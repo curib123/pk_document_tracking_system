@@ -1,0 +1,114 @@
+"""UI contract tests against the real JS and native dialog; API responses are simulated.
+This suite does not stand in for the separate real-MySQL integration suite.
+Run: python tests/modal_browser.py (requires playwright and Chromium).
+"""
+import json, os, pathlib, subprocess, threading, time, re
+from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
+from urllib.parse import urlparse, parse_qs
+from playwright.sync_api import sync_playwright, expect
+ROOT = pathlib.Path(__file__).resolve().parents[1]
+class Handler(SimpleHTTPRequestHandler):
+    def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT / 'public'), **kwargs)
+    def log_message(self, *args): pass
+    def do_GET(self):
+        if self.path == '/':
+            content = subprocess.check_output(['php', str(ROOT/'application/views/app.php')], env={**os.environ, 'APP_URL':f'http://127.0.0.1:{self.server.server_port}'})
+            self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.end_headers(); self.wfile.write(content)
+        else: super().do_GET()
+server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
+threading.Thread(target=server.serve_forever, daemon=True).start()
+url = f'http://127.0.0.1:{server.server_port}'
+metadata = json.loads(subprocess.check_output(['php','-r', "require 'application/bootstrap.php'; echo json_encode(['modules'=>array_values(Pk\\Core\\UiSchema::modules()),'document_fields'=>['softcopy'=>Pk\\Core\\UiSchema::documentFields('softcopy'),'hardcopy'=>Pk\\Core\\UiSchema::documentFields('hardcopy')],'request_fields'=>Pk\\Core\\UiSchema::requestFields(),'request_types'=>Pk\\Services\\RequestService::TYPES,'workflow_template'=>Pk\\Core\\WorkflowGraph::defaults()]);"],cwd=ROOT))
+permissions = [f'{module}.{action}' for module in ['users','roles','permissions','areas','specifics','assets','locations','categories','files','workflows','softcopy','hardcopy','requests','transfer','access','assignment','disposal','notifications','audit','sequences','settings','dashboard','documents'] for action in ['view','add','edit','delete','direct','approve','request','submit','cancel','reassign','upload','manage','access_all']]
+user = {'id':1,'username':'admin','first_name':'Admin','last_name':'Test','position_title':'Admin','role_id':1,'require_password_change':0}
+state = {'user':None,'save_calls':0,'permission_payload':None}
+userrow={**user,'active':1,'version':1,'middle_name':None,'leader_id':None}
+errors=[]
+def route_api(request):
+    q=parse_qs(urlparse(request['url']).query); op=q.get('op',[''])[0]
+    data=json.loads(request['body']) if request['method']=='POST' else {k:v[0] for k,v in q.items()}
+    status=200
+    if op=='session': result={'user':state['user'],'permissions':permissions if state['user'] else []}
+    elif op=='auth.login': state['user']=user; result={'user':user,'permissions':permissions}
+    elif op=='metadata': result={**metadata,'user':user,'permissions':permissions}
+    elif op=='dashboard': result={'softcopy':[], 'hardcopy':[], 'my_requests':[], 'unread_notifications':0,'pending_receipts':0}
+    elif op=='list':
+        rows=[userrow] if data.get('module')=='users' else ([{'id':1,'name':'Administrator','active':1,'version':1}] if data.get('module')=='roles' else [])
+        result={'rows':rows,'page':1,'pages':1,'limit':25,'total':len(rows)}
+    elif op=='lookups': result={'options':[{'id':1,'label':'Administrator'}],'more':False}
+    elif op=='detail': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}} if data.get('module')=='roles' else {'row':userrow,'related':{}}
+    elif op=='roles.permissions': state['permission_payload']=data; result={'message':'Permissions updated.'}
+    elif op=='catalog.save':
+        state['save_calls']+=1; status=422
+        result=None
+    else: result={'message':'Test operation recorded'}
+    body={'ok':True,'data':result,'csrf':'a'*64} if status==200 else {'ok':False,'error':{'message':'Username already exists.','fields':{'username':'Choose another username.'}},'csrf':'a'*64}
+    return {'status':status,'body':body}
+try:
+    with sync_playwright() as p:
+        browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
+        page=browser.new_page(viewport={'width':1000,'height':800}); page.set_default_timeout(5000)
+        page.on('pageerror',lambda error:errors.append(str(error)))
+        page.expose_function('test_api',route_api)
+        html=subprocess.check_output(['php',str(ROOT/'application/views/app.php')],env={**os.environ,'APP_URL':'https://pk-ui-test.invalid'}).decode()
+        html=re.sub(r'<script[^>]*>.*?</script>','',html,flags=re.S)
+        page.set_content(html)
+        page.evaluate("window.fetch = async (url, options={}) => { const r=await window.test_api({url:String(url),method:options.method||'GET',body:options.body||'{}'}); return new Response(JSON.stringify(r.body), {status:r.status,headers:{'Content-Type':'application/json'}}); }")
+        blobs={}
+        for name in ['api.js','components.js','forms.js','workflow-ui.js','app.js']:
+            source=(ROOT/'public/assets'/name).read_text()
+            for dependency,blob in blobs.items(): source=source.replace("'./"+dependency+"'",json.dumps(blob))
+            blobs[name]=page.evaluate("source=>URL.createObjectURL(new Blob([source],{type:'text/javascript'}))",source)
+        page.evaluate('url=>import(url)',blobs['app.js'])
+        login=page.get_by_role('dialog',name='Sign in',exact=True)
+        expect(login).to_be_visible()
+        expect(login.get_by_label('Username',exact=True)).to_be_focused()
+        login.get_by_label('Username',exact=True).fill('admin'); login.get_by_label('Password',exact=True).fill('test-password-long')
+        login.get_by_role('button',name='Sign in',exact=True).click()
+        expect(page.get_by_role('navigation').get_by_role('button',name='Users',exact=True)).to_be_visible()
+        # Result modals are allowed to remain visible; close them before navigation.
+        for dlg in page.get_by_role('dialog').all():
+            if dlg.is_visible(): dlg.get_by_role('button',name='Close',exact=True).click()
+        page.get_by_role('navigation').get_by_role('button',name='Users',exact=True).click()
+        page.get_by_role('button',name='Add user',exact=True).click()
+        modal=page.get_by_role('dialog',name='Add user',exact=True)
+        expect(modal).to_be_visible()
+        expect(modal).to_have_attribute('aria-busy','false')
+        assert page.evaluate("document.querySelector('dialog[open]').matches(':modal')"), 'Must use showModal(), not just open=true'
+        assert page.evaluate("document.querySelectorAll('style,link[rel=stylesheet],[style]').length")==0, 'No author styling is permitted'
+        page.keyboard.press('Escape'); expect(modal).not_to_be_visible()
+        expect(page.get_by_role('button',name='Add user',exact=True)).to_be_focused()
+        page.get_by_role('button',name='Add user',exact=True).click(); modal=page.get_by_role('dialog',name='Add user',exact=True)
+        modal.get_by_label('Username',exact=True).fill('existing-user')
+        modal.get_by_label('First Name',exact=True).fill('Test'); modal.get_by_label('Last Name',exact=True).fill('User')
+        modal.get_by_label('Position Title',exact=True).fill('Clerk'); modal.get_by_label('Role Id',exact=True).select_option('1')
+        modal.get_by_role('button',name='Save',exact=True).click()
+        expect(modal.get_by_role('alert')).to_contain_text('Username already exists.')
+        expect(modal.get_by_label('Username',exact=True)).to_have_value('existing-user')
+        expect(modal.get_by_role('button',name='Save',exact=True)).to_be_enabled()
+        assert state['save_calls']==1
+        modal.get_by_role('button',name='Cancel',exact=True).click()
+        assert not errors, errors
+        # A permission change must include the audit reason required by the real API.
+        page.get_by_role('navigation').get_by_role('button',name='Roles',exact=True).click()
+        page.get_by_role('button',name='View / actions',exact=True).click()
+        page.get_by_role('button',name='Assign permissions',exact=True).click()
+        perm=page.get_by_role('dialog',name='Assign role permissions',exact=True)
+        expect(perm.get_by_label('Reason',exact=True)).to_be_visible()
+        perm.get_by_role('button',name='Save permissions',exact=True).click()
+        assert state['permission_payload'] is None, 'Reason must be required before submission'
+        perm.get_by_label('Reason',exact=True).fill('Document-control role review')
+        perm.get_by_role('button',name='Save permissions',exact=True).click()
+        expect(perm.get_by_role('heading',name='Result',exact=True)).to_be_visible()
+        assert state['permission_payload']['reason']=='Document-control role review'
+        assert state['permission_payload']['permission_ids']==[1]
+        perm.get_by_role('button',name='Close',exact=True).click()
+        # All list modules must render without runtime failures.
+        for module in metadata['modules']:
+            page.get_by_role('navigation').get_by_role('button',name=module['label'],exact=True).click()
+            expect(page.locator('main h2')).to_have_text(module['label'])
+        assert not errors, errors
+        page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
+        browser.close()
+        print('PASS: native dialog, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all 24 modules, no JS runtime errors')
+finally: server.shutdown()
