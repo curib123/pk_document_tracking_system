@@ -1,0 +1,12 @@
+/vendor/
+/node_modules/
+.env
+/storage/*
+!/storage/.gitkeep
+/test-results/
+/playwright-report/
+/.superpowers/
+/.worktrees/
+tests/*.png
+tests/fixture.pdf
+__pycache__/

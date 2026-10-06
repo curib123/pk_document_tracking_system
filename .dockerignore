@@ -1,0 +1,8 @@
+.git
+.env
+vendor
+node_modules
+storage/*
+!storage/.gitkeep
+tests/*.png
+tests/fixture.pdf
