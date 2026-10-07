@@ -34,6 +34,133 @@ export async function mountFields(
   const controls = new Map();
   const getters = new Map();
   const disposers = [];
+  const lookupOptions = new Map();
+
+  const setLookupValue = (
+    name,
+    value,
+    label = ''
+  ) => {
+    const control = controls.get(name);
+
+    if (!control) {
+      return;
+    }
+
+    const next =
+      value === null ||
+      value === undefined ||
+      value === ''
+        ? ''
+        : String(value);
+
+    if (
+      next &&
+      !Array.from(control.options).some(
+        option => option.value === next
+      )
+    ) {
+      control.append(
+        el(
+          'option',
+          { value: next },
+          label || 'Selected value'
+        )
+      );
+    }
+
+    if (control.value === next) {
+      return;
+    }
+
+    control.value = next;
+    control.dispatchEvent(
+      new Event('change')
+    );
+  };
+
+  const applyLookupHierarchy = name => {
+    const control = controls.get(name);
+    const options = lookupOptions.get(name);
+
+    if (
+      !control ||
+      !options ||
+      !control.value
+    ) {
+      return;
+    }
+
+    const selected = options.get(
+      control.value
+    );
+
+    if (!selected) {
+      return;
+    }
+
+    const populate = (
+      key,
+      target,
+      labelKey
+    ) => {
+      if (
+        !Object.prototype.hasOwnProperty.call(
+          selected,
+          key
+        )
+      ) {
+        return;
+      }
+
+      setLookupValue(
+        target,
+        selected[key],
+        selected[labelKey] || ''
+      );
+    };
+
+    if (name === 'location_id') {
+      populate(
+        'asset_id',
+        'asset_id',
+        'asset_label'
+      );
+      populate(
+        'specific_id',
+        'specific_id',
+        'specific_label'
+      );
+      populate(
+        'area_id',
+        'area_id',
+        'area_label'
+      );
+      return;
+    }
+
+    if (name === 'asset_id') {
+      populate(
+        'specific_id',
+        'specific_id',
+        'specific_label'
+      );
+      populate(
+        'area_id',
+        'area_id',
+        'area_label'
+      );
+      return;
+    }
+
+    if (name === 'specific_id') {
+      populate(
+        'area_id',
+        'area_id',
+        'area_label'
+      );
+    }
+  };
 
   for (const definition of fields) {
     const {
@@ -73,6 +200,12 @@ export async function mountFields(
       });
 
       const hint = el('small', { role: 'status' });
+      const optionMap = new Map();
+
+      lookupOptions.set(
+        name,
+        optionMap
+      );
 
       let aborter;
       let timer;
@@ -105,6 +238,15 @@ export async function mountFields(
               required ? 'Choose…' : 'None'
             )
           );
+
+          optionMap.clear();
+
+          for (const option of result.options) {
+            optionMap.set(
+              String(option.id),
+              option
+            );
+          }
 
           const selectedExists = result.options.some(
             option => String(option.id) === selection
@@ -141,6 +283,7 @@ export async function mountFields(
 
       input.addEventListener('change', () => {
         selection = input.value;
+        applyLookupHierarchy(name);
       });
 
       search.addEventListener('input', () => {
@@ -384,6 +527,15 @@ export async function mountFields(
         )
       );
     }
+  }
+
+  // Apply predefined parent values after every lookup exists.
+  for (const name of [
+    'location_id',
+    'asset_id',
+    'specific_id'
+  ]) {
+    applyLookupHierarchy(name);
   }
 
   return {
