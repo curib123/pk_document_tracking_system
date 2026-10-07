@@ -58,6 +58,7 @@ export async function mountFields(
     let read;
 
     if (type === 'lookup') {
+      // Value is the internal ID, pero ang visible option kay readable name/code ra.
       const search = el('input', {
         type: 'search',
         id: id + '-search',
@@ -172,6 +173,7 @@ export async function mountFields(
           ? Number(input.value)
           : null;
     } else if (type === 'upload') {
+      // Upload ID stays internal; status text should stay human-readable.
       input = el('input', {
         id,
         type: 'file',
