@@ -31,7 +31,7 @@ export class Modal {
     const id = `dialog-title-${++serial}`;
     this.node = document.querySelector('#modal-shell').content.firstElementChild.cloneNode(true);
     this.node.setAttribute('aria-labelledby', id);
-    const heading = this.node.querySelector('[data-dialog-title]'); heading.id = id; heading.textContent = title;
+    this.heading = this.node.querySelector('[data-dialog-title]'); this.heading.id = id; this.heading.textContent = title;
     const description = this.node.querySelector('[data-dialog-explanation]'); description.textContent = explanation; description.hidden = !explanation;
     this.form = this.node.querySelector('form'); this.body = this.node.querySelector('fieldset'); this.footer = this.node.querySelector('footer');
     this.error = this.node.querySelector('[data-dialog-error]'); this.progress = this.node.querySelector('[data-dialog-progress]');
@@ -46,6 +46,7 @@ export class Modal {
     });
     this.node.showModal();
   }
+  setTitle(title) { this.heading.textContent = title; }
   setSubmit(label, handler) {
     this.submitHandler = handler;
     if (!this.submitButton) { this.submitButton = el('button', { type: 'submit' }, label); this.footer.prepend(this.submitButton); }
