@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** Identity persistence using the native CodeIgniter MySQLi Query Builder. */
 class Identity_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function active_user(array $params = []): ?array
     {
         $this->db->reset_query()->select('u.*, r.name AS role_name')->from('users u')
