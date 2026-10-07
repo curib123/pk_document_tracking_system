@@ -57,7 +57,7 @@ jobs:
           php tests/integration.php
           php tests/mysqli_integration.php
           php tests/concurrency.php
-      - name: Native and legacy controller integration
+      - name: Native controller integration
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/php-server.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break || sleep 1; done
@@ -73,4 +73,4 @@ jobs:
         if: failure()
         run: |
           test ! -f /tmp/php-server.log || tail -80 /tmp/php-server.log
-          find storage/logs -type f -name '*.log' -exec tail -50 {} \;
+          test ! -d storage/logs || find storage/logs -type f -name '*.log' -exec tail -50 {} \;
