@@ -2,11 +2,11 @@
 
 Functional CodeIgniter 3 / MySQL document control application. The interface intentionally has **no CSS, Bootstrap, themes, icon fonts, or visual design**. Record actions, approvals, account operations, confirmations, uploads, downloads, and workflow editing use native HTML modal dialogs.
 
-The application is configured for **Windows XAMPP + XAMPP MySQL**. It does not use a project `.env`, Docker, Docker Compose, a custom PHP server router, or a separate application server.
+The application is configured for **Windows XAMPP + XAMPP MySQL on PHP 8.0**. It does not use a project `.env`, Docker, Docker Compose, a custom PHP server router, or a separate application server.
 
 ## XAMPP requirements
 
-- XAMPP with Apache, MySQL/MariaDB, and PHP 8.2+
+- XAMPP with Apache, MySQL/MariaDB, and PHP 8.0+
 - PHP extensions: `mysqli`, `fileinfo`, `mbstring`, `zip`
 - Composer 2
 - A current browser supporting native `<dialog>`
