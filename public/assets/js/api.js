@@ -1,3 +1,4 @@
+// Native CI3 routes ra atong gamiton; no hidden fallback endpoint para predictable ang flow.
 export class ApiClient {
   constructor() {
     this.csrf = '';
