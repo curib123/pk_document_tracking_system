@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\Context;
 class Read_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $this->ctx = Context::fromOptions($options); }
     public function metadata(): array { return $this->ctx->model(Read_model::class)->metadata(); }
