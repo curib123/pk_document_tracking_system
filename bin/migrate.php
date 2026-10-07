@@ -51,6 +51,26 @@ function column_exists(
     );
 }
 
+function index_exists(
+    Database $db,
+    string $table,
+    string $index
+): bool {
+    return (bool) $db->one(
+        'SELECT 1 AS found
+         FROM information_schema.statistics
+         WHERE table_schema = ?
+           AND table_name = ?
+           AND index_name = ?
+         LIMIT 1',
+        [
+            $db->builder->database,
+            $table,
+            $index,
+        ]
+    );
+}
+
 /**
  * Schema v3 makes the predefined physical hierarchy flexible.
  *
@@ -107,6 +127,78 @@ function migrate_optional_location_hierarchy(
          MODIFY COLUMN asset_id
              BIGINT UNSIGNED NULL'
     );
+}
+
+/**
+ * Schema v4 aligns the physical hierarchy and workflow indexes
+ * with the current application behavior.
+ */
+function migrate_current_schema_indexes(
+    Database $db
+): void {
+    $indexes = [
+        [
+            'specifics',
+            'specific_lookup',
+            'ALTER TABLE specifics
+             ADD INDEX specific_lookup
+             (active, area_id, name)',
+        ],
+        [
+            'assets',
+            'asset_lookup',
+            'ALTER TABLE assets
+             ADD INDEX asset_lookup
+             (active, specific_id, asset_number)',
+        ],
+        [
+            'locations',
+            'location_hierarchy',
+            'ALTER TABLE locations
+             ADD INDEX location_hierarchy
+             (active, asset_id, specific_id, area_id)',
+        ],
+        [
+            'workflow_versions',
+            'draft_workflow',
+            'ALTER TABLE workflow_versions
+             ADD INDEX draft_workflow
+             (workflow_id, status, version_number)',
+        ],
+        [
+            'requests',
+            'request_workflow_version',
+            'ALTER TABLE requests
+             ADD INDEX request_workflow_version
+             (workflow_version_id, status)',
+        ],
+        [
+            'workflow_steps',
+            'request_steps',
+            'ALTER TABLE workflow_steps
+             ADD INDEX request_steps
+             (request_id, id, status, decision)',
+        ],
+        [
+            'workflow_history',
+            'request_history',
+            'ALTER TABLE workflow_history
+             ADD INDEX request_history
+             (request_id, created_at, id)',
+        ],
+    ];
+
+    foreach ($indexes as [$table, $index, $sql]) {
+        if (
+            !index_exists(
+                $db,
+                $table,
+                $index
+            )
+        ) {
+            $db->query($sql);
+        }
+    }
 }
 
 /**
@@ -349,11 +441,27 @@ try {
             0
         );
 
-    if ($current >= 3) {
+    if ($current >= 4) {
         echo
             'Database schema is already version ' .
             $current .
             ".\n";
+
+        exit(0);
+    }
+
+    if ($current === 3) {
+        migrate_current_schema_indexes(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(4)'
+        );
+
+        echo
+            "Migrated database schema from version 3 to version 4.\n";
 
         exit(0);
     }
@@ -368,8 +476,17 @@ try {
              VALUES(3)'
         );
 
+        migrate_current_schema_indexes(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(4)'
+        );
+
         echo
-            "Migrated database schema from version 2 to version 3.\n";
+            "Migrated database schema from version 2 to version 4.\n";
 
         exit(0);
     }
@@ -612,8 +729,17 @@ try {
          VALUES(3)'
     );
 
+    migrate_current_schema_indexes(
+        $db
+    );
+
+    $db->query(
+        'INSERT INTO schema_migrations(version)
+         VALUES(4)'
+    );
+
     echo
-        "Migrated database schema from version 1 to version 3.\n";
+        "Migrated database schema from version 1 to version 4.\n";
 } catch (Throwable $error) {
     fwrite(
         STDERR,
