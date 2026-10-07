@@ -10,7 +10,7 @@ class File_service
     {
         $this->ctx->require('files.upload');
         if (($upload['error'] ?? UPLOAD_ERR_NO_FILE)!==UPLOAD_ERR_OK || !is_uploaded_file($upload['tmp_name'] ?? '')) throw new Problem('Upload failed. Check the selected file and server upload limit.');
-        $size=filesize($upload['tmp_name']); $max=max(1,min(100,(int)(getenv('UPLOAD_MAX_MB') ?: 20)))*1024*1024;
+        $size=filesize($upload['tmp_name']); $max=20*1024*1024;
         if (!$size || $size>$max) throw new Problem('The file is empty or exceeds the configured upload limit.');
         $name=basename(str_replace('\\','/',(string)$upload['name']));
         if (strlen($name)>240 || preg_match('/[\x00-\x1F\x7F]/',$name)) throw new Problem('Invalid file name.');
@@ -131,8 +131,16 @@ class File_service
     }
     private function convert(string $source): array
     {
-        $binary=getenv('LIBREOFFICE_PATH') ?: '';
-        if ($binary==='' || !is_file($binary)) throw new Problem('Set LIBREOFFICE_PATH to enable DOCX/XLSX conversion, or upload a PDF revision.',503);
+        $binary='';
+        foreach([
+            'C:\\Program Files\\LibreOffice\\program\\soffice.exe',
+            'C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe',
+            '/usr/bin/libreoffice',
+            '/usr/bin/soffice'
+        ] as $candidate) {
+            if (is_file($candidate)) { $binary=$candidate; break; }
+        }
+        if ($binary==='') throw new Problem('Install LibreOffice in its standard location to enable DOCX/XLSX conversion, or upload a PDF revision.',503);
         $dir=PK_ROOT.'/storage/conversions/'.bin2hex(random_bytes(10)); if (!mkdir($dir,0700,true)) throw new Problem('Cannot create conversion workspace.',503);
         $process=proc_open([$binary,'-env:UserInstallation=file://'.str_replace('\\','/',$dir).'/profile','--headless','--convert-to','pdf','--outdir',$dir,$source],[0=>['pipe','r'],1=>['pipe','w'],2=>['pipe','w']],$pipes);
         if (!is_resource($process)) throw new Problem('Could not start Office conversion.',503);
