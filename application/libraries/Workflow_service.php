@@ -23,20 +23,11 @@ class Workflow_service
             'description'=>Rules::text($input,'description',4000,false),
         ];
 
-        if ($id) {
-            $db->update('workflows',$id,$data);
-        } else {
-            $data['workflow_key']=Rules::text($input,'workflow_key',80);
-            if (!preg_match('/^[a-z][a-z0-9_]+$/',$data['workflow_key'])) throw new Problem('Use a lowercase workflow key.');
-            $data['request_type']=Rules::choice($input,'request_type',Request_service::TYPES);
-            $data['active']=0;
-            $data['created_by']=$this->ctx->id();
-            $id=$db->insert('workflows',$data);
-            $this->version(['workflow_id'=>$id,'graph'=>WorkflowGraph::defaults()]);
-        }
+        if (!$id || !$before) throw new Problem('Workflow definitions are seeded for each request type. Edit an existing workflow and create a new version instead.',409);
+        $db->update('workflows',$id,$data);
 
-        $this->ctx->audit('workflows',$before?'updated':'created',$id,$before,$data);
-        return ['id'=>$id,'message'=>$before?'Workflow updated.':'Workflow created with an empty draft version.'];
+        $this->ctx->audit('workflows','updated',$id,$before,$data);
+        return ['id'=>$id,'message'=>'Workflow updated.'];
     }
 
     private function hydrateApproverLabels(array $workflow): array
