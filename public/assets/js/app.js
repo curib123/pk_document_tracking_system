@@ -87,8 +87,7 @@ async function loadTable() {
 }
 function editCatalog(module, row = {}, parent) {
   const existing = !!row.id; const operation = module.key === 'workflows' ? 'workflows.save' : 'catalog.save';
-  if (module.key === 'workflows' && !existing) row = { ...row, active: 0 };
-  return formModal(existing ? `Edit ${singular(module.key)}` : `Add ${singular(module.key)}`, fieldsFor(module.fields), row, api, values => api.request(operation, { module:module.key, ...(existing ? identity(row) : {}), ...values }, true), { after:afterChange(parent), disabled:existing ? (module.key === 'permissions' ? ['module_key','action_key'] : module.key === 'workflows' ? ['workflow_key','request_type'] : []) : [], explanation:module.key === 'workflows' ? 'New workflows start inactive. Publishing a version makes it the active workflow for that request type and deactivates the previous definition.' : module.key === 'settings' ? 'Appearance preferences are stored but no styling is applied in this functional build.' : '' });
+  return formModal(existing ? `Edit ${singular(module.key)}` : `Add ${singular(module.key)}`, fieldsFor(module.fields), row, api, values => api.request(operation, { module:module.key, ...(existing ? identity(row) : {}), ...values }, true), { after:afterChange(parent), disabled:existing ? (module.key === 'permissions' ? ['module_key','action_key'] : module.key === 'workflows' ? ['workflow_key','request_type'] : []) : [], explanation:module.key === 'workflows' ? 'New workflows start inactive with an empty draft. Add ordered approval steps, publish the version, then choose the published Default version that new requests should use.' : module.key === 'settings' ? 'Appearance preferences are stored but no styling is applied in this functional build.' : '' });
 }
 function directDocument(domain, row = {}, parent) {
   const existing = !!row.id; const values = { ...row, file_id:null, reason:'' };
