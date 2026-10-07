@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Pk\Core;
 final class Security
 {
+    // Security basics diri centralized para same behavior sa session, CSRF, ug HTTP methods.
     public static function method(string $method,bool $mutation): void
     {
         if ($method!==($mutation?'POST':'GET')) throw new Problem('HTTP method not allowed.',405);
