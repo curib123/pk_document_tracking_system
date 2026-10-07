@@ -354,10 +354,9 @@ export async function mountFields(
             : null;
         }
 
-        return
-          input.value === '' && !required
-            ? null
-            : input.value;
+        return input.value === '' && !required
+          ? null
+          : input.value;
       };
 
       group.append(
