@@ -98,6 +98,171 @@ class Read_model extends Repository_model
         $this->db->group_end();
     }
 
+    private function auditRows(): array
+    {
+        $this->ctx->require('audit.view');
+
+        $directory = PK_ROOT . '/storage/audit';
+
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach (
+            glob($directory . '/audit-*.jsonl')
+                ?: []
+            as $path
+        ) {
+            $handle = fopen($path, 'rb');
+
+            if (!$handle) {
+                continue;
+            }
+
+            try {
+                while (
+                    ($line = fgets($handle))
+                    !== false
+                ) {
+                    $row = json_decode(
+                        trim($line),
+                        true
+                    );
+
+                    if (
+                        is_array($row)
+                        && isset($row['id'])
+                    ) {
+                        $rows[] = $row;
+                    }
+                }
+            } finally {
+                fclose($handle);
+            }
+        }
+
+        return $rows;
+    }
+
+    private function auditListing(
+        array $query
+    ): array {
+        $definition =
+            UiSchema::modules()['audit'];
+
+        $request =
+            Datatable_service::normalize(
+                $query,
+                $definition['columns']
+            );
+
+        $rows = $this->auditRows();
+        $unfiltered = count($rows);
+
+        if ($request['q'] !== '') {
+            $needle =
+                mb_strtolower(
+                    $request['q']
+                );
+
+            $rows = array_values(
+                array_filter(
+                    $rows,
+                    static function (
+                        array $row
+                    ) use ($needle): bool {
+                        foreach (
+                            [
+                                'username',
+                                'module',
+                                'action',
+                                'reason',
+                                'created_at',
+                            ]
+                            as $key
+                        ) {
+                            if (
+                                str_contains(
+                                    mb_strtolower(
+                                        (string) (
+                                            $row[$key]
+                                            ?? ''
+                                        )
+                                    ),
+                                    $needle
+                                )
+                            ) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+                )
+            );
+        }
+
+        $filtered = count($rows);
+        $sort = $request['sort'];
+        $direction =
+            $request['direction'];
+
+        usort(
+            $rows,
+            static function (
+                array $left,
+                array $right
+            ) use (
+                $sort,
+                $direction
+            ): int {
+                $comparison =
+                    ($left[$sort] ?? null)
+                    <=> ($right[$sort] ?? null);
+
+                return $direction === 'asc'
+                    ? $comparison
+                    : -$comparison;
+            }
+        );
+
+        $rows = array_slice(
+            $rows,
+            $request['offset'],
+            $request['limit']
+        );
+
+        return Datatable_service::payload(
+            $rows,
+            $unfiltered,
+            $filtered,
+            $request
+        );
+    }
+
+    private function auditDetail(
+        int $id
+    ): array {
+        foreach (
+            $this->auditRows()
+            as $row
+        ) {
+            if ((int) $row['id'] === $id) {
+                return [
+                    'row' => $row,
+                    'related' => [],
+                ];
+            }
+        }
+
+        throw new Problem(
+            'Audit record not found.',
+            404
+        );
+    }
+
     private function applyListFilters(
         string $module,
         array $query
@@ -139,6 +304,12 @@ class Read_model extends Repository_model
         string $module,
         array $query
     ): array {
+        if ($module === 'audit') {
+            return $this->auditListing(
+                $query
+            );
+        }
+
         $definition = $this->scope($module);
         $this->applyListFilters($module, $query);
 
@@ -759,6 +930,10 @@ class Read_model extends Repository_model
 
     public function detail(string $module, int $id): array
     {
+        if ($module === 'audit') {
+            return $this->auditDetail($id);
+        }
+
         $this->scope($module);
         if ($module==='sequences') { $this->db->reset_query(); throw new Problem('Sequences are read-only counters.'); }
         $this->db->select('t.*')->where('t.id', $id)->limit(1);
