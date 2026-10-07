@@ -24,7 +24,7 @@ permissions = [f'{module}.{action}' for module in ['users','roles','permissions'
 user = {'id':1,'username':'admin','first_name':'Admin','last_name':'Test','position_title':'Admin','role_id':1,'require_password_change':0}
 seen_paths=[]
 endpoint_routes=json.loads(subprocess.check_output(['php','-r', "require 'application/bootstrap.php'; echo json_encode((new Endpoint_registry())->browserRoutes());"],cwd=ROOT))
-state = {'user':None,'save_calls':0,'permission_payload':None,'workflow_payload':None}
+state = {'user':None,'save_calls':0,'permission_payload':None,'workflow_payload':None,'workflow_delete_payload':None}
 userrow={**user,'active':1,'version':1,'middle_name':None,'leader_id':None}
 errors=[]
 def route_api(request):
@@ -51,10 +51,11 @@ def route_api(request):
         if data.get('module')=='roles': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}}
         elif data.get('module')=='softcopy': result={'row':{'id':7,'document_number':'DOC-001','title':'Quality Manual','category_id':1,'status':'active','version':1},'related':{'can_read_files':True,'files':[],'revisions':[]}}
         elif data.get('module')=='hardcopy': result={'row':{'id':8,'title':'Controlled Hardcopy','status':'active','version':1},'related':{'can_read_files':True}}
-        elif data.get('module')=='workflows': result={'row':{'id':9,'workflow_key':'test_flow','name':'Test Workflow','request_type':'access','active':1,'version':1},'related':{'versions':[]}}
+        elif data.get('module')=='workflows': result={'row':{'id':9,'workflow_key':'test_flow','name':'Test Workflow','request_type':'access','active':1,'version':1,'graph':{'private':'do-not-render'}},'related':{'versions':[{'id':31,'workflow_id':9,'version_number':2,'status':'draft','is_default':0,'graph':{'steps':[{'name':'Administrator review','approver':{'type':'role','value':1,'label':'Administrator'}}]},'version':1,'published_at':None}]}}
         else: result={'row':userrow,'related':{}}
     elif op=='roles.permissions': state['permission_payload']=data; result={'message':'Permissions updated.'}
     elif op=='workflows.version': state['workflow_payload']=data; result={'id':21,'message':'Draft version saved.'}
+    elif op=='workflows.delete_version': state['workflow_delete_payload']=data; result={'message':'Draft workflow version removed.'}
     elif op=='catalog.save':
         state['save_calls']+=1; status=422
         result=None
@@ -165,6 +166,10 @@ try:
         page.get_by_role('navigation').get_by_role('button',name='Workflow builder',exact=True).click()
         page.get_by_role('button',name='View / actions',exact=True).click()
         workflow=page.get_by_role('dialog',name='Test Workflow',exact=True)
+        expect(workflow.get_by_role('button',name='Remove draft version',exact=True)).to_be_visible()
+        assert workflow.locator('pre').count()==0, 'Raw JSON metadata must not be rendered'
+        assert 'Record metadata' not in workflow.inner_text()
+        assert 'do-not-render' not in workflow.inner_text()
         workflow.get_by_role('button',name='New draft version',exact=True).click()
         draft=page.get_by_role('dialog',name='New workflow version',exact=True)
         draft.get_by_role('button',name='Add approval step',exact=True).click()
@@ -185,6 +190,16 @@ try:
         draft.get_by_role('button',name='Close',exact=True).click()
         # Parent workflow details closes automatically after the draft save refresh.
 
+        page.get_by_role('navigation').get_by_role('button',name='Workflow builder',exact=True).click()
+        page.get_by_role('button',name='View / actions',exact=True).click()
+        workflow=page.get_by_role('dialog',name='Test Workflow',exact=True)
+        workflow.get_by_role('button',name='Remove draft version',exact=True).click()
+        remove_draft=page.get_by_role('dialog',name='Remove draft workflow version',exact=True)
+        remove_draft.get_by_label('Reason',exact=True).fill('Discard unused draft')
+        remove_draft.get_by_role('button',name='Confirm',exact=True).click()
+        assert state['workflow_delete_payload']['id']==31
+        assert state['workflow_delete_payload']['reason']=='Discard unused draft'
+
         # All list modules must render without runtime failures.
         for module in metadata['modules']:
             page.get_by_role('navigation').get_by_role('button',name=module['label'],exact=True).click()
@@ -193,5 +208,5 @@ try:
         assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, hardcopy transfer preset synchronization, table controls below results, ordered workflow step add/remove/save, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all modules, no JS runtime errors')
+        print('PASS: native dialog, hardcopy transfer preset synchronization, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all modules, no JS runtime errors')
 finally: server.shutdown()
