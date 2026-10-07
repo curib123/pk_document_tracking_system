@@ -77,7 +77,7 @@ class Read_model extends Repository_model
     private function safe(array $row): array
     {
         unset($row['password_hash'],$row['session_version'],$row['storage_name']);
-        foreach(['payload','snapshot','result','graph','config','value','origin','destination','candidates','assignment','before_state','after_state','previous_state','approver_config'] as $key) if (isset($row[$key]) && is_string($row[$key])) {
+        foreach(['payload','snapshot','result','graph','config','value','origin','destination','candidates','assignment','before_state','after_state','previous_state'] as $key) if (isset($row[$key]) && is_string($row[$key])) {
             $decoded=json_decode($row[$key],true); if (json_last_error()===JSON_ERROR_NONE) $row[$key]=$decoded;
         }
         return $row;
@@ -108,15 +108,17 @@ class Read_model extends Repository_model
             $related['disposals']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
             $related['status_history']=$this->results();
-            $this->db->reset_query()->from('document_approvers')->where('domain',$module)->where('document_id',$id)->limit(1);
-            $config=$this->first(); $related['approver_config']=$config?$this->safe($config):null;
             $related['can_read_files']=$content;
         }
         if (in_array($module,['requests','my_requests','my_tasks'],true)) {
             $this->db->reset_query()->from('workflow_steps')->where('request_id',$id)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
-            $this->db->reset_query()->from('workflow_history')->where('request_id',$id)->order_by('id');
+            $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id',$id)->order_by('h.id');
             $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
+            if ($row['workflow_version_id']) {
+                $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
+                $related['workflow_version']=$this->first();
+            } else $related['workflow_version']=null;
             $this->db->reset_query()->select('id')->from('transfers')->where('request_id',$id)->limit(1);
             $related['transfer']=$this->first();
         }
