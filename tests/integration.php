@@ -24,6 +24,31 @@ $db->transaction(function() use($db,$ctx) {
     $location=$catalog->save('locations',['name'=>'Shelf A','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $destination=$catalog->save('locations',['name'=>'Shelf B','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $category=$catalog->save('categories',['name'=>'Forms','folder_name'=>'forms']);
+
+    $reader=new Read_service($ctx);
+    $specificOptions=$reader->lookups(['kind'=>'specifics','selected'=>$specific['id']])['options'];
+    $specificOption=current(array_filter($specificOptions,fn(array $option)=>(int)$option['id']===(int)$specific['id']));
+    check(
+        (int)$specificOption['area_id']===(int)$area['id'],
+        'specific lookup exposes its predefined area'
+    );
+
+    $assetOptions=$reader->lookups(['kind'=>'assets','selected'=>$asset['id']])['options'];
+    $assetOption=current(array_filter($assetOptions,fn(array $option)=>(int)$option['id']===(int)$asset['id']));
+    check(
+        (int)$assetOption['specific_id']===(int)$specific['id']
+        && (int)$assetOption['area_id']===(int)$area['id'],
+        'asset lookup exposes its predefined specific and area'
+    );
+
+    $locationOptions=$reader->lookups(['kind'=>'locations','selected'=>$location['id']])['options'];
+    $locationOption=current(array_filter($locationOptions,fn(array $option)=>(int)$option['id']===(int)$location['id']));
+    check(
+        (int)$locationOption['asset_id']===(int)$asset['id']
+        && (int)$locationOption['specific_id']===(int)$specific['id']
+        && (int)$locationOption['area_id']===(int)$area['id'],
+        'location lookup exposes its complete predefined hierarchy'
+    );
     $documents=new Document_service($ctx);
     $hard=$documents->direct('hardcopy',['title'=>'Test physical record','area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$location['id'],'holder_id'=>$staff['id'],'reason'=>'Initial registration']);
     check((int)$db->row('hardcopy_documents',$hard['id'])['location_id']===$location['id'],'direct hardcopy created');
