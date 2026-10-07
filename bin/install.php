@@ -6,7 +6,7 @@ use Pk\Core\{Database,Seed,Rules};
 try {
     foreach(['mysqli','fileinfo','mbstring','zip'] as $extension) if (!extension_loaded($extension)) throw new RuntimeException("PHP extension $extension is required.");
     if (!is_file(PK_ROOT.'/vendor/codeigniter/framework/system/core/CodeIgniter.php')) throw new RuntimeException('Run composer install first.');
-    $username='admin';
+    $username=Seed::defaultAdmin()['username'];
     $testPassword=getenv('PK_TEST_DB')==='1' ? (string)(getenv('PK_ADMIN_PASSWORD') ?: '') : '';
     $password=$testPassword!=='' ? $testPassword : bin2hex(random_bytes(12));
     Rules::password($password,$password);
