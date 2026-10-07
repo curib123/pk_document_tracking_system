@@ -41,10 +41,16 @@ def route_api(request):
     elif op=='metadata': result={**metadata,'user':user,'permissions':permissions}
     elif op=='dashboard': result={'softcopy':[], 'hardcopy':[], 'my_requests':[], 'unread_notifications':0,'pending_receipts':0}
     elif op=='list':
-        rows=[userrow] if data.get('module')=='users' else ([{'id':1,'name':'Administrator','active':1,'version':1}] if data.get('module')=='roles' else [])
+        rows=[userrow] if data.get('module')=='users' else ([{'id':1,'name':'Administrator','active':1,'version':1}] if data.get('module')=='roles' else ([{'id':7,'document_number':'DOC-001','title':'Quality Manual','status':'active','version':1}] if data.get('module')=='softcopy' else []))
         result={'rows':rows,'page':1,'pages':1,'limit':25,'total':len(rows)}
-    elif op=='lookups': result={'options':[{'id':1,'label':'Administrator'}],'more':False}
-    elif op=='detail': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}} if data.get('module')=='roles' else {'row':userrow,'related':{}}
+    elif op=='lookups':
+        kind=data.get('kind')
+        options=[{'id':1,'label':'Administrator'}] if kind in ['roles','users'] else ([{'id':7,'label':'DOC-001 — Quality Manual'}] if kind=='softcopy' else [])
+        result={'options':options,'more':False}
+    elif op=='detail':
+        if data.get('module')=='roles': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}}
+        elif data.get('module')=='softcopy': result={'row':{'id':7,'document_number':'DOC-001','title':'Quality Manual','category_id':1,'status':'active','version':1},'related':{'can_read_files':True,'files':[],'revisions':[]}}
+        else: result={'row':userrow,'related':{}}
     elif op=='roles.permissions': state['permission_payload']=data; result={'message':'Permissions updated.'}
     elif op=='catalog.save':
         state['save_calls']+=1; status=422
@@ -115,6 +121,23 @@ try:
         assert state['permission_payload']['reason']=='Document-control role review'
         assert state['permission_payload']['permission_ids']==[1]
         perm.get_by_role('button',name='Close',exact=True).click()
+        # Specific request buttons must open with their own request type and target synchronized.
+        page.get_by_role('navigation').get_by_role('button',name='Softcopy documents',exact=True).click()
+        page.get_by_role('button',name='View / actions',exact=True).click()
+        soft=page.get_by_role('dialog',name='Softcopy documents #7',exact=True)
+        soft.get_by_role('button',name='Softcopy Revise request',exact=True).click()
+        revise=page.get_by_role('dialog',name='Softcopy Revise request',exact=True)
+        expect(revise.get_by_label('Request Type',exact=True)).to_have_value('softcopy_revise')
+        expect(revise.get_by_label('Softcopy Document',exact=True)).to_have_value('7')
+        revise.get_by_role('button',name='Cancel',exact=True).click()
+        soft.get_by_role('button',name='Request access',exact=True).click()
+        access=page.get_by_role('dialog',name='Access request',exact=True)
+        expect(access.get_by_label('Request Type',exact=True)).to_have_value('access')
+        expect(access.get_by_label('Domain',exact=True)).to_have_value('softcopy')
+        expect(access.get_by_label('Softcopy Document',exact=True)).to_have_value('7')
+        access.get_by_role('button',name='Cancel',exact=True).click()
+        soft.get_by_role('button',name='Close',exact=True).click()
+
         # All list modules must render without runtime failures.
         for module in metadata['modules']:
             page.get_by_role('navigation').get_by_role('button',name=module['label'],exact=True).click()
@@ -124,5 +147,5 @@ try:
         assert all('/api?' not in path for path in seen_paths)
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all 24 modules, no JS runtime errors')
+        print('PASS: native dialog, request-button type synchronization, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all 24 modules, no JS runtime errors')
 finally: server.shutdown()
