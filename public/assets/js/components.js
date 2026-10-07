@@ -17,6 +17,14 @@ export function button(label, action, attributes = {}) {
   } }, label);
 }
 export function labelOf(value) { return String(value).replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase()); }
+const hiddenDisplayKey = key => key === 'id' || key === 'version' || key === 'current_node' || key.endsWith('_id');
+export function displayValue(value) {
+  if (Array.isArray(value)) return value.map(displayValue);
+  if (!value || typeof value !== 'object') return value;
+  return Object.fromEntries(Object.entries(value)
+    .filter(([key]) => !hiddenDisplayKey(key))
+    .map(([key, item]) => [key, displayValue(item)]));
+}
 export class Modal {
   constructor(title, { explanation = '' } = {}) {
     this.trigger = document.activeElement; this.pending = false; this.completed = false;
@@ -64,7 +72,8 @@ export class Modal {
     try { return await handler(); } catch (error) { this.showError(error); } finally { this.busy(false); }
   }
   done(result = {}) {
-    this.completed = true; this.body.replaceChildren(el('h3', {}, 'Result'), el('pre', {}, typeof result === 'string' ? result : JSON.stringify(result, null, 2)));
+    const visible = typeof result === 'string' ? result : displayValue(result); const text = typeof visible === 'string' ? visible : (Object.keys(visible || {}).length ? JSON.stringify(visible, null, 2) : 'Completed.');
+    this.completed = true; this.body.replaceChildren(el('h3', {}, 'Result'), el('pre', {}, text));
     if (this.submitButton) this.submitButton.hidden = true;
     this.closeButton.textContent = 'Close'; this.error.textContent = '';
     queueMicrotask(() => this.closeButton.focus());
@@ -76,7 +85,7 @@ export class Modal {
 export function notice(title, message) { const modal = new Modal(title); modal.done(message); return modal; }
 export function inspect(value, heading = 'Details') {
   const details = el('details', { open: true }, el('summary', {}, heading));
-  details.append(el('pre', {}, JSON.stringify(value, null, 2))); return details;
+  details.append(el('pre', {}, JSON.stringify(displayValue(value), null, 2))); return details;
 }
 export function table(columns, rows, actions) {
   const head = el('tr', {}, columns.map(column => el('th', { scope: 'col' }, labelOf(column))));
