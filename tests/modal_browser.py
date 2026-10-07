@@ -7,12 +7,13 @@ from http.server import ThreadingHTTPServer, SimpleHTTPRequestHandler
 from urllib.parse import urlparse, parse_qs
 from playwright.sync_api import sync_playwright, expect
 ROOT = pathlib.Path(__file__).resolve().parents[1]
+RENDER_PHP = "require 'application/bootstrap.php'; require 'application/helpers/ui_helper.php'; $initial_module=''; $page_title='PK Document Tracking System'; require 'application/views/templates/header.php'; require 'application/views/modules/index.php'; require 'application/views/templates/footer.php';"
 class Handler(SimpleHTTPRequestHandler):
     def __init__(self, *args, **kwargs): super().__init__(*args, directory=str(ROOT / 'public'), **kwargs)
     def log_message(self, *args): pass
     def do_GET(self):
         if self.path == '/':
-            content = subprocess.check_output(['php', str(ROOT/'application/views/app.php')], env={**os.environ, 'APP_URL':f'http://127.0.0.1:{self.server.server_port}'})
+            content = subprocess.check_output(['php','-r',RENDER_PHP], cwd=ROOT)
             self.send_response(200); self.send_header('Content-Type','text/html; charset=utf-8'); self.end_headers(); self.wfile.write(content)
         else: super().do_GET()
 server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
@@ -63,7 +64,7 @@ try:
         page=browser.new_page(viewport={'width':1000,'height':800}); page.set_default_timeout(5000)
         page.on('pageerror',lambda error:errors.append(str(error)))
         page.expose_function('test_api',route_api)
-        html=subprocess.check_output(['php',str(ROOT/'application/views/app.php')],env={**os.environ,'APP_URL':'https://pk-ui-test.invalid'}).decode()
+        html=subprocess.check_output(['php','-r',RENDER_PHP],cwd=ROOT).decode()
         html=re.sub(r'<script[^>]*>.*?</script>','',html,flags=re.S)
         page.set_content(html)
         page.evaluate("() => { window.fetch = async (url, options={}) => { const r=await window.test_api({url:String(url),method:options.method||'GET',body:options.body||'{}'}); return new Response(JSON.stringify(r.body), {status:r.status,headers:{'Content-Type':'application/json'}}); }; }")
