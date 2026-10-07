@@ -110,6 +110,37 @@ class Workflow_model extends Repository_model
         );
     }
 
+
+    public function draft_version_request_reference(
+        array $params = []
+    ): ?array {
+        $this->db
+            ->reset_query()
+            ->select('id, reference')
+            ->from('requests')
+            ->where(
+                'workflow_version_id',
+                $params[0]
+            )
+            ->limit(1);
+
+        return $this->first();
+    }
+
+    public function delete_draft_version(
+        array $params = []
+    ): bool {
+        $this->db
+            ->reset_query()
+            ->where('id', $params[0]);
+
+        return $this->written(
+            $this->db->delete(
+                'workflow_versions'
+            )
+        );
+    }
+
     public function active_user_for_workflow(
         int $id
     ): ?array {
