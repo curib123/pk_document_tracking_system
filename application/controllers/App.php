@@ -1,10 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-class App extends CI_Controller
+class App extends MY_Controller
 {
-    public function index()
-    {
-        \Pk\Core\Security::headers();
-        $this->load->view('app');
-    }
+    public function index() { $this->module_page(); }
 }

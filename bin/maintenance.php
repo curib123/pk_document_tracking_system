@@ -5,14 +5,15 @@ require dirname(__DIR__).'/application/bootstrap.php';
 use Pk\Core\{Database,Context};
 try {
     $db=Database::connect(); $ctx=new Context($db);
-    $count=$db->transaction(function() use($db,$ctx) {
-        $grants=$db->all("SELECT * FROM access_grants WHERE status='access_granted' AND expires_at<NOW() FOR UPDATE");
+    $maintenance=$ctx->model(Maintenance_model::class);
+    $count=$db->transaction(function() use($db,$ctx,$maintenance) {
+        $grants=$maintenance->expired_grants();
         foreach($grants as $grant) {
             $db->update('access_grants',(int)$grant['id'],['status'=>'expired']);
             $ctx->audit('access','expired',(int)$grant['id'],$grant,['status'=>'expired'],'Scheduled expiry',(int)$grant['request_id']);
             $ctx->notify((int)$grant['user_id'],'Document access expired','Your approved access period ended.',(int)$grant['request_id']);
         }
-        $db->query('DELETE FROM login_attempts WHERE window_started < DATE_SUB(NOW(),INTERVAL 2 DAY)');
+        $maintenance->prune_login_attempts();
         return count($grants);
     });
     $root=PK_ROOT.'/storage/conversions';

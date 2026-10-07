@@ -21,12 +21,20 @@ url = f'http://127.0.0.1:{server.server_port}'
 metadata = json.loads(subprocess.check_output(['php','-r', "require 'application/bootstrap.php'; echo json_encode(['modules'=>array_values(Pk\\Core\\UiSchema::modules()),'document_fields'=>['softcopy'=>Pk\\Core\\UiSchema::documentFields('softcopy'),'hardcopy'=>Pk\\Core\\UiSchema::documentFields('hardcopy')],'request_fields'=>Pk\\Core\\UiSchema::requestFields(),'request_types'=>Pk\\Services\\RequestService::TYPES,'workflow_template'=>Pk\\Core\\WorkflowGraph::defaults()]);"],cwd=ROOT))
 permissions = [f'{module}.{action}' for module in ['users','roles','permissions','areas','specifics','assets','locations','categories','files','workflows','softcopy','hardcopy','requests','transfer','access','assignment','disposal','notifications','audit','sequences','settings','dashboard','documents'] for action in ['view','add','edit','delete','direct','approve','request','submit','cancel','reassign','upload','manage','access_all']]
 user = {'id':1,'username':'admin','first_name':'Admin','last_name':'Test','position_title':'Admin','role_id':1,'require_password_change':0}
+seen_paths=[]
+endpoint_routes=json.loads((ROOT/'tests/endpoint_routes.json').read_text())
 state = {'user':None,'save_calls':0,'permission_payload':None}
 userrow={**user,'active':1,'version':1,'middle_name':None,'leader_id':None}
 errors=[]
 def route_api(request):
     q=parse_qs(urlparse(request['url']).query); op=q.get('op',[''])[0]
     data=json.loads(request['body']) if request['method']=='POST' else {k:v[0] for k,v in q.items()}
+    path=urlparse(request['url']).path.split('/index.php/')[-1];seen_paths.append(path)
+    if not op:
+        key=next((key for key,value in endpoint_routes.items() if value==path),None)
+        assert key is not None, f'Unexpected native endpoint: {path}'
+        op,_,selector=key.partition('@')
+        if selector:data['domain' if op=='documents.direct' else 'module']=selector
     status=200
     if op=='session': result={'user':state['user'],'permissions':permissions if state['user'] else []}
     elif op=='auth.login': state['user']=user; result={'user':user,'permissions':permissions}
@@ -53,10 +61,10 @@ try:
         html=subprocess.check_output(['php',str(ROOT/'application/views/app.php')],env={**os.environ,'APP_URL':'https://pk-ui-test.invalid'}).decode()
         html=re.sub(r'<script[^>]*>.*?</script>','',html,flags=re.S)
         page.set_content(html)
-        page.evaluate("window.fetch = async (url, options={}) => { const r=await window.test_api({url:String(url),method:options.method||'GET',body:options.body||'{}'}); return new Response(JSON.stringify(r.body), {status:r.status,headers:{'Content-Type':'application/json'}}); }")
+        page.evaluate("() => { window.fetch = async (url, options={}) => { const r=await window.test_api({url:String(url),method:options.method||'GET',body:options.body||'{}'}); return new Response(JSON.stringify(r.body), {status:r.status,headers:{'Content-Type':'application/json'}}); }; }")
         blobs={}
         for name in ['api.js','components.js','forms.js','workflow-ui.js','app.js']:
-            source=(ROOT/'public/assets'/name).read_text()
+            source=(ROOT/'public/assets/js'/name).read_text()
             for dependency,blob in blobs.items(): source=source.replace("'./"+dependency+"'",json.dumps(blob))
             blobs[name]=page.evaluate("source=>URL.createObjectURL(new Blob([source],{type:'text/javascript'}))",source)
         page.evaluate('url=>import(url)',blobs['app.js'])
@@ -108,6 +116,8 @@ try:
             page.get_by_role('navigation').get_by_role('button',name=module['label'],exact=True).click()
             expect(page.locator('main h2')).to_have_text(module['label'])
         assert not errors, errors
+        assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
+        assert all('/api?' not in path for path in seen_paths)
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
         print('PASS: native dialog, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all 24 modules, no JS runtime errors')

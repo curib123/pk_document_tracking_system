@@ -30,6 +30,7 @@ jobs:
       DB_USERNAME: root
       DB_PASSWORD: integration-only
       PK_TEST_DB: '1'
+      CI_ROUTE_PASSWORD: Native-route-test-only-2026!
       PK_ADMIN_USERNAME: admin
       PK_ADMIN_PASSWORD: Initial-integration-only-123!
       APP_URL: http://127.0.0.1:8080
@@ -40,39 +41,37 @@ jobs:
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
-          extensions: pdo_mysql, fileinfo, mbstring, zip
+          extensions: mysqli, fileinfo, mbstring, zip
           coverage: none
           tools: composer:v2
       - run: composer install --prefer-dist --no-interaction
       - name: Syntax and domain rules
         run: |
           find application public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
-          for file in public/assets/*.js; do node --check "$file"; done
+          for file in public/assets/*.js public/assets/js/*.js; do node --check "$file"; done
           php tests/run.php
+          php tests/architecture.php
+          php tests/mysqli_contract.php
+          php tests/native_database.php
       - name: Install empty test database
         run: php bin/install.php > /tmp/install.log
       - name: Domain and concurrency integration
         run: |
           php tests/integration.php
+          php tests/mysqli_integration.php
           php tests/concurrency.php
-      - name: Real HTTP smoke and optional extended suite
+      - name: Native and legacy controller integration
         run: |
-          php tests/make_fixture.php
           php -S 127.0.0.1:8080 -t public public/router.php > /tmp/php-server.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break || sleep 1; done
-          curl -fsS 'http://127.0.0.1:8080/index.php/api?op=session' > /tmp/session.json
-          python3 -c 'import json; d=json.load(open("/tmp/session.json")); assert d["ok"] and d["data"]["user"] is None and len(d["csrf"])==64; print("PASS real CI3 session endpoint")'
-          if [ -f tests/http.py ]; then
-            python3 tests/http.py
-          else
-            echo '::notice::Extended HTTP suite was not uploaded by the connector. Not executed; see docs/VERIFICATION.md.'
-          fi
+          python3 tests/native_routes.py
       - name: Native modal UI contract
         run: |
           python3 -m pip install playwright
           python3 -m playwright install --with-deps chromium
           export CHROMIUM_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux*/chrome' -type f | head -1)
           python3 tests/modal_browser.py
+          python3 tests/native_browser.py
       - name: Private diagnostic logs on failure
         if: failure()
         run: |
