@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Problem,Rules};
 class Document_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options);}
     public static function table(string $domain): string { return match($domain) { 'softcopy'=>'softcopy_documents','hardcopy'=>'hardcopy_documents',default=>throw new Problem('Invalid document domain.') }; }
