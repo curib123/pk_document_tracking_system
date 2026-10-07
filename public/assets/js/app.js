@@ -2,7 +2,7 @@ import { ApiClient } from './api.js';
 import { el, button, Modal, notice, table, inspect, labelOf } from './components.js';
 import { field, formModal, actionModal, mountFields } from './forms.js';
 import { workflowVersionModal } from './workflow-ui.js';
-const api = new ApiClient(document.querySelector('meta[name=api-endpoint]').content);
+const api = new ApiClient();
 const content = document.querySelector('#content'), navigation = document.querySelector('#navigation'), account = document.querySelector('#account'), accountActions = document.querySelector('#account-actions'), status = document.querySelector('#global-status');
 let metadata, user, permissions = [], currentModule, page = 1, query = '', limit = 25, sort = '', direction = 'desc', listGeneration = 0;
 const can = capability => permissions.includes(capability);
