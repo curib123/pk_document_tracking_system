@@ -7,50 +7,74 @@ class Read_model extends Repository_model
 {
     public function metadata(): array
     {
-        $modules=array_filter(UiSchema::modules(),fn($m)=>$this->ctx->can($m['permission']));
-        foreach($modules as &$module) unset($module['table']); unset($module);
-        return ['modules'=>array_values($modules),'document_fields'=>['softcopy'=>UiSchema::documentFields('softcopy'),'hardcopy'=>UiSchema::documentFields('hardcopy')],'request_fields'=>UiSchema::requestFields(),'request_types'=>Request_service::TYPES,'workflow_template'=>WorkflowGraph::defaults(),'permissions'=>$this->ctx->permissions(),'user'=>$this->ctx->safeUser()];
+        $modules = array_filter(
+            UiSchema::modules(),
+            fn(array $module): bool => $this->ctx->can($module['permission'])
+        );
+
+        foreach ($modules as &$module) {
+            unset($module['table']);
+        }
+        unset($module);
+
+        return [
+            'modules' => array_values($modules),
+            'document_fields' => [
+                'softcopy' => UiSchema::documentFields('softcopy'),
+                'hardcopy' => UiSchema::documentFields('hardcopy'),
+            ],
+            'request_fields' => UiSchema::requestFields(),
+            'request_types' => Request_service::TYPES,
+            'workflow_template' => WorkflowGraph::defaults(),
+            'permissions' => $this->ctx->permissions(),
+            'user' => $this->ctx->safeUser(),
+        ];
     }
 
     private function scope(string $module): array
     {
-        $definition=UiSchema::modules()[$module] ?? throw new Problem('Unknown module.',404);
+        $definition = UiSchema::modules()[$module]
+            ?? throw new Problem('Unknown module.', 404);
+
         $this->ctx->require($definition['permission']);
-        $id=$this->ctx->id();
-        $steps=null; $transfers=null; $disposalRequests=null;
+
+        $userId = $this->ctx->id();
+        $steps = null;
+        $transfers = null;
+        $disposalRequests = null;
         // Compile subqueries first: each compilation resets the shared builder before
         // the outer query is started. No unescaped request value becomes SQL text.
         if ($module==='my_tasks' || ($module==='requests' && !$this->ctx->can('requests.view_all'))) {
-            $candidate=$this->db->escape(Context::json(['id'=>$id]));
+            $candidate=$this->db->escape(Context::json(['id' => $userId]));
             $this->db->reset_query()->select('s.request_id')->from('workflow_steps s');
             if ($module==='my_tasks') $this->db->where('s.status','pending')->where('JSON_CONTAINS(s.candidates,'.$candidate.') = 1',null,false);
-            else $this->db->group_start()->where('s.acting_user_id',$id)->or_where('JSON_CONTAINS(s.candidates,'.$candidate.') = 1',null,false)->group_end();
+            else $this->db->group_start()->where('s.acting_user_id',$userId)->or_where('JSON_CONTAINS(s.candidates,'.$candidate.') = 1',null,false)->group_end();
             $steps=$this->db->get_compiled_select();
         }
         if ($module==='requests' && !$this->ctx->can('requests.view_all')) {
             $this->db->reset_query()->select('tr.request_id')->from('transfers tr')->group_start()
-                ->where('tr.recipient_id',$id)->or_where('tr.current_holder_id',$id)->group_end();
+                ->where('tr.recipient_id',$userId)->or_where('tr.current_holder_id',$userId)->group_end();
             $transfers=$this->db->get_compiled_select();
         }
         if ($module==='disposals' && !$this->ctx->can('documents.access_all') && !$this->ctx->can('disposal.view_all')) {
-            $this->db->reset_query()->select('r.id')->from('requests r')->where('r.requested_by',$id);
+            $this->db->reset_query()->select('r.id')->from('requests r')->where('r.requested_by',$userId);
             $disposalRequests=$this->db->get_compiled_select();
         }
         $this->db->reset_query()->from($definition['table'].' t');
-        if ($module==='my_requests') $this->db->where('t.requested_by',$id);
+        if ($module==='my_requests') $this->db->where('t.requested_by',$userId);
         if ($module==='my_tasks') $this->db->where('t.status','pending')->where('t.id IN ('.$steps.')',null,false);
         if ($module==='requests' && !$this->ctx->can('requests.view_all')) {
-            $this->db->group_start()->where('t.requested_by',$id)->or_where('t.id IN ('.$steps.')',null,false)
+            $this->db->group_start()->where('t.requested_by',$userId)->or_where('t.id IN ('.$steps.')',null,false)
                 ->or_where('t.id IN ('.$transfers.')',null,false)->group_end();
         }
         if ($module==='transfers' && !$this->ctx->can('transfer.manage') && !$this->ctx->can('transfer.view_all')) {
-            $this->db->group_start()->where('t.recipient_id',$id)->or_where('t.current_holder_id',$id)->group_end();
+            $this->db->group_start()->where('t.recipient_id',$userId)->or_where('t.current_holder_id',$userId)->group_end();
         }
-        if ($module==='access' && !$this->ctx->can('access.manage') && !$this->ctx->can('access.view_all')) $this->db->where('t.user_id',$id);
-        if ($module==='assignments' && !$this->ctx->can('assignment.manage') && !$this->ctx->can('assignment.view_all')) $this->db->where('t.user_id',$id);
+        if ($module==='access' && !$this->ctx->can('access.manage') && !$this->ctx->can('access.view_all')) $this->db->where('t.user_id',$userId);
+        if ($module==='assignments' && !$this->ctx->can('assignment.manage') && !$this->ctx->can('assignment.view_all')) $this->db->where('t.user_id',$userId);
         if ($disposalRequests!==null) $this->db->where('t.request_id IN ('.$disposalRequests.')',null,false);
-        if ($module==='files' && !$this->ctx->can('files.approve') && !$this->ctx->can('files.view_all')) $this->db->where('t.uploaded_by',$id);
-        if ($module==='notifications') $this->db->where('t.user_id',$id);
+        if ($module==='files' && !$this->ctx->can('files.approve') && !$this->ctx->can('files.view_all')) $this->db->where('t.uploaded_by',$userId);
+        if ($module==='notifications') $this->db->where('t.user_id',$userId);
         return $definition;
     }
     private function search(
@@ -216,7 +240,7 @@ class Read_model extends Repository_model
         string $kind,
         ?int $id
     ): ?string {
-        if (!$id) {
+        if (!$userId) {
             return null;
         }
 
@@ -282,7 +306,7 @@ class Read_model extends Repository_model
                 false
             )
             ->from($table)
-            ->where('id', $id)
+            ->where('id', $userId)
             ->limit(1);
 
         $row = $this->first();
@@ -640,52 +664,52 @@ class Read_model extends Repository_model
         return $row;
     }
 
-    public function detail(string $module,int $id): array
+    public function detail(string $module,int $userId): array
     {
         $this->scope($module);
         if ($module==='sequences') { $this->db->reset_query(); throw new Problem('Sequences are read-only counters.'); }
-        $this->db->select('t.*')->where('t.id',$id)->limit(1);
+        $this->db->select('t.*')->where('t.id',$userId)->limit(1);
         $row=$this->first() ?? throw new Problem('Record not found or unavailable to this account.',404);
         $related=[];
         if (in_array($module,['softcopy','hardcopy'],true)) {
-            $content=(new Document_service($this->ctx))->canRead($module,$id);
+            $content=(new Document_service($this->ctx))->canRead($module,$userId);
             if ($content) {
-                $this->db->reset_query()->from('files')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
+                $this->db->reset_query()->from('files')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
                 $related['files']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             }
             if ($module==='softcopy') {
-                $this->db->reset_query()->select('r.*')->from('softcopy_revisions r')->where('r.document_id',$id)->order_by('r.revision_number','DESC');
+                $this->db->reset_query()->select('r.*')->from('softcopy_revisions r')->where('r.document_id',$userId)->order_by('r.revision_number','DESC');
                 $related['revisions']=$this->results();
                 foreach($related['revisions'] as &$revision) $revision['revision_status']=(int)$revision['id']===(int)$row['current_revision_id']?'current':'historical'; unset($revision);
                 if ($content) {
-                    $this->db->reset_query()->select('a.*')->from('revision_artifacts a')->join('softcopy_revisions r','r.id = a.revision_id')->where('r.document_id',$id)->order_by('a.id','DESC');
+                    $this->db->reset_query()->select('a.*')->from('revision_artifacts a')->join('softcopy_revisions r','r.id = a.revision_id')->where('r.document_id',$userId)->order_by('a.id','DESC');
                     $related['artifacts']=$this->results();
                 }
             }
-            $this->db->reset_query()->from('disposals')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
+            $this->db->reset_query()->from('disposals')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
             $related['disposals']=array_map(fn(array $row)=>$this->safe($row),$this->results());
-            $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
+            $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
             $related['status_history']=$this->results();
             $related['can_read_files']=$content;
         }
         if (in_array($module,['requests','my_requests','my_tasks'],true)) {
-            $this->db->reset_query()->from('workflow_steps')->where('request_id',$id)->order_by('id');
+            $this->db->reset_query()->from('workflow_steps')->where('request_id',$userId)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
-            $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id',$id)->order_by('h.id');
+            $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id',$userId)->order_by('h.id');
             $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             if ($row['workflow_version_id']) {
                 $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
                 $related['workflow_version']=$this->first();
             } else $related['workflow_version']=null;
-            $this->db->reset_query()->select('id')->from('transfers')->where('request_id',$id)->limit(1);
+            $this->db->reset_query()->select('id')->from('transfers')->where('request_id',$userId)->limit(1);
             $related['transfer']=$this->first();
         }
         if ($module==='workflows') {
-            $this->db->reset_query()->from('workflow_versions')->where('workflow_id',$id)->order_by('version_number','DESC');
+            $this->db->reset_query()->from('workflow_versions')->where('workflow_id',$userId)->order_by('version_number','DESC');
             $related['versions']=array_map(fn(array $row)=>$this->safe($row),$this->results());
         }
         if ($module==='roles') {
-            $this->db->reset_query()->select('permission_id')->from('role_permissions')->where('role_id',$id);
+            $this->db->reset_query()->select('permission_id')->from('role_permissions')->where('role_id',$userId);
             $related['permission_ids']=array_map('intval',array_column($this->results(),'permission_id'));
             if ($this->ctx->can('roles.edit')) {
                 $this->db->reset_query()->select('id,name,module_label,action_label')->from('permissions')->order_by('module_key')->order_by('action_key');
@@ -719,11 +743,11 @@ class Read_model extends Repository_model
             $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from($table)->group_by('status');
             $result[$module]=$this->results();
         }
-        $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from('requests')->where('requested_by',$id)->group_by('status');
+        $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from('requests')->where('requested_by',$userId)->group_by('status');
         $result['my_requests']=$this->results();
-        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('notifications')->where('user_id',$id)->where('read_at',null);
+        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('notifications')->where('user_id',$userId)->where('read_at',null);
         $result['unread_notifications']=(int)$this->first()['n'];
-        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('transfers')->where('recipient_id',$id)->where('status','pending_recipient_acceptance');
+        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('transfers')->where('recipient_id',$userId)->where('status','pending_recipient_acceptance');
         $result['pending_receipts']=(int)$this->first()['n'];
         return $result;
     }
