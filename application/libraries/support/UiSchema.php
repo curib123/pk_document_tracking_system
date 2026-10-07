@@ -48,6 +48,32 @@ final class UiSchema
             array $fields = [],
             ?string $permission = null
         ) use (&$modules): void {
+            $groups = [
+                'softcopy' => 'System Documents',
+                'hardcopy' => 'System Documents',
+                'my_requests' => 'Requests',
+                'my_tasks' => 'Requests',
+                'requests' => 'Requests',
+                'transfers' => 'Requests',
+                'access' => 'Requests',
+                'assignments' => 'Requests',
+                'disposals' => 'Requests',
+                'workflows' => 'Administration',
+                'users' => 'Administration',
+                'roles' => 'Administration',
+                'permissions' => 'Administration',
+                'areas' => 'Document Setup',
+                'specifics' => 'Document Setup',
+                'assets' => 'Document Setup',
+                'locations' => 'Document Setup',
+                'categories' => 'Document Setup',
+                'notifications' => 'Account',
+                'audit' => 'Administration',
+                'history' => 'Administration',
+                'sequences' => 'Administration',
+                'settings' => 'Administration',
+            ];
+
             $modules[$key] = [
                 'key' => $key,
                 'label' => $label,
@@ -57,6 +83,10 @@ final class UiSchema
                 'permission' =>
                     $permission ??
                     $key . '.view',
+                'navigation_group' =>
+                    $groups[$key] ?? 'Other',
+                'navigation_hidden' =>
+                    in_array($key, ['files', 'requests'], true),
             ];
         };
 
@@ -522,17 +552,40 @@ final class UiSchema
 
         return [
             $field('title'),
-            ...self::physicalFields(),
             $field(
-                'holder_id',
+                'location_id',
                 'lookup',
                 true,
-                'users'
+                'locations'
             ),
             $field(
                 'sequence_number',
                 'text',
                 false
+            ),
+            $field(
+                'asset_id',
+                'lookup',
+                false,
+                'assets'
+            ),
+            $field(
+                'specific_id',
+                'lookup',
+                false,
+                'specifics'
+            ),
+            $field(
+                'area_id',
+                'lookup',
+                false,
+                'areas'
+            ),
+            $field(
+                'holder_id',
+                'lookup',
+                false,
+                'users'
             ),
             $field(
                 'retention_enabled',
@@ -620,7 +673,35 @@ final class UiSchema
                     'hardcopy'
                 ),
             'transfer' => [
-                ...self::physicalFields(),
+                $field(
+                    'location_id',
+                    'lookup',
+                    true,
+                    'locations'
+                ),
+                $field(
+                    'sequence_number',
+                    'text',
+                    false
+                ),
+                $field(
+                    'asset_id',
+                    'lookup',
+                    false,
+                    'assets'
+                ),
+                $field(
+                    'specific_id',
+                    'lookup',
+                    false,
+                    'specifics'
+                ),
+                $field(
+                    'area_id',
+                    'lookup',
+                    false,
+                    'areas'
+                ),
                 $field(
                     'recipient_id',
                     'lookup',
@@ -629,11 +710,6 @@ final class UiSchema
                 ),
                 $field(
                     'document_copy_number'
-                ),
-                $field(
-                    'sequence_number',
-                    'text',
-                    false
                 ),
                 $reason,
             ],
