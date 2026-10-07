@@ -70,7 +70,7 @@ class Read_model extends Repository_model
         $this->scope($module); $this->search($definition,$request['q']);
         $select=$module==='users'?'t.id,t.username,t.first_name,t.middle_name,t.last_name,t.position_title,t.role_id,t.leader_id,t.require_password_change,t.active,t.version,t.created_at,t.updated_at':'t.*';
         $this->db->select($select)->order_by('t.'.$request['sort'],$request['direction'])->limit($request['limit'],$request['offset']);
-        $rows=array_map($this->safe(...),$this->results());
+        $rows=array_map(fn(array $row)=>$this->safe($row),$this->results());
         if ($module==='access') foreach($rows as &$row) if ($row['status']==='access_granted' && strtotime($row['expires_at'])<time()) $row['status']='expired'; unset($row);
         return Datatable_service::payload($rows,$unfiltered,$filtered,$request);
     }
@@ -93,7 +93,7 @@ class Read_model extends Repository_model
             $content=(new Document_service($this->ctx))->canRead($module,$id);
             if ($content) {
                 $this->db->reset_query()->from('files')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
-                $related['files']=array_map($this->safe(...),$this->results());
+                $related['files']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             }
             if ($module==='softcopy') {
                 $this->db->reset_query()->select('r.*')->from('softcopy_revisions r')->where('r.document_id',$id)->order_by('r.revision_number','DESC');
@@ -105,7 +105,7 @@ class Read_model extends Repository_model
                 }
             }
             $this->db->reset_query()->from('disposals')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
-            $related['disposals']=array_map($this->safe(...),$this->results());
+            $related['disposals']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id',$id)->order_by('id','DESC');
             $related['status_history']=$this->results();
             $this->db->reset_query()->from('document_approvers')->where('domain',$module)->where('document_id',$id)->limit(1);
@@ -114,15 +114,15 @@ class Read_model extends Repository_model
         }
         if (in_array($module,['requests','my_requests','my_tasks'],true)) {
             $this->db->reset_query()->from('workflow_steps')->where('request_id',$id)->order_by('id');
-            $related['steps']=array_map($this->safe(...),$this->results());
+            $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->from('workflow_history')->where('request_id',$id)->order_by('id');
-            $related['history']=array_map($this->safe(...),$this->results());
+            $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->select('id')->from('transfers')->where('request_id',$id)->limit(1);
             $related['transfer']=$this->first();
         }
         if ($module==='workflows') {
             $this->db->reset_query()->from('workflow_versions')->where('workflow_id',$id)->order_by('version_number','DESC');
-            $related['versions']=array_map($this->safe(...),$this->results());
+            $related['versions']=array_map(fn(array $row)=>$this->safe($row),$this->results());
         }
         if ($module==='roles') {
             $this->db->reset_query()->select('permission_id')->from('role_permissions')->where('role_id',$id);
