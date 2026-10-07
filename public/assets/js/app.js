@@ -356,6 +356,7 @@ async function dashboard() {
   }
 }
 
+// Ari ta mag-build sa actions per module para one place ra ang rules sa buttons.
 function addModuleActions(module, controls) {
   const isDocumentModule =
     ['softcopy', 'hardcopy'].includes(
@@ -457,6 +458,7 @@ function addModuleActions(module, controls) {
   }
 }
 
+// Search first, filters next, table dayon, then pagination sa ubos para klaro ang flow.
 async function selectModule(module) {
   currentModule = module;
   page = 1;
@@ -841,6 +843,7 @@ function directDocument(
   );
 }
 
+// Diri ta mag-sync sa button preset para sakto gyud ang request type pag-open sa modal.
 function requestForm(
   existing = null,
   preset = {},
@@ -877,6 +880,7 @@ function requestForm(
     : allowedTypes[0] ||
       'softcopy_create';
 
+  // Specific action buttons are locked; generic New Request remains editable.
   const lockedPreset = !!presetType;
 
   const fixedDomainFor = requestType => {
