@@ -30,14 +30,14 @@ export async function mountFields(container, fields, values, api, { disabled = [
       search.disabled = disabled.includes(name); read = () => input.value ? Number(input.value) : null;
     } else if (type === 'upload') {
       input = el('input', { id, type: 'file', name, required: required && !value, accept: '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg' });
-      const hint = el('small', { role: 'status' }, value ? `Saved private upload #${value}. Select a replacement only when needed.` : 'Select a document file. Upload occurs when this form is saved.');
+      const hint = el('small', { role: 'status' }, value ? 'A private upload is already saved. Select a replacement only when needed.' : 'Select a document file. Upload occurs when this form is saved.');
       let uploadedId = value ? Number(value) : null; let uploadedFile;
       read = async () => {
         const selected = input.files[0];
         if (selected && selected !== uploadedFile) {
           hint.textContent = 'Uploading…'; const form = new FormData(); form.append('file', selected);
           const result = await api.request('files.upload', form, true); uploadedId = result.id; uploadedFile = selected;
-          hint.textContent = `Private upload #${uploadedId} saved. It will be linked when the form succeeds.`;
+          hint.textContent = 'Private upload saved. It will be linked when the form succeeds.';
           input.required = false;
         }
         if (required && !uploadedId) throw new Error(`Select a file for ${label}.`);
