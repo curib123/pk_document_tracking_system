@@ -1,7 +1,7 @@
 <?php
 require_once dirname(__DIR__).'/application/bootstrap.php';
 define('ENVIRONMENT','development');
-// CI3 emits legacy dynamic-property deprecations on PHP 8.2+. Other errors are logged privately.
+// Keep browser errors private; application failures are logged for local diagnosis.
 error_reporting(E_ALL & ~E_DEPRECATED & ~E_STRICT); ini_set('display_errors','0'); ini_set('log_errors','1');
 $system=PK_ROOT.'/vendor/codeigniter/framework/system';
 if (!is_file($system.'/core/CodeIgniter.php')) {
