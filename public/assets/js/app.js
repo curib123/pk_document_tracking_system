@@ -36,6 +36,22 @@ let listGeneration = 0;
 let statusFilter = '';
 let layout = 'table';
 
+function cloneTemplate(id) {
+  const template = document.querySelector(
+    '#' + id
+  );
+
+  if (!template) {
+    throw new Error(
+      'Missing view template: ' + id
+    );
+  }
+
+  return template.content
+    .firstElementChild
+    .cloneNode(true);
+}
+
 const SINGULAR_NAMES = {
   users: 'user',
   roles: 'role',
@@ -363,12 +379,13 @@ async function boot() {
         module.navigation_group || 'Other';
 
       if (!navigationGroups.has(groupName)) {
-        const group = el(
-          'details',
-          {},
-          el('summary', {}, groupName),
-          el('div', { 'data-navigation-items': groupName })
+        const group = cloneTemplate(
+          'navigation-group-template'
         );
+
+        group.querySelector(
+          '[data-navigation-title]'
+        ).textContent = groupName;
 
         navigationGroups.set(
           groupName,
@@ -576,9 +593,20 @@ async function selectModule(module) {
   statusFilter = '';
   layout = 'table';
 
-  content.replaceChildren(
-    el('h2', {}, module.label)
+  const pageShell = cloneTemplate(
+    'module-page-template'
   );
+
+  pageShell.querySelector(
+    '[data-module-title]'
+  ).textContent = module.label;
+
+  const pageContent =
+    pageShell.querySelector(
+      '[data-module-content]'
+    );
+
+  content.replaceChildren(pageShell);
 
   const controls = el('div');
   addModuleActions(module, controls);
@@ -782,7 +810,7 @@ async function selectModule(module) {
     el('span', { id: 'pagination' })
   );
 
-  content.append(
+  pageContent.append(
     controls,
     searchForm,
     filters,
@@ -804,10 +832,17 @@ async function selectModule(module) {
 }
 
 function recordCard(module, row, actions) {
-  const card = el(
-    'article',
-    {},
-    el('h3', {}, recordLabel(module.key, row))
+  const card = cloneTemplate(
+    'record-card-template'
+  );
+
+  card.querySelector(
+    '[data-record-title]'
+  ).textContent =
+    recordLabel(module.key, row);
+
+  const fields = card.querySelector(
+    '[data-record-fields]'
   );
 
   for (const column of module.columns) {
@@ -820,7 +855,7 @@ function recordCard(module, row, actions) {
 
     const value = row[column];
 
-    card.append(
+    fields.append(
       el(
         'p',
         {},
@@ -831,7 +866,9 @@ function recordCard(module, row, actions) {
   }
 
   if (actions) {
-    card.append(actions(row));
+    card.querySelector(
+      '[data-record-actions]'
+    ).append(actions(row));
   }
 
   return card;
