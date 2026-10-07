@@ -1,6 +1,6 @@
 export class ApiClient {
-  constructor(endpoint) {
-    this.endpoint = endpoint; this.csrf = '';
+  constructor() {
+    this.csrf = '';
     this.endpointRoutes = JSON.parse(document.querySelector('meta[name=endpoint-routes]')?.content || '{}');
     this.apiRoot = document.querySelector('meta[name=api-root]')?.content || '';
   }
@@ -8,9 +8,8 @@ export class ApiClient {
     const selector = ['list','detail','catalog.save','catalog.delete'].includes(operation) ? 'module' : operation === 'documents.direct' ? 'domain' : null;
     const key = operation + (selector ? `@${data[selector]}` : '');
     const path = this.endpointRoutes[key];
-    if (this.apiRoot && !path) throw new Error('Unknown application endpoint. Refresh the page.');
-    const url = path ? new URL(path, this.apiRoot) : new URL(this.endpoint, location.href);
-    if (!path) url.searchParams.set('op', operation);
+    if (!this.apiRoot || !path) throw new Error('Unknown application endpoint. Refresh the page.');
+    const url = new URL(path, this.apiRoot);
     if (includeQuery && !(data instanceof FormData)) {
       for (const [key, value] of Object.entries(data)) if (value !== null && value !== undefined) url.searchParams.set(key, String(value));
     }
