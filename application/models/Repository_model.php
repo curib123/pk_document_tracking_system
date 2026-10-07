@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database};
 /** Shared mechanics; each domain model owns its actual Query Builder queries. */
 abstract class Repository_model extends CI_Model
 {
+    // Shared DB mechanics ra ni; actual queries naa sa specific model para dili maglibog.
     protected Context $ctx;
     protected Database $store;
     public CI_DB_query_builder $db;
