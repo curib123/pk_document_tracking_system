@@ -57,9 +57,67 @@ $db->transaction(function() use($db,$ctx) {
     check(count($db->all("SELECT * FROM status_history WHERE domain='hardcopy' AND document_id=?",[$hard['id']]))>=2,'document status history retained');
     check(count($db->all('SELECT * FROM notifications WHERE user_id=?',[$staff['id']]))>0,'notifications created');
     $workflowService=new Workflow_service($ctx);
+    $adminRole=(int)$db->one("SELECT role_id FROM users WHERE id=?",[$adminId])['role_id'];
+
+    // First publication must become default directly, without unrelated sequence writes.
+    $freshWorkflowId=$db->insert('workflows',[
+        'workflow_key'=>'test_first_publish_'.bin2hex(random_bytes(4)),
+        'name'=>'First publish regression',
+        'description'=>'Regression coverage for first usable workflow publication.',
+        'request_type'=>'test_first_publish_'.bin2hex(random_bytes(3)),
+        'created_by'=>$adminId,
+    ]);
+    $firstDraftResult=$workflowService->version([
+        'workflow_id'=>$freshWorkflowId,
+        'graph'=>['steps'=>[
+            ['name'=>'Administrator review','approver'=>['type'=>'role','value'=>$adminRole]]
+        ]]
+    ]);
+    $firstDraft=$db->row('workflow_versions',(int)$firstDraftResult['id']);
+    $workflowService->publish([
+        'id'=>(int)$firstDraft['id'],
+        'version'=>(int)$firstDraft['version'],
+        'reason'=>'Publish first usable workflow'
+    ]);
+    $firstPublished=$db->row('workflow_versions',(int)$firstDraft['id']);
+    $freshWorkflow=$db->row('workflows',$freshWorkflowId);
+    check(
+        $firstPublished['status']==='published'
+        && (int)$firstPublished['is_default']===1
+        && (int)$freshWorkflow['active']===1,
+        'first workflow publish becomes default without sequence side effects'
+    );
+
+    $removableDraftResult=$workflowService->version([
+        'workflow_id'=>$freshWorkflowId,
+        'graph'=>['steps'=>[
+            ['name'=>'Second administrator review','approver'=>['type'=>'role','value'=>$adminRole]]
+        ]]
+    ]);
+    $removableDraft=$db->row('workflow_versions',(int)$removableDraftResult['id']);
+    $workflowService->deleteVersion([
+        'id'=>(int)$removableDraft['id'],
+        'version'=>(int)$removableDraft['version'],
+        'reason'=>'Discard test draft'
+    ]);
+    check(
+        $db->one(
+            'SELECT id FROM workflow_versions WHERE id=?',
+            [(int)$removableDraft['id']]
+        )===null,
+        'unpublished workflow draft can be removed'
+    );
+    denied(
+        fn()=>$workflowService->deleteVersion([
+            'id'=>(int)$firstPublished['id'],
+            'version'=>(int)$firstPublished['version'],
+            'reason'=>'Must not delete published version'
+        ]),
+        'published workflow version cannot be removed'
+    );
+
     $transferWorkflow=$db->one("SELECT * FROM workflows WHERE request_type='transfer' AND active=1 LIMIT 1");
     $oldDefault=$db->one("SELECT * FROM workflow_versions WHERE workflow_id=? AND is_default=1 LIMIT 1",[$transferWorkflow['id']]);
-    $adminRole=(int)$db->one("SELECT role_id FROM users WHERE id=?",[$adminId])['role_id'];
     $draftResult=$workflowService->version(['workflow_id'=>(int)$transferWorkflow['id'],'graph'=>['steps'=>[
         ['name'=>'Transfer manager review','approver'=>['type'=>'role','value'=>$adminRole]]
     ]]]);
