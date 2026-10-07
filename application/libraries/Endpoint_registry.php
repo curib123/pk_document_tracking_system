@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\Problem;
 class Endpoint_registry
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     private array $definitions;
     public function __construct() { $this->definitions=require PK_ROOT.'/application/config/endpoints.php'; }
     public function byPath(string $path): array
