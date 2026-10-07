@@ -221,11 +221,23 @@ class Document_service
             $id
         );
 
+        $mayChooseHolder =
+            $this->ctx->can('hardcopy.direct')
+            || $this->ctx->can('requests.manage');
+
+        $defaultHolder =
+            $old['holder_id']
+            ?? $ownerId;
+
         $holderId = Rules::id(
             [
                 'holder_id' =>
-                    $input['holder_id']
-                    ?? ($old['holder_id'] ?? $ownerId),
+                    $mayChooseHolder
+                        ? (
+                            $input['holder_id']
+                            ?? $defaultHolder
+                        )
+                        : $defaultHolder,
             ],
             'holder_id'
         );
