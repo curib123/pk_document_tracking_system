@@ -431,13 +431,7 @@ class Catalog_service
             );
         }
 
-        if (
-            in_array(
-                $module,
-                ['assets', 'locations'],
-                true
-            )
-        ) {
+        if ($module === 'assets') {
             $data['specific_id'] = Rules::id(
                 $input,
                 'specific_id'
@@ -453,8 +447,7 @@ class Catalog_service
             $data = array_merge(
                 $data,
                 $this->normalizeLocation(
-                    $input,
-                    $data['specific_id']
+                    $input
                 )
             );
         }
@@ -482,26 +475,80 @@ class Catalog_service
     }
 
     private function normalizeLocation(
-        array $input,
-        int $specificId
+        array $input
     ): array {
+        // Backward location chain: Location -> Asset -> Specific -> Area.
+        // Missing levels are valid; deeper selections fill their known parents.
         $assetId = Rules::id(
             $input,
-            'asset_id'
+            'asset_id',
+            false
         );
 
-        $asset = $this->ctx->active(
-            'assets',
-            $assetId
+        $specificId = Rules::id(
+            $input,
+            'specific_id',
+            false
         );
 
-        if ((int) $asset['specific_id'] !== $specificId) {
-            throw new Problem(
-                'Asset and location must belong to the same Specific.'
+        $areaId = Rules::id(
+            $input,
+            'area_id',
+            false
+        );
+
+        if ($assetId !== null) {
+            $asset = $this->ctx->active(
+                'assets',
+                $assetId
+            );
+
+            $assetSpecificId =
+                (int) $asset['specific_id'];
+
+            if (
+                $specificId !== null &&
+                $specificId !== $assetSpecificId
+            ) {
+                throw new Problem(
+                    'Selected Asset Number does not belong to the selected Specific.'
+                );
+            }
+
+            $specificId = $assetSpecificId;
+        }
+
+        if ($specificId !== null) {
+            $specific = $this->ctx->active(
+                'specifics',
+                $specificId
+            );
+
+            $specificAreaId =
+                (int) $specific['area_id'];
+
+            if (
+                $areaId !== null &&
+                $areaId !== $specificAreaId
+            ) {
+                throw new Problem(
+                    'Selected Specific does not belong to the selected Area.'
+                );
+            }
+
+            $areaId = $specificAreaId;
+        }
+
+        if ($areaId !== null) {
+            $this->ctx->active(
+                'areas',
+                $areaId
             );
         }
 
         return [
+            'area_id' => $areaId,
+            'specific_id' => $specificId,
             'asset_id' => $assetId,
             'code' => Rules::text(
                 $input,
