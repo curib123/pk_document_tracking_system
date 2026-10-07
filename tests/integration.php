@@ -5,6 +5,8 @@ use Pk\Core\{Context,Database,Problem};
 if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', '_test')) { fwrite(STDERR,"Use PK_TEST_DB=1 and a dedicated database whose name ends in _test.\n"); exit(2); }
 if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
+$schemaVersion=(int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version'];
+if ($schemaVersion !== 4) throw new RuntimeException('Expected schema version 4, got '.$schemaVersion);
 if (!$admin) throw new RuntimeException('Run the installer first.');
 $ctx->identify((int)$admin['id']);
 $checks=0;
@@ -12,6 +14,26 @@ function check(bool $condition,string $name): void { global $checks; if (!$condi
 function denied(callable $fn,string $name): void { global $db; $db->query('SAVEPOINT expected_denial'); try { $fn(); } catch(Problem $e) { $db->query('ROLLBACK TO SAVEPOINT expected_denial'); $db->query('RELEASE SAVEPOINT expected_denial'); check(true,$name); return; } throw new RuntimeException('Expected denial: '.$name); }
 $db->begin();
 $db->transaction(function() use($db,$ctx) {
+    check(
+        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===4,
+        'schema version 4 is installed'
+    );
+
+    foreach ([
+        ['specifics','specific_lookup'],
+        ['assets','asset_lookup'],
+        ['locations','location_hierarchy'],
+        ['workflow_versions','draft_workflow'],
+        ['requests','request_workflow_version'],
+        ['workflow_steps','request_steps'],
+        ['workflow_history','request_history'],
+    ] as [$table,$index]) {
+        $found=$db->one(
+            'SELECT 1 AS found FROM information_schema.statistics WHERE table_schema=? AND table_name=? AND index_name=? LIMIT 1',
+            [$db->builder->database,$table,$index]
+        );
+        check((bool)$found,'schema index '.$index.' exists');
+    }
     $catalog=new Catalog_service($ctx);
     $staffRole=(int)$db->one("SELECT id FROM roles WHERE name='Staff'")['id'];
     $staff=$catalog->save('users',['username'=>'staff_'.bin2hex(random_bytes(3)),'first_name'=>'Test','last_name'=>'Staff','position_title'=>'Clerk','role_id'=>$staffRole]);
