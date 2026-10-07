@@ -36,5 +36,9 @@ new issues
 
 #12  [Not Fixed] fixed html is app.js which is not recommended make sure its in view as skeletal html tags no design ,each components that is centralized in view to easy edit design and track it easily
 
-#13  [Not Fixed] 
+#13  [Not Fixed] Audit log must be json file to save not in table to make more faster and dont consume to much storage in database
+
+#14 [Not Fixed] Workflow history there no step name in user requester so just put the requester action this text.
+
+#15 [Not Fixed] 
  
