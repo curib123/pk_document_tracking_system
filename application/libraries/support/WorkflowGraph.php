@@ -10,11 +10,11 @@ final class WorkflowGraph
         return ['steps'=>[]];
     }
 
-    public static function forRole(int $roleId,string $name='Administrator Approval'): array
+    public static function forRole(int $roleId,string $name='Administrator Approval',string $roleLabel='Administrator'): array
     {
         return self::validate([
             'steps'=>[
-                ['name'=>$name,'approver'=>['type'=>'role','value'=>$roleId]]
+                ['name'=>$name,'approver'=>['type'=>'role','value'=>$roleId,'label'=>$roleLabel]]
             ]
         ],true);
     }
