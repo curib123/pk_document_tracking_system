@@ -89,11 +89,12 @@ export function inspect(value, heading = 'Details') {
   details.append(el('pre', {}, JSON.stringify(displayValue(value), null, 2))); return details;
 }
 export function table(columns, rows, actions) {
+  columns = columns.filter(column => !hiddenDisplayKey(column));
   const head = el('tr', {}, columns.map(column => el('th', { scope: 'col' }, labelOf(column))));
   if (actions) head.append(el('th', { scope: 'col' }, 'Actions'));
   const body = el('tbody');
   for (const row of rows) {
-    const tr = el('tr', {}, columns.map(column => el('td', {}, typeof row[column] === 'object' && row[column] !== null ? JSON.stringify(row[column]) : row[column] ?? '—')));
+    const tr = el('tr', {}, columns.map(column => { const value=displayValue(row[column]); return el('td', {}, typeof value === 'object' && value !== null ? JSON.stringify(value) : value ?? '—'); }));
     if (actions) tr.append(el('td', {}, actions(row))); body.append(tr);
   }
   if (!rows.length) body.append(el('tr', {}, el('td', { colSpan: columns.length + (actions ? 1 : 0) }, 'No records found.')));
