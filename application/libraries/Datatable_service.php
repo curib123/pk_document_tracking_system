@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\Rules;
 class Datatable_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     public static function normalize(array $query,array $columns): array
     {
         $integer=static fn($value,$fallback)=>filter_var($value,FILTER_VALIDATE_INT)!==false?(int)$value:$fallback;
