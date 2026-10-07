@@ -10,6 +10,7 @@ use Pk\Core\{
 
 class Workflow_service
 {
+    // Ari ang approval flow: draft -> publish -> default -> pinned request snapshot.
     private Context $ctx;
 
     public function __construct(Context|array|null $options = null)
