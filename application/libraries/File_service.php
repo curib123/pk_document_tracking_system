@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Problem,Rules};
 class File_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options);}
     private function directory(): string { $path=PK_ROOT.'/storage/files'; if (!is_dir($path) && !mkdir($path,0700,true) && !is_dir($path)) throw new Problem('Private storage is not writable.',503); return $path; }
