@@ -53,111 +53,593 @@ class Read_model extends Repository_model
         if ($module==='notifications') $this->db->where('t.user_id',$id);
         return $definition;
     }
-    private function search(array $definition,string $search): void
-    {
-        if ($search==='') return;
+    private function search(
+        array $definition,
+        string $search
+    ): void {
+        if ($search === '') {
+            return;
+        }
+
         $this->db->group_start();
-        foreach($definition['columns'] as $column) $this->db->or_like('t.'.$column,$search);
+
+        foreach ($definition['columns'] as $column) {
+            $this->db->or_like(
+                't.' . $column,
+                $search
+            );
+        }
+
         $this->db->group_end();
     }
-    public function listing(string $module,array $query): array
-    {
-        $definition=$this->scope($module);
-        $request=Datatable_service::normalize($query,$definition['columns']);
-        $this->db->select('COUNT(*) AS n',false); $unfiltered=(int)$this->first()['n'];
-        $this->scope($module); $this->search($definition,$request['q']);
-        $this->db->select('COUNT(*) AS n',false); $filtered=(int)$this->first()['n'];
-        $this->scope($module); $this->search($definition,$request['q']);
-        $select=$module==='users'?'t.id,t.username,t.first_name,t.middle_name,t.last_name,t.position_title,t.role_id,t.leader_id,t.require_password_change,t.active,t.version,t.created_at,t.updated_at':'t.*';
-        $this->db->select($select)->order_by('t.'.$request['sort'],$request['direction'])->limit($request['limit'],$request['offset']);
-        $rows=array_map(fn(array $row)=>$this->safe($row),$this->results());
-        if ($module==='access') foreach($rows as &$row) if ($row['status']==='access_granted' && strtotime($row['expires_at'])<time()) $row['status']='expired'; unset($row);
-        return Datatable_service::payload($rows,$unfiltered,$filtered,$request);
+
+    public function listing(
+        string $module,
+        array $query
+    ): array {
+        $definition = $this->scope($module);
+
+        $request = Datatable_service::normalize(
+            $query,
+            $definition['columns']
+        );
+
+        $this->db->select(
+            'COUNT(*) AS n',
+            false
+        );
+
+        $unfiltered =
+            (int) $this->first()['n'];
+
+        $this->scope($module);
+        $this->search(
+            $definition,
+            $request['q']
+        );
+
+        $this->db->select(
+            'COUNT(*) AS n',
+            false
+        );
+
+        $filtered =
+            (int) $this->first()['n'];
+
+        $this->scope($module);
+        $this->search(
+            $definition,
+            $request['q']
+        );
+
+        $select =
+            $module === 'users'
+                ? 't.id,t.username,t.first_name,t.middle_name,t.last_name,t.position_title,t.role_id,t.leader_id,t.require_password_change,t.active,t.version,t.created_at,t.updated_at'
+                : 't.*';
+
+        $this->db
+            ->select($select)
+            ->order_by(
+                't.' . $request['sort'],
+                $request['direction']
+            )
+            ->limit(
+                $request['limit'],
+                $request['offset']
+            );
+
+        $rows = array_map(
+            fn(array $row): array =>
+                $this->safe($row),
+            $this->results()
+        );
+
+        if ($module === 'access') {
+            foreach ($rows as &$row) {
+                $expired =
+                    $row['status'] ===
+                        'access_granted' &&
+                    strtotime(
+                        $row['expires_at']
+                    ) < time();
+
+                if ($expired) {
+                    $row['status'] =
+                        'expired';
+                }
+            }
+
+            unset($row);
+        }
+
+        return Datatable_service::payload(
+            $rows,
+            $unfiltered,
+            $filtered,
+            $request
+        );
     }
+
     private function safe(array $row): array
     {
-        unset($row['password_hash'],$row['session_version'],$row['storage_name']);
-        foreach(['payload','snapshot','result','graph','config','value','origin','destination','candidates','assignment','before_state','after_state','previous_state'] as $key) if (isset($row[$key]) && is_string($row[$key])) {
-            $decoded=json_decode($row[$key],true); if (json_last_error()===JSON_ERROR_NONE) $row[$key]=$decoded;
+        unset(
+            $row['password_hash'],
+            $row['session_version'],
+            $row['storage_name']
+        );
+
+        $jsonFields = [
+            'payload',
+            'snapshot',
+            'result',
+            'graph',
+            'config',
+            'value',
+            'origin',
+            'destination',
+            'candidates',
+            'assignment',
+            'before_state',
+            'after_state',
+            'previous_state',
+        ];
+
+        foreach ($jsonFields as $key) {
+            if (
+                !isset($row[$key]) ||
+                !is_string($row[$key])
+            ) {
+                continue;
+            }
+
+            $decoded = json_decode(
+                $row[$key],
+                true
+            );
+
+            if (
+                json_last_error() ===
+                JSON_ERROR_NONE
+            ) {
+                $row[$key] =
+                    $decoded;
+            }
         }
+
         return $row;
     }
 
-    private function displayLabel(string $kind,?int $id): ?string
-    {
-        if (!$id) return null;
-        $map=[
-            'user'=>['users',"CONCAT(first_name,' ',last_name,' — ',position_title)"],
-            'role'=>['roles','name'],
-            'area'=>['areas','name'],
-            'specific'=>['specifics','name'],
-            'asset'=>['assets','asset_number'],
-            'location'=>['locations',"CONCAT(code,' — ',name)"],
-            'category'=>['categories','name'],
-            'softcopy'=>['softcopy_documents',"CONCAT(document_number,' — ',title)"],
-            'hardcopy'=>['hardcopy_documents','title'],
-            'request'=>['requests','reference'],
-            'file'=>['files','original_name'],
+    /**
+     * Resolve an internal foreign key into a human-readable label.
+     */
+    private function displayLabel(
+        string $kind,
+        ?int $id
+    ): ?string {
+        if (!$id) {
+            return null;
+        }
+
+        $definitions = [
+            'user' => [
+                'users',
+                "CONCAT(first_name,' ',last_name,' — ',position_title)",
+            ],
+            'role' => [
+                'roles',
+                'name',
+            ],
+            'area' => [
+                'areas',
+                'name',
+            ],
+            'specific' => [
+                'specifics',
+                'name',
+            ],
+            'asset' => [
+                'assets',
+                'asset_number',
+            ],
+            'location' => [
+                'locations',
+                "CONCAT(code,' — ',name)",
+            ],
+            'category' => [
+                'categories',
+                'name',
+            ],
+            'softcopy' => [
+                'softcopy_documents',
+                "CONCAT(document_number,' — ',title)",
+            ],
+            'hardcopy' => [
+                'hardcopy_documents',
+                'title',
+            ],
+            'request' => [
+                'requests',
+                'reference',
+            ],
+            'file' => [
+                'files',
+                'original_name',
+            ],
         ];
-        if (!isset($map[$kind])) return null;
-        [$table,$expression]=$map[$kind];
-        $this->db->reset_query()->select($expression.' AS label',false)->from($table)->where('id',$id)->limit(1);
-        $row=$this->first();
-        return $row ? (string)$row['label'] : null;
+
+        if (!isset($definitions[$kind])) {
+            return null;
+        }
+
+        [$table, $expression] =
+            $definitions[$kind];
+
+        $this->db
+            ->reset_query()
+            ->select(
+                $expression .
+                ' AS label',
+                false
+            )
+            ->from($table)
+            ->where('id', $id)
+            ->limit(1);
+
+        $row = $this->first();
+
+        return $row
+            ? (string) $row['label']
+            : null;
     }
 
-    private function withDisplayLabels(string $module,array $row): array
-    {
-        $add=function(string $key,string $kind,string $source) use (&$row): void {
-            $id=isset($row[$source]) && $row[$source]!==null ? (int)$row[$source] : null;
-            $label=$this->displayLabel($kind,$id);
-            if ($label!==null && $label!=='') $row[$key]=$label;
+    /**
+     * Add readable relation names for frontend display.
+     *
+     * Numeric IDs are still returned internally for actions and persistence,
+     * while shared frontend components hide them from the user.
+     */
+    private function withDisplayLabels(
+        string $module,
+        array $row
+    ): array {
+        $add = function (
+            string $key,
+            string $kind,
+            string $source
+        ) use (&$row): void {
+            $id =
+                isset($row[$source]) &&
+                $row[$source] !== null
+                    ? (int) $row[$source]
+                    : null;
+
+            $label =
+                $this->displayLabel(
+                    $kind,
+                    $id
+                );
+
+            if (
+                $label !== null &&
+                $label !== ''
+            ) {
+                $row[$key] = $label;
+            }
         };
 
-        if ($module==='users') { $add('role','role','role_id'); $add('leader','user','leader_id'); }
-        elseif ($module==='specifics') $add('area','area','area_id');
-        elseif ($module==='assets') $add('specific','specific','specific_id');
-        elseif ($module==='locations') { $add('specific','specific','specific_id'); $add('asset','asset','asset_id'); }
-        elseif ($module==='categories') $add('parent_category','category','parent_id');
-        elseif ($module==='softcopy') { $add('category','category','category_id'); $add('creator','user','created_by'); }
-        elseif ($module==='hardcopy') {
-            $add('area','area','area_id'); $add('specific','specific','specific_id'); $add('asset','asset','asset_id');
-            $add('location','location','location_id'); $add('holder','user','holder_id'); $add('creator','user','created_by');
-        } elseif (in_array($module,['requests','my_requests','my_tasks'],true)) {
-            $add('requester','user','requested_by'); $add('softcopy_document','softcopy','softcopy_id'); $add('hardcopy_document','hardcopy','hardcopy_id');
-            if (is_array($row['payload'] ?? null)) {
-                $payload=$row['payload']; $display=[];
-                foreach ([
-                    'area_id'=>['area','area'],'specific_id'=>['specific','specific'],'asset_id'=>['asset','asset'],
-                    'location_id'=>['location','location'],'recipient_id'=>['recipient','user'],'user_id'=>['user','user'],
-                    'holder_id'=>['holder','user'],'category_id'=>['category','category'],'file_id'=>['file','file']
-                ] as $source=>$meta) {
-                    if (!empty($payload[$source])) {
-                        $label=$this->displayLabel($meta[1],(int)$payload[$source]);
-                        if ($label) $display[$meta[0]]=$label;
+        if ($module === 'users') {
+            $add(
+                'role',
+                'role',
+                'role_id'
+            );
+
+            $add(
+                'leader',
+                'user',
+                'leader_id'
+            );
+        } elseif ($module === 'specifics') {
+            $add(
+                'area',
+                'area',
+                'area_id'
+            );
+        } elseif ($module === 'assets') {
+            $add(
+                'specific',
+                'specific',
+                'specific_id'
+            );
+        } elseif ($module === 'locations') {
+            $add(
+                'specific',
+                'specific',
+                'specific_id'
+            );
+
+            $add(
+                'asset',
+                'asset',
+                'asset_id'
+            );
+        } elseif ($module === 'categories') {
+            $add(
+                'parent_category',
+                'category',
+                'parent_id'
+            );
+        } elseif ($module === 'softcopy') {
+            $add(
+                'category',
+                'category',
+                'category_id'
+            );
+
+            $add(
+                'creator',
+                'user',
+                'created_by'
+            );
+        } elseif ($module === 'hardcopy') {
+            foreach (
+                [
+                    ['area', 'area', 'area_id'],
+                    ['specific', 'specific', 'specific_id'],
+                    ['asset', 'asset', 'asset_id'],
+                    ['location', 'location', 'location_id'],
+                    ['holder', 'user', 'holder_id'],
+                    ['creator', 'user', 'created_by'],
+                ]
+                as $relation
+            ) {
+                $add(...$relation);
+            }
+        } elseif (
+            in_array(
+                $module,
+                [
+                    'requests',
+                    'my_requests',
+                    'my_tasks',
+                ],
+                true
+            )
+        ) {
+            $add(
+                'requester',
+                'user',
+                'requested_by'
+            );
+
+            $add(
+                'softcopy_document',
+                'softcopy',
+                'softcopy_id'
+            );
+
+            $add(
+                'hardcopy_document',
+                'hardcopy',
+                'hardcopy_id'
+            );
+
+            if (
+                is_array(
+                    $row['payload'] ??
+                    null
+                )
+            ) {
+                $payload =
+                    $row['payload'];
+
+                $display = [];
+
+                $relations = [
+                    'area_id' => [
+                        'area',
+                        'area',
+                    ],
+                    'specific_id' => [
+                        'specific',
+                        'specific',
+                    ],
+                    'asset_id' => [
+                        'asset',
+                        'asset',
+                    ],
+                    'location_id' => [
+                        'location',
+                        'location',
+                    ],
+                    'recipient_id' => [
+                        'recipient',
+                        'user',
+                    ],
+                    'user_id' => [
+                        'user',
+                        'user',
+                    ],
+                    'holder_id' => [
+                        'holder',
+                        'user',
+                    ],
+                    'category_id' => [
+                        'category',
+                        'category',
+                    ],
+                    'file_id' => [
+                        'file',
+                        'file',
+                    ],
+                ];
+
+                foreach (
+                    $relations
+                    as $source => $meta
+                ) {
+                    if (
+                        empty(
+                            $payload[$source]
+                        )
+                    ) {
+                        continue;
+                    }
+
+                    $label =
+                        $this->displayLabel(
+                            $meta[1],
+                            (int) $payload[
+                                $source
+                            ]
+                        );
+
+                    if ($label) {
+                        $display[$meta[0]] =
+                            $label;
                     }
                 }
-                foreach ($payload as $key=>$value) if (!str_ends_with((string)$key,'_id')) $display[$key]=$value;
-                $row['request_details']=$display;
+
+                foreach (
+                    $payload
+                    as $key => $value
+                ) {
+                    if (
+                        str_ends_with(
+                            (string) $key,
+                            '_id'
+                        )
+                    ) {
+                        continue;
+                    }
+
+                    $display[$key] =
+                        $value;
+                }
+
+                $row['request_details'] =
+                    $display;
             }
-        } elseif ($module==='transfers') {
-            $add('request','request','request_id'); $add('document','hardcopy','hardcopy_id'); $add('current_holder','user','current_holder_id'); $add('recipient','user','recipient_id');
-        } elseif ($module==='access') {
-            $add('request','request','request_id'); $add('user','user','user_id');
-            if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id'); else $add('document','hardcopy','document_id');
-        } elseif ($module==='assignments') {
-            $add('document','softcopy','softcopy_id'); $add('user','user','user_id'); $add('assigned_by_name','user','assigned_by');
-        } elseif ($module==='disposals') {
-            $add('request','request','request_id'); $add('disposed_by_name','user','disposed_by');
-            if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id'); else $add('document','hardcopy','document_id');
-        } elseif ($module==='files') {
-            $add('uploaded_by_name','user','uploaded_by'); $add('approved_by_name','user','approved_by'); $add('rejected_by_name','user','rejected_by');
-            if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id');
-            elseif (($row['domain'] ?? '')==='hardcopy') $add('document','hardcopy','document_id');
-        } elseif ($module==='history') $add('user_name','user','user_id');
+        } elseif ($module === 'transfers') {
+            foreach (
+                [
+                    ['request', 'request', 'request_id'],
+                    ['document', 'hardcopy', 'hardcopy_id'],
+                    ['current_holder', 'user', 'current_holder_id'],
+                    ['recipient', 'user', 'recipient_id'],
+                ]
+                as $relation
+            ) {
+                $add(...$relation);
+            }
+        } elseif ($module === 'access') {
+            $add(
+                'request',
+                'request',
+                'request_id'
+            );
+
+            $add(
+                'user',
+                'user',
+                'user_id'
+            );
+
+            $documentKind =
+                ($row['domain'] ?? '') ===
+                'softcopy'
+                    ? 'softcopy'
+                    : 'hardcopy';
+
+            $add(
+                'document',
+                $documentKind,
+                'document_id'
+            );
+        } elseif ($module === 'assignments') {
+            $add(
+                'document',
+                'softcopy',
+                'softcopy_id'
+            );
+
+            $add(
+                'user',
+                'user',
+                'user_id'
+            );
+
+            $add(
+                'assigned_by_name',
+                'user',
+                'assigned_by'
+            );
+        } elseif ($module === 'disposals') {
+            $add(
+                'request',
+                'request',
+                'request_id'
+            );
+
+            $add(
+                'disposed_by_name',
+                'user',
+                'disposed_by'
+            );
+
+            $documentKind =
+                ($row['domain'] ?? '') ===
+                'softcopy'
+                    ? 'softcopy'
+                    : 'hardcopy';
+
+            $add(
+                'document',
+                $documentKind,
+                'document_id'
+            );
+        } elseif ($module === 'files') {
+            foreach (
+                [
+                    ['uploaded_by_name', 'user', 'uploaded_by'],
+                    ['approved_by_name', 'user', 'approved_by'],
+                    ['rejected_by_name', 'user', 'rejected_by'],
+                ]
+                as $relation
+            ) {
+                $add(...$relation);
+            }
+
+            if (
+                ($row['domain'] ?? '') ===
+                'softcopy'
+            ) {
+                $add(
+                    'document',
+                    'softcopy',
+                    'document_id'
+                );
+            } elseif (
+                ($row['domain'] ?? '') ===
+                'hardcopy'
+            ) {
+                $add(
+                    'document',
+                    'hardcopy',
+                    'document_id'
+                );
+            }
+        } elseif ($module === 'history') {
+            $add(
+                'user_name',
+                'user',
+                'user_id'
+            );
+        }
 
         return $row;
     }
+
     public function detail(string $module,int $id): array
     {
         $this->scope($module);
