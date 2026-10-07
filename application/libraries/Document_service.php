@@ -106,24 +106,5 @@ class Document_service
     {
         if ($this->ctx->model(\Document_model::class)->open_transfer([$id])) throw new Problem('Finish or cancel the open physical transfer first.');
     }
-    public function configureApprovers(array $input): array
-    {
-        $this->ctx->require('workflows.edit'); $domain=Rules::choice($input,'domain',['softcopy','hardcopy']); $id=Rules::id($input);
-        $this->ctx->model(\Document_model::class)->lock(self::table($domain),$id,Rules::id($input,'version'));
-        $config=Rules::json($input['config'] ?? []);
-        if (count($config)>30) throw new Problem('Too many document approvers.');
-        $saved=[];
-        foreach($config as $key=>$userId) {
-            if (!preg_match('/^[a-z][a-z0-9_]{0,49}$/',(string)$key)) throw new Problem('Invalid approver key.');
-            $user=$this->ctx->active('users',Rules::id(['user_id'=>$userId],'user_id'));
-            $saved[$key]=['user_id'=>(int)$user['id'],'name'=>Context::name($user),'position'=>$user['position_title']];
-        }
-        $old=$this->ctx->model(\Document_model::class)->approver_configuration([$domain,$id]);
-        $data=['config'=>Context::json($saved),'configured_by'=>$this->ctx->id()];
-        if ($old) $this->ctx->model(\Document_model::class)->update('document_approvers',(int)$old['id'],$data);
-        else $this->ctx->model(\Document_model::class)->insert('document_approvers',array_merge($data,['domain'=>$domain,'document_id'=>$id]));
-        $this->ctx->model(\Document_model::class)->update(self::table($domain),$id,['title'=>$this->ctx->model(\Document_model::class)->row(self::table($domain),$id)['title']]);
-        $this->ctx->audit($domain,'approvers_configured',$id,$old,$saved,Rules::text($input,'reason',2000));
-        return ['message'=>'Approvers saved. Submitted requests retain their original configuration.'];
-    }
+
 }
