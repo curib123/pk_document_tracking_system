@@ -6,7 +6,8 @@ final class Context
     public ?array $user = null;
     private array $models = [];
     private array $permissions = [];
-    public function __construct(public readonly Database $db) {}
+    public Database $db;
+    public function __construct(Database $db) { $this->db=$db; }
     /** A single context owns every model and the transaction connection. */
     public function model(string $class): \Repository_model
     {
