@@ -16,4 +16,16 @@
 - Frontend now renders readable scalar details only.
 - Internal graph, payload, snapshot, result, IDs, assignments, and audit state objects stay hidden.
 
-#4
+new issues
+
+#4 [Not Fixed] Holder select user why ? make automatic read only based current user because he/she is the requester so automaticaly he/she is the holder except if you are a admin or dco document controll officer
+
+#5 [Not Fixed ] sequence no. make it optional and make it below to location 1:1 ration to location
+
+#6 [Not fixed] in hardcopy document page its have no filtration like status ,the draft request did not show.
+
+#7[Not fixed ] there rebundant request route and the my request route in sidebar route 
+
+#8 [Not fixed] make sure dont show id in frontend throughout the system only there names or values should show
+
+#9 [Not fixed] 
