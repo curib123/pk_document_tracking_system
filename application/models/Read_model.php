@@ -5,6 +5,7 @@ use Pk\Core\{Context,Problem,Rules,UiSchema,WorkflowGraph};
 /** Permission-scoped list/detail queries. All request values go through Query Builder. */
 class Read_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
     public function metadata(): array
     {
         $modules = array_filter(
