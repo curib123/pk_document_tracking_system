@@ -5,6 +5,7 @@ namespace Pk\Core;
 
 final class Seed
 {
+    // Fresh-install defaults ni; readable roles/workflows daan para usable dayon ang system.
     public static function capabilities(): array
     {
         $map=[];
