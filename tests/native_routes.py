@@ -51,8 +51,9 @@ admin.call('areas/save',{'id':area['id'],'version':detail['version'],'name':name
 admin.call('areas/save',{'id':area['id'],'version':detail['version'],'name':'Stale','active':1},status=409)
 admin.call('specifics/save',{'name':'Model boundary room','area_id':area['id'],'active':1})
 admin.call('categories/save',{'name':'Model boundary category','folder_name':'model-boundary','active':1})
-new=admin.call('areas/datatable',query={'q':name})
-assert any(row['name']==name for row in new['rows'])
+revised=name+' revised'
+new=admin.call('areas/datatable',query={'q':revised})
+assert any(row['name']==revised for row in new['rows'])
 filtered=admin.call('areas/datatable',query={'draw':4,'search[value]':'not-present-'+name,'length':10})
 assert filtered['recordsFiltered']==0 and filtered['recordsTotal']>0
 role=next(x['id'] for x in admin.call('dashboard/lookups',query={'kind':'roles','q':'Staff'})['options'] if x['label']=='Staff')
