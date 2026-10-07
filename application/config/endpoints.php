@@ -82,6 +82,7 @@ return [
     'workflows.save' => ['op' => 'workflows.save', 'path' => 'workflows/save', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'save', 'shape' => 'input', 'fixed' => []],
     'workflows.version' => ['op' => 'workflows.version', 'path' => 'workflows/version', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'version', 'shape' => 'input', 'fixed' => []],
     'workflows.publish' => ['op' => 'workflows.publish', 'path' => 'workflows/publish', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'publish', 'shape' => 'input', 'fixed' => []],
+    'workflows.delete_version' => ['op' => 'workflows.delete_version', 'path' => 'workflows/delete_version', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'deleteVersion', 'shape' => 'input', 'fixed' => []],
     'workflows.default' => ['op' => 'workflows.default', 'path' => 'workflows/set_default', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'setDefault', 'shape' => 'input', 'fixed' => []],
     'workflows.reassign' => ['op' => 'workflows.reassign', 'path' => 'workflows/reassign', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'reassign', 'shape' => 'input', 'fixed' => []],
     'transfers.dispatch' => ['op' => 'transfers.dispatch', 'path' => 'transfers/dispatch', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'dispatch', 'shape' => 'input', 'fixed' => []],
