@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Database,Database_error,Problem,Rules,Security};
 class Http_gateway
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
 
     private Context $ctx;
     public function __construct()
