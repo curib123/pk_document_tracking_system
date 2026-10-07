@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Problem,Rules};
 class Request_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     public const TYPES=['softcopy_create','softcopy_revise','softcopy_cancel','hardcopy_create','hardcopy_update','transfer','assignment','access','disposal'];
     private Document_service $documents;
     private Workflow_service $workflow;
