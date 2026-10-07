@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** File persistence using the native CodeIgniter MySQLi Query Builder. */
 class File_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function attachment_approvers(array $params = []): array
     {
         $this->db->reset_query()->distinct()->select('u.id')->from('users u')->join('roles r','r.id = u.role_id')
