@@ -240,7 +240,7 @@ class Read_model extends Repository_model
         string $kind,
         ?int $id
     ): ?string {
-        if (!$userId) {
+        if (!$id) {
             return null;
         }
 
@@ -306,7 +306,7 @@ class Read_model extends Repository_model
                 false
             )
             ->from($table)
-            ->where('id', $userId)
+            ->where('id', $id)
             ->limit(1);
 
         $row = $this->first();
@@ -664,36 +664,36 @@ class Read_model extends Repository_model
         return $row;
     }
 
-    public function detail(string $module,int $userId): array
+    public function detail(string $module, int $id): array
     {
         $this->scope($module);
         if ($module==='sequences') { $this->db->reset_query(); throw new Problem('Sequences are read-only counters.'); }
-        $this->db->select('t.*')->where('t.id',$userId)->limit(1);
+        $this->db->select('t.*')->where('t.id', $id)->limit(1);
         $row=$this->first() ?? throw new Problem('Record not found or unavailable to this account.',404);
         $related=[];
         if (in_array($module,['softcopy','hardcopy'],true)) {
-            $content=(new Document_service($this->ctx))->canRead($module,$userId);
+            $content=(new Document_service($this->ctx))->canRead($module, $id);
             if ($content) {
-                $this->db->reset_query()->from('files')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
+                $this->db->reset_query()->from('files')->where('domain',$module)->where('document_id', $id)->order_by('id','DESC');
                 $related['files']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             }
             if ($module==='softcopy') {
-                $this->db->reset_query()->select('r.*')->from('softcopy_revisions r')->where('r.document_id',$userId)->order_by('r.revision_number','DESC');
+                $this->db->reset_query()->select('r.*')->from('softcopy_revisions r')->where('r.document_id', $id)->order_by('r.revision_number','DESC');
                 $related['revisions']=$this->results();
                 foreach($related['revisions'] as &$revision) $revision['revision_status']=(int)$revision['id']===(int)$row['current_revision_id']?'current':'historical'; unset($revision);
                 if ($content) {
-                    $this->db->reset_query()->select('a.*')->from('revision_artifacts a')->join('softcopy_revisions r','r.id = a.revision_id')->where('r.document_id',$userId)->order_by('a.id','DESC');
+                    $this->db->reset_query()->select('a.*')->from('revision_artifacts a')->join('softcopy_revisions r','r.id = a.revision_id')->where('r.document_id', $id)->order_by('a.id','DESC');
                     $related['artifacts']=$this->results();
                 }
             }
-            $this->db->reset_query()->from('disposals')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
+            $this->db->reset_query()->from('disposals')->where('domain',$module)->where('document_id', $id)->order_by('id','DESC');
             $related['disposals']=array_map(fn(array $row)=>$this->safe($row),$this->results());
-            $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id',$userId)->order_by('id','DESC');
+            $this->db->reset_query()->from('status_history')->where('domain',$module)->where('document_id', $id)->order_by('id','DESC');
             $related['status_history']=$this->results();
             $related['can_read_files']=$content;
         }
         if (in_array($module,['requests','my_requests','my_tasks'],true)) {
-            $this->db->reset_query()->from('workflow_steps')->where('request_id',$userId)->order_by('id');
+            $this->db->reset_query()->from('workflow_steps')->where('request_id', $id)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id',$userId)->order_by('h.id');
             $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
@@ -701,15 +701,15 @@ class Read_model extends Repository_model
                 $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
                 $related['workflow_version']=$this->first();
             } else $related['workflow_version']=null;
-            $this->db->reset_query()->select('id')->from('transfers')->where('request_id',$userId)->limit(1);
+            $this->db->reset_query()->select('id')->from('transfers')->where('request_id', $id)->limit(1);
             $related['transfer']=$this->first();
         }
         if ($module==='workflows') {
-            $this->db->reset_query()->from('workflow_versions')->where('workflow_id',$userId)->order_by('version_number','DESC');
+            $this->db->reset_query()->from('workflow_versions')->where('workflow_id', $id)->order_by('version_number','DESC');
             $related['versions']=array_map(fn(array $row)=>$this->safe($row),$this->results());
         }
         if ($module==='roles') {
-            $this->db->reset_query()->select('permission_id')->from('role_permissions')->where('role_id',$userId);
+            $this->db->reset_query()->select('permission_id')->from('role_permissions')->where('role_id', $id);
             $related['permission_ids']=array_map('intval',array_column($this->results(),'permission_id'));
             if ($this->ctx->can('roles.edit')) {
                 $this->db->reset_query()->select('id,name,module_label,action_label')->from('permissions')->order_by('module_key')->order_by('action_key');
@@ -738,7 +738,10 @@ class Read_model extends Repository_model
     }
     public function dashboard(): array
     {
-        $this->ctx->require('dashboard.view'); $id=$this->ctx->id(); $result=[];
+        $this->ctx->require('dashboard.view');
+
+        $userId = $this->ctx->id();
+        $result = [];
         foreach(['softcopy'=>'softcopy_documents','hardcopy'=>'hardcopy_documents'] as $module=>$table) if ($this->ctx->can($module.'.view')) {
             $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from($table)->group_by('status');
             $result[$module]=$this->results();
