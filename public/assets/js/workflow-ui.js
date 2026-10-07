@@ -49,7 +49,10 @@ function stepEditor(step, api, save) {
   modal.setSubmit('Save step', async () => {
     const data = await form.read();
     const approver = { type: data.approver_type };
-    if (['user', 'role'].includes(data.approver_type)) approver.value = Number(data.approver_value);
+    if (['user', 'role'].includes(data.approver_type)) {
+      approver.value = Number(data.approver_value);
+      approver.label = form.controls.get('approver_value')?.selectedOptions?.[0]?.textContent || '';
+    }
     save({ name: data.name, approver });
     modal.forceCloseAfterSuccess();
   });
