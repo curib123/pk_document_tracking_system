@@ -57,7 +57,6 @@ async function selectModule(module) {
   if (['softcopy','hardcopy'].includes(module.key)) {
     if (can(`${module.key}.direct`)) controls.append(button(`Direct create ${module.key}`, () => directDocument(module.key)));
     if (can('requests.add') && can(`${module.key}.request`)) controls.append(button('New document request', () => requestForm(null, { type: `${module.key}_create` })));
-  } else if (module.key === 'workflows' && can('workflows.edit')) controls.append(button('Add workflow', () => editCatalog(module)));
   else if (module.fields.length && module.key !== 'settings' && can(`${module.key}.add`)) controls.append(button(`Add ${singular(module.key)}`, () => editCatalog(module)));
   if (['requests','my_requests','my_tasks','transfers','access','assignments','disposals'].includes(module.key) && can('requests.add')) controls.append(button('New request', () => requestForm()));
   if (module.key === 'files' && can('files.upload')) controls.append(button('Upload file', () => formModal('Upload private file', [field('file_id','upload')], {}, api, values => ({ id: values.file_id, message: 'Private file saved. Use it in a document/revision or attach it from a document dialog.' }), { after: refresh })));
@@ -68,7 +67,16 @@ async function selectModule(module) {
   const sorting = el('select', { id:'table-sort' }, module.columns.map(column => el('option', { value: column }, labelOf(column))));
   sorting.value = sort; sorting.addEventListener('change', () => { sort=sorting.value; page=1; loadTable().catch(globalError); });
   const order = button('Reverse order', () => { direction = direction === 'asc' ? 'desc' : 'asc'; return loadTable(); });
-  content.append(controls, searchForm, el('p', {}, el('label', { htmlFor:'page-size' }, 'Rows per page'), pageSize, el('label', { htmlFor:'table-sort' }, 'Sort by'), sorting, order), button('Refresh records', loadTable), el('p', { id:'table-status', role:'status' }), el('div', { id:'table-container' }), el('div', { id:'pagination' }));
+  const filters = el('div', { id:'table-filters' },
+    el('label', { htmlFor:'table-sort' }, 'Sort by'), sorting,
+    order,
+    button('Refresh records', loadTable)
+  );
+  const tableFooter = el('div', { id:'table-footer' },
+    el('label', { htmlFor:'page-size' }, 'Rows per page'), pageSize,
+    el('span', { id:'pagination' })
+  );
+  content.append(controls, searchForm, filters, el('p', { id:'table-status', role:'status' }), el('div', { id:'table-container' }), tableFooter);
   await loadTable();
 }
 async function loadTable() {
@@ -95,8 +103,10 @@ function directDocument(domain, row = {}, parent) {
 }
 function requestForm(existing = null, preset = {}, parent) {
   const allowedTypes = metadata.request_types || [];
-  const initialType = existing?.type || preset.type || allowedTypes[0] || 'softcopy_create';
+  const presetType = !existing && preset.type && allowedTypes.includes(preset.type) ? preset.type : null;
+  const initialType = existing?.type || presetType || allowedTypes[0] || 'softcopy_create';
   let type = allowedTypes.includes(initialType) ? initialType : (allowedTypes[0] || 'softcopy_create');
+  const lockedPreset = !!presetType;
   const fixedDomainFor = requestType => {
     if (requestType.startsWith('softcopy') || requestType === 'assignment') return 'softcopy';
     if (requestType.startsWith('hardcopy') || requestType === 'transfer') return 'hardcopy';
@@ -124,11 +134,16 @@ function requestForm(existing = null, preset = {}, parent) {
     const descriptors=[field('type','select',true,null,{label:'Request Type',options:allowedTypes})];
     if (['access','disposal'].includes(type)) descriptors.push(field('domain','select',true,null,{options:['softcopy','hardcopy']}));
     if (!creates) descriptors.push(field('document_id','lookup',true,domain,{label:domain==='softcopy'?'Softcopy Document':'Hardcopy Document'}));
-    head=await mountFields(heading,descriptors,{type,domain,document_id:target},api,{disabled:existing?['type','domain','document_id']:[]});
+    const disabledHead = existing
+      ? ['type','domain','document_id']
+      : lockedPreset
+        ? ['type', ...(preset.domain ? ['domain'] : []), ...(preset.document_id ? ['document_id'] : [])]
+        : [];
+    head=await mountFields(heading,descriptors,{type,domain,document_id:target},api,{disabled:disabledHead});
 
     const typeControl=head.controls.get('type');
     typeControl.value=type;
-    typeControl.addEventListener('change',event=>modal.run(async()=>{
+    typeControl.addEventListener('change',event=>{ if (lockedPreset || existing) return; modal.run(async()=>{
       const nextType=event.currentTarget.value;
       if (!allowedTypes.includes(nextType) || nextType===type) return;
       type=nextType;
@@ -137,25 +152,25 @@ function requestForm(existing = null, preset = {}, parent) {
       values={};
       await renderHead();
       await renderPayload();
-    }));
+    }); });
 
-    head.controls.get('domain')?.addEventListener('change',event=>modal.run(async()=>{
+    head.controls.get('domain')?.addEventListener('change',event=>{ if ((lockedPreset && preset.domain) || existing) return; modal.run(async()=>{
       const nextDomain=event.currentTarget.value;
       domain=['softcopy','hardcopy'].includes(nextDomain)?nextDomain:'softcopy';
       target=null;
       values={};
       await renderHead();
       await renderPayload();
-    }));
+    }); });
 
-    head.controls.get('document_id')?.addEventListener('change',event=>modal.run(async()=>{
+    head.controls.get('document_id')?.addEventListener('change',event=>{ if ((lockedPreset && preset.document_id) || existing) return; modal.run(async()=>{
       target=Number(event.currentTarget.value)||null;
       if (target && ['softcopy_revise','hardcopy_update'].includes(type)) {
         const data=await api.request('detail',{module:domain,id:target});
         values={...data.row,file_id:null,reason:''};
         await renderPayload();
       }
-    }));
+    }); });
   };
   modal.setSubmit('Save draft',async()=>{
     const first=await head.read(), data=await payload.read();
@@ -171,7 +186,7 @@ function requestForm(existing = null, preset = {}, parent) {
 }
 async function details(moduleKey, id) {
   const definition=metadata.modules.find(module=>module.key===moduleKey) || metadata.modules.find(module=>module.key==='requests');
-  const modal=new Modal(`${definition?.label || labelOf(moduleKey)} #${id}`); modal.closeButton.textContent='Close';
+  const modal=new Modal(`${definition?.label || labelOf(moduleKey)}`); modal.closeButton.textContent='Close';
   await modal.run(async()=>{
     const result=await api.request('detail',{module:moduleKey,id}); const row=result.row, related=result.related;
     const actions=el('section',{'aria-label':'Record actions'}); modal.body.append(actions);
@@ -193,13 +208,12 @@ async function details(moduleKey, id) {
       }
       if (active && related.can_read_files && can('files.upload')) action('Add attachment','files.attach',{domain,document_id:row.id},[field('file_id','upload'),reason()]);
       if (related.revisions) {
-        modal.body.append(el('h3',{},'Revision history'),table(['id','revision_number','revision_status','document_title','effective_date','new_revision_level'],related.revisions,revision=>[
+        modal.body.append(el('h3',{},'Revision history'),table(['revision_number','revision_status','document_title','effective_date','new_revision_level'],related.revisions,revision=>[
           ...(related.can_read_files?[button('Download revision',()=>downloadModal(revision.file_id,related.files?.find(file=>Number(file.id)===Number(revision.file_id))?.original_name || `revision-${revision.revision_number}`))]:[]),
-          ...(related.can_read_files&&can('files.generate')?[button('Generate artifact',()=>actionModal('Generate revision artifact',api,'files.artifact',{revision_id:revision.id},[field('artifact_type','select',true,null,{options:active&&revision.revision_status==='current'?['controlled','uncontrolled']:['uncontrolled']})],{after:change}))]:[]),
-          button('View revision metadata',()=>notice('Revision metadata',JSON.stringify(revision,null,2)))
+          ...(related.can_read_files&&can('files.generate')?[button('Generate artifact',()=>actionModal('Generate revision artifact',api,'files.artifact',{revision_id:revision.id},[field('artifact_type','select',true,null,{options:active&&revision.revision_status==='current'?['controlled','uncontrolled']:['uncontrolled']})],{after:change}))]:[])
         ]));
       }
-      if (related.files) modal.body.append(el('h3',{},'Document files'),table(['id','original_name','purpose','status'],related.files,file=>button('File actions',()=>fileModal(file,change))));
+      if (related.files) modal.body.append(el('h3',{},'Document files'),table(['original_name','purpose','status'],related.files,file=>button('File actions',()=>fileModal(file,change))));
     }
     if (['requests','my_requests','my_tasks'].includes(moduleKey)) {
       const own=Number(row.requested_by)===Number(user.id), pending=related.steps?.find(step=>step.status==='pending');
@@ -279,7 +293,7 @@ function fileActions(container,file,after) {
     if (can('files.approve')||(decision==='cancelled'&&Number(file.uploaded_by)===Number(user.id))) container.append(button(`${labelOf(decision)} attachment`,()=>actionModal(`${labelOf(decision)} attachment`,api,'files.decide',{...identity(file),decision},[reason()],{after})));
   }
 }
-function fileModal(file,after) { const modal=new Modal(`File #${file.id}`);modal.closeButton.textContent='Close';fileActions(modal.body,file,async()=>{modal.forceCloseAfterSuccess();await after?.();});modal.body.append(inspect(file));return modal; }
+function fileModal(file,after) { const modal=new Modal(file.original_name || 'File');modal.closeButton.textContent='Close';fileActions(modal.body,file,async()=>{modal.forceCloseAfterSuccess();await after?.();});modal.body.append(inspect(file));return modal; }
 function permissionsModal(role,related,parent) {
   const modal=new Modal('Assign role permissions',{explanation:'Permissions are checked server-side. Your own recovery capabilities and the last active administrator are protected.'});
   const selected=new Set((related.permission_ids || []).map(Number)), boxes=[];
