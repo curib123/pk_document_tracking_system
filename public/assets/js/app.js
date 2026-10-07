@@ -129,7 +129,8 @@ function directDocument(domain, row = {}, parent) {
 }
 function requestForm(existing = null, preset = {}, parent) {
   const allowedTypes = metadata.request_types || [];
-  const presetType = !existing && preset.type && allowedTypes.includes(preset.type) ? preset.type : null;
+  if (!existing && preset.type && !allowedTypes.includes(preset.type)) throw new Error(`Request type ${preset.type} is not available. Refresh the page and try again.`);
+  const presetType = !existing && preset.type ? preset.type : null;
   const initialType = existing?.type || presetType || allowedTypes[0] || 'softcopy_create';
   let type = allowedTypes.includes(initialType) ? initialType : (allowedTypes[0] || 'softcopy_create');
   const lockedPreset = !!presetType;
