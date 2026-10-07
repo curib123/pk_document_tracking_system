@@ -19,11 +19,17 @@ final class UiSchema
                 ? preg_replace('/_id$/', '', $name)
                 : $name;
 
-        return [
-            'name' => $name,
-            'label' => ucwords(
+        $label = match ($name) {
+            'asset_id' => 'Asset Number',
+            'specific_id' => 'Specific Location',
+            default => ucwords(
                 str_replace('_', ' ', $displayName)
             ),
+        };
+
+        return [
+            'name' => $name,
+            'label' => $label,
             'type' => $type,
             'required' => $required,
             'lookup' => $lookup,
