@@ -73,7 +73,7 @@ class Request_service
     private function unchanged(array $old,array $fresh): void { if (isset($old['base_document_version']) && $old['base_document_version']!==($fresh['base_document_version'] ?? null)) throw new Problem('The document changed after this request was prepared. Return it for correction, then edit and resubmit.',409); }
     public function decide(array $input): array
     {
-        $this->ctx->require('requests.approve'); $request=$this->ctx->model(\Request_model::class)->lock('requests',Rules::id($input),Rules::id($input,'version'));
+        if (!$this->ctx->id()) throw new Problem('Sign in first.',401); $request=$this->ctx->model(\Request_model::class)->lock('requests',Rules::id($input),Rules::id($input,'version'));
         $this->workflow->decide($request,$input,fn(array $completedRequest)=>$this->complete($completedRequest));
         return ['message'=>'Decision recorded.'];
     }
@@ -106,7 +106,7 @@ class Request_service
         } elseif ($type==='disposal') {
             $table=Document_service::table($domain); $doc=$db->lock($table,$target);
             $disposal=$db->insert('disposals',['request_id'=>$id,'domain'=>$domain,'document_id'=>$target,'previous_status'=>$doc['status'],'previous_state'=>Context::json($doc),'disposal_action'=>$fresh['disposal_action'],'remarks'=>$fresh['reason'],'disposed_by'=>$this->ctx->id()]);
-            $db->update($table,$target,['previous_status'=>$doc['status'],'status'=>'disposed',...($domain==='hardcopy'?['location_id'=>null]:[])]);
+            $db->update($table,$target,array_merge(['previous_status'=>$doc['status'],'status'=>'disposed'],$domain==='hardcopy'?['location_id'=>null]:[]));
             $this->ctx->status($domain,$target,$doc['status'],'disposed','disposed',$fresh['reason']);
             foreach($db->grants_for_update([$domain,$target]) as $grant) {
                 $db->update('access_grants',(int)$grant['id'],['status'=>'revoked','revoked_at'=>date('Y-m-d H:i:s'),'revoked_by'=>$this->ctx->id()]);
