@@ -241,8 +241,8 @@ class Workflow_service
             'assignment'=>Context::json($stepDefinition['approver']),
             'candidates'=>Context::json($candidates),
             'assigned_user_id'=>$single['id'] ?? null,
-            'assigned_name'=>$single['name'] ?? null,
-            'assigned_position'=>$single['position'] ?? null,
+            'assigned_name'=>$single['name'] ?? ($stepDefinition['approver']['label'] ?? null),
+            'assigned_position'=>$single['position'] ?? ($stepDefinition['approver']['type']==='role'?'Role':null),
         ]);
 
         $db->update('requests',(int)$request['id'],['current_node'=>$key,'status'=>'pending']);
