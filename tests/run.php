@@ -5,7 +5,7 @@ $cases = [];
 function test(string $name, callable $fn): void { global $cases; $cases[$name] = $fn; }
 function ok(bool $condition, string $message = 'Assertion failed'): void { if (!$condition) throw new RuntimeException($message); }
 function rejects(callable $fn): void { try { $fn(); } catch (Pk\Core\Problem $e) { return; } throw new RuntimeException('Expected validation rejection'); }
-foreach (glob($root . '/application/src/Core/*.php') ?: [] as $file) require_once $file;
+require_once $root . '/application/bootstrap.php';
 test('validation rejects missing required values', fn() => rejects(fn() => Pk\Core\Rules::text([], 'title')));
 test('valid date is preserved', fn() => ok(Pk\Core\Rules::date(['date'=>'2026-10-06'], 'date') === '2026-10-06'));
 test('invalid calendar date rejected', fn() => rejects(fn() => Pk\Core\Rules::date(['date'=>'2026-02-30'], 'date')));

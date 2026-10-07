@@ -1,9 +1,10 @@
 FROM composer:2 AS dependencies
 WORKDIR /src
 COPY composer.json ./
-RUN composer install --no-dev --prefer-dist --no-interaction --ignore-platform-req=ext-pdo_mysql --ignore-platform-req=ext-mbstring --ignore-platform-req=ext-zip
+COPY application/ ./application/
+RUN composer install --no-dev --prefer-dist --no-interaction --ignore-platform-req=ext-mysqli --ignore-platform-req=ext-mbstring --ignore-platform-req=ext-zip
 FROM php:8.2-apache
-RUN apt-get update && apt-get install -y --no-install-recommends libonig-dev libzip-dev && docker-php-ext-install pdo_mysql mbstring zip && a2enmod rewrite && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends libonig-dev libzip-dev && docker-php-ext-install mysqli mbstring zip && a2enmod rewrite && rm -rf /var/lib/apt/lists/*
 WORKDIR /var/www/pk
 COPY . .
 COPY --from=dependencies /src/vendor ./vendor

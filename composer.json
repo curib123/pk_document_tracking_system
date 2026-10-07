@@ -4,16 +4,26 @@
   "type": "project",
   "require": {
     "php": "^8.2",
-    "ext-pdo": "*",
-    "ext-pdo_mysql": "*",
     "ext-fileinfo": "*",
     "ext-mbstring": "*",
     "ext-zip": "*",
     "codeigniter/framework": "3.1.13",
     "setasign/fpdi": "^2.6",
-    "setasign/fpdf": "^1.8"
+    "setasign/fpdf": "^1.8",
+    "ext-mysqli": "*"
   },
-  "autoload": { "psr-4": { "Pk\\": "application/src/" } },
-  "scripts": { "test": "php tests/run.php", "test:integration": "php tests/integration.php" },
-  "config": { "allow-plugins": false, "sort-packages": true }
+  "autoload": {
+    "classmap": [
+      "application/libraries/",
+      "application/models/"
+    ]
+  },
+  "scripts": {
+    "test": "php tests/run.php && php tests/architecture.php && php tests/mysqli_contract.php && php tests/native_database.php",
+    "test:integration": "php tests/integration.php"
+  },
+  "config": {
+    "allow-plugins": false,
+    "sort-packages": true
+  }
 }

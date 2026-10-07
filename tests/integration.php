@@ -4,14 +4,14 @@ require dirname(__DIR__).'/application/bootstrap.php';
 use Pk\Core\{Context,Database,Problem};
 use Pk\Services\{CatalogService,DocumentService,RequestService,WorkflowService,TransferService};
 if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', '_test')) { fwrite(STDERR,"Use PK_TEST_DB=1 and a dedicated database whose name ends in _test.\n"); exit(2); }
-if (!in_array('mysql',PDO::getAvailableDrivers(),true)) { fwrite(STDERR,"BLOCKED: PDO MySQL driver is unavailable; integration tests did not run.\n"); exit(2); }
+if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
 if (!$admin) throw new RuntimeException('Run the installer first.');
 $ctx->identify((int)$admin['id']);
 $checks=0;
 function check(bool $condition,string $name): void { global $checks; if (!$condition) throw new RuntimeException($name); ++$checks; echo "PASS $name\n"; }
 function denied(callable $fn,string $name): void { global $db; $db->query('SAVEPOINT expected_denial'); try { $fn(); } catch(Problem $e) { $db->query('ROLLBACK TO SAVEPOINT expected_denial'); $db->query('RELEASE SAVEPOINT expected_denial'); check(true,$name); return; } throw new RuntimeException('Expected denial: '.$name); }
-$db->pdo->beginTransaction();
+$db->begin();
 $db->transaction(function() use($db,$ctx) {
     $catalog=new CatalogService($ctx);
     $staffRole=(int)$db->one("SELECT id FROM roles WHERE name='Staff'")['id'];
@@ -115,5 +115,5 @@ $db->transaction(function() use($db,$ctx) {
     $ctx->identify($adminId);
     try { $db->update('audit_logs',1,['action'=>'tampered'],false); throw new RuntimeException('Audit update unexpectedly allowed'); } catch (LogicException $e) { check(true,'audit records append-only'); }
 });
-$db->pdo->rollBack();
+$db->rollback();
 echo "$checks integration assertions passed.\n";
