@@ -1,90 +1,76 @@
 <?php
 declare(strict_types=1);
+
 namespace Pk\Core;
+
 final class WorkflowGraph
 {
     public static function defaults(): array
     {
-        return ['start'=>'start','nodes'=>[
-            ['key'=>'start','type'=>'start','next'=>'review'],
-            ['key'=>'review','type'=>'approval','label'=>'Document approval','assignment'=>['type'=>'permission','value'=>'requests.approve'],'approve'=>'done','reject'=>'rejected','return'=>'returned'],
-            ['key'=>'done','type'=>'end','outcome'=>'approved'],
-            ['key'=>'rejected','type'=>'end','outcome'=>'rejected'],
-            ['key'=>'returned','type'=>'end','outcome'=>'returned'],
-        ]];
+        return ['steps'=>[]];
     }
-    public static function validate(array $graph): array
+
+    public static function forRole(int $roleId,string $name='Administrator Approval'): array
     {
-        $nodes = $graph['nodes'] ?? [];
-        if (!is_array($nodes) || count($nodes) < 3 || count($nodes) > 60) throw new Problem('A workflow needs 3–60 nodes.');
-        $map = []; $starts = 0;
-        foreach ($nodes as $node) {
-            if (!is_array($node) || !is_string($node['key'] ?? null) || !preg_match('/^[a-z][a-z0-9_]{0,49}$/', $node['key'] ?? '') || isset($map[$node['key']])) throw new Problem('Node keys must be unique lowercase identifiers.');
-            $type = $node['type'] ?? '';
-            if (!in_array($type, ['start','approval','condition','end'], true)) throw new Problem('Unknown workflow node type.');
-            if ($type === 'start') ++$starts;
-            if ($type === 'approval') {
-                Rules::text($node, 'label', 120);
-                $assignment = $node['assignment'] ?? [];
-                if (!in_array($assignment['type'] ?? '', ['user','role','permission','leader','document'], true)) throw new Problem('Invalid approver assignment type.');
-                if (in_array($assignment['type'], ['user','role'], true)) Rules::id(['value'=>$assignment['value'] ?? null], 'value');
-                elseif ($assignment['type'] !== 'leader') Rules::text($assignment, 'value', 120);
+        return self::validate([
+            'steps'=>[
+                ['name'=>$name,'approver'=>['type'=>'role','value'=>$roleId]]
+            ]
+        ],true);
+    }
+
+    public static function validate(array $workflow,bool $requireStep=true): array
+    {
+        $steps=$workflow['steps'] ?? [];
+        if (!is_array($steps)) throw new Problem('Workflow steps must be a list.');
+        if ($requireStep && count($steps)<1) throw new Problem('Add at least one approval step before publishing.');
+        if (count($steps)>30) throw new Problem('A workflow supports up to 30 approval steps.');
+
+        $normalized=[];
+        foreach (array_values($steps) as $index=>$step) {
+            if (!is_array($step)) throw new Problem('Invalid workflow step.');
+            $name=Rules::text($step,'name',120);
+            $approver=$step['approver'] ?? [];
+            if (!is_array($approver)) throw new Problem('Choose who approves '.$name.'.');
+            $type=$approver['type'] ?? '';
+            if (!in_array($type,['user','role','leader','requester'],true)) {
+                throw new Problem('Approver must be a specific user, role, requester leader, or requester.');
             }
-            if ($type === 'condition') self::condition($node, []);
-            if ($type === 'end' && !in_array($node['outcome'] ?? '', ['approved','rejected','returned','cancelled'], true)) throw new Problem('Invalid workflow outcome.');
-            $map[$node['key']] = $node;
+            $saved=['type'=>$type];
+            if (in_array($type,['user','role'],true)) {
+                $saved['value']=Rules::id(['value'=>$approver['value'] ?? null],'value');
+            }
+            if (isset($approver['label']) && is_string($approver['label']) && $approver['label']!=='') {
+                $saved['label']=mb_substr($approver['label'],0,255);
+            }
+            $normalized[]=[
+                'key'=>'step_'.($index+1),
+                'name'=>$name,
+                'approver'=>$saved,
+            ];
         }
-        $start = $graph['start'] ?? '';
-        if ($starts !== 1 || !is_string($start) || !isset($map[$start]) || $map[$start]['type'] !== 'start') throw new Problem('Exactly one matching start node is required.');
-        $seen = []; $visited = [];
-        $walk = function (string $key, array $path, bool $approved) use (&$walk, &$seen, &$visited, $map): void {
-            if (!isset($map[$key])) throw new Problem("Missing workflow target: $key.");
-            if (isset($path[$key])) throw new Problem('Workflow cycles are not allowed; use Return for Correction.');
-            $state=$key.':'.($approved?'1':'0'); if (isset($visited[$state])) return;
-            $node = $map[$key]; $path[$key] = true; $seen[$key] = true;
-            if ($node['type'] === 'end') {
-                if ($node['outcome'] === 'approved' && !$approved) throw new Problem('An approved path must pass through an approval decision.');
-                return;
-            }
-            foreach (self::edges($node) as $decision => $target) {
-                if (!is_string($target) || $target === '') throw new Problem('Every node path needs a target.');
-                $walk($target, $path, $approved || ($node['type']==='approval' && $decision==='approve'));
-            }
-            $visited[$state]=true;
-        };
-        $walk($start, [], false);
-        if (count($seen) !== count($map)) throw new Problem('Remove unreachable workflow nodes.');
-        return ['start'=>$start,'nodes'=>array_values($map)];
+        return ['steps'=>$normalized];
     }
-    public static function edges(array $node): array
+
+    public static function step(array $workflow,string $key): array
     {
-        return match ($node['type']) {
-            'start' => ['next'=>$node['next'] ?? ''],
-            'approval' => ['approve'=>$node['approve'] ?? '', 'reject'=>$node['reject'] ?? '', 'return'=>$node['return'] ?? ''],
-            'condition' => ['true'=>$node['true'] ?? '', 'false'=>$node['false'] ?? ''],
-            default => [],
-        };
+        foreach ($workflow['steps'] ?? [] as $step) {
+            if (($step['key'] ?? '')===$key) return $step;
+        }
+        throw new Problem('Workflow snapshot has a missing approval step.',409);
     }
-    public static function condition(array $node, array $payload): bool
+
+    public static function firstKey(array $workflow): ?string
     {
-        $field = $node['field'] ?? '';
-        if (!is_string($field) || !preg_match('/^[a-z][a-z0-9_]{0,63}$/', $field)) throw new Problem('Condition field must be a payload field name.');
-        $left = $payload[$field] ?? null; $right = $node['value'] ?? null;
-        if (($left !== null && !is_scalar($left)) || ($right !== null && !is_scalar($right))) throw new Problem('Condition values must be scalar.');
-        return match ($node['operator'] ?? '') {
-            'eq' => $left !== null && (string)$left === (string)$right,
-            'ne' => $left !== null && (string)$left !== (string)$right,
-            'gt' => is_numeric($left) && is_numeric($right) && (float)$left > (float)$right,
-            'gte' => is_numeric($left) && is_numeric($right) && (float)$left >= (float)$right,
-            'lt' => is_numeric($left) && is_numeric($right) && (float)$left < (float)$right,
-            'lte' => is_numeric($left) && is_numeric($right) && (float)$left <= (float)$right,
-            'contains' => is_scalar($left) && is_scalar($right) && str_contains((string)$left,(string)$right),
-            default => throw new Problem('Unsupported condition operator.'),
-        };
+        return $workflow['steps'][0]['key'] ?? null;
     }
-    public static function node(array $graph, string $key): array
+
+    public static function nextKey(array $workflow,string $key): ?string
     {
-        foreach ($graph['nodes'] as $node) if ($node['key'] === $key) return $node;
-        throw new Problem('Workflow snapshot has a missing node.', 409);
+        foreach (array_values($workflow['steps'] ?? []) as $index=>$step) {
+            if (($step['key'] ?? '')!==$key) continue;
+            return $workflow['steps'][$index+1]['key'] ?? null;
+        }
+        throw new Problem('Workflow snapshot has a missing approval step.',409);
     }
 }
