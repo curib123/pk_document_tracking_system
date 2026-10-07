@@ -119,9 +119,9 @@ class Workflow_service
         $id=Rules::id($input);
         $version=$db->lock('workflow_versions',$id,Rules::id($input,'version'));
         if ($version['status']!=='published') throw new Problem('Only a published workflow version can be the default.',409);
-        if ((int)$version['is_default']===1) return ['message'=>'This version is already the default.'];
-
         $definition=$db->lock('workflows',(int)$version['workflow_id']);
+        if ((int)$version['is_default']===1 && (int)$definition['active']===1) return ['message'=>'This version is already the default.'];
+
         $this->makeDefault((int)$definition['id'],$id,$definition['request_type']);
         $this->ctx->audit('workflows','default_version_changed',$id,$version,['is_default'=>1],Rules::text($input,'reason',2000));
         return ['message'=>'Default workflow version updated for new requests. Existing requests keep their original version.'];
