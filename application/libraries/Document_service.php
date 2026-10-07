@@ -1,111 +1,659 @@
 <?php
 declare(strict_types=1);
-use Pk\Core\{Context,Problem,Rules};
+
+use Pk\Core\{Context, Problem, Rules};
+
 class Document_service
 {
-    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
+    // Kani nga service nag-manage sa document rules; DB details naa sa model para clean ang flow.
     private Context $ctx;
-    public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options);}
-    public static function table(string $domain): string { return match($domain) { 'softcopy'=>'softcopy_documents','hardcopy'=>'hardcopy_documents',default=>throw new Problem('Invalid document domain.') }; }
-    public function direct(string $domain,array $input): array
+
+    public function __construct(Context|array|null $options = null)
     {
-        $this->ctx->require($domain.'.direct');
-        $id=Rules::id($input,'id',false);
-        if ($id) $this->ctx->model(\Document_model::class)->lock(self::table($domain),$id,Rules::id($input,'version'));
-        $data=$this->validate($domain,$input,$id,$this->ctx->id());
-        return $this->apply($domain,$data,$id,'direct',null,$this->ctx->id());
-    }
-    public function validate(string $domain,array $input,?int $id,int $owner): array
-    {
-        $data=['title'=>Rules::text($input,'title'),'reason'=>Rules::text($input,'reason',4000)];
-        $old=$id ? $this->ctx->model(\Document_model::class)->lock(self::table($domain),$id) : null;
-        if ($old && $old['status']!=='active') throw new Problem('Only active documents can be changed.');
-        if ($domain==='softcopy') {
-            $data['category_id']=Rules::id($input,'category_id'); $this->ctx->active('categories',$data['category_id']);
-            $data['document_number']=$old['document_number'] ?? Rules::text($input,'document_number',100,false);
-            $data['series_number']=Rules::text($input,'series_number',100,false);
-            $data['file_id']=Rules::id($input,'file_id'); $this->availableFile($data['file_id'],$owner);
-            $data['effective_date']=Rules::date($input,'effective_date');
-            $data['page_number']=Rules::id($input,'page_number');
-            if ($data['page_number']>100000) throw new Problem('Invalid page count.');
-            $data['new_revision_level']=Rules::text($input,'new_revision_level',30,false);
-            $data['date_received']=Rules::date(['date_received'=>($input['date_received'] ?? '') ?: date('Y-m-d')],'date_received');
-            $data['date_released']=Rules::date(['date_released'=>($input['date_released'] ?? '') ?: date('Y-m-d')],'date_released');
-            if ($data['date_released']<$data['date_received']) throw new Problem('Release date cannot precede receipt date.');
-        } elseif ($domain==='hardcopy') {
-            $data=array_merge($data,$this->physical($input,$id));
-            $data['holder_id']=Rules::id(['holder_id'=>$input['holder_id'] ?? ($old['holder_id'] ?? $owner)],'holder_id'); $this->ctx->active('users',$data['holder_id']);
-            $data['sequence_number']=Rules::text($input,'sequence_number',100,false);
-            $data['retention_enabled']=Rules::boolean($input['retention_enabled'] ?? 0);
-            $data['retention_start_date']=$data['retention_enabled'] ? Rules::date($input,'retention_start_date') : null;
-            $data['retention_end_date']=$data['retention_enabled'] ? Rules::date($input,'retention_end_date') : null;
-            if ($data['retention_enabled'] && $data['retention_end_date']<$data['retention_start_date']) throw new Problem('Retention end date cannot precede its start.');
-            if ($old && ((int)$old['location_id']!==$data['location_id'] || (int)$old['holder_id']!==$data['holder_id'])) throw new Problem('Use a Transfer request to change location or holder; recipient acceptance is required.');
-            if ($id) $this->noOpenTransfer($id);
-        } else throw new Problem('Invalid document domain.');
-        return $data;
-    }
-    public function physical(array $input,?int $documentId=null): array
-    {
-        $data=[];
-        foreach(['area_id','specific_id','asset_id','location_id'] as $key) $data[$key]=Rules::id($input,$key);
-        $this->ctx->active('areas',$data['area_id']); $specific=$this->ctx->active('specifics',$data['specific_id']);
-        $asset=$this->ctx->active('assets',$data['asset_id']); $location=$this->ctx->active('locations',$data['location_id']);
-        if ((int)$specific['area_id']!==$data['area_id'] || (int)$asset['specific_id']!==$data['specific_id'] || (int)$location['specific_id']!==$data['specific_id'] || (int)$location['asset_id']!==$data['asset_id']) throw new Problem('Area, Specific, asset and location must belong to the same hierarchy.');
-        $occupied=$this->ctx->model(\Document_model::class)->location_occupant([$data['location_id']]);
-        if ($occupied && (int)$occupied['id']!==$documentId) throw new Problem('That dedicated location is already assigned to another hardcopy.');
-        return $data;
-    }
-    public function availableFile(int $id,int $owner): array
-    {
-        $file=$this->ctx->model(\Document_model::class)->lock('files',$id);
-        if ((int)$file['uploaded_by']!==$owner || $file['document_id']!==null || $file['purpose']!=='upload' || $file['status']!=='pending') throw new Problem('Choose a new, unassigned file uploaded by the requester.');
-        return $file;
-    }
-    public function apply(string $domain,array $data,?int $id,string $source,?int $requestId,int $owner): array
-    {
-        $db=$this->ctx->model(\Document_model::class); $table=self::table($domain); $before=$id ? $db->lock($table,$id) : null;
-        $values=$domain==='softcopy'
-            ? array_intersect_key($data,array_flip(['title','category_id','document_number','series_number']))
-            : array_intersect_key($data,array_flip(['title','area_id','specific_id','asset_id','location_id','holder_id','sequence_number','retention_enabled','retention_start_date','retention_end_date']));
-        if (!$id) {
-            if ($domain==='softcopy' && !$values['document_number']) $values['document_number']=$this->ctx->sequence('document_'.date('Y'),'DOC-'.date('Y').'-');
-            $id=$db->insert($table,array_merge($values,['created_by'=>$owner,'creation_source'=>$source,'creation_reason'=>$data['reason'],'source_request_id'=>$requestId]));
-            $this->ctx->status($domain,$id,'','active','created',$data['reason']);
-        } else $db->update($table,$id,$values);
-        if ($domain==='softcopy') $this->revision($id,$data,$owner);
-        $this->ctx->audit($domain,$before?'updated':'created',$id,$before,$values,$data['reason'],$requestId);
-        if ($before) $this->ctx->status($domain,$id,$before['status'],$before['status'],$domain==='softcopy'?'revised':'updated',$data['reason']);
-        return ['id'=>$id,'domain'=>$domain];
-    }
-    private function revision(int $documentId,array $data,int $owner): void
-    {
-        $db=$this->ctx->model(\Document_model::class); $doc=$db->lock('softcopy_documents',$documentId);
-        $previous=$doc['current_revision_id'] ? $db->row('softcopy_revisions',(int)$doc['current_revision_id']) : null;
-        $number=$previous ? (int)$previous['revision_number']+1 : 0;
-        $file=$this->availableFile($data['file_id'],$owner);
-        $revision=$db->insert('softcopy_revisions',[
-            'document_id'=>$documentId,'revision_number'=>$number,'reason'=>$data['reason'],'effective_date'=>$data['effective_date'],'page_number'=>$data['page_number'],
-            'series_number'=>$data['series_number'],'document_title'=>$data['title'],'previous_revision_level'=>$previous['new_revision_level'] ?? null,'new_revision_level'=>$data['new_revision_level'] ?? (string)$number,
-            'previous_effective_date'=>$previous['effective_date'] ?? null,'new_effective_date'=>$data['effective_date'],'date_received'=>$data['date_received'],'date_released'=>$data['date_released'],'approval_date'=>date('Y-m-d'),
-            'file_id'=>$file['id'],'uploaded_by'=>$owner,'approved_by'=>$this->ctx->id(),
-        ]);
-        $db->update('files',(int)$file['id'],['purpose'=>'revision','domain'=>'softcopy','document_id'=>$documentId,'status'=>'approved','approved_by'=>$this->ctx->id(),'approved_at'=>date('Y-m-d H:i:s')]);
-        // The single FK pointer, not independently editable flags, defines the current revision.
-        $db->update('softcopy_documents',$documentId,['current_revision_id'=>$revision]);
-    }
-    public function canRead(string $domain,int $id): bool
-    {
-        $doc=$this->ctx->model(\Document_model::class)->row(self::table($domain),$id);
-        if ($this->ctx->can('documents.access_all')) return true;
-        if ($doc['status']!=='active') return false;
-        if ((int)$doc['created_by']===$this->ctx->id() || ($domain==='hardcopy' && (int)$doc['holder_id']===$this->ctx->id())) return true;
-        if ($domain==='softcopy' && $this->ctx->model(\Document_model::class)->active_assignment([$id,$this->ctx->id()])) return true;
-        return (bool)$this->ctx->model(\Document_model::class)->live_access_grant([$domain,$id,$this->ctx->id()]);
-    }
-    public function noOpenTransfer(int $id): void
-    {
-        if ($this->ctx->model(\Document_model::class)->open_transfer([$id])) throw new Problem('Finish or cancel the open physical transfer first.');
+        $this->ctx = Context::fromOptions($options);
     }
 
+    private function model(): Document_model
+    {
+        return $this->ctx->model(\Document_model::class);
+    }
+
+    public static function table(string $domain): string
+    {
+        return match ($domain) {
+            'softcopy' => 'softcopy_documents',
+            'hardcopy' => 'hardcopy_documents',
+            default => throw new Problem('Invalid document domain.'),
+        };
+    }
+
+    public function direct(string $domain, array $input): array
+    {
+        $this->ctx->require($domain . '.direct');
+
+        $id = Rules::id(
+            $input,
+            'id',
+            false
+        );
+
+        if ($id) {
+            // Ari ta mag-lock first para dili ma-overwrite ang newer edit.
+            $this->model()->lock(
+                self::table($domain),
+                $id,
+                Rules::id($input, 'version')
+            );
+        }
+
+        $data = $this->validate(
+            $domain,
+            $input,
+            $id,
+            $this->ctx->id()
+        );
+
+        return $this->apply(
+            $domain,
+            $data,
+            $id,
+            'direct',
+            null,
+            $this->ctx->id()
+        );
+    }
+
+    public function validate(
+        string $domain,
+        array $input,
+        ?int $id,
+        int $ownerId
+    ): array {
+        $data = [
+            'title' => Rules::text($input, 'title'),
+            'reason' => Rules::text(
+                $input,
+                'reason',
+                4000
+            ),
+        ];
+
+        $old = $id
+            ? $this->model()->lock(
+                self::table($domain),
+                $id
+            )
+            : null;
+
+        if ($old && $old['status'] !== 'active') {
+            throw new Problem(
+                'Only active documents can be changed.'
+            );
+        }
+
+        if ($domain === 'softcopy') {
+            return array_merge(
+                $data,
+                $this->validateSoftcopy(
+                    $input,
+                    $old,
+                    $ownerId
+                )
+            );
+        }
+
+        if ($domain === 'hardcopy') {
+            return array_merge(
+                $data,
+                $this->validateHardcopy(
+                    $input,
+                    $old,
+                    $id,
+                    $ownerId
+                )
+            );
+        }
+
+        throw new Problem('Invalid document domain.');
+    }
+
+    private function validateSoftcopy(
+        array $input,
+        ?array $old,
+        int $ownerId
+    ): array {
+        $categoryId = Rules::id(
+            $input,
+            'category_id'
+        );
+
+        $this->ctx->active(
+            'categories',
+            $categoryId
+        );
+
+        $fileId = Rules::id(
+            $input,
+            'file_id'
+        );
+
+        $this->availableFile(
+            $fileId,
+            $ownerId
+        );
+
+        $pageNumber = Rules::id(
+            $input,
+            'page_number'
+        );
+
+        if ($pageNumber > 100000) {
+            throw new Problem(
+                'Invalid page count.'
+            );
+        }
+
+        $dateReceived = Rules::date(
+            [
+                'date_received' =>
+                    ($input['date_received'] ?? '')
+                    ?: date('Y-m-d'),
+            ],
+            'date_received'
+        );
+
+        $dateReleased = Rules::date(
+            [
+                'date_released' =>
+                    ($input['date_released'] ?? '')
+                    ?: date('Y-m-d'),
+            ],
+            'date_released'
+        );
+
+        if ($dateReleased < $dateReceived) {
+            throw new Problem(
+                'Release date cannot precede receipt date.'
+            );
+        }
+
+        return [
+            'category_id' => $categoryId,
+            'document_number' =>
+                $old['document_number']
+                ?? Rules::text(
+                    $input,
+                    'document_number',
+                    100,
+                    false
+                ),
+            'series_number' => Rules::text(
+                $input,
+                'series_number',
+                100,
+                false
+            ),
+            'file_id' => $fileId,
+            'effective_date' => Rules::date(
+                $input,
+                'effective_date'
+            ),
+            'page_number' => $pageNumber,
+            'new_revision_level' => Rules::text(
+                $input,
+                'new_revision_level',
+                30,
+                false
+            ),
+            'date_received' => $dateReceived,
+            'date_released' => $dateReleased,
+        ];
+    }
+
+    private function validateHardcopy(
+        array $input,
+        ?array $old,
+        ?int $id,
+        int $ownerId
+    ): array {
+        $data = $this->physical(
+            $input,
+            $id
+        );
+
+        $holderId = Rules::id(
+            [
+                'holder_id' =>
+                    $input['holder_id']
+                    ?? ($old['holder_id'] ?? $ownerId),
+            ],
+            'holder_id'
+        );
+
+        $this->ctx->active(
+            'users',
+            $holderId
+        );
+
+        $retentionEnabled = Rules::boolean(
+            $input['retention_enabled'] ?? 0
+        );
+
+        $retentionStart = $retentionEnabled
+            ? Rules::date(
+                $input,
+                'retention_start_date'
+            )
+            : null;
+
+        $retentionEnd = $retentionEnabled
+            ? Rules::date(
+                $input,
+                'retention_end_date'
+            )
+            : null;
+
+        if (
+            $retentionEnabled
+            && $retentionEnd < $retentionStart
+        ) {
+            throw new Problem(
+                'Retention end date cannot precede its start.'
+            );
+        }
+
+        if ($old) {
+            $locationChanged =
+                (int) $old['location_id']
+                !== $data['location_id'];
+
+            $holderChanged =
+                (int) $old['holder_id']
+                !== $holderId;
+
+            if ($locationChanged || $holderChanged) {
+                throw new Problem(
+                    'Use a Transfer request to change location or holder; recipient acceptance is required.'
+                );
+            }
+        }
+
+        if ($id) {
+            $this->noOpenTransfer($id);
+        }
+
+        return array_merge(
+            $data,
+            [
+                'holder_id' => $holderId,
+                'sequence_number' => Rules::text(
+                    $input,
+                    'sequence_number',
+                    100,
+                    false
+                ),
+                'retention_enabled' => $retentionEnabled,
+                'retention_start_date' => $retentionStart,
+                'retention_end_date' => $retentionEnd,
+            ]
+        );
+    }
+
+    public function physical(
+        array $input,
+        ?int $documentId = null
+    ): array {
+        $data = [];
+
+        foreach (
+            [
+                'area_id',
+                'specific_id',
+                'asset_id',
+                'location_id',
+            ]
+            as $key
+        ) {
+            $data[$key] = Rules::id(
+                $input,
+                $key
+            );
+        }
+
+        $this->ctx->active(
+            'areas',
+            $data['area_id']
+        );
+
+        $specific = $this->ctx->active(
+            'specifics',
+            $data['specific_id']
+        );
+
+        $asset = $this->ctx->active(
+            'assets',
+            $data['asset_id']
+        );
+
+        $location = $this->ctx->active(
+            'locations',
+            $data['location_id']
+        );
+
+        $sameHierarchy =
+            (int) $specific['area_id'] === $data['area_id']
+            && (int) $asset['specific_id'] === $data['specific_id']
+            && (int) $location['specific_id'] === $data['specific_id']
+            && (int) $location['asset_id'] === $data['asset_id'];
+
+        if (!$sameHierarchy) {
+            throw new Problem(
+                'Area, Specific, asset and location must belong to the same hierarchy.'
+            );
+        }
+
+        $occupied = $this->model()->location_occupant(
+            [$data['location_id']]
+        );
+
+        if (
+            $occupied
+            && (int) $occupied['id'] !== $documentId
+        ) {
+            throw new Problem(
+                'That dedicated location is already assigned to another hardcopy.'
+            );
+        }
+
+        return $data;
+    }
+
+    public function availableFile(
+        int $id,
+        int $ownerId
+    ): array {
+        $file = $this->model()->lock(
+            'files',
+            $id
+        );
+
+        $available =
+            (int) $file['uploaded_by'] === $ownerId
+            && $file['document_id'] === null
+            && $file['purpose'] === 'upload'
+            && $file['status'] === 'pending';
+
+        if (!$available) {
+            throw new Problem(
+                'Choose a new, unassigned file uploaded by the requester.'
+            );
+        }
+
+        return $file;
+    }
+
+    public function apply(
+        string $domain,
+        array $data,
+        ?int $id,
+        string $source,
+        ?int $requestId,
+        int $ownerId
+    ): array {
+        $table = self::table($domain);
+
+        $before = $id
+            ? $this->model()->lock(
+                $table,
+                $id
+            )
+            : null;
+
+        $values = $this->documentValues(
+            $domain,
+            $data
+        );
+
+        if (!$id) {
+            if (
+                $domain === 'softcopy'
+                && !$values['document_number']
+            ) {
+                $values['document_number'] =
+                    $this->ctx->sequence(
+                        'document_' . date('Y'),
+                        'DOC-' . date('Y') . '-'
+                    );
+            }
+
+            $id = $this->model()->insert(
+                $table,
+                array_merge(
+                    $values,
+                    [
+                        'created_by' => $ownerId,
+                        'creation_source' => $source,
+                        'creation_reason' => $data['reason'],
+                        'source_request_id' => $requestId,
+                    ]
+                )
+            );
+
+            $this->ctx->status(
+                $domain,
+                $id,
+                '',
+                'active',
+                'created',
+                $data['reason']
+            );
+        } else {
+            $this->model()->update(
+                $table,
+                $id,
+                $values
+            );
+        }
+
+        if ($domain === 'softcopy') {
+            $this->revision(
+                $id,
+                $data,
+                $ownerId
+            );
+        }
+
+        $this->ctx->audit(
+            $domain,
+            $before ? 'updated' : 'created',
+            $id,
+            $before,
+            $values,
+            $data['reason'],
+            $requestId
+        );
+
+        if ($before) {
+            $this->ctx->status(
+                $domain,
+                $id,
+                $before['status'],
+                $before['status'],
+                $domain === 'softcopy'
+                    ? 'revised'
+                    : 'updated',
+                $data['reason']
+            );
+        }
+
+        return [
+            'id' => $id,
+            'domain' => $domain,
+        ];
+    }
+
+    private function documentValues(
+        string $domain,
+        array $data
+    ): array {
+        $keys = $domain === 'softcopy'
+            ? [
+                'title',
+                'category_id',
+                'document_number',
+                'series_number',
+            ]
+            : [
+                'title',
+                'area_id',
+                'specific_id',
+                'asset_id',
+                'location_id',
+                'holder_id',
+                'sequence_number',
+                'retention_enabled',
+                'retention_start_date',
+                'retention_end_date',
+            ];
+
+        return array_intersect_key(
+            $data,
+            array_flip($keys)
+        );
+    }
+
+    private function revision(
+        int $documentId,
+        array $data,
+        int $ownerId
+    ): void {
+        $document = $this->model()->lock(
+            'softcopy_documents',
+            $documentId
+        );
+
+        $previous = $document['current_revision_id']
+            ? $this->model()->row(
+                'softcopy_revisions',
+                (int) $document['current_revision_id']
+            )
+            : null;
+
+        $revisionNumber = $previous
+            ? (int) $previous['revision_number'] + 1
+            : 0;
+
+        $file = $this->availableFile(
+            $data['file_id'],
+            $ownerId
+        );
+
+        $revisionId = $this->model()->insert(
+            'softcopy_revisions',
+            [
+                'document_id' => $documentId,
+                'revision_number' => $revisionNumber,
+                'reason' => $data['reason'],
+                'effective_date' => $data['effective_date'],
+                'page_number' => $data['page_number'],
+                'series_number' => $data['series_number'],
+                'document_title' => $data['title'],
+                'previous_revision_level' =>
+                    $previous['new_revision_level'] ?? null,
+                'new_revision_level' =>
+                    $data['new_revision_level']
+                    ?? (string) $revisionNumber,
+                'previous_effective_date' =>
+                    $previous['effective_date'] ?? null,
+                'new_effective_date' => $data['effective_date'],
+                'date_received' => $data['date_received'],
+                'date_released' => $data['date_released'],
+                'approval_date' => date('Y-m-d'),
+                'file_id' => $file['id'],
+                'uploaded_by' => $ownerId,
+                'approved_by' => $this->ctx->id(),
+            ]
+        );
+
+        $this->model()->update(
+            'files',
+            (int) $file['id'],
+            [
+                'purpose' => 'revision',
+                'domain' => 'softcopy',
+                'document_id' => $documentId,
+                'status' => 'approved',
+                'approved_by' => $this->ctx->id(),
+                'approved_at' => date('Y-m-d H:i:s'),
+            ]
+        );
+
+        // Kani nga pointer mao ra ang source of truth sa current revision, para dili double-current.
+        $this->model()->update(
+            'softcopy_documents',
+            $documentId,
+            ['current_revision_id' => $revisionId]
+        );
+    }
+
+    public function canRead(
+        string $domain,
+        int $id
+    ): bool {
+        $document = $this->model()->row(
+            self::table($domain),
+            $id
+        );
+
+        if ($this->ctx->can('documents.access_all')) {
+            return true;
+        }
+
+        if ($document['status'] !== 'active') {
+            return false;
+        }
+
+        $isCreator =
+            (int) $document['created_by']
+            === $this->ctx->id();
+
+        $isHolder =
+            $domain === 'hardcopy'
+            && (int) $document['holder_id']
+                === $this->ctx->id();
+
+        if ($isCreator || $isHolder) {
+            return true;
+        }
+
+        $assigned =
+            $domain === 'softcopy'
+            && $this->model()->active_assignment(
+                [
+                    $id,
+                    $this->ctx->id(),
+                ]
+            );
+
+        if ($assigned) {
+            return true;
+        }
+
+        return (bool) $this->model()->live_access_grant(
+            [
+                $domain,
+                $id,
+                $this->ctx->id(),
+            ]
+        );
+    }
+
+    public function noOpenTransfer(int $id): void
+    {
+        if ($this->model()->open_transfer([$id])) {
+            throw new Problem(
+                'Finish or cancel the open physical transfer first.'
+            );
+        }
+    }
 }
