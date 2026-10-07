@@ -119,12 +119,12 @@ class Read_model extends Repository_model
         elseif ($module==='assets') $add('specific','specific','specific_id');
         elseif ($module==='locations') { $add('specific','specific','specific_id'); $add('asset','asset','asset_id'); }
         elseif ($module==='categories') $add('parent_category','category','parent_id');
-        elseif ($module==='softcopy') { $add('category','category','category_id'); $add('created_by','user','created_by'); }
+        elseif ($module==='softcopy') { $add('category','category','category_id'); $add('creator','user','created_by'); }
         elseif ($module==='hardcopy') {
             $add('area','area','area_id'); $add('specific','specific','specific_id'); $add('asset','asset','asset_id');
-            $add('location','location','location_id'); $add('holder','user','holder_id'); $add('created_by','user','created_by');
+            $add('location','location','location_id'); $add('holder','user','holder_id'); $add('creator','user','created_by');
         } elseif (in_array($module,['requests','my_requests','my_tasks'],true)) {
-            $add('requested_by','user','requested_by'); $add('softcopy_document','softcopy','softcopy_id'); $add('hardcopy_document','hardcopy','hardcopy_id');
+            $add('requester','user','requested_by'); $add('softcopy_document','softcopy','softcopy_id'); $add('hardcopy_document','hardcopy','hardcopy_id');
             if (is_array($row['payload'] ?? null)) {
                 $payload=$row['payload']; $display=[];
                 foreach ([
@@ -146,15 +146,15 @@ class Read_model extends Repository_model
             $add('request','request','request_id'); $add('user','user','user_id');
             if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id'); else $add('document','hardcopy','document_id');
         } elseif ($module==='assignments') {
-            $add('document','softcopy','softcopy_id'); $add('user','user','user_id'); $add('assigned_by','user','assigned_by');
+            $add('document','softcopy','softcopy_id'); $add('user','user','user_id'); $add('assigned_by_name','user','assigned_by');
         } elseif ($module==='disposals') {
-            $add('request','request','request_id'); $add('disposed_by','user','disposed_by');
+            $add('request','request','request_id'); $add('disposed_by_name','user','disposed_by');
             if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id'); else $add('document','hardcopy','document_id');
         } elseif ($module==='files') {
-            $add('uploaded_by','user','uploaded_by'); $add('approved_by','user','approved_by'); $add('rejected_by','user','rejected_by');
+            $add('uploaded_by_name','user','uploaded_by'); $add('approved_by_name','user','approved_by'); $add('rejected_by_name','user','rejected_by');
             if (($row['domain'] ?? '')==='softcopy') $add('document','softcopy','document_id');
             elseif (($row['domain'] ?? '')==='hardcopy') $add('document','hardcopy','document_id');
-        } elseif ($module==='history') $add('user','user','user_id');
+        } elseif ($module==='history') $add('user_name','user','user_id');
 
         return $row;
     }
