@@ -98,7 +98,7 @@ $db->transaction(function() use($db,$ctx) {
     $ctx->identify($staff['id']);
     denied(fn()=>$requests->save(['type'=>'disposal','hardcopy_id'=>$retain['id'],'payload'=>['reason'=>'Too early','disposal_action'=>'shred']]),'retention prevents premature disposal');
     $ctx->identify($adminId); $record=$db->row('hardcopy_documents',$retain['id']);
-    $documents->direct('hardcopy',[...$record,'retention_start_date'=>date('Y-m-d',strtotime('-2 years')),'retention_end_date'=>date('Y-m-d',strtotime('-1 day')),'reason'=>'Correct recorded retention dates']);
+    $documents->direct('hardcopy',array_merge($record,['retention_start_date'=>date('Y-m-d',strtotime('-2 years')),'retention_end_date'=>date('Y-m-d',strtotime('-1 day')),'reason'=>'Correct recorded retention dates']));
     $ctx->identify($staff['id']);
     $dispose=$requests->save(['type'=>'disposal','hardcopy_id'=>$retain['id'],'payload'=>['reason'=>'Retention ended','disposal_action'=>'shred']]);
     $requests->submit(['id'=>$dispose['id'],'version'=>1]);
