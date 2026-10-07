@@ -875,13 +875,28 @@ function recordCard(module, row, actions) {
 }
 
 function folderTree(module, rows, actions) {
-  const hierarchy =
-    module.key === 'hardcopy'
-      ? ['area', 'specific', 'asset', 'location']
-      : ['parent_category', 'category'];
+  const pathFor = row => {
+    if (module.key === 'softcopy') {
+      return Array.isArray(row.category_path) &&
+        row.category_path.length
+        ? row.category_path
+        : [row.category || 'Uncategorized'];
+    }
+
+    return [
+      row.area || 'Unassigned area',
+      row.specific || 'Unassigned specific',
+      row.asset || 'No asset number',
+      row.location || 'Unassigned location'
+    ];
+  };
 
   const build = (items, depth) => {
-    if (depth >= hierarchy.length) {
+    const terminal = items.every(
+      row => depth >= pathFor(row).length
+    );
+
+    if (terminal) {
       const leaf = el('div');
 
       for (const row of items) {
@@ -897,15 +912,18 @@ function folderTree(module, rows, actions) {
       return leaf;
     }
 
-    const key = hierarchy[depth];
     const groups = new Map();
+    const direct = [];
 
     for (const row of items) {
-      const name =
-        row[key] ||
-        (depth === 0
-          ? 'Unassigned'
-          : 'Other');
+      const path = pathFor(row);
+
+      if (depth >= path.length) {
+        direct.push(row);
+        continue;
+      }
+
+      const name = path[depth];
 
       if (!groups.has(name)) {
         groups.set(name, []);
@@ -916,15 +934,25 @@ function folderTree(module, rows, actions) {
 
     const container = el('div');
 
-    for (const [name, groupRows] of groups) {
-      const folder = el(
-        'details',
-        {},
-        el('summary', {}, name),
-        build(groupRows, depth + 1)
+    for (const row of direct) {
+      container.append(
+        recordCard(
+          module,
+          row,
+          actions
+        )
       );
+    }
 
-      container.append(folder);
+    for (const [name, groupRows] of groups) {
+      container.append(
+        el(
+          'details',
+          {},
+          el('summary', {}, name),
+          build(groupRows, depth + 1)
+        )
+      );
     }
 
     return container;
