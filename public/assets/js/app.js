@@ -224,7 +224,7 @@ function permissionsModal(role,related,parent) {
   const search=el('input',{type:'search','aria-label':'Filter permissions',placeholder:'Filter permissions'});modal.body.append(search);
   for (const permission of related.available_permissions || []) {
     const input=el('input',{type:'checkbox',checked:selected.has(Number(permission.id))});
-    const label=el('label',{},input,`${permission.module_label} → ${permission.action_label} (#${permission.id})`); const row=el('p',{},label);
+    const label=el('label',{},input,`${permission.module_label} → ${permission.action_label}`); const row=el('p',{},label);
     boxes.push({input,row,permission});modal.body.append(row);
   }
   search.addEventListener('input',()=>{for(const item of boxes)item.row.hidden=!`${item.permission.module_label} ${item.permission.action_label}`.toLowerCase().includes(search.value.toLowerCase());});
