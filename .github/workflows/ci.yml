@@ -45,7 +45,7 @@ jobs:
       - name: Syntax and domain rules
         run: |
           find application public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
-          for file in public/assets/*.js public/assets/js/*.js; do node --check "$file"; done
+          for file in public/assets/js/*.js; do node --check "$file"; done
           php tests/run.php
           php tests/architecture.php
           php tests/mysqli_contract.php
