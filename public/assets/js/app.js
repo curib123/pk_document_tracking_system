@@ -5,7 +5,6 @@ import {
   Modal,
   notice,
   table,
-  inspect,
   labelOf
 } from './components.js';
 import {
@@ -135,6 +134,71 @@ function recordLabel(module, row) {
   };
 
   return labels[module] || labelOf(module);
+}
+
+const HIDDEN_DETAIL_KEYS = new Set([
+  'id',
+  'version',
+  'graph',
+  'payload',
+  'snapshot',
+  'result',
+  'config',
+  'value',
+  'candidates',
+  'assignment',
+  'before_state',
+  'after_state',
+  'previous_state'
+]);
+
+function readableDetails(
+  data,
+  title = 'Details'
+) {
+  if (
+    !data ||
+    typeof data !== 'object' ||
+    Array.isArray(data)
+  ) {
+    return null;
+  }
+
+  const entries = Object.entries(data).filter(
+    ([key, value]) =>
+      !HIDDEN_DETAIL_KEYS.has(key) &&
+      !key.endsWith('_id') &&
+      value !== null &&
+      value !== '' &&
+      typeof value !== 'object'
+  );
+
+  if (!entries.length) {
+    return null;
+  }
+
+  const section = el(
+    'section',
+    {},
+    el('h3', {}, title)
+  );
+
+  for (const [key, value] of entries) {
+    section.append(
+      el(
+        'p',
+        {},
+        el(
+          'strong',
+          {},
+          labelOf(key) + ': '
+        ),
+        String(value)
+      )
+    );
+  }
+
+  return section;
 }
 
 function globalError(error) {
@@ -2067,6 +2131,25 @@ async function details(moduleKey, id) {
                     )
                 )
               );
+
+              versionActions.push(
+                button(
+                  'Remove draft version',
+                  () =>
+                    actionModal(
+                      'Remove draft workflow version',
+                      api,
+                      'workflows.delete_version',
+                      identity(version),
+                      [reason()],
+                      {
+                        after: change,
+                        explanation:
+                          'Permanently remove this unpublished draft version. Published or request-linked versions are protected.'
+                      }
+                    )
+                )
+              );
             }
 
             const canSetDefault =
@@ -2173,9 +2256,30 @@ async function details(moduleKey, id) {
       }
     }
 
-    modal.body.append(
-      inspect(row, 'Record metadata')
-    );
+    const recordDetails =
+      readableDetails(
+        row,
+        'Record details'
+      );
+
+    if (recordDetails) {
+      modal.body.append(recordDetails);
+    }
+
+    if (
+      row.request_details &&
+      typeof row.request_details === 'object'
+    ) {
+      const requestDetails =
+        readableDetails(
+          row.request_details,
+          'Request details'
+        );
+
+      if (requestDetails) {
+        modal.body.append(requestDetails);
+      }
+    }
 
     const handledRelated = [
       'files',
@@ -2188,16 +2292,24 @@ async function details(moduleKey, id) {
     ];
 
     for (const [key, value] of Object.entries(related)) {
-      if (handledRelated.includes(key)) {
+      if (
+        handledRelated.includes(key) ||
+        Array.isArray(value)
+      ) {
         continue;
       }
 
-      modal.body.append(
-        inspect(
+      const relatedDetails =
+        readableDetails(
           value,
           labelOf(key)
-        )
-      );
+        );
+
+      if (relatedDetails) {
+        modal.body.append(
+          relatedDetails
+        );
+      }
     }
   });
 
@@ -2360,7 +2472,14 @@ function fileModal(file, after) {
     }
   );
 
-  modal.body.append(inspect(file));
+  const details = readableDetails(
+    file,
+    'File details'
+  );
+
+  if (details) {
+    modal.body.append(details);
+  }
 
   return modal;
 }
