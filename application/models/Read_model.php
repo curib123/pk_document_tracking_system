@@ -537,6 +537,46 @@ class Read_model extends Repository_model
      * Numeric IDs are still returned internally for actions and persistence,
      * while shared frontend components hide them from the user.
      */
+    private function categoryPath(
+        int $categoryId
+    ): array {
+        $path = [];
+        $seen = [];
+
+        while (
+            $categoryId > 0 &&
+            !isset($seen[$categoryId]) &&
+            count($path) < 20
+        ) {
+            $seen[$categoryId] = true;
+
+            $this->db
+                ->reset_query()
+                ->select('id,name,parent_id')
+                ->from('categories')
+                ->where('id', $categoryId)
+                ->limit(1);
+
+            $category = $this->first();
+
+            if (!$category) {
+                break;
+            }
+
+            array_unshift(
+                $path,
+                (string) $category['name']
+            );
+
+            $categoryId =
+                $category['parent_id']
+                    ? (int) $category['parent_id']
+                    : 0;
+        }
+
+        return $path;
+    }
+
     private function withDisplayLabels(
         string $module,
         array $row
@@ -645,6 +685,13 @@ class Read_model extends Repository_model
                 'category',
                 'category_id'
             );
+
+            if (!empty($row['category_id'])) {
+                $row['category_path'] =
+                    $this->categoryPath(
+                        (int) $row['category_id']
+                    );
+            }
 
             $add(
                 'creator',
