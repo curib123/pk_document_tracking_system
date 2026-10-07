@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** Document persistence using the native CodeIgniter MySQLi Query Builder. */
 class Document_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function location_occupant(array $params = []): ?array
     {
         $this->db->reset_query()->select('id')->from('hardcopy_documents')->where('location_id',$params[0])->limit(1);
