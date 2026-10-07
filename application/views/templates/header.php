@@ -3,7 +3,6 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="api-endpoint" content="<?= ui_escape(ui_url('index.php/api')) ?>">
 <meta name="api-root" content="<?= ui_escape(ui_url('index.php/')) ?>">
 <meta name="endpoint-routes" content="<?= ui_escape(json_encode((new Endpoint_registry())->browserRoutes(),JSON_THROW_ON_ERROR)) ?>">
 <meta name="initial-module" content="<?= ui_escape($initial_module ?? '') ?>">
