@@ -57,13 +57,13 @@ No `.env` file, virtual host, Docker container, Node server, npm install, or `ph
 
 The installer refuses to modify a non-empty database. It never drops tables or resets an existing administrator.
 
-If you already have a **schema version 1** PK DTS database, update the code first and run:
+If you already have an older PK DTS database, update the code first and run:
 
 ```bat
 C:\xampp\php\php.exe bin\migrate.php
 ```
 
-The migration upgrades the workflow system to schema version 2, converts existing workflow snapshots to ordered approval steps, selects the current published workflow as the default, and removes the retired document-specific approver configuration. Back up the database before any schema migration.
+The migrator upgrades schema versions 1, 2, or 3 to the current **schema version 4**. It preserves existing data while applying the ordered workflow model, flexible predefined physical hierarchy, and the current lookup/workflow indexes used by location auto-population, workflow version management, and approval history. Back up the database before any schema migration.
 
 ## XAMPP notes
 
