@@ -19,13 +19,8 @@ if (!function_exists('pk_base_url')) {
 // Composer supplies third-party dependencies; application paths remain CI3-native.
 if (is_file(PK_ROOT.'/vendor/autoload.php')) require_once PK_ROOT.'/vendor/autoload.php';
 spl_autoload_register(static function (string $name): void {
-    static $map=null,$aliases=null;
+    static $map=null;
     $map ??= require PK_ROOT.'/application/config/classmap.php';
-    $aliases ??= require PK_ROOT.'/application/config/class_aliases.php';
-    if (isset($aliases[$name])) {
-        if (class_exists($aliases[$name]) && !class_exists($name,false)) class_alias($aliases[$name],$name);
-        return;
-    }
     if ($name==='CI_Model') {
         $path=PK_ROOT.'/vendor/codeigniter/framework/system/core/Model.php';
         if (is_file($path)) {
