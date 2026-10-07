@@ -16,3 +16,7 @@ Retargeted the application and CI to PHP 8.0, replaced PHP 8.1-only readonly pro
 ## Redundancy cleanup
 
 Removed the legacy query-string API adapter and service aliases, eliminated duplicated endpoint-route test data, flattened one-use UI template fragments, and removed obsolete compatibility/test files. Native CodeIgniter routes remain the single HTTP interface.
+
+## Workflow Builder simplification
+
+Replaced the generic branching node graph with ordered draftable approval steps. Steps can be added, edited, removed, and reordered, and approvers resolve dynamically from a specific user, role, requester leader, or requester. Published versions are immutable, an explicit published version is selected as Default for new requests, and request details show the pinned workflow version, approval steps, and workflow history.
