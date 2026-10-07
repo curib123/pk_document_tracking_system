@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Problem,Rules};
 class Catalog_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     public const TABLES=['users','roles','permissions','areas','specifics','assets','locations','categories','settings'];
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options);}
