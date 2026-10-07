@@ -129,6 +129,23 @@ class Workflow_model extends Repository_model
         return $this->first();
     }
 
+
+    public function previous_approved_step(
+        array $params = []
+    ): ?array {
+        $this->db
+            ->reset_query()
+            ->from('workflow_steps')
+            ->where('request_id', $params[0])
+            ->where('id <', $params[1])
+            ->where('status', 'completed')
+            ->where('decision', 'approve')
+            ->order_by('id', 'DESC')
+            ->limit(1);
+
+        return $this->first(true);
+    }
+
     public function eligible_approvers(
         string $type,
         mixed $value,
