@@ -237,7 +237,7 @@ async function details(moduleKey, id) {
           button('View approval sequence',()=>notice('Approval sequence',sequence)),
           ...(can('workflows.edit')?[button(version.status==='draft'?'Edit draft steps':'Copy to new draft',()=>workflowVersionModal(row,version,api,metadata.workflow_template,change,version.status!=='draft'))]:[]),
           ...(can('workflows.edit')&&version.status==='draft'?[button('Publish version',()=>actionModal('Publish workflow version',api,'workflows.publish',identity(version),[reason()],{after:change,explanation:'Publish this immutable version. If it is the first usable version, it becomes default automatically.'}))]:[]),
-          ...(can('workflows.edit')&&version.status==='published'&&!Number(version.is_default)?[button('Set as default',()=>actionModal('Set default workflow version',api,'workflows.default',identity(version),[reason()],{after:change,explanation:'New requests of this type will use this version. Existing submitted requests keep their original version.'}))]:[])
+          ...(can('workflows.edit')&&version.status==='published'&&(!Number(version.is_default)||!Number(row.active))?[button('Set as default',()=>actionModal('Set default workflow version',api,'workflows.default',identity(version),[reason()],{after:change,explanation:'New requests of this type will use this version. Existing submitted requests keep their original version.'}))]:[])
         ];
       }));
     }
