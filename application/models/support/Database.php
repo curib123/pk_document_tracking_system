@@ -7,9 +7,11 @@ final class Database
 {
     private bool $active = false;
     private bool $rollbackOnly = false;
+    public \CI_DB_query_builder $builder;
 
-    public function __construct(public readonly \CI_DB_query_builder $builder)
+    public function __construct(\CI_DB_query_builder $builder)
     {
+        $this->builder=$builder;
         if ($builder->dbdriver !== 'mysqli') throw new \LogicException('DTS requires the CodeIgniter mysqli driver.');
         $builder->db_debug = false;
         // Failed transaction groups can be rolled back and a later group can start cleanly.
