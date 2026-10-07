@@ -1,7 +1,6 @@
 <?php
 declare(strict_types=1);
 use Pk\Core\{Context,Database,Database_error,Problem,Rules,Security};
-use Pk\Services\{AuthService,CatalogService,DocumentService,FileService,ReadService,RequestService,TransferService,WorkflowService};
 class Http_gateway
 {
 
@@ -21,11 +20,6 @@ class Http_gateway
                 $this->ctx->user=null; $_SESSION=['csrf'=>bin2hex(random_bytes(32))]; session_regenerate_id(true);
             }
         }
-    }
-    public function dispatch(string $operation,string $method,array $input,array $uploads=[]): array
-    {
-        $definition=(new Endpoint_registry())->resolve($operation,$input);
-        return $this->execute($definition,$method,$input,$uploads);
     }
     public function execute(array $definition,string $method,array $input,array $uploads=[]): array
     {
@@ -56,7 +50,7 @@ class Http_gateway
         if ($operation==='auth.login') return $handle();
         return ($mutation || $operation==='files.download')?$this->ctx->db->transaction($handle):$handle();
     }
-    public static function respond(?string $path=null,array $routeParameters=[]): void
+    public static function respond(string $path,array $routeParameters=[]): void
     {
         Security::startSession(); Security::headers();
         try {
@@ -68,7 +62,7 @@ class Http_gateway
                 $input=Rules::json($raw);
             } else $input=$method==='POST'?$_POST:$_GET;
             $registry=new Endpoint_registry();
-            $definition=$path===null?$registry->resolve(Rules::text($_GET,'op',80),$input):$registry->byPath($path);
+            $definition=$registry->byPath($path);
             $input=array_replace($input,$definition['fixed'],$routeParameters);
             $operation=$definition['op'];
             Security::method($method,$definition['method']==='POST');
