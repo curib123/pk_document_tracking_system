@@ -57,7 +57,7 @@ async function selectModule(module) {
   if (['softcopy','hardcopy'].includes(module.key)) {
     if (can(`${module.key}.direct`)) controls.append(button(`Direct create ${module.key}`, () => directDocument(module.key)));
     if (can('requests.add') && can(`${module.key}.request`)) controls.append(button('New document request', () => requestForm(null, { type: `${module.key}_create` })));
-  else if (module.fields.length && module.key !== 'settings' && can(`${module.key}.add`)) controls.append(button(`Add ${singular(module.key)}`, () => editCatalog(module)));
+  } else if (module.fields.length && module.key !== 'settings' && can(`${module.key}.add`)) controls.append(button(`Add ${singular(module.key)}`, () => editCatalog(module)));
   if (['requests','my_requests','my_tasks','transfers','access','assignments','disposals'].includes(module.key) && can('requests.add')) controls.append(button('New request', () => requestForm()));
   if (module.key === 'files' && can('files.upload')) controls.append(button('Upload file', () => formModal('Upload private file', [field('file_id','upload')], {}, api, values => ({ id: values.file_id, message: 'Private file saved. Use it in a document/revision or attach it from a document dialog.' }), { after: refresh })));
   const search = el('input', { type: 'search', id: 'table-search', placeholder: 'Search records', value: query });
