@@ -5,6 +5,7 @@ namespace Pk\Core;
 /** One CI3 MySQLi connection and transaction boundary; models use its Query Builder. */
 final class Database
 {
+    // Kani ang shared DB wrapper; transaction ug error handling diri para one behavior ra tanan models.
     private bool $active = false;
     private bool $rollbackOnly = false;
     public \CI_DB_query_builder $builder;
