@@ -695,7 +695,7 @@ class Read_model extends Repository_model
         if (in_array($module,['requests','my_requests','my_tasks'],true)) {
             $this->db->reset_query()->from('workflow_steps')->where('request_id', $id)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
-            $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id',$userId)->order_by('h.id');
+            $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id', $id)->order_by('h.id');
             $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             if ($row['workflow_version_id']) {
                 $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
@@ -720,21 +720,85 @@ class Read_model extends Repository_model
     }
     public function lookups(array $query): array
     {
-        $kind=Rules::choice($query,'kind',['users','roles','permissions','areas','specifics','assets','locations','categories','softcopy','hardcopy']);
-        $table=match($kind){'softcopy'=>'softcopy_documents','hardcopy'=>'hardcopy_documents',default=>$kind};
-        if (in_array($kind,['softcopy','hardcopy'],true)) $this->ctx->require($kind.'.view');
-        if ($kind==='permissions') $this->ctx->require('permissions.view');
-        $label=match($kind){'users'=>"CONCAT(first_name,' ',last_name,' — ',position_title)",'assets'=>'asset_number','softcopy'=>"CONCAT(document_number,' — ',title)",'hardcopy'=>'title','locations'=>"CONCAT(code,' — ',name)",default=>'name'};
-        $search=Rules::text($query,'q',100,false) ?? '';
-        $this->db->reset_query()->select('id')->select($label.' AS label',false)->from($table)->group_start();
-        if (in_array($kind,['softcopy','hardcopy'],true)) $this->db->where('status','active');
-        elseif ($kind!=='permissions') $this->db->where('active',1);
-        $this->db->like($label,$search)->group_end();
-        $selected=Rules::id($query,'selected',false);
-        if ($selected!==null) $this->db->or_where('id',$selected);
-        $this->db->order_by('label')->limit(101);
-        $rows=$this->results(); $more=count($rows)>100;
-        return ['options'=>array_slice($rows,0,100),'more'=>$more,'message'=>$more?'More results exist. Type a narrower search.':''];
+        $kind = Rules::choice(
+            $query,
+            'kind',
+            [
+                'users',
+                'roles',
+                'permissions',
+                'areas',
+                'specifics',
+                'assets',
+                'locations',
+                'categories',
+                'softcopy',
+                'hardcopy',
+            ]
+        );
+
+        $table = match ($kind) {
+            'softcopy' => 'softcopy_documents',
+            'hardcopy' => 'hardcopy_documents',
+            default => $kind,
+        };
+
+        if (in_array($kind, ['softcopy', 'hardcopy'], true)) {
+            $this->ctx->require($kind . '.view');
+        }
+
+        if ($kind === 'permissions') {
+            $this->ctx->require('permissions.view');
+        }
+
+        $label = match ($kind) {
+            'users' => "CONCAT(first_name,' ',last_name,' — ',position_title)",
+            'assets' => 'asset_number',
+            'softcopy' => "CONCAT(document_number,' — ',title)",
+            'hardcopy' => 'title',
+            'locations' => "CONCAT(code,' — ',name)",
+            default => 'name',
+        };
+
+        $search = Rules::text($query, 'q', 100, false) ?? '';
+
+        $this->db
+            ->reset_query()
+            ->select('id')
+            ->select($label . ' AS label', false)
+            ->from($table)
+            ->group_start();
+
+        if (in_array($kind, ['softcopy', 'hardcopy'], true)) {
+            $this->db->where('status', 'active');
+        } elseif ($kind !== 'permissions') {
+            $this->db->where('active', 1);
+        }
+
+        $this->db
+            ->like($label, $search)
+            ->group_end();
+
+        $selected = Rules::id($query, 'selected', false);
+
+        if ($selected !== null) {
+            $this->db->or_where('id', $selected);
+        }
+
+        $this->db
+            ->order_by('label')
+            ->limit(101);
+
+        $rows = $this->results();
+        $more = count($rows) > 100;
+
+        return [
+            'options' => array_slice($rows, 0, 100),
+            'more' => $more,
+            'message' => $more
+                ? 'More results exist. Type a narrower search.'
+                : '',
+        ];
     }
     public function dashboard(): array
     {
@@ -742,24 +806,83 @@ class Read_model extends Repository_model
 
         $userId = $this->ctx->id();
         $result = [];
-        foreach(['softcopy'=>'softcopy_documents','hardcopy'=>'hardcopy_documents'] as $module=>$table) if ($this->ctx->can($module.'.view')) {
-            $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from($table)->group_by('status');
-            $result[$module]=$this->results();
+        foreach (
+            [
+                'softcopy' => 'softcopy_documents',
+                'hardcopy' => 'hardcopy_documents',
+            ] as $module => $table
+        ) {
+            if (!$this->ctx->can($module . '.view')) {
+                continue;
+            }
+
+            $this->db
+                ->reset_query()
+                ->select('status')
+                ->select('COUNT(*) AS total', false)
+                ->from($table)
+                ->group_by('status');
+
+            $result[$module] = $this->results();
         }
-        $this->db->reset_query()->select('status')->select('COUNT(*) AS total',false)->from('requests')->where('requested_by',$userId)->group_by('status');
-        $result['my_requests']=$this->results();
-        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('notifications')->where('user_id',$userId)->where('read_at',null);
-        $result['unread_notifications']=(int)$this->first()['n'];
-        $this->db->reset_query()->select('COUNT(*) AS n',false)->from('transfers')->where('recipient_id',$userId)->where('status','pending_recipient_acceptance');
-        $result['pending_receipts']=(int)$this->first()['n'];
+
+        $this->db
+            ->reset_query()
+            ->select('status')
+            ->select('COUNT(*) AS total', false)
+            ->from('requests')
+            ->where('requested_by', $userId)
+            ->group_by('status');
+
+        $result['my_requests'] = $this->results();
+
+        $this->db
+            ->reset_query()
+            ->select('COUNT(*) AS n', false)
+            ->from('notifications')
+            ->where('user_id', $userId)
+            ->where('read_at', null);
+
+        $result['unread_notifications'] = (int) $this->first()['n'];
+
+        $this->db
+            ->reset_query()
+            ->select('COUNT(*) AS n', false)
+            ->from('transfers')
+            ->where('recipient_id', $userId)
+            ->where('status', 'pending_recipient_acceptance');
+
+        $result['pending_receipts'] = (int) $this->first()['n'];
+
         return $result;
     }
     public function readNotification(array $input): array
     {
         $this->ctx->require('notifications.edit');
-        $row=$this->lock('notifications',Rules::id($input),Rules::id($input,'version'));
-        if ((int)$row['user_id']!==$this->ctx->id()) throw new Problem('This notification belongs to another user.',403);
-        if ($row['read_at']===null) $this->update('notifications',(int)$row['id'],['read_at'=>date('Y-m-d H:i:s')]);
-        return ['message'=>'Notification marked as read.'];
+
+        $row = $this->lock(
+            'notifications',
+            Rules::id($input),
+            Rules::id($input, 'version')
+        );
+
+        if ((int) $row['user_id'] !== $this->ctx->id()) {
+            throw new Problem(
+                'This notification belongs to another user.',
+                403
+            );
+        }
+
+        if ($row['read_at'] === null) {
+            $this->update(
+                'notifications',
+                (int) $row['id'],
+                ['read_at' => date('Y-m-d H:i:s')]
+            );
+        }
+
+        return [
+            'message' => 'Notification marked as read.',
+        ];
     }
 }
