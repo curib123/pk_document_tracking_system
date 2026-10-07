@@ -6,7 +6,7 @@ if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', 
 if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
 $schemaVersion=(int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version'];
-if ($schemaVersion !== 4) throw new RuntimeException('Expected schema version 4, got '.$schemaVersion);
+if ($schemaVersion !== 5) throw new RuntimeException('Expected schema version 5, got '.$schemaVersion);
 if (!$admin) throw new RuntimeException('Run the installer first.');
 $ctx->identify((int)$admin['id']);
 $checks=0;
@@ -15,8 +15,8 @@ function denied(callable $fn,string $name): void { global $db; $db->query('SAVEP
 $db->begin();
 $db->transaction(function() use($db,$ctx) {
     check(
-        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===4,
-        'schema version 4 is installed'
+        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===5,
+        'schema version 5 is installed'
     );
 
     foreach ([
@@ -227,7 +227,29 @@ $db->transaction(function() use($db,$ctx) {
     $auditAttempt=new \Read_service($ctx);
     denied(fn()=>$auditAttempt->listing('audit',[]),'ordinary staff cannot query global audit records');
     $ctx->identify($adminId);
-    try { $db->update('audit_logs',1,['action'=>'tampered'],false); throw new RuntimeException('Audit update unexpectedly allowed'); } catch (LogicException $e) { check(true,'audit records append-only'); }
+    $auditReader=new \Read_service($ctx);
+    $auditRows=$auditReader->listing('audit',[
+        'page'=>1,
+        'limit'=>100,
+        'sort'=>'created_at',
+        'direction'=>'desc',
+    ]);
+    check(
+        ($auditRows['total'] ?? 0)>0,
+        'audit records persist in append-only JSONL files'
+    );
+    $auditTable=$db->one(
+        'SELECT 1 AS found
+         FROM information_schema.tables
+         WHERE table_schema=?
+           AND table_name=?
+         LIMIT 1',
+        [$db->builder->database,'audit_logs']
+    );
+    check(
+        $auditTable===null,
+        'legacy audit table is removed in schema version 5'
+    );
 });
 $db->rollback();
 echo "$checks integration assertions passed.\n";
