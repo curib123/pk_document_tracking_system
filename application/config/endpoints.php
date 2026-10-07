@@ -1,5 +1,5 @@
 <?php
-// Explicit HTTP contract shared by native controllers and the legacy adapter.
+// Explicit HTTP contract for native CodeIgniter controllers.
 return [
     'list@softcopy' => ['op' => 'list', 'path' => 'softcopy/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'softcopy']],
     'detail@softcopy' => ['op' => 'detail', 'path' => 'softcopy/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'softcopy']],
