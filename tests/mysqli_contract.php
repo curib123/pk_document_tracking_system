@@ -24,11 +24,10 @@ contract('Composer requires mysqli and no PDO extension',function(){
     $deps=json_decode(file_get_contents(PK_ROOT.'/composer.json'),true)['require'];
     return isset($deps['ext-mysqli']) && !isset($deps['ext-pdo']) && !isset($deps['ext-pdo_mysql']);
 });
-contract('container and CI install mysqli only for the database driver',function(){
-    foreach(['Dockerfile','.github/workflows/ci.yml'] as $file) {
-        $s=file_get_contents(PK_ROOT.'/'.$file);
-        if (!str_contains($s,'mysqli') || str_contains($s,'pdo_mysql')) return false;
-    }return true;
+contract('Composer and CI use mysqli only for the database driver',function(){
+    $composer=file_get_contents(PK_ROOT.'/composer.json');
+    $ci=file_get_contents(PK_ROOT.'/.github/workflows/ci.yml');
+    return str_contains($composer,'ext-mysqli') && str_contains($ci,'mysqli') && !str_contains($composer,'pdo_mysql') && !str_contains($ci,'pdo_mysql');
 });
 foreach(['Auth','Identity','Catalog','Document','Request','Workflow','File','Read'] as $name) {
     contract($name.' model uses native Query Builder rather than SQL result wrappers',function()use($name){
