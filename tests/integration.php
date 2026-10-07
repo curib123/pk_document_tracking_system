@@ -2,7 +2,6 @@
 declare(strict_types=1);
 require dirname(__DIR__).'/application/bootstrap.php';
 use Pk\Core\{Context,Database,Problem};
-use Pk\Services\{CatalogService,DocumentService,RequestService,WorkflowService,TransferService};
 if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', '_test')) { fwrite(STDERR,"Use PK_TEST_DB=1 and a dedicated database whose name ends in _test.\n"); exit(2); }
 if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
@@ -13,7 +12,7 @@ function check(bool $condition,string $name): void { global $checks; if (!$condi
 function denied(callable $fn,string $name): void { global $db; $db->query('SAVEPOINT expected_denial'); try { $fn(); } catch(Problem $e) { $db->query('ROLLBACK TO SAVEPOINT expected_denial'); $db->query('RELEASE SAVEPOINT expected_denial'); check(true,$name); return; } throw new RuntimeException('Expected denial: '.$name); }
 $db->begin();
 $db->transaction(function() use($db,$ctx) {
-    $catalog=new CatalogService($ctx);
+    $catalog=new Catalog_service($ctx);
     $staffRole=(int)$db->one("SELECT id FROM roles WHERE name='Staff'")['id'];
     $staff=$catalog->save('users',['username'=>'staff_'.bin2hex(random_bytes(3)),'first_name'=>'Test','last_name'=>'Staff','position_title'=>'Clerk','role_id'=>$staffRole]);
     check(isset($staff['initial_password']),'generated password shown once');
@@ -25,13 +24,13 @@ $db->transaction(function() use($db,$ctx) {
     $location=$catalog->save('locations',['name'=>'Shelf A','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $destination=$catalog->save('locations',['name'=>'Shelf B','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $category=$catalog->save('categories',['name'=>'Forms','folder_name'=>'forms']);
-    $documents=new DocumentService($ctx);
+    $documents=new Document_service($ctx);
     $hard=$documents->direct('hardcopy',['title'=>'Test physical record','area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$location['id'],'holder_id'=>$staff['id'],'reason'=>'Initial registration']);
     check((int)$db->row('hardcopy_documents',$hard['id'])['location_id']===$location['id'],'direct hardcopy created');
     denied(fn()=>$documents->direct('hardcopy',['title'=>'Duplicate storage','area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$location['id'],'holder_id'=>$staff['id'],'reason'=>'Test']), 'one document per current location');
     $adminId=$ctx->id(); $ctx->identify($staff['id']);
     denied(fn()=>$documents->direct('hardcopy',[]),'staff cannot bypass direct-create authorization');
-    $requests=new RequestService($ctx);
+    $requests=new Request_service($ctx);
     $request=$requests->save(['type'=>'transfer','hardcopy_id'=>$hard['id'],'payload'=>['area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$destination['id'],'recipient_id'=>$adminId,'document_copy_number'=>'COPY-1','reason'=>'Move to document control']]);
     check($db->row('requests',$request['id'])['status']==='draft','request is independent draft');
     $requests->submit(['id'=>$request['id'],'version'=>1]);
@@ -44,7 +43,7 @@ $db->transaction(function() use($db,$ctx) {
     check($transfer['status']==='for_transfer','approval creates transfer awaiting physical movement');
     check((int)$db->row('hardcopy_documents',$hard['id'])['location_id']===$location['id'],'approval does not change current location');
     $ctx->identify($staff['id']);
-    $transfers=new TransferService($ctx);
+    $transfers=new Transfer_service($ctx);
     $transfers->dispatch(['id'=>$transfer['id'],'version'=>(int)$transfer['version'],'comments'=>'Delivered']);
     $transfer=$db->row('transfers',(int)$transfer['id']);
     denied(fn()=>$transfers->receive(['id'=>$transfer['id'],'version'=>(int)$transfer['version'],'decision'=>'accepted','comments'=>'Not the recipient']),'sender cannot accept for recipient');
@@ -57,7 +56,7 @@ $db->transaction(function() use($db,$ctx) {
     check(count($db->all('SELECT * FROM workflow_history WHERE request_id=?',[$request['id']]))>=4,'workflow and transfer history retained');
     check(count($db->all("SELECT * FROM status_history WHERE domain='hardcopy' AND document_id=?",[$hard['id']]))>=2,'document status history retained');
     check(count($db->all('SELECT * FROM notifications WHERE user_id=?',[$staff['id']]))>0,'notifications created');
-    $workflowService=new WorkflowService($ctx);
+    $workflowService=new Workflow_service($ctx);
     $extra=$workflowService->save(['workflow_key'=>'alternate_'.bin2hex(random_bytes(3)),'name'=>'Alternate transfer','request_type'=>'transfer','active'=>0]);
     check((int)$db->row('workflows',$extra['id'])['active']===0,'new alternate workflow starts inactive');
     $draft=$db->one('SELECT * FROM workflow_versions WHERE workflow_id=?',[$extra['id']]);
@@ -110,7 +109,7 @@ $db->transaction(function() use($db,$ctx) {
     $disposal=$db->one('SELECT * FROM disposals WHERE request_id=?',[$dispose['id']]);
     check((int)json_decode($disposal['previous_state'],true)['location_id']===$location['id'],'disposal preserves complete physical record snapshot');
     $ctx->identify($staff['id']);
-    $auditAttempt=new \Pk\Services\ReadService($ctx);
+    $auditAttempt=new \Read_service($ctx);
     denied(fn()=>$auditAttempt->listing('audit',[]),'ordinary staff cannot query global audit records');
     $ctx->identify($adminId);
     try { $db->update('audit_logs',1,['action'=>'tampered'],false); throw new RuntimeException('Audit update unexpectedly allowed'); } catch (LogicException $e) { check(true,'audit records append-only'); }
