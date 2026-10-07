@@ -41,15 +41,16 @@ def route_api(request):
     elif op=='metadata': result={**metadata,'user':user,'permissions':permissions}
     elif op=='dashboard': result={'softcopy':[], 'hardcopy':[], 'my_requests':[], 'unread_notifications':0,'pending_receipts':0}
     elif op=='list':
-        rows=[userrow] if data.get('module')=='users' else ([{'id':1,'name':'Administrator','active':1,'version':1}] if data.get('module')=='roles' else ([{'id':7,'document_number':'DOC-001','title':'Quality Manual','status':'active','version':1}] if data.get('module')=='softcopy' else ([{'id':9,'workflow_key':'test_flow','name':'Test Workflow','request_type':'access','active':1,'version':1}] if data.get('module')=='workflows' else [])))
+        rows=[userrow] if data.get('module')=='users' else ([{'id':1,'name':'Administrator','active':1,'version':1}] if data.get('module')=='roles' else ([{'id':7,'document_number':'DOC-001','title':'Quality Manual','status':'active','version':1}] if data.get('module')=='softcopy' else ([{'id':8,'title':'Controlled Hardcopy','sequence_number':'HC-001','status':'active','version':1}] if data.get('module')=='hardcopy' else ([{'id':9,'workflow_key':'test_flow','name':'Test Workflow','request_type':'access','active':1,'version':1}] if data.get('module')=='workflows' else []))))
         result={'rows':rows,'page':1,'pages':1,'limit':25,'total':len(rows)}
     elif op=='lookups':
         kind=data.get('kind')
-        options=[{'id':1,'label':'Administrator'}] if kind in ['roles','users'] else ([{'id':7,'label':'DOC-001 — Quality Manual'}] if kind=='softcopy' else [])
+        options=[{'id':1,'label':'Administrator'}] if kind in ['roles','users'] else ([{'id':7,'label':'DOC-001 — Quality Manual'}] if kind=='softcopy' else ([{'id':8,'label':'Controlled Hardcopy'}] if kind=='hardcopy' else []))
         result={'options':options,'more':False}
     elif op=='detail':
         if data.get('module')=='roles': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}}
         elif data.get('module')=='softcopy': result={'row':{'id':7,'document_number':'DOC-001','title':'Quality Manual','category_id':1,'status':'active','version':1},'related':{'can_read_files':True,'files':[],'revisions':[]}}
+        elif data.get('module')=='hardcopy': result={'row':{'id':8,'title':'Controlled Hardcopy','status':'active','version':1},'related':{'can_read_files':True}}
         elif data.get('module')=='workflows': result={'row':{'id':9,'workflow_key':'test_flow','name':'Test Workflow','request_type':'access','active':1,'version':1},'related':{'versions':[]}}
         else: result={'row':userrow,'related':{}}
     elif op=='roles.permissions': state['permission_payload']=data; result={'message':'Permissions updated.'}
@@ -123,6 +124,24 @@ try:
         assert state['permission_payload']['reason']=='Document-control role review'
         assert state['permission_payload']['permission_ids']==[1]
         perm.get_by_role('button',name='Close',exact=True).click()
+        # Hardcopy transfer action must never fall back to softcopy_create.
+        page.get_by_role('navigation').get_by_role('button',name='Hardcopy documents',exact=True).click()
+        expect(page.locator('#table-container th')).not_to_contain_text('Id')
+        assert page.evaluate("document.querySelector('#table-filters').compareDocumentPosition(document.querySelector('#table-container')) & Node.DOCUMENT_POSITION_FOLLOWING")
+        assert page.evaluate("document.querySelector('#table-container').compareDocumentPosition(document.querySelector('#table-footer')) & Node.DOCUMENT_POSITION_FOLLOWING")
+        assert page.locator('#table-footer').get_by_label('Rows per page',exact=True).is_visible()
+        page.get_by_role('button',name='View / actions',exact=True).click()
+        hard=page.get_by_role('dialog',name='Controlled Hardcopy',exact=True)
+        hard.get_by_role('button',name='Transfer request',exact=True).click()
+        transfer=page.get_by_role('dialog',name='Transfer request',exact=True)
+        expect(transfer.get_by_label('Request Type',exact=True)).to_have_value('transfer')
+        expect(transfer.get_by_label('Request Type',exact=True)).to_be_disabled()
+        expect(transfer.get_by_label('Hardcopy Document',exact=True)).to_have_value('8')
+        expect(transfer.get_by_label('Hardcopy Document',exact=True).locator('option[value="8"]')).to_have_text('Controlled Hardcopy')
+        assert '#8' not in transfer.inner_text()
+        transfer.get_by_role('button',name='Cancel',exact=True).click()
+        hard.get_by_role('button',name='Close',exact=True).click()
+
         # Specific request buttons must open with their own request type and target synchronized.
         page.get_by_role('navigation').get_by_role('button',name='Softcopy documents',exact=True).click()
         page.get_by_role('button',name='View / actions',exact=True).click()
@@ -172,5 +191,5 @@ try:
         assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, ordered workflow step add/remove/save, request-button type synchronization, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all 24 modules, no JS runtime errors')
+        print('PASS: native dialog, hardcopy transfer preset synchronization, table controls below results, ordered workflow step add/remove/save, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all modules, no JS runtime errors')
 finally: server.shutdown()
