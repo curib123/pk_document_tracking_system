@@ -421,6 +421,81 @@ class Workflow_service
         ];
     }
 
+    public function deleteVersion(
+        array $input
+    ): array {
+        $this->ctx->require(
+            'workflows.edit'
+        );
+
+        $db = $this->ctx->model(
+            \Workflow_model::class
+        );
+
+        $id = Rules::id($input);
+
+        $version = $db->lock(
+            'workflow_versions',
+            $id,
+            Rules::id(
+                $input,
+                'version'
+            )
+        );
+
+        if ($version['status'] !== 'draft') {
+            throw new Problem(
+                'Only draft workflow versions can be removed.',
+                409
+            );
+        }
+
+        if ((int) $version['is_default'] === 1) {
+            throw new Problem(
+                'A default workflow version cannot be removed.',
+                409
+            );
+        }
+
+        $reference =
+            $db->draft_version_request_reference(
+                [$id]
+            );
+
+        if ($reference) {
+            throw new Problem(
+                'This draft is already referenced by request ' .
+                $reference['reference'] .
+                ' and cannot be removed.',
+                409
+            );
+        }
+
+        $reason = Rules::text(
+            $input,
+            'reason',
+            2000
+        );
+
+        $db->delete_draft_version(
+            [$id]
+        );
+
+        $this->ctx->audit(
+            'workflows',
+            'draft_version_removed',
+            $id,
+            $version,
+            null,
+            $reason
+        );
+
+        return [
+            'message' =>
+                'Draft workflow version removed.',
+        ];
+    }
+
     private function makeDefault(
         int $workflowId,
         int $versionId,
@@ -430,11 +505,8 @@ class Workflow_service
             \Workflow_model::class
         );
 
-        $this->ctx->sequence(
-            'workflow_route_' . $requestType,
-            ''
-        );
-
+        // Default switching does not need a sequence counter.
+        // Keep publication limited to the workflow records it actually changes.
         $db->deactivate_other_definitions(
             [
                 $requestType,
