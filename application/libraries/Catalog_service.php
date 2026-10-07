@@ -54,7 +54,7 @@ class Catalog_service
         }
         if ($id) $db->update($module,$id,$data); else $id=$db->insert($module,$data);
         $this->ctx->audit($module,$before?'updated':'created',$id,$before,$data);
-        return ['id'=>$id,...$extra];
+        return array_merge(['id'=>$id],$extra);
     }
     public function resetPassword(array $input): array
     {
