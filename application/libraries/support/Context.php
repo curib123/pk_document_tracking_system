@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Pk\Core;
 final class Context
 {
+    // Mao ni ang request context: current user, permissions, DB, audit, ug notifications in one place.
     public ?array $user = null;
     private array $models = [];
     private array $permissions = [];
