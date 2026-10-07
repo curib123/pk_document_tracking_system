@@ -33,6 +33,8 @@ let limit = 25;
 let sort = '';
 let direction = 'desc';
 let listGeneration = 0;
+let statusFilter = '';
+let layout = 'table';
 
 const SINGULAR_NAMES = {
   users: 'user',
@@ -350,13 +352,42 @@ async function boot() {
       );
     }
 
+    const navigationGroups = new Map();
+
     for (const module of metadata.modules) {
-      navigation.append(
-        button(
-          module.label,
-          () => selectModule(module)
-        )
-      );
+      if (module.navigation_hidden) {
+        continue;
+      }
+
+      const groupName =
+        module.navigation_group || 'Other';
+
+      if (!navigationGroups.has(groupName)) {
+        const group = el(
+          'details',
+          {},
+          el('summary', {}, groupName),
+          el('div', { 'data-navigation-items': groupName })
+        );
+
+        navigationGroups.set(
+          groupName,
+          group.querySelector(
+            '[data-navigation-items]'
+          )
+        );
+
+        navigation.append(group);
+      }
+
+      navigationGroups
+        .get(groupName)
+        .append(
+          button(
+            module.label,
+            () => selectModule(module)
+          )
+        );
     }
 
     status.textContent = 'Ready.';
@@ -542,6 +573,8 @@ async function selectModule(module) {
   query = '';
   sort = module.columns[0];
   direction = 'desc';
+  statusFilter = '';
+  layout = 'table';
 
   content.replaceChildren(
     el('h2', {}, module.label)
@@ -654,6 +687,88 @@ async function selectModule(module) {
     )
   );
 
+  if (module.columns.includes('status')) {
+    const statusSelect = el(
+      'select',
+      { id: 'status-filter' },
+      [
+        '',
+        'active',
+        'draft',
+        'pending',
+        'returned',
+        'approved',
+        'rejected',
+        'cancelled',
+        'disposed',
+        'completed'
+      ].map(value =>
+        el(
+          'option',
+          { value },
+          value ? labelOf(value) : 'All statuses'
+        )
+      )
+    );
+
+    statusSelect.addEventListener(
+      'change',
+      () => {
+        statusFilter = statusSelect.value;
+        page = 1;
+        loadTable().catch(globalError);
+      }
+    );
+
+    filters.append(
+      el(
+        'label',
+        { htmlFor: 'status-filter' },
+        'Status'
+      ),
+      statusSelect
+    );
+  }
+
+  if (
+    ['softcopy', 'hardcopy'].includes(
+      module.key
+    )
+  ) {
+    const layoutSelect = el(
+      'select',
+      { id: 'layout-select' },
+      [
+        ['table', 'Table'],
+        ['grid', 'Grid'],
+        ['folder', 'Folder']
+      ].map(([value, name]) =>
+        el(
+          'option',
+          { value },
+          name
+        )
+      )
+    );
+
+    layoutSelect.addEventListener(
+      'change',
+      () => {
+        layout = layoutSelect.value;
+        loadTable().catch(globalError);
+      }
+    );
+
+    filters.append(
+      el(
+        'label',
+        { htmlFor: 'layout-select' },
+        'Layout'
+      ),
+      layoutSelect
+    );
+  }
+
   const tableFooter = el(
     'div',
     { id: 'table-footer' },
@@ -688,6 +803,137 @@ async function selectModule(module) {
   await loadTable();
 }
 
+function recordCard(module, row, actions) {
+  const card = el(
+    'article',
+    {},
+    el('h3', {}, recordLabel(module.key, row))
+  );
+
+  for (const column of module.columns) {
+    if (
+      column === 'id' ||
+      column.endsWith('_id')
+    ) {
+      continue;
+    }
+
+    const value = row[column];
+
+    card.append(
+      el(
+        'p',
+        {},
+        el('strong', {}, labelOf(column) + ': '),
+        value ?? '—'
+      )
+    );
+  }
+
+  if (actions) {
+    card.append(actions(row));
+  }
+
+  return card;
+}
+
+function folderTree(module, rows, actions) {
+  const hierarchy =
+    module.key === 'hardcopy'
+      ? ['area', 'specific', 'asset', 'location']
+      : ['parent_category', 'category'];
+
+  const build = (items, depth) => {
+    if (depth >= hierarchy.length) {
+      const leaf = el('div');
+
+      for (const row of items) {
+        leaf.append(
+          recordCard(
+            module,
+            row,
+            actions
+          )
+        );
+      }
+
+      return leaf;
+    }
+
+    const key = hierarchy[depth];
+    const groups = new Map();
+
+    for (const row of items) {
+      const name =
+        row[key] ||
+        (depth === 0
+          ? 'Unassigned'
+          : 'Other');
+
+      if (!groups.has(name)) {
+        groups.set(name, []);
+      }
+
+      groups.get(name).push(row);
+    }
+
+    const container = el('div');
+
+    for (const [name, groupRows] of groups) {
+      const folder = el(
+        'details',
+        {},
+        el('summary', {}, name),
+        build(groupRows, depth + 1)
+      );
+
+      container.append(folder);
+    }
+
+    return container;
+  };
+
+  return build(rows, 0);
+}
+
+function renderRows(module, rows, actions) {
+  if (layout === 'grid') {
+    const grid = el('div');
+
+    for (const row of rows) {
+      grid.append(
+        recordCard(
+          module,
+          row,
+          actions
+        )
+      );
+    }
+
+    if (!rows.length) {
+      grid.append(
+        el('p', {}, 'No records found.')
+      );
+    }
+
+    return grid;
+  }
+
+  if (layout === 'folder') {
+    return folderTree(
+      module,
+      rows,
+      actions
+    );
+  }
+
+  return table(
+    module.columns,
+    rows,
+    actions
+  );
+}
+
 async function loadTable() {
   if (!currentModule) {
     return;
@@ -713,6 +959,7 @@ async function loadTable() {
         page,
         limit,
         q: query,
+        status: statusFilter || undefined,
         sort,
         direction
       }
@@ -746,8 +993,8 @@ async function loadTable() {
     document
       .querySelector('#table-container')
       .replaceChildren(
-        table(
-          module.columns,
+        renderRows(
+          module,
           result.rows,
           actions
         )
@@ -1057,15 +1304,49 @@ function requestForm(
         ? ['document_number']
         : [];
 
+    let requestFields =
+      metadata.request_fields[type] || [];
+
+    const automaticHolder =
+      type === 'hardcopy_create' &&
+      !can('requests.manage') &&
+      !can('hardcopy.direct');
+
+    if (automaticHolder) {
+      requestFields =
+        requestFields.filter(
+          definition =>
+            definition.name !== 'holder_id'
+        );
+    }
+
     payload = await mountFields(
       body,
-      metadata.request_fields[type] || [],
+      requestFields,
       values,
       api,
       {
         disabled: disabledPayload
       }
     );
+
+    if (automaticHolder) {
+      body.prepend(
+        el(
+          'p',
+          {},
+          el('strong', {}, 'Holder: '),
+          [
+            user.first_name,
+            user.middle_name,
+            user.last_name
+          ]
+            .filter(Boolean)
+            .join(' ') +
+            ' (requester, automatic)'
+        )
+      );
+    }
   };
 
   const renderHead = async () => {
