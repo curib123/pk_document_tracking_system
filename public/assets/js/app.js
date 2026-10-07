@@ -193,10 +193,6 @@ async function details(moduleKey, id) {
         }
       }
       if (active && related.can_read_files && can('files.upload')) action('Add attachment','files.attach',{domain,document_id:row.id},[field('file_id','upload'),reason()]);
-      if (active && can('workflows.edit')) {
-        const config=Object.fromEntries(Object.entries(related.approver_config?.config || {}).map(([key,value])=>[key,value.user_id]));
-        actions.append(button('Configure document approvers',()=>formModal('Configure document approvers',[field('config','json'),reason()],{config},api,values=>api.request('documents.approvers',{domain,...identity(row),...values},true),{after:change,explanation:'Map workflow document-assignment keys to user IDs, for example {"plant_manager":2}. This affects new submissions, not existing snapshots.'})));
-      }
       if (related.revisions) {
         modal.body.append(el('h3',{},'Revision history'),table(['id','revision_number','revision_status','document_title','effective_date','new_revision_level'],related.revisions,revision=>[
           ...(related.can_read_files?[button('Download revision',()=>downloadModal(revision.file_id,related.files?.find(file=>Number(file.id)===Number(revision.file_id))?.original_name || `revision-${revision.revision_number}`))]:[]),
@@ -213,7 +209,7 @@ async function details(moduleKey, id) {
         if (can('requests.submit')) action('Submit request','requests.submit',identity(row),[],{explanation:'Submit this saved request to its published approval workflow?'});
       }
       if (can('requests.cancel')&&(own||can('requests.manage'))&&['draft','returned','pending'].includes(row.status)) action('Cancel request','requests.cancel',identity(row),[reason()]);
-      if (pending&&can('requests.approve')&&!own&&pending.candidates?.some(candidate=>Number(candidate.id)===Number(user.id))) {
+      if (pending&&pending.candidates?.some(candidate=>Number(candidate.id)===Number(user.id))) {
         for (const decision of ['approve','reject','return']) action(decision==='return'?'Return for correction':labelOf(decision),'requests.decide',{...identity(row),step_id:pending.id,decision},[comments()]);
         if (row.payload?.file_id) actions.append(button('Review submitted file',()=>downloadModal(row.payload.file_id,'submitted-document')));
       }
@@ -234,14 +230,40 @@ async function details(moduleKey, id) {
     if (moduleKey==='files') fileActions(actions,row,change);
     if (moduleKey==='workflows') {
       if (can('workflows.edit')) actions.append(button('New draft version',()=>workflowVersionModal(row,null,api,metadata.workflow_template,change)));
-      modal.body.append(el('h3',{},'Workflow versions'),table(['id','version_number','status','published_at'],related.versions || [],version=>[
-        button('View workflow graph',()=>notice('Workflow graph',JSON.stringify(version.graph,null,2))),
-        ...(can('workflows.edit')?[button(version.status==='draft'?'Edit draft nodes':'Copy to new draft',()=>workflowVersionModal(row,version,api,metadata.workflow_template,change,version.status!=='draft'))]:[]),
-        ...(can('workflows.edit')&&version.status==='draft'?[button('Publish version',()=>actionModal('Publish workflow version',api,'workflows.publish',identity(version),[reason()],{after:change,explanation:'Use this version for new submissions. Existing requests will not change.'}))]:[])
-      ]));
+      const versions=(related.versions || []).map(version=>({...version,default_version:Number(version.is_default)?'Yes':'No'}));
+      modal.body.append(el('h3',{},'Workflow versions'),table(['version_number','status','default_version','published_at'],versions,version=>{
+        const sequence=(version.graph?.steps || []).map((step,index)=>`${index+1}. ${step.name} — ${step.approver?.label || labelOf(step.approver?.type || '')}`).join('\n') || 'No approval steps.';
+        return [
+          button('View approval sequence',()=>notice('Approval sequence',sequence)),
+          ...(can('workflows.edit')?[button(version.status==='draft'?'Edit draft steps':'Copy to new draft',()=>workflowVersionModal(row,version,api,metadata.workflow_template,change,version.status!=='draft'))]:[]),
+          ...(can('workflows.edit')&&version.status==='draft'?[button('Publish version',()=>actionModal('Publish workflow version',api,'workflows.publish',identity(version),[reason()],{after:change,explanation:'Publish this immutable version. If it is the first usable version, it becomes default automatically.'}))]:[]),
+          ...(can('workflows.edit')&&version.status==='published'&&!Number(version.is_default)?[button('Set as default',()=>actionModal('Set default workflow version',api,'workflows.default',identity(version),[reason()],{after:change,explanation:'New requests of this type will use this version. Existing submitted requests keep their original version.'}))]:[])
+        ];
+      }));
+    }
+    if (['requests','my_requests','my_tasks'].includes(moduleKey)) {
+      if (related.workflow_version) {
+        const workflow=related.workflow_version;
+        modal.body.append(
+          el('h3',{},'Workflow'),
+          el('p',{},`${workflow.workflow_name} — Version ${workflow.version_number}`)
+        );
+      }
+      if (related.steps?.length) {
+        modal.body.append(el('h3',{},'Approval steps'),table(
+          ['label','assigned_name','assigned_position','status','decision','acting_name','comments'],
+          related.steps
+        ));
+      }
+      if (related.history?.length) {
+        modal.body.append(el('h3',{},'Workflow history'),table(
+          ['step_name','action','user_name','position_title','comments','created_at'],
+          related.history
+        ));
+      }
     }
     modal.body.append(inspect(row,'Record metadata'));
-    for (const [key,value] of Object.entries(related)) if (!['files','revisions','versions','available_permissions'].includes(key)) modal.body.append(inspect(value,labelOf(key)));
+    for (const [key,value] of Object.entries(related)) if (!['files','revisions','versions','available_permissions','steps','history','workflow_version'].includes(key)) modal.body.append(inspect(value,labelOf(key)));
   });
   return modal;
 }
