@@ -31,11 +31,8 @@ jobs:
       DB_PASSWORD: integration-only
       PK_TEST_DB: '1'
       CI_ROUTE_PASSWORD: Native-route-test-only-2026!
-      PK_ADMIN_USERNAME: admin
       PK_ADMIN_PASSWORD: Initial-integration-only-123!
       APP_URL: http://127.0.0.1:8080
-      APP_ENV: development
-      SESSION_SECURE: '0'
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -62,7 +59,7 @@ jobs:
           php tests/concurrency.php
       - name: Native and legacy controller integration
         run: |
-          php -S 127.0.0.1:8080 -t public public/router.php > /tmp/php-server.log 2>&1 &
+          php -S 127.0.0.1:8080 -t public > /tmp/php-server.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break || sleep 1; done
           python3 tests/native_routes.py
       - name: Native modal UI contract
