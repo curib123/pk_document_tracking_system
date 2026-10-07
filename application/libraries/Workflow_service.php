@@ -638,13 +638,12 @@ class Workflow_service
             ]
         );
 
-        $comments =
-            Rules::text(
-                $input,
-                'comments',
-                4000,
-                $decision !== 'approve'
-            ) ?? '';
+        // Remarks are required for every approval action.
+        $comments = Rules::text(
+            $input,
+            'comments',
+            4000
+        );
 
         $db->update(
             'workflow_steps',
@@ -668,46 +667,49 @@ class Workflow_service
             ]
         );
 
-        $this->history(
-            (int) $request['id'],
-            (int) $step['id'],
-            $decision,
-            $step,
-            null,
-            $comments
-        );
-
-        if ($decision !== 'approve') {
-            $status =
-                $decision === 'return'
-                    ? 'returned'
-                    : 'rejected';
+        if ($decision === 'reject') {
+            $after = [
+                'status' => 'rejected',
+                'current_node' => null,
+                'workflow_complete' => true,
+            ];
 
             $db->update(
                 'requests',
                 (int) $request['id'],
                 [
-                    'status' => $status,
+                    'status' => 'rejected',
                     'current_node' => null,
                     'completed_at' =>
-                        $status === 'returned'
-                            ? null
-                            : date(
-                                'Y-m-d H:i:s'
-                            ),
+                        date('Y-m-d H:i:s'),
                 ]
             );
 
+            $this->history(
+                (int) $request['id'],
+                (int) $step['id'],
+                'reject',
+                $step,
+                $after,
+                $comments
+            );
+
             $this->ctx->notify(
-                (int) $request[
-                    'requested_by'
-                ],
-                'Request ' . $status,
+                (int) $request['requested_by'],
+                'Request rejected',
                 $request['reference'] .
-                    ' is ' .
-                    $status .
-                    '.',
+                    ' was rejected and its approval workflow has ended.',
                 (int) $request['id']
+            );
+
+            return;
+        }
+
+        if ($decision === 'return') {
+            $this->returnToPreviousHolder(
+                $request,
+                $step,
+                $comments
             );
 
             return;
@@ -728,6 +730,20 @@ class Workflow_service
                     'current_node'
                 ]
             );
+
+        $this->history(
+            (int) $request['id'],
+            (int) $step['id'],
+            'approve',
+            $step,
+            [
+                'status' => 'pending',
+                'next_node' => $next,
+                'final_approval' =>
+                    $next === null,
+            ],
+            $comments
+        );
 
         if ($next === null) {
             $complete($request);
@@ -763,6 +779,175 @@ class Workflow_service
             ),
             $next,
             $complete
+        );
+    }
+
+    private function returnToPreviousHolder(
+        array $request,
+        array $currentStep,
+        string $comments
+    ): void {
+        $db = $this->ctx->model(
+            \Workflow_model::class
+        );
+
+        $requestId = (int) $request['id'];
+
+        $previous =
+            $db->previous_approved_step(
+                [
+                    $requestId,
+                    (int) $currentStep['id'],
+                ]
+            );
+
+        // Walay earlier approver: ang requester mao ang previous holder.
+        if (!$previous) {
+            $after = [
+                'status' => 'returned',
+                'current_node' => null,
+                'returned_to' => 'requester',
+                'returned_to_user_id' =>
+                    (int) $request['requested_by'],
+            ];
+
+            $db->update(
+                'requests',
+                $requestId,
+                [
+                    'status' => 'returned',
+                    'current_node' => null,
+                    'completed_at' => null,
+                ]
+            );
+
+            $this->history(
+                $requestId,
+                (int) $currentStep['id'],
+                'return',
+                $currentStep,
+                $after,
+                $comments
+            );
+
+            $this->ctx->notify(
+                (int) $request['requested_by'],
+                'Request returned for correction',
+                $request['reference'] .
+                    ' was returned to you. Review the remarks, correct the request, then resubmit it.',
+                $requestId
+            );
+
+            return;
+        }
+
+        $previousUserId =
+            (int) (
+                $previous['acting_user_id']
+                ?: $previous['assigned_user_id']
+            );
+
+        $holder =
+            $db->active_user_for_workflow(
+                $previousUserId
+            );
+
+        if (!$holder) {
+            throw new Problem(
+                'The previous request holder is no longer active. Ask an administrator to reassign the workflow before returning it.',
+                409
+            );
+        }
+
+        $candidate = [
+            'id' => (int) $holder['id'],
+            'name' => Context::name($holder),
+            'position' =>
+                $holder['position_title'],
+        ];
+
+        $assignment = [
+            'type' => 'user',
+            'value' => (int) $holder['id'],
+            'label' =>
+                $candidate['name'] .
+                ' — ' .
+                $candidate['position'],
+        ];
+
+        $newStepId = $db->insert(
+            'workflow_steps',
+            [
+                'request_id' => $requestId,
+                'node_key' =>
+                    $previous['node_key'],
+                'label' =>
+                    $previous['label'],
+                'assignment' =>
+                    Context::json($assignment),
+                'candidates' =>
+                    Context::json(
+                        [$candidate]
+                    ),
+                'assigned_user_id' =>
+                    (int) $holder['id'],
+                'assigned_name' =>
+                    $candidate['name'],
+                'assigned_position' =>
+                    $candidate['position'],
+            ]
+        );
+
+        $after = [
+            'status' => 'pending',
+            'current_node' =>
+                $previous['node_key'],
+            'returned_to' =>
+                $candidate['name'],
+            'returned_to_user_id' =>
+                (int) $holder['id'],
+            'new_step_id' => $newStepId,
+        ];
+
+        $db->update(
+            'requests',
+            $requestId,
+            [
+                'status' => 'pending',
+                'current_node' =>
+                    $previous['node_key'],
+                'completed_at' => null,
+            ]
+        );
+
+        $this->history(
+            $requestId,
+            (int) $currentStep['id'],
+            'return',
+            $currentStep,
+            $after,
+            $comments
+        );
+
+        $this->history(
+            $requestId,
+            $newStepId,
+            'assigned_after_return',
+            null,
+            [
+                'step_name' =>
+                    $previous['label'],
+                'assigned_to' =>
+                    $candidate,
+            ]
+        );
+
+        $this->ctx->notify(
+            (int) $holder['id'],
+            'Request returned to you',
+            $request['reference'] .
+                ' was returned to your previous approval step. Review the remarks and take action again.',
+            $requestId
         );
     }
 
