@@ -8,6 +8,7 @@ use Pk\Core\{Context, Problem};
  */
 class Workflow_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
     public function next_version_number(array $params = []): ?array
     {
         $this->db
