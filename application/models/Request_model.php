@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** Request persistence using the native CodeIgniter MySQLi Query Builder. */
 class Request_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function competing_transfer(array $params = []): ?array
     {
         $this->db->reset_query()->select('id')->from('requests')->where('hardcopy_id',$params[0])->where('type','transfer')
