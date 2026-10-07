@@ -1,6 +1,5 @@
 /vendor/
 /node_modules/
-.env
 /storage/*
 !/storage/.gitkeep
 /test-results/
