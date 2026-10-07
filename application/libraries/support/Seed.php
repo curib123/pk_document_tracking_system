@@ -18,7 +18,7 @@ final class Seed
             'hardcopy'=>['view','request','direct'],
             'documents'=>['access_all'],
             'files'=>['view','view_all','upload','approve','generate'],
-            'requests'=>['view','add','edit','submit','cancel','approve','manage','view_all'],
+            'requests'=>['view','add','edit','submit','cancel','manage','view_all'],
             'workflows'=>['view','edit','reassign'],
             'transfer'=>['view','view_all','request','manage'],
             'access'=>['view','view_all','request','revoke','manage'],
@@ -82,7 +82,7 @@ final class Seed
 
         $plantManager=array_merge(
             $baseline,
-            ['requests.approve','requests.view_all','documents.access_all']
+            ['requests.view_all','documents.access_all']
         );
 
         $documentControlOfficer=array_merge(
@@ -91,7 +91,6 @@ final class Seed
                 'softcopy.direct',
                 'hardcopy.direct',
                 'documents.access_all',
-                'requests.approve',
                 'requests.manage',
                 'requests.view_all',
                 'files.approve',
