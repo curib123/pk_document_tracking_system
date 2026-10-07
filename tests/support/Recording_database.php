@@ -47,7 +47,7 @@ class CI_DB_query_builder
         $this->state['where'][]=$condition;return $this;
     }
     public function or_where($key,$value=null,$escape=null): self { return $this->where($key,$value,$escape); }
-    public function where_in($key,$values): self { $this->state['where'][]=$key.' IN ('.implode(',',array_map($this->escape(...),$values)).')';return $this; }
+    public function where_in($key,$values): self { $this->state['where'][]=$key.' IN ('.implode(',',array_map(fn($value)=>$this->escape($value),$values)).')';return $this; }
     public function group_start(): self { $this->state['where'][]='(';return $this; }
     public function or_group_start(): self { return $this->group_start(); }
     public function group_end(): self { $this->state['where'][]=')';return $this; }
@@ -68,7 +68,7 @@ class CI_DB_query_builder
     }
     public function get_compiled_insert($table='',$reset=true): string {
         $data=$this->state['set']??[];
-        $s='INSERT INTO '.$table.' ('.implode(',',array_keys($data)).') VALUES ('.implode(',',array_map($this->escape(...),$data)).')';
+        $s='INSERT INTO '.$table.' ('.implode(',',array_keys($data)).') VALUES ('.implode(',',array_map(fn($value)=>$this->escape($value),$data)).')';
         if($reset)$this->reset_query();return $s;
     }
     public function query($sql,$binds=[]): mixed { $this->queries[]=[$sql,$binds];$result=array_shift($this->queued)??new CI_DB_result();if($result===false)$this->healthy=false;return $result; }
