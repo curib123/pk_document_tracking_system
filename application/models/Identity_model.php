@@ -62,7 +62,7 @@ class Identity_model extends Repository_model
         // Atomic upsert ni para safe bisan simultaneous requests.
         return $this->written(
             $this->db->query(
-                $sql . ' ON DUPLICATE KEY UPDATE \`value\`=\`value\`+1'
+                $sql . ' ON DUPLICATE KEY UPDATE `value`=`value`+1'
             )
         );
     }
