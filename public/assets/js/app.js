@@ -97,6 +97,7 @@ async function selectModule(module) {
     button('Refresh records', loadTable)
   );
   const tableFooter = el('div', { id:'table-footer' },
+    el('span', { id:'page-summary' }),
     el('label', { htmlFor:'page-size' }, 'Rows per page'), pageSize,
     el('span', { id:'pagination' })
   );
@@ -113,9 +114,10 @@ async function loadTable() {
     if (generation !== listGeneration || currentModule !== module) return;
     if (page > result.pages) { page = result.pages; return loadTable(); }
     document.querySelector('#table-container').replaceChildren(table(module.columns, result.rows, module.key === 'sequences' ? null : row => button('View / actions', () => details(module.key, row.id))));
-    message.textContent = `${result.total} matching records. Page ${result.page} of ${result.pages}.`;
+    message.textContent = `${result.total} matching records.`;
+    document.querySelector('#page-summary').textContent = `Page ${result.page} of ${result.pages}. `;
     document.querySelector('#pagination').replaceChildren(button('Previous', () => { page--; return loadTable(); }, { disabled:page<=1 }),button('Next', () => { page++; return loadTable(); }, { disabled:page>=result.pages }));
-  } catch (error) { if (generation === listGeneration) { message.textContent = error.message; document.querySelector('#table-container').replaceChildren(); } }
+  } catch (error) { if (generation === listGeneration) { message.textContent = error.message; document.querySelector('#table-container').replaceChildren(); const summary=document.querySelector('#page-summary'); if(summary) summary.textContent=''; } }
 }
 function editCatalog(module, row = {}, parent) {
   const existing = !!row.id; const operation = module.key === 'workflows' ? 'workflows.save' : 'catalog.save';
