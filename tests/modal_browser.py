@@ -162,7 +162,7 @@ try:
         draft.get_by_role('button',name='Save draft version',exact=True).click()
         assert state['workflow_payload']['graph']['steps']==[{'name':'Requester confirmation','approver':{'type':'requester'}}]
         draft.get_by_role('button',name='Close',exact=True).click()
-        workflow.get_by_role('button',name='Close',exact=True).click()
+        # Parent workflow details closes automatically after the draft save refresh.
 
         # All list modules must render without runtime failures.
         for module in metadata['modules']:
