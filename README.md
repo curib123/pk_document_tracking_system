@@ -1,45 +1,75 @@
 # PK Document Tracking System
 
-Functional CodeIgniter 3 / MySQL document control application. The interface intentionally has **no CSS, Bootstrap, themes, icon fonts, or visual design**. Record actions, approvals, account operations, confirmations, uploads, downloads, and workflow editing use native HTML modal dialogs. Navigation, searching, sorting and paging stay on the page.
+Functional CodeIgniter 3 / MySQL document control application. The interface intentionally has **no CSS, Bootstrap, themes, icon fonts, or visual design**. Record actions, approvals, account operations, confirmations, uploads, downloads, and workflow editing use native HTML modal dialogs.
 
-The original repository specification is retained in `# CodeIgniter 3 – Document Tracking Syst.md`. The latest instruction to omit styling takes precedence over that specification's appearance section. Implementation decisions and verification are recorded under `docs/`.
+The application is configured for **Windows XAMPP + XAMPP MySQL**. It does not use a project `.env`, Docker, Docker Compose, a custom PHP server router, or a separate application server.
 
-## Run natively
+## XAMPP requirements
 
-Requirements: PHP 8.2 or newer with `pdo_mysql`, `fileinfo`, `mbstring`, and `zip`; MySQL 8.0+; Composer 2. No Node build, npm installation, or frontend CDN is needed to run the application. Use a current browser supporting `HTMLDialogElement.showModal()`.
+- XAMPP with Apache, MySQL/MariaDB, and PHP 8.2+
+- PHP extensions: `mysqli`, `fileinfo`, `mbstring`, `zip`
+- Composer 2
+- A current browser supporting native `<dialog>`
 
-```bash
+Default database configuration is in `application/config/database.php`:
+
+- Host: `127.0.0.1`
+- Port: `3306`
+- Database: `pk_dts`
+- Username: `root`
+- Password: empty
+
+These are the normal default XAMPP MySQL settings. If your XAMPP MySQL root account has a password or uses another port, edit that file directly. The normal application does not load database credentials from `.env`.
+
+## Install and run with XAMPP
+
+1. Put the repository in:
+
+   `C:\xampp\htdocs\pk_document_tracking_system`
+
+2. Start **Apache** and **MySQL** from the XAMPP Control Panel.
+
+3. Open phpMyAdmin and create a new empty database named:
+
+   `pk_dts`
+
+   Use `utf8mb4` when choosing a character set/collation.
+
+4. From the project folder install PHP dependencies:
+
+```bat
 composer install
-cp .env.example .env
 ```
 
-Create a **new empty** MySQL database and a dedicated database account. Fill in `.env` with its credentials and the exact browser-facing `APP_URL`. Then:
+5. Run the one-time installer with XAMPP PHP:
 
-```bash
-php bin/install.php
-php -S localhost:8080 -t public public/router.php
+```bat
+C:\xampp\php\php.exe bin\install.php
 ```
 
-Open `http://localhost:8080`. The installer prints the initial administrator password once. Record it privately; change it at first login. There is no public registration and no hard-coded production password. `PK_ADMIN_USERNAME` / `PK_ADMIN_PASSWORD` can optionally supply the initial account through the environment. Remove those installation-only variables afterwards.
+The installer prints the initial administrator password once. The username is `admin`. Save that password, sign in, and change it immediately.
 
-For Windows/XAMPP, enable the listed PHP extensions, use `copy .env.example .env`, and configure an Apache virtual host whose **DocumentRoot is the `public/` directory**. The application, database scripts, Composer vendor directory, `.env`, and private `storage/` must never be served as public files. `AllowOverride All` permits `public/.htaccess`; URLs containing `index.php` also work without rewriting.
+6. Open:
 
-The installer refuses to change a non-empty database. It never drops tables or resets an existing administrator. Review and recover a partially failed installation explicitly rather than rerunning destructive setup against real data.
+   `http://localhost/pk_document_tracking_system/public/`
 
-## Optional Docker runtime
+No `.env` file, virtual host, Docker container, Node server, npm install, or `php -S` command is required.
 
-Set `DB_PASSWORD` and `MYSQL_ROOT_PASSWORD` in `.env` to distinct strong values, and set `APP_URL=http://localhost:8080` for local use.
+The installer refuses to modify a non-empty database. It never drops tables or resets an existing administrator.
 
-```bash
-docker compose up --build -d
-docker compose exec --user www-data app php bin/install.php
-```
+## XAMPP notes
 
-The MySQL database is not published to a host port. Database files and private uploads use separate named volumes. Do not run `docker compose down -v` against retained data.
+The app automatically derives its base URL from the Apache request, so the repository can be placed under another folder name inside `htdocs` without changing an `APP_URL`.
+
+The public entry point is the `public/` directory. Keep `application/`, `database/`, `storage/`, and `vendor/` private and do not browse them directly.
+
+Uploads are limited by the application to 20 MB. Make sure XAMPP's `php.ini` has `upload_max_filesize` and `post_max_size` set high enough for that limit, then restart Apache after changing PHP settings.
+
+PDF artifact generation uses FPDI/FPDF. DOCX/XLSX conversion automatically looks for LibreOffice in the standard Windows installation paths. If LibreOffice is not installed, Office documents can still be stored and downloaded, but PDF conversion requires LibreOffice or a PDF source.
 
 ## First-use setup
 
-Sign in and change the initial password. Create real users and assign the appropriate roles. At least **one other active user with `requests.approve`** is required to approve an administrator's own requests: requester self-approval is deliberately prohibited.
+Sign in and change the initial password. Create real users and assign the appropriate roles. At least **one other active user with `requests.approve`** is required to approve an administrator's own requests because requester self-approval is prohibited.
 
 Create the physical catalogue in order: **Area → Specific → Asset → Location**. Create softcopy categories separately. Then register documents directly using an authorized Administrator or Document Control Officer, or submit creation requests as staff.
 
@@ -55,56 +85,47 @@ Nine request types are implemented: softcopy creation, revision and cancellation
 
 A request is not a document. Drafts and approvals do not silently create or alter controlled records. Applying final approval and its document changes occurs in one database transaction.
 
-Softcopy revisions are preserved individually. A single current-revision foreign-key pointer prevents multiple current revisions. Direct revisions require a new private source upload. Existing controlled PDF artifacts become unavailable when their revision is superseded or the document becomes inactive; an uncontrolled historical artifact may still be generated by an authorized user. Previously downloaded files cannot be remotely recalled.
+Softcopy revisions are preserved individually. A single current-revision foreign-key pointer prevents multiple current revisions. Direct revisions require a new private source upload. Existing controlled PDF artifacts become unavailable when their revision is superseded or the document becomes inactive.
 
-A physical location holds at most one current hardcopy. Approval creates a transfer record; dispatch records delivery; **only the named recipient's acceptance changes the recorded holder/location**. Refusal keeps the origin unchanged and records the need to arrange physical return. Location/holder changes cannot be smuggled through ordinary metadata updates.
+A physical location holds at most one current hardcopy. Approval creates a transfer record; dispatch records delivery; **only the named recipient's acceptance changes the recorded holder/location**. Refusal keeps the origin unchanged and records the need to arrange physical return.
 
 Retention dates gate disposal. Disposal stores the previous status and complete document snapshot. A disposed hardcopy releases its current location while preserving its former physical coordinates in the disposal record.
 
 ### Workflow rules
 
-Use the workflow dialog to create a draft, add/edit/remove nodes, configure assignments and paths, and publish a version. Start, approval, condition and end nodes are supported. Assignment choices are individual user, role, permission, requester's leader, or a document-specific approver key. Conditions compare approved payload fields using a small operator allowlist; no code is evaluated.
+Use the workflow dialog to create a draft, add/edit/remove nodes, configure assignments and paths, and publish a version. Start, approval, condition and end nodes are supported. Assignment choices are individual user, role, permission, requester's leader, or a document-specific approver key.
 
-New workflow definitions start inactive. Publishing makes that definition active for its request type, replacing the previous active definition. Only one active definition per request type is allowed by the database. Published/archived version content is immutable. Submitted requests retain their workflow graph, workflow version and document-approver configuration through return-for-correction and resubmission. Reassignment records old/new approvers and historical names/positions.
+New workflow definitions start inactive. Publishing makes that definition active for its request type, replacing the previous active definition. Published/archived version content is immutable. Submitted requests retain their workflow graph, workflow version and document-approver configuration through correction and resubmission.
 
-All changes use optimistic record versions. A stale modal receives an explicit conflict instead of overwriting someone else's changes. Close it, refresh, and reopen before retrying.
+All changes use optimistic record versions. A stale modal receives an explicit conflict instead of overwriting someone else's changes.
 
-### Files and artifacts
+## Files and artifacts
 
-Uploads are stored outside the public directory under randomized names and SHA-256 fingerprints. Supported uploads: PDF, DOCX, XLSX, TXT, CSV, PNG and JPEG. Extension/MIME checks, size limits and Office archive checks are enforced. Rejected/cancelled attachments are retained with their status. Download permission and file integrity are checked each time.
+Uploads are stored outside the public directory under randomized names and SHA-256 fingerprints. Supported uploads: PDF, DOCX, XLSX, TXT, CSV, PNG and JPEG. Extension/MIME checks, size limits and Office archive checks are enforced. Download permission and file integrity are checked each time.
 
-PDF controlled/uncontrolled copies use FPDI/FPDF and add a separate footer area rather than painting over source content. Encrypted/unsupported PDFs return an actionable error; export them as compatible PDFs first.
+PDF controlled/uncontrolled copies use FPDI/FPDF and add a separate footer area rather than painting over source content.
 
-DOCX/XLSX-to-PDF artifact generation requires a locally installed LibreOffice executable configured with `LIBREOFFICE_PATH`. Without it, Office files can still be stored and downloaded, but artifact generation explicitly requests the converter or a PDF source. Conversion runs without a shell and has a timeout. For untrusted Office files, isolate the converter at the operating-system/container level and add malware scanning appropriate to your deployment. The optional Dockerfile does not install LibreOffice by default.
+## Maintenance
 
-Configure PHP `upload_max_filesize` and `post_max_size` consistently with `UPLOAD_MAX_MB` (20 MB default). Make `storage/` writable by the PHP service account; never use world-writable permissions in production.
+The optional maintenance command expires grants, sends related notifications, prunes login attempts and cleans old conversion workspaces:
 
-## Production operation
-
-Use HTTPS and `SESSION_SECURE=1`. Set `APP_ENV=production` and the exact HTTPS `APP_URL`. Keep error logs private. Sessions expire after 30 idle minutes; all mutations require POST and a per-session CSRF header. Login failures are rate-limited and audited. Permissions, active accounts and session versions are rechecked on every API request.
-
-Run the maintenance command hourly using your host's scheduler:
-
-```bash
-php bin/maintenance.php
+```bat
+C:\xampp\php\php.exe bin\maintenance.php
 ```
 
-Access expires at authorization time even without the scheduled task; maintenance records expired statuses/notifications and removes old conversion workspaces. Back up the database **and** private storage together, and test restoring both. No production host, real user accounts, server credentials or deployment is created by this source change.
+Run it manually when needed or schedule it through Windows Task Scheduler if this XAMPP installation is used continuously.
 
 ## Verification
 
-```bash
-php tests/run.php
-# Real database tests require a dedicated freshly installed database ending in _test:
-PK_TEST_DB=1 DB_DATABASE=pk_dts_test php tests/integration.php
-PK_TEST_DB=1 DB_DATABASE=pk_dts_test php tests/concurrency.php
-# With a real CI3/PHP server running and test environment variables configured:
-php tests/make_fixture.php
-python3 tests/http.py
-# Native browser modal contract with simulated API responses:
-python3 tests/modal_browser.py
+Pure/unit checks:
+
+```bat
+C:\xampp\php\php.exe tests\run.php
+C:\xampp\php\php.exe tests\architecture.php
+C:\xampp\php\php.exe tests\mysqli_contract.php
+C:\xampp\php\php.exe tests\native_database.php
 ```
 
-The browser suite requires Playwright and Chromium; `CHROMIUM_PATH` can select the executable. The application itself does not require those test dependencies. `tests/http.py` exercises the actual backend, authentication, uploads, artifacts and access permissions; the modal suite explicitly simulates API responses and is not a substitute for database integration.
+Real database integration tests are intentionally protected by test-only environment variables and must use a database whose name ends in `_test`; those variables are for automated/disposable tests only and are not application configuration.
 
-GitHub Actions provisions MySQL, installs dependencies, lints PHP/JavaScript, and runs domain, concurrency, CI3 session-endpoint smoke and native-dialog checks. The extended `tests/http.py` upload was blocked by the connector; it is included in the downloadable source archive, not this branch. CI explicitly reports that suite as unrun when absent. Current verification evidence and any limitations belong in `docs/VERIFICATION.md`; do not infer passing integration tests from the presence of the workflow alone.
+GitHub Actions provisions its own disposable MySQL database for those checks. The normal XAMPP application always uses the direct configuration in `application/config/database.php`.
