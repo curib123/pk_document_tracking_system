@@ -334,16 +334,22 @@ final class UiSchema
                 $field('name'),
                 $field('code'),
                 $field(
+                    'asset_id',
+                    'lookup',
+                    false,
+                    'assets'
+                ),
+                $field(
                     'specific_id',
                     'lookup',
-                    true,
+                    false,
                     'specifics'
                 ),
                 $field(
-                    'asset_id',
+                    'area_id',
                     'lookup',
-                    true,
-                    'assets'
+                    false,
+                    'areas'
                 ),
                 $active,
                 $field(
@@ -551,28 +557,28 @@ final class UiSchema
 
         return [
             $field(
-                'area_id',
-                'lookup',
-                true,
-                'areas'
-            ),
-            $field(
-                'specific_id',
-                'lookup',
-                true,
-                'specifics'
-            ),
-            $field(
-                'asset_id',
-                'lookup',
-                true,
-                'assets'
-            ),
-            $field(
                 'location_id',
                 'lookup',
                 true,
                 'locations'
+            ),
+            $field(
+                'asset_id',
+                'lookup',
+                false,
+                'assets'
+            ),
+            $field(
+                'specific_id',
+                'lookup',
+                false,
+                'specifics'
+            ),
+            $field(
+                'area_id',
+                'lookup',
+                false,
+                'areas'
             ),
         ];
     }
