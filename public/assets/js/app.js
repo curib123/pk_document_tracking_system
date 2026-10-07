@@ -11,6 +11,30 @@ const identity = row => ({ id: Number(row.id), version: Number(row.version) });
 const reason = () => field('reason', 'textarea');
 const comments = () => field('comments', 'textarea');
 const singular = module => ({ users: 'user', roles: 'role', permissions: 'permission', areas: 'area', specifics: 'specific', assets: 'asset', locations: 'location', categories: 'category', workflows: 'workflow' })[module] || 'record';
+const recordLabel = (module, row) => ({
+  softcopy: [row.document_number, row.title].filter(Boolean).join(' — '),
+  hardcopy: row.title,
+  requests: row.reference, my_requests: row.reference, my_tasks: row.reference,
+  transfers: row.document_copy_number || 'Hardcopy transfer',
+  access: 'Document access',
+  assignments: 'Document assignment',
+  disposals: 'Disposal record',
+  files: row.original_name,
+  workflows: row.name,
+  users: [row.first_name, row.middle_name, row.last_name].filter(Boolean).join(' ') || row.username,
+  roles: row.name,
+  permissions: row.name,
+  areas: row.name,
+  specifics: row.name,
+  assets: row.asset_number,
+  locations: [row.code, row.name].filter(Boolean).join(' — '),
+  categories: row.name,
+  notifications: row.title,
+  audit: [row.module, row.action].filter(Boolean).map(labelOf).join(' — '),
+  history: [row.domain, row.action].filter(Boolean).map(labelOf).join(' — '),
+  sequences: row.sequence_key,
+  settings: row.setting_key
+})[module] || labelOf(module);
 function globalError(error) { status.textContent = error.message; }
 async function refresh() { if (currentModule) await loadTable(); }
 function afterChange(parent) { return async () => { parent?.forceCloseAfterSuccess(); await refresh(); }; }
@@ -189,6 +213,7 @@ async function details(moduleKey, id) {
   const modal=new Modal(`${definition?.label || labelOf(moduleKey)}`); modal.closeButton.textContent='Close';
   await modal.run(async()=>{
     const result=await api.request('detail',{module:moduleKey,id}); const row=result.row, related=result.related;
+    modal.setTitle(recordLabel(moduleKey,row));
     const actions=el('section',{'aria-label':'Record actions'}); modal.body.append(actions);
     const change=afterChange(modal);
     const action=(title,operation,fixed,fields=[],options={})=>actions.append(button(title,()=>actionModal(title,api,operation,fixed,fields,{after:change,...options})));
