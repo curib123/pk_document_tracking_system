@@ -28,4 +28,9 @@ new issues
 
 #8 [Not fixed] make sure dont show id in frontend throughout the system only there names or values should show
 
-#9 [Not fixed] 
+#9 [Not fixed] have 3 layouts datatable which is the taable , grid layout in card layout and by folder like first area folder inside is specific then asset then location but in softcopy its category and sub category folder nested category folder
+
+#10 [Not Fixed] remove files and attachment in sidebar layout and make the sidebar route have main route like Dashboard ,System Document inside of its dropdown option is softcopy documents and hardcopy doxuments and so on organized it properly but dont design style it yet
+
+#11 in softcopy documents request why theres no document file upload to be view by approver
+ 
