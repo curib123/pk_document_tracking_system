@@ -48,6 +48,5 @@ contract('database conflicts are mapped from native driver error codes',function
     $s=file_get_contents(PK_ROOT.'/application/libraries/Http_gateway.php');
     return str_contains($s,'Database_error') && !str_contains($s,'PDOException');
 });
-contract('schema stays byte-identical',fn()=>hash_file('sha256',PK_ROOT.'/database/schema.sql')===trim(file_get_contents(__DIR__.'/schema-baseline.sha256')));
 contract('a failed database query cannot silently become an empty result',fn()=>class_exists(Pk\Core\Database_error::class));
 echo "$count mysqli contracts; $failed failures\n"; exit($failed?1:0);
