@@ -102,7 +102,7 @@ The seeder refuses to overwrite an existing user database.
 
 ## First-use setup
 
-Sign in and change the initial password. Create real users and assign the appropriate roles. At least **one other active user with `requests.approve`** is required to approve an administrator's own requests because requester self-approval is prohibited.
+Sign in and change the initial password. Create real users, assign their roles, and configure each user's leader when requester-leader workflow steps will be used. A requester can approve only when a workflow step explicitly uses the **Requester** approver source; user, role, and requester-leader steps resolve their own assigned approvers.
 
 Create the physical catalogue in order: **Area → Specific → Asset → Location**. Create softcopy categories separately. Then register documents directly using an authorized Administrator or Document Control Officer, or submit creation requests as staff.
 
@@ -126,9 +126,16 @@ Retention dates gate disposal. Disposal stores the previous status and complete 
 
 ### Workflow rules
 
-Use the workflow dialog to create a draft, add/edit/remove nodes, configure assignments and paths, and publish a version. Start, approval, condition and end nodes are supported. Assignment choices are individual user, role, permission, requester's leader, or a document-specific approver key.
+The Workflow Builder is an ordered approval sequence for each request type. A draft version can **add, edit, remove, move up, or move down approval steps**. Every step has a step name and one approver source:
 
-New workflow definitions start inactive. Publishing makes that definition active for its request type, replacing the previous active definition. Published/archived version content is immutable. Submitted requests retain their workflow graph, workflow version and document-approver configuration through correction and resubmission.
+- **Specific User** — one selected active account.
+- **Role** — active users belonging to the selected role.
+- **Requester’s Leader** — dynamically resolves the leader configured on the requester’s user account.
+- **Requester** — dynamically resolves the account that submitted the request.
+
+Draft versions can be saved with no steps while being designed, but at least one approval step is required before publishing. Published versions are immutable. Multiple versions may remain published; one published version is marked **Default** and is the version used by new requests. Changing the default never changes requests that were already submitted.
+
+When a request is submitted, it stores the selected workflow version and an immutable snapshot of its approval sequence. Approval proceeds in order: Step 1 → Step 2 → Step 3 → completion. Reject or Return stops the sequence immediately. The request view shows the workflow name/version, approval steps, assigned approvers, decisions, comments, and workflow history.
 
 All changes use optimistic record versions. A stale modal receives an explicit conflict instead of overwriting someone else's changes.
 
