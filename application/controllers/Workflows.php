@@ -8,5 +8,6 @@ class Workflows extends MY_Controller
     public function save() { $this->endpoint('workflows/save'); }
     public function version() { $this->endpoint('workflows/version'); }
     public function publish() { $this->endpoint('workflows/publish'); }
+    public function set_default() { $this->endpoint('workflows/set_default'); }
     public function reassign() { $this->endpoint('workflows/reassign'); }
 }
