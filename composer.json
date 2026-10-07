@@ -3,7 +3,7 @@
   "description": "Unstyled, modal-operated CodeIgniter 3 document control system",
   "type": "project",
   "require": {
-    "php": "^8.2",
+    "php": "^8.0",
     "ext-fileinfo": "*",
     "ext-mbstring": "*",
     "ext-zip": "*",
