@@ -28,9 +28,5 @@ public function location_occupant(array $params = []): ?array
             ->where_in('status',['for_transfer','pending_recipient_acceptance'])->limit(1);
         return $this->first(true);
     }
-    public function approver_configuration(array $params = []): ?array
-    {
-        $this->db->reset_query()->from('document_approvers')->where('domain',$params[0])->where('document_id',$params[1])->limit(1);
-        return $this->first(true);
-    }
+
 }
