@@ -1,11 +1,5 @@
 /vendor/
-/node_modules/
 /storage/*
 !/storage/.gitkeep
-/test-results/
-/playwright-report/
-/.superpowers/
-/.worktrees/
 tests/*.png
-tests/fixture.pdf
 __pycache__/
