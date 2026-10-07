@@ -1,15 +1,21 @@
 <?php
 declare(strict_types=1);
 define('PK_ROOT', dirname(__DIR__));
-if (is_file(PK_ROOT . '/.env')) {
-    foreach (file(PK_ROOT . '/.env', FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES) as $line) {
-        $line = trim($line);
-        if ($line === '' || $line[0] === '#' || !str_contains($line, '=')) continue;
-        [$key, $value] = explode('=', $line, 2);
-        if (getenv(trim($key)) === false) putenv(trim($key) . '=' . trim($value, " \t\n\r\0\x0B\"'"));
+date_default_timezone_set('Asia/Manila');
+
+if (!function_exists('pk_base_url')) {
+    function pk_base_url(): string
+    {
+        if (PHP_SAPI === 'cli') return 'http://localhost/';
+        $secure = !empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS']) !== 'off';
+        $scheme = $secure ? 'https' : 'http';
+        $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+        $script = str_replace('\\', '/', (string)($_SERVER['SCRIPT_NAME'] ?? '/index.php'));
+        $base = rtrim(str_replace('\\', '/', dirname($script)), '/.');
+        return $scheme.'://'.$host.($base !== '' ? $base : '').'/';
     }
 }
-date_default_timezone_set('Asia/Manila');
+
 // Composer supplies third-party dependencies; application paths remain CI3-native.
 if (is_file(PK_ROOT.'/vendor/autoload.php')) require_once PK_ROOT.'/vendor/autoload.php';
 spl_autoload_register(static function (string $name): void {
