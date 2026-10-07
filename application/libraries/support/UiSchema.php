@@ -3,7 +3,7 @@ declare(strict_types=1);
 namespace Pk\Core;
 final class UiSchema
 {
-    public static function field(string $name,string $type='text',bool $required=true,?string $lookup=null): array { return ['name'=>$name,'label'=>ucwords(str_replace('_',' ',$name)),'type'=>$type,'required'=>$required,'lookup'=>$lookup]; }
+    public static function field(string $name,string $type='text',bool $required=true,?string $lookup=null): array { $displayName=($type==='lookup' || $type==='upload' || $lookup!==null) ? preg_replace('/_id$/','',$name) : $name; return ['name'=>$name,'label'=>ucwords(str_replace('_',' ',$displayName)),'type'=>$type,'required'=>$required,'lookup'=>$lookup]; }
     public static function modules(): array
     {
         $m=[];
