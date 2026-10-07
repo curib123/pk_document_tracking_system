@@ -3,6 +3,7 @@ declare(strict_types=1);
 use Pk\Core\{Context,Problem,Rules};
 class Auth_service
 {
+    // Kani nga service mao ang business-rule layer; controllers thin ra para easy i-follow.
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options);}
     public function session(): array { return ['user'=>$this->ctx->safeUser(),'permissions'=>$this->ctx->id()?$this->ctx->permissions():[]]; }
