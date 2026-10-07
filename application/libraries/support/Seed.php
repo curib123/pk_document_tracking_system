@@ -207,7 +207,8 @@ final class Seed
                     'workflow_id'=>$workflow,
                     'version_number'=>1,
                     'status'=>'published',
-                    'graph'=>Context::json(WorkflowGraph::defaults()),
+                    'is_default'=>1,
+                    'graph'=>Context::json(WorkflowGraph::forRole($roleIds['Administrator'])),
                     'created_by'=>$admin,
                     'published_at'=>date('Y-m-d H:i:s'),
                 ]);
