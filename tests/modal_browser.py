@@ -199,6 +199,7 @@ try:
         remove_draft.get_by_role('button',name='Confirm',exact=True).click()
         assert state['workflow_delete_payload']['id']==31
         assert state['workflow_delete_payload']['reason']=='Discard unused draft'
+        remove_draft.get_by_role('button',name='Close',exact=True).click()
 
         # All list modules must render without runtime failures.
         for module in metadata['modules']:
