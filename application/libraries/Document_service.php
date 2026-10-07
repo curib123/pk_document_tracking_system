@@ -303,69 +303,153 @@ class Document_service
         array $input,
         ?int $documentId = null
     ): array {
-        $data = [];
-
-        foreach (
-            [
-                'area_id',
-                'specific_id',
-                'asset_id',
-                'location_id',
-            ]
-            as $key
-        ) {
-            $data[$key] = Rules::id(
-                $input,
-                $key
-            );
-        }
-
-        $this->ctx->active(
-            'areas',
-            $data['area_id']
-        );
-
-        $specific = $this->ctx->active(
-            'specifics',
-            $data['specific_id']
-        );
-
-        $asset = $this->ctx->active(
-            'assets',
-            $data['asset_id']
+        $locationId = Rules::id(
+            $input,
+            'location_id'
         );
 
         $location = $this->ctx->active(
             'locations',
-            $data['location_id']
+            $locationId
         );
 
-        $sameHierarchy =
-            (int) $specific['area_id'] === $data['area_id']
-            && (int) $asset['specific_id'] === $data['specific_id']
-            && (int) $location['specific_id'] === $data['specific_id']
-            && (int) $location['asset_id'] === $data['asset_id'];
+        // Optional levels may be omitted. The selected predefined location
+        // supplies any hierarchy values it already knows.
+        $assetId = Rules::id(
+            $input,
+            'asset_id',
+            false
+        );
 
-        if (!$sameHierarchy) {
+        $specificId = Rules::id(
+            $input,
+            'specific_id',
+            false
+        );
+
+        $areaId = Rules::id(
+            $input,
+            'area_id',
+            false
+        );
+
+        $locationAssetId =
+            $location['asset_id'] !== null
+                ? (int) $location['asset_id']
+                : null;
+
+        $locationSpecificId =
+            $location['specific_id'] !== null
+                ? (int) $location['specific_id']
+                : null;
+
+        $locationAreaId =
+            $location['area_id'] !== null
+                ? (int) $location['area_id']
+                : null;
+
+        if (
+            $assetId !== null &&
+            $locationAssetId !== null &&
+            $assetId !== $locationAssetId
+        ) {
             throw new Problem(
-                'Area, Specific, asset and location must belong to the same hierarchy.'
+                'Selected Asset Number does not match the predefined Location.'
+            );
+        }
+
+        if (
+            $specificId !== null &&
+            $locationSpecificId !== null &&
+            $specificId !== $locationSpecificId
+        ) {
+            throw new Problem(
+                'Selected Specific does not match the predefined Location.'
+            );
+        }
+
+        if (
+            $areaId !== null &&
+            $locationAreaId !== null &&
+            $areaId !== $locationAreaId
+        ) {
+            throw new Problem(
+                'Selected Area does not match the predefined Location.'
+            );
+        }
+
+        $assetId ??= $locationAssetId;
+        $specificId ??= $locationSpecificId;
+        $areaId ??= $locationAreaId;
+
+        if ($assetId !== null) {
+            $asset = $this->ctx->active(
+                'assets',
+                $assetId
+            );
+
+            $assetSpecificId =
+                (int) $asset['specific_id'];
+
+            if (
+                $specificId !== null &&
+                $specificId !== $assetSpecificId
+            ) {
+                throw new Problem(
+                    'Selected Asset Number does not belong to the selected Specific.'
+                );
+            }
+
+            $specificId = $assetSpecificId;
+        }
+
+        if ($specificId !== null) {
+            $specific = $this->ctx->active(
+                'specifics',
+                $specificId
+            );
+
+            $specificAreaId =
+                (int) $specific['area_id'];
+
+            if (
+                $areaId !== null &&
+                $areaId !== $specificAreaId
+            ) {
+                throw new Problem(
+                    'Selected Specific does not belong to the selected Area.'
+                );
+            }
+
+            $areaId = $specificAreaId;
+        }
+
+        if ($areaId !== null) {
+            $this->ctx->active(
+                'areas',
+                $areaId
             );
         }
 
         $occupied = $this->model()->location_occupant(
-            [$data['location_id']]
+            [$locationId]
         );
 
         if (
-            $occupied
-            && (int) $occupied['id'] !== $documentId
+            $occupied &&
+            (int) $occupied['id'] !== $documentId
         ) {
             throw new Problem(
                 'That dedicated location is already assigned to another hardcopy.'
             );
         }
 
-        return $data;
+        return [
+            'area_id' => $areaId,
+            'specific_id' => $specificId,
+            'asset_id' => $assetId,
+            'location_id' => $locationId,
+        ];
     }
 
     public function availableFile(
