@@ -3,8 +3,6 @@ declare(strict_types=1);
 
 namespace Pk\Core;
 
-use Pk\Services\RequestService;
-
 final class Seed
 {
     public static function capabilities(): array
@@ -197,7 +195,7 @@ final class Seed
             $ctx=new Context($db);
             $ctx->identify($admin);
 
-            foreach (RequestService::TYPES as $type) {
+            foreach (\Request_service::TYPES as $type) {
                 $workflow=$db->insert('workflows',[
                     'workflow_key'=>$type,
                     'name'=>ucwords(str_replace('_',' ',$type)).' approval',
