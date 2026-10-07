@@ -17,7 +17,7 @@ export function button(label, action, attributes = {}) {
   } }, label);
 }
 export function labelOf(value) { return String(value).replaceAll('_', ' ').replace(/\b\w/g, letter => letter.toUpperCase()); }
-const hiddenDisplayKey = key => key === 'id' || key === 'version' || key === 'current_node' || key.endsWith('_id');
+const hiddenDisplayKey = key => ['id','version','current_node','snapshot','payload','graph','assignment','candidates','before_state','after_state','previous_state','result','base_document_version'].includes(key) || key.endsWith('_id') || key.endsWith('_by');
 export function displayValue(value) {
   if (Array.isArray(value)) return value.map(displayValue);
   if (!value || typeof value !== 'object') return value;
