@@ -32,7 +32,7 @@ class Document_service
             $data['date_released']=Rules::date(['date_released'=>($input['date_released'] ?? '') ?: date('Y-m-d')],'date_released');
             if ($data['date_released']<$data['date_received']) throw new Problem('Release date cannot precede receipt date.');
         } elseif ($domain==='hardcopy') {
-            $data=[...$data,...$this->physical($input,$id)];
+            $data=array_merge($data,$this->physical($input,$id));
             $data['holder_id']=Rules::id(['holder_id'=>$input['holder_id'] ?? ($old['holder_id'] ?? $owner)],'holder_id'); $this->ctx->active('users',$data['holder_id']);
             $data['sequence_number']=Rules::text($input,'sequence_number',100,false);
             $data['retention_enabled']=Rules::boolean($input['retention_enabled'] ?? 0);
@@ -69,7 +69,7 @@ class Document_service
             : array_intersect_key($data,array_flip(['title','area_id','specific_id','asset_id','location_id','holder_id','sequence_number','retention_enabled','retention_start_date','retention_end_date']));
         if (!$id) {
             if ($domain==='softcopy' && !$values['document_number']) $values['document_number']=$this->ctx->sequence('document_'.date('Y'),'DOC-'.date('Y').'-');
-            $id=$db->insert($table,[...$values,'created_by'=>$owner,'creation_source'=>$source,'creation_reason'=>$data['reason'],'source_request_id'=>$requestId]);
+            $id=$db->insert($table,array_merge($values,['created_by'=>$owner,'creation_source'=>$source,'creation_reason'=>$data['reason'],'source_request_id'=>$requestId]));
             $this->ctx->status($domain,$id,'','active','created',$data['reason']);
         } else $db->update($table,$id,$values);
         if ($domain==='softcopy') $this->revision($id,$data,$owner);
@@ -121,7 +121,7 @@ class Document_service
         $old=$this->ctx->model(\Document_model::class)->approver_configuration([$domain,$id]);
         $data=['config'=>Context::json($saved),'configured_by'=>$this->ctx->id()];
         if ($old) $this->ctx->model(\Document_model::class)->update('document_approvers',(int)$old['id'],$data);
-        else $this->ctx->model(\Document_model::class)->insert('document_approvers',[...$data,'domain'=>$domain,'document_id'=>$id]);
+        else $this->ctx->model(\Document_model::class)->insert('document_approvers',array_merge($data,['domain'=>$domain,'document_id'=>$id]));
         $this->ctx->model(\Document_model::class)->update(self::table($domain),$id,['title'=>$this->ctx->model(\Document_model::class)->row(self::table($domain),$id)['title']]);
         $this->ctx->audit($domain,'approvers_configured',$id,$old,$saved,Rules::text($input,'reason',2000));
         return ['message'=>'Approvers saved. Submitted requests retain their original configuration.'];
