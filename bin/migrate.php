@@ -52,6 +52,64 @@ function column_exists(
 }
 
 /**
+ * Schema v3 makes the predefined physical hierarchy flexible.
+ *
+ * Location is the anchor. Asset, Specific and Area may be skipped,
+ * while existing records keep their old resolved parent values.
+ */
+function migrate_optional_location_hierarchy(
+    Database $db
+): void {
+    if (
+        !column_exists(
+            $db,
+            'locations',
+            'area_id'
+        )
+    ) {
+        $db->query(
+            'ALTER TABLE locations
+             ADD COLUMN area_id
+             BIGINT UNSIGNED NULL
+             AFTER id'
+        );
+
+        $db->query(
+            'UPDATE locations l
+             JOIN specifics s
+               ON s.id = l.specific_id
+             SET l.area_id = s.area_id
+             WHERE l.area_id IS NULL'
+        );
+
+        $db->query(
+            'ALTER TABLE locations
+             ADD CONSTRAINT locations_area_fk
+             FOREIGN KEY (area_id)
+             REFERENCES areas(id)'
+        );
+    }
+
+    $db->query(
+        'ALTER TABLE locations
+         MODIFY COLUMN specific_id
+             BIGINT UNSIGNED NULL,
+         MODIFY COLUMN asset_id
+             BIGINT UNSIGNED NULL'
+    );
+
+    $db->query(
+        'ALTER TABLE hardcopy_documents
+         MODIFY COLUMN area_id
+             BIGINT UNSIGNED NULL,
+         MODIFY COLUMN specific_id
+             BIGINT UNSIGNED NULL,
+         MODIFY COLUMN asset_id
+             BIGINT UNSIGNED NULL'
+    );
+}
+
+/**
  * Convert the old graph-based workflow into the ordered-step workflow.
  *
  * The returned map is used to translate any current workflow node keys
@@ -291,11 +349,27 @@ try {
             0
         );
 
-    if ($current >= 2) {
+    if ($current >= 3) {
         echo
             'Database schema is already version ' .
             $current .
             ".\n";
+
+        exit(0);
+    }
+
+    if ($current === 2) {
+        migrate_optional_location_hierarchy(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(3)'
+        );
+
+        echo
+            "Migrated database schema from version 2 to version 3.\n";
 
         exit(0);
     }
@@ -529,8 +603,17 @@ try {
          VALUES(2)'
     );
 
+    migrate_optional_location_hierarchy(
+        $db
+    );
+
+    $db->query(
+        'INSERT INTO schema_migrations(version)
+         VALUES(3)'
+    );
+
     echo
-        "Migrated database schema from version 1 to version 2.\n";
+        "Migrated database schema from version 1 to version 3.\n";
 } catch (Throwable $error) {
     fwrite(
         STDERR,
