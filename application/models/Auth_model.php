@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** Auth persistence using the native CodeIgniter MySQLi Query Builder. */
 class Auth_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function ensure_attempt(array $params = []): bool
     {
         $this->store->require_transaction();
