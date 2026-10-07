@@ -98,11 +98,49 @@ class Read_model extends Repository_model
         $this->db->group_end();
     }
 
+    private function applyListFilters(
+        string $module,
+        array $query
+    ): void {
+        if (
+            in_array(
+                $module,
+                [
+                    'softcopy',
+                    'hardcopy',
+                    'requests',
+                    'my_requests',
+                    'my_tasks',
+                    'transfers',
+                    'access',
+                    'disposals',
+                    'files',
+                ],
+                true
+            )
+        ) {
+            $status = Rules::text(
+                $query,
+                'status',
+                80,
+                false
+            );
+
+            if ($status) {
+                $this->db->where(
+                    't.status',
+                    $status
+                );
+            }
+        }
+    }
+
     public function listing(
         string $module,
         array $query
     ): array {
         $definition = $this->scope($module);
+        $this->applyListFilters($module, $query);
 
         $request = Datatable_service::normalize(
             $query,
@@ -118,6 +156,7 @@ class Read_model extends Repository_model
             (int) $this->first()['n'];
 
         $this->scope($module);
+        $this->applyListFilters($module, $query);
         $this->search(
             $definition,
             $request['q']
@@ -132,6 +171,7 @@ class Read_model extends Repository_model
             (int) $this->first()['n'];
 
         $this->scope($module);
+        $this->applyListFilters($module, $query);
         $this->search(
             $definition,
             $request['q']
@@ -155,7 +195,10 @@ class Read_model extends Repository_model
 
         $rows = array_map(
             fn(array $row): array =>
-                $this->safe($row),
+                $this->withDisplayLabels(
+                    $module,
+                    $this->safe($row)
+                ),
             $this->results()
         );
 
@@ -746,7 +789,29 @@ class Read_model extends Repository_model
             $this->db->reset_query()->from('workflow_steps')->where('request_id', $id)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id', $id)->order_by('h.id');
-            $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
+            $related['history']=array_map(
+                function(array $historyRow): array {
+                    $historyRow = $this->safe($historyRow);
+                    if (
+                        empty($historyRow['step_name'])
+                        && in_array(
+                            $historyRow['action'] ?? '',
+                            [
+                                'draft_created',
+                                'draft_updated',
+                                'submitted',
+                                'resubmitted',
+                                'cancelled',
+                            ],
+                            true
+                        )
+                    ) {
+                        $historyRow['step_name'] = 'Requester action';
+                    }
+                    return $historyRow;
+                },
+                $this->results()
+            );
             if ($row['workflow_version_id']) {
                 $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
                 $related['workflow_version']=$this->first();
