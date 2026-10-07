@@ -1,10 +1,19 @@
-- Issues  found in Testing Phases THe functionality
+- Issues found in Testing Phases — functionality
 
-#1 IN workflow builder publish version button issues - Database unavailable or not installed. Ask the administrator to check the private server logs and installation. issues after remark submit.
+#1 [FIXED] Workflow Builder publish version
+- Fixed the database error path after submitting the publish remark.
+- Publishing/default switching no longer performs an unrelated workflow-route sequence write.
+- Added regression coverage for publishing the first usable workflow version.
 
-#2 Workflow builder no draft delete/remove action
+#2 [FIXED] Workflow Builder draft delete/remove
+- Added "Remove draft version".
+- Requires a reason.
+- Only unpublished drafts can be removed.
+- Published, default, or request-linked versions remain protected.
 
-#3 Dont show the json metadata in frontend
+#3 [FIXED] Raw JSON metadata in frontend
+- Removed raw JSON/metadata dumps from record and file dialogs.
+- Frontend now renders readable scalar details only.
+- Internal graph, payload, snapshot, result, IDs, assignments, and audit state objects stay hidden.
 
-#4 
-
+#4
