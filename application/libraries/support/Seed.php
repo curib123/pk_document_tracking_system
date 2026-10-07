@@ -224,7 +224,7 @@ final class Seed
             ]);
 
             $ctx->audit('system','installed',$admin,null,[
-                'schema_version'=>1,
+                'schema_version'=>2,
                 'seeded_roles'=>array_keys($roleIds),
                 'seeded_permissions'=>count($permissionIds),
             ]);
