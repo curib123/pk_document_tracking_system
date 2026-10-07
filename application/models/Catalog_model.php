@@ -5,6 +5,7 @@ use Pk\Core\{Context,Database,Problem};
 /** Catalog persistence using the native CodeIgniter MySQLi Query Builder. */
 class Catalog_model extends Repository_model
 {
+    // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 public function permission_administrator(array $params = []): ?array
     {
         $this->db->reset_query()->select('id')->from('permissions')->where('module_key','roles')->where('action_key','edit');
