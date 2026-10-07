@@ -11,5 +11,5 @@
 </head>
 <body>
 <header><h1>PK Document Tracking System</h1><p id="account"></p><div id="account-actions"></div></header>
-<?php require PK_ROOT.'/application/views/components/status.php'; ?>
-<?php require PK_ROOT.'/application/views/templates/navigation.php'; ?>
+<p id="global-status" role="status" aria-live="polite">Loading the system…</p>
+<nav id="navigation" aria-label="Modules"></nav>
