@@ -815,6 +815,100 @@ class Read_model extends Repository_model
             false
         );
 
+        // Predefined physical lookups include their parent hierarchy.
+        // The frontend uses these readable values to auto-populate upward.
+        if ($kind === 'specifics') {
+            $label = 's.name';
+
+            $this->db
+                ->reset_query()
+                ->select(
+                    's.id,s.area_id'
+                )
+                ->select(
+                    $label . ' AS label',
+                    false
+                )
+                ->select(
+                    'a.name AS area_label',
+                    false
+                )
+                ->from('specifics s')
+                ->join(
+                    'areas a',
+                    'a.id = s.area_id'
+                )
+                ->group_start()
+                ->where('s.active', 1)
+                ->like($label, $search)
+                ->group_end();
+
+            if ($selected !== null) {
+                $this->db->or_where(
+                    's.id',
+                    $selected
+                );
+            }
+
+            $this->db
+                ->order_by('label')
+                ->limit(101);
+
+            return $this->lookupPayload(
+                $this->results()
+            );
+        }
+
+        if ($kind === 'assets') {
+            $label = 'a.asset_number';
+
+            $this->db
+                ->reset_query()
+                ->select(
+                    'a.id,a.specific_id,s.area_id'
+                )
+                ->select(
+                    $label . ' AS label',
+                    false
+                )
+                ->select(
+                    's.name AS specific_label',
+                    false
+                )
+                ->select(
+                    'ar.name AS area_label',
+                    false
+                )
+                ->from('assets a')
+                ->join(
+                    'specifics s',
+                    's.id = a.specific_id'
+                )
+                ->join(
+                    'areas ar',
+                    'ar.id = s.area_id'
+                )
+                ->group_start()
+                ->where('a.active', 1)
+                ->like($label, $search)
+                ->group_end();
+
+            if ($selected !== null) {
+                $this->db->or_where(
+                    'a.id',
+                    $selected
+                );
+            }
+
+            $this->db
+                ->order_by('label')
+                ->limit(101);
+
+            return $this->lookupPayload(
+                $this->results()
+            );
+        }
+
         if ($kind === 'locations') {
             $label =
                 "CONCAT_WS(' → ', " .
@@ -823,9 +917,23 @@ class Read_model extends Repository_model
 
             $this->db
                 ->reset_query()
-                ->select('l.id')
+                ->select(
+                    'l.id,l.asset_id,l.specific_id,l.area_id'
+                )
                 ->select(
                     $label . ' AS label',
+                    false
+                )
+                ->select(
+                    'a.asset_number AS asset_label',
+                    false
+                )
+                ->select(
+                    's.name AS specific_label',
+                    false
+                )
+                ->select(
+                    'ar.name AS area_label',
                     false
                 )
                 ->from('locations l')
@@ -860,27 +968,14 @@ class Read_model extends Repository_model
                 ->order_by('label')
                 ->limit(101);
 
-            $rows = $this->results();
-            $more = count($rows) > 100;
-
-            return [
-                'options' =>
-                    array_slice(
-                        $rows,
-                        0,
-                        100
-                    ),
-                'more' => $more,
-                'message' => $more
-                    ? 'More results exist. Type a narrower search.'
-                    : '',
-            ];
+            return $this->lookupPayload(
+                $this->results()
+            );
         }
 
         $label = match ($kind) {
             'users' =>
                 "CONCAT(first_name,' ',last_name,' — ',position_title)",
-            'assets' => 'asset_number',
             'softcopy' =>
                 "CONCAT(document_number,' — ',title)",
             'hardcopy' => 'title',
@@ -918,7 +1013,14 @@ class Read_model extends Repository_model
             ->order_by('label')
             ->limit(101);
 
-        $rows = $this->results();
+        return $this->lookupPayload(
+            $this->results()
+        );
+    }
+
+    private function lookupPayload(
+        array $rows
+    ): array {
         $more = count($rows) > 100;
 
         return [
