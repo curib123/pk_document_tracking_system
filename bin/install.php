@@ -6,11 +6,13 @@ use Pk\Core\{Database,Seed,Rules};
 try {
     foreach(['mysqli','fileinfo','mbstring','zip'] as $extension) if (!extension_loaded($extension)) throw new RuntimeException("PHP extension $extension is required.");
     if (!is_file(PK_ROOT.'/vendor/codeigniter/framework/system/core/CodeIgniter.php')) throw new RuntimeException('Run composer install first.');
-    $username=getenv('PK_ADMIN_USERNAME') ?: 'admin';
-    if (!preg_match('/^[a-zA-Z0-9_.-]{3,80}$/',$username)) throw new RuntimeException('Invalid PK_ADMIN_USERNAME.');
-    $password=getenv('PK_ADMIN_PASSWORD') ?: bin2hex(random_bytes(12)); Rules::password($password,$password);
+    $username='admin';
+    $testPassword=getenv('PK_TEST_DB')==='1' ? (string)(getenv('PK_ADMIN_PASSWORD') ?: '') : '';
+    $password=$testPassword!=='' ? $testPassword : bin2hex(random_bytes(12));
+    Rules::password($password,$password);
     $db=Database::connect();
-    $exists=$db->first($db->builder->reset_query()->select('COUNT(*) AS n',false)->where('table_schema',getenv('DB_DATABASE') ?: 'pk_dts')->get('information_schema.tables'));
+    $databaseName=(string)$db->builder->database;
+    $exists=$db->first($db->builder->reset_query()->select('COUNT(*) AS n',false)->where('table_schema',$databaseName)->get('information_schema.tables'));
     if ((int)$exists['n']>0) throw new RuntimeException('Database is not empty. Installer will not alter existing data. Use a new empty database or an explicit reviewed migration.');
     foreach(explode(';',file_get_contents(PK_ROOT.'/database/schema.sql')) as $statement) if (trim($statement)!=='') $db->query($statement);
     Seed::run($db,$username,$password);
