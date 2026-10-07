@@ -1,6 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-$config['base_url']=rtrim(getenv('APP_URL') ?: 'http://localhost:8080','/').'/';
+$config['base_url']=pk_base_url();
 $config['index_page']='index.php';
 $config['uri_protocol']='REQUEST_URI';
 $config['url_suffix']='';
@@ -34,7 +34,7 @@ $config['sess_regenerate_destroy']=true;
 $config['cookie_prefix']='';
 $config['cookie_domain']='';
 $config['cookie_path']='/';
-$config['cookie_secure']=getenv('SESSION_SECURE')==='1';
+$config['cookie_secure']=!empty($_SERVER['HTTPS']) && strtolower((string)$_SERVER['HTTPS'])!=='off';
 $config['cookie_httponly']=true;
 $config['cookie_samesite']='Strict';
 $config['standardize_newlines']=false;
