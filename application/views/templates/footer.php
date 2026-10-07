@@ -5,7 +5,7 @@
 </section>
 </template>
 <template id="navigation-group-template">
-<details>
+<details open>
 <summary data-navigation-title></summary>
 <div data-navigation-items></div>
 </details>
