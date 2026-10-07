@@ -71,6 +71,19 @@ const reason = () =>
 const comments = () =>
   field('comments', 'textarea');
 
+const approvalRemarks = () =>
+  field(
+    'comments',
+    'textarea',
+    true,
+    null,
+    {
+      label: 'Remarks',
+      description:
+        'Required. This remark is saved in the workflow history.'
+    }
+  );
+
 const singular = module =>
   SINGULAR_NAMES[module] || 'record';
 
@@ -1736,22 +1749,47 @@ async function details(moduleKey, id) {
         );
 
       if (canDecide) {
+        const decisionUi = {
+          approve: {
+            title: 'Approve',
+            submitLabel: 'Submit approval',
+            explanation:
+              'Enter remarks before approving. The request moves to the next approver; if this is the final step, it becomes approved.'
+          },
+          return: {
+            title: 'Return to previous holder',
+            submitLabel: 'Submit return',
+            explanation:
+              'Enter remarks before returning. The request moves backward to the previous holder for correction or another decision.'
+          },
+          reject: {
+            title: 'Reject request',
+            submitLabel: 'Submit rejection',
+            explanation:
+              'Enter remarks before rejecting. Rejection is final and stops the approval workflow.'
+          }
+        };
+
         for (const decision of [
           'approve',
-          'reject',
-          'return'
+          'return',
+          'reject'
         ]) {
+          const ui = decisionUi[decision];
+
           action(
-            decision === 'return'
-              ? 'Return for correction'
-              : labelOf(decision),
+            ui.title,
             'requests.decide',
             {
               ...identity(row),
               step_id: pending.id,
               decision
             },
-            [comments()]
+            [approvalRemarks()],
+            {
+              submitLabel: ui.submitLabel,
+              explanation: ui.explanation
+            }
           );
         }
 
