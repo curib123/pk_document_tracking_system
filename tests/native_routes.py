@@ -51,12 +51,10 @@ admin.call('areas/save',{'id':area['id'],'version':detail['version'],'name':name
 admin.call('areas/save',{'id':area['id'],'version':detail['version'],'name':'Stale','active':1},status=409)
 admin.call('specifics/save',{'name':'Model boundary room','area_id':area['id'],'active':1})
 admin.call('categories/save',{'name':'Model boundary category','folder_name':'model-boundary','active':1})
-legacy=admin.call('api',query={'op':'list','module':'areas','q':name})
 new=admin.call('areas/datatable',query={'q':name})
-assert legacy['rows']==new['rows']
+assert any(row['name']==name for row in new['rows'])
 filtered=admin.call('areas/datatable',query={'draw':4,'search[value]':'not-present-'+name,'length':10})
 assert filtered['recordsFiltered']==0 and filtered['recordsTotal']>0
-admin.call('api',query={'op':'not-an-operation'},status=404)
 role=next(x['id'] for x in admin.call('dashboard/lookups',query={'kind':'roles','q':'Staff'})['options'] if x['label']=='Staff')
 username='route_'+secrets.token_hex(4)
 account=admin.call('users/save',{'username':username,'first_name':'Route','last_name':'Staff','position_title':'Test','role_id':role,'active':1})
@@ -71,5 +69,5 @@ staff.call('my_requests/datatable')
 staff.call('auth/logout',{})
 assert staff.call('auth/session')['user'] is None
 admin.call('auth/logout',{})
-assert admin.call('api',query={'op':'session'})['user'] is None
-print(f'PASS {checks} native/legacy HTTP responses, all 24 module data endpoints, route isolation, authorization, concurrency, and DataTables counts.')
+assert admin.call('auth/session')['user'] is None
+print(f'PASS {checks} native HTTP responses, all 24 module data endpoints, route isolation, authorization, concurrency, and DataTables counts.')
