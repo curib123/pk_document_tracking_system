@@ -8,7 +8,7 @@ final class UiSchema
     {
         $m=[];
         $add=function(string $key,string $label,string $table,array $columns,array $fields=[],?string $permission=null) use (&$m) { $m[$key]=['key'=>$key,'label'=>$label,'table'=>$table,'columns'=>$columns,'fields'=>$fields,'permission'=>$permission ?? $key.'.view']; };
-        $f=self::field(...); $active=$f('active','checkbox',false);
+        $f=static fn(...$args)=>self::field(...$args); $active=$f('active','checkbox',false);
         $add('softcopy','Softcopy documents','softcopy_documents',['id','document_number','title','status','version']);
         $add('hardcopy','Hardcopy documents','hardcopy_documents',['id','title','area_id','location_id','holder_id','status','version']);
         foreach(['requests'=>'Requests','my_requests'=>'My requests','my_tasks'=>'My tasks'] as $key=>$label) $add($key,$label,'requests',['id','reference','type','status','current_node','requested_by','created_at'],[], 'requests.view');
@@ -35,14 +35,14 @@ final class UiSchema
     }
     public static function documentFields(string $domain): array
     {
-        $f=self::field(...);
+        $f=static fn(...$args)=>self::field(...$args);
         if ($domain==='softcopy') return [$f('document_number','text',false),$f('series_number','text',false),$f('title'),$f('category_id','lookup',true,'categories'),$f('file_id','upload'),$f('effective_date','date'),$f('page_number','number'),$f('new_revision_level','text',false),$f('date_received','date',false),$f('date_released','date',false),$f('reason','textarea')];
         return [$f('title'),...self::physicalFields(),$f('holder_id','lookup',true,'users'),$f('sequence_number','text',false),$f('retention_enabled','checkbox',false),$f('retention_start_date','date',false),$f('retention_end_date','date',false),$f('reason','textarea')];
     }
-    public static function physicalFields(): array { $f=self::field(...); return [$f('area_id','lookup',true,'areas'),$f('specific_id','lookup',true,'specifics'),$f('asset_id','lookup',true,'assets'),$f('location_id','lookup',true,'locations')]; }
+    public static function physicalFields(): array { $f=static fn(...$args)=>self::field(...$args); return [$f('area_id','lookup',true,'areas'),$f('specific_id','lookup',true,'specifics'),$f('asset_id','lookup',true,'assets'),$f('location_id','lookup',true,'locations')]; }
     public static function requestFields(): array
     {
-        $f=self::field(...); $reason=$f('reason','textarea');
+        $f=static fn(...$args)=>self::field(...$args); $reason=$f('reason','textarea');
         return ['softcopy_create'=>self::documentFields('softcopy'),'softcopy_revise'=>self::documentFields('softcopy'),'softcopy_cancel'=>[$reason],
             'hardcopy_create'=>self::documentFields('hardcopy'),'hardcopy_update'=>self::documentFields('hardcopy'),
             'transfer'=>[...self::physicalFields(),$f('recipient_id','lookup',true,'users'),$f('document_copy_number'),$f('sequence_number','text',false),$reason],
