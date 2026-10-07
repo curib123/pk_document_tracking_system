@@ -3,6 +3,7 @@ declare(strict_types=1);
 namespace Pk\Core;
 final class Rules
 {
+    // Ari ta mag-normalize ug validate input para service code dili balik-balik ug checks.
     public static function text(array $data, string $key, int $max = 255, bool $required = true): ?string
     {
         $value = $data[$key] ?? '';
