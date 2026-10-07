@@ -32,5 +32,9 @@ new issues
 
 #10 [Not Fixed] remove files and attachment in sidebar layout and make the sidebar route have main route like Dashboard ,System Document inside of its dropdown option is softcopy documents and hardcopy doxuments and so on organized it properly but dont design style it yet
 
-#11 in softcopy documents request why theres no document file upload to be view by approver
+#11  [Not Fixed] in softcopy documents request why theres no document file upload to be view by approver
+
+#12  [Not Fixed] fixed html is app.js which is not recommended make sure its in view as skeletal html tags no design ,each components that is centralized in view to easy edit design and track it easily
+
+#13  [Not Fixed] 
  
