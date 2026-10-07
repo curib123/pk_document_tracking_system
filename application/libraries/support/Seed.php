@@ -8,10 +8,10 @@ final class Seed
     {
         $map=[];
         foreach(['users','roles','permissions','areas','specifics','assets','locations','categories'] as $module) $map[$module]=['view','add','edit','delete'];
-        return [...$map,'dashboard'=>['view'],'softcopy'=>['view','request','direct'],'hardcopy'=>['view','request','direct'],
+        return array_merge($map,['dashboard'=>['view'],'softcopy'=>['view','request','direct'],'hardcopy'=>['view','request','direct'],
             'documents'=>['access_all'],'files'=>['view','view_all','upload','approve','generate'],'requests'=>['view','add','edit','submit','cancel','approve','manage','view_all'],
             'workflows'=>['view','edit','reassign'],'transfer'=>['view','view_all','request','manage'],'access'=>['view','view_all','request','revoke','manage'],
-            'assignment'=>['view','view_all','request','manage'],'disposal'=>['view','view_all','request'],'notifications'=>['view','edit'],'audit'=>['view'],'sequences'=>['view'],'settings'=>['view','edit']];
+            'assignment'=>['view','view_all','request','manage'],'disposal'=>['view','view_all','request'],'notifications'=>['view','edit'],'audit'=>['view'],'sequences'=>['view'],'settings'=>['view','edit']]);
     }
     public static function run(Database $db,string $username,string $password): void
     {
