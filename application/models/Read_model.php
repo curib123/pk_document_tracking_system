@@ -378,16 +378,47 @@ class Read_model extends Repository_model
             );
         } elseif ($module === 'locations') {
             $add(
+                'asset',
+                'asset',
+                'asset_id'
+            );
+
+            $add(
                 'specific',
                 'specific',
                 'specific_id'
             );
 
             $add(
-                'asset',
-                'asset',
-                'asset_id'
+                'area',
+                'area',
+                'area_id'
             );
+
+            $row['location_path'] =
+                implode(
+                    ' → ',
+                    array_values(
+                        array_filter(
+                            [
+                                trim(
+                                    ($row['code'] ?? '') .
+                                    (
+                                        !empty($row['name'])
+                                            ? ' — ' . $row['name']
+                                            : ''
+                                    )
+                                ),
+                                $row['asset'] ?? null,
+                                $row['specific'] ?? null,
+                                $row['area'] ?? null,
+                            ],
+                            static fn($value): bool =>
+                                $value !== null &&
+                                $value !== ''
+                        )
+                    )
+                );
         } elseif ($module === 'categories') {
             $add(
                 'parent_category',
@@ -420,6 +451,24 @@ class Read_model extends Repository_model
             ) {
                 $add(...$relation);
             }
+
+            $row['location_path'] =
+                implode(
+                    ' → ',
+                    array_values(
+                        array_filter(
+                            [
+                                $row['location'] ?? null,
+                                $row['asset'] ?? null,
+                                $row['specific'] ?? null,
+                                $row['area'] ?? null,
+                            ],
+                            static fn($value): bool =>
+                                $value !== null &&
+                                $value !== ''
+                        )
+                    )
+                );
         } elseif (
             in_array(
                 $module,
@@ -752,21 +801,99 @@ class Read_model extends Repository_model
             $this->ctx->require('permissions.view');
         }
 
+        $search =
+            Rules::text(
+                $query,
+                'q',
+                100,
+                false
+            ) ?? '';
+
+        $selected = Rules::id(
+            $query,
+            'selected',
+            false
+        );
+
+        if ($kind === 'locations') {
+            $label =
+                "CONCAT_WS(' → ', " .
+                "CONCAT(l.code,' — ',l.name), " .
+                "a.asset_number, s.name, ar.name)";
+
+            $this->db
+                ->reset_query()
+                ->select('l.id')
+                ->select(
+                    $label . ' AS label',
+                    false
+                )
+                ->from('locations l')
+                ->join(
+                    'assets a',
+                    'a.id = l.asset_id',
+                    'left'
+                )
+                ->join(
+                    'specifics s',
+                    's.id = l.specific_id',
+                    'left'
+                )
+                ->join(
+                    'areas ar',
+                    'ar.id = l.area_id',
+                    'left'
+                )
+                ->group_start()
+                ->where('l.active', 1)
+                ->like($label, $search)
+                ->group_end();
+
+            if ($selected !== null) {
+                $this->db->or_where(
+                    'l.id',
+                    $selected
+                );
+            }
+
+            $this->db
+                ->order_by('label')
+                ->limit(101);
+
+            $rows = $this->results();
+            $more = count($rows) > 100;
+
+            return [
+                'options' =>
+                    array_slice(
+                        $rows,
+                        0,
+                        100
+                    ),
+                'more' => $more,
+                'message' => $more
+                    ? 'More results exist. Type a narrower search.'
+                    : '',
+            ];
+        }
+
         $label = match ($kind) {
-            'users' => "CONCAT(first_name,' ',last_name,' — ',position_title)",
+            'users' =>
+                "CONCAT(first_name,' ',last_name,' — ',position_title)",
             'assets' => 'asset_number',
-            'softcopy' => "CONCAT(document_number,' — ',title)",
+            'softcopy' =>
+                "CONCAT(document_number,' — ',title)",
             'hardcopy' => 'title',
-            'locations' => "CONCAT(code,' — ',name)",
             default => 'name',
         };
-
-        $search = Rules::text($query, 'q', 100, false) ?? '';
 
         $this->db
             ->reset_query()
             ->select('id')
-            ->select($label . ' AS label', false)
+            ->select(
+                $label . ' AS label',
+                false
+            )
             ->from($table)
             ->group_start();
 
@@ -780,10 +907,11 @@ class Read_model extends Repository_model
             ->like($label, $search)
             ->group_end();
 
-        $selected = Rules::id($query, 'selected', false);
-
         if ($selected !== null) {
-            $this->db->or_where('id', $selected);
+            $this->db->or_where(
+                'id',
+                $selected
+            );
         }
 
         $this->db
@@ -794,13 +922,19 @@ class Read_model extends Repository_model
         $more = count($rows) > 100;
 
         return [
-            'options' => array_slice($rows, 0, 100),
+            'options' =>
+                array_slice(
+                    $rows,
+                    0,
+                    100
+                ),
             'more' => $more,
             'message' => $more
                 ? 'More results exist. Type a narrower search.'
                 : '',
         ];
     }
+
     public function dashboard(): array
     {
         $this->ctx->require('dashboard.view');
