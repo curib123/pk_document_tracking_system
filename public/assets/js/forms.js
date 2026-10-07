@@ -1,11 +1,11 @@
 import { el, Modal, labelOf } from './components.js';
 let fieldSerial = 0;
-export const field = (name, type = 'text', required = true, lookup = null, extra = {}) => ({ name, label: labelOf(name), type, required, lookup, ...extra });
+export const field = (name, type = 'text', required = true, lookup = null, extra = {}) => { const displayName = (type === 'lookup' || type === 'upload' || lookup) ? name.replace(/_id$/, '') : name; return { name, label: labelOf(displayName), type, required, lookup, ...extra }; };
 export async function mountFields(container, fields, values, api, { disabled = [] } = {}) {
   const controls = new Map(); const getters = new Map(); const disposers = [];
   for (const definition of fields) {
     const { name, type = 'text', required = true } = definition;
-    const label = definition.label || labelOf(name); const id = `field-${++fieldSerial}`; const group = el('p');
+    const displayName = (type === 'lookup' || type === 'upload' || definition.lookup) ? name.replace(/_id$/, '') : name; const label = definition.label || labelOf(displayName); const id = `field-${++fieldSerial}`; const group = el('p');
     let input, read; const value = values[name];
     if (type === 'lookup') {
       const search = el('input', { type: 'search', id: `${id}-search`, placeholder: 'Type to search', 'aria-label': `Search ${label}` });
@@ -17,8 +17,8 @@ export async function mountFields(container, fields, values, api, { disabled = [
           const result = await api.request('lookups', { kind: definition.lookup, q: search.value, selected: selection || undefined }, false, aborter.signal);
           if (!input.isConnected) return;
           input.replaceChildren(el('option', { value: '' }, required ? 'Choose…' : 'None'));
-          if (selection && !result.options.some(option => String(option.id) === selection)) input.append(el('option', { value: selection }, `Selected #${selection}`));
-          for (const option of result.options) input.append(el('option', { value: String(option.id) }, `${option.label} (#${option.id})`));
+          if (selection && !result.options.some(option => String(option.id) === selection)) input.append(el('option', { value: selection }, 'Current selection'));
+          for (const option of result.options) input.append(el('option', { value: String(option.id) }, option.label));
           input.value = selection; hint.textContent = result.message || '';
         } catch (error) { if (error.name !== 'AbortError') hint.textContent = error.message; }
       };
