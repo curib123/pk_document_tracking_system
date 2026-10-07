@@ -5,6 +5,7 @@ namespace Pk\Core;
 
 final class WorkflowGraph
 {
+    // Simple ordered steps ra ni; no hidden branching para dali i-review ug i-audit.
     public static function defaults(): array
     {
         return [
