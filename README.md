@@ -80,8 +80,8 @@ PDF artifact generation uses FPDI/FPDF. DOCX/XLSX conversion automatically looks
 A fresh installation automatically seeds:
 
 - **Administrator** — all permissions
-- **Document Control Officer** — document-control, approval, file, transfer, access, assignment, audit, sequence, and catalogue-management permissions
-- **Plant Manager** — normal staff access plus request approval, request-wide visibility, and document-wide access
+- **Document Control Officer** — document-control, file, transfer, access, assignment, audit, sequence, broad request visibility, and catalogue-management permissions
+- **Plant Manager** — normal staff access plus request-wide visibility and document-wide access; the role can be selected as an approver in a workflow step
 - **Internal Auditor** — read-focused access to documents, requests, transfers, assignments, access records, disposals, files, notifications, and audit logs
 - **Staff** — standard request, upload, notification, and document-view/request permissions
 
