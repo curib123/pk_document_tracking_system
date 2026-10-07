@@ -12,3 +12,7 @@ Removed project `.env` handling, Docker/Compose runtime files and the custom PHP
 ## PHP 8.0 / XAMPP cleanup
 
 Retargeted the application and CI to PHP 8.0, replaced PHP 8.1-only readonly properties and first-class callable syntax, removed associative-array unpacking that PHP 8.0 cannot execute, and deleted obsolete planning/build compatibility files.
+
+## Redundancy cleanup
+
+Removed the legacy query-string API adapter and service aliases, eliminated duplicated endpoint-route test data, flattened one-use UI template fragments, and removed obsolete compatibility/test files. Native CodeIgniter routes remain the single HTTP interface.
