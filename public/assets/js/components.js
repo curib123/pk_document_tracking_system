@@ -56,6 +56,7 @@ export function labelOf(value) {
     .replace(/\b\w/g, letter => letter.toUpperCase());
 }
 
+// ID internal ra ni; readable values ang ipakita sa user para dili confusing.
 const INTERNAL_DISPLAY_KEYS = new Set([
   'id',
   'version',
@@ -300,6 +301,7 @@ export function inspect(value, heading = 'Details') {
   return details;
 }
 
+// Shared guard ni: bisag naay ID maapil sa response, dili gihapon siya ma-render sa table.
 export function table(columns, rows, actions) {
   const visibleColumns = columns.filter(
     column => !hiddenDisplayKey(column)
