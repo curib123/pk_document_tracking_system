@@ -3,6 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /** Shared HTTP mechanics only. Domain decisions belong to service libraries. */
 class MY_Controller extends CI_Controller
 {
+    // Shared HTTP helper ra ni; ayaw diri ibutang ang domain/business rules.
     protected function endpoint(string $path,array $parameters=[]): void
     {
         Http_gateway::respond($path,$parameters);
