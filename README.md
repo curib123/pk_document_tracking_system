@@ -57,6 +57,14 @@ No `.env` file, virtual host, Docker container, Node server, npm install, or `ph
 
 The installer refuses to modify a non-empty database. It never drops tables or resets an existing administrator.
 
+If you already have a **schema version 1** PK DTS database, update the code first and run:
+
+```bat
+C:\xampp\php\php.exe bin\migrate.php
+```
+
+The migration upgrades the workflow system to schema version 2, converts existing workflow snapshots to ordered approval steps, selects the current published workflow as the default, and removes the retired document-specific approver configuration. Back up the database before any schema migration.
+
 ## XAMPP notes
 
 The app automatically derives its base URL from the Apache request, so the repository can be placed under another folder name inside `htdocs` without changing an `APP_URL`.
