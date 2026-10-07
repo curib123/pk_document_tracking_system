@@ -17,5 +17,5 @@ try {
     foreach(explode(';',file_get_contents(PK_ROOT.'/database/schema.sql')) as $statement) if (trim($statement)!=='') $db->query($statement);
     Seed::run($db,$username,$password);
     foreach(['files','conversions','logs'] as $folder) if (!is_dir(PK_ROOT.'/storage/'.$folder)) mkdir(PK_ROOT.'/storage/'.$folder,0700,true);
-    echo "Installed schema version 1.\nUsername: $username\nInitial password (shown once): $password\nChange this password at first login. Create another approver before using request workflows.\n";
+    echo "Installed schema version 2.\nUsername: $username\nInitial password (shown once): $password\nChange this password at first login. Create another approver before using request workflows.\n";
 } catch(Throwable $e) { fwrite(STDERR,"Installation failed: {$e->getMessage()}\n"); exit(1); }
