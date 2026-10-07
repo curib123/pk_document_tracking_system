@@ -57,10 +57,17 @@ $db->transaction(function() use($db,$ctx) {
     check(count($db->all("SELECT * FROM status_history WHERE domain='hardcopy' AND document_id=?",[$hard['id']]))>=2,'document status history retained');
     check(count($db->all('SELECT * FROM notifications WHERE user_id=?',[$staff['id']]))>0,'notifications created');
     $workflowService=new Workflow_service($ctx);
-    $extra=$workflowService->save(['workflow_key'=>'alternate_'.bin2hex(random_bytes(3)),'name'=>'Alternate transfer','request_type'=>'transfer','active'=>0]);
+    $extra=$workflowService->save(['workflow_key'=>'alternate_'.bin2hex(random_bytes(3)),'name'=>'Alternate transfer','request_type'=>'transfer']);
     check((int)$db->row('workflows',$extra['id'])['active']===0,'new alternate workflow starts inactive');
     $draft=$db->one('SELECT * FROM workflow_versions WHERE workflow_id=?',[$extra['id']]);
+    $adminRole=(int)$db->one("SELECT role_id FROM users WHERE id=?",[$adminId])['role_id'];
+    $workflowService->version(['id'=>(int)$draft['id'],'version'=>(int)$draft['version'],'graph'=>['steps'=>[
+        ['name'=>'Transfer approval','approver'=>['type'=>'role','value'=>$adminRole]]
+    ]]]);
+    $draft=$db->row('workflow_versions',(int)$draft['id']);
     $workflowService->publish(['id'=>(int)$draft['id'],'version'=>(int)$draft['version'],'reason'=>'Test alternate routing']);
+    $published=$db->row('workflow_versions',(int)$draft['id']);
+    check((int)$published['is_default']===1,'first published version becomes the default');
     check((int)$db->one("SELECT COUNT(*) n FROM workflows WHERE request_type='transfer' AND active=1")['n']===1,'exactly one active workflow per request type');
     check($db->row('requests',$request['id'])['snapshot']===$snapshot,'publishing alternate workflow cannot alter old request snapshots');
     // A synthetic private PDF record tests revision transactions; browser upload is tested separately.
