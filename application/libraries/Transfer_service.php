@@ -26,7 +26,7 @@ class Transfer_service
         $doc=$db->lock_hardcopy((int)$transfer['hardcopy_id']); $this->unchanged($transfer,$doc);
         if ($decision==='accepted') {
             $destination=Rules::json($transfer['destination']); $physical=(new Document_service($this->ctx))->physical($destination,(int)$doc['id']);
-            $db->update('hardcopy_documents',(int)$doc['id'],[...$physical,'holder_id'=>$this->ctx->id(),'sequence_number'=>$destination['sequence_number'] ?? $doc['sequence_number']]);
+            $db->update('hardcopy_documents',(int)$doc['id'],array_merge($physical,['holder_id'=>$this->ctx->id(),'sequence_number'=>$destination['sequence_number'] ?? $doc['sequence_number']]));
             $this->ctx->status('hardcopy',(int)$doc['id'],$doc['status'],$doc['status'],'transfer_received',$comments);
             $this->ctx->audit('hardcopy','location_changed',(int)$doc['id'],$doc,$physical,$comments,(int)$transfer['request_id']);
         }
