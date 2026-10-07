@@ -95,38 +95,79 @@ function directDocument(domain, row = {}, parent) {
   return formModal(existing ? `Direct ${domain === 'softcopy' ? 'revision' : 'update'}` : `Direct create ${domain}`, metadata.document_fields[domain], values, api, data => api.request('documents.direct', { domain, ...(existing?identity(row):{}), ...data }, true), { after:afterChange(parent), disabled:existing ? (domain === 'hardcopy' ? ['area_id','specific_id','asset_id','location_id','holder_id'] : ['document_number']) : [], explanation:domain === 'hardcopy' && existing ? 'Update metadata here. Use a transfer request to change physical location or holder.' : 'Direct changes require dedicated authorization and an audit reason. Softcopy changes always create a preserved revision.' });
 }
 function requestForm(existing = null, preset = {}, parent) {
-  const modal = new Modal(existing ? 'Edit request draft' : 'New request', { explanation:'Save a draft first. Then open it in My requests to submit. Request approval and document creation are separate operations.' });
-  let type = existing?.type || preset.type || 'softcopy_create';
-  let domain = existing?.softcopy_id ? 'softcopy' : existing?.hardcopy_id ? 'hardcopy' : preset.domain || (type.startsWith('hardcopy') || type==='transfer' ? 'hardcopy' : 'softcopy');
+  const allowedTypes = metadata.request_types || [];
+  const initialType = existing?.type || preset.type || allowedTypes[0] || 'softcopy_create';
+  let type = allowedTypes.includes(initialType) ? initialType : (allowedTypes[0] || 'softcopy_create');
+  const fixedDomainFor = requestType => {
+    if (requestType.startsWith('softcopy') || requestType === 'assignment') return 'softcopy';
+    if (requestType.startsWith('hardcopy') || requestType === 'transfer') return 'hardcopy';
+    return null;
+  };
+  const initialDomain = existing?.softcopy_id ? 'softcopy' : existing?.hardcopy_id ? 'hardcopy' : preset.domain;
+  let domain = fixedDomainFor(type) || (['softcopy','hardcopy'].includes(initialDomain) ? initialDomain : 'softcopy');
   let target = existing?.softcopy_id || existing?.hardcopy_id || preset.document_id || null;
   let values = existing?.payload || preset.values || {}; let head, payload;
+  const modalTitle = existing ? 'Edit request draft' : preset.type ? `${labelOf(type)} request` : 'New request';
+  const modal = new Modal(modalTitle, { explanation:'Save a draft first. Then open it in My requests to submit. Request approval and document creation are separate operations.' });
   const heading = el('div'), body = el('div'); modal.body.append(heading,body);
-  const renderPayload = async () => { payload?.dispose(); body.replaceChildren(); payload = await mountFields(body, metadata.request_fields[type], values, api, { disabled:existing?.type?.startsWith('softcopy') && type!=='softcopy_create' ? ['document_number'] : [] }); };
+
+  const syncDomain = (requestType, preferredDomain = domain) => {
+    const fixed = fixedDomainFor(requestType);
+    domain = fixed || (['softcopy','hardcopy'].includes(preferredDomain) ? preferredDomain : 'softcopy');
+  };
+  const renderPayload = async () => {
+    payload?.dispose(); body.replaceChildren();
+    payload = await mountFields(body, metadata.request_fields[type] || [], values, api, { disabled:existing?.type?.startsWith('softcopy') && type!=='softcopy_create' ? ['document_number'] : [] });
+  };
   const renderHead = async () => {
-    head?.dispose(); heading.replaceChildren();
-    if (type.startsWith('softcopy') || type==='assignment') domain='softcopy';
-    if (type.startsWith('hardcopy') || type==='transfer') domain='hardcopy';
-    const creates=type.endsWith('_create'); const descriptors=[field('type','select',true,null,{options:metadata.request_types})];
+    head?.dispose(); heading.replaceChildren(); syncDomain(type);
+    const creates=type.endsWith('_create');
+    const descriptors=[field('type','select',true,null,{label:'Request Type',options:allowedTypes})];
     if (['access','disposal'].includes(type)) descriptors.push(field('domain','select',true,null,{options:['softcopy','hardcopy']}));
-    if (!creates) descriptors.push(field('document_id','lookup',true,domain));
+    if (!creates) descriptors.push(field('document_id','lookup',true,domain,{label:domain==='softcopy'?'Softcopy Document':'Hardcopy Document'}));
     head=await mountFields(heading,descriptors,{type,domain,document_id:target},api,{disabled:existing?['type','domain','document_id']:[]});
-    head.controls.get('type').addEventListener('change',()=>modal.run(async()=>{ type=head.controls.get('type').value; target=null; values={}; await renderHead(); await renderPayload(); }));
-    head.controls.get('domain')?.addEventListener('change',()=>modal.run(async()=>{domain=head.controls.get('domain').value;target=null;values={};await renderHead();await renderPayload();}));
-    head.controls.get('document_id')?.addEventListener('change',()=>modal.run(async()=>{
-      target=Number(head.controls.get('document_id').value)||null;
+
+    const typeControl=head.controls.get('type');
+    typeControl.value=type;
+    typeControl.addEventListener('change',event=>modal.run(async()=>{
+      const nextType=event.currentTarget.value;
+      if (!allowedTypes.includes(nextType) || nextType===type) return;
+      type=nextType;
+      syncDomain(type);
+      target=null;
+      values={};
+      await renderHead();
+      await renderPayload();
+    }));
+
+    head.controls.get('domain')?.addEventListener('change',event=>modal.run(async()=>{
+      const nextDomain=event.currentTarget.value;
+      domain=['softcopy','hardcopy'].includes(nextDomain)?nextDomain:'softcopy';
+      target=null;
+      values={};
+      await renderHead();
+      await renderPayload();
+    }));
+
+    head.controls.get('document_id')?.addEventListener('change',event=>modal.run(async()=>{
+      target=Number(event.currentTarget.value)||null;
       if (target && ['softcopy_revise','hardcopy_update'].includes(type)) {
-        const data=await api.request('detail',{module:domain,id:target}); values={...data.row,file_id:null,reason:''}; await renderPayload();
+        const data=await api.request('detail',{module:domain,id:target});
+        values={...data.row,file_id:null,reason:''};
+        await renderPayload();
       }
     }));
   };
   modal.setSubmit('Save draft',async()=>{
     const first=await head.read(), data=await payload.read();
+    type=first.type || type;
+    syncDomain(type,first.domain || domain);
     const selected=type.endsWith('_create')?null:Number(first.document_id);
     const result=await api.request('requests.save',{...(existing?identity(existing):{}),type,softcopy_id:domain==='softcopy'?selected:null,hardcopy_id:domain==='hardcopy'?selected:null,payload:data},true);
     await afterChange(parent)(); modal.done(result);
     modal.body.append(button('Open saved request',()=>{modal.forceCloseAfterSuccess();return details('my_requests',result.id);}));
   });
-  modal.run(async()=>{await renderHead();await renderPayload();}).then(()=>modal.focusFirst());
+  modal.run(async()=>{syncDomain(type,initialDomain);await renderHead();await renderPayload();}).then(()=>modal.focusFirst());
   modal.node.addEventListener('close',()=>{head?.dispose();payload?.dispose();}); return modal;
 }
 async function details(moduleKey, id) {
