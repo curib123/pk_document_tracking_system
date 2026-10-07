@@ -45,7 +45,22 @@ def route_api(request):
         result={'rows':rows,'page':1,'pages':1,'limit':25,'total':len(rows)}
     elif op=='lookups':
         kind=data.get('kind')
-        options=[{'id':1,'label':'Administrator'}] if kind in ['roles','users'] else ([{'id':7,'label':'DOC-001 — Quality Manual'}] if kind=='softcopy' else ([{'id':8,'label':'Controlled Hardcopy'}] if kind=='hardcopy' else []))
+        if kind in ['roles','users']:
+            options=[{'id':1,'label':'Administrator'}]
+        elif kind=='softcopy':
+            options=[{'id':7,'label':'DOC-001 — Quality Manual'}]
+        elif kind=='hardcopy':
+            options=[{'id':8,'label':'Controlled Hardcopy'}]
+        elif kind=='areas':
+            options=[{'id':11,'label':'Admin Area'}]
+        elif kind=='specifics':
+            options=[{'id':12,'label':'Records Room','area_id':11,'area_label':'Admin Area'}]
+        elif kind=='assets':
+            options=[{'id':13,'label':'CAB-13','specific_id':12,'specific_label':'Records Room','area_id':11,'area_label':'Admin Area'}]
+        elif kind=='locations':
+            options=[{'id':14,'label':'LOC-14 — Shelf A → CAB-13 → Records Room → Admin Area','asset_id':13,'asset_label':'CAB-13','specific_id':12,'specific_label':'Records Room','area_id':11,'area_label':'Admin Area'}]
+        else:
+            options=[]
         result={'options':options,'more':False}
     elif op=='detail':
         if data.get('module')=='roles': result={'row':{'id':1,'name':'Administrator','active':1,'version':1},'related':{'permission_ids':[1],'available_permissions':[{'id':1,'module_label':'Users','action_label':'View'}]}}
@@ -139,6 +154,20 @@ try:
         expect(transfer.get_by_label('Request Type',exact=True)).to_be_disabled()
         expect(transfer.get_by_label('Hardcopy Document',exact=True)).to_have_value('8')
         expect(transfer.get_by_label('Hardcopy Document',exact=True).locator('option[value="8"]')).to_have_text('Controlled Hardcopy')
+
+        # Predefined physical hierarchy auto-populates upward.
+        transfer.get_by_label('Location',exact=True).select_option('14')
+        expect(transfer.get_by_label('Asset Number',exact=True)).to_have_value('13')
+        expect(transfer.get_by_label('Specific Location',exact=True)).to_have_value('12')
+        expect(transfer.get_by_label('Area',exact=True)).to_have_value('11')
+
+        transfer.get_by_label('Asset Number',exact=True).select_option('13')
+        expect(transfer.get_by_label('Specific Location',exact=True)).to_have_value('12')
+        expect(transfer.get_by_label('Area',exact=True)).to_have_value('11')
+
+        transfer.get_by_label('Specific Location',exact=True).select_option('12')
+        expect(transfer.get_by_label('Area',exact=True)).to_have_value('11')
+
         assert '#8' not in transfer.inner_text()
         transfer.get_by_role('button',name='Cancel',exact=True).click()
         hard.get_by_role('button',name='Close',exact=True).click()
@@ -209,5 +238,5 @@ try:
         assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, hardcopy transfer preset synchronization, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all modules, no JS runtime errors')
+        print('PASS: native dialog, hardcopy transfer preset synchronization, predefined location hierarchy auto-population, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, required permission-change reason, all modules, no JS runtime errors')
 finally: server.shutdown()
