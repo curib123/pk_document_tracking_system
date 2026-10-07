@@ -5,6 +5,7 @@ namespace Pk\Core;
 
 final class UiSchema
 {
+    // UI schema ra ni: labels, visible columns, ug fields in one readable source of truth.
     public static function field(
         string $name,
         string $type = 'text',
