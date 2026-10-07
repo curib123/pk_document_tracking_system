@@ -10,6 +10,7 @@ import {
   mountFields
 } from './forms.js';
 
+// Mao ni ang only approver sources supported sa simple workflow builder.
 const APPROVER_OPTIONS = [
   {
     value: 'user',
@@ -239,6 +240,7 @@ function moveStep(steps, from, to) {
   steps.splice(to, 0, item);
 }
 
+// Draft first, then publish, then choose Default. Old requests keep their pinned version.
 export function workflowVersionModal(
   workflow,
   version,
