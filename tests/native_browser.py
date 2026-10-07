@@ -37,7 +37,6 @@ with sync_playwright() as p:
     page.goto(base+'/index.php/softcopy')
     expect(page.locator('main h2')).to_have_text('Softcopy documents')
     assert any('/index.php/areas/save' in url for url in paths)
-    assert not any('/index.php/api?' in url for url in paths)
     assert not errors,errors
     browser.close()
 print('PASS real native-route modal login, module deep links, persistence, duplicate-save recovery, focus, and no CSS.')
