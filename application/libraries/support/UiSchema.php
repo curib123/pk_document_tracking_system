@@ -17,7 +17,7 @@ final class UiSchema
         $add('assignments','Assigned documents','assignments',['id','softcopy_id','user_id','active','assigned_at'],[],'assignment.view');
         $add('disposals','Disposal records','disposals',['id','domain','document_id','disposal_action','disposed_by','disposed_at'],[],'disposal.view');
         $add('files','Files and attachments','files',['id','original_name','purpose','domain','document_id','status','size','created_at']);
-        $add('workflows','Workflow builder','workflows',['id','name','request_type','active','version'],[$f('workflow_key'),$f('name'),$f('request_type','request_type'),$f('description','textarea',false)]);
+        $add('workflows','Workflow builder','workflows',['id','name','request_type','active','version'],[$f('name'),$f('description','textarea',false)]);
         $add('users','Users','users',['id','username','first_name','last_name','role_id','active','require_password_change'],[$f('username'),$f('first_name'),$f('middle_name','text',false),$f('last_name'),$f('position_title'),$f('role_id','lookup',true,'roles'),$f('leader_id','lookup',false,'users'),$active]);
         $add('roles','Roles','roles',['id','name','active','version'],[$f('name'),$active]);
         $add('permissions','Permissions','permissions',['id','name','module_key','action_key'],[$f('name'),$f('module_key'),$f('module_label'),$f('action_key'),$f('action_label'),$f('description','textarea',false)]);
