@@ -1,100 +1,196 @@
 <?php
+
 // Explicit HTTP contract for native CodeIgniter controllers.
 return [
     'list@softcopy' => ['op' => 'list', 'path' => 'softcopy/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'softcopy']],
+    
     'detail@softcopy' => ['op' => 'detail', 'path' => 'softcopy/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'softcopy']],
+    
     'list@hardcopy' => ['op' => 'list', 'path' => 'hardcopy/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'hardcopy']],
+   
     'detail@hardcopy' => ['op' => 'detail', 'path' => 'hardcopy/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'hardcopy']],
+   
     'list@requests' => ['op' => 'list', 'path' => 'requests/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'requests']],
+    
     'detail@requests' => ['op' => 'detail', 'path' => 'requests/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'requests']],
+    
     'list@my_requests' => ['op' => 'list', 'path' => 'my_requests/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'my_requests']],
+   
     'detail@my_requests' => ['op' => 'detail', 'path' => 'my_requests/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'my_requests']],
+  
     'list@my_tasks' => ['op' => 'list', 'path' => 'my_tasks/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'my_tasks']],
+   
     'detail@my_tasks' => ['op' => 'detail', 'path' => 'my_tasks/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'my_tasks']],
+   
     'list@transfers' => ['op' => 'list', 'path' => 'transfers/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'transfers']],
+  
     'detail@transfers' => ['op' => 'detail', 'path' => 'transfers/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'transfers']],
+    
     'list@access' => ['op' => 'list', 'path' => 'access/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'access']],
+   
     'detail@access' => ['op' => 'detail', 'path' => 'access/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'access']],
+   
     'list@assignments' => ['op' => 'list', 'path' => 'assignments/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'assignments']],
+   
     'detail@assignments' => ['op' => 'detail', 'path' => 'assignments/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'assignments']],
+   
     'list@disposals' => ['op' => 'list', 'path' => 'disposals/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'disposals']],
+  
     'detail@disposals' => ['op' => 'detail', 'path' => 'disposals/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'disposals']],
+  
     'list@files' => ['op' => 'list', 'path' => 'files/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'files']],
+  
     'detail@files' => ['op' => 'detail', 'path' => 'files/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'files']],
+   
     'list@workflows' => ['op' => 'list', 'path' => 'workflows/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'workflows']],
+   
     'detail@workflows' => ['op' => 'detail', 'path' => 'workflows/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'workflows']],
+   
     'list@users' => ['op' => 'list', 'path' => 'users/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'users']],
+   
     'detail@users' => ['op' => 'detail', 'path' => 'users/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'users']],
+   
     'list@roles' => ['op' => 'list', 'path' => 'roles/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'roles']],
+   
     'detail@roles' => ['op' => 'detail', 'path' => 'roles/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'roles']],
+   
     'list@permissions' => ['op' => 'list', 'path' => 'permissions/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'permissions']],
+  
     'detail@permissions' => ['op' => 'detail', 'path' => 'permissions/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'permissions']],
+  
     'list@areas' => ['op' => 'list', 'path' => 'areas/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'areas']],
+   
     'detail@areas' => ['op' => 'detail', 'path' => 'areas/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'areas']],
+   
     'list@specifics' => ['op' => 'list', 'path' => 'specifics/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'specifics']],
+   
     'detail@specifics' => ['op' => 'detail', 'path' => 'specifics/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'specifics']],
+   
     'list@assets' => ['op' => 'list', 'path' => 'assets/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'assets']],
+   
     'detail@assets' => ['op' => 'detail', 'path' => 'assets/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'assets']],
+   
     'list@locations' => ['op' => 'list', 'path' => 'locations/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'locations']],
+   
     'detail@locations' => ['op' => 'detail', 'path' => 'locations/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'locations']],
+    
     'list@categories' => ['op' => 'list', 'path' => 'categories/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'categories']],
+   
     'detail@categories' => ['op' => 'detail', 'path' => 'categories/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'categories']],
+   
     'list@notifications' => ['op' => 'list', 'path' => 'notifications/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'notifications']],
+   
     'detail@notifications' => ['op' => 'detail', 'path' => 'notifications/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'notifications']],
+   
     'list@audit' => ['op' => 'list', 'path' => 'audit/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'audit']],
+   
     'detail@audit' => ['op' => 'detail', 'path' => 'audit/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'audit']],
+   
     'list@history' => ['op' => 'list', 'path' => 'history/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'history']],
+   
     'detail@history' => ['op' => 'detail', 'path' => 'history/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'history']],
+   
     'list@sequences' => ['op' => 'list', 'path' => 'sequences/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'sequences']],
+  
     'list@settings' => ['op' => 'list', 'path' => 'settings/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'settings']],
+   
     'detail@settings' => ['op' => 'detail', 'path' => 'settings/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'settings']],
+   
     'catalog.save@users' => ['op' => 'catalog.save', 'path' => 'users/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'users']],
+   
     'catalog.delete@users' => ['op' => 'catalog.delete', 'path' => 'users/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'users']],
+   
     'catalog.save@roles' => ['op' => 'catalog.save', 'path' => 'roles/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'roles']],
+   
     'catalog.delete@roles' => ['op' => 'catalog.delete', 'path' => 'roles/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'roles']],
+   
     'catalog.save@permissions' => ['op' => 'catalog.save', 'path' => 'permissions/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'permissions']],
+   
     'catalog.delete@permissions' => ['op' => 'catalog.delete', 'path' => 'permissions/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'permissions']],
+   
     'catalog.save@areas' => ['op' => 'catalog.save', 'path' => 'areas/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'areas']],
+  
     'catalog.delete@areas' => ['op' => 'catalog.delete', 'path' => 'areas/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'areas']],
+   
     'catalog.save@specifics' => ['op' => 'catalog.save', 'path' => 'specifics/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'specifics']],
+   
     'catalog.delete@specifics' => ['op' => 'catalog.delete', 'path' => 'specifics/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'specifics']],
+   
     'catalog.save@assets' => ['op' => 'catalog.save', 'path' => 'assets/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'assets']],
+   
     'catalog.delete@assets' => ['op' => 'catalog.delete', 'path' => 'assets/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'assets']],
+   
     'catalog.save@locations' => ['op' => 'catalog.save', 'path' => 'locations/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'locations']],
+   
     'catalog.delete@locations' => ['op' => 'catalog.delete', 'path' => 'locations/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'locations']],
+   
     'catalog.save@categories' => ['op' => 'catalog.save', 'path' => 'categories/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'categories']],
+   
     'catalog.delete@categories' => ['op' => 'catalog.delete', 'path' => 'categories/delete', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'delete', 'shape' => 'module_input', 'fixed' => ['module' => 'categories']],
+   
     'catalog.save@settings' => ['op' => 'catalog.save', 'path' => 'settings/save', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'save', 'shape' => 'module_input', 'fixed' => ['module' => 'settings']],
+   
     'session' => ['op' => 'session', 'path' => 'auth/session', 'method' => 'GET', 'service' => 'Auth_service', 'handler' => 'session', 'shape' => 'none', 'fixed' => []],
+   
     'metadata' => ['op' => 'metadata', 'path' => 'dashboard/metadata', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'metadata', 'shape' => 'none', 'fixed' => []],
+   
     'lookups' => ['op' => 'lookups', 'path' => 'dashboard/lookups', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'lookups', 'shape' => 'input', 'fixed' => []],
+   
     'dashboard' => ['op' => 'dashboard', 'path' => 'dashboard/data', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'dashboard', 'shape' => 'none', 'fixed' => []],
+   
     'files.download' => ['op' => 'files.download', 'path' => 'files/download', 'method' => 'GET', 'service' => 'File_service', 'handler' => 'download', 'shape' => 'id', 'fixed' => []],
+   
     'auth.login' => ['op' => 'auth.login', 'path' => 'auth/login', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'login', 'shape' => 'input', 'fixed' => []],
+  
     'auth.password' => ['op' => 'auth.password', 'path' => 'auth/password', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'changePassword', 'shape' => 'input', 'fixed' => []],
+  
     'auth.logout' => ['op' => 'auth.logout', 'path' => 'auth/logout', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'logout', 'shape' => 'none', 'fixed' => []],
+  
     'users.reset_password' => ['op' => 'users.reset_password', 'path' => 'users/reset_password', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'resetPassword', 'shape' => 'input', 'fixed' => []],
+  
     'roles.permissions' => ['op' => 'roles.permissions', 'path' => 'roles/permissions', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'permissions', 'shape' => 'input', 'fixed' => []],
+  
     'requests.save' => ['op' => 'requests.save', 'path' => 'requests/save', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'save', 'shape' => 'input', 'fixed' => []],
+  
     'requests.submit' => ['op' => 'requests.submit', 'path' => 'requests/submit', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'submit', 'shape' => 'input', 'fixed' => []],
+  
     'requests.decide' => ['op' => 'requests.decide', 'path' => 'requests/decide', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'decide', 'shape' => 'input', 'fixed' => []],
+  
     'requests.cancel' => ['op' => 'requests.cancel', 'path' => 'requests/cancel', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'cancel', 'shape' => 'input', 'fixed' => []],
+  
     'workflows.save' => ['op' => 'workflows.save', 'path' => 'workflows/save', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'save', 'shape' => 'input', 'fixed' => []],
+  
     'workflows.version' => ['op' => 'workflows.version', 'path' => 'workflows/version', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'version', 'shape' => 'input', 'fixed' => []],
+ 
     'workflows.publish' => ['op' => 'workflows.publish', 'path' => 'workflows/publish', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'publish', 'shape' => 'input', 'fixed' => []],
+ 
     'workflows.delete_version' => ['op' => 'workflows.delete_version', 'path' => 'workflows/delete_version', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'deleteVersion', 'shape' => 'input', 'fixed' => []],
+ 
     'workflows.default' => ['op' => 'workflows.default', 'path' => 'workflows/set_default', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'setDefault', 'shape' => 'input', 'fixed' => []],
+ 
     'workflows.reassign' => ['op' => 'workflows.reassign', 'path' => 'workflows/reassign', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'reassign', 'shape' => 'input', 'fixed' => []],
+ 
     'transfers.dispatch' => ['op' => 'transfers.dispatch', 'path' => 'transfers/dispatch', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'dispatch', 'shape' => 'input', 'fixed' => []],
+ 
     'transfers.receive' => ['op' => 'transfers.receive', 'path' => 'transfers/receive', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'receive', 'shape' => 'input', 'fixed' => []],
+ 
     'transfers.cancel' => ['op' => 'transfers.cancel', 'path' => 'transfers/cancel', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'cancel', 'shape' => 'input', 'fixed' => []],
+ 
     'access.revoke' => ['op' => 'access.revoke', 'path' => 'access/revoke', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'revoke', 'shape' => 'input', 'fixed' => []],
+ 
     'assignments.remove' => ['op' => 'assignments.remove', 'path' => 'assignments/remove', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'unassign', 'shape' => 'input', 'fixed' => []],
+ 
     'files.upload' => ['op' => 'files.upload', 'path' => 'files/upload', 'method' => 'POST', 'service' => 'File_service', 'handler' => 'upload', 'shape' => 'upload', 'fixed' => []],
+ 
     'files.attach' => ['op' => 'files.attach', 'path' => 'files/attach', 'method' => 'POST', 'service' => 'File_service', 'handler' => 'attach', 'shape' => 'input', 'fixed' => []],
+ 
     'files.decide' => ['op' => 'files.decide', 'path' => 'files/decide', 'method' => 'POST', 'service' => 'File_service', 'handler' => 'decide', 'shape' => 'input', 'fixed' => []],
+ 
     'files.artifact' => ['op' => 'files.artifact', 'path' => 'files/artifact', 'method' => 'POST', 'service' => 'File_service', 'handler' => 'artifact', 'shape' => 'input', 'fixed' => []],
+ 
     'notifications.read' => ['op' => 'notifications.read', 'path' => 'notifications/read', 'method' => 'POST', 'service' => 'Read_service', 'handler' => 'readNotification', 'shape' => 'input', 'fixed' => []],
+ 
     'documents.direct@softcopy' => ['op' => 'documents.direct', 'path' => 'softcopy/direct', 'method' => 'POST', 'service' => 'Document_service', 'handler' => 'direct', 'shape' => 'domain_input', 'fixed' => ['domain' => 'softcopy']],
+ 
     'documents.direct@hardcopy' => ['op' => 'documents.direct', 'path' => 'hardcopy/direct', 'method' => 'POST', 'service' => 'Document_service', 'handler' => 'direct', 'shape' => 'domain_input', 'fixed' => ['domain' => 'hardcopy']]
 ];
