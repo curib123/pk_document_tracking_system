@@ -51,7 +51,9 @@ jobs:
           php tests/mysqli_contract.php
           php tests/native_database.php
       - name: Install empty test database
-        run: php bin/install.php > /tmp/install.log
+        run: |
+          php bin/install.php > /tmp/install.log
+          php bin/migrate.php
       - name: Domain and concurrency integration
         run: |
           php tests/integration.php
