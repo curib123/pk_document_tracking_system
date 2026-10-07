@@ -62,7 +62,11 @@ final class Database
         // numeric IDs without changing text identifiers such as "000123" or "007".
         $integerFields = [];
         foreach ($result->field_data() as $field) {
-            if (in_array(strtolower($field->type), ['tinyint','smallint','mediumint','int','bigint','year'], true)) $integerFields[] = $field->name;
+            $type=$field->type;
+            $integerType=is_string($type)
+                ? in_array(strtolower($type), ['tinyint','smallint','mediumint','int','bigint','year'], true)
+                : (is_int($type) && in_array($type,[1,2,3,8,9,13],true));
+            if ($integerType) $integerFields[]=$field->name;
         }
         foreach ($rows as &$row) foreach ($integerFields as $field) {
             if (isset($row[$field]) && is_string($row[$field])) {
