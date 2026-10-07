@@ -27,6 +27,10 @@ class Workflows extends MY_Controller
     {
         $this->endpoint('workflows/publish');
     }
+    public function delete_version()
+    {
+        $this->endpoint('workflows/delete_version');
+    }
     public function set_default()
     {
         $this->endpoint('workflows/set_default');
