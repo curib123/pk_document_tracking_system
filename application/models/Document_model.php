@@ -8,8 +8,7 @@ class Document_model extends Repository_model
 
     public function location_occupant(array $params = []): ?array
     {
-        $this->db
-            ->reset_query()
+        $this->db->reset_query()
             ->select('id')
             ->from('hardcopy_documents')
             ->where(
