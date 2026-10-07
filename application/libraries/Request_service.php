@@ -4,8 +4,8 @@ use Pk\Core\{Context,Problem,Rules};
 class Request_service
 {
     public const TYPES=['softcopy_create','softcopy_revise','softcopy_cancel','hardcopy_create','hardcopy_update','transfer','assignment','access','disposal'];
-    private readonly Document_service $documents;
-    private readonly Workflow_service $workflow;
+    private Document_service $documents;
+    private Workflow_service $workflow;
     private Context $ctx;
     public function __construct(Context|array|null $options = null) { $ctx=$this->ctx=Context::fromOptions($options); $this->documents=new Document_service($ctx); $this->workflow=new Workflow_service($ctx); }
     private function permission(string $type): void { if (str_starts_with($type,'softcopy_')) $this->ctx->require('softcopy.request'); elseif (str_starts_with($type,'hardcopy_')) $this->ctx->require('hardcopy.request'); else $this->ctx->require($type.'.request'); }
@@ -20,7 +20,7 @@ class Request_service
         $payload=$this->normalize($type,$soft,$hard,Rules::json($input['payload'] ?? []),$this->ctx->id(),true);
         $data=['type'=>$type,'softcopy_id'=>$soft,'hardcopy_id'=>$hard,'payload'=>Context::json($payload)];
         if ($id) $db->update('requests',$id,$data);
-        else $id=$db->insert('requests',[...$data,'reference'=>$this->ctx->sequence('request_'.date('Y'),'REQ-'.date('Y').'-'),'requested_by'=>$this->ctx->id()]);
+        else $id=$db->insert('requests',array_merge($data,['reference'=>$this->ctx->sequence('request_'.date('Y'),'REQ-'.date('Y').'-'),'requested_by'=>$this->ctx->id()]));
         $this->workflow->history($id,null,$before?'draft_updated':'draft_created',$before,$data);
         return ['id'=>$id,'message'=>'Draft saved. Submit it from the request dialog when ready.'];
     }
@@ -42,7 +42,7 @@ class Request_service
         if (in_array($type,['softcopy_create','softcopy_revise','hardcopy_create','hardcopy_update'],true)) $data=$this->documents->validate($domain,$payload,$target,$owner);
         elseif ($type==='transfer') {
             $this->documents->noOpenTransfer($hard);
-            $data=[...$data,...$this->documents->physical($payload,$hard),'recipient_id'=>Rules::id($payload,'recipient_id'),'document_copy_number'=>Rules::text($payload,'document_copy_number',100),'sequence_number'=>Rules::text($payload,'sequence_number',100,false)];
+            $data=array_merge($data,$this->documents->physical($payload,$hard),['recipient_id'=>Rules::id($payload,'recipient_id'),'document_copy_number'=>Rules::text($payload,'document_copy_number',100),'sequence_number'=>Rules::text($payload,'sequence_number',100,false)]);
             $this->ctx->active('users',$data['recipient_id']);
             if ($data['location_id']===(int)$doc['location_id'] && $data['recipient_id']===(int)$doc['holder_id']) throw new Problem('A transfer must change the location or holder.');
         } elseif ($type==='assignment') { $data['user_id']=Rules::id($payload,'user_id'); $this->ctx->active('users',$data['user_id']); }
@@ -67,14 +67,14 @@ class Request_service
         $fresh=$this->normalize($request['type'],$request['softcopy_id']?(int)$request['softcopy_id']:null,$request['hardcopy_id']?(int)$request['hardcopy_id']:null,$payload,$this->ctx->id(),true);
         $this->unchanged($payload,$fresh);
         if ($request['type']==='transfer' && $db->competing_transfer([$request['hardcopy_id'],$request['id']])) throw new Problem('Another transfer request is already in progress.');
-        $this->workflow->begin($request,$this->complete(...));
+        $this->workflow->begin($request,fn(array $completedRequest)=>$this->complete($completedRequest));
         return ['id'=>(int)$request['id'],'message'=>'Request submitted using its pinned workflow version.'];
     }
     private function unchanged(array $old,array $fresh): void { if (isset($old['base_document_version']) && $old['base_document_version']!==($fresh['base_document_version'] ?? null)) throw new Problem('The document changed after this request was prepared. Return it for correction, then edit and resubmit.',409); }
     public function decide(array $input): array
     {
         $this->ctx->require('requests.approve'); $request=$this->ctx->model(\Request_model::class)->lock('requests',Rules::id($input),Rules::id($input,'version'));
-        $this->workflow->decide($request,$input,$this->complete(...));
+        $this->workflow->decide($request,$input,fn(array $completedRequest)=>$this->complete($completedRequest));
         return ['message'=>'Decision recorded.'];
     }
     private function complete(array $request): void
