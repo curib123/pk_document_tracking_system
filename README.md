@@ -67,6 +67,39 @@ Uploads are limited by the application to 20 MB. Make sure XAMPP's `php.ini` has
 
 PDF artifact generation uses FPDI/FPDF. DOCX/XLSX conversion automatically looks for LibreOffice in the standard Windows installation paths. If LibreOffice is not installed, Office documents can still be stored and downloaded, but PDF conversion requires LibreOffice or a PDF source.
 
+## Default seed data
+
+A fresh installation automatically seeds:
+
+- **Administrator** — all permissions
+- **Document Control Officer** — document-control, approval, file, transfer, access, assignment, audit, sequence, and catalogue-management permissions
+- **Plant Manager** — normal staff access plus request approval, request-wide visibility, and document-wide access
+- **Internal Auditor** — read-focused access to documents, requests, transfers, assignments, access records, disposals, files, notifications, and audit logs
+- **Staff** — standard request, upload, notification, and document-view/request permissions
+
+The default administrator account is:
+
+- Username: `admin`
+- Name: `System Administrator`
+- Role: `Administrator`
+- Active: yes
+- Password: randomly generated during seeding and printed once
+- Forced password change: yes
+
+The full installer creates the schema and seed data:
+
+```bat
+C:\xampp\php\php.exe bin\install.php
+```
+
+If you manually imported `database/schema.sql` into an otherwise fresh database, seed only the defaults with:
+
+```bat
+C:\xampp\php\php.exe bin\seed.php
+```
+
+The seeder refuses to overwrite an existing user database.
+
 ## First-use setup
 
 Sign in and change the initial password. Create real users and assign the appropriate roles. At least **one other active user with `requests.approve`** is required to approve an administrator's own requests because requester self-approval is prohibited.
