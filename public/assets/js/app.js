@@ -990,15 +990,77 @@ async function loadTable() {
                 )
             );
 
-    document
-      .querySelector('#table-container')
-      .replaceChildren(
-        renderRows(
-          module,
-          result.rows,
-          actions
-        )
+    const tableContainer =
+      document.querySelector(
+        '#table-container'
       );
+
+    tableContainer.replaceChildren(
+      renderRows(
+        module,
+        result.rows,
+        actions
+      )
+    );
+
+    if (
+      module.key === 'hardcopy' &&
+      can('requests.view')
+    ) {
+      const drafts = await api.request(
+        'list',
+        {
+          module: 'my_requests',
+          page: 1,
+          limit: 25,
+          q: 'hardcopy_create',
+          status: 'draft',
+          sort: 'created_at',
+          direction: 'desc'
+        }
+      );
+
+      if (
+        generation === listGeneration &&
+        currentModule === module &&
+        drafts.rows.length
+      ) {
+        tableContainer.append(
+          el(
+            'section',
+            {},
+            el(
+              'h3',
+              {},
+              'Draft hardcopy requests'
+            ),
+            el(
+              'p',
+              {},
+              'These requests are not active hardcopy documents yet.'
+            ),
+            table(
+              [
+                'reference',
+                'type',
+                'status',
+                'created_at'
+              ],
+              drafts.rows,
+              row =>
+                button(
+                  'Open draft',
+                  () =>
+                    details(
+                      'my_requests',
+                      row.id
+                    )
+                )
+            )
+          )
+        );
+      }
+    }
 
     message.textContent =
       result.total +
