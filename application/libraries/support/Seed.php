@@ -24,7 +24,7 @@ final class Seed
             'transfer'=>['view','view_all','request','manage','direct'],
             'access'=>['view','view_all','request','revoke','manage','direct'],
             'assignment'=>['view','view_all','request','manage','direct'],
-            'disposal'=>['view','view_all','request'],
+            'disposal'=>['view','view_all','request','direct'],
             'notifications'=>['view','edit'],
             'audit'=>['view'],
             'sequences'=>['view'],
@@ -103,6 +103,7 @@ final class Seed
                 'access.revoke',
                 'assignment.manage',
                 'assignment.direct',
+                'disposal.direct',
                 'audit.view',
                 'sequences.view',
             ],
@@ -228,7 +229,7 @@ final class Seed
             ]);
 
             $ctx->audit('system','installed',$admin,null,[
-                'schema_version'=>6,
+                'schema_version'=>7,
                 'seeded_roles'=>array_keys($roleIds),
                 'seeded_permissions'=>count($permissionIds),
             ]);
