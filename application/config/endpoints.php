@@ -180,7 +180,9 @@ return [
  
     'access.revoke' => ['op' => 'access.revoke', 'path' => 'access/revoke', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'revoke', 'shape' => 'input', 'fixed' => []],
  
-    'assignments.remove' => ['op' => 'assignments.remove', 'path' => 'assignments/remove', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'unassign', 'shape' => 'input', 'fixed' => []],
+
+ 
+    'assignments.direct' => ['op' => 'assignments.direct', 'path' => 'assignments/direct', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'directAssign', 'shape' => 'input', 'fixed' => []],    'assignments.remove' => ['op' => 'assignments.remove', 'path' => 'assignments/remove', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'unassign', 'shape' => 'input', 'fixed' => []],
  
     'files.upload' => ['op' => 'files.upload', 'path' => 'files/upload', 'method' => 'POST', 'service' => 'File_service', 'handler' => 'upload', 'shape' => 'upload', 'fixed' => []],
  
