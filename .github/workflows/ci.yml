@@ -61,6 +61,7 @@ jobs:
           php bin/migrate.php
       - name: Domain and concurrency integration
         run: |
+          php tests/request_catalog.php
           php tests/integration.php
           php tests/mysqli_integration.php
           php tests/concurrency.php
