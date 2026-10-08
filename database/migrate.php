@@ -1162,6 +1162,9 @@ try {
          VALUES(6)'
     );
 
+    migrate_direct_disposal_v7($db);
+    $db->query('INSERT INTO schema_migrations(version) VALUES(7)');
+
     echo
         "Migrated database schema from version 1 to version 7.\n";
 } catch (Throwable $error) {
