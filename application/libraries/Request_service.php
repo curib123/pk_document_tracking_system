@@ -1153,7 +1153,8 @@ class Request_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         foreach (
@@ -1195,7 +1196,7 @@ class Request_service
             'cancelled',
             $request,
             null,
-            $reason
+            $reason ?? ''
         );
 
         return [
@@ -1235,7 +1236,8 @@ class Request_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         $status = $isOwner
@@ -1264,7 +1266,7 @@ class Request_service
         $this->ctx->notify(
             (int) $grant['user_id'],
             'Access ' . $status,
-            $reason,
+            $reason ?? '',
             (int) $grant['request_id']
         );
 
@@ -1376,7 +1378,8 @@ class Request_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         $this->model()->update(
@@ -1397,7 +1400,7 @@ class Request_service
         $this->ctx->notify(
             (int) $assignment['user_id'],
             'Assignment removed',
-            $reason
+            $reason ?? ''
         );
 
         return [
