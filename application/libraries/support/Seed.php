@@ -21,9 +21,9 @@ final class Seed
             'files'=>['view','view_all','upload','approve','generate'],
             'requests'=>['view','add','edit','submit','cancel','manage','view_all'],
             'workflows'=>['view','edit','reassign'],
-            'transfer'=>['view','view_all','request','manage'],
-            'access'=>['view','view_all','request','revoke','manage'],
-            'assignment'=>['view','view_all','request','manage'],
+            'transfer'=>['view','view_all','request','manage','direct'],
+            'access'=>['view','view_all','request','revoke','manage','direct'],
+            'assignment'=>['view','view_all','request','manage','direct'],
             'disposal'=>['view','view_all','request'],
             'notifications'=>['view','edit'],
             'audit'=>['view'],
@@ -97,9 +97,12 @@ final class Seed
                 'files.approve',
                 'files.generate',
                 'transfer.manage',
+                'transfer.direct',
                 'access.manage',
+                'access.direct',
                 'access.revoke',
                 'assignment.manage',
+                'assignment.direct',
                 'audit.view',
                 'sequences.view',
             ],
@@ -225,7 +228,7 @@ final class Seed
             ]);
 
             $ctx->audit('system','installed',$admin,null,[
-                'schema_version'=>2,
+                'schema_version'=>6,
                 'seeded_roles'=>array_keys($roleIds),
                 'seeded_permissions'=>count($permissionIds),
             ]);
