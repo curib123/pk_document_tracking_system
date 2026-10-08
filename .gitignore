@@ -4,3 +4,14 @@
 tests/*.png
 __pycache__/
 /node_modules/
+
+# Keep only reviewed public DDL and seed metadata.
+# Never stage phpMyAdmin exports or company records.
+/database/*.sql
+!/database/schema.sql
+!/database/seed.sql
+/database/*.sql.gz
+/database/*.dump
+*.bak.sql
+.env
+.env.*
