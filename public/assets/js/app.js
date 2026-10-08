@@ -595,6 +595,139 @@ function directTransfer() {
   );
 }
 
+function directDisposal() {
+  const modal = new Modal(
+    'Direct disposal',
+    {
+      explanation:
+        'Direct disposal bypasses the approval request. Retention and open-transfer protections still apply, and disposal history is preserved.'
+    }
+  );
+
+  const heading = el('div');
+  const body = el('div');
+
+  modal.body.append(
+    heading,
+    body
+  );
+
+  let domain = 'softcopy';
+  let head;
+  let disposalFields;
+
+  const renderDisposalFields = async () => {
+    disposalFields?.dispose();
+    body.replaceChildren();
+
+    disposalFields = await mountFields(
+      body,
+      [
+        field(
+          'document_id',
+          'lookup',
+          true,
+          domain,
+          {
+            label:
+              domain === 'softcopy'
+                ? 'Softcopy Document'
+                : 'Hardcopy Document'
+          }
+        ),
+        field(
+          'disposal_action',
+          'disposal_action'
+        ),
+        reason()
+      ],
+      {},
+      api
+    );
+  };
+
+  const renderHead = async () => {
+    head?.dispose();
+    heading.replaceChildren();
+
+    head = await mountFields(
+      heading,
+      [
+        field(
+          'domain',
+          'select',
+          true,
+          null,
+          {
+            options: [
+              'softcopy',
+              'hardcopy'
+            ]
+          }
+        )
+      ],
+      { domain },
+      api
+    );
+
+    head.controls
+      .get('domain')
+      .addEventListener(
+        'change',
+        event => {
+          modal.run(async () => {
+            domain =
+              event.currentTarget.value ===
+              'hardcopy'
+                ? 'hardcopy'
+                : 'softcopy';
+
+            await renderDisposalFields();
+          });
+        }
+      );
+  };
+
+  modal.setSubmit(
+    'Dispose document',
+    async () => {
+      const header = await head.read();
+      const values =
+        await disposalFields.read();
+
+      const result = await api.request(
+        'disposals.direct',
+        {
+          domain:
+            header.domain || domain,
+          ...values
+        },
+        true
+      );
+
+      await refresh();
+      modal.done(result);
+    }
+  );
+
+  modal
+    .run(async () => {
+      await renderHead();
+      await renderDisposalFields();
+    })
+    .then(() => modal.focusFirst());
+
+  modal.node.addEventListener(
+    'close',
+    () => {
+      head?.dispose();
+      disposalFields?.dispose();
+    }
+  );
+
+  return modal;
+}
+
 function directAccessGrant() {
   const modal = new Modal(
     'Direct grant access',
@@ -830,6 +963,18 @@ function addModuleActions(module, controls) {
       button(
         'Direct grant access',
         directAccessGrant
+      )
+    );
+  }
+
+  if (
+    module.key === 'disposals' &&
+    can('disposal.direct')
+  ) {
+    controls.append(
+      button(
+        'Direct disposal',
+        directDisposal
       )
     );
   }
