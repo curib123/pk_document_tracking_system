@@ -49,7 +49,7 @@ $checks = [
         !str_contains($authService, '$_SESSION') &&
         !str_contains($authService, 'session_regenerate_id('),
     'legacy gateway delegates login to MY_Controller after DB success' =>
-        str_contains($gateway, "completeAuthSession($operation)") &&
+        str_contains($gateway, 'completeAuthSession($operation)') &&
         str_contains($gateway, '_complete_auth_session('),
     'native login commits CI3 session after auth service' =>
         str_contains($auth, "_complete_auth_session('auth.login'"),
@@ -58,17 +58,17 @@ $checks = [
     'native logout invalidates central session' =>
         str_contains($auth, "_complete_auth_session('auth.logout'"),
     'catalog index requires view permission' =>
-        str_contains($catalog, "require_permission($module . '.view'"),
+        str_contains($catalog, 'require_permission($module . \'.view\''),
     'catalog form and lookup require edit/add permission' =>
         substr_count($catalog, "'edit' : 'add'") >= 2 &&
         substr_count($catalog, 'require_permission(') >= 5,
     'catalog delete requires delete permission' =>
-        str_contains($catalog, "require_permission($module . '.delete'"),
+        str_contains($catalog, 'require_permission($module . \'.delete\''),
     'catalog drafts use CI3 userdata' =>
         str_contains($catalog, "session->set_userdata('pk_catalog_draft'") &&
         !str_contains($catalog, '$_SESSION'),
     'record index and detail require permissions' =>
-        substr_count($records, "require_permission($definition['permission']") === 2,
+        substr_count($records, 'require_permission($definition[\'permission\']') === 2,
     'dashboard index requires explicit dashboard permission' =>
         str_contains($dashboard, "require_permission('dashboard.view'"),
     'domain service still owns catalog writes' =>
