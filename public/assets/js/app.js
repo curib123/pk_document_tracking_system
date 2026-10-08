@@ -3133,7 +3133,7 @@ function permissionsModal(
   const reasonInput = el('textarea', {
     id: 'permission-change-reason',
     name: 'reason',
-    required: true,
+    required: false,
     rows: 3,
     cols: 36
   });
@@ -3148,10 +3148,12 @@ function permissionsModal(
           htmlFor:
             'permission-change-reason'
         },
-        'Reason'
+        'Remarks'
       ),
       el('br'),
-      reasonInput
+      reasonInput,
+      el('br'),
+      el('small', {}, 'Optional.')
     )
   );
 
