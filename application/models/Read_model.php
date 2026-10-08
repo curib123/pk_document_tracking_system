@@ -606,6 +606,17 @@ class Read_model extends Repository_model
             }
         };
 
+        if (
+            isset($row['created_by']) &&
+            $row['created_by'] !== null
+        ) {
+            $add(
+                'created_by_name',
+                'user',
+                'created_by'
+            );
+        }
+
         if ($module === 'users') {
             $add(
                 'role',
@@ -693,11 +704,6 @@ class Read_model extends Repository_model
                     );
             }
 
-            $add(
-                'creator',
-                'user',
-                'created_by'
-            );
         } elseif ($module === 'hardcopy') {
             foreach (
                 [
@@ -706,7 +712,6 @@ class Read_model extends Repository_model
                     ['asset', 'asset', 'asset_id'],
                     ['location', 'location', 'location_id'],
                     ['holder', 'user', 'holder_id'],
-                    ['creator', 'user', 'created_by'],
                 ]
                 as $relation
             ) {
