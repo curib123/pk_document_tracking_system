@@ -6,7 +6,7 @@ if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', 
 if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
 $schemaVersion=(int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version'];
-if ($schemaVersion !== 5) throw new RuntimeException('Expected schema version 5, got '.$schemaVersion);
+if ($schemaVersion !== 6) throw new RuntimeException('Expected schema version 6, got '.$schemaVersion);
 if (!$admin) throw new RuntimeException('Run the installer first.');
 $ctx->identify((int)$admin['id']);
 $checks=0;
@@ -15,8 +15,8 @@ function denied(callable $fn,string $name): void { global $db; $db->query('SAVEP
 $db->begin();
 $db->transaction(function() use($db,$ctx) {
     check(
-        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===5,
-        'schema version 5 is installed'
+        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===6,
+        'schema version 6 is installed'
     );
 
     $profileBefore=$db->row('users',$ctx->id());
@@ -40,6 +40,40 @@ $db->transaction(function() use($db,$ctx) {
         'middle_name'=>$profileBefore['middle_name'],
         'last_name'=>$profileBefore['last_name'],
     ]);
+
+    foreach (['transfers','access_grants'] as $table) {
+        $nullable=$db->one(
+            'SELECT IS_NULLABLE AS nullable
+             FROM information_schema.columns
+             WHERE table_schema=?
+               AND table_name=?
+               AND column_name=?
+             LIMIT 1',
+            [$db->builder->database,$table,'request_id']
+        );
+        check(
+            ($nullable['nullable'] ?? '')==='YES',
+            $table.' request_id supports direct records without requests'
+        );
+    }
+
+    foreach (['Administrator','Document Control Officer'] as $roleName) {
+        $directCount=(int)$db->one(
+            "SELECT COUNT(*) AS n
+             FROM role_permissions rp
+             JOIN roles r ON r.id=rp.role_id
+             JOIN permissions p ON p.id=rp.permission_id
+             WHERE r.name=?
+               AND CONCAT(p.module_key,'.',p.action_key)
+                   IN ('transfer.direct','access.direct','assignment.direct')",
+            [$roleName]
+        )['n'];
+
+        check(
+            $directCount===3,
+            $roleName.' receives dedicated direct-action permissions'
+        );
+    }
 
     foreach ([
         ['specifics','specific_lookup'],
@@ -67,6 +101,7 @@ $db->transaction(function() use($db,$ctx) {
     $asset=$catalog->save('assets',['asset_number'=>'CAB-'.uniqid(),'specific_id'=>$specific['id']]);
     $location=$catalog->save('locations',['name'=>'Shelf A','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $destination=$catalog->save('locations',['name'=>'Shelf B','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
+    $directDestination=$catalog->save('locations',['name'=>'Shelf C','code'=>'LOC-'.uniqid(),'specific_id'=>$specific['id'],'asset_id'=>$asset['id']]);
     $category=$catalog->save('categories',['name'=>'Forms','folder_name'=>'forms']);
 
     $reader=new Read_service($ctx);
@@ -126,6 +161,29 @@ $db->transaction(function() use($db,$ctx) {
     $transfers->receive(['id'=>$transfer['id'],'version'=>(int)$transfer['version'],'decision'=>'accepted','comments'=>'Received']);
     check((int)$db->row('hardcopy_documents',$hard['id'])['location_id']===$destination['id'],'recipient acceptance changes current location');
     denied(fn()=>$transfers->receive(['id'=>$transfer['id'],'version'=>(int)$transfer['version'],'decision'=>'accepted','comments'=>'Duplicate']),'duplicate receipt rejected');
+
+    $directTransfer=$transfers->direct([
+        'hardcopy_id'=>$hard['id'],
+        'location_id'=>$directDestination['id'],
+        'asset_id'=>$asset['id'],
+        'specific_id'=>$specific['id'],
+        'area_id'=>$area['id'],
+        'recipient_id'=>$staff['id'],
+        'document_copy_number'=>'DIRECT-COPY-1',
+    ]);
+    $directTransferRow=$db->row('transfers',(int)$directTransfer['id']);
+    $directHardcopy=$db->row('hardcopy_documents',$hard['id']);
+    check(
+        $directTransferRow['request_id']===null
+        && $directTransferRow['status']==='completed'
+        && $directTransferRow['recipient_status']==='direct',
+        'direct hardcopy transfer bypasses request workflow'
+    );
+    check(
+        (int)$directHardcopy['location_id']===(int)$directDestination['id']
+        && (int)$directHardcopy['holder_id']===(int)$staff['id'],
+        'direct hardcopy transfer immediately updates holder and location'
+    );
     check($db->row('requests',$request['id'])['snapshot']===$snapshot,'workflow snapshot remains unchanged');
     check(count($db->all('SELECT * FROM workflow_history WHERE request_id=?',[$request['id']]))>=4,'workflow and transfer history retained');
     check(count($db->all("SELECT * FROM status_history WHERE domain='hardcopy' AND document_id=?",[$hard['id']]))>=2,'document status history retained');
@@ -242,6 +300,34 @@ $db->transaction(function() use($db,$ctx) {
     check(!$documents->canRead('softcopy',$soft['id']),'returned access immediately denies content');
 
     $ctx->identify($adminId);
+    $directGrant=$requests->directGrantAccess([
+        'domain'=>'softcopy',
+        'document_id'=>$soft['id'],
+        'user_id'=>$staff['id'],
+        'expiration_date'=>date('Y-m-d',strtotime('+7 days')),
+    ]);
+    $directGrantRow=$db->row('access_grants',(int)$directGrant['id']);
+    check(
+        $directGrantRow['request_id']===null
+        && $directGrantRow['status']==='access_granted',
+        'direct access grant bypasses request workflow'
+    );
+
+    $ctx->identify($staff['id']);
+    check(
+        $documents->canRead('softcopy',$soft['id']),
+        'direct access grant immediately permits controlled file access'
+    );
+    $requests->revoke([
+        'id'=>$directGrantRow['id'],
+        'version'=>$directGrantRow['version'],
+    ]);
+    check(
+        !$documents->canRead('softcopy',$soft['id']),
+        'direct access grant can be returned without workflow history'
+    );
+
+    $ctx->identify($adminId);
     $directAssignment=$requests->directAssign([
         'softcopy_id'=>$soft['id'],
         'user_id'=>$staff['id'],
@@ -301,7 +387,7 @@ $db->transaction(function() use($db,$ctx) {
     );
     check(
         $auditTable===null,
-        'legacy audit table is removed in schema version 5'
+        'legacy audit table remains removed in schema version 6'
     );
 });
 $db->rollback();
