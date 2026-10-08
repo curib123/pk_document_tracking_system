@@ -23,6 +23,190 @@ class Transfer_service
         return new Workflow_service($this->ctx);
     }
 
+    public function direct(array $input): array
+    {
+        $this->ctx->require(
+            'transfer.direct'
+        );
+        $this->ctx->require(
+            'hardcopy.view'
+        );
+
+        $hardcopyId = Rules::id(
+            $input,
+            'hardcopy_id'
+        );
+
+        $recipientId = Rules::id(
+            $input,
+            'recipient_id'
+        );
+
+        $document = $this->model()->lock_hardcopy(
+            $hardcopyId
+        );
+
+        if ($document['status'] !== 'active') {
+            throw new Problem(
+                'Only active hardcopy documents can be transferred directly.'
+            );
+        }
+
+        $documents = new Document_service(
+            $this->ctx
+        );
+
+        $documents->noOpenTransfer(
+            $hardcopyId
+        );
+
+        $recipient = $this->ctx->active(
+            'users',
+            $recipientId
+        );
+
+        $physical = $documents->physical(
+            $input,
+            $hardcopyId
+        );
+
+        $sequenceNumber = Rules::text(
+            $input,
+            'sequence_number',
+            100,
+            false
+        );
+
+        $copyNumber = Rules::text(
+            $input,
+            'document_copy_number',
+            100
+        );
+
+        $remarks = Rules::text(
+            $input,
+            'reason',
+            4000,
+            false
+        );
+
+        $sameLocation =
+            (int) $physical['location_id'] ===
+            (int) $document['location_id'];
+
+        $sameHolder =
+            $recipientId ===
+            (int) $document['holder_id'];
+
+        if ($sameLocation && $sameHolder) {
+            throw new Problem(
+                'A direct transfer must change the location or holder.'
+            );
+        }
+
+        $destination = array_merge(
+            $physical,
+            [
+                'recipient_id' => $recipientId,
+                'document_copy_number' =>
+                    $copyNumber,
+                'sequence_number' =>
+                    $sequenceNumber,
+                'reason' => $remarks,
+            ]
+        );
+
+        $transferId = $this->model()->insert(
+            'transfers',
+            [
+                'request_id' => null,
+                'hardcopy_id' => $hardcopyId,
+                'origin' =>
+                    Context::json($document),
+                'destination' =>
+                    Context::json($destination),
+                'current_holder_id' =>
+                    $document['holder_id'],
+                'recipient_id' => $recipientId,
+                'document_copy_number' =>
+                    $copyNumber,
+                'reason' => $remarks ?? '',
+                'comments' => $remarks,
+                'status' => 'completed',
+                'recipient_status' => 'direct',
+                'transferred_by' =>
+                    $this->ctx->id(),
+                'transferred_at' =>
+                    date('Y-m-d H:i:s'),
+                'accepted_at' =>
+                    date('Y-m-d H:i:s'),
+            ]
+        );
+
+        $this->model()->update(
+            'hardcopy_documents',
+            $hardcopyId,
+            array_merge(
+                $physical,
+                [
+                    'holder_id' => $recipientId,
+                    'sequence_number' =>
+                        $sequenceNumber ??
+                        $document[
+                            'sequence_number'
+                        ],
+                ]
+            )
+        );
+
+        $after = $this->model()->lock_hardcopy(
+            $hardcopyId
+        );
+
+        $this->ctx->status(
+            'hardcopy',
+            $hardcopyId,
+            $document['status'],
+            $document['status'],
+            'direct_transfer',
+            $remarks ?? ''
+        );
+
+        $this->ctx->audit(
+            'transfer',
+            'direct_completed',
+            $transferId,
+            $document,
+            $after,
+            $remarks
+        );
+
+        $this->ctx->notify(
+            $recipientId,
+            'Document transferred to you',
+            'A hardcopy document was transferred directly to you.'
+        );
+
+        if (
+            (int) $document['holder_id'] !==
+            $recipientId
+        ) {
+            $this->ctx->notify(
+                (int) $document['holder_id'],
+                'Document transferred',
+                'The hardcopy document is now assigned to ' .
+                    Context::name($recipient) .
+                    '.'
+            );
+        }
+
+        return [
+            'id' => $transferId,
+            'message' =>
+                'Hardcopy transferred directly without a workflow request.',
+        ];
+    }
+
     public function dispatch(array $input): array
     {
         $this->ctx->require('transfer.view');
