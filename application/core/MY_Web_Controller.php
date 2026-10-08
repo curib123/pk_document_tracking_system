@@ -39,7 +39,7 @@ class MY_Web_Controller extends MY_Controller
                 $_SESSION['last_seen'] = time();
             } catch (Problem $error) {
                 // Expired or disabled accounts cannot keep their old permissions.
-                $context->user = null;
+                $context = new Context(Database::connect());
                 $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
                 session_regenerate_id(true);
             }
@@ -82,7 +82,7 @@ class MY_Web_Controller extends MY_Controller
         $this->load->view('web/footer', $data);
     }
 
-    protected function webRedirect(string $route): never
+    protected function webRedirect(string $route): void
     {
         header('Location: ' . site_url($route), true, 303);
         exit;
@@ -93,7 +93,7 @@ class MY_Web_Controller extends MY_Controller
         $_SESSION['web_flash'] = ['message' => $message, 'type' => $type];
     }
 
-    protected function webFailure(Throwable $error, string $route): never
+    protected function webFailure(Throwable $error, string $route): void
     {
         if ($error instanceof Problem) {
             $this->webFlash($error->getMessage(), 'danger');

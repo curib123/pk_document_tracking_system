@@ -34,6 +34,9 @@ class Web_catalog extends MY_Web_Controller
                 'definition' => $definition,
                 'records' => $records,
                 'query' => $query,
+                'can_add' => $context->can($module . '.add'),
+                'can_edit' => $context->can($module . '.edit'),
+                'can_delete' => $context->can($module . '.delete'),
             ]);
         } catch (Throwable $error) {
             $this->webError($context, $error);

@@ -3,10 +3,7 @@
         <h1 class="h3 mb-1"><?= ui_escape($definition['label']) ?></h1>
         <p class="text-body-secondary mb-0">Manage records with server-rendered forms.</p>
     </div>
-    <?php if (in_array($module . '.add', $viewer ? array_merge([], array_keys([])) : [], true)): ?>
-    <?php endif; ?>
-    <?php if (isset($navigation[$module]) || true): ?>
-        <?php // Action permission is checked in the service and again on the form route. ?>
+    <?php if ($can_add): ?>
         <a class="btn btn-primary" href="<?= site_url('web/catalog/' . $module . '/new') ?>">Add record</a>
     <?php endif; ?>
 </div>
@@ -48,8 +45,12 @@
                     <td><?= ui_escape(is_scalar($value) ? $value : '—') ?></td>
                 <?php endforeach; ?>
                 <td class="text-nowrap">
-                    <a class="btn btn-outline-primary btn-sm" href="<?= site_url('web/catalog/' . $module . '/edit/' . (int) $row['id']) ?>">Edit</a>
-                    <a class="btn btn-outline-danger btn-sm" href="<?= site_url('web/catalog/' . $module . '/delete/' . (int) $row['id']) ?>">Delete</a>
+                    <?php if ($can_edit): ?>
+                        <a class="btn btn-outline-primary btn-sm" href="<?= site_url('web/catalog/' . $module . '/edit/' . (int) $row['id']) ?>">Edit</a>
+                    <?php endif; ?>
+                    <?php if ($can_delete): ?>
+                        <a class="btn btn-outline-danger btn-sm" href="<?= site_url('web/catalog/' . $module . '/delete/' . (int) $row['id']) ?>">Delete</a>
+                    <?php endif; ?>
                 </td>
             </tr>
         <?php endforeach; ?>

@@ -22,7 +22,7 @@
     </div>
 </div>
 <?php foreach ($detail['related'] as $section => $items): ?>
-    <?php if (!is_array($items) || !array_is_list($items)): ?>
+    <?php if (!is_array($items) || ($items !== [] && array_keys($items) !== range(0, count($items) - 1))): ?>
         <?php continue; ?>
     <?php endif; ?>
     <section class="card mt-3">

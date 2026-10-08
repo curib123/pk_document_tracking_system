@@ -55,6 +55,7 @@ jobs:
           for file in public/assets/js/*.js; do node --check "$file"; done
           php tests/run.php
           php tests/architecture.php
+          php tests/web_mvc.php
           php tests/mysqli_contract.php
           php tests/native_database.php
       - name: Install empty test database
