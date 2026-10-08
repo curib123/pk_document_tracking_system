@@ -99,8 +99,9 @@ try {
             'user_id' => $staffId, 'granted_by' => $adminId,
             'expires_at' => date('Y-m-d H:i:s', time() + 7200), 'reason' => '',
         ]);
-        $page = $reader->listing('softcopy', ['start' => 0, 'length' => 1, 'draw' => 4]);
-        visibilityCheck($page['recordsTotal'] === 2 && count($page['rows']) === 1, 'overlapping grants do not duplicate rows or inflate pagination');
+        // Supported page length with an offset leaves one authorized row.
+        $page = $reader->listing('softcopy', ['start' => 1, 'length' => 10, 'draw' => 4]);
+        visibilityCheck($page['recordsTotal'] === 2 && $page['recordsFiltered'] === 2 && count($page['rows']) === 1, 'overlapping grants do not duplicate rows or inflate pagination');
         $db->update('access_grants', $duplicateGrant, ['status' => 'returned']);
 
         $directory = PK_ROOT . '/storage/files';
@@ -173,6 +174,9 @@ try {
         $ctx->identify($staffId);
         visibilityCheck($reader->listing('softcopy', [])['total'] === 4, 'view-all is an explicit metadata override for any role');
         visibilityCheck(!$documents->canRead('softcopy', $hiddenId), 'view-all metadata is not unrestricted file-content access');
+        $db->query('DELETE FROM role_permissions WHERE role_id=? AND permission_id=?', [$roleId, $capabilities['softcopy.view']]);
+        $ctx->identify($staffId);
+        visibilityDenied(fn() => $reader->listing('softcopy', []), 403, 'domain view permission is still required with an all-metadata override');
         $ctx->identify($adminId);
         visibilityCheck($reader->listing('softcopy', [])['total'] === 4, 'existing administrative all-document access is preserved');
         visibilityCheck($documents->canRead('softcopy', $hiddenId), 'administrative content access remains explicit');

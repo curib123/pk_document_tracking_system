@@ -53,3 +53,5 @@ jobs:
           php tests/integration.php
           php tests/mysqli_integration.php
           php tests/concurrency.php
+      - name: Existing-database permission upgrade
+        run: php tests/document_visibility_sync.php
