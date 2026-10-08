@@ -67,7 +67,7 @@ $check('disabled pagination buttons not clickable', str_contains($table,'aria-di
 $check('row limit is below table', strpos($table,'Rows per page')>$t);
 $check('request type filters query the model and remain in pagination',
     str_contains(file_get_contents(APPPATH . 'models/Read_model.php'), "'t.type'")
-    && str_contains(file_get_contents(APPPATH . 'views/web/components/data_table.php'), "name="type"")
+    && str_contains(file_get_contents(APPPATH . 'views/web/components/data_table.php'), "selectName = 'type'")
 );
 
 $form = view_html('catalog_form', [
