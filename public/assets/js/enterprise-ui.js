@@ -104,6 +104,9 @@
             }
 
             wrapper.append(trigger, menu);
+            // The visible trigger owns validation once the native select is visually hidden.
+            const required = native.prop('required');
+            if (required) native.prop('required', false);
             native.addClass('visually-hidden').attr({ 'tabindex': '-1', 'aria-hidden': 'true' });
             wrapper.find('[data-pk-lookup-fallback]').prop('hidden', true)
                 .find('input, button').prop('disabled', true);
@@ -165,7 +168,22 @@
                     instance.show();
                 }
             });
-            native.on('change', showValue);
+            native.on('change', function () {
+                trigger.removeClass('border-danger');
+                showValue();
+            });
+
+            native.closest('form').on('submit', function (event) {
+                const submitter = event.originalEvent && event.originalEvent.submitter;
+                if (submitter && submitter.formNoValidate) return;
+                if (event.isDefaultPrevented()) return;
+                if (required && !native.val()) {
+                    event.preventDefault();
+                    trigger.addClass('border-danger');
+                    instance.show();
+                    count.text('Choose ' + label.toLowerCase() + ' to continue.');
+                }
+            });
             search.on('input', function () {
                 filteredOptions($(this).val());
             });
@@ -194,10 +212,19 @@
 
             showValue();
             if (native.attr('data-pk-autofocus') === 'true') {
-                instance.show();
-                const initialSearch = native.attr('data-pk-search-term') || '';
-                search.val(initialSearch);
-                filteredOptions(initialSearch);
+                const activateSearch = function () {
+                    const initialSearch = native.attr('data-pk-search-term') || '';
+                    instance.show();
+                    search.val(initialSearch);
+                    filteredOptions(initialSearch);
+                };
+
+                const ownerModal = native.closest('.modal');
+                if (ownerModal.length) {
+                    ownerModal.one('shown.bs.modal', activateSearch);
+                } else {
+                    activateSearch();
+                }
             }
         });
 
@@ -212,6 +239,17 @@
                 }).show();
             });
         }
+
+        // Password visibility is optional convenience; HTML form still works without JS.
+        $('[data-pk-password-toggle]').on('click', function () {
+            const control = document.getElementById($(this).attr('data-pk-password-toggle'));
+            if (!control) return;
+            const nowVisible = control.type === 'password';
+            control.type = nowVisible ? 'text' : 'password';
+            $(this).text(nowVisible ? 'Hide' : 'Show')
+                .attr('aria-pressed', String(nowVisible))
+                .attr('aria-label', (nowVisible ? 'Hide' : 'Show') + ' ' + (control.name || 'password'));
+        });
 
         // Dismiss mobile menu via click on the background only.
         $('.pk-mobile-drawer').on('click', function (event) {

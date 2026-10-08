@@ -19,7 +19,7 @@ $modalTitleId = $modalId . '-title';
 <div class="modal fade pk-page-modal" id="<?= ui_escape($modalId) ?>" tabindex="-1"
      role="dialog" aria-modal="true" aria-labelledby="<?= ui_escape($modalTitleId) ?>"
      data-pk-auto-open="<?= $modalAutoOpen ? 'true' : 'false' ?>">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <?php if ($modalForm): ?>
                 <form method="post" action="<?= ui_escape($modalAction) ?>" data-pk-native-form>

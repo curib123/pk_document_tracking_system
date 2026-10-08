@@ -128,3 +128,6 @@ body:not(.pk-modal-ready) .pk-page-modal .modal-content { box-shadow:var(--pk-sh
 @media (max-width:991.98px) { .pk-main { width:100%;padding:1.4rem 1rem 3rem; } .pk-topbar { padding:0 1rem; } }
 @media (max-width:575.98px) { .pk-brand-name small { display:none; } .pk-brand-name strong { font-size:.9rem; } .pk-brand-mark { width:36px;height:36px; } .pk-topbar-account { gap:.45rem; } .pk-data-top,.pk-data-bottom { padding:.85rem; } .pk-app .modal-dialog { margin:.6rem; } .pk-app .modal-body { padding:1rem; } .pk-app .modal-header,.pk-app .modal-footer { padding:.9rem 1rem; } }
 @media (prefers-reduced-motion:reduce) { html { scroll-behavior:auto; } *,*::before,*::after { animation-duration:.01ms!important;transition-duration:.01ms!important; } }
+
+.pk-select-trigger.border-danger { border-color:#dc3545!important; box-shadow:0 0 0 .17rem rgba(220,53,69,.11); }
+.pk-select-shell.is-open { z-index:1065; }
