@@ -35,3 +35,41 @@ docs/ENTERPRISE_MVC_UI.md for central ownership, server-side filtering,
 searchable dropdowns, alert/confirmation/form modals, accessibility,
 asset fallback and migration limitations. The controller bridges and
 business-domain services retain the normal CI3 MVC separation.
+
+## Controller permission and session architecture (October 2026)
+
+All CI3 controller classes inherit from application/core/MY_Controller.php.
+It loads CodeIgniter's Session library centrally, using the files driver and
+private storage/sessions directory. This includes the native MVC screens and
+the temporarily retained legacy API routes.
+
+The MY_Controller base owns:
+
+- CI session creation and CSRF token generation.
+- User restoration and session-version validation on every authenticated page.
+- The 30-minute idle timeout and forced initial-password-change redirect.
+- Auth login/password/logout session transitions and session ID regeneration.
+- One reusable require_permission(permission, context) action gate.
+
+Every protected native controller function must call require_permission()
+before reading or changing data. The view permission on index/detail, add/edit
+on forms, and delete on deletion screens must be checked explicitly.
+Domain services continue to validate permissions and business constraints.
+
+Auth_service handles password verification, rate limiting, password updates
+and audit. It does not read or mutate PHP sessions. After successfully
+committing a service operation, Auth_controller and the transitional
+Http_gateway call MY_Controller::_complete_auth_session() to update the CI
+session. The leading underscore prevents public URL routing to that method.
+
+Native catalog drafts use CI Session userdata; error/notice messages use CI
+flashdata. Browser screens do not access raw PHP $_SESSION.
+
+The CI session cookie is named pk_dts_ci_session. Previous homemade session
+cookies are not migrated; users must sign in again after deployment. The
+legacy gateway's standalone CLI fallback is retained until the legacy API
+migration is completed.
+
+Verification: php tests/ci_session.php plus the disposable-MySQL
+tests/web_ci_session.py (after tests/native_routes.py). Existing database
+and real-browser tests remain mandatory before merging.

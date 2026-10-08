@@ -54,6 +54,7 @@ jobs:
           php tests/architecture.php
           php tests/mysqli_contract.php
           php tests/native_database.php
+          php tests/ci_session.php
           php tests/integration.php
           php tests/mysqli_integration.php
           php tests/concurrency.php
