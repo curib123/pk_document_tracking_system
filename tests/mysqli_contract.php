@@ -13,7 +13,7 @@ contract('database is native mysqli, has an empty DSN and enables Query Builder'
     return $db['default']['dbdriver']==='mysqli' && $db['default']['dsn']==='' && $query_builder===true && !isset($db['default']['subdriver']);
 });
 contract('application and CLI contain no PDO identifiers or statement API calls',function(){
-    foreach(['application','bin'] as $dir) foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/'.$dir)) as $f) {
+    foreach(['application','database'] as $dir) foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/'.$dir)) as $f) {
         if (!$f->isFile() || $f->getExtension()!=='php') continue;
         $source=file_get_contents($f->getPathname());
         foreach(token_get_all($source) as $token) if(is_array($token) && !in_array($token[0],[T_COMMENT,T_DOC_COMMENT,T_WHITESPACE],true) && preg_match('/\bPDO(?:Statement|Exception)?\b|pdo_mysql|->pdo\b/i',$token[1])) return false;

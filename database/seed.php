@@ -62,7 +62,7 @@ try {
 
         if ((int) $exists['n'] !== 1) {
             throw new RuntimeException(
-                'Database schema is missing. Run bin/install.php or import database/schema.sql first.'
+                'Database schema is missing. Run database/install.php or import database/schema.sql first.'
             );
         }
     }
@@ -91,6 +91,17 @@ try {
         $username,
         $password
     );
+    $seedSource = file_get_contents(PK_ROOT . '/database/seed.sql');
+    if ($seedSource === false) {
+        throw new RuntimeException('database/seed.sql is missing.');
+    }
+    foreach (explode(';', preg_replace('/^\\s*--.*$/m', '', $seedSource)) as $statement) {
+        $statement = trim($statement);
+        if ($statement !== '') {
+            $db->query($statement);
+        }
+    }
+
 
     echo "Default seed completed.\n";
     echo "Username: $username\n";

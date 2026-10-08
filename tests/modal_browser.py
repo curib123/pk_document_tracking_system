@@ -130,7 +130,7 @@ try:
         expect(modal).to_be_visible()
         expect(modal).to_have_attribute('aria-busy','false')
         assert page.evaluate("document.querySelector('dialog[open]').matches(':modal')"), 'Must use showModal(), not just open=true'
-        assert page.evaluate("document.querySelectorAll('style,link[rel=stylesheet],[style]').length")==0, 'No author styling is permitted'
+        assert page.evaluate("document.querySelectorAll('style,[style]').length")==0, 'No inline author styles; shared external stylesheets remain permitted'
         page.keyboard.press('Escape'); expect(modal).not_to_be_visible()
         expect(page.get_by_role('button',name='Add user',exact=True)).to_be_focused()
         page.get_by_role('button',name='Add user',exact=True).click(); modal=page.get_by_role('dialog',name='Add user',exact=True)

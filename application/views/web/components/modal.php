@@ -18,7 +18,8 @@ $modalTitleId = $modalId . '-title';
 ?>
 <div class="modal fade pk-page-modal" id="<?= ui_escape($modalId) ?>" tabindex="-1"
      role="dialog" aria-modal="true" aria-labelledby="<?= ui_escape($modalTitleId) ?>"
-     data-pk-auto-open="<?= $modalAutoOpen ? 'true' : 'false' ?>">
+     data-pk-auto-open="<?= $modalAutoOpen ? 'true' : 'false' ?>"
+     <?= $modalBack !== '' ? 'data-pk-back-url="' . ui_escape($modalBack) . '"' : '' ?>>
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <?php if ($modalForm): ?>

@@ -139,3 +139,10 @@ body:not(.pk-modal-ready) .pk-page-modal .modal-content { box-shadow:var(--pk-sh
 .pk-quick-link { display:flex;align-items:center;gap:.75rem;min-height:66px;padding:.75rem 1rem;border-radius:10px;border:1px solid var(--pk-line);text-decoration:none;color:var(--pk-ink)!important;transition:border-color .15s,background .15s; }
 .pk-quick-link:hover,.pk-quick-link:focus-visible { background:var(--pk-brand-soft);border-color:#d9a7b7; }
 .pk-quick-icon { width:34px;height:34px;flex-basis:34px;border-radius:9px;font-size:.96rem; }
+
+/* Native expandable module groups: navigation works without JavaScript. */
+.pk-sidebar-toggle { cursor:pointer; display:flex; justify-content:space-between;align-items:center; gap:.4rem;list-style:none; padding:.68rem .8rem;margin:0; border-radius:8px;user-select:none; }
+.pk-sidebar-toggle::-webkit-details-marker { display:none; }
+.pk-sidebar-toggle:hover,.pk-sidebar-toggle:focus-visible { background:var(--pk-navy-raised);color:#fff; }
+.pk-sidebar-group[open] .pk-sidebar-toggle .pk-icon { transform:rotate(180deg); }
+.pk-sidebar-group .pk-sidebar-links { margin-top:.26rem; }

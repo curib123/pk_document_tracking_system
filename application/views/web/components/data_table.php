@@ -17,10 +17,12 @@ $limit = (int) ($records['limit'] ?? 25);
 $total = max(0, (int) ($records['total'] ?? 0));
 $status = is_string($query['status'] ?? null) ? $query['status'] : '';
 $active = in_array(($query['active'] ?? ''), ['0', '1'], true) ? $query['active'] : '';
-$baseQuery = ['q'=>$q,'sort'=>$sort,'direction'=>$direction,'status'=>$status,'active'=>$active,'limit'=>$limit];
+$requestTypeFiltering = in_array($module, ['requests', 'my_requests', 'my_tasks'], true);
+$requestType = $requestTypeFiltering && is_string($query['type'] ?? null) ? $query['type'] : '';
+$baseQuery = ['q'=>$q,'sort'=>$sort,'direction'=>$direction,'status'=>$status,'active'=>$active,'type'=>$requestType,'limit'=>$limit];
 $linkTo = static fn(array $change): string => $tableUrl . '?' . http_build_query(array_replace($baseQuery, $change));
-$hasActions = !$isCatalog || !empty($can_edit) || !empty($can_delete);
-$filterCount = $isCatalog ? 1 : (!empty($status_options) ? 1 : 0);
+$hasActions = (!$isCatalog && $module !== 'sequences') || !empty($can_edit) || !empty($can_delete);
+$filterCount = $isCatalog ? 1 : (!empty($status_options) || $requestTypeFiltering ? 1 : 0);
 ?>
 <section class="pk-data-panel" aria-label="<?= ui_escape($definition['label']) ?> data table" id="<?= ui_escape($tableId) ?>">
     <form method="get" action="<?= ui_escape($tableUrl) ?>" class="pk-data-top" role="search" aria-label="Search and filter records">
@@ -71,6 +73,32 @@ $filterCount = $isCatalog ? 1 : (!empty($status_options) ? 1 : 0);
                         require __DIR__ . '/searchable_select.php';
                         ?>
                     </div>
+                    <?php if ($requestTypeFiltering): ?>
+                        <div class="col-12 col-sm-7 col-lg-4">
+                            <label class="form-label" for="<?= ui_escape($tableId . '-type') ?>">Request type</label>
+                            <?php
+                            $selectId = $tableId . '-type';
+                            $selectName = 'type';
+                            $selectLabel = 'Request type';
+                            $selectValue = $requestType;
+                            $selectOptions = array_map(
+                                static fn(string $item): array => [
+                                    'value' => $item,
+                                    'label' => ucwords(str_replace('_', ' ', $item)),
+                                ],
+                                Request_service::TYPES
+                            );
+                            $selectRequired = false;
+                            $selectError = '';
+                            $selectSearchAction = '';
+                            $selectSearchTerm = '';
+                            $selectAutofocus = false;
+                            $selectMore = false;
+                            $selectPlaceholder = 'All request types';
+                            require __DIR__ . '/searchable_select.php';
+                            ?>
+                        </div>
+                    <?php endif; ?>
                     <div class="col-6 col-sm-auto">
                         <button type="submit" class="btn btn-outline-primary w-100">Apply filters</button>
                     </div>
@@ -147,7 +175,7 @@ $filterCount = $isCatalog ? 1 : (!empty($status_options) ? 1 : 0);
                     <tr>
                         <td class="py-5 text-center text-body-secondary" colspan="<?= count($columns) + ($hasActions ? 1 : 0) ?>">
                             <?= pk_web_icon('search') ?> No matching records.
-                            <?php if ($q !== '' || $status !== '' || $active !== ''): ?>
+                            <?php if ($q !== '' || $status !== '' || $active !== '' || $requestType !== ''): ?>
                                 <a href="<?= ui_escape($tableUrl) ?>">Clear filters</a>
                             <?php endif; ?>
                         </td>
@@ -171,7 +199,7 @@ $filterCount = $isCatalog ? 1 : (!empty($status_options) ? 1 : 0);
                         <?php endforeach; ?>
                     </select>
                 </div>
-                <?php foreach (['q','status','active','sort','direction'] as $name): ?>
+                <?php foreach (['q','status','active','type','sort','direction'] as $name): ?>
                     <input type="hidden" name="<?= $name ?>" value="<?= ui_escape($baseQuery[$name]) ?>">
                 <?php endforeach; ?>
                 <button type="submit" class="btn btn-outline-secondary btn-sm">Apply</button>

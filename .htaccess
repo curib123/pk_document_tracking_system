@@ -1,0 +1,11 @@
+# Only /public is an application entry point; deny private sibling folders.
+Options -Indexes
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteRule ^(application|database|storage|vendor|tests|docs|resources|tools)(/|$) - [F,L,NC]
+</IfModule>
+<IfModule mod_authz_core.c>
+    <FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json|\.env(\..*)?|\.git.*|README\.md|CHANGELOG\.md|issues-found\.md|modular_plan\.md)$">
+        Require all denied
+    </FilesMatch>
+</IfModule>

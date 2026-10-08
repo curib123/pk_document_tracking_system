@@ -15,8 +15,24 @@ foreach ($navigation as $item) {
     </div>
 
     <?php foreach ($groups as $group => $items): ?>
-        <section class="pk-sidebar-group">
-            <h2 class="pk-sidebar-heading"><?= ui_escape($group) ?></h2>
+        <?php
+        $groupActive = false;
+        foreach ($items as $item) {
+            $target = in_array($item['key'], $catalogKeys, true)
+                ? 'web/catalog/' . $item['key']
+                : 'web/records/' . $item['key'];
+            if (pk_web_route($activeRoute, $target)) {
+                $groupActive = true;
+                break;
+            }
+        }
+        // Only active section is open by default; leave Overview clean and compact.
+        ?>
+        <details class="pk-sidebar-group" <?= $groupActive ? 'open' : '' ?>>
+            <summary class="pk-sidebar-heading pk-sidebar-toggle">
+                <span><?= ui_escape($group) ?></span>
+                <span aria-hidden="true"><?= pk_web_icon('chevron') ?></span>
+            </summary>
             <nav class="pk-sidebar-links" aria-label="<?= ui_escape($group) ?>">
                 <?php foreach ($items as $item): ?>
                     <?php
@@ -32,7 +48,7 @@ foreach ($navigation as $item) {
                     </a>
                 <?php endforeach; ?>
             </nav>
-        </section>
+        </details>
     <?php endforeach; ?>
 
     <div class="pk-sidebar-bottom">

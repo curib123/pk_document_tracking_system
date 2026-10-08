@@ -22,7 +22,7 @@ class MY_Web_Controller extends MY_Controller
         // Browser enhancements only: PHP forms work without JS or external APIs.
         header(
             "Content-Security-Policy: default-src 'self'; " .
-            "script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net; " .
+            "script-src 'self'; " .
             "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
             "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
             "img-src 'self' data:; object-src 'none'; base-uri 'self'; " .

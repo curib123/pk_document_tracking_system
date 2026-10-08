@@ -443,11 +443,19 @@ class Document_service
             );
         }
 
+        // One hardcopy per occupied Location: reject with a domain error
+        // before the database's unique constraint can leak an SQL exception.
         $occupied = $this->model()->location_occupant(
             [$locationId]
         );
 
-       
+        if ($occupied && (int) $occupied['id'] !== (int) $documentId) {
+            throw new Problem(
+                'This Location already contains a hardcopy document. Choose another available Location.',
+                409
+            );
+        }
+
         return [
             'area_id' => $areaId,
             'specific_id' => $specificId,

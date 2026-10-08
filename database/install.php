@@ -76,8 +76,11 @@ try {
     $schema = file_get_contents(
         PK_ROOT . '/database/schema.sql'
     );
+    if ($schema === false) {
+        throw new RuntimeException('database/schema.sql is missing.');
+    }
 
-    foreach (explode(';', $schema) as $statement) {
+    foreach (explode(';', preg_replace('/^\\s*--.*$/m', '', $schema)) as $statement) {
         $statement = trim($statement);
 
         if ($statement !== '') {
@@ -90,6 +93,18 @@ try {
         $username,
         $password
     );
+    // Store the non-sensitive v7 seed marker separately from generated credentials.
+    $seedSource = file_get_contents(PK_ROOT . '/database/seed.sql');
+    if ($seedSource === false) {
+        throw new RuntimeException('database/seed.sql is missing.');
+    }
+    foreach (explode(';', preg_replace('/^\\s*--.*$/m', '', $seedSource)) as $statement) {
+        $statement = trim($statement);
+        if ($statement !== '') {
+            $db->query($statement);
+        }
+    }
+
 
     foreach (
         ['files', 'conversions', 'logs', 'audit']

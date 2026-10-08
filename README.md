@@ -62,7 +62,7 @@ composer install
 5. Run the one-time installer with XAMPP PHP:
 
 ```bat
-C:\xampp\php\php.exe bin\install.php
+C:\xampp\php\php.exe database\install.php
 ```
 
 The installer prints the initial administrator password once. The username is `admin`. Save that password, sign in, and change it immediately.
@@ -78,7 +78,7 @@ The installer refuses to modify a non-empty database. It never drops tables or r
 If you already have an older PK DTS database, update the code first and run:
 
 ```bat
-C:\xampp\php\php.exe bin\migrate.php
+C:\xampp\php\php.exe database\migrate.php
 ```
 
 The migrator upgrades schema versions 1 through 6 to the current **schema version 7**. Version 5 exports legacy database audit rows to append-only JSONL under `storage/audit/`; version 6 enables direct Transfer/Access records and dedicated direct-action permissions; version 7 enables requestless direct Disposal records and seeds `disposal.direct` for Administrator and Document Control Officer. Existing document, request, workflow, status-history, and approval-history data are preserved. Back up the database before any schema migration.
@@ -115,13 +115,13 @@ The default administrator account is:
 The full installer creates the schema and seed data:
 
 ```bat
-C:\xampp\php\php.exe bin\install.php
+C:\xampp\php\php.exe database\install.php
 ```
 
-If you manually imported `database/schema.sql` into an otherwise fresh database, seed only the defaults with:
+If you manually imported `database/schema.sql` into an otherwise fresh database, seed the schema version and generated account defaults with `database/seed.php` (do not import a company data dump):
 
 ```bat
-C:\xampp\php\php.exe bin\seed.php
+C:\xampp\php\php.exe database\seed.php
 ```
 
 The seeder refuses to overwrite an existing user database.
@@ -176,7 +176,7 @@ PDF controlled/uncontrolled copies use FPDI/FPDF and add a separate footer area 
 The optional maintenance command expires grants, sends related notifications, prunes login attempts and cleans old conversion workspaces:
 
 ```bat
-C:\xampp\php\php.exe bin\maintenance.php
+C:\xampp\php\php.exe database\maintenance.php
 ```
 
 Run it manually when needed or schedule it through Windows Task Scheduler if this XAMPP installation is used continuously.

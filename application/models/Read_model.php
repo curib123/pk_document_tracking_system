@@ -297,7 +297,6 @@ class Read_model extends Repository_model
                     'my_tasks',
                     'transfers',
                     'access',
-                    'disposals',
                     'files',
                 ],
                 true
@@ -315,6 +314,16 @@ class Read_model extends Repository_model
                     't.status',
                     $status
                 );
+            }
+        }
+
+        if (in_array($module, ['requests', 'my_requests', 'my_tasks'], true)) {
+            $type = Rules::text($query, 'type', 100, false);
+            if ($type !== null) {
+                if (!in_array($type, Request_service::TYPES, true)) {
+                    throw new Problem('Invalid request type filter.', 422);
+                }
+                $this->db->where('t.type', $type);
             }
         }
     }

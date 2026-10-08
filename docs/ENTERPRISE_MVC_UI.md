@@ -65,11 +65,10 @@ requests are made.
 
 - Font preference: Roboto; local Segoe UI, Arial and system UI fallback.
 - Icon preference: Font Awesome; Bootstrap Icons fallback; Unicode fallback.
-- Bootstrap CSS/JS, jQuery and web fonts currently load from public CDNs.
+- Bootstrap CSS/JS and jQuery are vendored locally under public/assets/vendor, with MIT license files included. Roboto and icon fonts still use public CDN origins when connected.
 - Local enterprise CSS/JS is tracked in the repository.
 - Normal HTML forms and native selects remain usable with JavaScript disabled.
-- Completely offline, full-quality styling requires vendoring Bootstrap,
-  jQuery and other third-party assets in a separate reviewed dependency step.
+- With no internet, Bootstrap and jQuery still work locally. The icon/text fallbacks use Unicode and local system fonts; remote icon-font styling is optional.
 - No font files are redistributed by this change.
 
 ## Scope boundaries

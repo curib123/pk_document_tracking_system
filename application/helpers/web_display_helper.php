@@ -30,6 +30,7 @@ if (!function_exists('pk_web_display_fields')) {
 
             if (in_array($normalized, $hide, true)
                 || str_ends_with($normalized, '_id')
+                || (str_ends_with($normalized, '_by') && is_numeric($value))
                 || str_contains($normalized, 'password') && $normalized !== 'require_password_change'
                 || str_contains($normalized, 'token')
                 || str_contains($normalized, 'secret')

@@ -20,7 +20,7 @@ function syncCheck(bool $condition, string $name): void
 }
 function syncRun(): void
 {
-    $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(PK_ROOT . '/bin/sync_document_visibility.php');
+    $command = escapeshellarg(PHP_BINARY) . ' ' . escapeshellarg(PK_ROOT . '/database/sync_document_visibility.php');
     exec($command . ' 2>&1', $output, $status);
     syncCheck($status === 0, 'permission update command succeeds: ' . implode(' ', $output));
 }

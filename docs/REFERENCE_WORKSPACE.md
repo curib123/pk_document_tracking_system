@@ -33,7 +33,7 @@ Roles without the catalog capability fall back to their ordinary assigned/grante
 After pulling this branch into an existing schema-v7 installation, back up the database and run from the repository root:
 
 ```bat
-C:\xampp\php\php.exe bin\sync_request_catalog.php
+C:\xampp\php\php.exe database\sync_request_catalog.php
 ```
 
 The command creates the capability and initial role bindings once, transactionally. Repeated runs preserve role customizations. Structural schema version remains 7. Fresh installations already include the permission.
