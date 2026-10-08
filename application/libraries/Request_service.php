@@ -391,9 +391,15 @@ class Request_service
     ): void {
         $this->ctx->require($domain . '.view');
 
+        // Discovery permits an approval request, never document reading or direct assignment.
+        $mayRequestAssignment =
+            $type === 'assignment'
+            && $this->ctx->can('documents.request_catalog');
+
         if (
             $document
             && $type !== 'access'
+            && !$mayRequestAssignment
             && !$this->documents->canRead(
                 $domain,
                 (int) $targetId
