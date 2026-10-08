@@ -103,6 +103,10 @@ $check('keyboard skip navigation exists', str_contains($header,'Skip to content'
 $check('sidebar is one shared template', substr_count($header,'components/sidebar.php')===2);
 $check('Font Awesome falls back to Bootstrap Icons', str_contains($header,'font-awesome') && str_contains($header,'bootstrap-icons'));
 $check('Roboto falls back to offline system fonts', str_contains($css,'"Segoe UI"'));
+$check('Bootstrap and jQuery are hosted locally for offline use',
+    str_contains($header,'assets/vendor/bootstrap/bootstrap.min.css')
+    && str_contains($footer,'assets/vendor/bootstrap/bootstrap.bundle.min.js')
+    && str_contains($footer,'assets/vendor/jquery/jquery-3.7.1.min.js'));
 $check('jQuery loads before enterprise script', strpos($footer,'jquery-3.7.1')<strpos($footer,'enterprise-ui.js'));
 $check('jQuery performs no REST/AJAX calls', !preg_match('/\$\.(ajax|getJSON|post)\s*\(|\bfetch\s*\(|XMLHttpRequest/', $js));
 $check('service owns catalog mutation', str_contains($controller,'new Catalog_service($context)') && str_contains($controller,'->transaction('));

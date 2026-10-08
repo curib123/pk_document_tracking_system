@@ -22,6 +22,8 @@ jobs:
         run: |
           find application/views/web application/modules/catalog application/modules/records application/core application/helpers -name '*.php' -print0 | xargs -0 -n1 php -l
           node --check public/assets/js/enterprise-ui.js
+          node --check public/assets/vendor/jquery/jquery-3.7.1.min.js
+          node --check public/assets/vendor/bootstrap/bootstrap.bundle.min.js
       - name: Shared component and modular MVC checks
         run: |
           php tests/web_mvc.php
