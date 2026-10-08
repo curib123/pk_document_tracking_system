@@ -35,7 +35,9 @@ class Read_service
 
     public function lookups(array $query): array
     {
-        if (($query['purpose'] ?? '') === 'request') {
+        // Both explicit-purpose callers and contextual forms use one catalog.
+        // The model still validates request type, module access and capability.
+        if (($query['purpose'] ?? '') === 'request' || isset($query['request_type'])) {
             return $this->ctx->model(Request_catalog_model::class)->options($query);
         }
         return $this->model()->lookups($query);
@@ -45,6 +47,11 @@ class Read_service
     {
         $result = $this->model()->dashboard();
         $result['recent_documents'] = $this->ctx->model(Workspace_model::class)->recentDocuments();
+        foreach ($result['recent_documents'] as &$row) {
+            // Retain the shared projection's reference key and expose a UI alias.
+            $row['document_number'] = $row['reference'] ?? '';
+        }
+        unset($row);
         return $result;
     }
 

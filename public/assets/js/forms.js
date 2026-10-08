@@ -215,13 +215,23 @@ export async function mountFields(
         aborter?.abort();
         aborter = new AbortController();
 
+        // Context belongs to this form, not the global screen. Nested/direct
+        // dialogs therefore cannot accidentally acquire request-catalog access.
+        const typeControl = container.closest('dialog')?.querySelector('select[name="type"]');
+        const requestType =
+          ['softcopy', 'hardcopy'].includes(definition.lookup) &&
+          ['access', 'assignment'].includes(typeControl?.value)
+            ? typeControl.value
+            : undefined;
+
         try {
           const result = await api.request(
             'lookups',
             {
               kind: definition.lookup,
               q: search.value,
-              selected: selection || undefined
+              selected: selection || undefined,
+              request_type: requestType
             },
             false,
             aborter.signal
@@ -251,6 +261,11 @@ export async function mountFields(
           const selectedExists = result.options.some(
             option => String(option.id) === selection
           );
+
+          if (selection && !selectedExists && requestType) {
+            // An inactive/unavailable target must be chosen again, not recreated.
+            selection = '';
+          }
 
           if (selection && !selectedExists) {
             input.append(

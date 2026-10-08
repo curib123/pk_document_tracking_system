@@ -8,8 +8,8 @@ return [
     'default_enabled' => false,
     'theme' => 'red',
     'modules' => [
-        'account' => false,
-        'dashboard' => false,
+        'account' => true,
+        'dashboard' => true,
         'softcopy' => false,
         'hardcopy' => false,
         'requests' => false,

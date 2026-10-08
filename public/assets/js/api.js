@@ -45,9 +45,18 @@ export class ApiClient {
       throw error;
     }
     if (operation === 'metadata') {
-      document.dispatchEvent(new CustomEvent('pk:metadata', { detail: { modules: payload.data?.modules || [] } }));
+      document.dispatchEvent(new CustomEvent('pk:metadata', { detail: { modules: payload.data?.modules || [], user: payload.data?.user || null } }));
     }
-    if (operation === 'session' && !payload.data?.user) screenEvent('account');
+    if (operation === 'session') {
+      if (!payload.data?.user) screenEvent('account');
+      document.dispatchEvent(new CustomEvent('pk:session', { detail: payload.data || {} }));
+    }
+    if (operation === 'dashboard') {
+      document.dispatchEvent(new CustomEvent('pk:dashboard', { detail: payload.data || {} }));
+      // Keep the original native dashboard's status/total table contract intact.
+      const { recent_documents, ...nativeSummary } = payload.data || {};
+      return nativeSummary;
+    }
     return payload.data;
   }
   async download(id, filename = 'document') {

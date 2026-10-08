@@ -46,6 +46,8 @@ jobs:
         run: |
           npm install --ignore-scripts --no-audit --no-fund
           npm run check:css
+          node tools/build-workspace.cjs --check
+          node --test tests/reference_data.test.mjs
           php tests/styling.php
       - name: Syntax and domain rules
         run: |
@@ -61,6 +63,7 @@ jobs:
           php bin/migrate.php
       - name: Domain and concurrency integration
         run: |
+          php tests/request_catalog.php
           php tests/integration.php
           php tests/mysqli_integration.php
           php tests/concurrency.php
@@ -77,6 +80,7 @@ jobs:
           python3 tests/modal_browser.py
           python3 tests/styling_browser.py
           python3 tests/native_browser.py
+          python3 tests/reference_browser.py
       - name: Private diagnostic logs on failure
         if: failure()
         run: |
