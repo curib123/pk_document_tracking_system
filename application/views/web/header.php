@@ -4,59 +4,84 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title><?= ui_escape($page_title ?? 'PK Document Tracking System') ?> | PK DTS</title>
-    <!-- Bootstrap is the sole stylesheet dependency; no custom CSS or JS bundles. -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700&amp;display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.13.1/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="<?= ui_url('assets/css/enterprise-ui.css') ?>">
 </head>
-<body class="bg-body-tertiary">
-<header class="navbar navbar-dark bg-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand fw-semibold" href="<?= site_url('web') ?>">PK Document Tracking System</a>
+<body class="pk-app">
+<a href="#main-content" class="visually-hidden-focusable pk-skip-link">Skip to content</a>
+<header class="pk-topbar">
+    <div class="pk-topbar-main">
+        <a href="<?= site_url('web') ?>" class="pk-brand" aria-label="PK Document Tracking System home">
+            <span class="pk-brand-mark"><?= pk_web_icon('files') ?></span>
+            <span class="pk-brand-name"><strong>PK Documents</strong><small>Tracking system</small></span>
+        </a>
+
         <?php if ($viewer): ?>
-            <div class="d-flex align-items-center gap-3 text-white">
-                <span class="small"><?= ui_escape(trim(($viewer['first_name'] ?? '') . ' ' . ($viewer['last_name'] ?? '')) ?: ($viewer['username'] ?? 'User')) ?></span>
-                <form action="<?= site_url('web/logout') ?>" method="post" class="m-0">
-                    <input type="hidden" name="csrf" value="<?= ui_escape($csrf) ?>">
-                    <button type="submit" class="btn btn-outline-light btn-sm">Sign out</button>
-                </form>
-            </div>
+            <details class="pk-mobile-drawer d-lg-none">
+                <summary class="pk-mobile-trigger" aria-label="Open navigation">
+                    <?= pk_web_icon('menu') ?> <span>Menu</span>
+                </summary>
+                <div class="pk-mobile-panel">
+                    <?php require __DIR__ . '/components/sidebar.php'; ?>
+                </div>
+            </details>
         <?php endif; ?>
     </div>
+
+    <?php if ($viewer): ?>
+        <?php
+        $displayName = trim(($viewer['first_name'] ?? '') . ' ' . ($viewer['last_name'] ?? ''));
+        if ($displayName === '') {
+            $displayName = (string) ($viewer['username'] ?? 'Account');
+        }
+        $initials = strtoupper(mb_substr($displayName, 0, 1));
+        ?>
+        <div class="pk-topbar-account">
+            <span class="pk-avatar" aria-hidden="true"><?= ui_escape($initials) ?></span>
+            <span class="pk-account-name d-none d-sm-inline"><?= ui_escape($displayName) ?></span>
+            <form method="post" action="<?= site_url('web/logout') ?>" class="m-0">
+                <input type="hidden" name="csrf" value="<?= ui_escape($csrf) ?>">
+                <button type="submit" class="pk-logout" aria-label="Sign out" title="Sign out"><?= pk_web_icon('logout') ?></button>
+            </form>
+        </div>
+    <?php endif; ?>
 </header>
-<div class="container-fluid">
-    <div class="row g-0">
-        <?php if ($viewer): ?>
-        <aside class="col-12 col-lg-3 col-xl-2 bg-white border-end p-3">
-            <nav aria-label="Main navigation">
-                <a class="btn btn-outline-primary w-100 mb-3" href="<?= site_url('web') ?>">Dashboard</a>
-                <?php
-                $groups = [];
-                foreach ($navigation as $item) {
-                    $groups[$item['navigation_group']][] = $item;
-                }
-                $catalogModules = ['areas', 'specifics', 'assets', 'locations', 'categories'];
-                ?>
-                <?php foreach ($groups as $group => $items): ?>
-                    <h2 class="h6 text-body-secondary mt-3 mb-2"><?= ui_escape($group) ?></h2>
-                    <div class="nav flex-column gap-1">
-                        <?php foreach ($items as $item): ?>
-                            <?php $href = in_array($item['key'], $catalogModules, true)
-                                ? 'web/catalog/' . $item['key']
-                                : 'web/records/' . $item['key']; ?>
-                            <a class="nav-link py-1 px-2" href="<?= site_url($href) ?>">
-                                <?= ui_escape($item['label']) ?>
-                            </a>
-                        <?php endforeach; ?>
-                    </div>
-                <?php endforeach; ?>
-                <hr>
-                <a href="<?= site_url('web/password') ?>" class="nav-link px-2">Change password</a>
-                <a href="<?= site_url('app') ?>" class="nav-link px-2">Existing workspace (legacy)</a>
-            </nav>
+
+<div class="pk-layout">
+    <?php if ($viewer): ?>
+        <aside class="pk-sidebar d-none d-lg-block">
+            <?php require __DIR__ . '/components/sidebar.php'; ?>
         </aside>
+    <?php endif; ?>
+
+    <main class="pk-main <?= !$viewer ? 'pk-main-guest' : '' ?>" id="main-content" tabindex="-1">
+        <?php if ($viewer): ?>
+            <div class="pk-content-eyebrow">WORKSPACE <span aria-hidden="true">/</span> <?= ui_escape($page_title ?? 'Overview') ?></div>
         <?php endif; ?>
-        <main class="<?= $viewer ? 'col-12 col-lg-9 col-xl-10' : 'col-12' ?> p-3 p-md-4" id="main-content">
-            <?php if (is_array($flash) && !empty($flash['message'])): ?>
-                <div class="alert alert-<?= ($flash['type'] ?? '') === 'danger' ? 'danger' : 'success' ?>" role="alert">
-                    <?= ui_escape($flash['message']) ?>
+
+        <?php if (!empty($flash['message'])): ?>
+            <?php if (($flash['type'] ?? '') === 'danger'): ?>
+                <?php
+                $modalId = 'pk-alert-modal';
+                $modalTitle = 'Action not completed';
+                $modalTone = 'danger';
+                $modalAutoOpen = true;
+                $modalMessage = (string) $flash['message'];
+                $modalAction = null;
+                $modalSubmit = '';
+                $modalBack = '';
+                $modalFields = [];
+                require __DIR__ . '/components/modal.php';
+                ?>
+            <?php else: ?>
+                <div class="alert alert-success pk-inline-feedback d-flex gap-2 align-items-center" role="status">
+                    <?= pk_web_icon('success') ?> <span><?= ui_escape($flash['message']) ?></span>
                 </div>
             <?php endif; ?>
+        <?php endif; ?>
