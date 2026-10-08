@@ -2,11 +2,12 @@
   "name": "pk-dts-design-system",
   "private": true,
   "scripts": {
-    "build:css": "node tools/build-styles.cjs",
-    "check:css": "node tools/build-styles.cjs --check",
+    "build:css": "node tools/build-styles.cjs && node tools/build-workspace.cjs",
+    "check:css": "node tools/build-styles.cjs --check && node tools/build-workspace.cjs --check",
+    "test:assets": "php tests/frontend_assets.php",
     "test:styling": "php tests/styling.php && python3 tests/styling_browser.py"
   },
   "devDependencies": {
-    "tailwindcss": "4.1.10"
+    "tailwindcss": "4.3.1"
   }
 }

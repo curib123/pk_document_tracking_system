@@ -4,6 +4,10 @@
   --radius-lg: 0.625rem;
   --radius-xl: 0.875rem;
   --radius-2xl: 1.25rem;
+  --font-sans: var(--pk-font-sans);
+}
+.pk-ui, body[data-pk-shell] {
+  --pk-font-sans: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
 }
 .pk-ui {
   --pk-brand: #b91c1c;
@@ -16,7 +20,7 @@
   --pk-surface: #ffffff;
   --pk-shadow: 0 1px 3px rgb(16 24 40 / 0.05);
   color: var(--pk-ink);
-  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--pk-font-sans);
   font-size: 14px;
   line-height: 1.55;
   text-align: left;

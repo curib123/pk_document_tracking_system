@@ -1,0 +1,53 @@
+name: Prepare Tailwind 4.3 generated assets
+on:
+  push:
+    branches: [feature/tailwind43-fontawesome-poppins]
+    paths: [.github/workflows/prepare-tailwind43.yml]
+permissions:
+  contents: write
+jobs:
+  compile:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          coverage: none
+      - name: Apply verified renderer and typography substitutions
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          replacements = {
+              'public/assets/js/workspace.js': [("querySelector('svg')", "querySelector('.ws-icon')")],
+              'resources/workspace/reference.css': [("font-family: Inter, 'Segoe UI', Arial, sans-serif;", 'font-family: var(--pk-font-sans);')],
+          }
+          for filename, changes in replacements.items():
+              path = Path(filename)
+              text = path.read_text()
+              for before, after in changes:
+                  assert before in text, (filename, before)
+                  text = text.replace(before, after)
+              path.write_text(text)
+          PY
+      - name: Resolve and compile the pinned release
+        run: |
+          npm install --package-lock-only --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
+          npm run build:css
+          npm run check:css
+          php tests/frontend_assets.php
+      - name: Record compiled assets on this feature branch only
+        run: |
+          git fetch origin feature/tailwind43-fontawesome-poppins
+          test "$(git rev-parse FETCH_HEAD)" = "$GITHUB_SHA"
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add package-lock.json public/assets/css/app.css public/assets/css/workspace.css public/assets/js/workspace.js resources/workspace/reference.css
+          git rm .github/workflows/prepare-tailwind43.yml
+          git commit -m 'build: compile Tailwind 4.3.1 and align view-based icon and typography bindings'
+          git push origin HEAD:refs/heads/feature/tailwind43-fontawesome-poppins

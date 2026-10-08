@@ -16,6 +16,7 @@ $pkStyling['reference_stylesheet'] = ui_url('assets/css/workspace.css?v=' . (is_
 <meta name="initial-module" content="<?= ui_escape($initial_module ?? '') ?>">
 <meta name="pk-styling" content="<?= ui_escape(json_encode($pkStyling, JSON_THROW_ON_ERROR)) ?>">
 <title><?= ui_escape($page_title ?? 'PK Document Tracking System') ?></title>
+<?php require __DIR__ . '/../components/assets/styles.php'; ?>
 <script type="module" src="<?= ui_escape(ui_url('assets/js/styling.js')) ?>"></script>
 <script type="module" src="<?= ui_escape(ui_url('assets/js/workspace.js')) ?>"></script>
 <script type="module" src="<?= ui_escape(ui_url('assets/js/app.js')) ?>"></script>
