@@ -48,9 +48,25 @@ class MY_Web_Controller extends MY_Controller
         $data['flash'] = $this->session->flashdata('web_flash');
 
         $this->load->view('web/header', $data);
-        // Trusted module paths only; no user-provided dynamic view paths.
-        $path = str_starts_with($view, 'modules/') ? $view : 'web/' . $view;
-        $this->load->view($path, $data);
+        // CI3 normally searches application/views/. Module-owned views need
+        // their package root registered with the CI Loader for this render.
+        if (str_starts_with($view, 'modules/')) {
+            if (!preg_match('~^modules/([a-z_]+)/views/([a-z_][a-z0-9_/]*)$~', $view, $matches)) {
+                throw new \LogicException('Invalid trusted module view path.');
+            }
+
+            $package = APPPATH . 'modules/' . $matches[1] . '/';
+            $this->load->add_package_path($package, false);
+
+            try {
+                $this->load->view($matches[2], $data);
+            } finally {
+                $this->load->remove_package_path($package);
+            }
+        } else {
+            $this->load->view('web/' . $view, $data);
+        }
+
         $this->load->view('web/footer', $data);
     }
 

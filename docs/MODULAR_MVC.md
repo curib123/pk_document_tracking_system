@@ -73,3 +73,13 @@ migration is completed.
 Verification: php tests/ci_session.php plus the disposable-MySQL
 tests/web_ci_session.py (after tests/native_routes.py). Existing database
 and real-browser tests remain mandatory before merging.
+
+## Loading module-owned views
+
+CodeIgniter 3 normally looks under `application/views/`. When a trusted
+module controller renders `modules/<name>/views/<view>`, MY_Web_Controller
+registers `application/modules/<name>/` through CI3
+`load->add_package_path(..., false)` and removes it immediately after the
+render. This avoids copying the view to `application/views/` or exposing
+untrusted paths. The path is strictly allowlisted by format and originates
+from controller code, not from URL parameters.
