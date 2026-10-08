@@ -1275,10 +1275,139 @@ class Request_service
         ];
     }
 
+    public function directGrantAccess(
+        array $input
+    ): array {
+        $this->ctx->require(
+            'access.direct'
+        );
+
+        $domain = Rules::choice(
+            $input,
+            'domain',
+            ['softcopy', 'hardcopy']
+        );
+
+        $this->ctx->require(
+            $domain . '.view'
+        );
+
+        $documentId = Rules::id(
+            $input,
+            'document_id'
+        );
+
+        $userId = Rules::id(
+            $input,
+            'user_id'
+        );
+
+        $document = $this->model()->lock(
+            Document_service::table($domain),
+            $documentId
+        );
+
+        if ($document['status'] !== 'active') {
+            throw new Problem(
+                'Only active documents can receive direct access grants.'
+            );
+        }
+
+        $this->ctx->active(
+            'users',
+            $userId
+        );
+
+        $expirationDate =
+            $this->normalizeAccessExpiration(
+                $input
+            );
+
+        $remarks = Rules::text(
+            $input,
+            'reason',
+            4000,
+            false
+        );
+
+        $existing =
+            $this->model()
+                ->live_grant_for_user_update(
+                    [
+                        $domain,
+                        $documentId,
+                        $userId,
+                    ]
+                );
+
+        $values = [
+            'domain' => $domain,
+            'document_id' => $documentId,
+            'user_id' => $userId,
+            'granted_by' => $this->ctx->id(),
+            'granted_at' => date('Y-m-d H:i:s'),
+            'expires_at' =>
+                $expirationDate .
+                ' 23:59:59',
+            'revoked_at' => null,
+            'revoked_by' => null,
+            'reason' => $remarks ?? '',
+            'status' => 'access_granted',
+        ];
+
+        if ($existing) {
+            $this->model()->update(
+                'access_grants',
+                (int) $existing['id'],
+                $values
+            );
+
+            $grantId = (int) $existing['id'];
+        } else {
+            $grantId = $this->model()->insert(
+                'access_grants',
+                array_merge(
+                    $values,
+                    [
+                        'request_id' => null,
+                    ]
+                )
+            );
+        }
+
+        $after = $this->model()->lock(
+            'access_grants',
+            $grantId
+        );
+
+        $this->ctx->audit(
+            'access',
+            'direct_granted',
+            $grantId,
+            $existing,
+            $after,
+            $remarks
+        );
+
+        $this->ctx->notify(
+            $userId,
+            'Access granted',
+            'Direct document access granted until ' .
+                $expirationDate .
+                '.'
+        );
+
+        return [
+            'id' => $grantId,
+            'message' =>
+                'Access granted directly without a workflow request.',
+        ];
+    }
+
     public function directAssign(array $input): array
     {
         $this->ctx->require(
-            'assignment.manage'
+            'assignment.direct'
         );
         $this->ctx->require(
             'softcopy.view'
