@@ -104,6 +104,10 @@ try:
         login.get_by_label('Username',exact=True).fill('admin'); login.get_by_label('Password',exact=True).fill('test-password-long')
         login.get_by_role('button',name='Sign in',exact=True).click()
         expect(page.get_by_role('navigation').get_by_role('button',name='Users',exact=True)).to_be_visible()
+        assert page.evaluate("""() => [...document.querySelectorAll('#navigation details')].some(group =>
+            group.querySelector('summary')?.textContent.trim() === 'Document Setup'
+            && [...group.querySelectorAll('button')].some(button => button.textContent.trim() === 'Sequences')
+        )"""), 'Sequences must be grouped under Document Setup'
 
         # Every signed-in user can view/edit their own profile without admin user-management access.
         page.get_by_role('button',name='My profile',exact=True).click()
@@ -211,6 +215,17 @@ try:
 
         # Request pages must open a deterministic, locked request type instead of falling back to the first type.
         page.get_by_role('navigation').get_by_role('button',name='Hardcopy transfers',exact=True).click()
+        expect(page.get_by_role('button',name='Direct hardcopy transfer',exact=True)).to_be_visible()
+        page.get_by_role('button',name='Direct hardcopy transfer',exact=True).click()
+        direct_transfer=page.get_by_role('dialog',name='Direct hardcopy transfer',exact=True)
+        expect(direct_transfer.get_by_label('Hardcopy Document',exact=True)).to_be_visible()
+        expect(direct_transfer.get_by_label('Location',exact=True)).to_be_visible()
+        expect(direct_transfer.get_by_label('Recipient',exact=True)).to_be_visible()
+        expect(direct_transfer.get_by_label('Remarks',exact=True)).to_be_visible()
+        assert direct_transfer.get_by_label('Remarks',exact=True).get_attribute('required') is None
+        assert direct_transfer.get_by_label('Request Type',exact=True).count()==0
+        direct_transfer.get_by_role('button',name='Cancel',exact=True).click()
+
         page.get_by_role('button',name='Transfer request',exact=True).click()
         transfer_page_request=page.get_by_role('dialog',name='Transfer request',exact=True)
         expect(transfer_page_request.get_by_label('Request Type',exact=True)).to_have_value('transfer')
@@ -218,6 +233,17 @@ try:
         transfer_page_request.get_by_role('button',name='Cancel',exact=True).click()
 
         page.get_by_role('navigation').get_by_role('button',name='Access grants',exact=True).click()
+        expect(page.get_by_role('button',name='Direct grant access',exact=True)).to_be_visible()
+        page.get_by_role('button',name='Direct grant access',exact=True).click()
+        direct_access=page.get_by_role('dialog',name='Direct grant access',exact=True)
+        expect(direct_access.get_by_label('Domain',exact=True)).to_have_value('softcopy')
+        expect(direct_access.get_by_label('Softcopy Document',exact=True)).to_be_visible()
+        expect(direct_access.get_by_label('Grant Access To',exact=True)).to_be_visible()
+        expect(direct_access.get_by_label('Expiration Date',exact=True)).to_be_visible()
+        assert direct_access.get_by_label('Remarks',exact=True).get_attribute('required') is None
+        assert direct_access.get_by_label('Request Type',exact=True).count()==0
+        direct_access.get_by_role('button',name='Cancel',exact=True).click()
+
         page.get_by_role('button',name='Access request',exact=True).click()
         access_page_request=page.get_by_role('dialog',name='Access request',exact=True)
         expect(access_page_request.get_by_label('Request Type',exact=True)).to_have_value('access')
@@ -298,5 +324,5 @@ try:
         assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, hardcopy transfer preset synchronization, predefined location hierarchy auto-population, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, self profile, contextual request presets, separate direct assignment, readable created-by values, optional remarks, all modules, no JS runtime errors')
+        print('PASS: native dialog, hardcopy transfer preset synchronization, predefined location hierarchy auto-population, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, self profile, contextual request presets, permission-controlled direct transfer/access/assignment, sequences under Document Setup, readable created-by values, optional remarks, all modules, no JS runtime errors')
 finally: server.shutdown()
