@@ -288,8 +288,10 @@ try:
         assert state['workflow_delete_payload']['reason'] is None
         remove_draft.get_by_role('button',name='Close',exact=True).click()
 
-        # All list modules must render without runtime failures.
+        # All visible navigation modules must render without runtime failures.
         for module in metadata['modules']:
+            if module.get('navigation_hidden'):
+                continue
             page.get_by_role('navigation').get_by_role('button',name=module['label'],exact=True).click()
             expect(page.locator('main h2')).to_have_text(module['label'])
         assert not errors, errors
