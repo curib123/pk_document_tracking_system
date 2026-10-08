@@ -43,7 +43,9 @@ jobs:
       - name: Install isolated test database
         run: php bin/install.php > /tmp/visibility-install.log
       - name: Document visibility regression tests
-        run: php tests/document_visibility.php
+        run: |
+          php tests/document_visibility.php
+          php tests/request_discovery.php
       - name: Existing domain and MySQL regression tests
         run: |
           php tests/run.php
