@@ -163,6 +163,68 @@ class Auth_service
         ];
     }
 
+    public function updateProfile(array $input): array
+    {
+        if (!$this->ctx->id()) {
+            throw new Problem(
+                'Sign in first.',
+                401
+            );
+        }
+
+        $id = $this->ctx->id();
+
+        $before = $this->model()->lock(
+            'users',
+            $id
+        );
+
+        $data = [
+            'username' => Rules::text(
+                $input,
+                'username',
+                80
+            ),
+            'first_name' => Rules::text(
+                $input,
+                'first_name',
+                100
+            ),
+            'middle_name' => Rules::text(
+                $input,
+                'middle_name',
+                100,
+                false
+            ),
+            'last_name' => Rules::text(
+                $input,
+                'last_name',
+                100
+            ),
+        ];
+
+        $this->model()->update(
+            'users',
+            $id,
+            $data
+        );
+
+        $this->ctx->identify($id);
+
+        $this->ctx->audit(
+            'users',
+            'profile_updated',
+            $id,
+            $before,
+            $data
+        );
+
+        return [
+            'user' => $this->ctx->safeUser(),
+            'message' => 'Profile updated.',
+        ];
+    }
+
     public function changePassword(array $input): array
     {
         if (!$this->ctx->id()) {
