@@ -92,7 +92,7 @@ try {
     );
 
     foreach (
-        ['files', 'conversions', 'logs']
+        ['files', 'conversions', 'logs', 'audit']
         as $folder
     ) {
         $path =
@@ -105,7 +105,7 @@ try {
         }
     }
 
-    echo "Installed schema version 4.\n";
+    echo "Installed schema version 5.\n";
     echo "Username: $username\n";
     echo "Initial password (shown once): $password\n";
     echo "Change this password at first login. Create another approver before using request workflows.\n";

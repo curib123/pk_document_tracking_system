@@ -412,6 +412,115 @@ function legacy_workflow(
     ];
 }
 
+function migrate_file_audit(
+    Database $db
+): void {
+    if (!table_exists($db, 'audit_logs')) {
+        return;
+    }
+
+    $directory = PK_ROOT . '/storage/audit';
+
+    if (
+        !is_dir($directory)
+        && !mkdir($directory, 0770, true)
+        && !is_dir($directory)
+    ) {
+        throw new RuntimeException(
+            'Unable to create the audit log directory.'
+        );
+    }
+
+    $finalPath =
+        $directory .
+        '/audit-migrated-v5.jsonl';
+
+    if (!is_file($finalPath)) {
+        $temporaryPath =
+            $finalPath .
+            '.tmp';
+
+        $handle = fopen(
+            $temporaryPath,
+            'wb'
+        );
+
+        if (!$handle) {
+            throw new RuntimeException(
+                'Unable to create the audit migration file.'
+            );
+        }
+
+        try {
+            foreach (
+                $db->all(
+                    'SELECT *
+                     FROM audit_logs
+                     ORDER BY id'
+                )
+                as $row
+            ) {
+                foreach (
+                    [
+                        'before_state',
+                        'after_state',
+                    ]
+                    as $key
+                ) {
+                    if (
+                        isset($row[$key])
+                        && is_string($row[$key])
+                    ) {
+                        $decoded = json_decode(
+                            $row[$key],
+                            true
+                        );
+
+                        if (
+                            json_last_error()
+                            === JSON_ERROR_NONE
+                        ) {
+                            $row[$key] =
+                                $decoded;
+                        }
+                    }
+                }
+
+                if (
+                    fwrite(
+                        $handle,
+                        Context::json($row) .
+                        PHP_EOL
+                    ) === false
+                ) {
+                    throw new RuntimeException(
+                        'Unable to export an audit record.'
+                    );
+                }
+            }
+        } finally {
+            fclose($handle);
+        }
+
+        if (
+            !rename(
+                $temporaryPath,
+                $finalPath
+            )
+        ) {
+            @unlink($temporaryPath);
+
+            throw new RuntimeException(
+                'Unable to finalize the audit migration file.'
+            );
+        }
+    }
+
+    $db->query(
+        'DROP TABLE audit_logs'
+    );
+}
+
 try {
     $db = Database::connect();
 
@@ -441,11 +550,25 @@ try {
             0
         );
 
-    if ($current >= 4) {
+    if ($current >= 5) {
         echo
             'Database schema is already version ' .
             $current .
             ".\n";
+
+        exit(0);
+    }
+
+    if ($current === 4) {
+        migrate_file_audit($db);
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(5)'
+        );
+
+        echo
+            "Migrated database schema from version 4 to version 5.\n";
 
         exit(0);
     }
@@ -460,8 +583,15 @@ try {
              VALUES(4)'
         );
 
+        migrate_file_audit($db);
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(5)'
+        );
+
         echo
-            "Migrated database schema from version 3 to version 4.\n";
+            "Migrated database schema from version 3 to version 5.\n";
 
         exit(0);
     }
@@ -485,8 +615,15 @@ try {
              VALUES(4)'
         );
 
+        migrate_file_audit($db);
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(5)'
+        );
+
         echo
-            "Migrated database schema from version 2 to version 4.\n";
+            "Migrated database schema from version 2 to version 5.\n";
 
         exit(0);
     }
@@ -738,8 +875,15 @@ try {
          VALUES(4)'
     );
 
+    migrate_file_audit($db);
+
+    $db->query(
+        'INSERT INTO schema_migrations(version)
+         VALUES(5)'
+    );
+
     echo
-        "Migrated database schema from version 1 to version 4.\n";
+        "Migrated database schema from version 1 to version 5.\n";
 } catch (Throwable $error) {
     fwrite(
         STDERR,

@@ -185,55 +185,87 @@ final class Context
         ?string $reason = null,
         ?int $request = null
     ): void {
-        // Sensitive fields never go to audit JSON, bisag accidentally naapil sa payload.
+        // Audit trail is file-backed JSONL, dili DB table, para append-only ug light sa database.
         $before = self::redact($before);
         $after = self::redact($after);
 
-        $this
-            ->model(\Identity_model::class)
-            ->insert(
-                'audit_logs',
-                [
-                    'user_id' => $this->id() ?: null,
-                    'username' =>
-                        $this->user['username']
-                        ?? 'anonymous',
-                    'role_name' =>
-                        $this->user['role_name']
-                        ?? '',
-                    'module' => $module,
-                    'action' => $action,
-                    'entity_id' => $entity,
-                    'before_state' => self::json($before),
-                    'after_state' => self::json($after),
-                    'reason' => $reason,
-                    'request_id' => $request,
-                    'http_method' => substr(
-                        $_SERVER['REQUEST_METHOD']
-                            ?? 'CLI',
-                        0,
-                        10
-                    ),
-                    'path' => substr(
-                        $_SERVER['REQUEST_URI']
-                            ?? 'CLI',
-                        0,
-                        255
-                    ),
-                    'ip_address' => substr(
-                        $_SERVER['REMOTE_ADDR']
-                            ?? 'local',
-                        0,
-                        64
-                    ),
-                    'user_agent' => substr(
-                        $_SERVER['HTTP_USER_AGENT']
-                            ?? 'CLI',
-                        0,
-                        255
-                    ),
-                ]
+        $directory = PK_ROOT . '/storage/audit';
+
+        if (
+            !is_dir($directory)
+            && !mkdir($directory, 0770, true)
+            && !is_dir($directory)
+        ) {
+            throw new \RuntimeException(
+                'Unable to create the audit log directory.'
             );
+        }
+
+        $path =
+            $directory .
+            '/audit-' .
+            date('Y-m') .
+            '.jsonl';
+
+        $record = [
+            'id' =>
+                ((int) round(
+                    microtime(true) * 1000000
+                )),
+            'user_id' => $this->id() ?: null,
+            'username' =>
+                $this->user['username']
+                ?? 'anonymous',
+            'role_name' =>
+                $this->user['role_name']
+                ?? '',
+            'module' => $module,
+            'action' => $action,
+            'entity_id' => $entity,
+            'before_state' => $before,
+            'after_state' => $after,
+            'reason' => $reason,
+            'request_id' => $request,
+            'http_method' => substr(
+                $_SERVER['REQUEST_METHOD']
+                    ?? 'CLI',
+                0,
+                10
+            ),
+            'path' => substr(
+                $_SERVER['REQUEST_URI']
+                    ?? 'CLI',
+                0,
+                255
+            ),
+            'ip_address' => substr(
+                $_SERVER['REMOTE_ADDR']
+                    ?? 'local',
+                0,
+                64
+            ),
+            'user_agent' => substr(
+                $_SERVER['HTTP_USER_AGENT']
+                    ?? 'CLI',
+                0,
+                255
+            ),
+            'created_at' => date('Y-m-d H:i:s'),
+        ];
+
+        $line = self::json($record) . PHP_EOL;
+
+        if (
+            file_put_contents(
+                $path,
+                $line,
+                FILE_APPEND | LOCK_EX
+            ) === false
+        ) {
+            throw new \RuntimeException(
+                'Unable to write the audit log.'
+            );
+        }
     }
 
     private static function redact(mixed $data): mixed

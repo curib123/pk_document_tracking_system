@@ -98,11 +98,220 @@ class Read_model extends Repository_model
         $this->db->group_end();
     }
 
+    private function auditRows(): array
+    {
+        $this->ctx->require('audit.view');
+
+        $directory = PK_ROOT . '/storage/audit';
+
+        if (!is_dir($directory)) {
+            return [];
+        }
+
+        $rows = [];
+
+        foreach (
+            glob($directory . '/audit-*.jsonl')
+                ?: []
+            as $path
+        ) {
+            $handle = fopen($path, 'rb');
+
+            if (!$handle) {
+                continue;
+            }
+
+            try {
+                while (
+                    ($line = fgets($handle))
+                    !== false
+                ) {
+                    $row = json_decode(
+                        trim($line),
+                        true
+                    );
+
+                    if (
+                        is_array($row)
+                        && isset($row['id'])
+                    ) {
+                        $rows[] = $row;
+                    }
+                }
+            } finally {
+                fclose($handle);
+            }
+        }
+
+        return $rows;
+    }
+
+    private function auditListing(
+        array $query
+    ): array {
+        $definition =
+            UiSchema::modules()['audit'];
+
+        $request =
+            Datatable_service::normalize(
+                $query,
+                $definition['columns']
+            );
+
+        $rows = $this->auditRows();
+        $unfiltered = count($rows);
+
+        if ($request['q'] !== '') {
+            $needle =
+                mb_strtolower(
+                    $request['q']
+                );
+
+            $rows = array_values(
+                array_filter(
+                    $rows,
+                    static function (
+                        array $row
+                    ) use ($needle): bool {
+                        foreach (
+                            [
+                                'username',
+                                'module',
+                                'action',
+                                'reason',
+                                'created_at',
+                            ]
+                            as $key
+                        ) {
+                            if (
+                                str_contains(
+                                    mb_strtolower(
+                                        (string) (
+                                            $row[$key]
+                                            ?? ''
+                                        )
+                                    ),
+                                    $needle
+                                )
+                            ) {
+                                return true;
+                            }
+                        }
+
+                        return false;
+                    }
+                )
+            );
+        }
+
+        $filtered = count($rows);
+        $sort = $request['sort'];
+        $direction =
+            $request['direction'];
+
+        usort(
+            $rows,
+            static function (
+                array $left,
+                array $right
+            ) use (
+                $sort,
+                $direction
+            ): int {
+                $comparison =
+                    ($left[$sort] ?? null)
+                    <=> ($right[$sort] ?? null);
+
+                return $direction === 'asc'
+                    ? $comparison
+                    : -$comparison;
+            }
+        );
+
+        $rows = array_slice(
+            $rows,
+            $request['offset'],
+            $request['limit']
+        );
+
+        return Datatable_service::payload(
+            $rows,
+            $unfiltered,
+            $filtered,
+            $request
+        );
+    }
+
+    private function auditDetail(
+        int $id
+    ): array {
+        foreach (
+            $this->auditRows()
+            as $row
+        ) {
+            if ((int) $row['id'] === $id) {
+                return [
+                    'row' => $row,
+                    'related' => [],
+                ];
+            }
+        }
+
+        throw new Problem(
+            'Audit record not found.',
+            404
+        );
+    }
+
+    private function applyListFilters(
+        string $module,
+        array $query
+    ): void {
+        if (
+            in_array(
+                $module,
+                [
+                    'softcopy',
+                    'hardcopy',
+                    'requests',
+                    'my_requests',
+                    'my_tasks',
+                    'transfers',
+                    'access',
+                    'disposals',
+                    'files',
+                ],
+                true
+            )
+        ) {
+            $status = Rules::text(
+                $query,
+                'status',
+                80,
+                false
+            );
+
+            if ($status) {
+                $this->db->where(
+                    't.status',
+                    $status
+                );
+            }
+        }
+    }
+
     public function listing(
         string $module,
         array $query
     ): array {
+        if ($module === 'audit') {
+            return $this->auditListing(
+                $query
+            );
+        }
+
         $definition = $this->scope($module);
+        $this->applyListFilters($module, $query);
 
         $request = Datatable_service::normalize(
             $query,
@@ -118,6 +327,7 @@ class Read_model extends Repository_model
             (int) $this->first()['n'];
 
         $this->scope($module);
+        $this->applyListFilters($module, $query);
         $this->search(
             $definition,
             $request['q']
@@ -132,6 +342,7 @@ class Read_model extends Repository_model
             (int) $this->first()['n'];
 
         $this->scope($module);
+        $this->applyListFilters($module, $query);
         $this->search(
             $definition,
             $request['q']
@@ -155,7 +366,10 @@ class Read_model extends Repository_model
 
         $rows = array_map(
             fn(array $row): array =>
-                $this->safe($row),
+                $this->withDisplayLabels(
+                    $module,
+                    $this->safe($row)
+                ),
             $this->results()
         );
 
@@ -323,6 +537,46 @@ class Read_model extends Repository_model
      * Numeric IDs are still returned internally for actions and persistence,
      * while shared frontend components hide them from the user.
      */
+    private function categoryPath(
+        int $categoryId
+    ): array {
+        $path = [];
+        $seen = [];
+
+        while (
+            $categoryId > 0 &&
+            !isset($seen[$categoryId]) &&
+            count($path) < 20
+        ) {
+            $seen[$categoryId] = true;
+
+            $this->db
+                ->reset_query()
+                ->select('id,name,parent_id')
+                ->from('categories')
+                ->where('id', $categoryId)
+                ->limit(1);
+
+            $category = $this->first();
+
+            if (!$category) {
+                break;
+            }
+
+            array_unshift(
+                $path,
+                (string) $category['name']
+            );
+
+            $categoryId =
+                $category['parent_id']
+                    ? (int) $category['parent_id']
+                    : 0;
+        }
+
+        return $path;
+    }
+
     private function withDisplayLabels(
         string $module,
         array $row
@@ -431,6 +685,13 @@ class Read_model extends Repository_model
                 'category',
                 'category_id'
             );
+
+            if (!empty($row['category_id'])) {
+                $row['category_path'] =
+                    $this->categoryPath(
+                        (int) $row['category_id']
+                    );
+            }
 
             $add(
                 'creator',
@@ -716,6 +977,10 @@ class Read_model extends Repository_model
 
     public function detail(string $module, int $id): array
     {
+        if ($module === 'audit') {
+            return $this->auditDetail($id);
+        }
+
         $this->scope($module);
         if ($module==='sequences') { $this->db->reset_query(); throw new Problem('Sequences are read-only counters.'); }
         $this->db->select('t.*')->where('t.id', $id)->limit(1);
@@ -746,7 +1011,29 @@ class Read_model extends Repository_model
             $this->db->reset_query()->from('workflow_steps')->where('request_id', $id)->order_by('id');
             $related['steps']=array_map(fn(array $row)=>$this->safe($row),$this->results());
             $this->db->reset_query()->select('h.*, s.label AS step_name')->from('workflow_history h')->join('workflow_steps s','s.id = h.step_id','left')->where('h.request_id', $id)->order_by('h.id');
-            $related['history']=array_map(fn(array $row)=>$this->safe($row),$this->results());
+            $related['history']=array_map(
+                function(array $historyRow): array {
+                    $historyRow = $this->safe($historyRow);
+                    if (
+                        empty($historyRow['step_name'])
+                        && in_array(
+                            $historyRow['action'] ?? '',
+                            [
+                                'draft_created',
+                                'draft_updated',
+                                'submitted',
+                                'resubmitted',
+                                'cancelled',
+                            ],
+                            true
+                        )
+                    ) {
+                        $historyRow['step_name'] = 'Requester action';
+                    }
+                    return $historyRow;
+                },
+                $this->results()
+            );
             if ($row['workflow_version_id']) {
                 $this->db->reset_query()->select('v.version_number,v.status,v.is_default,w.name AS workflow_name,w.request_type')->from('workflow_versions v')->join('workflows w','w.id = v.workflow_id')->where('v.id',$row['workflow_version_id'])->limit(1);
                 $related['workflow_version']=$this->first();

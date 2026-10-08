@@ -342,7 +342,6 @@ final class Database
             in_array(
                 $table,
                 [
-                    'audit_logs',
                     'status_history',
                     'workflow_history',
                 ],

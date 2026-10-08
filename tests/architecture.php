@@ -44,10 +44,31 @@ verify('normal page queries remain supported',function(){
     $r=Datatable_service::normalize(['page'=>2,'limit'=>50,'q'=>'audit','sort'=>'id','direction'=>'asc'],['id','title']);
     return $r['offset']===50 && $r['limit']===50 && $r['direction']==='asc';
 });
-verify('shared PHP templates own the table and native modal shell',function(){
+verify('shared PHP templates own reusable UI skeletons',function(){
     $header=file_get_contents(PK_ROOT.'/application/views/templates/header.php');
     $footer=file_get_contents(PK_ROOT.'/application/views/templates/footer.php');
-    return str_contains($header,'id="navigation"') && str_contains($header,'id="global-status"') && str_contains($footer,'id="data-table-template"') && str_contains($footer,'id="modal-shell"');
+    return str_contains($header,'id="navigation"')
+        && str_contains($header,'id="global-status"')
+        && str_contains($footer,'id="module-page-template"')
+        && str_contains($footer,'id="navigation-group-template"')
+        && str_contains($footer,'id="record-card-template"')
+        && str_contains($footer,'id="data-table-template"')
+        && str_contains($footer,'id="modal-shell"');
+});
+verify('audit persistence is file-backed instead of a database table',function(){
+    $context=file_get_contents(PK_ROOT.'/application/libraries/support/Context.php');
+    $schema=file_get_contents(PK_ROOT.'/database/schema.sql');
+    $read=file_get_contents(PK_ROOT.'/application/models/Read_model.php');
+    return str_contains($context,'/storage/audit')
+        && str_contains($context,'FILE_APPEND | LOCK_EX')
+        && !str_contains($schema,'CREATE TABLE audit_logs')
+        && str_contains($read,'auditListing');
+});
+verify('hardcopy holder is enforced server-side for ordinary requesters',function(){
+    $service=file_get_contents(PK_ROOT.'/application/libraries/Document_service.php');
+    return str_contains($service,"can('hardcopy.direct')")
+        && str_contains($service,"can('requests.manage')")
+        && str_contains($service,'$defaultHolder');
 });
 verify('the view layer remains unstyled',function(){
     foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/application/views')) as $file) if($file->isFile() && preg_match('/<style\b|\bstyle\s*=|rel=[\'\"]stylesheet/i',file_get_contents($file->getPathname())))return false;

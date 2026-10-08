@@ -33,6 +33,24 @@ let limit = 25;
 let sort = '';
 let direction = 'desc';
 let listGeneration = 0;
+let statusFilter = '';
+let layout = 'table';
+
+function cloneTemplate(id) {
+  const template = document.querySelector(
+    '#' + id
+  );
+
+  if (!template) {
+    throw new Error(
+      'Missing view template: ' + id
+    );
+  }
+
+  return template.content
+    .firstElementChild
+    .cloneNode(true);
+}
 
 const SINGULAR_NAMES = {
   users: 'user',
@@ -350,13 +368,43 @@ async function boot() {
       );
     }
 
+    const navigationGroups = new Map();
+
     for (const module of metadata.modules) {
-      navigation.append(
-        button(
-          module.label,
-          () => selectModule(module)
-        )
-      );
+      if (module.navigation_hidden) {
+        continue;
+      }
+
+      const groupName =
+        module.navigation_group || 'Other';
+
+      if (!navigationGroups.has(groupName)) {
+        const group = cloneTemplate(
+          'navigation-group-template'
+        );
+
+        group.querySelector(
+          '[data-navigation-title]'
+        ).textContent = groupName;
+
+        navigationGroups.set(
+          groupName,
+          group.querySelector(
+            '[data-navigation-items]'
+          )
+        );
+
+        navigation.append(group);
+      }
+
+      navigationGroups
+        .get(groupName)
+        .append(
+          button(
+            module.label,
+            () => selectModule(module)
+          )
+        );
     }
 
     status.textContent = 'Ready.';
@@ -542,10 +590,23 @@ async function selectModule(module) {
   query = '';
   sort = module.columns[0];
   direction = 'desc';
+  statusFilter = '';
+  layout = 'table';
 
-  content.replaceChildren(
-    el('h2', {}, module.label)
+  const pageShell = cloneTemplate(
+    'module-page-template'
   );
+
+  pageShell.querySelector(
+    '[data-module-title]'
+  ).textContent = module.label;
+
+  const pageContent =
+    pageShell.querySelector(
+      '[data-module-content]'
+    );
+
+  content.replaceChildren(pageShell);
 
   const controls = el('div');
   addModuleActions(module, controls);
@@ -654,6 +715,88 @@ async function selectModule(module) {
     )
   );
 
+  if (module.columns.includes('status')) {
+    const statusSelect = el(
+      'select',
+      { id: 'status-filter' },
+      [
+        '',
+        'active',
+        'draft',
+        'pending',
+        'returned',
+        'approved',
+        'rejected',
+        'cancelled',
+        'disposed',
+        'completed'
+      ].map(value =>
+        el(
+          'option',
+          { value },
+          value ? labelOf(value) : 'All statuses'
+        )
+      )
+    );
+
+    statusSelect.addEventListener(
+      'change',
+      () => {
+        statusFilter = statusSelect.value;
+        page = 1;
+        loadTable().catch(globalError);
+      }
+    );
+
+    filters.append(
+      el(
+        'label',
+        { htmlFor: 'status-filter' },
+        'Status'
+      ),
+      statusSelect
+    );
+  }
+
+  if (
+    ['softcopy', 'hardcopy'].includes(
+      module.key
+    )
+  ) {
+    const layoutSelect = el(
+      'select',
+      { id: 'layout-select' },
+      [
+        ['table', 'Table'],
+        ['grid', 'Grid'],
+        ['folder', 'Folder']
+      ].map(([value, name]) =>
+        el(
+          'option',
+          { value },
+          name
+        )
+      )
+    );
+
+    layoutSelect.addEventListener(
+      'change',
+      () => {
+        layout = layoutSelect.value;
+        loadTable().catch(globalError);
+      }
+    );
+
+    filters.append(
+      el(
+        'label',
+        { htmlFor: 'layout-select' },
+        'Layout'
+      ),
+      layoutSelect
+    );
+  }
+
   const tableFooter = el(
     'div',
     { id: 'table-footer' },
@@ -667,7 +810,7 @@ async function selectModule(module) {
     el('span', { id: 'pagination' })
   );
 
-  content.append(
+  pageContent.append(
     controls,
     searchForm,
     filters,
@@ -686,6 +829,174 @@ async function selectModule(module) {
   );
 
   await loadTable();
+}
+
+function recordCard(module, row, actions) {
+  const card = cloneTemplate(
+    'record-card-template'
+  );
+
+  card.querySelector(
+    '[data-record-title]'
+  ).textContent =
+    recordLabel(module.key, row);
+
+  const fields = card.querySelector(
+    '[data-record-fields]'
+  );
+
+  for (const column of module.columns) {
+    if (
+      column === 'id' ||
+      column.endsWith('_id')
+    ) {
+      continue;
+    }
+
+    const value = row[column];
+
+    fields.append(
+      el(
+        'p',
+        {},
+        el('strong', {}, labelOf(column) + ': '),
+        value ?? '—'
+      )
+    );
+  }
+
+  if (actions) {
+    card.querySelector(
+      '[data-record-actions]'
+    ).append(actions(row));
+  }
+
+  return card;
+}
+
+function folderTree(module, rows, actions) {
+  const pathFor = row => {
+    if (module.key === 'softcopy') {
+      return Array.isArray(row.category_path) &&
+        row.category_path.length
+        ? row.category_path
+        : [row.category || 'Uncategorized'];
+    }
+
+    return [
+      row.area || 'Unassigned area',
+      row.specific || 'Unassigned specific',
+      row.asset || 'No asset number',
+      row.location || 'Unassigned location'
+    ];
+  };
+
+  const build = (items, depth) => {
+    const terminal = items.every(
+      row => depth >= pathFor(row).length
+    );
+
+    if (terminal) {
+      const leaf = el('div');
+
+      for (const row of items) {
+        leaf.append(
+          recordCard(
+            module,
+            row,
+            actions
+          )
+        );
+      }
+
+      return leaf;
+    }
+
+    const groups = new Map();
+    const direct = [];
+
+    for (const row of items) {
+      const path = pathFor(row);
+
+      if (depth >= path.length) {
+        direct.push(row);
+        continue;
+      }
+
+      const name = path[depth];
+
+      if (!groups.has(name)) {
+        groups.set(name, []);
+      }
+
+      groups.get(name).push(row);
+    }
+
+    const container = el('div');
+
+    for (const row of direct) {
+      container.append(
+        recordCard(
+          module,
+          row,
+          actions
+        )
+      );
+    }
+
+    for (const [name, groupRows] of groups) {
+      container.append(
+        el(
+          'details',
+          {},
+          el('summary', {}, name),
+          build(groupRows, depth + 1)
+        )
+      );
+    }
+
+    return container;
+  };
+
+  return build(rows, 0);
+}
+
+function renderRows(module, rows, actions) {
+  if (layout === 'grid') {
+    const grid = el('div');
+
+    for (const row of rows) {
+      grid.append(
+        recordCard(
+          module,
+          row,
+          actions
+        )
+      );
+    }
+
+    if (!rows.length) {
+      grid.append(
+        el('p', {}, 'No records found.')
+      );
+    }
+
+    return grid;
+  }
+
+  if (layout === 'folder') {
+    return folderTree(
+      module,
+      rows,
+      actions
+    );
+  }
+
+  return table(
+    module.columns,
+    rows,
+    actions
+  );
 }
 
 async function loadTable() {
@@ -713,6 +1024,7 @@ async function loadTable() {
         page,
         limit,
         q: query,
+        status: statusFilter || undefined,
         sort,
         direction
       }
@@ -743,15 +1055,77 @@ async function loadTable() {
                 )
             );
 
-    document
-      .querySelector('#table-container')
-      .replaceChildren(
-        table(
-          module.columns,
-          result.rows,
-          actions
-        )
+    const tableContainer =
+      document.querySelector(
+        '#table-container'
       );
+
+    tableContainer.replaceChildren(
+      renderRows(
+        module,
+        result.rows,
+        actions
+      )
+    );
+
+    if (
+      module.key === 'hardcopy' &&
+      can('requests.view')
+    ) {
+      const drafts = await api.request(
+        'list',
+        {
+          module: 'my_requests',
+          page: 1,
+          limit: 25,
+          q: 'hardcopy_create',
+          status: 'draft',
+          sort: 'created_at',
+          direction: 'desc'
+        }
+      );
+
+      if (
+        generation === listGeneration &&
+        currentModule === module &&
+        drafts.rows.length
+      ) {
+        tableContainer.append(
+          el(
+            'section',
+            {},
+            el(
+              'h3',
+              {},
+              'Draft hardcopy requests'
+            ),
+            el(
+              'p',
+              {},
+              'These requests are not active hardcopy documents yet.'
+            ),
+            table(
+              [
+                'reference',
+                'type',
+                'status',
+                'created_at'
+              ],
+              drafts.rows,
+              row =>
+                button(
+                  'Open draft',
+                  () =>
+                    details(
+                      'my_requests',
+                      row.id
+                    )
+                )
+            )
+          )
+        );
+      }
+    }
 
     message.textContent =
       result.total +
@@ -1057,15 +1431,49 @@ function requestForm(
         ? ['document_number']
         : [];
 
+    let requestFields =
+      metadata.request_fields[type] || [];
+
+    const automaticHolder =
+      type === 'hardcopy_create' &&
+      !can('requests.manage') &&
+      !can('hardcopy.direct');
+
+    if (automaticHolder) {
+      requestFields =
+        requestFields.filter(
+          definition =>
+            definition.name !== 'holder_id'
+        );
+    }
+
     payload = await mountFields(
       body,
-      metadata.request_fields[type] || [],
+      requestFields,
       values,
       api,
       {
         disabled: disabledPayload
       }
     );
+
+    if (automaticHolder) {
+      body.prepend(
+        el(
+          'p',
+          {},
+          el('strong', {}, 'Holder: '),
+          [
+            user.first_name,
+            user.middle_name,
+            user.last_name
+          ]
+            .filter(Boolean)
+            .join(' ') +
+            ' (requester, automatic)'
+        )
+      );
+    }
   };
 
   const renderHead = async () => {

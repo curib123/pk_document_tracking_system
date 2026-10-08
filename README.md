@@ -63,7 +63,7 @@ If you already have an older PK DTS database, update the code first and run:
 C:\xampp\php\php.exe bin\migrate.php
 ```
 
-The migrator upgrades schema versions 1, 2, or 3 to the current **schema version 4**. It preserves existing data while applying the ordered workflow model, flexible predefined physical hierarchy, and the current lookup/workflow indexes used by location auto-population, workflow version management, and approval history. Back up the database before any schema migration.
+The migrator upgrades schema versions 1 through 4 to the current **schema version 5**. Version 5 exports legacy database audit rows to append-only JSONL under `storage/audit/` before removing the old audit table. Existing document, request, workflow, status-history, and approval-history data are preserved. Back up the database before any schema migration.
 
 ## XAMPP notes
 
