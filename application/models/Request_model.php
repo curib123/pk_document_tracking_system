@@ -33,6 +33,21 @@ class Request_model extends Repository_model
         return $this->first(true);
     }
 
+    public function live_grant_for_user_update(
+        array $params = []
+    ): ?array {
+        $this->db
+            ->reset_query()
+            ->from('access_grants')
+            ->where('domain', $params[0])
+            ->where('document_id', $params[1])
+            ->where('user_id', $params[2])
+            ->where('status', 'access_granted')
+            ->limit(1);
+
+        return $this->first(true);
+    }
+
     public function grants_for_update(array $params = []): array
     {
         $this->db
