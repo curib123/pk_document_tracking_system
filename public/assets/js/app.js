@@ -552,6 +552,191 @@ async function dashboard() {
   }
 }
 
+function directTransfer() {
+  const transferFields =
+    (metadata.request_fields.transfer || [])
+      .map(definition =>
+        definition.name === 'reason'
+          ? {
+              ...definition,
+              label: 'Remarks',
+              required: false
+            }
+          : definition
+      );
+
+  return formModal(
+    'Direct hardcopy transfer',
+    [
+      field(
+        'hardcopy_id',
+        'lookup',
+        true,
+        'hardcopy',
+        {
+          label: 'Hardcopy Document'
+        }
+      ),
+      ...transferFields
+    ],
+    {},
+    api,
+    values =>
+      api.request(
+        'transfers.direct',
+        values,
+        true
+      ),
+    {
+      after: refresh,
+      explanation:
+        'Direct transfer bypasses the approval request and recipient-acceptance workflow. Use only when authorized.'
+    }
+  );
+}
+
+function directAccessGrant() {
+  const modal = new Modal(
+    'Direct grant access',
+    {
+      explanation:
+        'Direct access bypasses the approval request. The grant is still recorded and can be revoked normally.'
+    }
+  );
+
+  const heading = el('div');
+  const body = el('div');
+
+  modal.body.append(
+    heading,
+    body
+  );
+
+  let domain = 'softcopy';
+  let head;
+  let grantFields;
+
+  const renderGrantFields = async () => {
+    grantFields?.dispose();
+    body.replaceChildren();
+
+    grantFields = await mountFields(
+      body,
+      [
+        field(
+          'document_id',
+          'lookup',
+          true,
+          domain,
+          {
+            label:
+              domain === 'softcopy'
+                ? 'Softcopy Document'
+                : 'Hardcopy Document'
+          }
+        ),
+        field(
+          'user_id',
+          'lookup',
+          true,
+          'users',
+          {
+            label: 'Grant Access To'
+          }
+        ),
+        field(
+          'expiration_date',
+          'date'
+        ),
+        reason()
+      ],
+      {},
+      api
+    );
+  };
+
+  const renderHead = async () => {
+    head?.dispose();
+    heading.replaceChildren();
+
+    head = await mountFields(
+      heading,
+      [
+        field(
+          'domain',
+          'select',
+          true,
+          null,
+          {
+            options: [
+              'softcopy',
+              'hardcopy'
+            ]
+          }
+        )
+      ],
+      { domain },
+      api
+    );
+
+    head.controls
+      .get('domain')
+      .addEventListener(
+        'change',
+        event => {
+          modal.run(async () => {
+            domain =
+              event.currentTarget.value ===
+              'hardcopy'
+                ? 'hardcopy'
+                : 'softcopy';
+
+            await renderGrantFields();
+          });
+        }
+      );
+  };
+
+  modal.setSubmit(
+    'Grant access',
+    async () => {
+      const header = await head.read();
+      const values =
+        await grantFields.read();
+
+      const result = await api.request(
+        'access.direct',
+        {
+          domain:
+            header.domain || domain,
+          ...values
+        },
+        true
+      );
+
+      await refresh();
+      modal.done(result);
+    }
+  );
+
+  modal
+    .run(async () => {
+      await renderHead();
+      await renderGrantFields();
+    })
+    .then(() => modal.focusFirst());
+
+  modal.node.addEventListener(
+    'close',
+    () => {
+      head?.dispose();
+      grantFields?.dispose();
+    }
+  );
+
+  return modal;
+}
+
 // Ari ta mag-build sa actions per module para one place ra ang rules sa buttons.
 function addModuleActions(module, controls) {
   const isDocumentModule =
@@ -626,8 +811,32 @@ function addModuleActions(module, controls) {
   };
 
   if (
+    module.key === 'transfers' &&
+    can('transfer.direct')
+  ) {
+    controls.append(
+      button(
+        'Direct hardcopy transfer',
+        directTransfer
+      )
+    );
+  }
+
+  if (
+    module.key === 'access' &&
+    can('access.direct')
+  ) {
+    controls.append(
+      button(
+        'Direct grant access',
+        directAccessGrant
+      )
+    );
+  }
+
+  if (
     module.key === 'assignments' &&
-    can('assignment.manage')
+    can('assignment.direct')
   ) {
     controls.append(
       button(
