@@ -126,16 +126,60 @@ class Http_gateway
 
         // Login owns its transaction so failed-attempt counters still commit.
         if ($operation === 'auth.login') {
-            return $handle();
+            $result = $handle();
+            $this->completeAuthSession($operation);
+            return $result;
         }
 
         $needsTransaction =
             $mutation
             || $operation === 'files.download';
 
-        return $needsTransaction
+        $result = $needsTransaction
             ? $this->ctx->db->transaction($handle)
             : $handle();
+
+        // Only perform session transitions after a successful DB transaction.
+        if ($operation === 'auth.password' || $operation === 'auth.logout') {
+            $this->completeAuthSession($operation);
+        }
+
+        return $result;
+    }
+
+    private function completeAuthSession(string $operation): void
+    {
+        // HTTP requests enter through MY_Controller, which owns CI3 Session.
+        if (function_exists('get_instance')) {
+            $controller = get_instance();
+            if ($controller instanceof MY_Controller) {
+                $controller->_complete_auth_session($operation, $this->ctx);
+                return;
+            }
+        }
+
+        // Standalone CLI/direct gateway compatibility (no CI3 HTTP instance).
+        // Never use this branch for a CodeIgniter-routed request.
+        Security::startSession();
+        session_regenerate_id(true);
+
+        if ($operation === 'auth.logout') {
+            $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
+            return;
+        }
+
+        if (!$this->ctx->id()) {
+            throw new \LogicException('Authentication context was not established.');
+        }
+
+        if ($operation === 'auth.login') {
+            $_SESSION = [];
+        }
+
+        $_SESSION['user_id'] = $this->ctx->id();
+        $_SESSION['session_version'] = (int) $this->ctx->user['session_version'];
+        $_SESSION['last_seen'] = time();
+        $_SESSION['csrf'] = bin2hex(random_bytes(32));
     }
 
     private function assertOperationAllowed(

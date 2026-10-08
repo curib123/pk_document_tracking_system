@@ -25,6 +25,7 @@ class Auth_controller extends MY_Web_Controller
             }
 
             (new Auth_service($context))->login($input);
+            $this->_complete_auth_session('auth.login', $context);
             $this->webRedirect('web');
         } catch (Pk\Core\Problem $error) {
             http_response_code($error->status);
@@ -48,6 +49,7 @@ class Auth_controller extends MY_Web_Controller
 
         try {
             (new Auth_service($context))->changePassword($this->webPost());
+            $this->_complete_auth_session('auth.password', $context);
             $this->webFlash('Password changed successfully.');
             $this->webRedirect('web');
         } catch (Throwable $error) {
@@ -62,6 +64,7 @@ class Auth_controller extends MY_Web_Controller
         try {
             $this->webPost();
             (new Auth_service($context))->logout();
+            $this->_complete_auth_session('auth.logout', $context);
             $this->webRedirect('web/login');
         } catch (Throwable $error) {
             $this->webFailure($error, 'web');
