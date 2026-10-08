@@ -22,6 +22,11 @@ The optional server environment variable `PK_STYLING_ENABLED=0` disables everyth
 
 ## Design a module later
 
+Edit page HTML in `application/views/pages/<module>/index.php` and shared HTML in
+`application/views/components/`. JavaScript binds data/events to these PHP-owned
+templates. See `docs/VIEW_ARCHITECTURE.md` for the component map.
+
+
 - Change brand colors, text, borders and surfaces in `resources/styles/00-tokens.css`.
 - Change reusable buttons, tables, forms, status indicators and dialogs in `resources/styles/10-components.css`.
 - Change the responsive shell in `resources/styles/20-layout.css`.

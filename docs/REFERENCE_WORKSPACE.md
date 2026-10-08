@@ -4,7 +4,7 @@
 
 The supplied dashboard and login screenshots define the visual target: dark burgundy sidebar, red active navigation, pale dashboard surface, rounded cards, welcome banner, document-library donut, recent records and a full-page login over the supplied building photograph. The bundled PK and Peanut Kisses marks are cropped from the supplied references; replace the small WebP files with original logo assets when higher-resolution originals are available.
 
-`workspace.js` is a presentation adapter. Native forms, request actions, CSRF, role permissions and workflow decisions remain owned by the existing application. The dashboard uses permission-filtered live data. Its labels are **Active documents** and **My requests in workflow**, rather than copying misleading sample counts/statuses from the reference. Latest-document rows use actual authorized records and open the existing document search.
+`application/views/pages/account/login.php` and `application/views/pages/dashboard/index.php` own the reference HTML, with reusable components under `application/views/components/`. `workspace.js` only binds data and events to those views. See `docs/VIEW_ARCHITECTURE.md` for the page/component map. Native forms, request actions, CSRF, role permissions and workflow decisions remain owned by the existing application. The dashboard uses permission-filtered live data. Its labels are **Active documents** and **My requests in workflow**, rather than copying misleading sample counts/statuses from the reference. Latest-document rows use actual authorized records and open the existing document search.
 
 The existing username/password sign-in form is retained. The password eye button is local-only; **Remember username on this device** remembers only the username, not the password or a persistent authentication token. There is no fake public registration link: account requests are directed to the Document Control Officer.
 
@@ -12,7 +12,7 @@ The existing username/password sign-in form is retained. The password eye button
 
 `application/config/styling.php` remains authoritative. `account` and `dashboard` are enabled for the two supplied screens. Other existing module flags are preserved. Set any module to true to use the same shell and shared red components; false retains native HTML and its functionality. Turning the global switch off disables styling. Dark/light mode only affects enabled presentation and is stored on the current device.
 
-Edit `resources/workspace/reference.css` for this layout. Rebuild and commit the output together:
+Edit the PHP views for layout markup and `resources/workspace/reference.css` for presentation styles. Rebuild and commit the output together:
 
 ```sh
 npm install

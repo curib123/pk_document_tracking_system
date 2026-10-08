@@ -45,15 +45,22 @@ verify('normal page queries remain supported',function(){
     return $r['offset']===50 && $r['limit']===50 && $r['direction']==='asc';
 });
 verify('shared PHP templates own reusable UI skeletons',function(){
-    $header=file_get_contents(PK_ROOT.'/application/views/templates/header.php');
-    $footer=file_get_contents(PK_ROOT.'/application/views/templates/footer.php');
-    return str_contains($header,'id="navigation"')
-        && str_contains($header,'id="global-status"')
-        && str_contains($footer,'id="module-page-template"')
-        && str_contains($footer,'id="navigation-group-template"')
-        && str_contains($footer,'id="record-card-template"')
-        && str_contains($footer,'id="data-table-template"')
-        && str_contains($footer,'id="modal-shell"');
+    require_once PK_ROOT.'/application/helpers/ui_helper.php';
+    ob_start();
+    $initial_module='';
+    require PK_ROOT.'/application/views/templates/header.php';
+    require PK_ROOT.'/application/views/templates/footer.php';
+    $html=ob_get_clean();
+    foreach (['navigation','global-status','module-page-template','navigation-group-template',
+        'record-card-template','data-table-template','modal-shell','login-workspace-template',
+        'dashboard-workspace-template','field-lookup-template'] as $id) {
+        if (!str_contains($html,'id="'.$id.'"')) return false;
+    }
+    foreach (Pk\Core\UiSchema::modules() as $key=>$module) {
+        if (!is_file(PK_ROOT.'/application/views/pages/'.$key.'/index.php')) return false;
+        if (!str_contains($html,'id="page-'.$key.'-template"')) return false;
+    }
+    return true;
 });
 verify('audit persistence is file-backed instead of a database table',function(){
     $context=file_get_contents(PK_ROOT.'/application/libraries/support/Context.php');

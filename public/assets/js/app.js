@@ -1,6 +1,6 @@
+import { cloneView, cloneView as cloneTemplate, viewText, bindText, detailRow, section } from './views.js';
 import { ApiClient } from './api.js';
 import {
-  el,
   button,
   Modal,
   notice,
@@ -35,22 +35,6 @@ let direction = 'desc';
 let listGeneration = 0;
 let statusFilter = '';
 let layout = 'table';
-
-function cloneTemplate(id) {
-  const template = document.querySelector(
-    '#' + id
-  );
-
-  if (!template) {
-    throw new Error(
-      'Missing view template: ' + id
-    );
-  }
-
-  return template.content
-    .firstElementChild
-    .cloneNode(true);
-}
 
 const SINGULAR_NAMES = {
   users: 'user',
@@ -230,28 +214,14 @@ function readableDetails(
     return null;
   }
 
-  const section = el(
-    'section',
-    {},
-    el('h3', {}, title)
-  );
-
+  const details = cloneView('detail-section-template');
+  bindText(details, 'heading', title);
+  const rows = details.querySelector('[data-section-content]');
   for (const [key, value] of entries) {
-    section.append(
-      el(
-        'p',
-        {},
-        el(
-          'strong',
-          {},
-          detailLabel(key) + ': '
-        ),
-        String(value)
-      )
-    );
+    rows.append(detailRow(detailLabel(key) + ': ', String(value)));
   }
 
-  return section;
+  return details;
 }
 
 function globalError(error) {
@@ -510,46 +480,20 @@ async function boot() {
 
 async function dashboard() {
   currentModule = null;
-  listGeneration++;
-
-  content.replaceChildren(
-    el('h2', {}, 'Dashboard'),
-    el('p', {}, 'Loading…')
-  );
-
+  const generation = ++listGeneration;
+  const native = cloneView('dashboard-native-template');
+  content.replaceChildren(native);
   try {
     const data = await api.request('dashboard');
-
-    if (currentModule) {
-      return;
-    }
-
-    content.replaceChildren(
-      el('h2', {}, 'Dashboard')
-    );
-
+    if (currentModule || generation !== listGeneration) return;
+    native.querySelector('[data-dashboard-loading]').hidden = true;
+    const sections = native.querySelector('[data-dashboard-sections]');
     for (const [name, value] of Object.entries(data)) {
-      const block = Array.isArray(value)
-        ? el(
-            'section',
-            {},
-            el('h3', {}, labelOf(name)),
-            table(
-              ['status', 'total'],
-              value
-            )
-          )
-        : el(
-            'p',
-            {},
-            labelOf(name) + ': ' + value
-          );
-
-      content.append(block);
+      sections.append(Array.isArray(value)
+        ? section(labelOf(name), table(['status', 'total'], value))
+        : viewText('text-paragraph-template', labelOf(name) + ': ' + value));
     }
-  } catch (error) {
-    globalError(error);
-  }
+  } catch (error) { globalError(error); }
 }
 
 function directTransfer() {
@@ -604,13 +548,10 @@ function directDisposal() {
     }
   );
 
-  const heading = el('div');
-  const body = el('div');
-
-  modal.body.append(
-    heading,
-    body
-  );
+  const sections = cloneView('form-sections-template');
+  const heading = sections.querySelector('[data-form-heading]');
+  const body = sections.querySelector('[data-form-body]');
+  modal.body.append(sections);
 
   let domain = 'softcopy';
   let head;
@@ -737,13 +678,10 @@ function directAccessGrant() {
     }
   );
 
-  const heading = el('div');
-  const body = el('div');
-
-  modal.body.append(
-    heading,
-    body
-  );
+  const sections = cloneView('form-sections-template');
+  const heading = sections.querySelector('[data-form-heading]');
+  const body = sections.querySelector('[data-form-body]');
+  modal.body.append(sections);
 
   let domain = 'softcopy';
   let head;
@@ -1110,241 +1048,44 @@ async function selectModule(module) {
   statusFilter = '';
   layout = 'table';
 
-  const pageShell = cloneTemplate(
-    'module-page-template'
-  );
-
-  pageShell.querySelector(
-    '[data-module-title]'
-  ).textContent = module.label;
-
-  const pageContent =
-    pageShell.querySelector(
-      '[data-module-content]'
-    );
-
+  // Each module owns its PHP page; only the shared controls are bound here.
+  const pageShell = cloneView('page-' + module.key + '-template');
+  pageShell.querySelector('[data-module-title]').textContent = module.label;
   content.replaceChildren(pageShell);
-
-  const controls = el('div');
-  addModuleActions(module, controls);
-
-  const search = el('input', {
-    type: 'search',
-    id: 'table-search',
-    placeholder: 'Search records',
-    value: query
+  addModuleActions(module, pageShell.querySelector('[data-module-actions]'));
+  const search = pageShell.querySelector('#table-search');
+  const reload = () => loadTable().catch(globalError);
+  search.value = query;
+  pageShell.querySelector('[data-record-search]').addEventListener('submit', event => {
+    event.preventDefault(); query = search.value; page = 1; reload();
   });
-
-  const searchForm = el(
-    'form',
-    {
-      onsubmit: event => {
-        event.preventDefault();
-        query = search.value;
-        page = 1;
-        loadTable().catch(globalError);
-      }
-    },
-    el(
-      'label',
-      { htmlFor: 'table-search' },
-      'Search'
-    ),
-    search,
-    el(
-      'button',
-      { type: 'submit' },
-      'Search'
-    )
-  );
-
-  const pageSize = el(
-    'select',
-    { id: 'page-size' },
-    [10, 25, 50, 100].map(size =>
-      el(
-        'option',
-        { value: size },
-        size
-      )
-    )
-  );
-
+  const pageSize = pageShell.querySelector('#page-size');
   pageSize.value = limit;
-
-  pageSize.addEventListener(
-    'change',
-    () => {
-      limit = Number(pageSize.value);
-      page = 1;
-      loadTable().catch(globalError);
-    }
-  );
-
-  const sorting = el(
-    'select',
-    { id: 'table-sort' },
-    module.columns.map(column =>
-      el(
-        'option',
-        { value: column },
-        labelOf(column)
-      )
-    )
-  );
-
+  pageSize.addEventListener('change', () => {
+    limit = Number(pageSize.value); page = 1; reload();
+  });
+  const sorting = pageShell.querySelector('#table-sort');
+  for (const column of module.columns) {
+    sorting.append(viewText('text-option-template', labelOf(column), { value: column }));
+  }
   sorting.value = sort;
-
-  sorting.addEventListener(
-    'change',
-    () => {
-      sort = sorting.value;
-      page = 1;
-      loadTable().catch(globalError);
-    }
-  );
-
-  const order = button(
-    'Reverse order',
-    () => {
-      direction =
-        direction === 'asc'
-          ? 'desc'
-          : 'asc';
-
-      return loadTable();
-    }
-  );
-
-  const filters = el(
-    'div',
-    { id: 'table-filters' },
-    el(
-      'label',
-      { htmlFor: 'table-sort' },
-      'Sort by'
-    ),
-    sorting,
-    order,
-    button(
-      'Refresh records',
-      loadTable
-    )
-  );
-
+  sorting.addEventListener('change', () => { sort = sorting.value; page = 1; reload(); });
+  pageShell.querySelector('[data-reverse-order]').addEventListener('click', () => {
+    direction = direction === 'asc' ? 'desc' : 'asc'; reload();
+  });
+  pageShell.querySelector('[data-refresh-records]').addEventListener('click', reload);
+  const statusSelect = pageShell.querySelector('#status-filter');
   if (module.columns.includes('status')) {
-    const statusSelect = el(
-      'select',
-      { id: 'status-filter' },
-      [
-        '',
-        'active',
-        'draft',
-        'pending',
-        'returned',
-        'approved',
-        'rejected',
-        'cancelled',
-        'disposed',
-        'completed'
-      ].map(value =>
-        el(
-          'option',
-          { value },
-          value ? labelOf(value) : 'All statuses'
-        )
-      )
-    );
-
-    statusSelect.addEventListener(
-      'change',
-      () => {
-        statusFilter = statusSelect.value;
-        page = 1;
-        loadTable().catch(globalError);
-      }
-    );
-
-    filters.append(
-      el(
-        'label',
-        { htmlFor: 'status-filter' },
-        'Status'
-      ),
-      statusSelect
-    );
+    statusSelect.addEventListener('change', () => { statusFilter = statusSelect.value; page = 1; reload(); });
+  } else {
+    pageShell.querySelectorAll('[data-status-control]').forEach(node => node.remove());
   }
-
-  if (
-    ['softcopy', 'hardcopy'].includes(
-      module.key
-    )
-  ) {
-    const layoutSelect = el(
-      'select',
-      { id: 'layout-select' },
-      [
-        ['table', 'Table'],
-        ['grid', 'Grid'],
-        ['folder', 'Folder']
-      ].map(([value, name]) =>
-        el(
-          'option',
-          { value },
-          name
-        )
-      )
-    );
-
-    layoutSelect.addEventListener(
-      'change',
-      () => {
-        layout = layoutSelect.value;
-        loadTable().catch(globalError);
-      }
-    );
-
-    filters.append(
-      el(
-        'label',
-        { htmlFor: 'layout-select' },
-        'Layout'
-      ),
-      layoutSelect
-    );
+  if (['softcopy', 'hardcopy'].includes(module.key)) {
+    const layoutSelect = pageShell.querySelector('#layout-select');
+    layoutSelect.addEventListener('change', () => { layout = layoutSelect.value; reload(); });
+  } else {
+    pageShell.querySelectorAll('[data-layout-control]').forEach(node => node.remove());
   }
-
-  const tableFooter = el(
-    'div',
-    { id: 'table-footer' },
-    el('span', { id: 'page-summary' }),
-    el(
-      'label',
-      { htmlFor: 'page-size' },
-      'Rows per page'
-    ),
-    pageSize,
-    el('span', { id: 'pagination' })
-  );
-
-  pageContent.append(
-    controls,
-    searchForm,
-    filters,
-    el(
-      'p',
-      {
-        id: 'table-status',
-        role: 'status'
-      }
-    ),
-    el(
-      'div',
-      { id: 'table-container' }
-    ),
-    tableFooter
-  );
-
   await loadTable();
 }
 
@@ -1372,14 +1113,7 @@ function recordCard(module, row, actions) {
 
     const value = row[column];
 
-    fields.append(
-      el(
-        'p',
-        {},
-        el('strong', {}, labelOf(column) + ': '),
-        value ?? '—'
-      )
-    );
+    fields.append(detailRow(labelOf(column) + ': ', value ?? '—'));
   }
 
   if (actions) {
@@ -1414,7 +1148,7 @@ function folderTree(module, rows, actions) {
     );
 
     if (terminal) {
-      const leaf = el('div');
+      const leaf = cloneView('record-group-template');
 
       for (const row of items) {
         leaf.append(
@@ -1449,7 +1183,7 @@ function folderTree(module, rows, actions) {
       groups.get(name).push(row);
     }
 
-    const container = el('div');
+    const container = cloneView('record-group-template');
 
     for (const row of direct) {
       container.append(
@@ -1462,14 +1196,10 @@ function folderTree(module, rows, actions) {
     }
 
     for (const [name, groupRows] of groups) {
-      container.append(
-        el(
-          'details',
-          {},
-          el('summary', {}, name),
-          build(groupRows, depth + 1)
-        )
-      );
+      const folder = cloneView('record-folder-template');
+      bindText(folder, 'title', name);
+      folder.querySelector('[data-folder-content]').append(build(groupRows, depth + 1));
+      container.append(folder);
     }
 
     return container;
@@ -1480,7 +1210,7 @@ function folderTree(module, rows, actions) {
 
 function renderRows(module, rows, actions) {
   if (layout === 'grid') {
-    const grid = el('div');
+    const grid = cloneView('record-group-template');
 
     for (const row of rows) {
       grid.append(
@@ -1494,7 +1224,7 @@ function renderRows(module, rows, actions) {
 
     if (!rows.length) {
       grid.append(
-        el('p', {}, 'No records found.')
+        viewText('text-paragraph-template', 'No records found.')
       );
     }
 
@@ -1608,18 +1338,9 @@ async function loadTable() {
         drafts.rows.length
       ) {
         tableContainer.append(
-          el(
-            'section',
-            {},
-            el(
-              'h3',
-              {},
-              'Draft hardcopy requests'
-            ),
-            el(
-              'p',
-              {},
-              'These requests are not active hardcopy documents yet.'
+          section(
+            'Draft hardcopy requests',
+            viewText('text-paragraph-template', 'These requests are not active hardcopy documents yet.'
             ),
             table(
               [
@@ -1911,13 +1632,10 @@ function requestForm(
     }
   );
 
-  const heading = el('div');
-  const body = el('div');
-
-  modal.body.append(
-    heading,
-    body
-  );
+  const sections = cloneView('form-sections-template');
+  const heading = sections.querySelector('[data-form-heading]');
+  const body = sections.querySelector('[data-form-body]');
+  modal.body.append(sections);
 
   const syncDomain = (
     requestType,
@@ -1976,10 +1694,7 @@ function requestForm(
 
     if (automaticHolder) {
       body.prepend(
-        el(
-          'p',
-          {},
-          el('strong', {}, 'Holder: '),
+        detailRow('Holder: ',
           [
             user.first_name,
             user.middle_name,
@@ -2306,12 +2021,7 @@ async function details(moduleKey, id) {
       recordLabel(moduleKey, row)
     );
 
-    const actions = el(
-      'section',
-      {
-        'aria-label': 'Record actions'
-      }
-    );
+    const actions = cloneView('record-actions-template');
 
     modal.body.append(actions);
 
@@ -2548,10 +2258,7 @@ async function details(moduleKey, id) {
 
       if (related.revisions) {
         modal.body.append(
-          el(
-            'h3',
-            {},
-            'Revision history'
+          viewText('section-heading-template', 'Revision history'
           ),
           table(
             [
@@ -2639,10 +2346,7 @@ async function details(moduleKey, id) {
 
       if (related.files) {
         modal.body.append(
-          el(
-            'h3',
-            {},
-            'Document files'
+          viewText('section-heading-template', 'Document files'
           ),
           table(
             [
@@ -2968,10 +2672,7 @@ async function details(moduleKey, id) {
         );
 
       modal.body.append(
-        el(
-          'h3',
-          {},
-          'Workflow versions'
+        viewText('section-heading-template', 'Workflow versions'
         ),
         table(
           [
@@ -3122,15 +2823,9 @@ async function details(moduleKey, id) {
           related.workflow_version;
 
         modal.body.append(
-          el(
-            'h3',
-            {},
-            'Workflow'
+          viewText('section-heading-template', 'Workflow'
           ),
-          el(
-            'p',
-            {},
-            workflow.workflow_name +
+          viewText('text-paragraph-template', workflow.workflow_name +
               ' — Version ' +
               workflow.version_number
           )
@@ -3139,10 +2834,7 @@ async function details(moduleKey, id) {
 
       if (related.steps?.length) {
         modal.body.append(
-          el(
-            'h3',
-            {},
-            'Approval steps'
+          viewText('section-heading-template', 'Approval steps'
           ),
           table(
             [
@@ -3161,10 +2853,7 @@ async function details(moduleKey, id) {
 
       if (related.history?.length) {
         modal.body.append(
-          el(
-            'h3',
-            {},
-            'Workflow history'
+          viewText('section-heading-template', 'Workflow history'
           ),
           table(
             [
@@ -3428,88 +3117,26 @@ function permissionsModal(
 
   const boxes = [];
 
-  const search = el('input', {
-    type: 'search',
-    'aria-label': 'Filter permissions',
-    placeholder: 'Filter permissions'
-  });
-
-  modal.body.append(search);
-
+  const editor = cloneView('permission-editor-template');
+  modal.body.append(editor);
+  const search = editor.querySelector('[data-permission-search]');
+  const rows = editor.querySelector('[data-permission-rows]');
+  const reasonInput = editor.querySelector('[name="reason"]');
   for (const permission of related.available_permissions || []) {
-    const input = el('input', {
-      type: 'checkbox',
-      checked: selected.has(
-        Number(permission.id)
-      )
-    });
-
-    const label = el(
-      'label',
-      {},
-      input,
-      permission.module_label +
-        ' → ' +
-        permission.action_label
-    );
-
-    const row = el('p', {}, label);
-
-    boxes.push({
-      input,
-      row,
-      permission
-    });
-
-    modal.body.append(row);
+    const row = cloneView('permission-row-template');
+    const input = row.querySelector('input');
+    input.checked = selected.has(Number(permission.id));
+    bindText(row, 'label', permission.module_label + ' → ' + permission.action_label);
+    boxes.push({ input, row, permission });
+    rows.append(row);
   }
-
-  search.addEventListener(
-    'input',
-    () => {
-      const filter =
-        search.value.toLowerCase();
-
-      for (const item of boxes) {
-        const text =
-          (
-            item.permission.module_label +
-            ' ' +
-            item.permission.action_label
-          ).toLowerCase();
-
-        item.row.hidden =
-          !text.includes(filter);
-      }
+  search.addEventListener('input', () => {
+    const filter = search.value.toLowerCase();
+    for (const item of boxes) {
+      item.row.hidden = !(item.permission.module_label + ' ' + item.permission.action_label)
+        .toLowerCase().includes(filter);
     }
-  );
-
-  const reasonInput = el('textarea', {
-    id: 'permission-change-reason',
-    name: 'reason',
-    required: false,
-    rows: 3,
-    cols: 36
   });
-
-  modal.body.append(
-    el(
-      'p',
-      {},
-      el(
-        'label',
-        {
-          htmlFor:
-            'permission-change-reason'
-        },
-        'Remarks'
-      ),
-      el('br'),
-      reasonInput,
-      el('br'),
-      el('small', {}, 'Optional.')
-    )
-  );
 
   modal.setSubmit(
     'Save permissions',
