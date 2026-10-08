@@ -29,7 +29,7 @@ $checks = [
     'session restoration centrally checks version' =>
         str_contains($base, "session->userdata('session_version')"),
     'session restoration checks idle timeout' =>
-        str_contains($base, "time() - $lastSeen > 1800"),
+        str_contains($base, 'time() - $lastSeen > 1800'),
     'role checks use centralized require_permission' =>
         str_contains($base, 'function require_permission(') &&
         str_contains($base, '$current->require($permission)'),
