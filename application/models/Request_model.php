@@ -42,6 +42,7 @@ class Request_model extends Repository_model
             ->where('domain', $params[0])
             ->where('document_id', $params[1])
             ->where('user_id', $params[2])
+            ->where('request_id', null)
             ->where('status', 'access_granted')
             ->limit(1);
 
