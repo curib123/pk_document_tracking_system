@@ -27,6 +27,7 @@
                 <summary class="pk-mobile-trigger" aria-label="Open navigation">
                     <?= pk_web_icon('menu') ?> <span>Menu</span>
                 </summary>
+                <button type="button" class="pk-mobile-backdrop" aria-label="Close navigation" data-pk-close-mobile></button>
                 <div class="pk-mobile-panel">
                     <?php require __DIR__ . '/components/sidebar.php'; ?>
                 </div>

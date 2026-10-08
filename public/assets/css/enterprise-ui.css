@@ -84,7 +84,8 @@ body.pk-app {
 .pk-mobile-trigger::-webkit-details-marker { display:none; }
 .pk-mobile-drawer[open] .pk-mobile-panel { position:fixed;left:0;top:70px;bottom:0;z-index:1050;width:min(310px,86vw);background:var(--pk-navy);box-shadow:0 14px 50px #0005; }
 .pk-mobile-panel .pk-sidebar-inner { position:static;max-height:calc(100vh - 70px); }
-.pk-mobile-drawer[open]::before { content:"";position:fixed;inset:70px 0 0;background:rgba(12,24,43,.43);z-index:1049; }
+.pk-mobile-backdrop { display:none; }
+.pk-mobile-drawer[open] .pk-mobile-backdrop { display:block;position:fixed;inset:70px 0 0;z-index:1049;background:rgba(12,24,43,.43);border:0;width:100%;height:calc(100vh - 70px);cursor:pointer; }
 .pk-data-panel { background:#fff;border:1px solid var(--pk-line);box-shadow:var(--pk-shadow);border-radius:var(--pk-radius);overflow:hidden; }
 .pk-data-top { padding:1.2rem 1.25rem .9rem; border-bottom:1px solid var(--pk-line); }
 .pk-data-top .form-label { margin-bottom:.35rem; }

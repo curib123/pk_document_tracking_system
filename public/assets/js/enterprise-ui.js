@@ -32,6 +32,10 @@
             $(this).closest('.pk-mobile-drawer').prop('open', false);
         });
 
+        $('[data-pk-close-mobile]').on('click', function () {
+            $(this).closest('.pk-mobile-drawer').prop('open', false);
+        });
+
         $(document).on('keydown', function (event) {
             if (event.key === 'Escape') {
                 $('.pk-mobile-drawer').prop('open', false);
