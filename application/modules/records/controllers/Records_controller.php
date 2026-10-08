@@ -20,7 +20,9 @@ class Records_controller extends MY_Web_Controller
         try {
             $definition = $this->definition($module);
             $query = $this->input->get(NULL, false) ?: [];
-            $result = (new Read_service($context))->listing($module, $query);
+            $read = new Read_service($context);
+            $result = $read->listing($module, $query);
+            $statuses = $read->statusOptions($module);
 
             $this->webView('records', $context, [
                 'page_title' => $definition['label'],
@@ -28,6 +30,7 @@ class Records_controller extends MY_Web_Controller
                 'definition' => $definition,
                 'records' => $result,
                 'query' => $query,
+                'status_options' => $statuses,
             ]);
         } catch (Throwable $error) {
             $this->webError($context, $error);
