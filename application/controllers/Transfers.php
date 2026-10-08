@@ -15,6 +15,10 @@ class Transfers extends MY_Controller
     {
         $this->endpoint('transfers/view', $id===null?[]:['id'=>$id]);
     }
+    public function direct()
+    {
+        $this->endpoint('transfers/direct');
+    }
     public function dispatch()
     {
         $this->endpoint('transfers/dispatch');
