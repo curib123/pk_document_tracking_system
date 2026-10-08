@@ -26,10 +26,12 @@ return [
     'Read_model' => 'models/Read_model.php',
     'Read_service' => 'libraries/Read_service.php',
     'Repository_model' => 'models/Repository_model.php',
+    'Request_catalog_model' => 'models/Request_catalog_model.php',
     'Request_model' => 'models/Request_model.php',
     'Request_service' => 'libraries/Request_service.php',
     'Transfer_model' => 'models/Transfer_model.php',
     'Transfer_service' => 'libraries/Transfer_service.php',
+    'Workspace_model' => 'models/Workspace_model.php',
     'Workflow_model' => 'models/Workflow_model.php',
     'Workflow_service' => 'libraries/Workflow_service.php'
 ];
