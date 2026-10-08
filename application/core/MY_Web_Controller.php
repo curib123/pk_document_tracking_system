@@ -78,7 +78,10 @@ class MY_Web_Controller extends MY_Controller
         unset($_SESSION['web_flash']);
 
         $this->load->view('web/header', $data);
-        $this->load->view('web/' . $view, $data);
+        // Internal module views are supported without changing public routes.
+        // Only trusted controller-supplied view names may reach this method.
+        $path = str_starts_with($view, 'modules/') ? $view : 'web/' . $view;
+        $this->load->view($path, $data);
         $this->load->view('web/footer', $data);
     }
 
