@@ -15,4 +15,8 @@ class Disposals extends MY_Controller
     {
         $this->endpoint('disposals/view', $id===null?[]:['id'=>$id]);
     }
+    public function direct()
+    {
+        $this->endpoint('disposals/direct');
+    }
 }
