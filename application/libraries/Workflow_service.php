@@ -341,7 +341,8 @@ class Workflow_service
             Rules::text(
                 $input,
                 'reason',
-                2000
+                2000,
+                false
             )
         );
 
@@ -411,7 +412,8 @@ class Workflow_service
             Rules::text(
                 $input,
                 'reason',
-                2000
+                2000,
+                false
             )
         );
 
@@ -474,7 +476,8 @@ class Workflow_service
         $reason = Rules::text(
             $input,
             'reason',
-            2000
+            2000,
+            false
         );
 
         $db->delete_draft_version(
@@ -710,11 +713,12 @@ class Workflow_service
             ]
         );
 
-        // Remarks are required for every approval action.
+        // Remarks are optional; the action and actor are still recorded.
         $comments = Rules::text(
             $input,
             'comments',
-            4000
+            4000,
+            false
         );
 
         $db->update(
@@ -857,7 +861,7 @@ class Workflow_service
     private function returnToPreviousHolder(
         array $request,
         array $currentStep,
-        string $comments
+        ?string $comments
     ): void {
         $db = $this->ctx->model(
             \Workflow_model::class
@@ -1301,7 +1305,8 @@ class Workflow_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         $users =
