@@ -1,44 +1,70 @@
-<div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mb-3">
-    <h1 class="h3 mb-0"><?= ui_escape($page_title) ?></h1>
-    <a href="<?= site_url('web/records/' . $module) ?>" class="btn btn-outline-secondary">Back to list</a>
+<?php
+require_once APPPATH . 'helpers/web_display_helper.php';
+$display = pk_web_display_fields($detail['row']);
+$descriptions = is_array($detail['row']['request_details'] ?? null)
+    ? pk_web_request_fields($detail['row']['request_details'])
+    : [];
+?>
+<div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+    <div>
+        <h1 class="h3 fw-bold mb-1"><?= ui_escape($page_title) ?></h1>
+        <p class="text-body-secondary mb-0">A readable view of this record and its activity.</p>
+    </div>
+    <a href="<?= site_url('web/records/' . $module) ?>" class="btn btn-outline-secondary">Back to records</a>
 </div>
-<div class="card">
+<section class="card mb-3" aria-labelledby="pk-record-info">
+    <div class="card-header py-3"><h2 class="h5 mb-0" id="pk-record-info">Record information</h2></div>
     <div class="card-body">
-        <dl class="row mb-0">
-            <?php foreach ($detail['row'] as $key => $value): ?>
-                <?php
-                // Relation IDs stay internal; show their display labels instead.
-                if ($key === 'id' || $key === 'version' || str_ends_with($key, '_id')) {
-                    continue;
-                }
-                if (is_array($value)) {
-                    $value = json_encode($value, JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT);
-                }
-                ?>
-                <dt class="col-12 col-md-4 text-body-secondary"><?= ui_escape(ucwords(str_replace('_', ' ', $key))) ?></dt>
-                <dd class="col-12 col-md-8 text-break"><?= ui_escape($value ?? '—') ?></dd>
+        <dl class="row g-2 mb-0">
+            <?php foreach ($display as $item): ?>
+                <dt class="col-12 col-sm-4 text-body-secondary"><?= ui_escape($item['label']) ?></dt>
+                <dd class="col-12 col-sm-8 text-break"><?= ui_escape($item['value']) ?></dd>
             <?php endforeach; ?>
         </dl>
     </div>
-</div>
-<?php foreach ($detail['related'] as $section => $items): ?>
-    <?php if (!is_array($items) || ($items !== [] && array_keys($items) !== range(0, count($items) - 1))): ?>
-        <?php continue; ?>
-    <?php endif; ?>
-    <section class="card mt-3">
+</section>
+<?php if ($descriptions): ?>
+<section class="card mb-3" aria-labelledby="pk-request-data">
+    <div class="card-header py-3"><h2 class="h5 mb-0" id="pk-request-data">Request details</h2></div>
+    <div class="card-body">
+        <dl class="row g-2 mb-0">
+        <?php foreach ($descriptions as $item): ?>
+            <dt class="col-12 col-sm-4 text-body-secondary"><?= ui_escape($item['label']) ?></dt>
+            <dd class="col-12 col-sm-8 text-break"><?= ui_escape($item['value']) ?></dd>
+        <?php endforeach; ?>
+        </dl>
+    </div>
+</section>
+<?php endif; ?>
+<?php foreach ($detail['related'] as $section => $entries): ?>
+    <?php
+    if (!is_array($entries) || ($entries && array_keys($entries) !== range(0, count($entries)-1))) {
+        continue;
+    }
+    $sectionTitle = ucwords(str_replace('_', ' ', (string) $section));
+    $sectionId = 'pk-section-' . preg_replace('/[^a-z0-9]/', '-', strtolower((string) $section));
+    ?>
+    <section class="card mb-3" aria-labelledby="<?= ui_escape($sectionId) ?>">
+        <div class="card-header py-3">
+            <h2 class="h5 mb-0" id="<?= ui_escape($sectionId) ?>"><?= ui_escape($sectionTitle) ?> <span class="text-body-secondary small">(<?= count($entries) ?>)</span></h2>
+        </div>
         <div class="card-body">
-            <h2 class="h5"><?= ui_escape(ucwords(str_replace('_', ' ', $section))) ?></h2>
-            <?php if (!$items): ?><p class="text-body-secondary mb-0">No history available.</p><?php endif; ?>
-            <?php foreach ($items as $item): ?>
-                <?php if (!is_array($item)): continue; endif; ?>
-                <dl class="row border-bottom py-2 mb-0">
-                <?php foreach ($item as $key => $value): ?>
-                    <?php if ($key === 'id' || $key === 'version' || str_ends_with($key, '_id')): continue; endif; ?>
-                    <dt class="col-12 col-md-4"><?= ui_escape(ucwords(str_replace('_', ' ', $key))) ?></dt>
-                    <dd class="col-12 col-md-8 text-break"><?= ui_escape(is_scalar($value) ? $value : json_encode($value, JSON_UNESCAPED_UNICODE)) ?></dd>
-                <?php endforeach; ?>
-                </dl>
+            <?php if (!$entries): ?><p class="text-body-secondary mb-0">No history recorded.</p><?php endif; ?>
+            <?php foreach (array_slice($entries, 0, 50) as $entryIndex => $entry): ?>
+                <?php if (!is_array($entry)): continue; endif; ?>
+                <div class="border-bottom mb-3 pb-2">
+                    <h3 class="h6 mb-2 text-body-secondary">Entry <?= $entryIndex + 1 ?></h3>
+                    <dl class="row g-1 mb-0">
+                    <?php foreach (pk_web_display_fields($entry) as $item): ?>
+                        <dt class="col-12 col-sm-4 text-body-secondary"><?= ui_escape($item['label']) ?></dt>
+                        <dd class="col-12 col-sm-8 text-break"><?= ui_escape($item['value']) ?></dd>
+                    <?php endforeach; ?>
+                    </dl>
+                </div>
             <?php endforeach; ?>
+            <?php if (count($entries) > 50): ?>
+                <p class="text-body-secondary small mb-0">Showing 50 of <?= count($entries) ?> entries.</p>
+            <?php endif; ?>
         </div>
     </section>
 <?php endforeach; ?>
