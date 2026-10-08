@@ -2,63 +2,87 @@
 
 ## Turn styling on or off
 
-Edit `application/config/styling.php`. This is the single authoritative styling configuration.
+Edit `application/config/styling.php`. This remains the authoritative styling configuration. This upgrade does not change the module flags.
 
 ```php
-'enabled' => true,          // false: the entire app stays plain HTML
-'shell' => true,            // sidebar/header design for enabled screens
-'default_enabled' => false,// new/unregistered modules stay plain
+'enabled' => true,           // false: the app uses plain HTML
+'shell' => true,             // sidebar/header design on enabled screens
+'default_enabled' => false,  // example policy for unregistered modules
 'modules' => [
     'softcopy' => true,
-    'hardcopy' => false,    // no design on this module
+    'hardcopy' => false,
     'workflows' => true,
-    // Keep the other existing module entries.
+    // Keep the remaining existing module entries.
 ],
 ```
 
-Use PHP booleans `true` and `false`, not quoted strings. Reload the page after editing. When a module is false, its content and the screen shell lose their scoped styles; native form controls, tables and headings remain usable. Other modules keep their settings. Dialogs inherit the originating module; record-detail dialogs use their requested module. Account dialogs use `account`.
+Use actual PHP booleans, not quoted strings. Reload after changing the configuration. A false module keeps native form/table styling and does not receive the Poppins font-family override. Other modules retain their settings. Dialogs inherit their originating module; account dialogs use `account`.
 
-The optional server environment variable `PK_STYLING_ENABLED=0` disables everything for troubleshooting. `1` enables the configured module map. This is a server environment override, not a new public setting or query parameter. The older database appearance JSON is retained for compatibility but does not control this layer. No database migration is needed.
+`PK_STYLING_ENABLED=0` disables styling globally for troubleshooting. On a page reload, the global false flag also prevents loading the external font/icon links. This is a server setting, not an authorization permission or public query parameter. No database migration is required.
 
-## Design a module later
+## HTML belongs in views
 
-Edit page HTML in `application/views/pages/<module>/index.php` and shared HTML in
-`application/views/components/`. JavaScript binds data/events to these PHP-owned
-templates. See `docs/VIEW_ARCHITECTURE.md` for the component map.
+Page HTML lives in `application/views/pages/<module>/` and reusable markup in `application/views/components/`. JavaScript clones the PHP-owned templates and binds values/events. Do not introduce HTML strings, SVG path maps, or template construction in JavaScript. The existing view architecture and request workflows are unchanged.
 
+## Tailwind CSS 4.3
 
-- Change brand colors, text, borders and surfaces in `resources/styles/00-tokens.css`.
-- Change reusable buttons, tables, forms, status indicators and dialogs in `resources/styles/10-components.css`.
-- Change the responsive shell in `resources/styles/20-layout.css`.
-- Add focused extensions under `resources/styles/modules/`, always scoped to `.pk-ui[data-pk-module="your_module"]`.
+The compiler is pinned to **Tailwind CSS 4.3.1**, including `package-lock.json`. Both `public/assets/css/app.css` and `public/assets/css/workspace.css` are compiled and committed. XAMPP needs no Node server or browser Tailwind compiler.
 
-For example:
-
-```css
-#content.pk-ui[data-pk-module="locations"] h2 {
-  border-left: 3px solid var(--pk-brand);
-  padding-left: 14px;
-}
-```
-
-Register the module's boolean in the PHP config. The shared components already style its forms and tables. Do not duplicate component CSS in controllers or business services.
-
-## Build and deploy
-
-The compiled stylesheet `public/assets/css/app.css` is committed. XAMPP needs no Node installation, Tailwind CDN, external fonts or network access to display it.
-
-Developers rebuilding styles use Node 18+:
+Rebuild with Node 22 and npm:
 
 ```sh
-npm install
+npm ci
 npm run build:css
 npm run check:css
+npm run test:assets
 ```
 
-The compiler is pinned to Tailwind CSS 4.1.10. This semantic-component build uses Tailwind `@apply`; it deliberately omits Preflight and global theme resets. Do not edit compiled CSS manually. Commit CSS source and the rebuilt file together. Modern browsers supporting CSS nesting, `:has()` and dynamic viewport units are expected.
+`build:css` and `check:css` cover both shared components and the reference workspace. The semantic component build uses Tailwind's CSS compiler and `@apply`, without global Preflight resets. Keep selectors scoped so disabled modules remain plain. Commit CSS source, lockfile changes and regenerated CSS together.
 
-## Boundaries and verification
+## Poppins and Font Awesome
 
-`styling.js` owns presentation scopes, responsive navigation and dynamic dialog decoration. `api.js` emits screen/detail/metadata events only; endpoint paths, payloads, CSRF handling, permissions and workflow decisions are unchanged. Styling switches are not security permissions.
+The shared head partial `application/views/components/assets/styles.php` includes:
 
-PHP tests cover strict flags and the master override. Browser tests compare disabled modules with native computed styles, navigate in both directions, verify dialog isolation, keyboard menu behavior and mobile overflow. Existing unstyled modal tests and live styled application tests run in CI. Screenshots in tests use synthetic demonstration rows, not production documents.
+- Font Awesome **6.7.2**, using the requested cdnjs `all.min.css` URL.
+- Google Fonts **Poppins**, weights **400, 500, 600, 700**, with `display=swap`.
+- The Google Fonts and gstatic preconnect links, with crossorigin on gstatic.
+
+The main layout requires the partial once. `--pk-font-sans` in `resources/styles/00-tokens.css` is the single typography token for styled roots. The workspace inherits it rather than specifying another font. Poppins falls back to Segoe UI/system sans-serif when unavailable.
+
+These external font and icon resources require internet access unless already cached. The compiled application layout stays local. Buttons retain visible text or accessible labels when the external resources cannot load; no passwords, authentication tokens, or document data are sent to these providers by the asset links.
+
+The Content Security Policy permits the exact CSS/font origins needed by these links. Application scripts remain same-origin; inline scripts/styles, arbitrary external scripts, object embeds and framing remain blocked.
+
+### Shared icon component
+
+`application/config/icons.php` maps stable application names to Font Awesome Free classes. The actual `<i>` markup lives in `application/views/components/workspace/icon.php`; `icons.php` builds reusable HTML templates from the same component.
+
+Use this inside a PHP view:
+
+```php
+<?php
+$iconName = 'file';
+require APPPATH . 'views/components/workspace/icon.php';
+?>
+```
+
+In JavaScript, `icon('file')` clones that template. Extra CSS classes are added without removing the Font Awesome renderer/glyph classes. Icons are decorative (`aria-hidden="true"`); icon-only buttons must retain an accessible label.
+
+The dashboard donut remains an SVG data chart, not an icon. Its geometry and live permission-filtered counts are unchanged.
+
+## Where to design later
+
+| Location | Responsibility |
+| --- | --- |
+| `resources/styles/00-tokens.css` | Brand, typography and shared surface tokens |
+| `resources/styles/10-components.css` | Reusable inputs, buttons, tables and dialogs |
+| `resources/styles/20-layout.css` | Base responsive shell |
+| `resources/styles/90-fontawesome.css` | Scoped icon alignment/sizing |
+| `resources/styles/modules/` | Isolated module extensions |
+| `resources/workspace/reference.css` | Screenshot-based login/dashboard layout |
+| `application/views/components/assets/styles.php` | Shared external stylesheet/font links |
+| `application/config/icons.php` | Shared icon-name mappings |
+
+## Verification
+
+`tests/frontend_assets.php` checks the exact dependency/lockfile version, view-owned assets/icons, escaping, global-off behaviour and CSP boundaries. `tests/frontend_assets_browser.py` checks actual font loading, repeated icon updates, mobile overflow and blocked-CDN fallback against an isolated CI3/MySQL installation. Existing native/styled UI, document visibility and workflow tests remain in CI.
