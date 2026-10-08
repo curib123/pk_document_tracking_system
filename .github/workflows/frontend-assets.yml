@@ -58,21 +58,11 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run check:css
           php tests/frontend_assets.php
-      - name: Prepare historical schema in disposable runner only
+      - name: Install schema from clean DDL and seed files
         run: |
           test "$PK_TEST_DB" = 1
           test "$DB_DATABASE" = pk_frontend_test
-          # The user removed database/schema.sql in 75d24b9. Do not undo that
-          # production change or import the unrelated workflow-history backup.
-          # This known v7 DDL contains no company/user/document fixture records.
-          if [ ! -f database/schema.sql ]; then
-            git fetch --no-tags --depth=1 origin 1636d6ad9ae373b1030a8ad8ca66bfef36a72921
-            git show 1636d6ad9ae373b1030a8ad8ca66bfef36a72921:database/schema.sql > /tmp/pk-assets-schema.sql
-            test "$(git hash-object /tmp/pk-assets-schema.sql)" = 31cf8501b2b76cd4bd0f5a51959a3a956c302ec4
-            mkdir -p database
-            cp /tmp/pk-assets-schema.sql database/schema.sql
-          fi
-          php bin/install.php > /tmp/frontend-install.log
+          php database/install.php > /tmp/frontend-install.log
       - name: Start real test application
         run: |
           php -S 127.0.0.1:8080 -t public > /tmp/frontend-server.log 2>&1 &

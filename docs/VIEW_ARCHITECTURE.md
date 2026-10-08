@@ -85,8 +85,8 @@ screens are migrated. Database-backed verification remains the responsibility of
 the existing MySQL/controller workflows. The completed one-time view-refactor
 bootstrap workflow and compressed payload are no longer retained on this branch.
 
-The baseline used for this refactor (`f06d416f896de8a294351338da4d992e86b32b37`)
-is missing `database/schema.sql`, although the installer and architecture tests
-still require it. Consequently its full functional CI already fails before the
-refactor's database stages. No replacement schema is invented here, and a passing
-view-only job must not be described as a passing full application test suite.
+The new **database/schema.sql** contains clean v7 table definitions (no exported
+users or business records). Fresh installations now use **database/install.php**,
+which applies **database/seed.sql** and generates the initial administrator password
+through the PHP seeder. All database tests should use this clean schema rather
+than attempting to restore a historical database dump.

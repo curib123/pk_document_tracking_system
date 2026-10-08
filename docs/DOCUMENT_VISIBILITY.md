@@ -30,7 +30,7 @@ Hidden document details return the same 404 as an unavailable record. A previous
 Back up the database and pull the updated code. Run from the repository root:
 
 ```bat
-C:\xampp\php\php.exe bin\sync_document_visibility.php
+C:\xampp\php\php.exe database\sync_document_visibility.php
 ```
 
 This is a permission-data upgrade; it does not change table columns or the schema version (v7). It creates the three new capability rows, sets the initial Staff restricted defaults, and registers the capabilities on Administrator. Existing Administrator/DCO broad access and unrelated/custom role permissions are preserved. Review custom roles with only module View permissions and explicitly select their desired document scopes.

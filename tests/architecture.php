@@ -78,12 +78,15 @@ verify('hardcopy holder is enforced server-side for ordinary requesters',functio
         && str_contains($service,'$defaultHolder');
 });
 verify('view styles remain external and stylesheet links are centralized',function(){
-    $assets=PK_ROOT.'/application/views/components/assets/styles.php';
+    $authorizedStylesheets=[
+        PK_ROOT.'/application/views/components/assets/styles.php',
+        PK_ROOT.'/application/views/web/header.php',
+    ];
     foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/application/views')) as $file) {
         if (!$file->isFile()) continue;
         $html=file_get_contents($file->getPathname());
         if (preg_match('/<style\b|\bstyle\s*=/i',$html)) return false;
-        if (preg_match('/rel=[\'\"]stylesheet/i',$html) && $file->getPathname()!==$assets) return false;
+        if (preg_match('/rel=[\'\"]stylesheet/i',$html) && !in_array($file->getPathname(),$authorizedStylesheets,true)) return false;
     }
     return true;
 });

@@ -41,7 +41,7 @@ jobs:
           tools: composer:v2
       - run: composer install --prefer-dist --no-interaction
       - name: Install isolated test database
-        run: php bin/install.php > /tmp/visibility-install.log
+        run: php database/install.php > /tmp/visibility-install.log
       - name: Document visibility regression tests
         run: |
           php tests/document_visibility.php

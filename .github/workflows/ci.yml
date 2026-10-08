@@ -60,8 +60,8 @@ jobs:
           php tests/native_database.php
       - name: Install empty test database
         run: |
-          php bin/install.php > /tmp/install.log
-          php bin/migrate.php
+          php database/install.php > /tmp/install.log
+          php database/migrate.php
       - name: Domain and concurrency integration
         run: |
           php tests/request_catalog.php
