@@ -70,7 +70,7 @@ final class UiSchema
                 'notifications' => 'Account',
                 'audit' => 'Administration',
                 'history' => 'Administration',
-                'sequences' => 'Administration',
+                'sequences' => 'Document Setup',
                 'settings' => 'Administration',
             ];
 
