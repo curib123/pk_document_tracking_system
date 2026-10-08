@@ -18,7 +18,9 @@ $cases = [
 ];
 foreach ($controllers as $name) {
     $content = file_get_contents($root . '/application/controllers/' . $name . '.php');
-    $cases[$name . ' extends browser MVC controller'] = str_contains($content, 'extends MY_Web_Controller');
+    $cases[$name . ' uses browser MVC'] = $name === 'Web_dashboard'
+        ? str_contains($content, 'extends Dashboard_controller')
+        : str_contains($content, 'extends MY_Web_Controller');
     $cases[$name . ' does not dispatch JSON endpoints'] = !str_contains($content, '$this->endpoint(');
 }
 $failures = 0;
