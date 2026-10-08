@@ -196,3 +196,8 @@ C:\xampp\php\php.exe tests\styling.php
 Real database integration tests are intentionally protected by test-only environment variables and must use a database whose name ends in `_test`; those variables are for automated/disposable tests only and are not application configuration.
 
 GitHub Actions provisions its own disposable MySQL database for those checks, verifies the committed Tailwind build, and tests both styled and plain interfaces. The normal XAMPP application always uses the direct configuration in `application/config/database.php`.
+
+
+
+Establish a bidirectional development workflow for Aevareth Monster Realm:
+
