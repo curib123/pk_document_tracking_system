@@ -53,7 +53,8 @@ class Transfer_service
         $comments = Rules::text(
             $input,
             'comments',
-            4000
+            4000,
+            false
         );
 
         $this->model()->update(
@@ -125,7 +126,8 @@ class Transfer_service
         $comments = Rules::text(
             $input,
             'comments',
-            4000
+            4000,
+            false
         );
 
         $document = $this->model()->lock_hardcopy(
@@ -188,7 +190,7 @@ class Transfer_service
         $this->ctx->notify(
             (int) $transfer['current_holder_id'],
             'Transfer ' . $status,
-            $comments,
+            $comments ?? '',
             (int) $transfer['request_id']
         );
 
@@ -202,7 +204,7 @@ class Transfer_service
     private function applyAcceptedDestination(
         array $transfer,
         array $document,
-        string $comments
+        ?string $comments
     ): void {
         $destination = Rules::json(
             $transfer['destination']
@@ -243,7 +245,7 @@ class Transfer_service
             (int) $document['id'],
             $document,
             $physical,
-            $comments,
+            $comments ?? '',
             (int) $transfer['request_id']
         );
     }
@@ -269,7 +271,8 @@ class Transfer_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         $this->model()->update(
@@ -302,7 +305,7 @@ class Transfer_service
         $this->ctx->notify(
             (int) $transfer['recipient_id'],
             'Transfer cancelled',
-            $reason,
+            $reason ?? '',
             (int) $transfer['request_id']
         );
 
