@@ -1,11 +1,11 @@
 <?php
 declare(strict_types=1);
 
-use Pk\Core\{Context, Problem, Rules};
+use Pk\Core\Context;
 
 class Read_service
 {
-    // Thin read service ra ni; actual scoped queries naa sa the read models.
+    // Thin read service; database queries and policy remain in native models.
     private Context $ctx;
 
     public function __construct(Context|array|null $options = null)
@@ -35,28 +35,24 @@ class Read_service
 
     public function lookups(array $query): array
     {
-        if (isset($query['request_type'])) {
-            $type = Rules::choice($query, 'request_type', ['access', 'assignment']);
-            $domain = Rules::choice($query, 'kind', ['softcopy', 'hardcopy']);
-            if ($type === 'assignment' && $domain !== 'softcopy') {
-                throw new Problem('Assignment requests require a softcopy document.', 422);
-            }
-            $this->ctx->require('requests.add');
-            $this->ctx->require($type . '.request');
-            $this->ctx->require($domain . '.view');
-            if ($this->ctx->can('documents.request_catalog')) {
-                return $this->ctx->model(Workspace_read_model::class)->requestCatalog($query);
-            }
+        // Both explicit-purpose callers and contextual forms use one catalog.
+        // The model still validates request type, module access and capability.
+        if (($query['purpose'] ?? '') === 'request' || isset($query['request_type'])) {
+            return $this->ctx->model(Request_catalog_model::class)->options($query);
         }
-        // Ordinary forms and roles without catalog discovery retain row scoping.
         return $this->model()->lookups($query);
     }
 
     public function dashboard(): array
     {
-        $data = $this->model()->dashboard();
-        $data['recent_documents'] = $this->ctx->model(Workspace_read_model::class)->recentDocuments();
-        return $data;
+        $result = $this->model()->dashboard();
+        $result['recent_documents'] = $this->ctx->model(Workspace_model::class)->recentDocuments();
+        foreach ($result['recent_documents'] as &$row) {
+            // Retain the shared projection's reference key and expose a UI alias.
+            $row['document_number'] = $row['reference'] ?? '';
+        }
+        unset($row);
+        return $result;
     }
 
     public function readNotification(array $input): array

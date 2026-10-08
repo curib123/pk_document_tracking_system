@@ -1,7 +1,5 @@
 <?php
 return [
-    'Workspace_read_model' => 'models/Workspace_read_model.php',
-    'Document_visibility_model' => 'models/Document_visibility_model.php',
     'Maintenance_model' => 'models/Maintenance_model.php',
     'Pk\\Core\\Database_error' => 'models/support/Database_error.php',
     'Auth_model' => 'models/Auth_model.php',
@@ -10,6 +8,7 @@ return [
     'Catalog_service' => 'libraries/Catalog_service.php',
     'Datatable_service' => 'libraries/Datatable_service.php',
     'Document_model' => 'models/Document_model.php',
+    'Document_visibility_model' => 'models/Document_visibility_model.php',
     'Document_service' => 'libraries/Document_service.php',
     'Endpoint_registry' => 'libraries/Endpoint_registry.php',
     'File_model' => 'models/File_model.php',
@@ -27,10 +26,12 @@ return [
     'Read_model' => 'models/Read_model.php',
     'Read_service' => 'libraries/Read_service.php',
     'Repository_model' => 'models/Repository_model.php',
+    'Request_catalog_model' => 'models/Request_catalog_model.php',
     'Request_model' => 'models/Request_model.php',
     'Request_service' => 'libraries/Request_service.php',
     'Transfer_model' => 'models/Transfer_model.php',
     'Transfer_service' => 'libraries/Transfer_service.php',
+    'Workspace_model' => 'models/Workspace_model.php',
     'Workflow_model' => 'models/Workflow_model.php',
     'Workflow_service' => 'libraries/Workflow_service.php'
 ];
