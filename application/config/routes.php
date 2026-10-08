@@ -2,10 +2,10 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 // Preserve the existing workspace routes until feature parity is verified.
-$route['default_controller'] = 'app';
+$route['default_controller'] = 'web_dashboard';
 $route['404_override'] = '';
 $route['translate_uri_dashes'] = false;
-$route['login'] = 'auth/index';
+$route['login'] = 'web_auth/index';
 
 // Native Bootstrap browser routes: server-rendered HTML and POST/redirect/GET.
 $route['web'] = 'web_dashboard/index';

@@ -18,7 +18,8 @@ $cases = [
 ];
 foreach ($controllers as $name) {
     $content = file_get_contents($root . '/application/controllers/' . $name . '.php');
-    $cases[$name . ' extends browser MVC controller'] = str_contains($content, 'extends MY_Web_Controller');
+    $moduleClass = ['Web_dashboard' => 'Dashboard_controller', 'Web_auth' => 'Auth_controller', 'Web_catalog' => 'Catalog_controller', 'Web_records' => 'Records_controller'][$name];
+    $cases[$name . ' delegates to feature controller'] = str_contains($content, 'extends ' . $moduleClass);
     $cases[$name . ' does not dispatch JSON endpoints'] = !str_contains($content, '$this->endpoint(');
 }
 $failures = 0;
