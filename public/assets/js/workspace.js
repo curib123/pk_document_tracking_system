@@ -72,7 +72,7 @@ function updateIdentity() {
   mode?.setAttribute('aria-pressed', String(theme === 'dark'));
   text('#ws-mode-label', theme === 'dark' ? 'Light mode' : 'Dark mode');
   if (mode && mode.dataset.mode !== theme) {
-    mode.querySelector('svg')?.remove(); mode.prepend(icon(theme === 'dark' ? 'sun' : 'moon')); mode.dataset.mode = theme;
+    mode.querySelector('.ws-icon')?.remove(); mode.prepend(icon(theme === 'dark' ? 'sun' : 'moon')); mode.dataset.mode = theme;
   }
   const module = current();
   const label = module === 'dashboard' ? 'Dashboard' : modules.find(item => item.key === module)?.label || 'Document workspace';
@@ -190,7 +190,7 @@ function decorateLogin(dialog) {
     });
   }
   const submit = dialog.querySelector('button[type="submit"]');
-  if (submit && !submit.querySelector('svg')) submit.prepend(icon('arrow'));
+  if (submit && !submit.querySelector('.ws-icon')) submit.prepend(icon('arrow'));
   const username = dialog.querySelector('input[name="username"]');
   const password = dialog.querySelector('input[name="password"]');
   if (!username || !password || username.dataset.wsReady) return;
