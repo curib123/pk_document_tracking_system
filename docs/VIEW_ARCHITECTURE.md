@@ -80,10 +80,10 @@ The browser suites `modal_browser.py`, `styling_browser.py`, and
 `view_templates_browser.py` render the real PHP views and run the real frontend
 controllers against explicitly simulated API responses. They verify forms,
 module navigation, optional remarks, workflow controls, styling isolation, safe
-text binding, login, dashboard, profile and mobile layout. The view-only CI job
-runs these tests without requiring a database. Backend integration remains the
-responsibility of the existing MySQL/controller workflows, which are not removed
-or replaced by these tests.
+text binding, login, dashboard, profile and mobile layout. These optional view-only checks exercise the legacy workspace while the new MVC
+screens are migrated. Database-backed verification remains the responsibility of
+the existing MySQL/controller workflows. The completed one-time view-refactor
+bootstrap workflow and compressed payload are no longer retained on this branch.
 
 The baseline used for this refactor (`f06d416f896de8a294351338da4d992e86b32b37`)
 is missing `database/schema.sql`, although the installer and architecture tests
