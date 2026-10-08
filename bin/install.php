@@ -105,7 +105,7 @@ try {
         }
     }
 
-    echo "Installed schema version 6.\n";
+    echo "Installed schema version 7.\n";
     echo "Username: $username\n";
     echo "Initial password (shown once): $password\n";
     echo "Change this password at first login. Create another approver before using request workflows.\n";
