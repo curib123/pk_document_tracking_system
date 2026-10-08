@@ -13,9 +13,8 @@ class Dashboard_controller extends MY_Web_Controller
         $context = $this->webContext();
 
         try {
-            $summary = $context->can('dashboard.view')
-                ? (new Read_service($context))->dashboard()
-                : [];
+            $this->require_permission('dashboard.view', $context);
+            $summary = (new Read_service($context))->dashboard();
 
             $this->webView('modules/dashboard/views/index', $context, [
                 'page_title' => 'Dashboard',

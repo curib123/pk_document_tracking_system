@@ -19,6 +19,7 @@ class Records_controller extends MY_Web_Controller
 
         try {
             $definition = $this->definition($module);
+            $this->require_permission($definition['permission'], $context);
             $query = $this->input->get(NULL, false) ?: [];
             $read = new Read_service($context);
             $result = $read->listing($module, $query);
@@ -43,6 +44,7 @@ class Records_controller extends MY_Web_Controller
 
         try {
             $definition = $this->definition($module);
+            $this->require_permission($definition['permission'], $context);
             $detail = (new Read_service($context))->detail($module, $id);
 
             $this->webView('record_detail', $context, [
