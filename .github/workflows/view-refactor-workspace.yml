@@ -1,0 +1,30 @@
+name: View refactor workspace
+on:
+  push:
+    branches: [refactor/php-view-templates]
+    paths: [.github/workflows/view-refactor-workspace.yml]
+permissions:
+  contents: read
+jobs:
+  source:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.0'
+          extensions: mysqli, mbstring, zip
+          tools: composer:v2
+      - run: composer install --prefer-dist --no-interaction
+      - run: npm install --ignore-scripts --no-audit --no-fund
+      - name: Export tracked sources and build dependencies
+        run: |
+          mkdir /tmp/view-workspace
+          git archive HEAD | tar -x -C /tmp/view-workspace
+          cp -R vendor node_modules /tmp/view-workspace/
+          tar -czf /tmp/view-workspace.tar.gz -C /tmp/view-workspace .
+      - uses: actions/upload-artifact@v4
+        with:
+          name: view-workspace
+          path: /tmp/view-workspace.tar.gz
+          retention-days: 1
