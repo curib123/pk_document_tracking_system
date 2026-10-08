@@ -56,3 +56,15 @@ features are migrated and verified. Do not represent this stage as fully REST-fr
 - Preserve database schema, migrations and production data.
 - Run php tests/web_mvc.php, PHP lint, domain tests and browser regression suite.
 - Verify compatibility with PHP 8.0 before merging.
+
+## Repository cleanup (2026-10-08)
+
+Removed the completed one-time `refactor/php-view-templates` GitHub Actions
+bootstrap and its four compressed edit-payload chunks. They were only invoked
+by workflows scoped to that old, isolated refactor branch; they are not used
+by runtime CodeIgniter routes or ongoing test workflows.
+
+The legacy workspace and its runtime JS/CSS, CSS build scripts, PHP templates,
+API registry, installers, schema upgrade scripts and regression tests are **not**
+obsolete yet, because production flows still use them. Delete them only after
+feature-equivalent native MVC replacements have passed end-to-end verification.
