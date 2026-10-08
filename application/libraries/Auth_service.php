@@ -203,6 +203,17 @@ class Auth_service
             ),
         ];
 
+        if (
+            !preg_match(
+                '/^[a-zA-Z0-9_.-]{3,80}$/',
+                $data['username']
+            )
+        ) {
+            throw new Problem(
+                'Username must be 3–80 letters, numbers, dots, dashes or underscores.'
+            );
+        }
+
         $this->model()->update(
             'users',
             $id,
