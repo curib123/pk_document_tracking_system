@@ -1,3 +1,5 @@
+import { cloneView } from './views.js';
+
 // Native CI3 routes ra atong gamiton; no hidden fallback endpoint para predictable ang flow.
 function screenEvent(module) {
   document.documentElement.dataset.pkModule = module;
@@ -67,7 +69,7 @@ export class ApiClient {
       throw new Error(error.error?.message || 'Download was not allowed.');
     }
     const blob = await response.blob(); const url = URL.createObjectURL(blob);
-    const link = document.createElement('a'); link.href = url; link.download = filename;
+    const link = cloneView('download-link-template'); link.href = url; link.download = filename;
     document.body.append(link); link.click(); link.remove(); setTimeout(() => URL.revokeObjectURL(url), 60000);
     return { message: 'Download started. Treat downloaded files according to your document-control policy.' };
   }

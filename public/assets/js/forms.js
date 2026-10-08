@@ -1,4 +1,5 @@
-import { el, Modal, labelOf } from './components.js';
+import { Modal, labelOf } from './components.js';
+import { cloneView, setAttributes, viewText } from './views.js';
 
 let fieldSerial = 0;
 
@@ -60,13 +61,7 @@ export async function mountFields(
         option => option.value === next
       )
     ) {
-      control.append(
-        el(
-          'option',
-          { value: next },
-          label || 'Selected value'
-        )
-      );
+      control.append(viewText('text-option-template', label || 'Selected value', { value: next }));
     }
 
     if (control.value === next) {
@@ -163,50 +158,38 @@ export async function mountFields(
   };
 
   for (const definition of fields) {
-    const {
-      name,
-      type = 'text',
-      required = true
-    } = definition;
-
-    const displayName =
-      type === 'lookup' ||
-      type === 'upload' ||
-      definition.lookup
-        ? name.replace(/_id$/, '')
-        : name;
-
+    const { name, type = 'text', required = true } = definition;
+    const displayName = type === 'lookup' || type === 'upload' || definition.lookup
+      ? name.replace(/_id$/, '') : name;
     const label = definition.label || labelOf(displayName);
     const id = 'field-' + (++fieldSerial);
-    const group = el('p');
     const value = values[name];
-
-    let input;
+    const choices = definition.options || {
+      request_type: definition.requestTypes || [],
+      disposal_action: ['shred', 'scratch', 'reuse', 'other']
+    }[type];
+    const template = type === 'lookup' ? 'field-lookup-template'
+      : type === 'upload' ? 'field-upload-template'
+      : choices ? 'field-select-template'
+      : ['textarea', 'json'].includes(type) ? 'field-textarea-template'
+      : 'field-input-template';
+    const group = cloneView(template);
+    const input = group.querySelector('[data-control]');
+    const labelNode = group.querySelector('[data-field-label]');
+    labelNode.htmlFor = id;
+    labelNode.textContent = label;
+    setAttributes(input, { id, name, required });
+    input.disabled = disabled.includes(name);
+    container.append(group);
     let read;
 
     if (type === 'lookup') {
-      // Value is the internal ID, pero ang visible option kay readable name/code ra.
-      const search = el('input', {
-        type: 'search',
-        id: id + '-search',
-        placeholder: 'Type to search',
-        'aria-label': 'Search ' + label
-      });
-
-      input = el('select', {
-        id,
-        name,
-        required
-      });
-
-      const hint = el('small', { role: 'status' });
+      const search = group.querySelector('[data-lookup-search]');
+      setAttributes(search, { id: id + '-search', 'aria-label': 'Search ' + label });
+      search.disabled = input.disabled;
+      const hint = group.querySelector('[data-field-hint]');
       const optionMap = new Map();
-
-      lookupOptions.set(
-        name,
-        optionMap
-      );
-
+      lookupOptions.set(name, optionMap);
       let aborter;
       let timer;
       let selection = value ? String(value) : '';
@@ -214,333 +197,111 @@ export async function mountFields(
       const load = async () => {
         aborter?.abort();
         aborter = new AbortController();
-
-        // Context belongs to this form, not the global screen. Nested/direct
-        // dialogs therefore cannot accidentally acquire request-catalog access.
+        // Scope comes from this request form, never the global page or a direct action.
         const typeControl = container.closest('dialog')?.querySelector('select[name="type"]');
-        const requestType =
-          ['softcopy', 'hardcopy'].includes(definition.lookup) &&
-          ['access', 'assignment'].includes(typeControl?.value)
-            ? typeControl.value
-            : undefined;
-
+        const requestType = ['softcopy', 'hardcopy'].includes(definition.lookup)
+          && ['access', 'assignment'].includes(typeControl?.value) ? typeControl.value : undefined;
         try {
-          const result = await api.request(
-            'lookups',
-            {
-              kind: definition.lookup,
-              q: search.value,
-              selected: selection || undefined,
-              request_type: requestType
-            },
-            false,
-            aborter.signal
-          );
-
-          if (!input.isConnected) {
-            return;
-          }
-
-          input.replaceChildren(
-            el(
-              'option',
-              { value: '' },
-              required ? 'Choose…' : 'None'
-            )
-          );
-
+          const result = await api.request('lookups', {
+            kind: definition.lookup,
+            q: search.value,
+            selected: selection || undefined,
+            request_type: requestType
+          }, false, aborter.signal);
+          if (!input.isConnected) return;
+          input.replaceChildren(viewText('text-option-template', required ? 'Choose…' : 'None', { value: '' }));
           optionMap.clear();
-
-          for (const option of result.options) {
-            optionMap.set(
-              String(option.id),
-              option
-            );
-          }
-
-          const selectedExists = result.options.some(
-            option => String(option.id) === selection
-          );
-
-          if (selection && !selectedExists && requestType) {
-            // An inactive/unavailable target must be chosen again, not recreated.
-            selection = '';
-          }
-
+          for (const option of result.options) optionMap.set(String(option.id), option);
+          const selectedExists = result.options.some(option => String(option.id) === selection);
+          if (selection && !selectedExists && requestType) selection = '';
           if (selection && !selectedExists) {
-            input.append(
-              el(
-                'option',
-                { value: selection },
-                'Current selection'
-              )
-            );
+            input.append(viewText('text-option-template', 'Current selection', { value: selection }));
           }
-
           for (const option of result.options) {
-            input.append(
-              el(
-                'option',
-                { value: String(option.id) },
-                option.label
-              )
-            );
+            input.append(viewText('text-option-template', option.label, { value: String(option.id) }));
           }
-
           input.value = selection;
           hint.textContent = result.message || '';
         } catch (error) {
-          if (error.name !== 'AbortError') {
-            hint.textContent = error.message;
-          }
+          if (error.name !== 'AbortError') hint.textContent = error.message;
         }
       };
-
       input.addEventListener('change', () => {
         selection = input.value;
         applyLookupHierarchy(name);
       });
-
       search.addEventListener('input', () => {
         clearTimeout(timer);
         timer = setTimeout(load, 200);
       });
-
-      group.append(
-        el('label', { htmlFor: id }, label),
-        el('br'),
-        search,
-        el('br'),
-        input,
-        el('br'),
-        hint
-      );
-
-      container.append(group);
       await load();
-
-      disposers.push(() => {
-        clearTimeout(timer);
-        aborter?.abort();
-      });
-
-      search.disabled = disabled.includes(name);
-
-      read = () =>
-        input.value
-          ? Number(input.value)
-          : null;
+      disposers.push(() => { clearTimeout(timer); aborter?.abort(); });
+      read = () => input.value ? Number(input.value) : null;
     } else if (type === 'upload') {
-      // Upload ID stays internal; status text should stay human-readable.
-      input = el('input', {
-        id,
-        type: 'file',
-        name,
-        required: required && !value,
-        accept: '.pdf,.docx,.xlsx,.txt,.csv,.png,.jpg,.jpeg'
-      });
-
-      const hint = el(
-        'small',
-        { role: 'status' },
-        value
-          ? 'A private upload is already saved. Select a replacement only when needed.'
-          : 'Select a document file. Upload occurs when this form is saved.'
-      );
-
+      input.required = required && !value;
+      const hint = group.querySelector('[data-field-hint]');
+      hint.textContent = value
+        ? 'A private upload is already saved. Select a replacement only when needed.'
+        : 'Select a document file. Upload occurs when this form is saved.';
       let uploadedId = value ? Number(value) : null;
       let uploadedFile;
-
       read = async () => {
         const selected = input.files[0];
-
         if (selected && selected !== uploadedFile) {
           hint.textContent = 'Uploading…';
-
           const form = new FormData();
           form.append('file', selected);
-
-          const result = await api.request(
-            'files.upload',
-            form,
-            true
-          );
-
+          const result = await api.request('files.upload', form, true);
           uploadedId = result.id;
           uploadedFile = selected;
-          hint.textContent =
-            'Private upload saved. It will be linked when the form succeeds.';
+          hint.textContent = 'Private upload saved. It will be linked when the form succeeds.';
           input.required = false;
         }
-
-        if (required && !uploadedId) {
-          throw new Error('Select a file for ' + label + '.');
-        }
-
+        if (required && !uploadedId) throw new Error('Select a file for ' + label + '.');
         return uploadedId;
       };
-
-      group.append(
-        el('label', { htmlFor: id }, label),
-        el('br'),
-        input,
-        el('br'),
-        hint
-      );
-
-      container.append(group);
     } else {
-      const defaultChoices = {
-        request_type: definition.requestTypes || [],
-        disposal_action: [
-          'shred',
-          'scratch',
-          'reuse',
-          'other'
-        ]
-      };
-
-      const choices =
-        definition.options ||
-        defaultChoices[type];
-
       if (choices) {
-        input = el(
-          'select',
-          { id, name, required },
-          el(
-            'option',
-            { value: '' },
-            required ? 'Choose…' : 'None'
-          )
-        );
-
+        input.append(viewText('text-option-template', required ? 'Choose…' : 'None', { value: '' }));
         for (const option of choices) {
-          const isObject =
-            typeof option === 'object';
-
-          input.append(
-            el(
-              'option',
-              {
-                value: String(
-                  isObject
-                    ? option.value
-                    : option
-                )
-              },
-              isObject
-                ? option.label
-                : labelOf(option)
-            )
-          );
+          const object = typeof option === 'object';
+          input.append(viewText('text-option-template', object ? option.label : labelOf(option), {
+            value: String(object ? option.value : option)
+          }));
         }
-
         input.value = value ?? '';
       } else if (['textarea', 'json'].includes(type)) {
-        input = el('textarea', {
-          id,
-          name,
-          rows: type === 'json' ? 8 : 3,
-          cols: 36,
-          required,
-          value:
-            type === 'json' &&
-            typeof value === 'object'
-              ? JSON.stringify(value, null, 2)
-              : value ?? ''
-        });
+        input.rows = type === 'json' ? 8 : 3;
+        input.value = type === 'json' && typeof value === 'object' ? JSON.stringify(value, null, 2) : value ?? '';
       } else if (type === 'checkbox') {
-        input = el('input', {
-          id,
-          name,
-          type: 'checkbox',
-          checked:
-            value === undefined
-              ? name === 'active'
-              : !!Number(value)
-        });
+        input.type = 'checkbox';
+        input.required = false;
+        input.checked = value === undefined ? name === 'active' : !!Number(value);
       } else {
-        const nativeType = [
-          'password',
-          'date',
-          'number',
-          'email'
-        ].includes(type)
-          ? type
-          : 'text';
-
-        const autocomplete =
-          type === 'password'
-            ? name === 'new_password' ||
-              name === 'confirm_password'
-              ? 'new-password'
-              : 'current-password'
-            : 'off';
-
-        input = el('input', {
-          id,
-          name,
-          type: nativeType,
-          required,
-          value:
-            value ??
-            (name === 'page_number' ? 1 : ''),
-          autocomplete,
-          ...(type === 'number'
-            ? { min: 1, step: 1 }
-            : {})
-        });
+        input.type = ['password', 'date', 'number', 'email'].includes(type) ? type : 'text';
+        input.value = value ?? (name === 'page_number' ? 1 : '');
+        input.autocomplete = type === 'password'
+          ? ['new_password', 'confirm_password'].includes(name) ? 'new-password' : 'current-password'
+          : 'off';
+        if (type === 'number') { input.min = 1; input.step = 1; }
       }
-
       read = () => {
-        if (type === 'checkbox') {
-          return input.checked ? 1 : 0;
-        }
-
+        if (type === 'checkbox') return input.checked ? 1 : 0;
         if (type === 'json') {
-          try {
-            return JSON.parse(input.value);
-          } catch {
-            throw new Error(
-              label + ' must be valid JSON.'
-            );
-          }
+          try { return JSON.parse(input.value); }
+          catch { throw new Error(label + ' must be valid JSON.'); }
         }
-
-        if (type === 'number') {
-          return input.value
-            ? Number(input.value)
-            : null;
-        }
-
-        return input.value === '' && !required
-          ? null
-          : input.value;
+        if (type === 'number') return input.value ? Number(input.value) : null;
+        return input.value === '' && !required ? null : input.value;
       };
-
-      group.append(
-        el('label', { htmlFor: id }, label),
-        el('br'),
-        input
-      );
-
-      container.append(group);
     }
-
-    input.disabled = disabled.includes(name);
     controls.set(name, input);
     getters.set(name, read);
-
     if (definition.description) {
-      group.append(
-        el('br'),
-        el(
-          'small',
-          {},
-          definition.description
-        )
-      );
+      const description = group.querySelector('[data-description]');
+      description.textContent = definition.description;
+      description.hidden = false;
+      group.querySelector('[data-description-break]').hidden = false;
     }
   }
 

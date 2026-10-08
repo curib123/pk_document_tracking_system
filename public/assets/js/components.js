@@ -1,42 +1,10 @@
+import { cloneView, setAttributes, viewText, bindText } from './views.js';
+
 let serial = 0;
 
-export function el(tag, attributes = {}, ...children) {
-  const node = document.createElement(tag);
-
-  for (const [key, value] of Object.entries(attributes)) {
-    if (value === undefined || value === null || value === false) {
-      continue;
-    }
-
-    if (key === 'text') {
-      node.textContent = String(value);
-    } else if (key.startsWith('on')) {
-      node.addEventListener(key.slice(2), value);
-    } else if (key in node && !key.startsWith('aria-') && key !== 'role') {
-      node[key] = value;
-    } else {
-      node.setAttribute(key, String(value));
-    }
-  }
-
-  for (const child of children.flat(Infinity)) {
-    if (child === undefined || child === null) {
-      continue;
-    }
-
-    node.append(
-      child instanceof Node
-        ? child
-        : document.createTextNode(String(child))
-    );
-  }
-
-  return node;
-}
-
 export function button(label, action, attributes = {}) {
-  return el(
-    'button',
+  return setAttributes(
+    viewText('action-button-template', label),
     {
       type: 'button',
       ...attributes,
@@ -45,8 +13,7 @@ export function button(label, action, attributes = {}) {
           .then(() => action(event))
           .catch(error => notice('Action failed', error.message));
       }
-    },
-    label
+    }
   );
 }
 
@@ -172,7 +139,7 @@ export class Modal {
     this.submitHandler = handler;
 
     if (!this.submitButton) {
-      this.submitButton = el('button', { type: 'submit' }, label);
+      this.submitButton = viewText('submit-button-template', label);
       this.footer.prepend(this.submitButton);
     }
 
@@ -243,10 +210,9 @@ export class Modal {
 
     this.completed = true;
 
-    this.body.replaceChildren(
-      el('h3', {}, 'Result'),
-      el('pre', {}, text)
-    );
+    const resultView = cloneView('result-template');
+    bindText(resultView, 'result', text);
+    this.body.replaceChildren(resultView);
 
     if (this.submitButton) {
       this.submitButton.hidden = true;
@@ -288,87 +254,41 @@ export function notice(title, message) {
 }
 
 export function inspect(value, heading = 'Details') {
-  const details = el(
-    'details',
-    { open: true },
-    el('summary', {}, heading)
-  );
-
-  details.append(
-    el('pre', {}, JSON.stringify(displayValue(value), null, 2))
-  );
-
+  const details = cloneView('inspect-template');
+  bindText(details, 'heading', heading);
+  bindText(details, 'value', JSON.stringify(displayValue(value), null, 2));
   return details;
 }
 
-// Shared guard ni: bisag naay ID maapil sa response, dili gihapon siya ma-render sa table.
+// ID internal ra ni; view templates render only human-readable columns.
 export function table(columns, rows, actions) {
-  const visibleColumns = columns.filter(
-    column => !hiddenDisplayKey(column)
-  );
-
-  const head = el(
-    'tr',
-    {},
-    visibleColumns.map(column =>
-      el('th', { scope: 'col' }, labelOf(column))
-    )
-  );
-
-  if (actions) {
-    head.append(el('th', { scope: 'col' }, 'Actions'));
+  const visibleColumns = columns.filter(column => !hiddenDisplayKey(column));
+  const result = cloneView('data-table-template');
+  const head = cloneView('table-row-template');
+  for (const column of visibleColumns) {
+    head.append(viewText('table-header-template', labelOf(column)));
   }
-
-  const body = el('tbody');
+  if (actions) head.append(viewText('table-header-template', 'Actions'));
+  result.tHead.append(head);
 
   for (const row of rows) {
-    const cells = visibleColumns.map(column => {
+    const tr = cloneView('table-row-template');
+    for (const column of visibleColumns) {
       const value = displayValue(row[column]);
-
-      return el(
-        'td',
-        {},
-        typeof value === 'object' && value !== null
-          ? JSON.stringify(value)
-          : value ?? '—'
-      );
-    });
-
-    const tr = el('tr', {}, cells);
-
-    if (actions) {
-      tr.append(el('td', {}, actions(row)));
+      tr.append(viewText('table-cell-template',
+        typeof value === 'object' && value !== null ? JSON.stringify(value) : value ?? '—'));
     }
-
-    body.append(tr);
+    if (actions) {
+      const cell = cloneView('table-cell-template');
+      cell.append(...[actions(row)].flat(Infinity));
+      tr.append(cell);
+    }
+    result.tBodies[0].append(tr);
   }
-
   if (!rows.length) {
-    body.append(
-      el(
-        'tr',
-        {},
-        el(
-          'td',
-          {
-            colSpan:
-              visibleColumns.length +
-              (actions ? 1 : 0)
-          },
-          'No records found.'
-        )
-      )
-    );
+    const empty = cloneView('table-empty-template');
+    empty.firstElementChild.colSpan = visibleColumns.length + (actions ? 1 : 0);
+    result.tBodies[0].append(empty);
   }
-
-  const result = document
-    .querySelector('#data-table-template')
-    .content
-    .firstElementChild
-    .cloneNode(true);
-
-  result.tHead.append(head);
-  result.tBodies[0].replaceWith(body);
-
   return result;
 }

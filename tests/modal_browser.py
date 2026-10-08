@@ -93,7 +93,7 @@ try:
         page.set_content(html)
         page.evaluate("() => { window.fetch = async (url, options={}) => { const r=await window.test_api({url:String(url),method:options.method||'GET',body:options.body||'{}'}); return new Response(JSON.stringify(r.body), {status:r.status,headers:{'Content-Type':'application/json'}}); }; }")
         blobs={}
-        for name in ['api.js','components.js','forms.js','workflow-ui.js','app.js']:
+        for name in ['views.js','api.js','components.js','forms.js','workflow-ui.js','app.js']:
             source=(ROOT/'public/assets/js'/name).read_text()
             for dependency,blob in blobs.items(): source=source.replace("'./"+dependency+"'",json.dumps(blob))
             blobs[name]=page.evaluate("source=>URL.createObjectURL(new Blob([source],{type:'text/javascript'}))",source)

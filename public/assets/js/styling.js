@@ -1,3 +1,5 @@
+import { cloneView } from './views.js';
+
 // Presentation only. Walay workflow/permission rules in this module.
 const meta = document.querySelector('meta[name=pk-styling]');
 let config = {};
@@ -34,7 +36,7 @@ function stylesheet(needed) {
   if (existing || failedStylesheet || !config.stylesheet) return;
   const url = new URL(config.stylesheet, document.baseURI);
   if (url.origin !== location.origin || !['http:', 'https:', 'blob:'].includes(url.protocol)) return;
-  const link = document.createElement('link');
+  const link = cloneView('stylesheet-link-template');
   link.rel = 'stylesheet';
   link.href = url.href;
   link.dataset.pkStyles = 'red';

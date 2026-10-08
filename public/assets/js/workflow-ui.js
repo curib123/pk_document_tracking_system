@@ -1,5 +1,5 @@
+import { cloneView, bindText } from './views.js';
 import {
-  el,
   Modal,
   button,
   table,
@@ -277,13 +277,11 @@ export function workflowVersionModal(
   const draw = () => {
     modal.body.replaceChildren();
 
-    modal.body.append(
-      el(
-        'p',
-        {},
-        'Approval steps: ' +
-          draft.steps.length
-      ),
+    const editor = cloneView('workflow-version-editor-template');
+    modal.body.append(editor);
+    bindText(editor, 'step-count', draft.steps.length);
+    editor.querySelector('[data-no-steps]').hidden = draft.steps.length > 0;
+    editor.querySelector('[data-step-actions]').append(
       button(
         'Add approval step',
         () =>
@@ -311,7 +309,7 @@ export function workflowVersionModal(
       })
     );
 
-    modal.body.append(
+    editor.querySelector('[data-step-table]').append(
       table(
         [
           'step',
@@ -382,15 +380,7 @@ export function workflowVersionModal(
       )
     );
 
-    if (!draft.steps.length) {
-      modal.body.append(
-        el(
-          'p',
-          {},
-          'This draft has no approval steps yet. Add at least one step before publishing.'
-        )
-      );
-    }
+
   };
 
   draw();
