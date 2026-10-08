@@ -521,6 +521,119 @@ function migrate_file_audit(
     );
 }
 
+function migrate_direct_actions_v6(
+    Database $db
+): void {
+    $db->query(
+        'ALTER TABLE transfers
+         MODIFY COLUMN request_id
+             BIGINT UNSIGNED NULL'
+    );
+
+    $db->query(
+        'ALTER TABLE access_grants
+         MODIFY COLUMN request_id
+             BIGINT UNSIGNED NULL'
+    );
+
+    $permissions = [
+        [
+            'transfer',
+            'direct',
+            'Transfer',
+            'Direct',
+            'Allows direct hardcopy transfer without an approval request.',
+        ],
+        [
+            'access',
+            'direct',
+            'Access',
+            'Direct',
+            'Allows direct document access grants without an approval request.',
+        ],
+        [
+            'assignment',
+            'direct',
+            'Assignment',
+            'Direct',
+            'Allows direct document assignment without an approval request.',
+        ],
+    ];
+
+    foreach (
+        $permissions
+        as [
+            $module,
+            $action,
+            $moduleLabel,
+            $actionLabel,
+            $description,
+        ]
+    ) {
+        $row = $db->one(
+            'SELECT id
+             FROM permissions
+             WHERE module_key = ?
+               AND action_key = ?
+             LIMIT 1',
+            [
+                $module,
+                $action,
+            ]
+        );
+
+        $permissionId = $row
+            ? (int) $row['id']
+            : $db->insert(
+                'permissions',
+                [
+                    'name' =>
+                        $moduleLabel .
+                        ': ' .
+                        $actionLabel,
+                    'module_key' => $module,
+                    'module_label' =>
+                        $moduleLabel,
+                    'action_key' => $action,
+                    'action_label' =>
+                        $actionLabel,
+                    'description' =>
+                        $description,
+                ]
+            );
+
+        foreach (
+            [
+                'Administrator',
+                'Document Control Officer',
+            ]
+            as $roleName
+        ) {
+            $role = $db->one(
+                'SELECT id
+                 FROM roles
+                 WHERE name = ?
+                 LIMIT 1',
+                [$roleName]
+            );
+
+            if (!$role) {
+                continue;
+            }
+
+            $db->query(
+                'INSERT IGNORE INTO role_permissions
+                    (role_id, permission_id)
+                 VALUES (?, ?)',
+                [
+                    (int) $role['id'],
+                    $permissionId,
+                ]
+            );
+        }
+    }
+}
+
 try {
     $db = Database::connect();
 
@@ -550,11 +663,27 @@ try {
             0
         );
 
-    if ($current >= 5) {
+    if ($current >= 6) {
         echo
             'Database schema is already version ' .
             $current .
             ".\n";
+
+        exit(0);
+    }
+
+    if ($current === 5) {
+        migrate_direct_actions_v6(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(6)'
+        );
+
+        echo
+            "Migrated database schema from version 5 to version 6.\n";
 
         exit(0);
     }
@@ -567,8 +696,17 @@ try {
              VALUES(5)'
         );
 
+        migrate_direct_actions_v6(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(6)'
+        );
+
         echo
-            "Migrated database schema from version 4 to version 5.\n";
+            "Migrated database schema from version 4 to version 6.\n";
 
         exit(0);
     }
@@ -590,8 +728,17 @@ try {
              VALUES(5)'
         );
 
+        migrate_direct_actions_v6(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(6)'
+        );
+
         echo
-            "Migrated database schema from version 3 to version 5.\n";
+            "Migrated database schema from version 3 to version 6.\n";
 
         exit(0);
     }
@@ -622,8 +769,17 @@ try {
              VALUES(5)'
         );
 
+        migrate_direct_actions_v6(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(6)'
+        );
+
         echo
-            "Migrated database schema from version 2 to version 5.\n";
+            "Migrated database schema from version 2 to version 6.\n";
 
         exit(0);
     }
@@ -882,8 +1038,17 @@ try {
          VALUES(5)'
     );
 
+    migrate_direct_actions_v6(
+        $db
+    );
+
+    $db->query(
+        'INSERT INTO schema_migrations(version)
+         VALUES(6)'
+    );
+
     echo
-        "Migrated database schema from version 1 to version 5.\n";
+        "Migrated database schema from version 1 to version 6.\n";
 } catch (Throwable $error) {
     fwrite(
         STDERR,
