@@ -34,6 +34,8 @@ return [
    
     'detail@assignments' => ['op' => 'detail', 'path' => 'assignments/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'assignments']],
    
+    'disposals.direct' => ['op' => 'disposals.direct', 'path' => 'disposals/direct', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'directDispose', 'shape' => 'input', 'fixed' => []],
+  
     'list@disposals' => ['op' => 'list', 'path' => 'disposals/datatable', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'listing', 'shape' => 'module_input', 'fixed' => ['module' => 'disposals']],
   
     'detail@disposals' => ['op' => 'detail', 'path' => 'disposals/view', 'method' => 'GET', 'service' => 'Read_service', 'handler' => 'detail', 'shape' => 'module_id', 'fixed' => ['module' => 'disposals']],
