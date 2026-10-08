@@ -14,15 +14,20 @@ function styling_check(bool $ok, string $name): void {
     echo "PASS $name\n";
 }
 putenv('PK_STYLING_ENABLED');
-$config = pk_styling_config();
-styling_check($config['enabled'] === true, 'red design is enabled by default');
-styling_check(pk_module_styled($config, 'hardcopy'), 'known module is styled');
-styling_check(!pk_module_styled($config, 'unknown_module'), 'unknown module remains plain');
+$deployment = pk_styling_config();
+styling_check(is_bool($deployment['enabled']), 'deployment styling switch is boolean');
+// Test the resolver independently of the users editable deployment choices.
+$config = ['enabled' => true, 'default_enabled' => false,
+    'modules' => ['hardcopy' => true, 'softcopy' => true]];
+styling_check(pk_module_styled($config, 'hardcopy'), 'enabled module is styled');
+styling_check(!pk_module_styled($config, 'unknown_module'), 'unknown module follows disabled default');
 $config['modules']['hardcopy'] = false;
 styling_check(!pk_module_styled($config, 'hardcopy'), 'per-module false disables design');
 styling_check(pk_module_styled($config, 'softcopy'), 'neighbor module stays enabled');
 $config['modules']['hardcopy'] = 'false';
 styling_check(!pk_module_styled($config, 'hardcopy'), 'truthy string does not enable design');
+$config['default_enabled'] = true;
+styling_check(pk_module_styled($config, 'unknown_module'), 'unknown module follows enabled default');
 $config['enabled'] = false;
 styling_check(!pk_module_styled($config, 'softcopy'), 'master switch overrides enabled module');
 putenv('PK_STYLING_ENABLED=false');
@@ -33,5 +38,6 @@ putenv('PK_STYLING_ENABLED=not-a-boolean');
 styling_check(pk_styling_config()['enabled'] === false, 'invalid environment override fails closed');
 putenv('PK_STYLING_ENABLED');
 $config = pk_styling_config();
+styling_check($config === $deployment, 'test leaves deployment configuration unchanged');
 styling_check(count($config['modules']) >= 26, 'all existing modules and account are explicitly configured');
 echo "$checks styling configuration checks passed.\n";

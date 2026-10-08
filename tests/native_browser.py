@@ -1,5 +1,5 @@
 """Real browser + real CI3 + real MySQL. Run after native_routes.py in test CI."""
-import os,secrets
+import json,os,secrets
 from playwright.sync_api import sync_playwright,expect
 if os.environ.get('PK_TEST_DB')!='1' or not os.environ.get('DB_DATABASE','').endswith('_test'):
     raise SystemExit('Requires a dedicated *_test database.')
@@ -16,6 +16,8 @@ with sync_playwright() as p:
     assert "style-src 'self'" in policy, 'Locally compiled CSS must be permitted by the real response policy'
     assert "script-src 'self'" in policy and "object-src 'none'" in policy
     assert 'unsafe-inline' not in policy and 'unsafe-eval' not in policy
+    config=json.loads(page.locator('meta[name="pk-styling"]').get_attribute('content'))
+    area_styled=config.get('enabled') is True and config.get('modules',{}).get('areas',config.get('default_enabled')) is True
     dialog=page.get_by_role('dialog',name='Sign in',exact=True)
     dialog.get_by_label('Username',exact=True).fill('admin')
     dialog.get_by_label('Password',exact=True).fill(os.environ['CI_ROUTE_PASSWORD'])
@@ -38,14 +40,18 @@ with sync_playwright() as p:
     expect(create.get_by_role('button',name='Save',exact=True)).to_be_enabled()
     page.keyboard.press('Escape')
     expect(page.get_by_role('button',name='Add area',exact=True)).to_be_focused()
-    expect(page.locator('main')).to_have_class('pk-ui')
-    expect(page.locator('link[data-pk-styles]')).to_have_count(1)
-    page.wait_for_function("getComputedStyle(document.querySelector('main')).fontFamily.includes('Segoe')")
-    assert 200 in css_responses, 'A real local stylesheet response must load, not just a CSS class'
+    if area_styled:
+        expect(page.locator('main')).to_have_class('pk-ui')
+        expect(page.locator('link[data-pk-styles]')).to_have_count(1)
+        page.wait_for_function("getComputedStyle(document.querySelector('main')).fontFamily.includes('Segoe')")
+        assert 200 in css_responses, 'A real local stylesheet response must load, not just a CSS class'
+    else:
+        expect(page.locator('main.pk-ui')).to_have_count(0)
+        expect(page.locator('link[data-pk-styles]')).to_have_count(0)
     page.goto(base+'/index.php/softcopy')
     expect(page.locator('main h2')).to_have_text('Softcopy documents')
     expect(page.locator('main')).to_have_attribute('data-pk-module','softcopy')
     assert any('/index.php/areas/save' in url for url in paths)
     assert not errors,errors
     browser.close()
-print('PASS real styled native-route modal login, CSP-safe local CSS, deep links, persistence, duplicate-save recovery and focus.')
+print('PASS real native-route modal login, configured styling, CSP-safe local CSS, deep links, persistence, duplicate-save recovery and focus.')
