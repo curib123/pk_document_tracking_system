@@ -33,10 +33,12 @@ with sync_playwright() as p:
     expect(create.get_by_role('button',name='Save',exact=True)).to_be_enabled()
     page.keyboard.press('Escape')
     expect(page.get_by_role('button',name='Add area',exact=True)).to_be_focused()
-    assert page.evaluate("document.querySelectorAll('style,link[rel=stylesheet],[style]').length")==0
+    expect(page.locator('main')).to_have_class('pk-ui')
+    expect(page.locator('link[data-pk-styles]')).to_have_count(1)
     page.goto(base+'/index.php/softcopy')
     expect(page.locator('main h2')).to_have_text('Softcopy documents')
+    expect(page.locator('main')).to_have_attribute('data-pk-module','softcopy')
     assert any('/index.php/areas/save' in url for url in paths)
     assert not errors,errors
     browser.close()
-print('PASS real native-route modal login, module deep links, persistence, duplicate-save recovery, focus, and no CSS.')
+print('PASS real styled native-route modal login, deep links, persistence, duplicate-save recovery and focus.')

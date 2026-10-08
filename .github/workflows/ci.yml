@@ -42,6 +42,11 @@ jobs:
           coverage: none
           tools: composer:v2
       - run: composer install --prefer-dist --no-interaction
+      - name: Verify compiled design system
+        run: |
+          npm install --ignore-scripts --no-audit --no-fund
+          npm run check:css
+          php tests/styling.php
       - name: Syntax and domain rules
         run: |
           find application public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
@@ -64,12 +69,13 @@ jobs:
           php -S 127.0.0.1:8080 -t public > /tmp/php-server.log 2>&1 &
           for i in $(seq 1 30); do curl -fsS http://127.0.0.1:8080/ >/dev/null && break || sleep 1; done
           python3 tests/native_routes.py
-      - name: Native modal UI contract
+      - name: Native and styled modal UI contracts
         run: |
           python3 -m pip install playwright
           python3 -m playwright install --with-deps chromium
           export CHROMIUM_PATH=$(find "$HOME/.cache/ms-playwright" -path '*/chrome-linux*/chrome' -type f | head -1)
           python3 tests/modal_browser.py
+          python3 tests/styling_browser.py
           python3 tests/native_browser.py
       - name: Private diagnostic logs on failure
         if: failure()

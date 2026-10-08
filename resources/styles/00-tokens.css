@@ -1,0 +1,26 @@
+/* Tailwind inline tokens compile to values: no global theme or Preflight leak. */
+@theme inline {
+  --spacing: 0.25rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.875rem;
+  --radius-2xl: 1.25rem;
+}
+.pk-ui {
+  --pk-brand: #b91c1c;
+  --pk-brand-hover: #991b1b;
+  --pk-brand-soft: #fef2f2;
+  --pk-ink: #182230;
+  --pk-muted: #667085;
+  --pk-border: #e4e7ec;
+  --pk-canvas: #f8fafc;
+  --pk-surface: #ffffff;
+  --pk-shadow: 0 1px 3px rgb(16 24 40 / 0.05);
+  color: var(--pk-ink);
+  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  font-size: 14px;
+  line-height: 1.55;
+  text-align: left;
+  color-scheme: light;
+}
+.pk-ui, .pk-ui *, .pk-ui *::before, .pk-ui *::after { box-sizing: border-box; }
+.pk-ui [hidden] { display: none !important; }

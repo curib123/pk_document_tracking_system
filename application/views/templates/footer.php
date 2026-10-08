@@ -1,3 +1,4 @@
+</div>
 <template id="module-page-template">
 <section>
 <h2 data-module-title></h2>

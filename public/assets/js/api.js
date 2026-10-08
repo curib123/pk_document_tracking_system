@@ -1,4 +1,9 @@
 // Native CI3 routes ra atong gamiton; no hidden fallback endpoint para predictable ang flow.
+function screenEvent(module) {
+  document.documentElement.dataset.pkModule = module;
+  document.dispatchEvent(new CustomEvent('pk:screen', { detail: { module } }));
+}
+
 export class ApiClient {
   constructor() {
     this.csrf = '';
@@ -17,6 +22,12 @@ export class ApiClient {
     return url;
   }
   async request(operation, data = {}, mutation = false, signal) {
+    // UI events never modify request data, authorization, or endpoints.
+    if (!mutation && operation === 'list') screenEvent(String(data.module || ''));
+    if (!mutation && operation === 'dashboard') screenEvent('dashboard');
+    if (!mutation && operation === 'detail') {
+      document.dispatchEvent(new CustomEvent('pk:detail', { detail: { module: data.module } }));
+    }
     const multipart = data instanceof FormData;
     const options = { method: mutation ? 'POST' : 'GET', credentials: 'same-origin', signal, headers: { Accept: 'application/json' } };
     if (mutation) {
@@ -33,6 +44,10 @@ export class ApiClient {
       error.status = response.status; error.fields = payload.error?.fields || {};
       throw error;
     }
+    if (operation === 'metadata') {
+      document.dispatchEvent(new CustomEvent('pk:metadata', { detail: { modules: payload.data?.modules || [] } }));
+    }
+    if (operation === 'session' && !payload.data?.user) screenEvent('account');
     return payload.data;
   }
   async download(id, filename = 'document') {

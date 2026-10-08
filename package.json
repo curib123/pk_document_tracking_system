@@ -1,0 +1,12 @@
+{
+  "name": "pk-dts-design-system",
+  "private": true,
+  "scripts": {
+    "build:css": "node tools/build-styles.cjs",
+    "check:css": "node tools/build-styles.cjs --check",
+    "test:styling": "php tests/styling.php && python3 tests/styling_browser.py"
+  },
+  "devDependencies": {
+    "tailwindcss": "4.1.10"
+  }
+}
