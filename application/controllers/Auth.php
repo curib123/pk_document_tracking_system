@@ -15,6 +15,10 @@ class Auth extends MY_Controller
     {
         $this->endpoint('auth/login');
     }
+    public function profile()
+    {
+        $this->endpoint('auth/profile');
+    }
     public function password()
     {
         $this->endpoint('auth/password');
