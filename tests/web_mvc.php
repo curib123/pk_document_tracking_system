@@ -13,8 +13,8 @@ $cases = [
     'native forms use CSRF' => str_contains($catalog, 'name="csrf"'),
     'optimistic version is passed' => str_contains($catalog, 'name="version"'),
     'bootstrap stylesheet used' => str_contains($header, 'bootstrap@5.3.8'),
-    'no custom stylesheet on native pages' => !str_contains($header, 'assets/css/'),
-    'no JavaScript bundle on native pages' => !str_contains($header, '<script'),
+    'shared enterprise stylesheet present' => str_contains($header, 'assets/css/enterprise-ui.css'),
+    'single enterprise enhancement script present' => str_contains(file_get_contents($root . '/application/views/web/footer.php'), 'enterprise-ui.js'),
 ];
 foreach ($controllers as $name) {
     $content = file_get_contents($root . '/application/controllers/' . $name . '.php');
