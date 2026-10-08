@@ -83,21 +83,39 @@ const identity = row => ({
 });
 
 const reason = () =>
-  field('reason', 'textarea');
+  field(
+    'reason',
+    'textarea',
+    false,
+    null,
+    {
+      label: 'Remarks',
+      description: 'Optional.'
+    }
+  );
 
 const comments = () =>
-  field('comments', 'textarea');
+  field(
+    'comments',
+    'textarea',
+    false,
+    null,
+    {
+      label: 'Remarks',
+      description: 'Optional.'
+    }
+  );
 
 const approvalRemarks = () =>
   field(
     'comments',
     'textarea',
-    true,
+    false,
     null,
     {
       label: 'Remarks',
       description:
-        'Required. This remark is saved in the workflow history.'
+        'Optional. When provided, this remark is saved in the workflow history.'
     }
   );
 
@@ -170,6 +188,19 @@ const HIDDEN_DETAIL_KEYS = new Set([
   'previous_state'
 ]);
 
+function detailLabel(key) {
+  const labels = {
+    created_by_name: 'Created By',
+    assigned_by_name: 'Assigned By',
+    uploaded_by_name: 'Uploaded By',
+    approved_by_name: 'Approved By',
+    rejected_by_name: 'Rejected By',
+    disposed_by_name: 'Disposed By'
+  };
+
+  return labels[key] || labelOf(key);
+}
+
 function readableDetails(
   data,
   title = 'Details'
@@ -186,6 +217,10 @@ function readableDetails(
     ([key, value]) =>
       !HIDDEN_DETAIL_KEYS.has(key) &&
       !key.endsWith('_id') &&
+      !(
+        key.endsWith('_by') &&
+        !key.endsWith('_by_name')
+      ) &&
       value !== null &&
       value !== '' &&
       typeof value !== 'object'
@@ -209,7 +244,7 @@ function readableDetails(
         el(
           'strong',
           {},
-          labelOf(key) + ': '
+          detailLabel(key) + ': '
         ),
         String(value)
       )
@@ -257,6 +292,38 @@ function login() {
       after: boot,
       explanation:
         'Use an administrator-created account. Public registration is not available.'
+    }
+  );
+}
+
+function profile() {
+  return formModal(
+    'My profile',
+    [
+      field('username'),
+      field('first_name'),
+      field(
+        'middle_name',
+        'text',
+        false
+      ),
+      field('last_name'),
+      field('position_title')
+    ],
+    user,
+    api,
+    values =>
+      api.request(
+        'auth.profile',
+        values,
+        true
+      ),
+    {
+      disabled: ['position_title'],
+      closeOnSuccess: true,
+      after: boot,
+      explanation:
+        'View and edit your own account details. Position, role, leader and account status are managed by an administrator.'
     }
   );
 }
@@ -328,6 +395,10 @@ async function boot() {
       user.position_title;
 
     accountActions.append(
+      button(
+        'My profile',
+        profile
+      ),
       button(
         'Change password',
         password
@@ -529,18 +600,110 @@ function addModuleActions(module, controls) {
     );
   }
 
-  const requestModules = [
-    'requests',
-    'my_requests',
-    'my_tasks',
-    'transfers',
-    'access',
-    'assignments',
-    'disposals'
-  ];
+  const requestPresets = {
+    transfers: {
+      label: 'Transfer request',
+      type: 'transfer',
+      domain: 'hardcopy',
+      capability: 'transfer.request'
+    },
+    access: {
+      label: 'Access request',
+      type: 'access',
+      capability: 'access.request'
+    },
+    assignments: {
+      label: 'Assignment request',
+      type: 'assignment',
+      domain: 'softcopy',
+      capability: 'assignment.request'
+    },
+    disposals: {
+      label: 'Disposal request',
+      type: 'disposal',
+      capability: 'disposal.request'
+    }
+  };
 
   if (
-    requestModules.includes(module.key) &&
+    module.key === 'assignments' &&
+    can('assignment.manage')
+  ) {
+    controls.append(
+      button(
+        'Direct assign document',
+        () =>
+          formModal(
+            'Direct assign document',
+            [
+              field(
+                'softcopy_id',
+                'lookup',
+                true,
+                'softcopy',
+                {
+                  label: 'Softcopy Document'
+                }
+              ),
+              field(
+                'user_id',
+                'lookup',
+                true,
+                'users',
+                {
+                  label: 'Assign To'
+                }
+              ),
+              reason()
+            ],
+            {},
+            api,
+            values =>
+              api.request(
+                'assignments.direct',
+                values,
+                true
+              ),
+            {
+              after: refresh,
+              explanation:
+                'Administrative direct assignment. This does not create or use an approval request.'
+            }
+          )
+      )
+    );
+  }
+
+  const requestPreset =
+    requestPresets[module.key];
+
+  if (
+    requestPreset &&
+    can('requests.add') &&
+    can(requestPreset.capability)
+  ) {
+    controls.append(
+      button(
+        requestPreset.label,
+        () =>
+          requestForm(
+            null,
+            {
+              type: requestPreset.type,
+              ...(requestPreset.domain
+                ? {
+                    domain:
+                      requestPreset.domain
+                  }
+                : {})
+            }
+          )
+      )
+    );
+  }
+
+  if (
+    module.key === 'my_requests' &&
     can('requests.add')
   ) {
     controls.append(
@@ -1382,8 +1545,8 @@ function requestForm(
 
   const modalTitle = existing
     ? 'Edit request draft'
-    : preset.type
-      ? labelOf(type) + ' request'
+    : presetType
+      ? labelOf(presetType) + ' request'
       : 'New request';
 
   const modal = new Modal(
