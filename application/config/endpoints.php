@@ -172,11 +172,15 @@ return [
  
     'workflows.reassign' => ['op' => 'workflows.reassign', 'path' => 'workflows/reassign', 'method' => 'POST', 'service' => 'Workflow_service', 'handler' => 'reassign', 'shape' => 'input', 'fixed' => []],
  
+    'transfers.direct' => ['op' => 'transfers.direct', 'path' => 'transfers/direct', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'direct', 'shape' => 'input', 'fixed' => []],
+ 
     'transfers.dispatch' => ['op' => 'transfers.dispatch', 'path' => 'transfers/dispatch', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'dispatch', 'shape' => 'input', 'fixed' => []],
  
     'transfers.receive' => ['op' => 'transfers.receive', 'path' => 'transfers/receive', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'receive', 'shape' => 'input', 'fixed' => []],
  
     'transfers.cancel' => ['op' => 'transfers.cancel', 'path' => 'transfers/cancel', 'method' => 'POST', 'service' => 'Transfer_service', 'handler' => 'cancel', 'shape' => 'input', 'fixed' => []],
+ 
+    'access.direct' => ['op' => 'access.direct', 'path' => 'access/direct', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'directGrantAccess', 'shape' => 'input', 'fixed' => []],
  
     'access.revoke' => ['op' => 'access.revoke', 'path' => 'access/revoke', 'method' => 'POST', 'service' => 'Request_service', 'handler' => 'revoke', 'shape' => 'input', 'fixed' => []],
  
