@@ -132,3 +132,10 @@ body:not(.pk-modal-ready) .pk-page-modal .modal-content { box-shadow:var(--pk-sh
 
 .pk-select-trigger.border-danger { border-color:#dc3545!important; box-shadow:0 0 0 .17rem rgba(220,53,69,.11); }
 .pk-select-shell.is-open { z-index:1065; }
+
+/* Dashboard components reuse the global enterprise spacing, type and surfaces. */
+.pk-overview-kpi .card-body { min-height:160px; }
+.pk-kpi-icon,.pk-quick-icon { width:44px;height:44px;border-radius:11px;background:var(--pk-brand-soft);color:var(--pk-brand);display:inline-grid;place-items:center;flex:0 0 44px;font-size:1.12rem; }
+.pk-quick-link { display:flex;align-items:center;gap:.75rem;min-height:66px;padding:.75rem 1rem;border-radius:10px;border:1px solid var(--pk-line);text-decoration:none;color:var(--pk-ink)!important;transition:border-color .15s,background .15s; }
+.pk-quick-link:hover,.pk-quick-link:focus-visible { background:var(--pk-brand-soft);border-color:#d9a7b7; }
+.pk-quick-icon { width:34px;height:34px;flex-basis:34px;border-radius:9px;font-size:.96rem; }
