@@ -1,15 +1,33 @@
 # PK Document Tracking System
 
-Functional CodeIgniter 3 / MySQL document control application. The interface intentionally has **no CSS, Bootstrap, themes, icon fonts, or visual design**. Record actions, approvals, account operations, confirmations, uploads, downloads, and workflow editing use native HTML modal dialogs.
+Functional CodeIgniter 3 / MySQL document control application with a **modular red Tailwind design system** and a fully usable **plain HTML fallback**. Record actions, approvals, account operations, confirmations, uploads, downloads, and workflow editing retain native HTML modal dialogs. Styling is presentation only and does not change permissions or workflow behavior.
 
 The application is configured for **Windows XAMPP + XAMPP MySQL on PHP 8.0**. It does not use a project `.env`, Docker, Docker Compose, a custom PHP server router, or a separate application server.
+
+## Styling configuration
+
+Edit `application/config/styling.php` to enable or disable the design globally or by module. Current modules are enabled by default; new/unregistered modules remain plain until enabled. Use real PHP booleans, not strings:
+
+```php
+'enabled' => true,           // false disables all application styling
+'shell' => true,             // style the sidebar/header on enabled screens
+'default_enabled' => false,  // unregistered modules remain plain
+'modules' => [
+    'softcopy' => true,
+    'hardcopy' => false,     // example: native HTML on hardcopy screens
+    'workflows' => true,
+    // Keep the other module entries from the configuration file.
+],
+```
+
+A disabled module keeps working with native controls and no application design. Shared colors, controls and layout live in `resources/styles/`; module refinements live in `resources/styles/modules/`. The compiled stylesheet is committed, so XAMPP does not need Node, npm, a Tailwind CDN or internet access to display the design. See [the styling guide](docs/STYLING.md) for configuration precedence, optional emergency override, module extensions, rebuilding and tests. No database migration is required for styling.
 
 ## XAMPP requirements
 
 - XAMPP with Apache, MySQL/MariaDB, and PHP 8.0+
 - PHP extensions: `mysqli`, `fileinfo`, `mbstring`, `zip`
 - Composer 2
-- A current browser supporting native `<dialog>`
+- A current browser supporting native `<dialog>` and modern CSS
 
 Default database configuration is in `application/config/database.php`:
 
@@ -172,8 +190,9 @@ C:\xampp\php\php.exe tests\run.php
 C:\xampp\php\php.exe tests\architecture.php
 C:\xampp\php\php.exe tests\mysqli_contract.php
 C:\xampp\php\php.exe tests\native_database.php
+C:\xampp\php\php.exe tests\styling.php
 ```
 
 Real database integration tests are intentionally protected by test-only environment variables and must use a database whose name ends in `_test`; those variables are for automated/disposable tests only and are not application configuration.
 
-GitHub Actions provisions its own disposable MySQL database for those checks. The normal XAMPP application always uses the direct configuration in `application/config/database.php`.
+GitHub Actions provisions its own disposable MySQL database for those checks, verifies the committed Tailwind build, and tests both styled and plain interfaces. The normal XAMPP application always uses the direct configuration in `application/config/database.php`.
