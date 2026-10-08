@@ -38,3 +38,26 @@ new issues
 
 #13 [Not Fixed] Workflow history there no step name in user requester so just put the requester action this text.
 
+latest issues
+
+#14 [FIXED] Account profile
+- Added My profile in the signed-in account actions.
+- Users can view/edit their own username and name without user-management permission.
+- Position, role, leader and account status remain administrator-managed.
+
+#15 [FIXED] Assignment request vs direct assignment
+- Assignment request stays on the workflow/request lifecycle.
+- Added Direct assign document for assignment managers; it does not create a request.
+
+#16 [FIXED] Request type preset synchronization
+- Transfer, Access, Assignment and Disposal pages now open their own locked request type.
+- Contextual document request buttons keep the selected document/domain synchronized.
+
+#17 [FIXED] Created By raw ID
+- Raw created_by IDs are hidden from frontend details.
+- Created By now resolves to the readable user name and position.
+
+#18 [FIXED] Optional remarks
+- Approval, return, reject, publish/default, reassignment, transfer, access, assignment, file and catalog action remarks can be left empty.
+- Business request reasons remain separate from optional action remarks.
+
