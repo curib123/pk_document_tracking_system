@@ -1254,20 +1254,37 @@ class Request_service
             ]
         );
 
-        $this->workflow->history(
-            (int) $grant['request_id'],
-            null,
-            'access_' . $status,
-            $grant,
-            null,
-            $reason
-        );
+        $requestId = $grant['request_id']
+            ? (int) $grant['request_id']
+            : null;
+
+        if ($requestId !== null) {
+            $this->workflow->history(
+                $requestId,
+                null,
+                'access_' . $status,
+                $grant,
+                null,
+                $reason
+            );
+        } else {
+            $this->ctx->audit(
+                'access',
+                'direct_' . $status,
+                (int) $grant['id'],
+                $grant,
+                [
+                    'status' => $status,
+                ],
+                $reason
+            );
+        }
 
         $this->ctx->notify(
             (int) $grant['user_id'],
             'Access ' . $status,
             $reason ?? '',
-            (int) $grant['request_id']
+            $requestId
         );
 
         return [
