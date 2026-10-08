@@ -927,12 +927,30 @@ class Request_service
         array $fresh,
         int $requestId
     ): void {
-        $existing = $this->model()->assignment_for_update(
-            [
-                $softcopyId,
-                $fresh['user_id'],
-            ]
+        $this->upsertAssignment(
+            $softcopyId,
+            $fresh['user_id']
         );
+
+        $this->ctx->notify(
+            $fresh['user_id'],
+            'Document assigned',
+            'A controlled softcopy document has been assigned to you.',
+            $requestId
+        );
+    }
+
+    private function upsertAssignment(
+        int $softcopyId,
+        int $userId
+    ): int {
+        $existing =
+            $this->model()->assignment_for_update(
+                [
+                    $softcopyId,
+                    $userId,
+                ]
+            );
 
         if ($existing) {
             $this->model()->update(
@@ -940,26 +958,26 @@ class Request_service
                 (int) $existing['id'],
                 [
                     'active' => 1,
-                    'assigned_by' => $this->ctx->id(),
-                    'assigned_at' => date('Y-m-d H:i:s'),
+                    'assigned_by' =>
+                        $this->ctx->id(),
+                    'assigned_at' =>
+                        date('Y-m-d H:i:s'),
                 ]
             );
-        } else {
-            $this->model()->insert(
-                'assignments',
-                [
-                    'softcopy_id' => $softcopyId,
-                    'user_id' => $fresh['user_id'],
-                    'assigned_by' => $this->ctx->id(),
-                ]
-            );
+
+            return (int) $existing['id'];
         }
 
-        $this->ctx->notify(
-            $fresh['user_id'],
-            'Document assigned',
-            'A controlled softcopy document has been assigned to you.',
-            $requestId
+        return $this->model()->insert(
+            'assignments',
+            [
+                'softcopy_id' =>
+                    $softcopyId,
+                'user_id' =>
+                    $userId,
+                'assigned_by' =>
+                    $this->ctx->id(),
+            ]
         );
     }
 
@@ -1252,6 +1270,89 @@ class Request_service
 
         return [
             'message' => 'Access ' . $status . '.',
+        ];
+    }
+
+    public function directAssign(array $input): array
+    {
+        $this->ctx->require(
+            'assignment.manage'
+        );
+        $this->ctx->require(
+            'softcopy.view'
+        );
+
+        $softcopyId = Rules::id(
+            $input,
+            'softcopy_id'
+        );
+
+        $userId = Rules::id(
+            $input,
+            'user_id'
+        );
+
+        $reason = Rules::text(
+            $input,
+            'reason',
+            4000,
+            false
+        );
+
+        $document = $this->model()->lock(
+            'softcopy_documents',
+            $softcopyId
+        );
+
+        if ($document['status'] !== 'active') {
+            throw new Problem(
+                'Only active softcopy documents can be assigned.'
+            );
+        }
+
+        $this->ctx->active(
+            'users',
+            $userId
+        );
+
+        $before =
+            $this->model()->assignment_for_update(
+                [
+                    $softcopyId,
+                    $userId,
+                ]
+            );
+
+        $assignmentId =
+            $this->upsertAssignment(
+                $softcopyId,
+                $userId
+            );
+
+        $after = $this->model()->lock(
+            'assignments',
+            $assignmentId
+        );
+
+        $this->ctx->audit(
+            'assignment',
+            'direct_assigned',
+            $assignmentId,
+            $before,
+            $after,
+            $reason
+        );
+
+        $this->ctx->notify(
+            $userId,
+            'Document assigned',
+            'A controlled softcopy document has been assigned to you.'
+        );
+
+        return [
+            'id' => $assignmentId,
+            'message' =>
+                'Document assigned directly without a workflow request.',
         ];
     }
 
