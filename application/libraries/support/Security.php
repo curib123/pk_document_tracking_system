@@ -116,11 +116,12 @@ final class Security
             'Referrer-Policy: same-origin'
         );
 
+        // Local compiled styles only; no CDN or inline CSS is permitted.
         header(
             "Content-Security-Policy: " .
             "default-src 'self'; " .
             "script-src 'self'; " .
-            "style-src 'none'; " .
+            "style-src 'self'; " .
             "img-src 'self'; " .
             "object-src 'none'; " .
             "base-uri 'self'; " .

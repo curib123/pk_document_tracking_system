@@ -7,10 +7,15 @@ base=os.environ['APP_URL'].rstrip('/')
 with sync_playwright() as p:
     browser=p.chromium.launch(executable_path=os.environ.get('CHROMIUM_PATH','/usr/bin/chromium'),headless=True,args=['--no-sandbox'])
     page=browser.new_page();page.set_default_timeout(10000)
-    errors=[];paths=[]
+    errors=[];paths=[];css_responses=[]
     page.on('pageerror',lambda error:errors.append(str(error)))
     page.on('request',lambda request:paths.append(request.url))
-    page.goto(base+'/index.php/areas')
+    page.on('response',lambda response:css_responses.append(response.status) if '/assets/css/app.css' in response.url else None)
+    response=page.goto(base+'/index.php/areas')
+    policy=response.headers.get('content-security-policy','')
+    assert "style-src 'self'" in policy, 'Locally compiled CSS must be permitted by the real response policy'
+    assert "script-src 'self'" in policy and "object-src 'none'" in policy
+    assert 'unsafe-inline' not in policy and 'unsafe-eval' not in policy
     dialog=page.get_by_role('dialog',name='Sign in',exact=True)
     dialog.get_by_label('Username',exact=True).fill('admin')
     dialog.get_by_label('Password',exact=True).fill(os.environ['CI_ROUTE_PASSWORD'])
@@ -35,10 +40,12 @@ with sync_playwright() as p:
     expect(page.get_by_role('button',name='Add area',exact=True)).to_be_focused()
     expect(page.locator('main')).to_have_class('pk-ui')
     expect(page.locator('link[data-pk-styles]')).to_have_count(1)
+    page.wait_for_function("getComputedStyle(document.querySelector('main')).fontFamily.includes('Segoe')")
+    assert 200 in css_responses, 'A real local stylesheet response must load, not just a CSS class'
     page.goto(base+'/index.php/softcopy')
     expect(page.locator('main h2')).to_have_text('Softcopy documents')
     expect(page.locator('main')).to_have_attribute('data-pk-module','softcopy')
     assert any('/index.php/areas/save' in url for url in paths)
     assert not errors,errors
     browser.close()
-print('PASS real styled native-route modal login, deep links, persistence, duplicate-save recovery and focus.')
+print('PASS real styled native-route modal login, CSP-safe local CSS, deep links, persistence, duplicate-save recovery and focus.')
