@@ -88,8 +88,12 @@
             const search = $('<input type="search" class="form-control form-control-sm" autocomplete="off">')
                 .attr('aria-label', 'Search ' + label)
                 .attr('placeholder', 'Search ' + label.toLowerCase())
-                .attr('name', native.attr('data-lookup-name') || '')
-                .prop('disabled', !native.attr('data-lookup-name'));
+                .attr('placeholder', 'Search ' + label.toLowerCase());
+            // Local filtering must work even without a server-side lookup route.
+            // Only full-catalogue lookups submit their query field with the form.
+            if (native.attr('data-lookup-name')) {
+                search.attr('name', native.attr('data-lookup-name'));
+            }
             const list = $('<div class="pk-option-list" role="listbox"></div>');
             const count = $('<div class="pk-option-hint" aria-live="polite"></div>');
             menu.append(search, list, count);
@@ -237,7 +241,16 @@
         if (window.bootstrap && window.bootstrap.Modal) {
             $('body').addClass('pk-modal-ready');
             $('.pk-page-modal[data-pk-auto-open="true"]').each(function () {
-                window.bootstrap.Modal.getOrCreateInstance(this, {
+                const element = this;
+                const backUrl = element.getAttribute('data-pk-back-url');
+                if (backUrl) {
+                    $(element).on('hidden.bs.modal', function () {
+                        // This route consists solely of a dialog; closing must return
+                        // to its originating page instead of leaving an empty screen.
+                        window.location.assign(backUrl);
+                    });
+                }
+                window.bootstrap.Modal.getOrCreateInstance(element, {
                     backdrop: 'static',
                     keyboard: true
                 }).show();
