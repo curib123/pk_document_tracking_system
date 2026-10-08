@@ -15,6 +15,10 @@ class Assignments extends MY_Controller
     {
         $this->endpoint('assignments/view', $id===null?[]:['id'=>$id]);
     }
+    public function direct()
+    {
+        $this->endpoint('assignments/direct');
+    }
     public function remove()
     {
         $this->endpoint('assignments/remove');
