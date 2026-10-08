@@ -63,7 +63,7 @@ If you already have an older PK DTS database, update the code first and run:
 C:\xampp\php\php.exe bin\migrate.php
 ```
 
-The migrator upgrades schema versions 1 through 5 to the current **schema version 6**. Version 5 exports legacy database audit rows to append-only JSONL under `storage/audit/`; version 6 enables direct Transfer/Access records without workflow requests and seeds dedicated `transfer.direct`, `access.direct`, and `assignment.direct` permissions for Administrator and Document Control Officer. Existing document, request, workflow, status-history, and approval-history data are preserved. Back up the database before any schema migration.
+The migrator upgrades schema versions 1 through 6 to the current **schema version 7**. Version 5 exports legacy database audit rows to append-only JSONL under `storage/audit/`; version 6 enables direct Transfer/Access records and dedicated direct-action permissions; version 7 enables requestless direct Disposal records and seeds `disposal.direct` for Administrator and Document Control Officer. Existing document, request, workflow, status-history, and approval-history data are preserved. Back up the database before any schema migration.
 
 ## XAMPP notes
 
