@@ -6,7 +6,7 @@ This branch starts an incremental move to traditional server-rendered CodeIgnite
 
 A feature lives under `application/modules/<feature>/controllers`, `models` and `views` as needed. CodeIgniter 3 does not automatically discover modules. Instead, keep a thin controller in `application/controllers` for CI3's normal router, which loads the actual module controller using `require_once`. Existing route URLs therefore remain stable, with no additional HMVC vendor framework or router rewrite.
 
-Dashboard pilot:
+Initial modules:
 - `application/controllers/Web_dashboard.php`: CI3 compatibility bridge.
 - `application/modules/dashboard/controllers/Dashboard_controller.php`: native server-side controller.
 - `application/modules/dashboard/views/index.php`: feature-owned PHP view.
@@ -24,4 +24,4 @@ Run `php tests/modular_mvc.php`, `php tests/web_mvc.php`, `php tests/run.php`, a
 
 ## Status
 
-Only the native dashboard has been moved to the feature module so far. All other legacy and native browser features remain available through their original routes.
+The native dashboard, authentication, catalogue and read-only records controllers now live in feature modules behind CodeIgniter 3 route bridges. Their existing native PHP views remain under `application/views/web` until a later view relocation. The default entry route now opens the Bootstrap-only dashboard, and `/login` uses the native login. The old `/app` workspace and API routes remain available because several transactional workflows have not yet been converted. These legacy routes still depend on custom JavaScript/CSS; full removal would break those features.
