@@ -269,6 +269,16 @@ try:
         assignment_request.get_by_role('button',name='Cancel',exact=True).click()
 
         page.get_by_role('navigation').get_by_role('button',name='Disposal records',exact=True).click()
+        expect(page.get_by_role('button',name='Direct disposal',exact=True)).to_be_visible()
+        page.get_by_role('button',name='Direct disposal',exact=True).click()
+        direct_disposal=page.get_by_role('dialog',name='Direct disposal',exact=True)
+        expect(direct_disposal.get_by_label('Domain',exact=True)).to_have_value('softcopy')
+        expect(direct_disposal.get_by_label('Softcopy Document',exact=True)).to_be_visible()
+        expect(direct_disposal.get_by_label('Disposal Action',exact=True)).to_be_visible()
+        assert direct_disposal.get_by_label('Remarks',exact=True).get_attribute('required') is None
+        assert direct_disposal.get_by_label('Request Type',exact=True).count()==0
+        direct_disposal.get_by_role('button',name='Cancel',exact=True).click()
+
         page.get_by_role('button',name='Disposal request',exact=True).click()
         disposal_request=page.get_by_role('dialog',name='Disposal request',exact=True)
         expect(disposal_request.get_by_label('Request Type',exact=True)).to_have_value('disposal')
@@ -324,5 +334,5 @@ try:
         assert 'auth/login' in seen_paths and 'users/save' in seen_paths and 'roles/permissions' in seen_paths
         page.screenshot(path=str(ROOT/'tests/modal-browser.png'),full_page=True)
         browser.close()
-        print('PASS: native dialog, hardcopy transfer preset synchronization, predefined location hierarchy auto-population, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, self profile, contextual request presets, permission-controlled direct transfer/access/assignment, sequences under Document Setup, readable created-by values, optional remarks, all modules, no JS runtime errors')
+        print('PASS: native dialog, hardcopy transfer preset synchronization, predefined location hierarchy auto-population, table controls below results, ordered workflow step add/remove/save, removable workflow drafts, no raw JSON metadata, human-readable lookup labels without IDs, no CSS, modal login, Escape/focus, failed-save recovery, one submission, self profile, contextual request presets, permission-controlled direct transfer/access/assignment/disposal, sequences under Document Setup, readable created-by values, optional remarks, all modules, no JS runtime errors')
 finally: server.shutdown()
