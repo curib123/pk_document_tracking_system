@@ -296,7 +296,8 @@ class File_service
             Rules::text(
                 $input,
                 'reason',
-                2000
+                2000,
+                false
             )
         );
 
@@ -348,7 +349,8 @@ class File_service
         $reason = Rules::text(
             $input,
             'reason',
-            4000
+            4000,
+            false
         );
 
         $data = [
@@ -382,7 +384,8 @@ class File_service
         $this->ctx->notify(
             (int) $file['uploaded_by'],
             'Attachment ' . $decision,
-            $file['original_name'] . ' — ' . $reason
+            $file['original_name'] .
+                ($reason ? ' — ' . $reason : '')
         );
 
         return [
