@@ -1,9 +1,5 @@
 <template id="login-workspace-template">
     <div class="ws-login-scene">
-        <header class="ws-login-topbar">
-            <?php require __DIR__ . '/../../components/workspace/login_brand.php'; ?>
-            <span class="ws-secure-label"><span data-icon="shield"></span>Authorized access only</span>
-        </header>
         <div class="ws-login-grid">
             <section class="ws-login-hero">
                 <span class="ws-login-pill">Document tracking system</span>
