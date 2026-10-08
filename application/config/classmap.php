@@ -8,6 +8,7 @@ return [
     'Catalog_service' => 'libraries/Catalog_service.php',
     'Datatable_service' => 'libraries/Datatable_service.php',
     'Document_model' => 'models/Document_model.php',
+    'Document_visibility_model' => 'models/Document_visibility_model.php',
     'Document_service' => 'libraries/Document_service.php',
     'Endpoint_registry' => 'libraries/Endpoint_registry.php',
     'File_model' => 'models/File_model.php',

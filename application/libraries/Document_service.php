@@ -696,52 +696,9 @@ class Document_service
         string $domain,
         int $id
     ): bool {
-        $document = $this->model()->row(
-            self::table($domain),
-            $id
-        );
-
-        if ($this->ctx->can('documents.access_all')) {
-            return true;
-        }
-
-        if ($document['status'] !== 'active') {
-            return false;
-        }
-
-        $isCreator =
-            (int) $document['created_by']
-            === $this->ctx->id();
-
-        $isHolder =
-            $domain === 'hardcopy'
-            && (int) $document['holder_id']
-                === $this->ctx->id();
-
-        if ($isCreator || $isHolder) {
-            return true;
-        }
-
-        $assigned =
-            $domain === 'softcopy'
-            && $this->model()->active_assignment(
-                [
-                    $id,
-                    $this->ctx->id(),
-                ]
-            );
-
-        if ($assigned) {
-            return true;
-        }
-
-        return (bool) $this->model()->live_access_grant(
-            [
-                $domain,
-                $id,
-                $this->ctx->id(),
-            ]
-        );
+        // Same access rules as document lists; no implicit creator bypass.
+        return $this->ctx->model(Document_visibility_model::class)
+            ->canRead($domain, $id);
     }
 
     public function noOpenTransfer(int $id): void

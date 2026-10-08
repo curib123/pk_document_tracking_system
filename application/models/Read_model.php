@@ -32,6 +32,11 @@ class Read_model extends Repository_model
         ];
     }
 
+    private function visibility(): Document_visibility_model
+    {
+        return $this->ctx->model(Document_visibility_model::class);
+    }
+
     private function scope(string $module): array
     {
         $definition = UiSchema::modules()[$module]
@@ -62,6 +67,10 @@ class Read_model extends Repository_model
             $disposalRequests=$this->db->get_compiled_select();
         }
         $this->db->reset_query()->from($definition['table'].' t');
+        if (in_array($module, ['softcopy', 'hardcopy'], true)) {
+            // Same predicate before counts, pagination and individual record lookup.
+            $this->db->where($this->visibility()->predicate($module, 't'), null, false);
+        }
         if ($module==='my_requests') $this->db->where('t.requested_by',$userId);
         if ($module==='my_tasks') $this->db->where('t.status','pending')->where('t.id IN ('.$steps.')',null,false);
         if ($module==='requests' && !$this->ctx->can('requests.view_all')) {
@@ -74,7 +83,9 @@ class Read_model extends Repository_model
         if ($module==='access' && !$this->ctx->can('access.manage') && !$this->ctx->can('access.view_all')) $this->db->where('t.user_id',$userId);
         if ($module==='assignments' && !$this->ctx->can('assignment.manage') && !$this->ctx->can('assignment.view_all')) $this->db->where('t.user_id',$userId);
         if ($disposalRequests!==null) $this->db->where('t.request_id IN ('.$disposalRequests.')',null,false);
-        if ($module==='files' && !$this->ctx->can('files.approve') && !$this->ctx->can('files.view_all')) $this->db->where('t.uploaded_by',$userId);
+        if ($module === 'files') {
+            $this->db->where($this->visibility()->filePredicate('t'), null, false);
+        }
         if ($module==='notifications') $this->db->where('t.user_id',$userId);
         return $definition;
     }
@@ -456,6 +467,11 @@ class Read_model extends Repository_model
         ?int $id
     ): ?string {
         if (!$id) {
+            return null;
+        }
+
+        if (in_array($kind, ['softcopy', 'hardcopy'], true)
+            && !$this->visibility()->canView($kind, $id)) {
             return null;
         }
 
@@ -1107,6 +1123,28 @@ class Read_model extends Repository_model
             false
         );
 
+        if (in_array($kind, ['softcopy', 'hardcopy'], true)) {
+            $label = $kind === 'softcopy'
+                ? "CONCAT(d.document_number,' — ',d.title)"
+                : 'd.title';
+            $this->db->reset_query()
+                ->select('d.id')
+                ->select($label . ' AS label', false)
+                ->from($table . ' d')
+                ->where($this->visibility()->predicate($kind, 'd'), null, false)
+                ->where('d.status', 'active')
+                ->group_start()
+                ->like($label, $search);
+
+            // Keep the selection searchable, never outside the access boundary.
+            if ($selected !== null) {
+                $this->db->or_where('d.id', $selected);
+            }
+
+            $this->db->group_end()->order_by('label')->limit(101);
+            return $this->lookupPayload($this->results());
+        }
+
         // Predefined physical lookups include their parent hierarchy.
         // The frontend uses these readable values to auto-populate upward.
         if ($kind === 'specifics') {
@@ -1347,10 +1385,11 @@ class Read_model extends Repository_model
 
             $this->db
                 ->reset_query()
-                ->select('status')
+                ->select('d.status AS status', false)
                 ->select('COUNT(*) AS total', false)
-                ->from($table)
-                ->group_by('status');
+                ->from($table . ' d')
+                ->where($this->visibility()->predicate($module, 'd'), null, false)
+                ->group_by('d.status');
 
             $result[$module] = $this->results();
         }

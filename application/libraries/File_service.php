@@ -450,23 +450,27 @@ class File_service
         array $file,
         int $id
     ): bool {
+        if (!$this->ctx->id() || !$this->ctx->can('files.view')) {
+            return false;
+        }
+
         if (!$file['document_id']) {
             return
                 (int) $file['uploaded_by'] === $this->ctx->id()
                 || $this->canReview($id);
         }
 
+        $canReadDocument = (new Document_service($this->ctx))
+            ->canRead($file['domain'], (int) $file['document_id']);
+
         if ($file['status'] === 'approved') {
-            return (new Document_service($this->ctx))
-                ->canRead(
-                    $file['domain'],
-                    (int) $file['document_id']
-                );
+            return $canReadDocument;
         }
 
-        return
-            (int) $file['uploaded_by'] === $this->ctx->id()
-            || $this->ctx->can('files.approve');
+        // Personal upload ownership cannot reopen a linked document after access ends.
+        // Explicit attachment reviewers retain their existing review permission.
+        return $this->ctx->can('files.approve')
+            || ($canReadDocument && (int) $file['uploaded_by'] === $this->ctx->id());
     }
 
     private function assertArtifactStillValid(
