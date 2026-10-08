@@ -19,6 +19,28 @@ $db->transaction(function() use($db,$ctx) {
         'schema version 5 is installed'
     );
 
+    $profileBefore=$db->row('users',$ctx->id());
+    $profileService=new Auth_service($ctx);
+    $profileService->updateProfile([
+        'username'=>$profileBefore['username'],
+        'first_name'=>'Profile Test',
+        'middle_name'=>$profileBefore['middle_name'],
+        'last_name'=>$profileBefore['last_name'],
+    ]);
+    $profileAfter=$db->row('users',$ctx->id());
+    check(
+        $profileAfter['first_name']==='Profile Test'
+        && $profileAfter['position_title']===$profileBefore['position_title']
+        && (int)$profileAfter['role_id']===(int)$profileBefore['role_id'],
+        'signed-in user can update own profile without changing managed role or position'
+    );
+    $profileService->updateProfile([
+        'username'=>$profileBefore['username'],
+        'first_name'=>$profileBefore['first_name'],
+        'middle_name'=>$profileBefore['middle_name'],
+        'last_name'=>$profileBefore['last_name'],
+    ]);
+
     foreach ([
         ['specifics','specific_lookup'],
         ['assets','asset_lookup'],
@@ -85,7 +107,12 @@ $db->transaction(function() use($db,$ctx) {
     check($r['status']==='pending','submitted request waiting for workflow');
     $ctx->identify($adminId);
     $step=$db->one("SELECT * FROM workflow_steps WHERE request_id=? AND status='pending'",[$request['id']]);
-    $requests->decide(['id'=>$request['id'],'version'=>(int)$r['version'],'step_id'=>$step['id'],'decision'=>'approve','comments'=>'Approved']);
+    $requests->decide(['id'=>$request['id'],'version'=>(int)$r['version'],'step_id'=>$step['id'],'decision'=>'approve']);
+    $approvalHistory=$db->one("SELECT comments FROM workflow_history WHERE request_id=? AND action='approve' ORDER BY id DESC LIMIT 1",[$request['id']]);
+    check(
+        $approvalHistory['comments']===null,
+        'workflow approval remarks are optional'
+    );
     $transfer=$db->one('SELECT * FROM transfers WHERE request_id=?',[$request['id']]);
     check($transfer['status']==='for_transfer','approval creates transfer awaiting physical movement');
     check((int)$db->row('hardcopy_documents',$hard['id'])['location_id']===$location['id'],'approval does not change current location');
@@ -182,6 +209,12 @@ $db->transaction(function() use($db,$ctx) {
     $ctx->identify($adminId);
     $file=$db->insert('files',['original_name'=>'form.pdf','storage_name'=>bin2hex(random_bytes(16)).'.pdf','size'=>10,'mime_type'=>'application/pdf','fingerprint'=>hash('sha256','fixture'),'extension'=>'pdf','uploaded_by'=>$adminId]);
     $soft=$documents->direct('softcopy',['title'=>'Quality form','category_id'=>$category['id'],'file_id'=>$file,'reason'=>'Initial controlled document','effective_date'=>date('Y-m-d'),'page_number'=>1]);
+    $softDetail=(new Read_service($ctx))->detail('softcopy',(int)$soft['id']);
+    check(
+        !empty($softDetail['row']['created_by_name'])
+        && !ctype_digit((string)$softDetail['row']['created_by_name']),
+        'created-by relation exposes a readable user label'
+    );
     $before=$db->row('softcopy_documents',$soft['id']);
     $file2=$db->insert('files',['original_name'=>'form-v2.pdf','storage_name'=>bin2hex(random_bytes(16)).'.pdf','size'=>10,'mime_type'=>'application/pdf','fingerprint'=>hash('sha256','fixture2'),'extension'=>'pdf','uploaded_by'=>$adminId]);
     $documents->direct('softcopy',['id'=>$soft['id'],'version'=>(int)$before['version'],'title'=>'Quality form revised','category_id'=>$category['id'],'file_id'=>$file2,'reason'=>'Updated','effective_date'=>date('Y-m-d'),'page_number'=>2]);
@@ -205,9 +238,29 @@ $db->transaction(function() use($db,$ctx) {
     $requests->decide(['id'=>$r['id'],'version'=>$r['version'],'step_id'=>$step['id'],'decision'=>'approve','comments'=>'Approved corrected purpose']);
     $ctx->identify($staff['id']); check($documents->canRead('softcopy',$soft['id']),'approved access grant permits controlled file access');
     $grant=$db->one('SELECT * FROM access_grants WHERE request_id=?',[$r['id']]);
-    $requests->revoke(['id'=>$grant['id'],'version'=>$grant['version'],'reason'=>'Finished reviewing']);
+    $requests->revoke(['id'=>$grant['id'],'version'=>$grant['version']]);
     check(!$documents->canRead('softcopy',$soft['id']),'returned access immediately denies content');
+
     $ctx->identify($adminId);
+    $directAssignment=$requests->directAssign([
+        'softcopy_id'=>$soft['id'],
+        'user_id'=>$staff['id'],
+    ]);
+    $assigned=$db->row('assignments',(int)$directAssignment['id']);
+    check(
+        (int)$assigned['softcopy_id']===(int)$soft['id']
+        && (int)$assigned['user_id']===(int)$staff['id']
+        && (int)$assigned['active']===1,
+        'administrative direct assignment is separate from workflow requests'
+    );
+    check(
+        $db->one(
+            "SELECT id FROM requests WHERE type='assignment' AND softcopy_id=? AND requested_by=? ORDER BY id DESC LIMIT 1",
+            [$soft['id'],$adminId]
+        )===null,
+        'direct assignment does not create an assignment request'
+    );
+
     $retain=$documents->direct('hardcopy',['title'=>'Retention fixture','area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$location['id'],'holder_id'=>$staff['id'],'retention_enabled'=>1,'retention_start_date'=>date('Y-m-d'),'retention_end_date'=>date('Y-m-d',strtotime('+1 year')),'reason'=>'Register retention-controlled copy']);
     $ctx->identify($staff['id']);
     denied(fn()=>$requests->save(['type'=>'disposal','hardcopy_id'=>$retain['id'],'payload'=>['reason'=>'Too early','disposal_action'=>'shred']]),'retention prevents premature disposal');
