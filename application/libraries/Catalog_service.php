@@ -618,7 +618,8 @@ class Catalog_service
         $reason = Rules::text(
             $input,
             'reason',
-            2000
+            2000,
+            false
         );
 
         $user = $this->model()->lock(
@@ -739,7 +740,8 @@ class Catalog_service
             Rules::text(
                 $input,
                 'reason',
-                2000
+                2000,
+                false
             )
         );
 
@@ -843,7 +845,8 @@ class Catalog_service
         $reason = Rules::text(
             $input,
             'reason',
-            2000
+            2000,
+            false
         );
 
         if ($module === 'users') {
@@ -888,7 +891,7 @@ class Catalog_service
     private function deactivateUser(
         int $id,
         array $row,
-        string $reason
+        ?string $reason
     ): array {
         if ($id === $this->ctx->id()) {
             throw new Problem(
