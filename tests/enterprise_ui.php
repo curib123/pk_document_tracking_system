@@ -65,6 +65,10 @@ $check('table places search, filters, rows, pagination in order',
 $check('table escapes database text', str_contains($table,'Warehouse &amp; Admin'));
 $check('disabled pagination buttons not clickable', str_contains($table,'aria-disabled="true">Previous') && str_contains($table,'aria-disabled="true">Next'));
 $check('row limit is below table', strpos($table,'Rows per page')>$t);
+$check('request type filters query the model and remain in pagination',
+    str_contains(file_get_contents(APPPATH . 'models/Read_model.php'), "'t.type'")
+    && str_contains(file_get_contents(APPPATH . 'views/web/components/data_table.php'), "name="type"")
+);
 
 $form = view_html('catalog_form', [
     'module'=>'areas','definition'=>$definition,'page_title'=>'Edit Areas',
