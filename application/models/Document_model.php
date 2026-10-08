@@ -6,39 +6,19 @@ class Document_model extends Repository_model
 {
     // Ari ang DB queries; service layer ang magbuot sa business rules para klaro ang separation.
 
+
     public function location_occupant(array $params = []): ?array
-    {
-        $this->db->reset_query()
-            ->select('id')
-            ->from('hardcopy_documents')
-            ->where(
-                'location_id',
-                $params[0]
-            )
-            ->limit(1);
+{
+    $this->db->reset_query()
+        ->select('id')
+        ->from('hardcopy_documents')
+        ->where(
+            'location_id',
+            $params[0]
+        );
 
-        return $this->first(true);
-    }
-
-    public function active_assignment(array $params = []): ?array
-    {
-        $this->db
-            ->reset_query()
-            ->select('id')
-            ->from('assignments')
-            ->where(
-                'softcopy_id',
-                $params[0]
-            )
-            ->where(
-                'user_id',
-                $params[1]
-            )
-            ->where('active', 1)
-            ->limit(1);
-
-        return $this->first();
-    }
+    return $this->first(true);
+}
 
     public function live_access_grant(array $params = []): ?array
     {

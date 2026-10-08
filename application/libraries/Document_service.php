@@ -447,15 +447,7 @@ class Document_service
             [$locationId]
         );
 
-        if (
-            $occupied &&
-            (int) $occupied['id'] !== $documentId
-        ) {
-            throw new Problem(
-                'That dedicated location is already assigned to another hardcopy.'
-            );
-        }
-
+       
         return [
             'area_id' => $areaId,
             'specific_id' => $specificId,

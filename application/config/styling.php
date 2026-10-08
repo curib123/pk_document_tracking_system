@@ -5,7 +5,7 @@ declare(strict_types=1);
 return [
     'enabled' => true,
     'shell' => true,
-    'default_enabled' => true,
+    'default_enabled' => false,
     'theme' => 'red',
     'modules' => [
         'account' => false,
