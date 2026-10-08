@@ -232,7 +232,7 @@ try:
         direct_assign=page.get_by_role('dialog',name='Direct assign document',exact=True)
         expect(direct_assign.get_by_label('Softcopy Document',exact=True)).to_be_visible()
         expect(direct_assign.get_by_label('Assign To',exact=True)).to_be_visible()
-        expect(direct_assign.get_by_label('Remarks',exact=True)).not_to_be_required()
+        assert direct_assign.get_by_label('Remarks',exact=True).get_attribute('required') is None
         assert direct_assign.get_by_label('Request Type',exact=True).count()==0
         direct_assign.get_by_role('button',name='Cancel',exact=True).click()
 
@@ -282,7 +282,7 @@ try:
         workflow=page.get_by_role('dialog',name='Test Workflow',exact=True)
         workflow.get_by_role('button',name='Remove draft version',exact=True).click()
         remove_draft=page.get_by_role('dialog',name='Remove draft workflow version',exact=True)
-        expect(remove_draft.get_by_label('Remarks',exact=True)).not_to_be_required()
+        assert remove_draft.get_by_label('Remarks',exact=True).get_attribute('required') is None
         remove_draft.get_by_role('button',name='Confirm',exact=True).click()
         assert state['workflow_delete_payload']['id']==31
         assert state['workflow_delete_payload']['reason'] is None
