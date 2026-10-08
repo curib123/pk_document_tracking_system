@@ -236,7 +236,7 @@ class Transfer_service
             $document['status'],
             $document['status'],
             'transfer_received',
-            $comments
+            $comments ?? ''
         );
 
         $this->ctx->audit(
