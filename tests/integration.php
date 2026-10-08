@@ -6,7 +6,7 @@ if (getenv('PK_TEST_DB') !== '1' || !str_ends_with(getenv('DB_DATABASE') ?: '', 
 if (!extension_loaded('mysqli')) { fwrite(STDERR,"BLOCKED: MySQLi extension is unavailable; integration tests did not run.\n"); exit(2); }
 $db=Database::connect(); $ctx=new Context($db); $admin=$db->one("SELECT id FROM users WHERE username='admin'");
 $schemaVersion=(int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version'];
-if ($schemaVersion !== 6) throw new RuntimeException('Expected schema version 6, got '.$schemaVersion);
+if ($schemaVersion !== 7) throw new RuntimeException('Expected schema version 7, got '.$schemaVersion);
 if (!$admin) throw new RuntimeException('Run the installer first.');
 $ctx->identify((int)$admin['id']);
 $checks=0;
@@ -15,8 +15,8 @@ function denied(callable $fn,string $name): void { global $db; $db->query('SAVEP
 $db->begin();
 $db->transaction(function() use($db,$ctx) {
     check(
-        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===6,
-        'schema version 6 is installed'
+        (int)$db->one('SELECT MAX(version) AS version FROM schema_migrations')['version']===7,
+        'schema version 7 is installed'
     );
 
     $profileBefore=$db->row('users',$ctx->id());
@@ -41,7 +41,7 @@ $db->transaction(function() use($db,$ctx) {
         'last_name'=>$profileBefore['last_name'],
     ]);
 
-    foreach (['transfers','access_grants'] as $table) {
+    foreach (['transfers','access_grants','disposals'] as $table) {
         $nullable=$db->one(
             'SELECT IS_NULLABLE AS nullable
              FROM information_schema.columns
@@ -65,12 +65,12 @@ $db->transaction(function() use($db,$ctx) {
              JOIN permissions p ON p.id=rp.permission_id
              WHERE r.name=?
                AND CONCAT(p.module_key,'.',p.action_key)
-                   IN ('transfer.direct','access.direct','assignment.direct')",
+                   IN ('transfer.direct','access.direct','assignment.direct','disposal.direct')",
             [$roleName]
         )['n'];
 
         check(
-            $directCount===3,
+            $directCount===4,
             $roleName.' receives dedicated direct-action permissions'
         );
     }
@@ -347,6 +347,25 @@ $db->transaction(function() use($db,$ctx) {
         'direct assignment does not create an assignment request'
     );
 
+    $directDisposal=$requests->directDispose([
+        'domain'=>'softcopy',
+        'document_id'=>$soft['id'],
+        'disposal_action'=>'shred',
+    ]);
+    $directDisposalRow=$db->row('disposals',(int)$directDisposal['id']);
+    $directDisposedDocument=$db->row('softcopy_documents',$soft['id']);
+    check(
+        $directDisposalRow['request_id']===null
+        && $directDisposalRow['domain']==='softcopy'
+        && $directDisposalRow['disposal_action']==='shred',
+        'direct disposal bypasses request workflow'
+    );
+    check(
+        $directDisposedDocument['status']==='disposed'
+        && $directDisposedDocument['previous_status']==='active',
+        'direct disposal preserves previous document status'
+    );
+
     $retain=$documents->direct('hardcopy',['title'=>'Retention fixture','area_id'=>$area['id'],'specific_id'=>$specific['id'],'asset_id'=>$asset['id'],'location_id'=>$location['id'],'holder_id'=>$staff['id'],'retention_enabled'=>1,'retention_start_date'=>date('Y-m-d'),'retention_end_date'=>date('Y-m-d',strtotime('+1 year')),'reason'=>'Register retention-controlled copy']);
     $ctx->identify($staff['id']);
     denied(fn()=>$requests->save(['type'=>'disposal','hardcopy_id'=>$retain['id'],'payload'=>['reason'=>'Too early','disposal_action'=>'shred']]),'retention prevents premature disposal');
@@ -387,7 +406,7 @@ $db->transaction(function() use($db,$ctx) {
     );
     check(
         $auditTable===null,
-        'legacy audit table remains removed in schema version 6'
+        'legacy audit table remains removed in schema version 7'
     );
 });
 $db->rollback();
