@@ -15,6 +15,10 @@ class Access extends MY_Controller
     {
         $this->endpoint('access/view', $id===null?[]:['id'=>$id]);
     }
+    public function direct()
+    {
+        $this->endpoint('access/direct');
+    }
     public function revoke()
     {
         $this->endpoint('access/revoke');
