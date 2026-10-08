@@ -33,9 +33,10 @@ $config['cache_query_string'] = false;
 $config['encryption_key'] = '';
 
 $config['sess_driver'] = 'files';
-$config['sess_cookie_name'] = 'unused_ci_session';
+$config['sess_cookie_name'] = 'pk_dts_ci_session';
 $config['sess_expiration'] = 1800;
-$config['sess_save_path'] = null;
+$config['sess_save_path'] = PK_ROOT . '/storage/sessions';
+$config['sess_samesite'] = 'Strict';
 $config['sess_match_ip'] = false;
 $config['sess_time_to_update'] = 300;
 $config['sess_regenerate_destroy'] = true;
@@ -52,7 +53,7 @@ $config['cookie_samesite'] = 'Strict';
 $config['standardize_newlines'] = false;
 $config['global_xss_filtering'] = false;
 
-// API uses its own per-session synchronizer token in X-CSRF-Token.
+// Shared synchronizer token: CI session for browser forms and legacy JSON transport.
 $config['csrf_protection'] = false;
 $config['csrf_token_name'] = 'unused_ci_csrf';
 $config['csrf_cookie_name'] = 'unused_ci_csrf';

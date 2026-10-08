@@ -107,7 +107,7 @@ try {
 
 
     foreach (
-        ['files', 'conversions', 'logs', 'audit']
+        ['files', 'conversions', 'logs', 'audit', 'sessions']
         as $folder
     ) {
         $path =
