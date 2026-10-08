@@ -1,4 +1,7 @@
-/*! tailwindcss v4.1.10 | MIT License | https://tailwindcss.com */
+/*! tailwindcss v4.3.1 | MIT License | https://tailwindcss.com */
+.pk-ui, body[data-pk-shell] {
+  --pk-font-sans: "Poppins", "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+}
 .pk-ui {
   --pk-brand: #b91c1c;
   --pk-brand-hover: #991b1b;
@@ -10,7 +13,7 @@
   --pk-surface: #ffffff;
   --pk-shadow: 0 1px 3px rgb(16 24 40 / 0.05);
   color: var(--pk-ink);
-  font-family: "Segoe UI", ui-sans-serif, system-ui, sans-serif;
+  font-family: var(--pk-font-sans);
   font-size: 14px;
   line-height: 1.55;
   text-align: left;
@@ -542,6 +545,23 @@ body[data-pk-shell] #pk-menu-toggle {
   #content.pk-ui {
     padding: 0;
   }
+}
+.pk-ui .ws-icon, body[data-pk-shell] .ws-icon {
+  display: inline-grid;
+  place-items: center;
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  font-size: 16px;
+  line-height: 1;
+  font-style: normal;
+  vertical-align: middle;
+}
+.pk-ui .ws-welcome-icon .ws-icon {
+  font-size: 22px;
+}
+.pk-ui .ws-empty .ws-icon {
+  font-size: 26px;
 }
 #content.pk-ui[data-pk-module="softcopy"] td:first-child {
   color: #475467;

@@ -5,7 +5,7 @@ body[data-pk-shell], dialog.pk-login.pk-ui {
   --ws-muted: #63738b; --ws-line: #e2e5ec; --ws-side: #1c1015;
   --pk-brand: #990d38; --pk-brand-hover: #79062a; --pk-brand-soft: #fff1f3;
   --pk-border: #e2e5ec; --pk-muted: #63738b;
-  font-family: Inter, 'Segoe UI', Arial, sans-serif; color: var(--ws-text);
+  font-family: var(--pk-font-sans); color: var(--ws-text);
 }
 body[data-pk-shell][data-ws-mode="dark"] {
   --ws-page:#10131b; --ws-surface:#1a1f2b; --ws-text:#f2f4fa;

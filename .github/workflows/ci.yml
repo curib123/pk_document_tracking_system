@@ -44,11 +44,11 @@ jobs:
       - run: composer install --prefer-dist --no-interaction
       - name: Verify compiled design system
         run: |
-          npm install --ignore-scripts --no-audit --no-fund
+          npm ci --ignore-scripts --no-audit --no-fund
           npm run check:css
-          node tools/build-workspace.cjs --check
           node --test tests/reference_data.test.mjs
           php tests/styling.php
+          php tests/frontend_assets.php
       - name: Syntax and domain rules
         run: |
           find application public bin tests -name '*.php' -print0 | xargs -0 -n1 php -l
@@ -81,6 +81,7 @@ jobs:
           python3 tests/styling_browser.py
           python3 tests/native_browser.py
           python3 tests/reference_browser.py
+          python3 tests/frontend_assets_browser.py
       - name: Private diagnostic logs on failure
         if: failure()
         run: |

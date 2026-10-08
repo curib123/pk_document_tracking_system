@@ -77,8 +77,14 @@ verify('hardcopy holder is enforced server-side for ordinary requesters',functio
         && str_contains($service,"can('requests.manage')")
         && str_contains($service,'$defaultHolder');
 });
-verify('the view layer remains unstyled',function(){
-    foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/application/views')) as $file) if($file->isFile() && preg_match('/<style\b|\bstyle\s*=|rel=[\'\"]stylesheet/i',file_get_contents($file->getPathname())))return false;
+verify('view styles remain external and stylesheet links are centralized',function(){
+    $assets=PK_ROOT.'/application/views/components/assets/styles.php';
+    foreach(new RecursiveIteratorIterator(new RecursiveDirectoryIterator(PK_ROOT.'/application/views')) as $file) {
+        if (!$file->isFile()) continue;
+        $html=file_get_contents($file->getPathname());
+        if (preg_match('/<style\b|\bstyle\s*=/i',$html)) return false;
+        if (preg_match('/rel=[\'\"]stylesheet/i',$html) && $file->getPathname()!==$assets) return false;
+    }
     return true;
 });
 verify('browser transport uses native controller endpoints',fn()=>is_file(PK_ROOT.'/public/assets/js/api.js') && str_contains(file_get_contents(PK_ROOT.'/public/assets/js/api.js'),'endpointRoutes'));

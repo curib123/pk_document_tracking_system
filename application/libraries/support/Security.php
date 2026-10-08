@@ -116,18 +116,20 @@ final class Security
             'Referrer-Policy: same-origin'
         );
 
-        // Local compiled styles only; no CDN or inline CSS is permitted.
+        // Tailwind stays local. Only the requested font/icon CSS origins are added.
+        // No remote scripts, inline CSS/JS or wildcard origins are permitted.
         header(
             "Content-Security-Policy: " .
             "default-src 'self'; " .
             "script-src 'self'; " .
-            "style-src 'self'; " .
+            "style-src 'self' https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
+            "font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
             "img-src 'self'; " .
             "object-src 'none'; " .
             "base-uri 'self'; " .
             "frame-ancestors 'none'; " .
             "form-action 'self'; " .
-            "connect-src 'self'"
+            "connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com"
         );
 
         header(
