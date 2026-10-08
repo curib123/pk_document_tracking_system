@@ -144,6 +144,8 @@ return [
   
     'auth.password' => ['op' => 'auth.password', 'path' => 'auth/password', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'changePassword', 'shape' => 'input', 'fixed' => []],
   
+    'auth.profile' => ['op' => 'auth.profile', 'path' => 'auth/profile', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'updateProfile', 'shape' => 'input', 'fixed' => []],
+  
     'auth.logout' => ['op' => 'auth.logout', 'path' => 'auth/logout', 'method' => 'POST', 'service' => 'Auth_service', 'handler' => 'logout', 'shape' => 'none', 'fixed' => []],
   
     'users.reset_password' => ['op' => 'users.reset_password', 'path' => 'users/reset_password', 'method' => 'POST', 'service' => 'Catalog_service', 'handler' => 'resetPassword', 'shape' => 'input', 'fixed' => []],
