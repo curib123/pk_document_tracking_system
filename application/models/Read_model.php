@@ -278,6 +278,14 @@ class Read_model extends Repository_model
         string $module,
         array $query
     ): void {
+        if (in_array($module, ['areas', 'specifics', 'assets', 'locations', 'categories'], true)) {
+            // 0 must remain a valid filter rather than meaning "not supplied".
+            $active = $query['active'] ?? null;
+            if (is_string($active) && in_array($active, ['0', '1'], true)) {
+                $this->db->where('t.active', (int) $active);
+            }
+        }
+
         if (
             in_array(
                 $module,
@@ -309,6 +317,36 @@ class Read_model extends Repository_model
                 );
             }
         }
+    }
+
+    /**
+     * Permission-scoped status choices for normal GET filters.
+     * Reuses the same document/request visibility SQL as the table itself.
+     */
+    public function statusOptions(string $module): array
+    {
+        $allowed = [
+            'softcopy', 'hardcopy', 'requests', 'my_requests', 'my_tasks',
+            'transfers', 'access', 'files',
+        ];
+
+        if (!in_array($module, $allowed, true)) {
+            return [];
+        }
+
+        $this->scope($module);
+        $this->db
+            ->select('t.status')
+            ->where('t.status IS NOT NULL', null, false)
+            ->where('t.status !=', '')
+            ->group_by('t.status')
+            ->order_by('t.status', 'ASC')
+            ->limit(100);
+
+        return array_values(array_map(
+            static fn(array $row): string => (string) $row['status'],
+            $this->results()
+        ));
     }
 
     public function listing(

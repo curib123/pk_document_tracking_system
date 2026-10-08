@@ -18,6 +18,7 @@ $route['web/change-password'] = 'web_auth/change_password';
 $route['web/catalog/(:any)/new'] = 'web_catalog/create/$1';
 $route['web/catalog/(:any)/edit/(:num)'] = 'web_catalog/edit/$1/$2';
 $route['web/catalog/(:any)/delete/(:num)'] = 'web_catalog/confirm_delete/$1/$2';
+$route['web/catalog/(:any)/lookup'] = 'web_catalog/lookup/$1';
 $route['web/catalog/(:any)/save'] = 'web_catalog/save/$1';
 $route['web/catalog/(:any)/remove'] = 'web_catalog/delete/$1';
 $route['web/catalog/(:any)'] = 'web_catalog/index/$1';

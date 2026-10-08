@@ -15,12 +15,19 @@ class MY_Web_Controller extends MY_Controller
 {
     protected function webContext(bool $guestAllowed = false, bool $passwordAllowed = false): Context
     {
-        $this->load->helper(['url', 'ui']);
+        $this->load->helper(['url', 'ui', 'web_ui']);
         Security::startSession();
         Security::headers();
 
-        // Bootstrap CSS only. Browser pages intentionally execute no JavaScript.
-        header("Content-Security-Policy: default-src 'self'; script-src 'none'; style-src 'self' https://cdn.jsdelivr.net; font-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'");
+        // Browser enhancements only: PHP forms work without JS or external APIs.
+        header(
+            "Content-Security-Policy: default-src 'self'; " .
+            "script-src 'self' https://code.jquery.com https://cdn.jsdelivr.net; " .
+            "style-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.googleapis.com; " .
+            "font-src 'self' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://fonts.gstatic.com; " .
+            "img-src 'self' data:; object-src 'none'; base-uri 'self'; " .
+            "frame-ancestors 'none'; form-action 'self'; connect-src 'self'"
+        );
 
         $context = new Context(Database::connect());
 
@@ -74,6 +81,7 @@ class MY_Web_Controller extends MY_Controller
                 $context->can($module['permission'])
                 && empty($module['navigation_hidden'])
         );
+        $data['current_route'] = trim((string) $this->uri->uri_string(), '/');
         $data['flash'] = $_SESSION['web_flash'] ?? null;
         unset($_SESSION['web_flash']);
 

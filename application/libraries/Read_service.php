@@ -28,6 +28,11 @@ class Read_service
         return $this->model()->listing($module, $query);
     }
 
+    public function statusOptions(string $module): array
+    {
+        return $this->model()->statusOptions($module);
+    }
+
     public function detail(string $module, int $id): array
     {
         return $this->model()->detail($module, $id);

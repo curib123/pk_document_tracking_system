@@ -1,16 +1,25 @@
-<h1 class="h3 mb-3">Delete <?= ui_escape($definition['label']) ?> record?</h1>
-<div class="card card-body shadow-sm">
-    <p>Delete <strong><?= ui_escape($record['name'] ?? $record['asset_number'] ?? 'this record') ?></strong>?</p>
-    <p class="text-body-secondary">Referenced records cannot be deleted. All checks remain in the catalogue service.</p>
-    <form method="post" action="<?= site_url('web/catalog/' . $module . '/remove') ?>">
-        <input type="hidden" name="csrf" value="<?= ui_escape($csrf) ?>">
-        <input type="hidden" name="id" value="<?= (int) $record['id'] ?>">
-        <input type="hidden" name="version" value="<?= (int) $record['version'] ?>">
-        <label for="delete_reason" class="form-label">Reason (optional)</label>
-        <textarea class="form-control mb-3" id="delete_reason" name="reason" rows="2" maxlength="2000"></textarea>
-        <div class="d-flex gap-2">
-            <button type="submit" class="btn btn-danger">Confirm deletion</button>
-            <a class="btn btn-outline-secondary" href="<?= site_url('web/catalog/' . $module) ?>">Cancel</a>
-        </div>
-    </form>
+<?php
+$recordLabel = (string) ($record['name'] ?? $record['asset_number'] ?? 'this record');
+ob_start();
+?>
+<div class="alert alert-warning">
+    Records referenced by other documents cannot be deleted. The service validates all references.
 </div>
+<div class="mb-2">
+    <label class="form-label" for="pk-delete-reason">Reason (optional)</label>
+    <textarea class="form-control" id="pk-delete-reason" name="reason" maxlength="2000" rows="3"
+              placeholder="Reason for removing the record"></textarea>
+</div>
+<?php
+$modalContentHtml = ob_get_clean();
+$modalId = 'pk-catalog-delete-modal';
+$modalTitle = 'Delete ' . $definition['label'] . ' record?';
+$modalTone = 'danger';
+$modalMessage = 'You are about to delete ' . $recordLabel . '. This action cannot be undone.';
+$modalAutoOpen = true;
+$modalAction = site_url('web/catalog/' . $module . '/remove');
+$modalFields = ['csrf' => $csrf, 'id' => (int) $record['id'], 'version' => (int) $record['version']];
+$modalSubmit = 'Delete record';
+$modalBack = site_url('web/catalog/' . $module);
+require __DIR__ . '/components/modal.php';
+?>

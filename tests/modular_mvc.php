@@ -12,7 +12,7 @@ $cases = [
     'module renders its own view' => str_contains($module, "modules/dashboard/views/index"),
     'module uses permission-scoped dashboard data' => str_contains($module, "can('dashboard.view')"),
     'module has no API endpoint calls' => !str_contains($module, 'endpoint('),
-    'web view supports qualified module view names' => str_contains($base, "str_starts_with($view, 'modules/')"),
+    'web view supports qualified module view names' => str_contains($base, 'str_starts_with($view, \'modules/\')'),
     'dashboard escapes rendered label' => str_contains($view, 'ui_escape($title)'),
 ];
 $failed = 0;

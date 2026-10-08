@@ -25,3 +25,13 @@ Run `php tests/modular_mvc.php`, `php tests/web_mvc.php`, `php tests/run.php`, a
 ## Status
 
 The native dashboard, authentication, catalogue and read-only records controllers now live in feature modules behind CodeIgniter 3 route bridges. Their existing native PHP views remain under `application/views/web` until a later view relocation. The default entry route now opens the Bootstrap-only dashboard, and `/login` uses the native login. The old `/app` workspace and API routes remain available because several transactional workflows have not yet been converted. These legacy routes still depend on custom JavaScript/CSS; full removal would break those features.
+
+
+## Enterprise shared UI components
+
+The native module controllers now use shared PHP view components, custom
+enterprise CSS and a local jQuery enhancement script. See
+docs/ENTERPRISE_MVC_UI.md for central ownership, server-side filtering,
+searchable dropdowns, alert/confirmation/form modals, accessibility,
+asset fallback and migration limitations. The controller bridges and
+business-domain services retain the normal CI3 MVC separation.

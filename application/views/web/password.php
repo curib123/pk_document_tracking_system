@@ -1,29 +1,38 @@
-<div class="row justify-content-center">
-    <div class="col-12 col-md-7 col-xl-5">
-        <h1 class="h3 mb-3">Change password</h1>
-        <?php if (!empty($viewer['require_password_change'])): ?>
-            <div class="alert alert-warning">Change your initial password before accessing the system.</div>
-        <?php endif; ?>
-        <form method="post" action="<?= site_url('web/change-password') ?>" class="card card-body shadow-sm">
-            <input type="hidden" name="csrf" value="<?= ui_escape($csrf) ?>">
-            <div class="mb-3">
-                <label class="form-label" for="current_password">Current password</label>
-                <input class="form-control" type="password" name="current_password" id="current_password" required autocomplete="current-password">
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="new_password">New password</label>
-                <input class="form-control" type="password" name="new_password" id="new_password" required autocomplete="new-password">
-            </div>
-            <div class="mb-3">
-                <label class="form-label" for="confirm_password">Confirm password</label>
-                <input class="form-control" type="password" name="confirm_password" id="confirm_password" required autocomplete="new-password">
-            </div>
-            <div class="d-flex gap-2">
-                <button type="submit" class="btn btn-primary">Update password</button>
-                <?php if (empty($viewer['require_password_change'])): ?>
-                    <a href="<?= site_url('web') ?>" class="btn btn-outline-secondary">Cancel</a>
+<div class="row justify-content-center py-4">
+    <div class="col-12 col-md-8 col-xl-5">
+        <div class="card">
+            <div class="card-body p-4">
+                <h1 class="h4 fw-bold mb-2">Change password</h1>
+                <?php if (!empty($viewer['require_password_change'])): ?>
+                    <div class="alert alert-warning">Update your initial password to access your workspace.</div>
+                <?php else: ?>
+                    <p class="text-body-secondary">Choose a new password to secure your account.</p>
                 <?php endif; ?>
+                <form method="post" action="<?= site_url('web/change-password') ?>">
+                    <input type="hidden" name="csrf" value="<?= ui_escape($csrf) ?>">
+                    <?php foreach ([
+                        'current_password' => 'Current password',
+                        'new_password' => 'New password',
+                        'confirm_password' => 'Confirm new password',
+                    ] as $field => $label): ?>
+                        <div class="mb-3">
+                            <label class="form-label" for="<?= $field ?>"><?= $label ?></label>
+                            <div class="input-group">
+                                <input class="form-control" type="password" id="<?= $field ?>" name="<?= $field ?>"
+                                       required autocomplete="<?= $field === 'current_password' ? 'current-password' : 'new-password' ?>">
+                                <button class="btn btn-outline-secondary" type="button"
+                                        data-pk-password-toggle="<?= $field ?>" aria-label="Show <?= $label ?>" aria-pressed="false">Show</button>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
+                    <div class="d-flex flex-wrap gap-2 mt-4">
+                        <button type="submit" class="btn btn-primary">Update password</button>
+                        <?php if (empty($viewer['require_password_change'])): ?>
+                            <a class="btn btn-outline-secondary" href="<?= site_url('web') ?>">Cancel</a>
+                        <?php endif; ?>
+                    </div>
+                </form>
             </div>
-        </form>
+        </div>
     </div>
 </div>
