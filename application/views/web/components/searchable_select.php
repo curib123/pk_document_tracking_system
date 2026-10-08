@@ -11,6 +11,7 @@ $selectSearchAction = (string) ($selectSearchAction ?? '');
 $selectSearchTerm = (string) ($selectSearchTerm ?? '');
 $selectAutofocus = !empty($selectAutofocus);
 $selectMore = !empty($selectMore);
+$selectPlaceholder = (string) ($selectPlaceholder ?? ('Choose ' . strtolower($selectLabel)));
 ?>
 <div class="pk-select-shell">
     <select id="<?= ui_escape($selectId) ?>" name="<?= ui_escape($selectName) ?>"
@@ -22,7 +23,7 @@ $selectMore = !empty($selectMore);
             <?= $selectSearchAction !== '' ? 'data-lookup-name="lookup_q[' . ui_escape($selectName) . ']"' : '' ?>
             <?= $selectRequired ? 'required data-pk-required="true"' : '' ?>
             <?= $selectError !== '' ? 'aria-invalid="true" aria-describedby="' . ui_escape($selectId . '-error') . '"' : '' ?>>
-        <option value="">Choose <?= ui_escape(strtolower($selectLabel)) ?></option>
+        <option value=""><?= ui_escape($selectPlaceholder) ?></option>
         <?php foreach ($selectOptions as $choice): ?>
             <?php $optionValue = (string) ($choice['value'] ?? $choice['id'] ?? ''); ?>
             <option value="<?= ui_escape($optionValue) ?>" <?= $selectValue !== '' && $selectValue === $optionValue ? 'selected' : '' ?>>
