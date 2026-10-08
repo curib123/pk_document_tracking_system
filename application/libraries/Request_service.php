@@ -1020,7 +1020,7 @@ class Request_service
         string $domain,
         int $targetId,
         array $fresh,
-        int $requestId
+        ?int $requestId
     ): array {
         $table = Document_service::table($domain);
 
@@ -1064,7 +1064,7 @@ class Request_service
             $document['status'],
             'disposed',
             'disposed',
-            $fresh['reason']
+            $fresh['reason'] ?? ''
         );
 
         foreach (
@@ -1086,7 +1086,7 @@ class Request_service
 
     private function revokeGrantAfterDisposal(
         array $grant,
-        int $requestId
+        ?int $requestId
     ): void {
         $this->model()->update(
             'access_grants',
@@ -1102,7 +1102,9 @@ class Request_service
             (int) $grant['user_id'],
             'Access revoked',
             'The document has been disposed.',
-            (int) $grant['request_id']
+            $grant['request_id']
+                ? (int) $grant['request_id']
+                : null
         );
 
         $this->ctx->audit(
@@ -1289,6 +1291,99 @@ class Request_service
 
         return [
             'message' => 'Access ' . $status . '.',
+        ];
+    }
+
+    public function directDispose(
+        array $input
+    ): array {
+        $this->ctx->require(
+            'disposal.direct'
+        );
+
+        $domain = Rules::choice(
+            $input,
+            'domain',
+            ['softcopy', 'hardcopy']
+        );
+
+        $this->ctx->require(
+            $domain . '.view'
+        );
+
+        $documentId = Rules::id(
+            $input,
+            'document_id'
+        );
+
+        $table = Document_service::table(
+            $domain
+        );
+
+        $document = $this->model()->lock(
+            $table,
+            $documentId
+        );
+
+        if ($document['status'] !== 'active') {
+            throw new Problem(
+                'Only active documents can be disposed directly.'
+            );
+        }
+
+        $hardcopyId =
+            $domain === 'hardcopy'
+                ? $documentId
+                : null;
+
+        $normalized =
+            $this->normalizeDisposal(
+                $input,
+                $domain,
+                $hardcopyId,
+                $document
+            );
+
+        $remarks = Rules::text(
+            $input,
+            'reason',
+            4000,
+            false
+        );
+
+        $fresh = array_merge(
+            $normalized,
+            [
+                'reason' => $remarks ?? '',
+            ]
+        );
+
+        $result = $this->completeDisposal(
+            $domain,
+            $documentId,
+            $fresh,
+            null
+        );
+
+        $after = $this->model()->lock(
+            $table,
+            $documentId
+        );
+
+        $this->ctx->audit(
+            'disposal',
+            'direct_disposed',
+            (int) $result['disposal_id'],
+            $document,
+            $after,
+            $remarks
+        );
+
+        return [
+            'id' =>
+                (int) $result['disposal_id'],
+            'message' =>
+                'Document disposed directly without a workflow request.',
         ];
     }
 
