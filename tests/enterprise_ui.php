@@ -65,6 +65,11 @@ $check('table places search, filters, rows, pagination in order',
 $check('table escapes database text', str_contains($table,'Warehouse &amp; Admin'));
 $check('disabled pagination buttons not clickable', str_contains($table,'aria-disabled="true">Previous') && str_contains($table,'aria-disabled="true">Next'));
 $check('row limit is below table', strpos($table,'Rows per page')>$t);
+$check('sequence rows cannot link to nonexistent numeric detail IDs',
+    str_contains(file_get_contents(APPPATH . 'views/web/components/data_table.php'), "$" . "module !== 'sequences'"));
+$check('disposal records do not filter a nonexistent status column',
+    !preg_match("/'disposals'\\s*,\\s*'files'/", file_get_contents(APPPATH . 'models/Read_model.php')));
+
 $check('request type filters query the model and remain in pagination',
     str_contains(file_get_contents(APPPATH . 'models/Read_model.php'), "'t.type'")
     && str_contains(file_get_contents(APPPATH . 'views/web/components/data_table.php'), "selectName = 'type'")

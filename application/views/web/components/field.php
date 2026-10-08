@@ -13,10 +13,11 @@ $error = (string) ($form_error['fields'][$name] ?? '');
             <input type="hidden" name="<?= ui_escape($name) ?>" value="0">
             <input class="form-check-input" type="checkbox" id="<?= ui_escape($id) ?>"
                    name="<?= ui_escape($name) ?>" value="1"
-                   <?= !$record || (int) $value === 1 ? 'checked' : '' ?>>
+                   <?= !$record || (int) $value === 1 ? 'checked' : '' ?>
+                   <?= $error !== '' ? 'aria-invalid="true" aria-describedby="' . ui_escape($id . '-error') . '"' : '' ?>>
             <label class="form-check-label fw-semibold" for="<?= ui_escape($id) ?>"><?= ui_escape($label) ?></label>
         </div>
-        <?php if ($error !== ''): ?><p class="invalid-feedback d-block"><?= ui_escape($error) ?></p><?php endif; ?>
+        <?php if ($error !== ''): ?><p class="invalid-feedback d-block" id="<?= ui_escape($id . '-error') ?>"><?= ui_escape($error) ?></p><?php endif; ?>
     <?php else: ?>
         <label class="form-label" for="<?= ui_escape($id) ?>">
             <?= ui_escape($label) ?>
@@ -40,12 +41,14 @@ $error = (string) ($form_error['fields'][$name] ?? '');
         <?php elseif ($type === 'textarea'): ?>
             <textarea class="form-control <?= $error !== '' ? 'is-invalid' : '' ?>"
                       id="<?= ui_escape($id) ?>" name="<?= ui_escape($name) ?>" rows="4"
-                      <?= $required ? 'required' : '' ?>><?= ui_escape($value) ?></textarea>
+                      <?= $required ? 'required' : '' ?>
+                      <?= $error !== '' ? 'aria-invalid="true" aria-describedby="' . ui_escape($id . '-error') . '"' : '' ?>><?= ui_escape($value) ?></textarea>
         <?php else: ?>
             <input class="form-control <?= $error !== '' ? 'is-invalid' : '' ?>"
                    type="<?= $type === 'date' ? 'date' : 'text' ?>"
                    id="<?= ui_escape($id) ?>" name="<?= ui_escape($name) ?>"
-                   value="<?= ui_escape($value) ?>" <?= $required ? 'required' : '' ?>>
+                   value="<?= ui_escape($value) ?>" <?= $required ? 'required' : '' ?>
+                   <?= $error !== '' ? 'aria-invalid="true" aria-describedby="' . ui_escape($id . '-error') . '"' : '' ?>>
         <?php endif; ?>
         <?php if ($error !== '' && $type !== 'lookup'): ?>
             <p class="invalid-feedback d-block" id="<?= ui_escape($id . '-error') ?>"><?= ui_escape($error) ?></p>

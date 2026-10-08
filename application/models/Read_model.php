@@ -297,7 +297,6 @@ class Read_model extends Repository_model
                     'my_tasks',
                     'transfers',
                     'access',
-                    'disposals',
                     'files',
                 ],
                 true

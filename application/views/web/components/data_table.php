@@ -21,7 +21,7 @@ $requestTypeFiltering = in_array($module, ['requests', 'my_requests', 'my_tasks'
 $requestType = $requestTypeFiltering && is_string($query['type'] ?? null) ? $query['type'] : '';
 $baseQuery = ['q'=>$q,'sort'=>$sort,'direction'=>$direction,'status'=>$status,'active'=>$active,'type'=>$requestType,'limit'=>$limit];
 $linkTo = static fn(array $change): string => $tableUrl . '?' . http_build_query(array_replace($baseQuery, $change));
-$hasActions = !$isCatalog || !empty($can_edit) || !empty($can_delete);
+$hasActions = (!$isCatalog && $module !== 'sequences') || !empty($can_edit) || !empty($can_delete);
 $filterCount = $isCatalog ? 1 : (!empty($status_options) || $requestTypeFiltering ? 1 : 0);
 ?>
 <section class="pk-data-panel" aria-label="<?= ui_escape($definition['label']) ?> data table" id="<?= ui_escape($tableId) ?>">
