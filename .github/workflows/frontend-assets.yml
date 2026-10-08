@@ -58,6 +58,8 @@ jobs:
           npm ci --ignore-scripts --no-audit --no-fund
           npm run check:css
           php tests/frontend_assets.php
+      - name: Verify database files
+        run: php tests/database_layout.php
       - name: Install schema from clean DDL and seed files
         run: |
           test "$PK_TEST_DB" = 1

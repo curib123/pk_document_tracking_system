@@ -19,7 +19,7 @@
     ]
   },
   "scripts": {
-    "test": "php tests/run.php && php tests/architecture.php && php tests/mysqli_contract.php && php tests/native_database.php",
+    "test": "php tests/database_layout.php && php tests/run.php && php tests/architecture.php && php tests/mysqli_contract.php && php tests/native_database.php",
     "test:integration": "php tests/integration.php"
   },
   "config": {
