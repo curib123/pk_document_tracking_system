@@ -634,6 +634,69 @@ function migrate_direct_actions_v6(
     }
 }
 
+function migrate_direct_disposal_v7(
+    Database $db
+): void {
+    $db->query(
+        'ALTER TABLE disposals
+         MODIFY COLUMN request_id
+             BIGINT UNSIGNED NULL'
+    );
+
+    $permission = $db->one(
+        "SELECT id
+         FROM permissions
+         WHERE module_key = 'disposal'
+           AND action_key = 'direct'
+         LIMIT 1"
+    );
+
+    $permissionId = $permission
+        ? (int) $permission['id']
+        : $db->insert(
+            'permissions',
+            [
+                'name' => 'Disposal: Direct',
+                'module_key' => 'disposal',
+                'module_label' => 'Disposal',
+                'action_key' => 'direct',
+                'action_label' => 'Direct',
+                'description' =>
+                    'Allows direct document disposal without an approval request.',
+            ]
+        );
+
+    foreach (
+        [
+            'Administrator',
+            'Document Control Officer',
+        ]
+        as $roleName
+    ) {
+        $role = $db->one(
+            'SELECT id
+             FROM roles
+             WHERE name = ?
+             LIMIT 1',
+            [$roleName]
+        );
+
+        if (!$role) {
+            continue;
+        }
+
+        $db->query(
+            'INSERT IGNORE INTO role_permissions
+                (role_id, permission_id)
+             VALUES (?, ?)',
+            [
+                (int) $role['id'],
+                $permissionId,
+            ]
+        );
+    }
+}
+
 try {
     $db = Database::connect();
 
@@ -663,11 +726,27 @@ try {
             0
         );
 
-    if ($current >= 6) {
+    if ($current >= 7) {
         echo
             'Database schema is already version ' .
             $current .
             ".\n";
+
+        exit(0);
+    }
+
+    if ($current === 6) {
+        migrate_direct_disposal_v7(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(7)'
+        );
+
+        echo
+            "Migrated database schema from version 6 to version 7.\n";
 
         exit(0);
     }
@@ -682,8 +761,17 @@ try {
              VALUES(6)'
         );
 
+        migrate_direct_disposal_v7(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(7)'
+        );
+
         echo
-            "Migrated database schema from version 5 to version 6.\n";
+            "Migrated database schema from version 5 to version 7.\n";
 
         exit(0);
     }
@@ -705,8 +793,17 @@ try {
              VALUES(6)'
         );
 
+        migrate_direct_disposal_v7(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(7)'
+        );
+
         echo
-            "Migrated database schema from version 4 to version 6.\n";
+            "Migrated database schema from version 4 to version 7.\n";
 
         exit(0);
     }
@@ -737,8 +834,17 @@ try {
              VALUES(6)'
         );
 
+        migrate_direct_disposal_v7(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(7)'
+        );
+
         echo
-            "Migrated database schema from version 3 to version 6.\n";
+            "Migrated database schema from version 3 to version 7.\n";
 
         exit(0);
     }
@@ -778,8 +884,17 @@ try {
              VALUES(6)'
         );
 
+        migrate_direct_disposal_v7(
+            $db
+        );
+
+        $db->query(
+            'INSERT INTO schema_migrations(version)
+             VALUES(7)'
+        );
+
         echo
-            "Migrated database schema from version 2 to version 6.\n";
+            "Migrated database schema from version 2 to version 7.\n";
 
         exit(0);
     }
@@ -1048,7 +1163,7 @@ try {
     );
 
     echo
-        "Migrated database schema from version 1 to version 6.\n";
+        "Migrated database schema from version 1 to version 7.\n";
 } catch (Throwable $error) {
     fwrite(
         STDERR,
