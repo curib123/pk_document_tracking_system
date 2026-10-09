@@ -2,7 +2,8 @@
 // Tiny framework-free architectural check. Not a substitute for MySQL integration tests.
 $root = dirname(__DIR__);
 $required = [
-    'application/bootstrap.php', 'application/config/routes.php', 'application/core/MY_Controller.php',
+    'application/bootstrap.php', 'application/config/routes.php',
+    'application/core/MY_Controller.php', 'application/libraries/Table_pager.php',
     'application/controllers/Auth.php', 'application/controllers/Dashboard.php',
     'application/controllers/Records.php', 'application/controllers/Requests.php',
     'application/controllers/Administration.php', 'application/models/Permission_model.php',
@@ -18,7 +19,7 @@ $required = [
     'application/view/pages/administration/workflows.php', 'public/assets/css/app.css',
     'public/assets/js/app.js', 'database/schema.sql',
     'database/migrations/20261009_document_workflows.sql', 'database/seed.sql',
-    'tools/audit_legacy_schema.php', 'tests/business_flows.sh'
+    'tools/audit_legacy_schema.php', 'tests/business_flows.sh', 'tests/pagination_flows.sh'
 ];
 $failed = [];
 foreach ($required as $file) {
@@ -39,6 +40,29 @@ if (preg_match('/\bfetch\s*\(|\$\.ajax\s*\(/', $js)) $failed[] = 'Unexpected RES
 $seed = file_get_contents($root . '/database/seed.sql');
 foreach (['staff','plant_manager','document_control_officer','internal_audit','super_admin'] as $role) {
     if (strpos($seed, "'" . $role . "'") === false) $failed[] = 'Missing base role ' . $role;
+}
+$pager = file_get_contents($root . '/application/libraries/Table_pager.php');
+if (strpos($pager, '[10, 25, 50, 100]') === FALSE || strpos($pager, 'function clamp(') === FALSE) {
+    $failed[] = 'Shared page/limit validation missing.';
+}
+foreach (['Requests.php', 'Administration.php', 'Records.php'] as $controller) {
+    $code = file_get_contents($root . '/application/controllers/' . $controller);
+    if (strpos($code, 'array_slice(') !== FALSE || strpos($code, 'count($rows)') !== FALSE) {
+        $failed[] = 'PHP in-memory table pagination found in ' . $controller;
+    }
+}
+foreach ([
+    'Request_model.php' => ['count_listing', 'page_listing'],
+    'Administration_model.php' => ['count_users', 'page_users', 'count_roles', 'page_roles',
+        'count_workflows', 'page_workflows'],
+    'Records_model.php' => ['count_documents', 'page_documents', 'count_places', 'page_places']
+] as $model => $methods) {
+    $code = file_get_contents($root . '/application/models/' . $model);
+    foreach ($methods as $method) {
+        if (strpos($code, 'function ' . $method . '(') === FALSE) {
+            $failed[] = 'Missing SQL pagination method ' . $model . '::' . $method;
+        }
+    }
 }
 if ($failed) {
     fwrite(STDERR, implode(PHP_EOL, $failed) . PHP_EOL);
