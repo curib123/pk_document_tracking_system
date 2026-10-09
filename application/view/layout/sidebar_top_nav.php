@@ -6,9 +6,13 @@ $path = uri_string();
 $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
-$places = ['areas','specifics','assets','locations','sequences','categories'];
+$places = [
+    'area' => 'areas', 'specific' => 'specifics', 'asset' => 'assets',
+    'location' => 'locations', 'sequence' => 'sequences',
+    'softcopy-categories' => 'categories'
+];
 $anyPlace = FALSE;
-foreach ($places as $item) if ($visible($item)) $anyPlace = TRUE;
+foreach ($places as $module) if ($visible($module)) $anyPlace = TRUE;
 ?>
 <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar">
@@ -32,8 +36,8 @@ foreach ($places as $item) if ($visible($item)) $anyPlace = TRUE;
             <?php endif; ?>
             <?php if ($anyPlace): ?>
                 <div class="side-heading">Places</div>
-                <?php foreach ($places as $p): if ($visible($p)): ?>
-                    <a class="side-link<?= $active('places/' . $p) ?>" href="<?= site_url('places/' . $p) ?>"><i class="fa-solid fa-location-dot"></i> <?= html_escape(ucwords(str_replace('-', ' ', $p))) ?></a>
+                <?php foreach ($places as $slug => $module): if ($visible($module)): ?>
+                    <a class="side-link<?= $active('places/' . $slug) ?>" href="<?= site_url('places/' . $slug) ?>"><i class="fa-solid fa-location-dot"></i> <?= html_escape(ucwords(str_replace('-', ' ', $slug))) ?></a>
                 <?php endif; endforeach; ?>
             <?php endif; ?>
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
