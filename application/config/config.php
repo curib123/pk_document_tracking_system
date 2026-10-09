@@ -18,7 +18,8 @@ $config['log_path'] = PK_ROOT . '/storage/logs/';
 $config['log_file_extension'] = 'log';
 $config['log_file_permissions'] = 0600;
 $config['log_date_format'] = 'Y-m-d H:i:s';
-$config['error_views_path'] = APPPATH . 'views/errors/';
+// CI3's built-in error templates live in the installed framework (not application/view).
+$config['error_views_path'] = PK_ROOT . '/vendor/codeigniter/framework/application/views/errors/';
 $config['cache_path'] = '';
 $config['cache_query_string'] = FALSE;
 $config['encryption_key'] = getenv('PK_ENCRYPTION_KEY') ?: '';
