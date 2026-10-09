@@ -41,6 +41,16 @@ foreach ($rows as $row) {
     if ($mode === 'documents' && $current === 'softcopy') {
         if ($row['status'] === 'active' && $may('edit')) $buttons[] = ['type' => 'upload'];
         if (!empty($row['latest_file_id']) && !empty($file_allowed[$row['id']])) {
+            $history = [];
+            foreach ($file_histories[$row['id']] ?? [] as $f) {
+                $history[] = [
+                    'name' => $f['original_name'],
+                    'detail' => 'Uploaded by ' . $f['uploaded_by'] . ' on ' . $f['created_at'] .
+                        ' (' . round($f['file_size'] / 1024, 1) . ' KB)',
+                    'url' => site_url('documents/softcopy/files/' . $f['id'])
+                ];
+            }
+            $buttons[] = ['type' => 'history', 'files' => $history];
             $buttons[] = ['type' => 'download',
                 'url' => 'documents/softcopy/files/' . $row['latest_file_id']];
         }
