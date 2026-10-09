@@ -26,7 +26,7 @@
             target.querySelectorAll('[name]').forEach(function (field) {
                 if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
                 if (field.type === 'checkbox') field.checked = !!Number(record[field.name]);
-                else if (field.type !== 'hidden' || field.name === 'id') field.value = record[field.name] == null ? '' : record[field.name];
+                else field.value = record[field.name] == null ? '' : record[field.name];
             });
             var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle' : 'editTitle');
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
