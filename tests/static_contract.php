@@ -77,5 +77,28 @@ foreach (['prepare_location', "join('specifics s'", "join('areas a'",
 if (strpos($placeJs, 'updateLocationHierarchy') === FALSE) {
     $fail[] = 'Location hierarchy filtering script missing.';
 }
+// Softcopy direct and requested actions MUST share both form fields and effects.
+$docView=file_get_contents($root.'/application/view/pages/documents/shared_index.php');
+$reqView=file_get_contents($root.'/application/view/pages/request/shared_index.php');
+$docCtl=file_get_contents($root.'/application/controllers/Documents.php');
+$reqSvc=file_get_contents($root.'/application/services/request/request_service.php');
+$directSvc=file_get_contents($root.'/application/services/softcopy/softcopy_direct_service.php');
+$routes=file_get_contents($root.'/application/config/routes.php');
+foreach ([$docView,$reqView] as $page) {
+    if (strpos($page, "pages/request/softcopy_fields")===FALSE) {
+        $fail[] = 'Direct and requested Softcopy must use the shared fieldset.';
+    }
+}
+if (strpos($reqSvc, 'Softcopy_operation_service')===FALSE ||
+    strpos($directSvc, 'Softcopy_operation_service')===FALSE) {
+    $fail[] = 'Direct and requested softcopy must share domain effects.';
+}
+if (strpos($docCtl, "require_permission('softcopy','direct')")===FALSE ||
+    strpos($routes, "'documents/softcopy/direct'")===FALSE) {
+    $fail[] = 'Softcopy Direct endpoint must require original softcopy.direct permission.';
+}
+if (!is_file($root.'/tests/direct_softcopy_smoke.sh')) {
+    $fail[] = 'Missing database-backed Softcopy Direct tests.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
