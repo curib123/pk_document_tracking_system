@@ -110,6 +110,39 @@ class Administration_service
         $this->ci->db->trans_commit();
     }
 
+    public function clone_workflow($id)
+    {
+        $source = $this->ci->db->get_where('workflows', ['id' => $id])->row_array();
+        if (!$source) throw new DomainException('Workflow version was not found.');
+        $steps = $this->ci->db->from('workflow_steps')->where('workflow_id', $id)
+            ->order_by('step_order')->get()->result_array();
+        if (!$steps) throw new DomainException('Add approval steps before cloning a workflow.');
+
+        $this->ci->db->trans_begin();
+        $latest = $this->ci->db->select_max('version')->get_where('workflows', [
+            'request_type' => $source['request_type']
+        ])->row_array();
+        $this->ci->db->insert('workflows', [
+            'name' => $source['name'], 'request_type' => $source['request_type'],
+            'version' => (int) $latest['version'] + 1,
+            'active' => 0, 'is_default' => 0
+        ]);
+        $newId = (int) $this->ci->db->insert_id();
+        foreach ($steps as $step) {
+            $this->ci->db->insert('workflow_steps', [
+                'workflow_id' => $newId, 'step_order' => $step['step_order'],
+                'label' => $step['label'], 'approver_type' => $step['approver_type'],
+                'approver_user_id' => $step['approver_user_id'],
+                'approver_role_id' => $step['approver_role_id']
+            ]);
+        }
+        if ($this->ci->db->trans_status() === FALSE) {
+            $this->ci->db->trans_rollback();
+            throw new DomainException('Could not clone the workflow version.');
+        }
+        $this->ci->db->trans_commit();
+    }
+
     public function save_step($post)
     {
         $workflowId = (int) ($post['workflow_id'] ?? 0);
