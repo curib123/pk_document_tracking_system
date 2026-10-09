@@ -2,6 +2,68 @@
 (function () {
     'use strict';
 
+    // Works on offline office networks when Bootstrap's CDN cannot be reached.
+    // Keep native server form actions and confirmation semantics unchanged.
+    if (!window.bootstrap) {
+        document.body.classList.add('offline-ui');
+        window.bootstrap = {
+            Modal: {
+                getOrCreateInstance: function (element) {
+                    return {
+                        show: function () {
+                            if (!element) return;
+                            element.style.display = 'block';
+                            element.classList.add('show');
+                            element.removeAttribute('aria-hidden');
+                            var backdrop = document.createElement('div');
+                            backdrop.className = 'modal-backdrop fallback-backdrop';
+                            document.body.appendChild(backdrop);
+                        },
+                        hide: function () {
+                            if (!element) return;
+                            element.style.display = 'none';
+                            element.classList.remove('show');
+                            element.setAttribute('aria-hidden', 'true');
+                            document.querySelectorAll('.fallback-backdrop').forEach(function (node) {
+                                node.remove();
+                            });
+                            element.dispatchEvent(new Event('hidden.bs.modal'));
+                        }
+                    };
+                }
+            }
+        };
+        document.addEventListener('click', function (event) {
+            var trigger = event.target.closest('[data-bs-toggle]');
+            if (trigger) {
+                var type = trigger.getAttribute('data-bs-toggle');
+                if (type === 'modal') {
+                    var target = document.querySelector(trigger.getAttribute('data-bs-target'));
+                    if (target) window.bootstrap.Modal.getOrCreateInstance(target).show();
+                } else if (type === 'dropdown') {
+                    var menu = trigger.closest('.dropdown').querySelector('.dropdown-menu');
+                    menu.classList.toggle('show');
+                } else if (type === 'collapse') {
+                    var pane = document.querySelector(trigger.getAttribute('data-bs-target'));
+                    if (pane) pane.classList.toggle('show');
+                }
+            }
+            var dismiss = event.target.closest('[data-bs-dismiss="modal"]');
+            if (dismiss) {
+                var modal = dismiss.closest('.modal');
+                if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+            }
+            if (event.target.classList.contains('modal') && event.target.classList.contains('show')) {
+                window.bootstrap.Modal.getOrCreateInstance(event.target).hide();
+            }
+        });
+        document.addEventListener('keydown', function (event) {
+            if (event.key !== 'Escape') return;
+            var modal = document.querySelector('.modal.show');
+            if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+        });
+    }
+
     var sidebar = document.getElementById('appSidebar');
     var toggle = document.getElementById('sidebarToggle');
     if (toggle && sidebar) toggle.addEventListener('click', function () {
