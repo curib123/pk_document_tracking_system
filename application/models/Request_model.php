@@ -5,9 +5,12 @@ class Request_model extends CI_Model
 {
     public function mine($type, $userId)
     {
-        return $this->db->select('r.*, d.code AS document_code, d.title AS document_title, ws.label AS current_step_label')
+        return $this->db->select('r.*, d.code AS document_code, d.title AS document_title, ws.label AS current_step_label, rd.operation, rd.target_place_id, rd.target_user_id, rd.access_expires_at, rd.proposed_code, rd.proposed_title, rd.proposed_version, rd.proposed_description, destination.name AS destination_name, target.name AS target_user_name')
             ->from('requests r')->join('documents d', 'd.id = r.document_id', 'left')
             ->join('workflow_steps ws', 'ws.workflow_id = r.workflow_id AND ws.step_order = r.current_step', 'left')
+            ->join('request_details rd', 'rd.request_id = r.id', 'left')
+            ->join('places destination', 'destination.id = rd.target_place_id', 'left')
+            ->join('users target', 'target.id = rd.target_user_id', 'left')
             ->where('r.request_type', $type)->where('r.requester_id', $userId)
             ->order_by('r.updated_at', 'DESC')->get()->result_array();
     }
@@ -15,12 +18,18 @@ class Request_model extends CI_Model
     public function tasks($type, $user)
     {
         $sql = "SELECT r.*, d.code AS document_code, d.title AS document_title,
-                    creator.name AS requester_name, ws.label AS step_label
+                    creator.name AS requester_name, ws.label AS step_label,
+                    rd.operation, rd.target_place_id, rd.target_user_id, rd.access_expires_at,
+                    rd.proposed_code, rd.proposed_title, rd.proposed_version, rd.proposed_description,
+                    destination.name AS destination_name, target.name AS target_user_name
                 FROM requests r
                 JOIN users creator ON creator.id = r.requester_id
                 JOIN workflow_steps ws ON ws.workflow_id = r.workflow_id
                     AND ws.step_order = r.current_step
                 LEFT JOIN documents d ON d.id = r.document_id
+                LEFT JOIN request_details rd ON rd.request_id = r.id
+                LEFT JOIN places destination ON destination.id = rd.target_place_id
+                LEFT JOIN users target ON target.id = rd.target_user_id
                 WHERE r.request_type = ? AND r.status = 'pending'
                     AND ((ws.approver_type = 'user' AND ws.approver_user_id = ?)
                       OR (ws.approver_type = 'role' AND ws.approver_role_id = ?)

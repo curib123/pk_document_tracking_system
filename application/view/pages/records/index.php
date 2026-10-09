@@ -25,7 +25,8 @@ foreach ($rows as $row) {
         $display = ['Code' => $row['code'], 'Title' => $row['title'], 'Type' => ucfirst($row['kind']),
             'Version' => $row['version'], 'Location' => $row['place_name'],
             'Category' => $row['category_name'], 'Status' => $row['status'],
-            'Created By' => $row['creator_name'], 'Description' => $row['description']];
+            'Created By' => $row['creator_name'], 'Description' => $row['description'],
+            'Latest File' => $row['latest_file_name'] ?? 'No file uploaded'];
         $cells = ['code' => $row['code'], 'title' => $row['title'], 'version' => $row['version'],
             'place' => $row['place_name'], 'status' => $row['status'], 'updated' => $row['updated_at']];
     } else {
@@ -37,6 +38,13 @@ foreach ($rows as $row) {
             'active' => $row['active'] ? 'active' : '0'];
     }
     $buttons = [['type' => 'view']];
+    if ($mode === 'documents' && $current === 'softcopy') {
+        if ($row['status'] === 'active' && $may('edit')) $buttons[] = ['type' => 'upload'];
+        if (!empty($row['latest_file_id']) && !empty($file_allowed[$row['id']])) {
+            $buttons[] = ['type' => 'download',
+                'url' => 'documents/softcopy/files/' . $row['latest_file_id']];
+        }
+    }
     if ($may('edit')) $buttons[] = ['type' => 'edit'];
     if ($may('delete')) $buttons[] = ['type' => 'action', 'url' => $delete_action, 'label' => $mode === 'documents' ? 'Dispose' : 'Deactivate',
         'description' => $mode === 'documents' ? 'This document will be marked as disposed.' : 'This place will be made inactive.',
@@ -81,3 +89,28 @@ foreach ($rows as $row) {
         </form>
     </div></div>
 </div>
+
+<?php if ($mode === 'documents' && $current === 'softcopy' && $may('edit')): ?>
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+        <form action="<?= site_url('documents/softcopy/upload') ?>" method="post"
+              enctype="multipart/form-data" data-confirm="Upload this document file?">
+            <div class="modal-header"><h2 class="modal-title fs-6" id="uploadTitle">Upload Softcopy File</h2>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+                <p class="text-secondary small" id="uploadDocumentName"></p>
+                <input type="hidden" name="document_id" id="uploadDocumentId" value="">
+                <label class="form-label" for="documentAttachment">Select File</label>
+                <input class="form-control" type="file" id="documentAttachment" name="attachment"
+                       accept=".pdf,.doc,.docx,.xls,.xlsx,.txt,.jpg,.jpeg,.png" required>
+                <div class="form-text">PDF, Office files, TXT or images; maximum 15 MB. Stored privately with an audit record.</div>
+            </div>
+            <input type="hidden" name="confirmed" value="no">
+            <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                   value="<?= $this->security->get_csrf_hash() ?>">
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                <button type="submit" class="btn btn-primary">Upload File</button></div>
+        </form>
+    </div></div>
+</div>
+<?php endif; ?>

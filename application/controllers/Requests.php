@@ -56,7 +56,12 @@ class Requests extends MY_Controller
             'status' => $status,
             'base_path' => ($task ? 'my-tasks/' : 'my-requests/') . $type,
             'form_action' => 'my-requests/' . $type . '/save',
-            'document_options' => $this->Records_model->document_options()
+            'document_options' => $this->Records_model->document_options(
+                in_array($type, ['hardcopy','softcopy'], TRUE) ? $type :
+                ($type === 'hardcopy-transfer' ? 'hardcopy' : NULL)
+            ),
+            'user_options' => $this->Records_model->user_options(),
+            'location_options' => $this->Records_model->place_options('location')
         ]);
     }
 

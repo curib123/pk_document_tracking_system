@@ -52,6 +52,12 @@
             }
         }
 
+        var upload = event.target.closest('.js-upload');
+        if (upload) {
+            document.getElementById('uploadDocumentId').value = upload.getAttribute('data-document-id') || '';
+            document.getElementById('uploadDocumentName').textContent = upload.getAttribute('data-document-name') || '';
+        }
+
         var action = event.target.closest('.js-action');
         if (action) {
             var form = document.getElementById('actionForm');

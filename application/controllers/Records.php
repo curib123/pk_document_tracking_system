@@ -11,6 +11,7 @@ class Records extends MY_Controller
     {
         parent::__construct();
         $this->load->model('Records_model');
+        $this->load->model('Document_file_model');
         require_once APPPATH . 'services/records/Records_service.php';
     }
 
@@ -36,9 +37,12 @@ class Records extends MY_Controller
         $status = (string) $this->input->get('status', TRUE);
         if (!in_array($status, ['','active','archived','disposed'], TRUE)) $status = '';
         list($rows, $total) = $this->Records_model->documents($kind, $q, $status, $limit, ($page - 1) * $limit);
+        $fileAllowed = $this->Document_file_model->authorized_document_ids(
+            $this->user, $rows, $this->can($kind, 'edit')
+        );
         $this->render($this->kinds[$kind], 'pages/records/index', [
             'mode' => 'documents', 'module' => $kind, 'current' => $kind,
-            'tabs' => $this->kinds, 'rows' => $rows, 'total' => $total,
+            'tabs' => $this->kinds, 'rows' => $rows, 'file_allowed' => $fileAllowed, 'total' => $total,
             'page' => $page, 'limit' => $limit, 'q' => $q, 'status' => $status,
             'base_path' => 'documents/' . $kind,
             'form_action' => 'documents/' . $kind . '/save',
@@ -70,6 +74,49 @@ class Records extends MY_Controller
             $this->notice('Document marked as disposed.');
         } catch (DomainException $e) { $this->notice($e->getMessage(), 'danger'); }
         redirect('documents/' . $kind);
+    }
+
+    public function upload_document()
+    {
+        $this->require_permission('softcopy', 'edit');
+        $this->confirmed();
+        require_once APPPATH . 'services/records/Document_file_service.php';
+        try {
+            (new Document_file_service())->upload(
+                (int) $this->input->post('document_id'),
+                (int) $this->user['id'],
+                $_FILES['attachment'] ?? NULL
+            );
+            $this->notice('New softcopy file version uploaded.');
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('documents/softcopy');
+    }
+
+    public function download_document($fileId)
+    {
+        $this->authenticate();
+        $file = $this->Document_file_model->by_id((int) $fileId, 'softcopy');
+        if (!$file || !$this->Document_file_model->authorized(
+            $this->user, $file, $this->can('softcopy', 'edit'))) {
+            show_error('Document file access denied.', 403);
+            return;
+        }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path)) {
+            show_404();
+            return;
+        }
+        // Files are always attachments, never directly executed in the browser.
+        $name = str_replace(['"', "\r", "\n"], '_', $file['original_name']);
+        header('Content-Type: application/octet-stream');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Content-Disposition: attachment; filename="' . $name . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
     }
 
     public function places($type)

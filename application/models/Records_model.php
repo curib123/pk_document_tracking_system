@@ -15,11 +15,14 @@ class Records_model extends CI_Model
 
     public function documents($kind, $search, $status, $limit, $offset)
     {
-        $this->db->select('d.*, p.name AS place_name, c.name AS category_name, u.name AS creator_name')
+        $this->db->select('d.*, p.name AS place_name, c.name AS category_name, u.name AS creator_name,
+                 df.id AS latest_file_id, df.original_name AS latest_file_name, df.file_size AS latest_file_size')
             ->from('documents d')
             ->join('places p', 'p.id = d.place_id', 'left')
             ->join('places c', 'c.id = d.category_id', 'left')
             ->join('users u', 'u.id = d.created_by')
+            ->join('document_files df',
+                'df.id = (SELECT MAX(f.id) FROM document_files f WHERE f.document_id = d.id)', 'left')
             ->where('d.kind', $kind);
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search)
@@ -37,9 +40,16 @@ class Records_model extends CI_Model
             ->where('active', 1)->order_by('name')->get()->result_array();
     }
 
-    public function document_options()
+    public function document_options($kind = NULL)
     {
-        return $this->db->select('id,code,title')->from('documents')
-            ->where('status', 'active')->order_by('title')->get()->result_array();
+        $this->db->select('id,code,title,kind')->from('documents')->where('status', 'active');
+        if ($kind) $this->db->where('kind', $kind);
+        return $this->db->order_by('title')->get()->result_array();
+    }
+
+    public function user_options()
+    {
+        return $this->db->select('id,name')->from('users')->where('active', 1)
+            ->order_by('name')->get()->result_array();
     }
 }

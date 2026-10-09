@@ -62,6 +62,13 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                                 <?php elseif ($button['type'] === 'edit'): ?>
                                     <button type="button" class="btn-icon js-edit" title="Edit" aria-label="Edit record" data-bs-toggle="modal" data-bs-target="#editModal" data-target="#editForm"
                                         data-record="<?= html_escape(json_encode($dt_row['record'])) ?>" data-title="Edit Record"><i class="fa-solid fa-pen"></i></button>
+                                <?php elseif ($button['type'] === 'upload'): ?>
+                                    <button type="button" class="btn-icon js-upload" title="Upload File" aria-label="Upload File"
+                                        data-bs-toggle="modal" data-bs-target="#uploadModal"
+                                        data-document-id="<?= (int) $dt_row['id'] ?>"
+                                        data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                <?php elseif ($button['type'] === 'download'): ?>
+                                    <a class="btn-icon" title="Download File" aria-label="Download File" href="<?= site_url($button['url']) ?>"><i class="fa-solid fa-download"></i></a>
                                 <?php elseif ($button['type'] === 'action'): ?>
                                     <button type="button" class="btn-icon js-action" title="<?= html_escape($button['label']) ?>" aria-label="<?= html_escape($button['label']) ?>"
                                         data-bs-toggle="modal" data-bs-target="#actionModal" data-url="<?= site_url($button['url']) ?>"
