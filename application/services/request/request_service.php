@@ -25,9 +25,12 @@ class Request_service
           'destination_location_id'=>(int)($post['destination_location_id']??0),
           'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
           'effective_date'=>trim((string)($post['effective_date']??'')),
-          'date_received'=>trim((string)($post['date_received']??'')),
-          'date_released'=>trim((string)($post['date_released']??'')),
+          'date_received'=>date('Y-m-d'),
+          'date_released'=>'',
           'page_number'=>max(1,(int)($post['page_number']??1)),
+          'document_domain'=>trim((string)($post['document_domain']??'softcopy')),
+          'disposal_reason'=>trim((string)($post['disposal_reason']??'')),
+          'disposal_other'=>trim((string)($post['disposal_other']??'')),
           'area_id'=>(int)($post['area_id']??0),
           'specific_id'=>(int)($post['specific_id']??0),
           'asset_id'=>(int)($post['asset_id']??0),
@@ -41,7 +44,19 @@ class Request_service
         ];
         $softcopyId=(int)($post['softcopy_id']??0);
         $hardcopyId=(int)($post['hardcopy_id']??0);
-        if (in_array($type,['softcopy_revise','softcopy_cancel','assignment','access'],TRUE) &&
+        $domain=$payload['document_domain'];
+        if (in_array($type,['assignment','access'],TRUE)) {
+            if (!in_array($domain,['softcopy','hardcopy'],TRUE))
+                throw new DomainException('Choose Softcopy or Hardcopy.');
+            if (($domain==='softcopy' && !$softcopyId) ||
+                ($domain==='hardcopy' && !$hardcopyId))
+                throw new DomainException('Select a document in the chosen domain.');
+            $table=$domain==='softcopy'?'softcopy_documents':'hardcopy_documents';
+            $docId=$domain==='softcopy'?$softcopyId:$hardcopyId;
+            if (!$this->ci->db->get_where($table,['id'=>$docId,'status'=>'active'])->row_array())
+                throw new DomainException('Selected document is inactive or missing.');
+        }
+        if (in_array($type,['softcopy_revise','softcopy_cancel'],TRUE) &&
             !$softcopyId) throw new DomainException('Select a softcopy document.');
         if (in_array($type,['hardcopy_update','transfer','disposal'],TRUE) &&
             !$hardcopyId) throw new DomainException('Select a hardcopy document.');
@@ -50,6 +65,10 @@ class Request_service
         if ($type==='access' && ($payload['expires_at']==='' ||
             strtotime($payload['expires_at'])===FALSE))
             throw new DomainException('Select an access expiry date.');
+        if ($type==='disposal') {
+            require_once APPPATH.'services/documents/disposal_service.php';
+            $payload['disposal_description']=(new Disposal_service())->reason($payload);
+        }
         if ($type==='transfer' && !$payload['destination_location_id'])
             throw new DomainException('Choose the destination location.');
         $fileId=NULL;
@@ -258,30 +277,11 @@ class Request_service
                 $type,$payload,$soft,$actor,$owner,$id
             );
         }
-        if ($type==='assignment') {
-            if (!$soft || !$recipient) throw new DomainException('Choose a document and assignee.');
-            $match=$this->ci->db->get_where('assignments',[
-                'softcopy_id'=>$soft,'user_id'=>$recipient
-            ])->row_array();
-            if ($match) $this->ci->db->where('id',$match['id'])->update('assignments',[
-                'active'=>1,'assigned_by'=>$actor,'assigned_at'=>date('Y-m-d H:i:s')
-            ]);
-            else $this->ci->db->insert('assignments',[
-                'softcopy_id'=>$soft,'user_id'=>$recipient,'assigned_by'=>$actor
-            ]);
-            return ['softcopy_id'=>$soft,'assigned_to'=>$recipient];
-        }
-        if ($type==='access') {
-            if (!$soft || !$recipient || empty($payload['expires_at']))
-                throw new DomainException('Document, recipient and expiry are required.');
-            $expires=$payload['expires_at'].' 23:59:59';
-            if (strtotime($expires)<time()) throw new DomainException('Access expiry has already passed.');
-            $this->ci->db->insert('access_grants',[
-                'request_id'=>$id,'domain'=>'softcopy','document_id'=>$soft,
-                'user_id'=>$recipient,'granted_by'=>$actor,
-                'expires_at'=>$expires,'reason'=>$reason
-            ]);
-            return ['grant_id'=>$this->ci->db->insert_id()];
+        if ($type==='assignment' || $type==='access') {
+            require_once APPPATH.'services/documents/document_access_service.php';
+            return (new Document_access_service())->apply(
+                $type,$payload,$soft,$hard,$recipient,$actor,$id
+            );
         }
         if ($type==='transfer') {
             $doc=$this->ci->db->get_where('hardcopy_documents',['id'=>$hard,'status'=>'active'])->row_array();
@@ -310,14 +310,16 @@ class Request_service
             $this->ci->db->insert('disposals',[
                 'request_id'=>$id,'domain'=>'hardcopy','document_id'=>$hard,
                 'previous_status'=>$doc['status'],'previous_state'=>json_encode($doc),
-                'disposal_action'=>'dispose','remarks'=>$reason,'disposed_by'=>$actor
+                'disposal_action'=>$payload['disposal_reason'],
+                'remarks'=>$payload['disposal_description'],'disposed_by'=>$actor
             ]);
             $this->ci->db->where('id',$hard)->update('hardcopy_documents',[
                 'previous_status'=>$doc['status'],'status'=>'disposed','location_id'=>NULL
             ]);
             $this->ci->db->insert('status_history',[
                 'domain'=>'hardcopy','document_id'=>$hard,'previous_status'=>$doc['status'],
-                'new_status'=>'disposed','action'=>'disposed','user_id'=>$actor,'remarks'=>$reason
+                'new_status'=>'disposed','action'=>'disposed','user_id'=>$actor,
+                'remarks'=>$payload['disposal_description']
             ]);
             $this->ci->db->where('domain','hardcopy')->where('document_id',$hard)
                 ->where('revoked_at IS NULL',NULL,FALSE)->update('access_grants',[

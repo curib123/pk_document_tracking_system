@@ -44,6 +44,12 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
             <?php endif; ?>
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
                 <div class="side-heading">Administration</div>
+                <?php if (strcasecmp((string)$user['role'],'Administrator')===0): ?>
+                    <a class="side-link<?= $active('admin/document-assignments') ?>"
+                       href="<?= site_url('admin/document-assignments') ?>">
+                       <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> Assign Documents
+                    </a>
+                <?php endif; ?>
                 <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
                 <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
                 <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>

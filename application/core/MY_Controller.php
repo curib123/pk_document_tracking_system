@@ -54,6 +54,15 @@ class MY_Controller extends CI_Controller
 
     protected function notice($message, $type = 'success')
     {
+        // Daily JSON audit is filesystem-only; never insert operational audit
+        // events into an additional SQL table.
+        if ($type==='success' && $this->user && $this->input->method(TRUE)==='POST') {
+            $this->load->library('Audit_file');
+            if (!$this->audit_file->append((int)$this->user['id'],
+                trim(uri_string(),'/'))) {
+                log_message('error','Unable to write JSON audit file for successful action.');
+            }
+        }
         $this->session->set_flashdata('notice', $message);
         $this->session->set_flashdata('notice_type', $type);
     }

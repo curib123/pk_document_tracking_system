@@ -28,12 +28,11 @@ class Softcopy_operation_service
         if ($level==='' || mb_strlen($level)>30) {
             throw new DomainException('New revision level must contain 1 to 30 characters.');
         }
-        foreach (['effective_date','date_received','date_released'] as $field) {
-            $date=(string)($payload[$field]??'');
-            $parsed=DateTime::createFromFormat('!Y-m-d',$date);
-            if (!$parsed || $parsed->format('Y-m-d')!==$date) {
-                throw new DomainException('Provide a valid '.$field.' for the revision.');
-            }
+        $effective=(string)($payload['effective_date']??'');
+        if ($effective!=='') {
+            $parsed=DateTime::createFromFormat('!Y-m-d',$effective);
+            if (!$parsed || $parsed->format('Y-m-d')!==$effective)
+                throw new DomainException('Effective date must be valid when provided.');
         }
         if ((int)($payload['page_number']??0)<1) {
             throw new DomainException('Number of pages must be at least one.');
@@ -134,20 +133,22 @@ class Softcopy_operation_service
             if ($title!=='' && mb_strlen($title)>255) {
                 throw new DomainException('Document title is too long.');
             }
-            $date=date('Y-m-d');
+            $date=(new DateTimeImmutable('now',new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+            $effective=trim((string)($payload['effective_date']??''))?:$date;
+            $received=(string)($payload['date_received']??'')?:$date;
             if (!$db->insert('softcopy_revisions',[
                 'document_id'=>(int)$softcopyId,
                 'revision_number'=>(int)($max['revision_number']??0)+1,
-                'reason'=>$reason,'effective_date'=>$payload['effective_date'],
+                'reason'=>$reason,'effective_date'=>$effective,
                 'page_number'=>(int)$payload['page_number'],
                 'series_number'=>$doc['series_number'],
                 'document_title'=>$title?:$doc['title'],
                 'previous_revision_level'=>$previous['new_revision_level']??NULL,
                 'new_revision_level'=>$level,
                 'previous_effective_date'=>$previous['new_effective_date']??NULL,
-                'new_effective_date'=>$payload['effective_date'],
-                'date_received'=>$payload['date_received'],
-                'date_released'=>$payload['date_released'],
+                'new_effective_date'=>$effective,
+                'date_received'=>$received,
+                'date_released'=>$date,
                 'approval_date'=>$date,'file_id'=>$fileId,
                 'uploaded_by'=>$ownerId,'approved_by'=>$actorId
             ])) throw new DomainException('Unable to save softcopy revision.');

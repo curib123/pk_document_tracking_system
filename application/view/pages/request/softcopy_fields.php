@@ -56,17 +56,16 @@ $softcopyDirect = !empty($softcopyDirect);
     <label class="form-label" for="revisionPages">Number of Pages</label>
     <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1">
 </div>
+
 <div class="col-md-6">
-    <label class="form-label" for="revisionEffective">Effective Date</label>
+    <label class="form-label" for="revisionEffective">Effective Date
+      <span class="optional-label">(optional)</span></label>
     <input class="form-control" type="date" id="revisionEffective" name="effective_date">
+    <small class="form-text">If blank, effective date defaults to approval day.</small>
 </div>
-<div class="col-md-6">
-    <label class="form-label" for="revisionReceived">Received Date</label>
-    <input class="form-control" type="date" id="revisionReceived" name="date_received">
-</div>
-<div class="col-md-6">
-    <label class="form-label" for="revisionReleased">Released Date</label>
-    <input class="form-control" type="date" id="revisionReleased" name="date_released">
+<div class="col-12">
+    <p class="form-text mb-0">Date received and date released are recorded automatically:
+       received when saved, released when approved.</p>
 </div>
 <div class="col-12">
     <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and Revise · 15 MB maximum)</span></label>

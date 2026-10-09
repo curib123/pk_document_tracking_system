@@ -67,6 +67,29 @@ class Administration_model extends CI_Model
         }
         return $rows;
     }
+    public function document_assignments()
+    {
+        // Latest assignments from BOTH pk_dts sources, no substitute table.
+        $soft=$this->db->select("'softcopy' AS domain, d.document_number AS code,
+            d.title, CONCAT_WS(' ',u.first_name,u.last_name) AS assignee,
+            a.assigned_at AS assigned_date",FALSE)
+            ->from('assignments a')
+            ->join('softcopy_documents d','d.id=a.softcopy_id')
+            ->join('users u','u.id=a.user_id')
+            ->where('a.active',1)->order_by('a.assigned_at','DESC')
+            ->limit(25)->get()->result_array();
+        $hard=$this->db->select("'hardcopy' AS domain,d.sequence_number AS code,
+            d.title, CONCAT_WS(' ',u.first_name,u.last_name) AS assignee,
+            d.updated_at AS assigned_date",FALSE)
+            ->from('hardcopy_documents d')
+            ->join('users u','u.id=d.holder_id')
+            ->where('d.status','active')->order_by('d.updated_at','DESC')
+            ->limit(25)->get()->result_array();
+        $all=array_merge($soft,$hard);
+        usort($all,function($a,$b){return strcmp($b['assigned_date'],$a['assigned_date']);});
+        return array_slice($all,0,25);
+    }
+
     public function role_options()
     {
         return $this->db->select('id,name')->from('roles')->where('active',1)

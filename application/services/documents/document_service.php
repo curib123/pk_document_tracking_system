@@ -229,7 +229,7 @@ class Document_service
         $data['location_id']=$location?:NULL;
     }
 
-    public function dispose($domain,$id,$actorId,$reason='')
+    public function dispose($domain,$id,$actorId,$reason='',$action='other')
     {
         $c=$this->ci->Document_model->config($domain);
         $row=$this->ci->Document_model->find($domain,$id);
@@ -239,7 +239,7 @@ class Document_service
         $this->ci->db->insert('disposals',[
             'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],
             'previous_state'=>json_encode($row,JSON_UNESCAPED_UNICODE),
-            'disposal_action'=>'dispose','remarks'=>trim($reason),'disposed_by'=>$actorId
+            'disposal_action'=>$action,'remarks'=>trim($reason),'disposed_by'=>$actorId
         ]);
         $this->ci->db->insert('status_history',[
             'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],

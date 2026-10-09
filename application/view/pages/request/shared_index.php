@@ -28,7 +28,7 @@ foreach ($rows as $row) {
  }
  $display=[
  'Approval Route'=>implode("\n",$routeText)?:'Not submitted yet',
- 'Controlled File'=>isset($payload['controlled_file_id']) || isset($payload['revision_file_id'])
+ 'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
    ? 'Attached for approval' : 'Not attached',
  'Reference'=>$row['reference'],'Action'=>ucwords(str_replace('_',' ',$row['type'])),
  'Subject'=>$payload['subject']??'','Remarks'=>$payload['remarks']??'',
@@ -44,6 +44,9 @@ foreach ($rows as $row) {
  'category_id'=>$payload['category_id']??'','softcopy_id'=>$row['softcopy_id']??'',
  'hardcopy_id'=>$row['hardcopy_id']??'','recipient_id'=>$payload['recipient_id']??'',
  'expires_at'=>$payload['expires_at']??'',
+ 'document_domain'=>$payload['document_domain']??($row['hardcopy_id']?'hardcopy':'softcopy'),
+ 'disposal_reason'=>$payload['disposal_reason']??'',
+ 'disposal_other'=>$payload['disposal_other']??'',
  'new_revision_level'=>$payload['new_revision_level']??'',
  'effective_date'=>$payload['effective_date']??'',
  'date_received'=>$payload['date_received']??'',
@@ -148,6 +151,9 @@ data-confirm="Save request draft?">
       <?php endforeach; ?>
     </select>
   </div>
+  <div class="col-12" data-hardcopy-disposal hidden>
+    <?php $this->load->view('pages/request/disposal_fields'); ?>
+  </div>
   <div class="col-12" data-hardcopy-details>
     <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
       'options'=>$hardcopy_form_options,'user'=>$user,
@@ -163,13 +169,22 @@ data-confirm="Save request draft?">
 <?php endforeach; ?></select></div>
 <div class="col-md-6"><label class="form-label" for="reqSubject">Subject</label>
 <input class="form-control" name="subject" id="reqSubject" maxlength="255" required></div>
-<div class="col-md-6"><label class="form-label" for="reqSoftcopy">Softcopy Document</label>
+<?php if (in_array($tab,['access-grant','document-assign'],TRUE)): ?>
+<div class="col-md-6" data-domain-picker>
+ <label class="form-label" for="requestDocumentDomain">Document Type</label>
+ <select class="form-select" id="requestDocumentDomain" name="document_domain" required>
+   <option value="softcopy">Softcopy</option>
+   <option value="hardcopy">Hardcopy</option>
+ </select>
+</div>
+<?php endif; ?>
+<div class="col-md-6" data-document-domain="softcopy"><label class="form-label" for="reqSoftcopy">Softcopy Document</label>
 <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable>
 <option value="">Not selected</option>
 <?php foreach ($softcopy_options as $item): ?>
 <option value="<?= (int)$item['id'] ?>"><?= html_escape($item['document_number'].' · '.$item['title']) ?></option>
 <?php endforeach; ?></select></div>
-<div class="col-md-6"><label class="form-label" for="reqHardcopy">Hardcopy Document</label>
+<div class="col-md-6" data-document-domain="hardcopy"><label class="form-label" for="reqHardcopy">Hardcopy Document</label>
 <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable>
 <option value="">Not selected</option>
 <?php foreach ($hardcopy_options as $item): ?>

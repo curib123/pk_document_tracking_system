@@ -36,8 +36,8 @@ class Softcopy_direct_service
             'category_id'=>(int)($post['category_id']??0),
             'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
             'effective_date'=>trim((string)($post['effective_date']??'')),
-            'date_received'=>trim((string)($post['date_received']??'')),
-            'date_released'=>trim((string)($post['date_released']??'')),
+            'date_received'=>date('Y-m-d'),
+            'date_released'=>'',
             'page_number'=>(int)($post['page_number']??0)
         ];
         $stagedFileId=NULL;

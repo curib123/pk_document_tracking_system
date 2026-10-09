@@ -21,6 +21,9 @@
                 <p id="actionDescription" class="text-secondary"></p>
                 <label for="actionRemark" class="form-label">Remark <span class="optional-label">(optional)</span></label>
                 <textarea class="form-control" id="actionRemark" name="remark" rows="3"></textarea>
+                <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
+                    <?php $this->load->view('pages/request/disposal_fields'); ?>
+                </div>
             </div>
             <input type="hidden" name="id" value="">
             <input type="hidden" name="decision" value="">

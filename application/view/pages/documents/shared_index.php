@@ -52,9 +52,10 @@ foreach ($rows as $r) {
          $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
      }
  }
- if ($can && $r['status']!=='disposed') $buttons[]=['type'=>'action',
+ if ($can && $r['status']==='active') $buttons[]=['type'=>'action',
      'url'=>'documents/'.$cfg['domain'].'/dispose','label'=>'Dispose',
-     'description'=>'Permanently mark this document disposed, preserving the status history.',
+     'disposal'=>TRUE,
+     'description'=>'Choose a disposal reason and confirm this action.',
      'icon'=>'fa-solid fa-trash-can'];
  $dt_rows[]=['id'=>$r['id'],'cells'=>$cells,'record'=>$rec,'display'=>$display,'buttons'=>$buttons];
 }

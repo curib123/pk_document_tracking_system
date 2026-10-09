@@ -27,6 +27,47 @@ class Administration extends MY_Controller
             'grants'=>$kind==='roles'?$this->Administration_model->grants(array_column($rows,'id')):[]
         ]);
     }
+    /** Administrative direct assignment. Approval requests remain in My Requests. */
+    public function document_assignments()
+    {
+        $this->authenticate();
+        if (strcasecmp((string)$this->user['role'],'Administrator')!==0)
+            show_error('Administrator access is required.',403);
+        $this->load->model('Document_model');
+        $this->render('Assign Documents','pages/administration/document_assignments',[
+            'softcopy_options'=>$this->Document_model->options('softcopy'),
+            'hardcopy_options'=>$this->Document_model->options('hardcopy'),
+            'users_list'=>$this->Administration_model->user_options(),
+            'assignment_rows'=>$this->Administration_model->document_assignments()
+        ]);
+    }
+    public function save_document_assignment()
+    {
+        $this->authenticate();
+        if (strcasecmp((string)$this->user['role'],'Administrator')!==0)
+            show_error('Administrator access is required.',403);
+        $this->confirmed();
+        $domain=(string)$this->input->post('document_domain',TRUE);
+        $payload=['document_domain'=>$domain];
+        $soft=(int)$this->input->post('softcopy_id');
+        $hard=(int)$this->input->post('hardcopy_id');
+        $recipient=(int)$this->input->post('recipient_id');
+        try {
+            require_once APPPATH.'services/documents/document_access_service.php';
+            $this->db->trans_begin();
+            (new Document_access_service())->apply(
+                'assignment',$payload,$soft,$hard,$recipient,(int)$this->user['id'],NULL
+            );
+            if ($this->db->trans_status()===FALSE)
+                throw new DomainException('Assignment transaction failed.');
+            $this->db->trans_commit();
+            $this->notice('Document assigned successfully.');
+        } catch (DomainException $e) {
+            $this->db->trans_rollback();
+            $this->notice($e->getMessage(),'danger');
+        }
+        redirect('admin/document-assignments');
+    }
     public function users(){$this->listing('users');}
     public function roles(){$this->listing('roles');}
     public function workflows(){$this->listing('workflows');}

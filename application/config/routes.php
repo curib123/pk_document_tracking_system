@@ -31,6 +31,8 @@ $route['my-tasks/(:any)/decide']['POST'] = 'Requests/decide/$1';
 $route['my-tasks/hardcopy-transfer/dispatch']['POST'] = 'Requests/dispatch_transfer';
 $route['my-tasks/hardcopy-transfer/accept']['POST'] = 'Requests/accept_transfer';
 
+$route['admin/document-assignments']['GET'] = 'Administration/document_assignments';
+$route['admin/document-assignments/save']['POST'] = 'Administration/save_document_assignment';
 $route['admin/users']['GET'] = 'Administration/users';
 $route['admin/users/save']['POST'] = 'Administration/save_user';
 $route['admin/users/deactivate']['POST'] = 'Administration/deactivate_user';

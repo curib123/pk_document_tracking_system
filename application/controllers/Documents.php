@@ -84,8 +84,14 @@ class Documents extends MY_Controller
         $this->require_permission($domain,'direct');
         $this->confirmed();
         try {
+            require_once APPPATH.'services/documents/disposal_service.php';
+            $payload=[
+                'disposal_reason'=>$this->input->post('disposal_reason',TRUE),
+                'disposal_other'=>$this->input->post('disposal_other',TRUE)
+            ];
+            $reason=(new Disposal_service())->reason($payload);
             (new Document_service())->dispose($domain,(int)$this->input->post('id'),
-                (int)$this->user['id'],(string)$this->input->post('remark'));
+                (int)$this->user['id'],$reason,$payload['disposal_reason']);
             $this->notice('Document disposed and history recorded.');
         } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
         redirect('documents/'.$domain);

@@ -98,6 +98,8 @@
             if (target.id === 'stepForm') updateStepApprover();
             if (target.hasAttribute('data-location-upsert')) updateLocationHierarchy();
             if (target.hasAttribute('data-hardcopy-upsert')) updateHardcopyHierarchy();
+            updateDocumentDomain();
+            updateDisposalReason();
             updateHardcopyRequestAction();
             updateHardcopyRetention();
         }
@@ -169,6 +171,15 @@
             document.getElementById('actionDescription').textContent =
                 action.getAttribute('data-description') || 'This action will be saved to the system.';
             form.setAttribute('data-confirm', title + '?');
+            var disposal=form.querySelector('#actionDisposalFields');
+            if (disposal) {
+                disposal.hidden=action.getAttribute('data-disposal')!=='yes';
+                disposal.querySelectorAll('select,input').forEach(function(field) {
+                    field.disabled=disposal.hidden;
+                    field.required=!disposal.hidden && field.hasAttribute('data-disposal-reason');
+                });
+                updateDisposalReason();
+            }
         }
     });
 
@@ -221,8 +232,7 @@
             destination_location_id: ['transfer'],
             new_revision_level: ['softcopy_revise'],
             effective_date: ['softcopy_revise'],
-            date_received: ['softcopy_revise'],
-            date_released: ['softcopy_revise'],
+            // Received and released dates are recorded by PHP, not user inputs.
             page_number: ['softcopy_revise'],
             revision_attachment: ['softcopy_create','softcopy_revise']
         };
@@ -243,9 +253,46 @@
             }
         });
     }
-    document.addEventListener('change', function (event) {
-        if (event.target && event.target.id === 'reqType') updateRequestActionFields();
+    function updateDocumentDomain() {
+        document.querySelectorAll('form').forEach(function(form) {
+            var select=form.querySelector('[name="document_domain"]');
+            if (!select) return;
+            var domain=select.value;
+            form.querySelectorAll('[data-document-domain]').forEach(function(section) {
+                var show=section.dataset.documentDomain===domain;
+                section.hidden=!show;
+                section.querySelectorAll('select').forEach(function(field) {
+                    field.disabled=!show;
+                    field.required=show;
+                    if (!show) field.value='';
+                });
+            });
+        });
+    }
+    function updateDisposalReason() {
+        document.querySelectorAll('[data-disposal-reason]').forEach(function(select) {
+            var form=select.form;
+            if (!form) return;
+            var other=form.querySelector('[data-disposal-other]');
+            if (!other) return;
+            var show=select.value==='other';
+            other.hidden=!show;
+            other.querySelectorAll('input').forEach(function(field) {
+                field.disabled=!show;
+                field.required=show;
+                if (!show) field.value='';
+            });
+        });
+    }
+    document.addEventListener('change', function(event) {
+        if (event.target?.id==='reqType') updateRequestActionFields();
+        if (event.target?.name==='document_domain') {
+            updateDocumentDomain(); updateRequestActionFields();
+        }
+        if (event.target?.hasAttribute('data-disposal-reason')) updateDisposalReason();
     });
+    updateDocumentDomain();
+    updateDisposalReason();
     updateRequestActionFields();
 
     function updateStepApprover() {
@@ -386,6 +433,15 @@
             field.disabled=!requiresExisting;
             field.required=requiresExisting;
         });
+        var disposal=form.querySelector('[data-hardcopy-disposal]');
+        if (disposal) {
+            var isDisposal=type==='disposal';
+            disposal.hidden=!isDisposal;
+            disposal.querySelectorAll('input,select').forEach(function(field) {
+                field.disabled=!isDisposal;
+                field.required=isDisposal && field.hasAttribute('data-disposal-reason');
+            });
+        }
         var showDetails=type==='hardcopy_create' || type==='hardcopy_update';
         details.hidden=!showDetails;
         details.querySelectorAll('input, select, textarea').forEach(function (field) {
@@ -398,6 +454,7 @@
             if (title) title.required=true;
         }
         updateHardcopyRetention();
+        updateDisposalReason();
     }
     document.addEventListener('change', function (e) {
         if (e.target?.name==='retention_enabled') updateHardcopyRetention();
