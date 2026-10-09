@@ -47,4 +47,6 @@ jobs:
           php-version: '8.2'
           extensions: mysqli,mbstring,fileinfo,zip
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Show active smoke-test route when debugging failures
+        run: sed -i 's@  curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@  echo "Checking route: $route"; curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@' tests/smoke.sh
       - run: bash tests/smoke.sh
