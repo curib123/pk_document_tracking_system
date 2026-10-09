@@ -47,6 +47,19 @@ class Records_model extends CI_Model
         return $this->db->order_by('title')->get()->result_array();
     }
 
+    public function file_histories($documentIds)
+    {
+        if (!$documentIds) return [];
+        $rows = $this->db->select('f.id,f.document_id,f.original_name,f.file_size,f.created_at,u.name AS uploaded_by')
+            ->from('document_files f')->join('users u', 'u.id = f.uploaded_by')
+            ->where_in('f.document_id', $documentIds)
+            ->order_by('f.created_at', 'DESC')->order_by('f.id', 'DESC')
+            ->get()->result_array();
+        $histories = [];
+        foreach ($rows as $row) $histories[$row['document_id']][] = $row;
+        return $histories;
+    }
+
     public function user_options()
     {
         return $this->db->select('id,name')->from('users')->where('active', 1)
