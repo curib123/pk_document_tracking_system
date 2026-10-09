@@ -11,6 +11,9 @@ INSERT INTO users(username,first_name,last_name,position_title,role_id,password_
 SELECT 'test_admin','Test','Administrator','System Admin',id,'$HASH',0,1
 FROM roles WHERE name='Administrator';
 "
+# Import original workflow graph presets only AFTER the administrator exists.
+mysql -h127.0.0.1 -uroot -prootpass pk_dts_test < database/seed_workflows.sql
+php tests/source_schema_contract.php
 
 php -S 127.0.0.1:8089 -t public public/index.php >/tmp/pk-server.log 2>&1 &
 PID=$!

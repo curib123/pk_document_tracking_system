@@ -32,13 +32,14 @@ LOC_ID=$(db "SELECT id FROM locations WHERE name='QA Archive'")
 REC_ID=$(db "SELECT id FROM users WHERE username='recipient_test'")
 ADMIN_ROLE=$(db "SELECT id FROM roles WHERE name='Administrator'")
 
-for t in softcopy_create softcopy_revise hardcopy_create transfer assignment access disposal softcopy_cancel hardcopy_update; do
-    db "INSERT INTO workflows(workflow_key,name,request_type,active,created_by)
-        VALUES ('qa_$t','QA $t','$t',1,$ADMIN_ID);
-        INSERT INTO workflow_versions(workflow_id,version_number,status,is_default,graph,created_by,published_at)
-        SELECT id,1,'published',1,
-        '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Admin Approval\",\"approver\":{\"type\":\"role\",\"value\":$ADMIN_ROLE,\"label\":\"Administrator\"}}]}',
-        $ADMIN_ID,NOW() FROM workflows WHERE workflow_key='qa_$t';"
+# The nine published workflow presets are imported from the original SQL seed
+# with created_by resolved to the generated administrator. Never create a
+# duplicate active workflow for a type (pk_dts enforces one_active_workflow).
+for t in softcopy_create softcopy_revise softcopy_cancel hardcopy_create hardcopy_update transfer assignment access disposal; do
+    test "$(db "SELECT COUNT(*) FROM workflows w
+      JOIN workflow_versions v ON v.workflow_id=w.id
+      WHERE w.request_type='$t' AND w.active=1
+      AND v.is_default=1 AND v.status='published'")" = 1
 done
 
 echo 'CASE: create softcopy'

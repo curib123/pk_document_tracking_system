@@ -2,6 +2,7 @@
 // Shared Places screen: each master-branch module keeps its own index.php.
 $permissions = $permissions ?? [];
 $can = function ($action) use ($permissions,$cfg) {
+    if (!empty($cfg['read_only']) && $action !== 'view') return FALSE;
     return isset($permissions['*']) || !empty($permissions[$cfg['table']][$action]);
 };
 $dt_columns = [];
@@ -53,7 +54,7 @@ $dt_sortable=[];
 ?>
 <div class="page-heading"><div><span class="eyebrow">Master Data</span>
 <h1><?= html_escape($title) ?></h1>
-<p>Reference data stored in the original <code><?= html_escape($cfg['table']) ?></code> table.</p>
+<p>Reference data stored in the original <code><?= html_escape($cfg['table']) ?></code> table.<?php if (!empty($cfg['read_only'])): ?> System counters are read-only.<?php endif; ?></p>
 </div></div>
 <nav class="tab-bar" aria-label="Place categories">
 <?php foreach ([

@@ -7,6 +7,9 @@ class Place_service
 
     public function save($c, $post, $actorId)
     {
+        // sequences has a string primary key and controls system counters.
+        // It has no numeric id or active column, so keep it read-only in Places.
+        if (!empty($c['read_only'])) throw new DomainException('System sequences are managed automatically.');
         $id=(int)($post['id']??0); $data=[];
         foreach ($c['fields'] as $field) {
             $value=trim((string)($post[$field]??''));

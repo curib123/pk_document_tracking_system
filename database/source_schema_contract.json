@@ -1,0 +1,817 @@
+{
+  "source": "User supplied phpMyAdmin dump Oct 09 2026 at 03:08 AM",
+  "normalized_source_git_blob_sha": "65660f3a1dc48874c86540db5728156fd31f587d",
+  "tables": [
+    {
+      "name": "access_grants",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "domain": "varchar(10) NOT NULL",
+        "document_id": "bigint(20) UNSIGNED NOT NULL",
+        "user_id": "bigint(20) UNSIGNED NOT NULL",
+        "granted_by": "bigint(20) UNSIGNED NOT NULL",
+        "granted_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "expires_at": "datetime NOT NULL",
+        "revoked_at": "datetime DEFAULT NULL",
+        "revoked_by": "bigint(20) UNSIGNED DEFAULT NULL",
+        "reason": "text NOT NULL",
+        "status": "varchar(20) NOT NULL DEFAULT 'access_granted'",
+        "version": "int(11) NOT NULL DEFAULT 1"
+      }
+    },
+    {
+      "name": "areas",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "name": "varchar(150) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "assets",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "specific_id": "bigint(20) UNSIGNED NOT NULL",
+        "asset_number": "varchar(100) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "assignments",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "softcopy_id": "bigint(20) UNSIGNED NOT NULL",
+        "user_id": "bigint(20) UNSIGNED NOT NULL",
+        "assigned_by": "bigint(20) UNSIGNED NOT NULL",
+        "assigned_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1"
+      }
+    },
+    {
+      "name": "categories",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "parent_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "name": "varchar(150) NOT NULL",
+        "folder_name": "varchar(150) NOT NULL",
+        "description": "text DEFAULT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "created_by": "bigint(20) UNSIGNED NOT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "disposals",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "domain": "varchar(10) NOT NULL",
+        "document_id": "bigint(20) UNSIGNED NOT NULL",
+        "previous_status": "varchar(30) NOT NULL",
+        "previous_state": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`previous_state`))",
+        "disposal_action": "varchar(20) NOT NULL",
+        "remarks": "text NOT NULL",
+        "disposed_by": "bigint(20) UNSIGNED NOT NULL",
+        "disposed_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "files",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "original_name": "varchar(255) NOT NULL",
+        "storage_name": "varchar(100) NOT NULL",
+        "size": "bigint(20) UNSIGNED NOT NULL",
+        "mime_type": "varchar(150) NOT NULL",
+        "fingerprint": "char(64) NOT NULL",
+        "extension": "varchar(10) NOT NULL",
+        "purpose": "varchar(30) NOT NULL DEFAULT 'upload'",
+        "domain": "varchar(10) DEFAULT NULL",
+        "document_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "uploaded_by": "bigint(20) UNSIGNED NOT NULL",
+        "status": "varchar(30) NOT NULL DEFAULT 'pending'",
+        "approved_by": "bigint(20) UNSIGNED DEFAULT NULL",
+        "approved_at": "datetime DEFAULT NULL",
+        "rejected_by": "bigint(20) UNSIGNED DEFAULT NULL",
+        "rejected_at": "datetime DEFAULT NULL",
+        "rejection_reason": "text DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "hardcopy_documents",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "title": "varchar(255) NOT NULL",
+        "area_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "specific_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "asset_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "location_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "sequence_number": "varchar(100) DEFAULT NULL",
+        "retention_enabled": "tinyint(4) NOT NULL DEFAULT 0",
+        "retention_start_date": "date DEFAULT NULL",
+        "retention_end_date": "date DEFAULT NULL",
+        "holder_id": "bigint(20) UNSIGNED NOT NULL",
+        "status": "varchar(30) NOT NULL DEFAULT 'active'",
+        "previous_status": "varchar(30) DEFAULT NULL",
+        "created_by": "bigint(20) UNSIGNED NOT NULL",
+        "creation_source": "varchar(20) NOT NULL",
+        "creation_reason": "text NOT NULL",
+        "source_request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "locations",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "area_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "specific_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "asset_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "name": "varchar(150) NOT NULL",
+        "code": "varchar(100) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "archive_date": "date DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "login_attempts",
+      "columns": {
+        "attempt_key": "char(64) NOT NULL",
+        "failures": "int(11) NOT NULL DEFAULT 0",
+        "window_started": "datetime NOT NULL"
+      }
+    },
+    {
+      "name": "notifications",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "user_id": "bigint(20) UNSIGNED NOT NULL",
+        "title": "varchar(150) NOT NULL",
+        "message": "text NOT NULL",
+        "request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "read_at": "datetime DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "permissions",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "name": "varchar(150) NOT NULL",
+        "module_key": "varchar(60) NOT NULL",
+        "module_label": "varchar(100) NOT NULL",
+        "action_key": "varchar(60) NOT NULL",
+        "action_label": "varchar(100) NOT NULL",
+        "description": "text DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1"
+      }
+    },
+    {
+      "name": "requests",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "reference": "varchar(50) NOT NULL",
+        "type": "varchar(50) NOT NULL",
+        "softcopy_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "hardcopy_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "requested_by": "bigint(20) UNSIGNED NOT NULL",
+        "payload": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`))",
+        "workflow_version_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "snapshot": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`snapshot`))",
+        "current_node": "varchar(50) DEFAULT NULL",
+        "status": "varchar(30) NOT NULL DEFAULT 'draft'",
+        "result": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`result`))",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "submitted_at": "datetime DEFAULT NULL",
+        "completed_at": "datetime DEFAULT NULL",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "revision_artifacts",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "revision_id": "bigint(20) UNSIGNED NOT NULL",
+        "artifact_type": "varchar(20) NOT NULL",
+        "file_id": "bigint(20) UNSIGNED NOT NULL",
+        "source_fingerprint": "char(64) NOT NULL",
+        "generator_version": "varchar(50) NOT NULL",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "roles",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "name": "varchar(120) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "role_permissions",
+      "columns": {
+        "role_id": "bigint(20) UNSIGNED NOT NULL",
+        "permission_id": "bigint(20) UNSIGNED NOT NULL"
+      }
+    },
+    {
+      "name": "schema_migrations",
+      "columns": {
+        "version": "int(11) NOT NULL",
+        "applied_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "sequences",
+      "columns": {
+        "sequence_key": "varchar(80) NOT NULL",
+        "value": "bigint(20) UNSIGNED NOT NULL"
+      }
+    },
+    {
+      "name": "settings",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "setting_key": "varchar(80) NOT NULL",
+        "value": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`))",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "softcopy_documents",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "document_number": "varchar(100) NOT NULL",
+        "series_number": "varchar(100) DEFAULT NULL",
+        "title": "varchar(255) NOT NULL",
+        "category_id": "bigint(20) UNSIGNED NOT NULL",
+        "current_revision_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "status": "varchar(30) NOT NULL DEFAULT 'active'",
+        "previous_status": "varchar(30) DEFAULT NULL",
+        "created_by": "bigint(20) UNSIGNED NOT NULL",
+        "creation_source": "varchar(20) NOT NULL",
+        "creation_reason": "text NOT NULL",
+        "source_request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "softcopy_revisions",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "document_id": "bigint(20) UNSIGNED NOT NULL",
+        "revision_number": "int(10) UNSIGNED NOT NULL",
+        "reason": "text NOT NULL",
+        "effective_date": "date NOT NULL",
+        "page_number": "int(10) UNSIGNED NOT NULL",
+        "series_number": "varchar(100) DEFAULT NULL",
+        "document_title": "varchar(255) NOT NULL",
+        "previous_revision_level": "varchar(30) DEFAULT NULL",
+        "new_revision_level": "varchar(30) NOT NULL",
+        "previous_effective_date": "date DEFAULT NULL",
+        "new_effective_date": "date NOT NULL",
+        "date_received": "date NOT NULL",
+        "date_released": "date NOT NULL",
+        "approval_date": "date NOT NULL",
+        "file_id": "bigint(20) UNSIGNED NOT NULL",
+        "uploaded_by": "bigint(20) UNSIGNED NOT NULL",
+        "approved_by": "bigint(20) UNSIGNED NOT NULL",
+        "approved_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "specifics",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "area_id": "bigint(20) UNSIGNED NOT NULL",
+        "name": "varchar(150) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "status_history",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "domain": "varchar(10) NOT NULL",
+        "document_id": "bigint(20) UNSIGNED NOT NULL",
+        "previous_status": "varchar(30) NOT NULL",
+        "new_status": "varchar(30) NOT NULL",
+        "action": "varchar(60) NOT NULL",
+        "user_id": "bigint(20) UNSIGNED NOT NULL",
+        "remarks": "text DEFAULT NULL",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "transfers",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "request_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "hardcopy_id": "bigint(20) UNSIGNED NOT NULL",
+        "origin": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`origin`))",
+        "destination": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`destination`))",
+        "current_holder_id": "bigint(20) UNSIGNED NOT NULL",
+        "recipient_id": "bigint(20) UNSIGNED NOT NULL",
+        "document_copy_number": "varchar(100) NOT NULL",
+        "reason": "text NOT NULL",
+        "comments": "text DEFAULT NULL",
+        "status": "varchar(40) NOT NULL DEFAULT 'for_transfer'",
+        "recipient_status": "varchar(20) NOT NULL DEFAULT 'pending'",
+        "transferred_by": "bigint(20) UNSIGNED DEFAULT NULL",
+        "transferred_at": "datetime DEFAULT NULL",
+        "accepted_by": "bigint(20) UNSIGNED DEFAULT NULL",
+        "accepted_at": "datetime DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "users",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "username": "varchar(80) NOT NULL",
+        "first_name": "varchar(100) NOT NULL",
+        "middle_name": "varchar(100) DEFAULT NULL",
+        "last_name": "varchar(100) NOT NULL",
+        "position_title": "varchar(150) NOT NULL",
+        "role_id": "bigint(20) UNSIGNED NOT NULL",
+        "leader_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "password_hash": "varchar(255) NOT NULL",
+        "require_password_change": "tinyint(4) NOT NULL DEFAULT 1",
+        "session_version": "int(11) NOT NULL DEFAULT 1",
+        "active": "tinyint(4) NOT NULL DEFAULT 1",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "workflows",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "workflow_key": "varchar(80) NOT NULL",
+        "name": "varchar(150) NOT NULL",
+        "description": "text DEFAULT NULL",
+        "request_type": "varchar(50) NOT NULL",
+        "active": "tinyint(4) NOT NULL DEFAULT 0",
+        "active_request_type": "varchar(50) GENERATED ALWAYS AS (case when `active` = 1 then `request_type` else NULL end) STORED",
+        "created_by": "bigint(20) UNSIGNED NOT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "updated_at": "timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()"
+      }
+    },
+    {
+      "name": "workflow_history",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "request_id": "bigint(20) UNSIGNED NOT NULL",
+        "step_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "action": "varchar(50) NOT NULL",
+        "user_id": "bigint(20) UNSIGNED NOT NULL",
+        "user_name": "varchar(255) NOT NULL",
+        "position_title": "varchar(150) NOT NULL",
+        "before_state": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`before_state`))",
+        "after_state": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`after_state`))",
+        "comments": "text DEFAULT NULL",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    },
+    {
+      "name": "workflow_steps",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "request_id": "bigint(20) UNSIGNED NOT NULL",
+        "node_key": "varchar(50) NOT NULL",
+        "label": "varchar(120) NOT NULL",
+        "assignment": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`assignment`))",
+        "candidates": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`candidates`))",
+        "assigned_user_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "assigned_name": "varchar(255) DEFAULT NULL",
+        "assigned_position": "varchar(150) DEFAULT NULL",
+        "status": "varchar(20) NOT NULL DEFAULT 'pending'",
+        "decision": "varchar(20) DEFAULT NULL",
+        "comments": "text DEFAULT NULL",
+        "acting_user_id": "bigint(20) UNSIGNED DEFAULT NULL",
+        "acting_name": "varchar(255) DEFAULT NULL",
+        "acting_position": "varchar(150) DEFAULT NULL",
+        "assigned_at": "timestamp NOT NULL DEFAULT current_timestamp()",
+        "acted_at": "datetime DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1"
+      }
+    },
+    {
+      "name": "workflow_versions",
+      "columns": {
+        "id": "bigint(20) UNSIGNED NOT NULL",
+        "workflow_id": "bigint(20) UNSIGNED NOT NULL",
+        "version_number": "int(10) UNSIGNED NOT NULL",
+        "status": "varchar(20) NOT NULL DEFAULT 'draft'",
+        "is_default": "tinyint(4) NOT NULL DEFAULT 0",
+        "graph": "longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`graph`))",
+        "created_by": "bigint(20) UNSIGNED NOT NULL",
+        "published_at": "datetime DEFAULT NULL",
+        "version": "int(11) NOT NULL DEFAULT 1",
+        "created_at": "timestamp NOT NULL DEFAULT current_timestamp()"
+      }
+    }
+  ],
+  "foreignKeys": [
+    {
+      "name": "access_grants_ibfk_1",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "access_grants_ibfk_2",
+      "column": "user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "access_grants_ibfk_3",
+      "column": "granted_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "access_grants_ibfk_4",
+      "column": "revoked_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "assets_ibfk_1",
+      "column": "specific_id",
+      "references": "specifics",
+      "reference_column": "id"
+    },
+    {
+      "name": "assignments_ibfk_1",
+      "column": "softcopy_id",
+      "references": "softcopy_documents",
+      "reference_column": "id"
+    },
+    {
+      "name": "assignments_ibfk_2",
+      "column": "user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "assignments_ibfk_3",
+      "column": "assigned_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "categories_ibfk_1",
+      "column": "parent_id",
+      "references": "categories",
+      "reference_column": "id"
+    },
+    {
+      "name": "categories_ibfk_2",
+      "column": "created_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "disposals_ibfk_1",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "disposals_ibfk_2",
+      "column": "disposed_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "files_ibfk_1",
+      "column": "uploaded_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "files_ibfk_2",
+      "column": "approved_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "files_ibfk_3",
+      "column": "rejected_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_1",
+      "column": "area_id",
+      "references": "areas",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_2",
+      "column": "specific_id",
+      "references": "specifics",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_3",
+      "column": "asset_id",
+      "references": "assets",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_4",
+      "column": "location_id",
+      "references": "locations",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_5",
+      "column": "holder_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "hardcopy_documents_ibfk_6",
+      "column": "created_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "locations_ibfk_1",
+      "column": "area_id",
+      "references": "areas",
+      "reference_column": "id"
+    },
+    {
+      "name": "locations_ibfk_2",
+      "column": "specific_id",
+      "references": "specifics",
+      "reference_column": "id"
+    },
+    {
+      "name": "locations_ibfk_3",
+      "column": "asset_id",
+      "references": "assets",
+      "reference_column": "id"
+    },
+    {
+      "name": "notifications_ibfk_1",
+      "column": "user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "notifications_ibfk_2",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "requests_ibfk_1",
+      "column": "softcopy_id",
+      "references": "softcopy_documents",
+      "reference_column": "id"
+    },
+    {
+      "name": "requests_ibfk_2",
+      "column": "hardcopy_id",
+      "references": "hardcopy_documents",
+      "reference_column": "id"
+    },
+    {
+      "name": "requests_ibfk_3",
+      "column": "requested_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "requests_ibfk_4",
+      "column": "workflow_version_id",
+      "references": "workflow_versions",
+      "reference_column": "id"
+    },
+    {
+      "name": "revision_artifacts_ibfk_1",
+      "column": "revision_id",
+      "references": "softcopy_revisions",
+      "reference_column": "id"
+    },
+    {
+      "name": "revision_artifacts_ibfk_2",
+      "column": "file_id",
+      "references": "files",
+      "reference_column": "id"
+    },
+    {
+      "name": "role_permissions_ibfk_1",
+      "column": "role_id",
+      "references": "roles",
+      "reference_column": "id"
+    },
+    {
+      "name": "role_permissions_ibfk_2",
+      "column": "permission_id",
+      "references": "permissions",
+      "reference_column": "id"
+    },
+    {
+      "name": "current_revision_fk",
+      "column": "current_revision_id",
+      "references": "softcopy_revisions",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_documents_ibfk_1",
+      "column": "category_id",
+      "references": "categories",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_documents_ibfk_2",
+      "column": "created_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_revisions_ibfk_1",
+      "column": "document_id",
+      "references": "softcopy_documents",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_revisions_ibfk_2",
+      "column": "file_id",
+      "references": "files",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_revisions_ibfk_3",
+      "column": "uploaded_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "softcopy_revisions_ibfk_4",
+      "column": "approved_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "specifics_ibfk_1",
+      "column": "area_id",
+      "references": "areas",
+      "reference_column": "id"
+    },
+    {
+      "name": "status_history_ibfk_1",
+      "column": "user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_1",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_2",
+      "column": "hardcopy_id",
+      "references": "hardcopy_documents",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_3",
+      "column": "current_holder_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_4",
+      "column": "recipient_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_5",
+      "column": "transferred_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "transfers_ibfk_6",
+      "column": "accepted_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "users_ibfk_1",
+      "column": "role_id",
+      "references": "roles",
+      "reference_column": "id"
+    },
+    {
+      "name": "users_ibfk_2",
+      "column": "leader_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflows_ibfk_1",
+      "column": "created_by",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_history_ibfk_1",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_history_ibfk_2",
+      "column": "step_id",
+      "references": "workflow_steps",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_history_ibfk_3",
+      "column": "user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_steps_ibfk_1",
+      "column": "request_id",
+      "references": "requests",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_steps_ibfk_2",
+      "column": "assigned_user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_steps_ibfk_3",
+      "column": "acting_user_id",
+      "references": "users",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_versions_ibfk_1",
+      "column": "workflow_id",
+      "references": "workflows",
+      "reference_column": "id"
+    },
+    {
+      "name": "workflow_versions_ibfk_2",
+      "column": "created_by",
+      "references": "users",
+      "reference_column": "id"
+    }
+  ],
+  "seed_tables": [
+    "roles",
+    "permissions",
+    "role_permissions",
+    "settings"
+  ]
+}
