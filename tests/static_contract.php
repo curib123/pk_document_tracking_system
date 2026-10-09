@@ -17,5 +17,15 @@ foreach(['users','roles','permissions','areas','specifics','assets','locations',
  if (strpos($sql,'CREATE TABLE ' . chr(96) . $t . chr(96))===FALSE) $fail[]="Missing table ".$t;
 }
 if (strpos($sql,'INSERT INTO ' . chr(96) . 'users' . chr(96))!==FALSE) $fail[]='User data in schema';
+// Login screen retains native CI3 form posts and its full-viewport visual layout.
+$login=file_get_contents($root.'/application/view/pages/authentication/index.php');
+$css=file_get_contents($root.'/public/assets/css/app.css');
+foreach (['login-shell','login-cover','login-panel','login-card','assets/images/building.jpg',
+    'assets/images/peanut-kisses.jpg','site_url(\'login\')'] as $item) {
+    if (strpos($login,$item)===FALSE) $fail[]='Login layout missing: '.$item;
+}
+foreach (['.login-page::before','.login-shell','.login-card','background-size: cover'] as $style) {
+    if (strpos($css,$style)===FALSE) $fail[]='Full-cover login CSS missing: '.$style;
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
