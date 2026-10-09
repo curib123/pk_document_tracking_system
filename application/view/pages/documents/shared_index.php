@@ -20,6 +20,23 @@ foreach ($rows as $r) {
  foreach (array_merge(['id'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
  $buttons=[['type'=>'view']];
  if ($can) $buttons[]=['type'=>'edit'];
+ if ($cfg['domain']==='softcopy') {
+     if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
+         $buttons[]=['type'=>'upload'];
+     }
+     if (!empty($latest_files[$r['id']]) && !empty($file_access[$r['id']])) {
+         $historyEntries=[];
+         foreach ($file_histories[$r['id']]??[] as $item) {
+             $historyEntries[]=[
+                 'name'=>$item['original_name'],
+                 'detail'=>$item['first_name'].' '.$item['last_name'].' — '.$item['created_at'],
+                 'url'=>site_url('files/download/'.$item['id'])
+             ];
+         }
+         $buttons[]=['type'=>'history','files'=>$historyEntries];
+         $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
+     }
+ }
  if ($can && $r['status']!=='disposed') $buttons[]=['type'=>'action',
      'url'=>'documents/'.$cfg['domain'].'/dispose','label'=>'Dispose',
      'description'=>'Permanently mark this document disposed, preserving the status history.',
@@ -85,3 +102,42 @@ $dt_create=$can?'Add Document':'';
  <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
  <button class="btn btn-primary" type="submit">Save Document</button></div>
 </form></div></div></div>
+
+<?php if ($cfg['domain']==='softcopy'): ?>
+<div class="modal fade" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+    <div class="modal-header"><h2 class="modal-title fs-6" id="fileHistoryTitle">Document File History</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body" id="fileHistoryList"></div>
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
+  </div></div>
+</div>
+<?php if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))): ?>
+<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+  <form method="post" enctype="multipart/form-data" action="<?= site_url('files/upload') ?>"
+        data-confirm="Upload and record this controlled revision?">
+    <div class="modal-header"><h2 class="modal-title fs-6" id="uploadTitle">Upload Controlled Revision</h2>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+    <div class="modal-body">
+      <p id="uploadDocumentName" class="small text-secondary"></p>
+      <input type="hidden" name="document_id" id="uploadDocumentId">
+      <label class="form-label" for="uploadLevel">New Revision Level</label>
+      <input class="form-control mb-3" id="uploadLevel" name="new_revision_level" required maxlength="30">
+      <label class="form-label" for="uploadPages">Page Count</label>
+      <input class="form-control mb-3" id="uploadPages" type="number" name="page_number" min="1" value="1">
+      <label class="form-label" for="uploadReason">Reason <span class="optional-label">(optional)</span></label>
+      <textarea class="form-control mb-3" id="uploadReason" name="reason" rows="2"></textarea>
+      <label class="form-label" for="uploadFile">File (15 MB maximum)</label>
+      <input class="form-control" type="file" id="uploadFile" name="attachment"
+        accept=".pdf,.txt,.jpg,.jpeg,.png,.docx,.xlsx" required>
+    </div>
+    <input type="hidden" name="confirmed" value="no">
+    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+      value="<?= $this->security->get_csrf_hash() ?>">
+    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+      <button type="submit" class="btn btn-primary">Upload Revision</button></div>
+  </form></div></div>
+</div>
+<?php endif; ?>
+<?php endif; ?>
