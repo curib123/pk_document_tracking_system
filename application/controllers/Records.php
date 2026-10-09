@@ -104,14 +104,12 @@ class Records extends MY_Controller
     {
         $this->require_permission('softcopy', 'edit');
         $this->confirmed();
-        $id = (int) $this->input->post('id');
-        $grant = $this->db->get_where('document_access_grants', ['id' => $id])->row_array();
-        if (!$grant || $grant['revoked_at']) {
-            $this->notice('Active grant was not found.', 'danger');
-        } else {
-            $this->db->where('id', $id)->where('revoked_at IS NULL', NULL, FALSE)
-                ->update('document_access_grants', ['revoked_at' => date('Y-m-d H:i:s')]);
+        require_once APPPATH . 'services/records/Document_file_service.php';
+        try {
+            (new Document_file_service())->revoke((int) $this->input->post('id'));
             $this->notice('Document access has been revoked.');
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
         }
         redirect('documents/softcopy');
     }
