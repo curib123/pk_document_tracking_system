@@ -42,10 +42,16 @@ class Requests extends MY_Controller
         if (!in_array($limit, [10,25,50,100], TRUE)) $limit = 10;
         $page = max(1, (int) $this->input->get('page'));
         $total = count($rows);
+        $visibleRows = array_slice($rows, ($page - 1) * $limit, $limit);
+        $histories = $this->Request_model->histories(array_column($visibleRows, 'id'));
+        foreach ($visibleRows as &$item) {
+            $item['history_text'] = implode("\n", $histories[$item['id']] ?? []);
+        }
+        unset($item);
         $this->render(($task ? 'My Tasks' : 'My Requests') . ' · ' . $this->types[$type], 'pages/request/index', [
             'task' => $task, 'module' => $task ? 'tasks' : 'requests',
             'tabs' => $this->types, 'current' => $type,
-            'rows' => array_slice($rows, ($page - 1) * $limit, $limit),
+            'rows' => $visibleRows,
             'total' => $total, 'page' => $page, 'limit' => $limit, 'q' => $q,
             'status' => $status,
             'base_path' => ($task ? 'my-tasks/' : 'my-requests/') . $type,
