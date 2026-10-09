@@ -6,61 +6,141 @@
     // Keep native server form actions and confirmation semantics unchanged.
     if (!window.bootstrap) {
         document.body.classList.add('offline-ui');
+
+        // Native forms keep working when the office network cannot load Bootstrap.
+        // Reuse modal instances and restore keyboard focus like the full component.
+        var fallbackInstances = new WeakMap();
+        var fallbackOpenModal = null;
+
+        function modalFocusables(modal) {
+            return Array.from(modal.querySelectorAll(
+                'button:not([disabled]), input:not([disabled]):not([type="hidden"]), ' +
+                'select:not([disabled]), textarea:not([disabled]), a[href], [tabindex="0"]'
+            )).filter(function (node) {
+                return !node.closest('[hidden]') && node.getClientRects().length > 0;
+            });
+        }
+
         window.bootstrap = {
             Modal: {
                 getOrCreateInstance: function (element) {
-                    return {
+                    if (!element) return {show: function () {}, hide: function () {}};
+                    if (fallbackInstances.has(element)) return fallbackInstances.get(element);
+                    var returnFocus = null;
+                    var instance = {
                         show: function () {
-                            if (!element) return;
+                            if (element.classList.contains('show')) return;
+                            if (fallbackOpenModal && fallbackOpenModal !== element) {
+                                window.bootstrap.Modal.getOrCreateInstance(fallbackOpenModal).hide();
+                            }
+                            returnFocus = document.activeElement;
                             element.style.display = 'block';
                             element.classList.add('show');
                             element.removeAttribute('aria-hidden');
-                            var backdrop = document.createElement('div');
-                            backdrop.className = 'modal-backdrop fallback-backdrop';
-                            document.body.appendChild(backdrop);
+                            element.setAttribute('role', 'dialog');
+                            element.setAttribute('aria-modal', 'true');
+                            document.body.classList.add('modal-open');
+                            fallbackOpenModal = element;
+                            if (!document.querySelector('.fallback-backdrop')) {
+                                var backdrop = document.createElement('div');
+                                backdrop.className = 'modal-backdrop fallback-backdrop show';
+                                document.body.appendChild(backdrop);
+                            }
+                            var focusable = modalFocusables(element);
+                            if (focusable.length) focusable[0].focus();
                         },
                         hide: function () {
-                            if (!element) return;
+                            if (!element.classList.contains('show')) return;
+                            if (element.contains(document.activeElement)) document.activeElement.blur();
                             element.style.display = 'none';
                             element.classList.remove('show');
                             element.setAttribute('aria-hidden', 'true');
+                            element.removeAttribute('aria-modal');
                             document.querySelectorAll('.fallback-backdrop').forEach(function (node) {
                                 node.remove();
                             });
+                            document.body.classList.remove('modal-open');
+                            fallbackOpenModal = null;
+                            if (returnFocus && returnFocus.isConnected && !returnFocus.closest('[hidden]')) {
+                                returnFocus.focus();
+                            }
                             element.dispatchEvent(new Event('hidden.bs.modal'));
                         }
                     };
+                    fallbackInstances.set(element, instance);
+                    return instance;
                 }
             }
         };
+
         document.addEventListener('click', function (event) {
             var trigger = event.target.closest('[data-bs-toggle]');
             if (trigger) {
                 var type = trigger.getAttribute('data-bs-toggle');
-                if (type === 'modal') {
-                    var target = document.querySelector(trigger.getAttribute('data-bs-target'));
-                    if (target) window.bootstrap.Modal.getOrCreateInstance(target).show();
+                var selector = trigger.getAttribute('data-bs-target');
+                if (type === 'modal' && selector) {
+                    var modal = document.querySelector(selector);
+                    if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).show();
                 } else if (type === 'dropdown') {
-                    var menu = trigger.closest('.dropdown').querySelector('.dropdown-menu');
-                    menu.classList.toggle('show');
-                } else if (type === 'collapse') {
-                    var pane = document.querySelector(trigger.getAttribute('data-bs-target'));
-                    if (pane) pane.classList.toggle('show');
+                    var menu = trigger.closest('.dropdown')?.querySelector('.dropdown-menu');
+                    if (menu) {
+                        var isOpen = !menu.classList.contains('show');
+                        document.querySelectorAll('.offline-ui .dropdown-menu.show').forEach(function (node) {
+                            node.classList.remove('show');
+                        });
+                        menu.classList.toggle('show', isOpen);
+                        trigger.setAttribute('aria-expanded', String(isOpen));
+                    }
+                } else if (type === 'collapse' && selector) {
+                    var pane = document.querySelector(selector);
+                    if (pane) {
+                        var isExpanded = !pane.classList.contains('show');
+                        pane.classList.toggle('show', isExpanded);
+                        trigger.classList.toggle('collapsed', !isExpanded);
+                        trigger.setAttribute('aria-expanded', String(isExpanded));
+                    }
                 }
             }
             var dismiss = event.target.closest('[data-bs-dismiss="modal"]');
             if (dismiss) {
-                var modal = dismiss.closest('.modal');
-                if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+                var parentModal = dismiss.closest('.modal');
+                if (parentModal) window.bootstrap.Modal.getOrCreateInstance(parentModal).hide();
             }
             if (event.target.classList.contains('modal') && event.target.classList.contains('show')) {
                 window.bootstrap.Modal.getOrCreateInstance(event.target).hide();
             }
+            if (!event.target.closest('.dropdown')) {
+                document.querySelectorAll('.offline-ui .dropdown-menu.show').forEach(function (menu) {
+                    menu.classList.remove('show');
+                    var button = menu.closest('.dropdown')?.querySelector('[data-bs-toggle="dropdown"]');
+                    if (button) button.setAttribute('aria-expanded', 'false');
+                });
+            }
         });
+
         document.addEventListener('keydown', function (event) {
-            if (event.key !== 'Escape') return;
-            var modal = document.querySelector('.modal.show');
-            if (modal) window.bootstrap.Modal.getOrCreateInstance(modal).hide();
+            if (event.key === 'Escape') {
+                if (fallbackOpenModal) {
+                    event.preventDefault();
+                    window.bootstrap.Modal.getOrCreateInstance(fallbackOpenModal).hide();
+                }
+                document.querySelectorAll('.offline-ui .dropdown-menu.show').forEach(function (menu) {
+                    menu.classList.remove('show');
+                });
+            }
+            if (event.key !== 'Tab' || !fallbackOpenModal) return;
+            var nodes = modalFocusables(fallbackOpenModal);
+            if (!nodes.length) return;
+            var first = nodes[0], last = nodes[nodes.length - 1];
+            if (event.shiftKey && (document.activeElement === first ||
+                !fallbackOpenModal.contains(document.activeElement))) {
+                event.preventDefault();
+                last.focus();
+            } else if (!event.shiftKey && (document.activeElement === last ||
+                !fallbackOpenModal.contains(document.activeElement))) {
+                event.preventDefault();
+                first.focus();
+            }
         });
     }
 
@@ -192,6 +272,7 @@
             if (target.id==='assignmentForm') updateDocumentDomain();
             updateHardcopyRetention();
             updateHardcopyTransfer();
+            syncSearchableControls(target);
         }
 
         var view = event.target.closest('.js-view');
@@ -564,8 +645,11 @@
         details.hidden=!showDetails;
         details.querySelectorAll('input, select, textarea').forEach(function (field) {
             if (field.name==='holder_id' && field.type==='hidden') return;
+            if (!field.hasAttribute('data-original-required')) {
+                field.setAttribute('data-original-required',field.required?'yes':'no');
+            }
             field.disabled=!showDetails;
-            if (!showDetails) field.required=false;
+            field.required=showDetails && field.getAttribute('data-original-required')==='yes';
         });
         if (showDetails) {
             var title=details.querySelector('[name="title"]');
@@ -709,6 +793,211 @@
         if (level) updateHardcopyTransfer(level);
     });
     updateHardcopyTransfer();
+
+    // Accessible progressive enhancement for all data-searchable dropdowns.
+    // The original select stays form-associated and remains the source of truth.
+    var searchableSelects = [];
+
+    function syncSearchableControls(root) {
+        searchableSelects.forEach(function (control) {
+            if (root && !root.contains(control.select)) return;
+            var select = control.select, input = control.input;
+            var option = select.options[select.selectedIndex];
+            input.value = select.value && option ? option.textContent.trim() : '';
+            input.placeholder = select.options[0]?.textContent.trim() || 'Search and select...';
+            input.disabled = select.disabled;
+            input.required = select.required;
+            input.setAttribute('aria-invalid', 'false');
+            if (select.disabled) control.close();
+        });
+    }
+
+    function setupSearchableSelects() {
+        document.querySelectorAll('select[data-searchable]').forEach(function (select, index) {
+            if (select.dataset.searchReady === 'yes') return;
+            select.dataset.searchReady = 'yes';
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'searchable-select';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+            select.classList.add('searchable-native');
+            select.tabIndex = -1;
+            select.setAttribute('aria-hidden', 'true');
+
+            var input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'form-control searchable-input';
+            input.autocomplete = 'off';
+            input.id = (select.id || 'searchable-' + index) + '-search';
+            input.setAttribute('role', 'combobox');
+            input.setAttribute('aria-autocomplete', 'list');
+            input.setAttribute('aria-expanded', 'false');
+            input.setAttribute('aria-haspopup', 'listbox');
+            var list = document.createElement('div');
+            list.className = 'searchable-options';
+            list.id = input.id + '-list';
+            list.setAttribute('role', 'listbox');
+            list.hidden = true;
+            input.setAttribute('aria-controls', list.id);
+
+            var label = select.id ? document.querySelector('label[for="' + select.id + '"]') : null;
+            if (label) label.htmlFor = input.id;
+            input.setAttribute('aria-label', label ? label.textContent.trim() :
+                select.getAttribute('aria-label') || 'Select an option');
+
+            wrapper.appendChild(input);
+            // Portal the listbox to body so scrollable Bootstrap modal bodies
+            // cannot clip options near the bottom of a long form.
+            document.body.appendChild(list);
+            var active = -1;
+            var visibleOptions = [];
+
+            function highlight(next) {
+                if (!visibleOptions.length) return;
+                active = (next + visibleOptions.length) % visibleOptions.length;
+                visibleOptions.forEach(function (option, i) {
+                    option.classList.toggle('is-active', i === active);
+                });
+                input.setAttribute('aria-activedescendant', visibleOptions[active].id);
+                visibleOptions[active].scrollIntoView({block: 'nearest'});
+            }
+
+            function choose(value) {
+                select.value = value;
+                select.dispatchEvent(new Event('change', {bubbles: true}));
+                close();
+                syncSearchableControls();
+                input.focus();
+            }
+
+            function render(query) {
+                list.replaceChildren();
+                active = -1;
+                visibleOptions = [];
+                input.removeAttribute('aria-activedescendant');
+                var options = Array.from(select.options).filter(function (option) {
+                    if (option.disabled || option.hidden) return false;
+                    if (select.required && option.value === '') return false;
+                    return option.textContent.toLowerCase().includes(query.trim().toLowerCase());
+                });
+                options.slice(0, 80).forEach(function (option, i) {
+                    var row = document.createElement('div');
+                    row.id = list.id + '-option-' + i;
+                    row.className = 'searchable-option';
+                    row.setAttribute('role', 'option');
+                    row.setAttribute('aria-selected', String(select.value === option.value));
+                    row.textContent = option.textContent.trim();
+                    row.addEventListener('pointerdown', function (event) {
+                        event.preventDefault();
+                    });
+                    row.addEventListener('click', function () {
+                        choose(option.value);
+                    });
+                    list.appendChild(row);
+                    visibleOptions.push(row);
+                });
+                if (!visibleOptions.length || options.length > 80) {
+                    var note = document.createElement('p');
+                    note.className = 'searchable-message';
+                    note.textContent = !options.length ? 'No matches found' :
+                        'Showing the first 80 matches. Type to narrow the results.';
+                    list.appendChild(note);
+                }
+            }
+
+            function positionList() {
+                var rect = input.getBoundingClientRect();
+                var roomBelow = window.innerHeight - rect.bottom - 12;
+                var roomAbove = rect.top - 12;
+                var above = roomBelow < 180 && roomAbove > roomBelow;
+                list.style.left = Math.max(8, rect.left) + 'px';
+                list.style.width = Math.max(160, Math.min(rect.width, window.innerWidth - 16)) + 'px';
+                list.style.maxHeight = Math.max(80, Math.min(285, above ? roomAbove : roomBelow)) + 'px';
+                list.style.top = above ? 'auto' : (rect.bottom + 4) + 'px';
+                list.style.bottom = above ? (window.innerHeight - rect.top + 4) + 'px' : 'auto';
+            }
+
+            function open() {
+                if (input.disabled) return;
+                searchableSelects.forEach(function (control) {
+                    if (control.input !== input) control.close();
+                });
+                list.hidden = false;
+                positionList();
+                input.setAttribute('aria-expanded', 'true');
+                render('');
+            }
+
+            function close() {
+                list.hidden = true;
+                input.setAttribute('aria-expanded', 'false');
+                input.removeAttribute('aria-activedescendant');
+                active = -1;
+                var chosen = select.options[select.selectedIndex];
+                input.value = select.value && chosen ? chosen.textContent.trim() : '';
+            }
+
+            input.addEventListener('focus', open);
+            input.addEventListener('click', function () {
+                if (list.hidden) open();
+            });
+            input.addEventListener('input', function () {
+                if (list.hidden) open();
+                render(input.value);
+            });
+            input.addEventListener('keydown', function (event) {
+                if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    if (list.hidden) open();
+                    highlight(active + (event.key === 'ArrowDown' ? 1 : -1));
+                } else if (event.key === 'Enter' && !list.hidden) {
+                    event.preventDefault();
+                    if (active >= 0 && visibleOptions[active]) {
+                        visibleOptions[active].click();
+                    } else if (visibleOptions.length === 1) {
+                        visibleOptions[0].click();
+                    }
+                } else if (event.key === 'Escape') {
+                    if (!list.hidden) {
+                        event.stopPropagation();
+                        event.preventDefault();
+                        close();
+                    }
+                } else if (event.key === 'Tab') {
+                    close();
+                }
+            });
+            document.addEventListener('pointerdown', function (event) {
+                if (!wrapper.contains(event.target) && !list.contains(event.target)) close();
+            });
+            document.addEventListener('scroll', function () {
+                if (!list.hidden) positionList();
+            }, true);
+            window.addEventListener('resize', function () {
+                if (!list.hidden) positionList();
+            });
+            searchableSelects.push({select: select, input: input, close: close});
+        });
+        syncSearchableControls();
+    }
+
+    setupSearchableSelects();
+    document.addEventListener('change', function () {
+        // Run after the page's dependent-select and form-section change handlers.
+        Promise.resolve().then(function () { syncSearchableControls(); });
+    });
+    document.addEventListener('reset', function () {
+        setTimeout(function () { syncSearchableControls(); }, 0);
+    });
+    document.addEventListener('invalid', function (event) {
+        if (!event.target.matches('select[data-searchable]')) return;
+        var input = event.target.parentElement?.querySelector('.searchable-input');
+        if (!input) return;
+        event.preventDefault();
+        input.setAttribute('aria-invalid', 'true');
+        input.focus();
+    }, true);
 
     var pendingForm = null;
     var pendingParent = null;

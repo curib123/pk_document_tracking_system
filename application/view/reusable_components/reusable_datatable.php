@@ -1,8 +1,9 @@
 <?php
 // Centralized search → filters → table → pagination component.
 // Inputs: dt_rows/cells/buttons, dt_columns, dt_filters, dt_path and metadata.
+$dt_limit = max(1, (int) $dt_limit);
 $dt_pages = max(1, (int) ceil($dt_total / $dt_limit));
-$dt_page = min($dt_page, $dt_pages);
+$dt_page = max(1, min((int) $dt_page, $dt_pages));
 $dt_filter_values = $dt_filter_values ?? ['status' => $dt_filter];
 $dt_sort = $dt_sort ?? '';
 $dt_dir = $dt_dir ?? 'asc';
@@ -63,7 +64,8 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     </div>
     <?php if ($dt_layout==='grid'): ?>
     <div class="document-card-grid p-3" data-record-layout="grid">
-      <?php if (!$dt_rows): ?><p class="empty-state mb-0">No records found.</p><?php endif; ?>
+      <?php if (!$dt_rows): ?><p class="empty-state mb-0" role="status"><strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'No matching records' : 'No records yet' ?></strong>
+        <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'Try another search or clear the filters above.' : 'Records will appear here when they are added.' ?></span></p><?php endif; ?>
       <?php foreach ($dt_rows as $dt_row): ?>
       <article class="document-record-card" data-record-id="<?= (int)$dt_row['id'] ?>">
         <h3 class="fs-6 fw-bold mb-3"><?= html_escape($dt_row['cells']['title']??$dt_row['cells']['name']??'Document') ?></h3>
@@ -99,7 +101,11 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             </tr></thead>
             <tbody>
                 <?php if (!$dt_rows): ?>
-                    <tr><td colspan="<?= count($dt_columns) + 1 ?>"><div class="empty-state"><i class="fa-regular fa-folder-open d-block fs-4 mb-2"></i>No records found.</div></td></tr>
+                    <tr><td colspan="<?= count($dt_columns) + 1 ?>"><div class="empty-state" role="status">
+                        <i class="fa-regular fa-folder-open d-block fs-4 mb-2" aria-hidden="true"></i>
+                        <strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'No matching records' : 'No records yet' ?></strong>
+                        <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'Try another search or clear the filters above.' : 'Records will appear here when they are added.' ?></span>
+                    </div></td></tr>
                 <?php endif; ?>
                 <?php foreach ($dt_rows as $dt_row): ?>
                     <?php $rowCanView=!empty($dt_row['display']);
@@ -109,10 +115,11 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                         'data-row-view="'.html_escape(json_encode($dt_row['display'],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)).'"'.
                         ' data-row-title="'.html_escape($rowTitle).'"' : '' ?>>
                         <?php foreach ($dt_columns as $key => $label): ?>
-                            <td <?= $rowCanView ? 'class="table-cell-view" tabindex="0" role="button" aria-label="View '.html_escape($label).' details"' : '' ?>>
+                            <td <?= $rowCanView ? 'class="table-cell-view"'.($key === array_key_first($dt_columns)
+                              ? ' tabindex="0" role="button" aria-label="View '.html_escape($rowTitle).' details"' : '') : '' ?>>
                                 <?php $value = $dt_row['cells'][$key] ?? ''; ?>
                                 <?php if (in_array($key, $dt_badges ?? [], TRUE)): ?>
-                                    <span class="badge-status status-<?= html_escape(strtolower((string) $value)) ?>"><?= html_escape((string) $value === '0' ? 'Inactive' : ucwords(str_replace('_', ' ', (string) $value))) ?></span>
+                                    <span class="badge-status status-<?= html_escape(preg_replace('/[^a-z0-9-]+/', '-', strtolower((string) $value))) ?>"><?= html_escape((string) $value === '0' ? 'Inactive' : ((string) $value === '1' ? 'Active' : ucwords(str_replace('_', ' ', (string) $value)))) ?></span>
                                 <?php else: ?><?= html_escape((string) ($value === '' || $value === NULL ? '—' : $value)) ?><?php endif; ?>
                             </td>
                         <?php endforeach; ?>
@@ -134,9 +141,13 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <select class="form-select form-select-sm" id="rowLimit" name="limit" form="tableFilter" style="width:79px" data-auto-submit>
                 <?php foreach ([10,25,50,100] as $n): ?><option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
             </select>
-            <a class="btn btn-light btn-sm <?= $dt_page <= 1 ? 'disabled' : '' ?>" href="<?= $dt_link(max(1, $dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left"></i></a>
-            <span class="small text-secondary"><?= $dt_page ?> / <?= $dt_pages ?></span>
-            <a class="btn btn-light btn-sm <?= $dt_page >= $dt_pages ? 'disabled' : '' ?>" href="<?= $dt_link(min($dt_pages, $dt_page + 1)) ?>" aria-label="Next page"><i class="fa-solid fa-chevron-right"></i></a>
+            <?php if ($dt_page > 1): ?>
+             <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
+             <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Previous page unavailable"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></span><?php endif; ?>
+             <span class="small text-secondary" aria-live="polite">Page <?= $dt_page ?> of <?= $dt_pages ?></span>
+             <?php if ($dt_page < $dt_pages): ?>
+             <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page + 1)) ?>" aria-label="Next page"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+             <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Next page unavailable"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span><?php endif; ?>
         </div>
     </div>
 </div>
