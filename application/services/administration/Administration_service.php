@@ -83,6 +83,12 @@ class Administration_service
         $name = trim((string) ($post['name'] ?? ''));
         if (!in_array($type, $types, TRUE) || $name === '' || mb_strlen($name) > 160) throw new DomainException('Enter a valid workflow name and type.');
         $id = (int) ($post['id'] ?? 0);
+        if (!empty($post['is_default'])) {
+            $count = $id ? $this->ci->db->where('workflow_id', $id)->count_all_results('workflow_steps') : 0;
+            if (!$count || empty($post['active'])) {
+                throw new DomainException('Add approval steps and activate the workflow before making it the default.');
+            }
+        }
         $this->ci->db->trans_begin();
         $data = ['name' => $name, 'request_type' => $type, 'active' => !empty($post['active']) ? 1 : 0,
             'is_default' => !empty($post['is_default']) ? 1 : 0];
