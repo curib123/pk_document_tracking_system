@@ -53,6 +53,32 @@
             }
         }
 
+        var fileHistory = event.target.closest('.js-file-history');
+        if (fileHistory) {
+            var list = document.getElementById('fileHistoryList');
+            if (list) {
+                list.replaceChildren();
+                parse(fileHistory, 'files').forEach(function (file) {
+                    var item = document.createElement('div');
+                    item.className = 'd-flex justify-content-between align-items-center gap-3 border-bottom py-3';
+                    var meta = document.createElement('div');
+                    var name = document.createElement('strong');
+                    var small = document.createElement('small');
+                    name.className = 'd-block';
+                    small.className = 'text-secondary d-block mt-1';
+                    name.textContent = file.name;
+                    small.textContent = file.detail;
+                    meta.append(name, small);
+                    var download = document.createElement('a');
+                    download.className = 'btn btn-outline-primary btn-sm';
+                    download.href = file.url;
+                    download.textContent = 'Download';
+                    item.append(meta, download);
+                    list.appendChild(item);
+                });
+            }
+        }
+
         var upload = event.target.closest('.js-upload');
         if (upload) {
             document.getElementById('uploadDocumentId').value = upload.getAttribute('data-document-id') || '';
