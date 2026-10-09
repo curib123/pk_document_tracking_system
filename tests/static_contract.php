@@ -30,7 +30,7 @@ foreach (['.login-page::before','.login-shell','.login-card','background-size: c
 // Places navigation: one accessible expandable group and six distinct icon assets.
 $sidebar = file_get_contents($root.'/application/view/layout/sidebar_top_nav.php');
 foreach (['<details', '<summary', 'placesSidebarGroup', 'placesSidebarLinks',
-    "strpos($path, 'places/') === 0", '$visible($place[\'module\'])',
+    'strpos($path, \'places/\') === 0', '$visible($place[\'module\'])',
     'aria-current="page"'] as $token) {
     if (strpos($sidebar, $token) === FALSE) {
         $fail[] = 'Places dropdown markup missing: ' . $token;
