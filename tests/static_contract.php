@@ -5,6 +5,7 @@ $files=['application/bootstrap.php','application/core/MY_Controller.php',
  'application/controllers/Places.php','application/controllers/Documents.php',
  'application/controllers/Requests.php','application/controllers/Administration.php',
  'application/models/Place_model.php','application/models/Document_model.php',
+  'application/services/places/place_service.php',
  'application/models/Request_model.php','application/models/Administration_model.php',
  'application/view/reusable_components/reusable_datatable.php',
  'database/pk_dts.sql','database/seed.sql'];
@@ -182,7 +183,7 @@ foreach (['/storage/audit','LOCK_EX','JSON_PRETTY_PRINT'] as $key) {
     if (strpos($audit,$key)===FALSE) $fail[]='Daily filesystem JSON audit missing: '.$key;
 }
 if (strpos($softcopyRevision,'$effective=')===FALSE ||
-    strpos($softcopyRevision,"'date_released'=>$date")===FALSE)
+    strpos($softcopyRevision,"'date_released'=>\$date")===FALSE)
     $fail[]='Softcopy automatic dates are incomplete.';
 if (!is_file($root.'/tests/domain_audit_smoke.sh'))
     $fail[]='Missing domain + audit tests.';
