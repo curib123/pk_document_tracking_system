@@ -6,8 +6,7 @@ db() { mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test -e "$1"; }
 token_for() {
     curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie \
       -o /tmp/pk-form.html "http://127.0.0.1:8089/$1"
-    grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-form.html |
-      head -1 | sed 's/.*value="//;s/"$//'
+    perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-form.html
 }
 post_form() {
     local page="$1" action="$2"; shift 2
@@ -147,7 +146,7 @@ post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/dispatch "id=$TR
 test "$(db "SELECT status FROM transfers WHERE id=$TRANSFER_ID")" = in_transit
 
 curl -fsS -c /tmp/pk-recipient-cookie -o /tmp/pk-recipient-login.html http://127.0.0.1:8089/login
-REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-recipient-login.html | head -1 | sed 's/.*value="//;s/"$//')
+REC_TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-recipient-login.html)
 curl -sS -L -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie \
     -o /tmp/pk-recipient-home.html --data-urlencode "pk_csrf_token=$REC_TOKEN" \
     --data-urlencode 'login=recipient_test' --data-urlencode 'password=TemporaryTestPassword2026!' \
@@ -158,7 +157,7 @@ grep -q 'Dashboard' /tmp/pk-recipient-home.html
 curl -fsS -b /tmp/pk-recipient-cookie -o /tmp/pk-transfer-task.html \
     http://127.0.0.1:8089/my-tasks/hardcopy-transfer
 grep -q 'Accept Hardcopy' /tmp/pk-transfer-task.html
-REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-transfer-task.html | head -1 | sed 's/.*value="//;s/"$//')
+REC_TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-transfer-task.html)
 curl -fsS -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie -o /dev/null \
     --data-urlencode "pk_csrf_token=$REC_TOKEN" --data-urlencode 'confirmed=yes' \
     --data-urlencode "id=$TRANSFER_ID" http://127.0.0.1:8089/my-tasks/hardcopy-transfer/accept
