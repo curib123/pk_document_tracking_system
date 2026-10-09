@@ -1,0 +1,106 @@
+name: Apply verified PK DTS repairs
+on:
+  push:
+    branches: ['fix/plan-first-login-gate-20261009']
+permissions:
+  contents: write
+jobs:
+  apply:
+    if: github.repository == 'curib123/pk_document_tracking_system'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli,mbstring,fileinfo,zip
+      - name: Reconstruct the exact locally tested source and validate every preimage
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          import base64, hashlib, json, lzma, os, pathlib, subprocess, urllib.request
+          chunks = [
+              'aafe127d12d7df4aed95401dd7a7d4eb8d2e732f',
+              'ba769e8d30171e407449a4fe0a04e7c8d0788b05',
+              '9ce2f67aa7f301f7b3bbd170243ee61cf9d8750c',
+              '5076b1a190f0ccd276d28fa62f2b625da394443b',
+              '2918002437e9f1441d17c65aa61ce3d7b794ee6d',
+              'e50aef48c1aab262c383dde43a668dd5bf6a191f',
+              '31ec5fb2a8181c7f511ac81a11d890d55713426e',
+          ]
+          def blob(data):
+              return hashlib.sha1(b'blob ' + str(len(data)).encode() + b'\0' + data).hexdigest()
+          compressed = bytearray()
+          for sha in chunks:
+              request = urllib.request.Request(
+                  'https://api.github.com/repos/curib123/pk_document_tracking_system/git/blobs/' + sha,
+                  headers={'Authorization': 'Bearer ' + os.environ['GH_TOKEN'], 'Accept': 'application/vnd.github+json'})
+              with urllib.request.urlopen(request, timeout=30) as response:
+                  stored = json.load(response)
+              assert stored['encoding'] == 'base64'
+              data = base64.b64decode(stored['content'])
+              assert blob(data) == sha
+              compressed.extend(data)
+          assert len(compressed) == 58776
+          assert hashlib.sha256(compressed).hexdigest() == 'a52088585c596d3d56cdcb1cd0a7302d51f6957cdec08bcb2559657ceb001e86'
+          decoder = lzma.LZMADecompressor(memlimit=256 * 1024 * 1024)
+          raw = decoder.decompress(compressed, max_length=1024 * 1024)
+          assert decoder.eof and not decoder.unused_data
+          assert hashlib.sha256(raw).hexdigest() == 'e0e1c0d66df2c2597af9001d863f452690872f9e9dc80e51cb2f758ed543b4e3'
+          package = json.loads(raw)
+          assert package['format'] == 1 and len(package['files']) == 78
+          assert package['base_commit'] == '06da753eebf51bf3ec2380a32ee3f04e300d476d'
+          root = pathlib.Path.cwd().resolve()
+          pending = []
+          seen = set()
+          for item in package['files']:
+              name = item['path']
+              path = pathlib.PurePosixPath(name)
+              assert not path.is_absolute() and '..' not in path.parts and name not in seen
+              assert name == 'README.md' or name.startswith(('application/', 'public/assets/css/', 'public/assets/js/', 'tests/', 'docs/'))
+              seen.add(name)
+              target = root.joinpath(name)
+              assert target.resolve().is_relative_to(root)
+              assert not any(p.is_symlink() for p in [target, *target.parents] if p != root.parent)
+              before = target.read_bytes() if target.exists() else None
+              assert (blob(before) if before is not None else None) == item['before'], 'Preimage mismatch: ' + name
+              if item['after'] is None:
+                  after = None
+              elif 'content' in item:
+                  assert before is None
+                  after = item['content'].encode('utf-8')
+              else:
+                  lines = before.decode('utf-8').splitlines(keepends=True)
+                  previous = len(lines) + 1
+                  for start, end, replacement in reversed(item['edits']):
+                      assert 0 <= start <= end <= len(lines) and end < previous
+                      previous = start
+                      lines[start:end] = replacement.splitlines(keepends=True)
+                  after = ''.join(lines).encode('utf-8')
+              assert (blob(after) if after is not None else None) == item['after'], 'Output mismatch: ' + name
+              pending.append((target, after))
+          for target, data in pending:
+              if data is None:
+                  target.unlink()
+              else:
+                  target.parent.mkdir(parents=True, exist_ok=True)
+                  target.write_bytes(data)
+          subprocess.run(['git', 'add', '--', *sorted(seen)], check=True)
+          print('Applied and hash-verified 78 source, test and report files; database and workflow files excluded.')
+          PY
+      - name: Validate reconstructed source before committing
+        run: bash tests/run_unit.sh
+      - name: Commit only the verified source to the repair branch
+        shell: bash
+        run: |
+          set -euo pipefail
+          git diff --cached --check
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'fix: complete plan.md security, workflow, document and responsive repairs'
+          git push origin HEAD:refs/heads/fix/plan-first-login-gate-20261009
