@@ -77,6 +77,16 @@ $dt_create = $may('create') ? 'Create Workflow Version' : '';
                             </div>
                         <?php endforeach; ?>
                         <?php if (empty($steps[$r['id']])): ?><p class="text-secondary small">No approval steps configured yet.</p><?php endif; ?>
+                        <?php if ($may('create')): ?>
+                            <button class="btn btn-light btn-sm js-action mt-2" type="button"
+                                data-bs-toggle="modal" data-bs-target="#actionModal"
+                                data-url="<?= site_url('admin/workflows/clone') ?>"
+                                data-id="<?= (int) $r['id'] ?>"
+                                data-title="Clone Workflow Version"
+                                data-description="Create an independent draft version with copies of the existing approval steps.">
+                                <i class="fa-solid fa-code-branch me-1"></i> Clone to New Version
+                            </button>
+                        <?php endif; ?>
                         <?php if ($may('edit')): ?>
                             <button class="btn btn-outline-primary btn-sm js-edit mt-2" type="button" data-bs-toggle="modal" data-bs-target="#stepModal" data-target="#stepForm"
                                 data-record="<?= html_escape(json_encode(['workflow_id' => $r['id']])) ?>" data-title="Add Workflow Step">
