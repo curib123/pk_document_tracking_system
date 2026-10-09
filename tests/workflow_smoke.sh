@@ -70,6 +70,31 @@ test "$(db "SELECT file_id FROM softcopy_revisions WHERE id=$REV_ID")" = "$FILE_
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-downloaded-revision.txt "http://127.0.0.1:8089/files/download/$FILE_ID"
 cmp /tmp/pk-private-revision.txt /tmp/pk-downloaded-revision.txt
 
+# A requested revision stores a pending file first, then publishes that file
+# only after the original versioned approval workflow completes.
+printf 'Revision awaiting signed approval\n' > /tmp/pk-pending-revision.txt
+REVISE_TOKEN=$(token_for my-requests/softcopy)
+curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \
+  -F "pk_csrf_token=$REVISE_TOKEN" -F 'confirmed=yes' \
+  -F 'type=softcopy_revise' -F 'subject=QA Revision Request' \
+  -F "softcopy_id=$SOFT_ID" -F 'title=Control Checklist Revision' \
+  -F 'new_revision_level=REV-B' -F 'effective_date=2026-10-09' \
+  -F 'date_received=2026-10-08' -F 'date_released=2026-10-09' \
+  -F 'page_number=2' \
+  -F 'revision_attachment=@/tmp/pk-pending-revision.txt;type=text/plain' \
+  http://127.0.0.1:8089/my-requests/softcopy/save
+REV_REQUEST_ID=$(db "SELECT id FROM requests WHERE type='softcopy_revise' ORDER BY id DESC LIMIT 1")
+test -n "$REV_REQUEST_ID"
+PENDING_ID=$(db "SELECT id FROM files WHERE status='pending' AND document_id=$SOFT_ID ORDER BY id DESC LIMIT 1")
+test -n "$PENDING_ID"
+test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE file_id=$PENDING_ID")" = 0
+post_form my-requests/softcopy my-requests/softcopy/submit "id=$REV_REQUEST_ID"
+post_form my-tasks/softcopy my-tasks/softcopy/decide "id=$REV_REQUEST_ID" 'decision=approved'
+test "$(db "SELECT status FROM requests WHERE id=$REV_REQUEST_ID")" = completed
+test "$(db "SELECT status FROM files WHERE id=$PENDING_ID")" = approved
+test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE file_id=$PENDING_ID AND new_revision_level='REV-B'")" = 1
+test "$(db "SELECT current_revision_id FROM softcopy_documents WHERE id=$SOFT_ID")" != "$REV_ID"
+
 # Create a hardcopy using the same versioned workflow mechanism.
 post_form my-requests/hardcopy my-requests/hardcopy/save \
     'type=hardcopy_create' 'subject=QA Hardcopy Create' 'title=Physical Guide'
