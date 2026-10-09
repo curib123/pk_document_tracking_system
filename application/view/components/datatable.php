@@ -62,6 +62,11 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                                 <?php elseif ($button['type'] === 'edit'): ?>
                                     <button type="button" class="btn-icon js-edit" title="Edit" aria-label="Edit record" data-bs-toggle="modal" data-bs-target="#editModal" data-target="#editForm"
                                         data-record="<?= html_escape(json_encode($dt_row['record'])) ?>" data-title="Edit Record"><i class="fa-solid fa-pen"></i></button>
+                                <?php elseif ($button['type'] === 'history'): ?>
+                                    <button type="button" class="btn-icon js-file-history" title="File History" aria-label="File History"
+                                        data-bs-toggle="modal" data-bs-target="#fileHistoryModal"
+                                        data-files="<?= html_escape(json_encode($button['files'])) ?>">
+                                        <i class="fa-solid fa-clock-rotate-left"></i></button>
                                 <?php elseif ($button['type'] === 'upload'): ?>
                                     <button type="button" class="btn-icon js-upload" title="Upload File" aria-label="Upload File"
                                         data-bs-toggle="modal" data-bs-target="#uploadModal"
