@@ -20,6 +20,8 @@ foreach ($rows as $row) {
     $doc = $row['document_code'] ? $row['document_code'] . ' · ' . $row['document_title'] : 'No document selected';
     $display = ['Subject' => $row['subject'], 'Type' => ucwords(str_replace('-', ' ', $row['request_type'])),
         'Document' => $doc, 'Remark' => $row['remark'], 'Status' => $row['status'],
+        'Current Step' => $row['step_label'] ?? $row['current_step_label'] ?? 'No active step',
+        'Workflow History' => $row['history_text'] ?: 'No recorded decisions',
         'Submitted' => $row['created_at']];
     $record = ['id' => $row['id'], 'subject' => $row['subject'], 'document_id' => $row['document_id'],
         'remark' => $row['remark']];
