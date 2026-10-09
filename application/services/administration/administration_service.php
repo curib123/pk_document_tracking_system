@@ -136,11 +136,16 @@ class Administration_service
         if (!is_array($graph)) $graph=['steps'=>[]];
         $name=trim((string)($post['name']??''));
         $type=(string)($post['approver_type']??'');
-        $value=(int)($post['approver_value']??0);
+        $value=$type==='user'?(int)($post['approver_user_id']??0):
+            ($type==='role'?(int)($post['approver_role_id']??0):0);
         if ($name==='' || !in_array($type,['user','role','requester_leader','requester'],TRUE))
             throw new DomainException('Choose an approver type and step name.');
-        if (in_array($type,['user','role'],TRUE) && !$value)
-            throw new DomainException('Choose an approver user or role.');
+        if ($type==='user' && (!$value || !$this->ci->db->get_where('users',[
+            'id'=>$value,'active'=>1
+        ])->row_array())) throw new DomainException('Choose an active user approver.');
+        if ($type==='role' && (!$value || !$this->ci->db->get_where('roles',[
+            'id'=>$value,'active'=>1
+        ])->row_array())) throw new DomainException('Choose an active approver role.');
         $key='step_'.(count($graph['steps']??[])+1);
         $graph['steps'][]=['key'=>$key,'name'=>$name,'approver'=>[
             'type'=>$type,'value'=>in_array($type,['user','role'],TRUE)?$value:NULL,'label'=>$name
@@ -149,6 +154,31 @@ class Administration_service
             'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
         ]);
     }
+    public function remove_workflow_step($post)
+    {
+        $versionId=(int)($post['id']??0);
+        $key=(string)($post['step_key']??'');
+        $version=$this->ci->db->get_where('workflow_versions',[
+            'id'=>$versionId,'status'=>'draft'
+        ])->row_array();
+        if (!$version || !preg_match('/^step_[0-9]+$/',$key))
+            throw new DomainException('Select a valid draft workflow step.');
+        $graph=json_decode($version['graph'],TRUE);
+        if (!is_array($graph) || !isset($graph['steps']) || !is_array($graph['steps']))
+            throw new DomainException('Workflow graph is invalid.');
+        $original=count($graph['steps']);
+        $steps=array_values(array_filter($graph['steps'],function($step)use($key){
+            return ($step['key']??'')!==$key;
+        }));
+        if (count($steps)===$original) throw new DomainException('Approval step was not found.');
+        foreach($steps as $i=>&$step) $step['key']='step_'.($i+1);
+        unset($step);
+        $graph['steps']=$steps;
+        $this->ci->db->where('id',$versionId)->update('workflow_versions',[
+            'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
+        ]);
+    }
+
     public function publish_workflow($versionId,$actorId)
     {
         $v=$this->ci->db->get_where('workflow_versions',['id'=>$versionId,'status'=>'draft'])->row_array();
