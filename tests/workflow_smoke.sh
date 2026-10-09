@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # Executed only by tests/smoke.sh against disposable pk_dts_test.
 set -euo pipefail
+trap 'echo "Integration assertion failed at workflow_smoke.sh:$LINENO"' ERR
 db() { mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test -e "$1"; }
 token_for() {
     curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie \
@@ -40,6 +41,7 @@ for t in softcopy_create hardcopy_create transfer assignment access disposal sof
         $ADMIN_ID,NOW() FROM workflows WHERE workflow_key='qa_$t';"
 done
 
+echo 'CASE: create softcopy'
 # Create a softcopy through request approval.
 post_form my-requests/softcopy my-requests/softcopy/save \
     'type=softcopy_create' 'subject=QA Softcopy Create' \
@@ -54,6 +56,7 @@ SOFT_ID=$(db "SELECT id FROM softcopy_documents WHERE document_number='QA-001'")
 test -n "$SOFT_ID"
 test "$(db "SELECT COUNT(*) FROM workflow_history WHERE request_id=$RID")" -ge 2
 
+echo 'CASE: direct private revision upload'
 # Private files use the original files + softcopy_revisions tables, not a new file schema.
 printf 'PK DTS private revision content\\n' > /tmp/pk-private-revision.txt
 UPLOAD_TOKEN=$(token_for documents/softcopy)
@@ -70,6 +73,7 @@ test "$(db "SELECT file_id FROM softcopy_revisions WHERE id=$REV_ID")" = "$FILE_
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-downloaded-revision.txt "http://127.0.0.1:8089/files/download/$FILE_ID"
 cmp /tmp/pk-private-revision.txt /tmp/pk-downloaded-revision.txt
 
+echo 'CASE: staged workflow revision'
 # A requested revision stores a pending file first, then publishes that file
 # only after the original versioned approval workflow completes.
 printf 'Revision awaiting signed approval\n' > /tmp/pk-pending-revision.txt
@@ -95,6 +99,7 @@ test "$(db "SELECT status FROM files WHERE id=$PENDING_ID")" = approved
 test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE file_id=$PENDING_ID AND new_revision_level='REV-B'")" = 1
 test "$(db "SELECT current_revision_id FROM softcopy_documents WHERE id=$SOFT_ID")" != "$REV_ID"
 
+echo 'CASE: create hardcopy'
 # Create a hardcopy using the same versioned workflow mechanism.
 post_form my-requests/hardcopy my-requests/hardcopy/save \
     'type=hardcopy_create' 'subject=QA Hardcopy Create' 'title=Physical Guide'
@@ -104,6 +109,7 @@ post_form my-tasks/hardcopy my-tasks/hardcopy/decide "id=$RID" 'decision=approve
 HARD_ID=$(db "SELECT id FROM hardcopy_documents WHERE title='Physical Guide'")
 test -n "$HARD_ID"
 
+echo 'CASE: assignment'
 # Assignment is linked to softcopy_id; transfer is linked to hardcopy_id.
 post_form my-requests/document-assign my-requests/document-assign/save \
     'type=assignment' 'subject=QA Assignment' "softcopy_id=$SOFT_ID" "recipient_id=$REC_ID"
@@ -112,6 +118,7 @@ post_form my-requests/document-assign my-requests/document-assign/submit "id=$RI
 post_form my-tasks/document-assign my-tasks/document-assign/decide "id=$RID" 'decision=approved'
 test "$(db "SELECT COUNT(*) FROM assignments WHERE softcopy_id=$SOFT_ID AND user_id=$REC_ID")" = 1
 
+echo 'CASE: access grant'
 post_form my-requests/access-grant my-requests/access-grant/save \
     'type=access' 'subject=QA Access' "softcopy_id=$SOFT_ID" \
     "recipient_id=$REC_ID" 'expires_at=2028-12-30'
@@ -120,6 +127,7 @@ post_form my-requests/access-grant my-requests/access-grant/submit "id=$RID"
 post_form my-tasks/access-grant my-tasks/access-grant/decide "id=$RID" 'decision=approved'
 test "$(db "SELECT COUNT(*) FROM access_grants WHERE request_id=$RID AND status='access_granted'")" = 1
 
+echo 'CASE: transfer approval'
 post_form my-requests/hardcopy-transfer my-requests/hardcopy-transfer/save \
     'type=transfer' 'subject=QA Transfer' "hardcopy_id=$HARD_ID" \
     "recipient_id=$REC_ID" "destination_location_id=$LOC_ID"
@@ -129,6 +137,7 @@ post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/decide "id=$RID"
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = approved
 test "$(db "SELECT COUNT(*) FROM transfers WHERE request_id=$RID AND recipient_status='pending'")" = 1
 
+echo 'CASE: physical transfer dispatch and acceptance'
 TRANSFER_ID=$(db "SELECT id FROM transfers WHERE request_id=$RID")
 test -n "$TRANSFER_ID"
 
