@@ -7,7 +7,11 @@ curl -fsS -b /tmp/pk-cookie -o /tmp/pk-admin-assignment.html \
 grep -q 'Assign Documents' /tmp/pk-admin-assignment.html
 grep -q 'name="document_domain"' /tmp/pk-admin-assignment.html
 grep -q 'name="hardcopy_id"' /tmp/pk-admin-assignment.html
-grep -q 'name="softcopy_id"' /tmp/pk-admin-assignment.html
+grep -q 'name="folder"' /tmp/pk-admin-assignment.html
+grep -q 'Folder Explorer' /tmp/pk-admin-assignment.html
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-admin-softcopy.html \
+  'http://127.0.0.1:8089/admin/document-assignments?domain=softcopy'
+grep -q 'name="softcopy_id"' /tmp/pk-admin-softcopy.html
 grep -q 'data-record=' /tmp/pk-admin-assignment.html
 
 # Administrator can assign a hardcopy without creating a workflow request.
@@ -29,7 +33,7 @@ post_form admin/document-assignments admin/document-assignments/save \
 test "$(db "SELECT COUNT(*) FROM assignments
   WHERE softcopy_id=$SOFT_ASSIGN_ID AND user_id=$REC_ID AND active=1")" = 1
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-admin-assignments-updated.html \
-  http://127.0.0.1:8089/admin/document-assignments
+  'http://127.0.0.1:8089/admin/document-assignments?domain=softcopy'
 grep -q 'Assignment Fixture' /tmp/pk-admin-assignments-updated.html
 grep -q 'data-record=' /tmp/pk-admin-assignments-updated.html
 
