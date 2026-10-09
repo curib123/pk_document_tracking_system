@@ -39,7 +39,6 @@ $route['admin/users/deactivate']['POST'] = 'Administration/deactivate_user';
 $route['admin/roles']['GET'] = 'Administration/roles';
 $route['admin/roles/save']['POST'] = 'Administration/save_role';
 $route['admin/workflows']['GET'] = 'Administration/workflows';
-$route['admin/workflows/save']['POST'] = 'Administration/save_workflow';
 $route['admin/workflows/step/save']['POST'] = 'Administration/save_workflow_step';
 $route['admin/workflows/step/remove']['POST'] = 'Administration/remove_workflow_step';
 $route['admin/workflows/step/move']['POST'] = 'Administration/move_workflow_step';

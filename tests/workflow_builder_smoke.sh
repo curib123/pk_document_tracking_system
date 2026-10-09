@@ -3,14 +3,26 @@
 set -euo pipefail
 
 echo 'CASE: sequential Workflow Builder user -> role routing'
-post_form admin/workflows admin/workflows/save \
- 'workflow_key=qa_two_approvers' 'name=QA Two Approvers' \
- 'request_type=softcopy_cancel'
-WF_ID=$(db "SELECT id FROM workflows WHERE workflow_key='qa_two_approvers'")
+# Workflow definitions come only from database/seed_workflows.sql.
+WF_ID=$(db "SELECT id FROM workflows WHERE workflow_key='softcopy_cancel'")
 test -n "$WF_ID"
+WORKFLOWS_BEFORE=$(db "SELECT COUNT(*) FROM workflows")
+post_form admin/workflows admin/workflows/save \
+ 'workflow_key=unauthorized_new_flow' 'name=Not Allowed' \
+ 'request_type=softcopy_cancel'
+test "$(db "SELECT COUNT(*) FROM workflows")" = "$WORKFLOWS_BEFORE"
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-wf-fixed.html \
+ http://127.0.0.1:8089/admin/workflows
+if grep -q 'New Workflow\|admin/workflows/save' /tmp/pk-wf-fixed.html; then
+ echo 'Workflow creation UI must not be present.'
+ exit 1
+fi
+# Only draft workflow steps can change. Published version remains intact.
+ORIGINAL_VER=$(db "SELECT id FROM workflow_versions WHERE workflow_id=$WF_ID AND is_default=1")
+post_form admin/workflows admin/workflows/clone "id=$WF_ID"
 WF_VER=$(db "SELECT id FROM workflow_versions WHERE workflow_id=$WF_ID AND status='draft'")
 test -n "$WF_VER"
-
+post_form admin/workflows admin/workflows/step/remove "id=$WF_VER" 'step_key=step_1'
 post_form admin/workflows admin/workflows/step/save \
  "workflow_version_id=$WF_VER" 'name=Final Administrative Decision' \
  'approver_type=role' "approver_role_id=$ADMIN_ROLE"
@@ -24,12 +36,12 @@ test "$(db "SELECT JSON_UNQUOTE(JSON_EXTRACT(graph,'$.steps[0].approver.type'))
 test "$(db "SELECT JSON_UNQUOTE(JSON_EXTRACT(graph,'$.steps[0].approver.value'))
  FROM workflow_versions WHERE id=$WF_VER")" = "$REC_ID"
 
-OLD_WF=$(db "SELECT id FROM workflows WHERE request_type='softcopy_cancel' AND active=1")
 post_form admin/workflows admin/workflows/publish "id=$WF_VER"
 test "$(db "SELECT status FROM workflow_versions WHERE id=$WF_VER")" = published
-test "$(db "SELECT active FROM workflows WHERE id=$OLD_WF")" = 0
 test "$(db "SELECT active FROM workflows WHERE id=$WF_ID")" = 1
-test "$(db "SELECT COUNT(*) FROM workflows WHERE request_type='softcopy_cancel' AND active=1")" = 1
+test "$(db "SELECT is_default FROM workflow_versions WHERE id=$ORIGINAL_VER")" = 0
+test "$(db "SELECT is_default FROM workflow_versions WHERE id=$WF_VER")" = 1
+test "$(db "SELECT COUNT(*) FROM workflows")" = "$WORKFLOWS_BEFORE"
 
 post_form admin/workflows admin/workflows/step/save \
  "workflow_version_id=$WF_VER" 'name=Cannot Edit Published' \

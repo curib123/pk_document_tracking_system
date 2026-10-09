@@ -18,23 +18,24 @@ foreach($rows as $r){
  'display'=>['Workflow'=>$r['name'],'Request Type'=>$r['request_type'],
     'Latest Version'=>$r['version_number']??0,'Status'=>$state,
     'Approval Steps'=>implode(' → ',array_column($steps,'name'))],
- 'buttons'=>[['type'=>'view'],['type'=>'edit']]];
+ 'buttons'=>[['type'=>'view']]];
 }
 $dt_path='admin/workflows';$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
 $dt_sort='name';$dt_dir='asc';$dt_sortable=[];
 $dt_filters=['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']];
 $dt_filter_values=['status'=>$dt_filter];$dt_badges=['active','status'];
-$dt_create='New Workflow';
+$dt_create='';
+$dt_badges=['active','status'];
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Workflow Builder</h1>
-<p>Configure who receives each request, in order. Each approver must approve before the request moves to the next step.</p></div></div>
+<p>These request workflows are predefined. Customize the approver steps, then publish the updated version to use it for future requests.</p></div></div>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
 <div class="workspace-card mt-4"><div class="workspace-card-header">
-<strong>Request Approval Route</strong><p class="text-secondary small mb-0">1. Choose the approver at each stage · 2. Arrange the pass-to order · 3. Publish the workflow version</p>
+<strong>Predefined Approval Workflows</strong><p class="text-secondary small mb-0">Open a workflow, edit its draft approval route, and publish when ready. Published versions remain unchanged for existing requests.</p>
 </div><div class="accordion accordion-flush" id="wfAccordion">
 <?php foreach($rows as $r):
  $steps=(json_decode($r['graph']??'{"steps":[]}',TRUE)['steps']??[]);
@@ -43,7 +44,9 @@ $dt_create='New Workflow';
 <div class="accordion-item"><h2 class="accordion-header">
 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
 data-bs-target="#wf-<?= (int)$r['id'] ?>">
-<?= html_escape($r['name']) ?> — v<?= (int)$r['version_number'] ?> (<?= html_escape($r['version_status']) ?>)
+<i class="fa-solid fa-route me-2 text-secondary" aria-hidden="true"></i>
+<?= html_escape($r['name']) ?>
+<span class="ms-2 small text-secondary">v<?= (int)$r['version_number'] ?> · <?= html_escape(ucwords($r['version_status'])) ?></span>
 </button></h2>
 <div class="accordion-collapse collapse" id="wf-<?= (int)$r['id'] ?>" data-bs-parent="#wfAccordion">
 <div class="accordion-body">
@@ -105,7 +108,11 @@ Send to <?= html_escape($approverLabel) ?> (<?= html_escape(ucwords(str_replace(
 <?php endif; ?>
 </div>
 <?php endforeach; ?>
-<?php if(!$steps): ?><p class="text-muted small">No steps yet. Add at least one step to publish.</p><?php endif; ?>
+<?php if(!$steps): ?><p class="text-muted small">No approval steps configured. Add the first approver before publishing.</p><?php endif; ?>
+<?php if($steps): ?><p class="text-secondary small mt-3 mb-0">
+<i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i>
+After the final approval, the requested document action is applied.
+</p><?php endif; ?>
 <div class="d-flex gap-2 flex-wrap mt-3">
 <?php if($draft): ?>
 <button class="btn btn-outline-primary btn-sm js-edit" type="button"
@@ -122,32 +129,11 @@ Publish Version</button><?php endif; ?>
 <button class="btn btn-light btn-sm js-action" type="button"
  data-bs-toggle="modal" data-bs-target="#actionModal"
  data-url="<?= site_url('admin/workflows/clone') ?>" data-id="<?= (int)$r['id'] ?>"
- data-title="Clone Workflow" data-description="Create an editable draft copy of the latest published graph.">
-<i class="fa-solid fa-code-branch me-1"></i> Clone New Version</button>
+ data-title="Edit Approval Steps" data-description="Create an editable draft of this seeded workflow's approval steps; published requests retain their existing route.">
+<i class="fa-solid fa-pen-to-square me-1"></i> Edit Approval Steps</button>
 <?php endif; ?>
 </div></div></div></div>
 <?php endforeach; ?></div></div>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
-<div class="modal-dialog modal-dialog-centered"><div class="modal-content">
-<form id="editForm" action="<?= site_url('admin/workflows/save') ?>" method="post" data-confirm="Save workflow?">
-<div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Workflow</h2>
-<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-<div class="modal-body">
-<input type="hidden" name="id" value="">
-<div class="mb-3"><label class="form-label" for="wName">Name</label><input class="form-control"
-id="wName" name="name" required maxlength="150"></div>
-<div class="mb-3"><label class="form-label" for="wKey">Workflow Key</label><input class="form-control"
-id="wKey" name="workflow_key" required pattern="[a-z0-9_]{3,80}"></div>
-<div class="mb-3"><label class="form-label" for="wType">Request Type</label>
-<select class="form-select" name="request_type" id="wType" required>
-<?php foreach($types as $key=>$label): ?><option value="<?= html_escape($key) ?>"><?= html_escape($label) ?></option>
-<?php endforeach; ?></select></div>
-<div><label class="form-label" for="wDescription">Description <span class="optional-label">(optional)</span></label>
-<textarea class="form-control" id="wDescription" name="description" rows="2"></textarea></div>
-</div><input type="hidden" name="confirmed" value="no">
-<input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
-<div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-<button class="btn btn-primary" type="submit">Save Workflow</button></div></form></div></div></div>
 <div class="modal fade" id="stepModal" tabindex="-1" aria-labelledby="stepTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
 <form id="stepForm" action="<?= site_url('admin/workflows/step/save') ?>" method="post"

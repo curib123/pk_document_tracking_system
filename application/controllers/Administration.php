@@ -95,11 +95,6 @@ class Administration extends MY_Controller
             (new Administration_service())->save_role($this->input->post());
         },'admin/roles');
     }
-    public function save_workflow() {
-        $this->mutate('workflows','edit',function(){
-            (new Administration_service())->save_workflow($this->input->post(),$this->user['id']);
-        },'admin/workflows');
-    }
     public function save_workflow_step() {
         $this->mutate('workflows','edit',function(){
             (new Administration_service())->save_workflow_step($this->input->post());

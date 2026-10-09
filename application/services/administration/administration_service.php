@@ -94,43 +94,11 @@ class Administration_service
         }
         $this->ci->db->trans_commit();
     }
+    // Workflow definitions are seeded and fixed; only their versioned approval
+    // steps may be edited. Never add arbitrary new request-type workflows.
     public function save_workflow($post,$actorId)
     {
-        $id=(int)($post['id']??0);
-        $name=trim((string)($post['name']??''));
-        $key=trim((string)($post['workflow_key']??''));
-        $type=trim((string)($post['request_type']??''));
-        $types=['softcopy_create','softcopy_revise','softcopy_cancel',
-            'hardcopy_create','hardcopy_update','transfer','assignment','access','disposal'];
-        if (!in_array($type,$types,TRUE) || $name==='' ||
-           !preg_match('/^[a-z0-9_]{3,80}$/',$key))
-            throw new DomainException('Choose a valid workflow name, key and request type.');
-        $data=['workflow_key'=>$key,'name'=>$name,'request_type'=>$type,
-            'description'=>trim((string)($post['description']??''))];
-        $this->ci->db->trans_begin();
-        if ($id) {
-            $existing=$this->ci->db->get_where('workflows',['id'=>$id])->row_array();
-            if (!$existing) throw new DomainException('Workflow not found.');
-            if ($existing['request_type']!==$type &&
-                $this->ci->db->from('workflow_versions')->where('workflow_id',$id)
-                    ->where('status','published')->count_all_results()>0) {
-                throw new DomainException('Published workflow request type is immutable. Create a new workflow.');
-            }
-            $this->ci->db->where('id',$id)->update('workflows',$data);
-        } else {
-            $data['created_by']=$actorId;
-            $data['active']=0;
-            $this->ci->db->insert('workflows',$data);
-            $id=(int)$this->ci->db->insert_id();
-            $this->ci->db->insert('workflow_versions',[
-                'workflow_id'=>$id,'version_number'=>1,'status'=>'draft',
-                'is_default'=>0,'graph'=>'{"steps":[]}','created_by'=>$actorId
-            ]);
-        }
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback();throw new DomainException('Workflow save failed.');
-        }
-        $this->ci->db->trans_commit();
+        throw new DomainException('Workflow definitions are predefined. Edit approval steps in an existing seeded workflow.');
     }
     public function save_workflow_step($post)
     {
