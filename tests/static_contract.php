@@ -210,5 +210,30 @@ foreach (['data-transfer-source','data-transfer-origin',
 if (strpos($trJs,'updateHardcopyTransfer')===FALSE ||
     strpos($trSvc,'validate_transfer_destination')===FALSE)
     $fail[]='Destination auto population and server validation missing.';
+// Folder navigation is shared by documents and admin assignments.
+$folders=file_get_contents($root.'/application/models/Folder_model.php');
+$docModel=file_get_contents($root.'/application/models/Document_model.php');
+$docCtl=file_get_contents($root.'/application/controllers/Documents.php');
+$adminCtl=file_get_contents($root.'/application/controllers/Administration.php');
+$docView=file_get_contents($root.'/application/view/pages/documents/shared_index.php');
+$assignmentView=file_get_contents($root.'/application/view/pages/administration/document_assignments.php');
+$tableView=file_get_contents($root.'/application/view/reusable_components/reusable_datatable.php');
+$ui=file_get_contents($root.'/public/assets/js/app.js');
+foreach (['category','area','specific','asset','location','parent_id','scope_documents']
+    as $item) if (strpos($folders,$item)===FALSE) $fail[]='Folder hierarchy missing '.$item;
+if (strpos($docModel,'options_in_folder')===FALSE ||
+    strpos($docCtl,"Folder_model")===FALSE ||
+    strpos($adminCtl,"Folder_model")===FALSE) {
+    $fail[]='Folder filtering is missing from document / assignment queries.';
+}
+if (strpos($docView,'reusable_components/folder_browser')===FALSE ||
+    strpos($assignmentView,'reusable_components/folder_browser')===FALSE ||
+    strpos($assignmentView,'data-row-view')===FALSE ||
+    strpos($tableView,'class="table-cell-view"')===FALSE ||
+    strpos($ui,'showTableCellDetails')===FALSE) {
+    $fail[]='Shared folder navigator or cell-click view missing.';
+}
+if (!is_file($root.'/tests/folder_browser_smoke.sh'))
+    $fail[]='Folder navigation tests are missing.';
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
