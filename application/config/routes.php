@@ -32,5 +32,6 @@ $route['admin/roles']['GET'] = 'Administration/roles';
 $route['admin/roles/save']['POST'] = 'Administration/save_role';
 $route['admin/workflows']['GET'] = 'Administration/workflows';
 $route['admin/workflows/save']['POST'] = 'Administration/save_workflow';
+$route['admin/workflows/clone']['POST'] = 'Administration/clone_workflow';
 $route['admin/workflows/step']['POST'] = 'Administration/save_step';
 $route['admin/workflows/step/delete']['POST'] = 'Administration/delete_step';
