@@ -1,5 +1,5 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
 
 /* =========================================================
    CSS VARIABLES
@@ -33,7 +33,7 @@
 
 body {
     margin: 0;
-    font-family: 'Roboto', Arial, sans-serif;
+     font-family: 'Poppins', sans-serif;
     color: var(--text);
     background: var(--bg);
     font-size: 14px;
@@ -682,12 +682,13 @@ a {
     inset: 0;
     z-index: -1;
     pointer-events: none;
+
     background: linear-gradient(
         105deg,
-        rgba(12, 21, 37, 0.87) 0%,
-        rgba(12, 21, 37, 0.76) 44%,
-        rgba(12, 21, 37, 0.59) 75%,
-        rgba(12, 21, 37, 0.65) 100%
+        rgba(12, 21, 37, 0.98) 0%,
+        rgba(12, 21, 37, 0.95) 44%,
+        rgba(12, 21, 37, 0.95) 75%,
+        rgba(12, 21, 37, 0.94) 100%
     );
 }
 
@@ -712,13 +713,16 @@ a {
 
 .login-intro {
     width: 100%;
-    max-width: 580px;
+    max-width: 600px;
 }
 
 .login-kicker {
+    background: #8a0012;
+    padding: 8px 15px;
+    border-radius: 10px;
     display: inline-block;
-    color: #ffd8dd;
-    font-size: 11px;
+    color: #fff;
+    font-size: 10px;
     font-weight: 800;
     letter-spacing: 1.65px;
     line-height: 1.6;
@@ -726,21 +730,26 @@ a {
 }
 
 .login-cover h1 {
-    max-width: 580px;
-    margin: 18px 0 20px;
-    color: #fff;
-    font-size: clamp(38px, 4.4vw, 64px);
+    max-width: 650px;
+    margin: 14px 0 15px;
+    color: #ffffff;
+
+    font-size: clamp(2.0rem, 5vw, 4.0rem);
     font-weight: 800;
-    letter-spacing: -1.9px;
-    line-height: 1.12;
-    text-wrap: balance;
+    line-height: 1.08;
+    letter-spacing: -2px;
+
+    text-align: left;
+    text-transform: uppercase;
+
+    text-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
 }
 
 .login-cover p {
-    max-width: 460px;
+    max-width: 500px;
     margin: 0;
     color: #e1e7f1;
-    font-size: clamp(14px, 1.5vw, 17px);
+    font-size: clamp(13px, 1vw, 13px);
     line-height: 1.8;
 }
 
