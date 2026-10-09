@@ -32,7 +32,7 @@ if ! grep -q 'name="login"' /tmp/pk-login.html; then
 fi
 
 curl -fsS -c /tmp/pk-cookie -o /tmp/pk-login.html http://127.0.0.1:8089/login
-TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-login.html | head -1 | sed 's/.*value="//;s/"$//')
+TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-login.html)
 test -n "$TOKEN"
 curl -sS -L -b /tmp/pk-cookie -c /tmp/pk-cookie -o /tmp/pk-home.html \
   --data-urlencode "pk_csrf_token=$TOKEN" --data-urlencode 'login=test_admin' \
