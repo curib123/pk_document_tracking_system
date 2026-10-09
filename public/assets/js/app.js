@@ -95,6 +95,7 @@
             target.dataset.confirmed = '';
             if (target.dataset.requestType) refreshRequestForm();
             updateRequestActionFields();
+            if (target.id === 'stepForm') updateStepApprover();
         }
 
         var view = event.target.closest('.js-view');
@@ -234,6 +235,26 @@
         if (event.target && event.target.id === 'reqType') updateRequestActionFields();
     });
     updateRequestActionFields();
+
+    function updateStepApprover() {
+        var type = document.getElementById('sType');
+        if (!type) return;
+        var selected = type.value;
+        document.querySelectorAll('[data-approver-option]').forEach(function (section) {
+            var visible = section.getAttribute('data-approver-option') === selected;
+            section.hidden = !visible;
+            section.querySelectorAll('select').forEach(function (field) {
+                field.disabled = !visible;
+                field.required = visible;
+            });
+        });
+        var info = document.getElementById('approverAutoInfo');
+        if (info) info.hidden = selected === 'user' || selected === 'role';
+    }
+    document.addEventListener('change', function (event) {
+        if (event.target && event.target.id === 'sType') updateStepApprover();
+    });
+    updateStepApprover();
 
     var pendingForm = null;
     var pendingParent = null;
