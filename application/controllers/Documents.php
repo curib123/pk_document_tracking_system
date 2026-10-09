@@ -21,6 +21,9 @@ class Documents extends MY_Controller
         foreach (['areas','specifics','assets','locations','categories'] as $name)
             $options[$name]=$this->Place_model->options($name);
         $options['users']=$this->Document_model->active_users();
+        if ($domain==='hardcopy') {
+            $options['locations']=$this->Document_model->hardcopy_locations();
+        }
         $softcopy_options=$domain==='softcopy'?$this->Document_model->options('softcopy'):[];
         $category_options=$domain==='softcopy'?$options['categories']:[];
         $latest=[];
@@ -42,7 +45,8 @@ class Documents extends MY_Controller
         $this->render($c['title'],$view,[
             'cfg'=>$c,'rows'=>$rows,'total'=>$total,'table'=>$state,'options'=>$options,
             'latest_files'=>$latest,'file_access'=>$accessible,'file_histories'=>$filesByDocument,
-            'softcopy_options'=>$softcopy_options,'category_options'=>$category_options
+            'softcopy_options'=>$softcopy_options,'category_options'=>$category_options,
+            'is_administrator'=>strcasecmp((string)$this->user['role'],'Administrator')===0
         ]);
     }
     public function direct_softcopy()
