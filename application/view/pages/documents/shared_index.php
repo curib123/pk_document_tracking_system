@@ -75,7 +75,7 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
 <nav class="tab-bar" aria-label="Document types">
 <?php foreach (['hardcopy'=>'Hardcopy Documents','softcopy'=>'Softcopy Documents'] as $kind=>$label):
  if (isset($permissions['*']) || !empty($permissions[$kind]['view'])): ?>
-<a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>">
+<a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>" <?= $cfg['domain']===$kind?'aria-current="page"':'' ?>>
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
 <?php $this->load->view('reusable_components/folder_browser',[
     'folder_browser'=>$folder_browser,'folder_base'=>$folder_base,
