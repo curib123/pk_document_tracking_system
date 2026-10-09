@@ -31,6 +31,7 @@
             var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle' : 'editTitle');
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
             target.dataset.confirmed = '';
+            if (target.dataset.requestType) refreshRequestForm();
         }
 
         var view = event.target.closest('.js-view');
@@ -74,6 +75,38 @@
             form.setAttribute('data-confirm', title + '?');
         }
     });
+
+    // Sections shown in the modal depend on the request's operation.
+    function refreshRequestForm() {
+        var form = document.querySelector('#editForm[data-request-type]');
+        if (!form) return;
+        var operation = form.querySelector('[name="operation"]').value;
+        var sections = {
+            document: operation !== 'create',
+            proposal: operation === 'create' || operation === 'revise',
+            location: operation === 'transfer',
+            user: operation === 'grant' || operation === 'assign',
+            expiry: operation === 'grant'
+        };
+        Object.keys(sections).forEach(function (key) {
+            var section = form.querySelector('[data-request-section="' + key + '"]');
+            if (!section) return;
+            section.hidden = !sections[key];
+            section.querySelectorAll('input,select,textarea').forEach(function (field) {
+                field.disabled = !sections[key];
+                field.required = sections[key] && (
+                    (key === 'proposal' && ['proposed_code', 'proposed_title', 'proposed_version'].includes(field.name)) ||
+                    (key === 'document' && field.name === 'document_id') ||
+                    (key === 'location' && field.name === 'target_place_id') ||
+                    (key === 'user' && field.name === 'target_user_id')
+                );
+            });
+        });
+    }
+    document.addEventListener('change', function (event) {
+        if (event.target.matches('#requestOperation')) refreshRequestForm();
+    });
+    refreshRequestForm();
 
     var pendingForm = null;
     var pendingParent = null;
