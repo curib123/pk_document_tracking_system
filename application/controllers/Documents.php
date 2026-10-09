@@ -7,6 +7,7 @@ class Documents extends MY_Controller
         parent::__construct();
         $this->load->model('Document_model');
         $this->load->model('Place_model');
+        $this->load->model('Folder_model');
         $this->load->model('File_model');
         require_once APPPATH.'services/documents/document_service.php';
     }
@@ -15,8 +16,11 @@ class Documents extends MY_Controller
         $c=$this->Document_model->config($domain);
         $this->require_permission($domain,'view');
         $state=$this->table_state('updated_at');
+        $folder=trim((string)$this->input->get('folder',TRUE));
+        if (strlen($folder)>100) show_404();
+        $browser=$this->Folder_model->browse($domain,$folder);
         list($rows,$total,$state['page'])=$this->Document_model->listing(
-            $domain,$state['q'],$state['status'],$state['page'],$state['limit']);
+            $domain,$state['q'],$state['status'],$state['page'],$state['limit'],$browser);
         $options=[];
         foreach (['areas','specifics','assets','locations','categories'] as $name)
             $options[$name]=$this->Place_model->options($name);
@@ -46,6 +50,11 @@ class Documents extends MY_Controller
             'cfg'=>$c,'rows'=>$rows,'total'=>$total,'table'=>$state,'options'=>$options,
             'latest_files'=>$latest,'file_access'=>$accessible,'file_histories'=>$filesByDocument,
             'softcopy_options'=>$softcopy_options,'category_options'=>$category_options,
+            'folder_browser'=>$browser,'folder_base'=>'documents/'.$domain,
+            'folder_params'=>[
+                'q'=>$state['q'],'status'=>$state['status'],'limit'=>$state['limit']
+            ],
+            'folder_value'=>$browser['folder'],
             'is_administrator'=>strcasecmp((string)$this->user['role'],'Administrator')===0
         ]);
     }

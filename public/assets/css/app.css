@@ -1296,3 +1296,95 @@ a {
         padding: 11px 14px;
     }
 }
+
+/* Native folder navigator shared by Hardcopy, Softcopy and Admin Assignments. */
+.folder-explorer {
+    padding: 20px 22px;
+    margin: 14px 0 20px;
+    border: 1px solid #e5e9f0;
+    border-radius: 16px;
+    background: #fff;
+    box-shadow: 0 5px 24px rgba(20, 32, 56, .035);
+}
+.folder-explorer-header {
+    display: flex;
+    gap: 16px;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+}
+.folder-breadcrumbs {
+    display: flex;
+    gap: 9px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin: 12px 0 16px;
+    font-size: 12px;
+    color: #66738a;
+}
+.folder-breadcrumbs a {
+    color: #37445d;
+    text-decoration: none;
+    font-weight: 600;
+}
+.folder-breadcrumbs a:hover {
+    color: var(--accent);
+    text-decoration: underline;
+}
+.folder-breadcrumbs i { font-size: 9px; color: #a3acb9; }
+.folder-breadcrumbs [aria-current="page"] { color: var(--accent); font-weight: 700; }
+.folder-tiles {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 220px), 1fr));
+    gap: 10px;
+}
+.folder-tile {
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 14px;
+    border: 1px solid #e5eaf1;
+    border-radius: 11px;
+    text-decoration: none;
+    color: #24324b;
+    background: #fcfdff;
+    transition: background .15s ease, border-color .15s ease, transform .15s ease;
+}
+.folder-tile:hover, .folder-tile:focus-visible {
+    color: #24324b;
+    border-color: #dfb3bd;
+    background: #fff5f7;
+    transform: translateY(-1px);
+}
+.folder-tile-icon {
+    display: grid;
+    place-items: center;
+    flex: 0 0 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: #f9e7eb;
+    color: var(--accent);
+}
+.folder-tile-text { min-width: 0; flex: 1; }
+.folder-tile-text strong,
+.folder-tile-text small {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.folder-tile-text strong { font-size: 13px; }
+.folder-tile-text small { color: #798599; font-size: 11px; margin-top: 2px; }
+.folder-tile-arrow { font-size: 10px; color: #9eabbc; }
+.table-cell-view { cursor: pointer; }
+.table-cell-view:hover { background: rgba(212,38,58,.055); }
+.table-cell-view:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: -2px;
+    background: rgba(212,38,58,.075);
+}
+@media (prefers-reduced-motion: reduce) {
+    .folder-tile { transition: none; }
+}

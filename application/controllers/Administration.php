@@ -34,11 +34,22 @@ class Administration extends MY_Controller
         if (strcasecmp((string)$this->user['role'],'Administrator')!==0)
             show_error('Administrator access is required.',403);
         $this->load->model('Document_model');
+        $this->load->model('Folder_model');
+        $domain=(string)($this->input->get('domain',TRUE)?:'hardcopy');
+        if (!in_array($domain,['hardcopy','softcopy'],TRUE)) show_404();
+        $folder=trim((string)$this->input->get('folder',TRUE));
+        if (strlen($folder)>100) show_404();
+        $browser=$this->Folder_model->browse($domain,$folder);
         $this->render('Assign Documents','pages/administration/document_assignments',[
-            'softcopy_options'=>$this->Document_model->options('softcopy'),
-            'hardcopy_options'=>$this->Document_model->options('hardcopy'),
+            'selected_domain'=>$domain,'folder_value'=>$browser['folder'],
+            'folder_browser'=>$browser,'folder_base'=>'admin/document-assignments',
+            'folder_params'=>['domain'=>$domain],
+            'softcopy_options'=>$domain==='softcopy'?
+                $this->Document_model->options_in_folder('softcopy',$browser):[],
+            'hardcopy_options'=>$domain==='hardcopy'?
+                $this->Document_model->options_in_folder('hardcopy',$browser):[],
             'users_list'=>$this->Administration_model->user_options(),
-            'assignment_rows'=>$this->Administration_model->document_assignments()
+            'assignment_rows'=>$this->Administration_model->document_assignments($domain,$browser)
         ]);
     }
     public function save_document_assignment()
@@ -52,7 +63,15 @@ class Administration extends MY_Controller
         $soft=(int)$this->input->post('softcopy_id');
         $hard=(int)$this->input->post('hardcopy_id');
         $recipient=(int)$this->input->post('recipient_id');
+        $folder=trim((string)$this->input->post('folder',TRUE));
         try {
+            $this->load->model('Folder_model');
+            $this->load->model('Document_model');
+            $browser=$this->Folder_model->browse($domain,$folder);
+            $documentId=$domain==='softcopy'?$soft:$hard;
+            $allowed=array_column($this->Document_model->options_in_folder($domain,$browser),'id');
+            if (!in_array($documentId,array_map('intval',$allowed),TRUE))
+                throw new DomainException('The document is not available in the selected folder.');
             require_once APPPATH.'services/documents/document_access_service.php';
             $this->db->trans_begin();
             (new Document_access_service())->apply(
@@ -66,7 +85,9 @@ class Administration extends MY_Controller
             $this->db->trans_rollback();
             $this->notice($e->getMessage(),'danger');
         }
-        redirect('admin/document-assignments');
+        $query=['domain'=>in_array($domain,['hardcopy','softcopy'],TRUE)?$domain:'hardcopy'];
+        if ($folder!=='') $query['folder']=$folder;
+        redirect('admin/document-assignments?'.http_build_query($query));
     }
     public function users(){$this->listing('users');}
     public function roles(){$this->listing('roles');}

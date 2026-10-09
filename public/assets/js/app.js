@@ -64,6 +64,41 @@
         });
     }
 
+    // Each data cell opens the exact same reusable View modal as the eye
+    // action; action buttons and links remain independent and never trigger it.
+    function showTableCellDetails(row) {
+        if (!row || !row.hasAttribute('data-row-view')) return;
+        var data;
+        try { data=JSON.parse(row.getAttribute('data-row-view')||'{}'); }
+        catch(error) { return; }
+        var modal=document.getElementById('viewModal');
+        var details=document.getElementById('viewDetails');
+        var heading=document.getElementById('viewModalTitle');
+        if (!modal || !details) return;
+        details.replaceChildren();
+        Object.keys(data).forEach(function(key) {
+            var term=document.createElement('dt');
+            var value=document.createElement('dd');
+            term.textContent=key;
+            value.textContent=data[key] == null || data[key]===''?'—':String(data[key]);
+            details.append(term,value);
+        });
+        if (heading) heading.textContent=row.getAttribute('data-row-title')||'View Details';
+        window.bootstrap.Modal.getOrCreateInstance(modal).show();
+    }
+    document.addEventListener('click',function(event) {
+        var cell=event.target.closest('td.table-cell-view');
+        if (!cell || event.target.closest('a,button,input,select,textarea,label')) return;
+        showTableCellDetails(cell.closest('tr[data-row-view]'));
+    });
+    document.addEventListener('keydown',function(event) {
+        if (event.key!=='Enter' && event.key!==' ') return;
+        var cell=event.target.closest('td.table-cell-view');
+        if (!cell || event.target!==cell) return;
+        event.preventDefault();
+        showTableCellDetails(cell.closest('tr[data-row-view]'));
+    });
+
     var sidebar = document.getElementById('appSidebar');
     var toggle = document.getElementById('sidebarToggle');
     if (toggle && sidebar) toggle.addEventListener('click', function () {

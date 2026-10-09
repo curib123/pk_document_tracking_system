@@ -7,10 +7,12 @@ $dt_filter_values = $dt_filter_values ?? ['status' => $dt_filter];
 $dt_sort = $dt_sort ?? '';
 $dt_dir = $dt_dir ?? 'asc';
 $dt_sortable = $dt_sortable ?? [];
+$dt_extra_params = $dt_extra_params ?? [];
 $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
-    $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir
+    $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir,
+    $dt_extra_params
 ) {
-    $params = array_merge(['q' => $dt_q], $dt_filter_values, [
+    $params = array_merge($dt_extra_params, ['q' => $dt_q], $dt_filter_values, [
         'page' => $page, 'limit' => $dt_limit,
         'sort' => $sortOverride ?? $dt_sort, 'dir' => $dirOverride ?? $dt_dir
     ]);
@@ -26,6 +28,9 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <input type="hidden" name="page" value="1">
             <input type="hidden" name="sort" value="<?= html_escape($dt_sort) ?>">
             <input type="hidden" name="dir" value="<?= html_escape($dt_dir) ?>">
+            <?php foreach ($dt_extra_params as $key=>$value): ?>
+            <input type="hidden" name="<?= html_escape($key) ?>" value="<?= html_escape($value) ?>">
+            <?php endforeach; ?>
         </form>
         <?php if (!empty($dt_create)): ?>
             <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#editModal"
@@ -43,7 +48,9 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             </select>
         <?php endforeach; ?>
         <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i> Apply</button>
-        <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?><a class="btn btn-light" href="<?= site_url($dt_path) ?>">Clear</a><?php endif; ?>
+        <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?>
+            <a class="btn btn-light" href="<?= site_url($dt_path).($dt_extra_params?'?'.http_build_query($dt_extra_params):'') ?>">Clear</a>
+        <?php endif; ?>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
@@ -70,9 +77,14 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                     <tr><td colspan="<?= count($dt_columns) + 1 ?>"><div class="empty-state"><i class="fa-regular fa-folder-open d-block fs-4 mb-2"></i>No records found.</div></td></tr>
                 <?php endif; ?>
                 <?php foreach ($dt_rows as $dt_row): ?>
-                    <tr>
+                    <?php $rowCanView=!empty($dt_row['display']);
+                          $rowTitle=(string)($dt_row['cells']['title'] ??
+                              $dt_row['cells']['name'] ?? $dt_row['cells']['reference'] ?? 'View Details'); ?>
+                    <tr <?= $rowCanView ?
+                        'data-row-view="'.html_escape(json_encode($dt_row['display'],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)).'"'.
+                        ' data-row-title="'.html_escape($rowTitle).'"' : '' ?>>
                         <?php foreach ($dt_columns as $key => $label): ?>
-                            <td>
+                            <td <?= $rowCanView ? 'class="table-cell-view" tabindex="0" role="button" aria-label="View '.html_escape($label).' details"' : '' ?>>
                                 <?php $value = $dt_row['cells'][$key] ?? ''; ?>
                                 <?php if (in_array($key, $dt_badges ?? [], TRUE)): ?>
                                     <span class="badge-status status-<?= html_escape(strtolower((string) $value)) ?>"><?= html_escape((string) $value === '0' ? 'Inactive' : ucwords(str_replace('_', ' ', (string) $value))) ?></span>

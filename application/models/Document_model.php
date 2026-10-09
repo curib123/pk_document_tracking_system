@@ -14,10 +14,14 @@ class Document_model extends CI_Model
         if (!isset($defs[$domain])) show_404();
         return $defs[$domain]+['domain'=>$domain];
     }
-    private function base_query($domain,$search,$status)
+    private function base_query($domain,$search,$status,$browser=NULL)
     {
         $c=$this->config($domain);
         $this->db->from($c['table'].' d');
+        if ($browser!==NULL) {
+            $this->load->model('Folder_model');
+            $this->Folder_model->scope_documents($domain,$browser,'d');
+        }
         if ($status!=='' && in_array($status,['active','disposed','archived'],TRUE))
             $this->db->where('d.status',$status);
         if ($search!=='') {
@@ -27,12 +31,12 @@ class Document_model extends CI_Model
             $this->db->group_end();
         }
     }
-    public function listing($domain,$q,$status,$page,$limit)
+    public function listing($domain,$q,$status,$page,$limit,$browser=NULL)
     {
-        $this->base_query($domain,$q,$status);
+        $this->base_query($domain,$q,$status,$browser);
         $total=(int)$this->db->count_all_results();
         $page=min(max(1,$page),max(1,(int)ceil($total/$limit)));
-        $this->base_query($domain,$q,$status);
+        $this->base_query($domain,$q,$status,$browser);
         $this->db->select('d.*, CONCAT_WS(" ", u.first_name,u.last_name) AS creator_name');
         $this->db->join('users u','u.id=d.created_by');
         if ($domain==='softcopy') {
@@ -64,6 +68,21 @@ class Document_model extends CI_Model
               'id,title,area_id,specific_id,asset_id,location_id,sequence_number,
                retention_enabled,retention_start_date,retention_end_date,holder_id')
             ->order_by('title')->get()->result_array();
+    }
+
+    // Admin assignment choices are constrained to the currently open folder.
+    public function options_in_folder($domain,$browser)
+    {
+        $c=$this->config($domain);
+        $this->load->model('Folder_model');
+        $this->db->from($c['table'].' d')->where('d.status','active');
+        $this->Folder_model->scope_documents($domain,$browser,'d');
+        $columns=$domain==='softcopy'
+            ? 'd.id,d.document_number,d.title,d.category_id'
+            : 'd.id,d.title,d.sequence_number,d.area_id,d.specific_id,
+               d.asset_id,d.location_id,d.holder_id';
+        return $this->db->select($columns)->order_by('d.title')
+            ->limit(500)->get()->result_array();
     }
 
     // Predefined active location choices carry the existing hierarchy.

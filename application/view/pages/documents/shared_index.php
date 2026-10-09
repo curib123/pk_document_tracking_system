@@ -59,7 +59,8 @@ foreach ($rows as $r) {
      'icon'=>'fa-solid fa-trash-can'];
  $dt_rows[]=['id'=>$r['id'],'cells'=>$cells,'record'=>$rec,'display'=>$display,'buttons'=>$buttons];
 }
-$dt_path='documents/'.$cfg['domain'];$dt_q=$table['q'];$dt_filter=$table['status'];
+$dt_path='documents/'.$cfg['domain'];
+$dt_extra_params=['folder'=>$folder_value];$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
 $dt_sort='updated_at';$dt_dir='desc';$dt_sortable=[];
 $dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived']];
@@ -76,9 +77,14 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
  if (isset($permissions['*']) || !empty($permissions[$kind]['view'])): ?>
 <a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>">
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
+<?php $this->load->view('reusable_components/folder_browser',[
+    'folder_browser'=>$folder_browser,'folder_base'=>$folder_base,
+    'folder_params'=>$folder_params,'domain'=>$cfg['domain']
+]); ?>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
-'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
+'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows',
+'dt_extra_params'
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
