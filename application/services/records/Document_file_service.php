@@ -10,6 +10,19 @@ class Document_file_service
         $this->ci =& get_instance();
     }
 
+    public function revoke($grantId)
+    {
+        $grant = $this->ci->db->get_where('document_access_grants', [
+            'id' => $grantId, 'revoked_at' => NULL
+        ])->row_array();
+        if (!$grant) throw new DomainException('Active grant was not found.');
+        $this->ci->db->where('id', $grantId)->where('revoked_at IS NULL', NULL, FALSE)
+            ->update('document_access_grants', ['revoked_at' => date('Y-m-d H:i:s')]);
+        if ($this->ci->db->affected_rows() !== 1) {
+            throw new DomainException('Access grant was already revoked.');
+        }
+    }
+
     public function upload($documentId, $userId, $input)
     {
         $document = $this->ci->db->get_where('documents', [
