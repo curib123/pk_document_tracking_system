@@ -24,9 +24,16 @@ The existing login imagery is in `public/assets/images/`. Bootstrap, jQuery, Cha
 - `application/models/`: database reads and query construction.
 - `application/services/`: database changes and validation of business rules.
 - `application/view/layout/`: shared header, sidebar, top bar, footer and confirmation modals.
-- `application/view/components/datatable.php`: shared search, filters, table, actions, page limits and pagination.
+- `application/view/components/datatable.php`: shared search, filters, sortable columns, actions, page limits and pagination.
+- `application/libraries/Table_pager.php`: centralized allowlisted query-state parsing and page-bound clamping.
 - `public/assets/css/app.css` / `public/assets/js/app.js`: visual style and progressive UI interactions.
 - `database/`: new schema and idempotent base role/permission seeds.
+
+### Database-backed DataTables
+
+All **My Requests, My Tasks, Users, Roles, Workflows, Hardcopy/Softcopy Documents and six Places tabs** use SQL `COUNT(*)` and `LIMIT/OFFSET` with stable order-by columns. No table fetches all records for PHP `array_slice()`. Every table supports 10, 25, 50 or 100 rows per page and GET-based search, filter and column sorting. Pagination links preserve active search/filter/sort/limit settings, and out-of-range page numbers automatically clamp to the last page.
+
+The reusable headers accept only allowlisted sort keys and `asc`/`desc`, so raw query parameters are never used as SQL column expressions. Workflow approval steps and role-permission assignments are fetched only for records visible on the current page. Form dropdown options are separate reference data, not paginated table rows. All requests remain traditional PHP page loads and HTML form submissions, **without REST APIs or AJAX**.
 
 ### Available modules
 
@@ -40,7 +47,7 @@ Each access is enforced by `MY_Controller::require_permission`, with matching ac
 - `php tests/lint.php` — PHP syntax checks (requires a CLI PHP executable).
 - `composer test` — structural tests.
 - `composer run test:lint` — syntax checks.
-- `bash tests/integration_smoke.sh` — **CI-only disposable MySQL test**, using a temporary `pk_dts_test` database and built-in HTTP server. Do not run on a database with real records.
+- `bash tests/integration_smoke.sh` — **CI-only disposable MySQL test**, using a temporary `pk_dts_test` database and built-in HTTP server. Do not run on a database with real records. Includes `tests/pagination_flows.sh`, which creates 37 fixtures per module to verify SQL page boundaries, search/filter, sorting, row limits and permission isolation.
 
 GitHub Actions executes PHP lint and static checks plus a disposable MySQL HTTP integration suite that exercises login, server-enforced role permissions, all 22 main routes, document file uploads and guarded downloads, create/revise/dispose/transfer/access-grant/assignment effects, and workflow cloning.
 
