@@ -7,6 +7,21 @@ on:
 permissions:
   contents: read
 jobs:
+  local-runtime:
+    runs-on: ubuntu-latest
+    container: debian:trixie
+    steps:
+      - name: Prepare disposable verification runtime packages
+        run: |
+          apt-get update -qq
+          apt-get -y --download-only install php8.4-mysql php8.4-mbstring mariadb-server mariadb-client
+          mkdir -p /tmp/pk-runtime
+          cp /var/cache/apt/archives/*.deb /tmp/pk-runtime/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pk-verification-runtime
+          path: /tmp/pk-runtime/*.deb
+          retention-days: 1
   source-snapshot:
     runs-on: ubuntu-latest
     steps:
@@ -61,4 +76,9 @@ jobs:
           php-version: '8.2'
           extensions: mysqli,mbstring,fileinfo,zip
       - run: composer install --no-interaction --prefer-dist --no-progress
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pk-verification-vendor
+          path: vendor/
+          retention-days: 1
       - run: bash tests/smoke.sh
