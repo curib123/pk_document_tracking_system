@@ -54,6 +54,26 @@ class Request_model extends CI_Model
         foreach ($rows as $r) $result[$r['request_id']][]=$r;
         return $result;
     }
+    public function approval_routes($ids)
+    {
+        if (!$ids) return [];
+        $rows=$this->db->select('s.request_id,s.node_key,s.label,s.assignment,
+                s.assigned_name,s.status,s.decision,s.acting_name,s.acted_at')
+            ->from('workflow_steps s')
+            ->where_in('s.request_id',$ids)
+            ->order_by('s.request_id')->order_by('s.id')
+            ->get()->result_array();
+        $out=[];
+        foreach ($rows as $s) {
+            $assignment=json_decode($s['assignment'],TRUE)?:[];
+            $s['approver_type']=$assignment['type']??'unknown';
+            $s['approver_label']=$s['assigned_name'] ?:
+                ($assignment['label']??'Assigned approver');
+            $out[$s['request_id']][]=$s;
+        }
+        return $out;
+    }
+
     public function active_workflow($type)
     {
         return $this->db->select('v.*,w.name AS workflow_name')

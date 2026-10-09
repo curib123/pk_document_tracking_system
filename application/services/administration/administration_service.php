@@ -143,8 +143,9 @@ class Administration_service
         $type=(string)($post['approver_type']??'');
         $value=$type==='user'?(int)($post['approver_user_id']??0):
             ($type==='role'?(int)($post['approver_role_id']??0):0);
-        if ($name==='' || !in_array($type,['user','role','requester_leader','requester'],TRUE))
-            throw new DomainException('Choose an approver type and step name.');
+        if ($name==='' || mb_strlen($name)>120 ||
+            !in_array($type,['user','role','requester_leader','requester'],TRUE))
+            throw new DomainException('Choose a valid approver type and step name (maximum 120 characters).');
         if ($type==='user' && (!$value || !$this->ci->db->get_where('users',[
             'id'=>$value,'active'=>1
         ])->row_array())) throw new DomainException('Choose an active user approver.');
@@ -152,8 +153,19 @@ class Administration_service
             'id'=>$value,'active'=>1
         ])->row_array())) throw new DomainException('Choose an active approver role.');
         $key='step_'.(count($graph['steps']??[])+1);
+        $target='Requester account';
+        if ($type==='user') {
+            $assigned=$this->ci->db->select('first_name,last_name')->get_where('users',['id'=>$value])->row_array();
+            $target=trim($assigned['first_name'].' '.$assigned['last_name']);
+        } elseif ($type==='role') {
+            $assigned=$this->ci->db->get_where('roles',['id'=>$value])->row_array();
+            $target=$assigned['name'];
+        } elseif ($type==='requester_leader') {
+            $target='Requester leader';
+        }
         $graph['steps'][]=['key'=>$key,'name'=>$name,'approver'=>[
-            'type'=>$type,'value'=>in_array($type,['user','role'],TRUE)?$value:NULL,'label'=>$name
+            'type'=>$type,'value'=>in_array($type,['user','role'],TRUE)?$value:NULL,
+            'label'=>$target
         ]];
         $this->ci->db->where('id',$versionId)->update('workflow_versions',[
             'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
@@ -184,12 +196,75 @@ class Administration_service
         ]);
     }
 
+    /**
+     * Draft-only step positioning. Routing follows array order, so the current
+     * request always passes to the next unresolved approver in this sequence.
+     */
+    public function move_workflow_step($post)
+    {
+        $id=(int)($post['id']??0);
+        $key=(string)($post['step_key']??'');
+        $direction=(string)($post['direction']??'');
+        if (!in_array($direction,['up','down'],TRUE) || !preg_match('/^step_[0-9]+$/',$key))
+            throw new DomainException('Choose a valid step and direction.');
+        $version=$this->ci->db->get_where('workflow_versions',[
+            'id'=>$id,'status'=>'draft'
+        ])->row_array();
+        if (!$version) throw new DomainException('Only draft approval routes can be reordered.');
+        $graph=json_decode($version['graph'],TRUE);
+        if (!isset($graph['steps']) || !is_array($graph['steps']))
+            throw new DomainException('Approval graph is invalid.');
+        $index=NULL;
+        foreach ($graph['steps'] as $i=>$step) {
+            if (($step['key']??'')===$key) {$index=$i;break;}
+        }
+        if ($index===NULL) throw new DomainException('Approval step was not found.');
+        $swap=$index+($direction==='up'?-1:1);
+        if ($swap<0 || $swap>=count($graph['steps']))
+            throw new DomainException('Approval step is already at the end of the route.');
+        [$graph['steps'][$index],$graph['steps'][$swap]]=
+            [$graph['steps'][$swap],$graph['steps'][$index]];
+        foreach ($graph['steps'] as $i=>&$step) $step['key']='step_'.($i+1);
+        unset($step);
+        $this->ci->db->where('id',$id)->where('status','draft')
+            ->update('workflow_versions',['graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)]);
+    }
+
+    private function validate_approval_graph($graph)
+    {
+        $steps=$graph['steps']??NULL;
+        if (!is_array($steps) || !$steps || count($steps)>30)
+            throw new DomainException('An approval route must contain between 1 and 30 steps.');
+        foreach ($steps as $i=>$step) {
+            if (($step['key']??'')!=='step_'.($i+1) ||
+                trim((string)($step['name']??''))==='' ||
+                mb_strlen((string)$step['name'])>120) {
+                throw new DomainException('Approval steps must have ordered keys and a name.');
+            }
+            $assignee=$step['approver']??[];
+            $type=(string)($assignee['type']??'');
+            $value=(int)($assignee['value']??0);
+            if (!in_array($type,['user','role','requester_leader','requester'],TRUE))
+                throw new DomainException('Every approval step needs a valid approver type.');
+            if ($type==='user' &&
+                !$this->ci->db->get_where('users',['id'=>$value,'active'=>1])->row_array())
+                throw new DomainException('An approver user is no longer active.');
+            if ($type==='role') {
+                $role=$this->ci->db->get_where('roles',['id'=>$value,'active'=>1])->row_array();
+                if (!$role || !$this->ci->db->get_where('users',[
+                    'role_id'=>$value,'active'=>1
+                ])->row_array()) {
+                    throw new DomainException('Every approver role must be active and contain an active user.');
+                }
+            }
+        }
+    }
+
     public function publish_workflow($versionId,$actorId)
     {
         $v=$this->ci->db->get_where('workflow_versions',['id'=>$versionId,'status'=>'draft'])->row_array();
         if (!$v) throw new DomainException('Only draft versions can be published.');
-        $steps=(json_decode($v['graph'],TRUE)['steps']??[]);
-        if (!$steps) throw new DomainException('Add at least one approval step before publishing.');
+        $this->validate_approval_graph(json_decode($v['graph'],TRUE)?:[]);
         $this->ci->db->trans_begin();
         $workflow=$this->ci->db->get_where('workflows',['id'=>$v['workflow_id']])->row_array();
         if (!$workflow) throw new DomainException('Workflow not found.');
@@ -197,8 +272,14 @@ class Administration_service
             'request_type'=>$workflow['request_type']
         ])->result_array();
         $ids=array_column($related,'id');
-        if ($ids) $this->ci->db->where_in('workflow_id',$ids)
-            ->update('workflow_versions',['is_default'=>0]);
+        if ($ids) {
+            $this->ci->db->where_in('workflow_id',$ids)
+                ->update('workflow_versions',['is_default'=>0]);
+            // The source schema enforces UNIQUE(active_request_type) in
+            // workflows: deactivate the old route BEFORE activating the new.
+            $this->ci->db->where_in('id',$ids)->where('id !=',$v['workflow_id'])
+                ->update('workflows',['active'=>0]);
+        }
         $this->ci->db->where('id',$versionId)->update('workflow_versions',[
             'status'=>'published','is_default'=>1,'published_at'=>date('Y-m-d H:i:s')
         ]);
@@ -210,6 +291,12 @@ class Administration_service
     }
     public function clone_workflow($workflowId,$actorId)
     {
+        $existingDraft=$this->ci->db->get_where('workflow_versions',[
+            'workflow_id'=>$workflowId,'status'=>'draft'
+        ])->row_array();
+        if ($existingDraft) {
+            throw new DomainException('An editable draft already exists for this workflow.');
+        }
         $v=$this->ci->db->from('workflow_versions')->where('workflow_id',$workflowId)
             ->order_by('version_number','DESC')->limit(1)->get()->row_array();
         if (!$v) throw new DomainException('No workflow version to copy.');

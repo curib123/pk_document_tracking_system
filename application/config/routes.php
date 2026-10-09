@@ -40,5 +40,6 @@ $route['admin/workflows']['GET'] = 'Administration/workflows';
 $route['admin/workflows/save']['POST'] = 'Administration/save_workflow';
 $route['admin/workflows/step/save']['POST'] = 'Administration/save_workflow_step';
 $route['admin/workflows/step/remove']['POST'] = 'Administration/remove_workflow_step';
+$route['admin/workflows/step/move']['POST'] = 'Administration/move_workflow_step';
 $route['admin/workflows/publish']['POST'] = 'Administration/publish_workflow';
 $route['admin/workflows/clone']['POST'] = 'Administration/clone_workflow';

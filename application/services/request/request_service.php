@@ -146,37 +146,50 @@ class Request_service
             $graph=json_decode($workflow['graph'],TRUE);
             $steps=$graph['steps']??[];
             if (!$steps) throw new DomainException('Workflow has no approval steps.');
-            // Preserve prior workflow steps and their historical foreign keys
-            // when a returned request is corrected and resubmitted.
-            $existingSteps=$this->ci->db->from('workflow_steps')
-                ->where('request_id',$id)->order_by('id')->get()->result_array();
+            // Resubmissions do not overwrite old step rows: workflow_history
+            // holds foreign keys to those decisions. Only unfinished old steps
+            // become superseded, preserving the exact past approval sequence.
+            $this->ci->db->where('request_id',$id)
+                ->where_in('status',['pending','active'])
+                ->update('workflow_steps',['status'=>'superseded']);
             foreach ($steps as $i=>$step) {
                 $approver=$step['approver']??[];
                 $type=$approver['type']??'';
+                $value=(int)($approver['value']??0);
                 if (!in_array($type,['user','role','requester_leader','requester'],TRUE))
-                    throw new DomainException('Workflow contains unsupported approver type.');
+                    throw new DomainException('Workflow contains an unsupported approver type.');
                 $assigned=NULL;
-                if ($type==='user') $assigned=(int)($approver['value']??0);
+                $name=NULL;
+                $position=NULL;
+                if ($type==='user') $assigned=$value;
                 if ($type==='requester') $assigned=(int)$r['requested_by'];
                 if ($type==='requester_leader') {
                     $owner=$this->ci->db->get_where('users',['id'=>$r['requested_by']])->row_array();
-                    $assigned=$owner['leader_id']??NULL;
+                    $assigned=(int)($owner['leader_id']??0);
                 }
-                if ($type!=='role' && !$assigned) throw new DomainException('Workflow approver could not be resolved.');
-                $stepData=[
-                  'request_id'=>$id,'node_key'=>(string)($step['key']??'step_'.($i+1)),
-                  'label'=>(string)($step['name']??'Review'),
-                  'assignment'=>json_encode($approver),
-                  'candidates'=>'[]','assigned_user_id'=>$assigned,
-                  'status'=>$i===0?'active':'pending',
-                  'decision'=>NULL,'comments'=>NULL,'acting_user_id'=>NULL,
-                  'acting_name'=>NULL,'acting_position'=>NULL,'acted_at'=>NULL
-                ];
-                if (isset($existingSteps[$i])) {
-                    $this->ci->db->where('id',$existingSteps[$i]['id'])->update('workflow_steps',$stepData);
+                if ($type==='role') {
+                    $role=$this->ci->db->get_where('roles',['id'=>$value,'active'=>1])->row_array();
+                    if (!$role || !$this->ci->db->get_where('users',[
+                        'role_id'=>$value,'active'=>1
+                    ])->row_array()) {
+                        throw new DomainException('Approver role needs an active user.');
+                    }
                 } else {
-                    $this->ci->db->insert('workflow_steps',$stepData);
+                    $resolved=$this->ci->db->get_where('users',[
+                        'id'=>$assigned,'active'=>1
+                    ])->row_array();
+                    if (!$resolved) throw new DomainException('An approver account or leader is no longer active.');
+                    $name=trim($resolved['first_name'].' '.$resolved['last_name']);
+                    $position=$resolved['position_title'];
                 }
+                $this->ci->db->insert('workflow_steps',[
+                    'request_id'=>$id,'node_key'=>(string)($step['key']??'step_'.($i+1)),
+                    'label'=>(string)($step['name']??'Review'),
+                    'assignment'=>json_encode($approver),
+                    'candidates'=>'[]','assigned_user_id'=>$assigned,
+                    'assigned_name'=>$name,'assigned_position'=>$position,
+                    'status'=>$i===0?'active':'pending'
+                ]);
             }
             $this->ci->db->where('id',$id)->update('requests',[
               'workflow_version_id'=>$workflow['id'],'snapshot'=>$workflow['graph'],

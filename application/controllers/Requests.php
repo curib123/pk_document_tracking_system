@@ -26,6 +26,7 @@ class Requests extends MY_Controller
         list($rows,$total,$state['page'])=$this->Request_model->listing(
            $tab,$this->user,$task,$state['q'],$state['status'],$state['page'],$state['limit']);
         $history=$this->Request_model->histories(array_column($rows,'id'));
+        $approvalRoutes=$this->Request_model->approval_routes(array_column($rows,'id'));
         $handoffs=[];$handoffPage=1;$handoffTotal=0;
         if ($task && $tab==='hardcopy-transfer' && $this->can('transfer','view')) {
             list($handoffs,$handoffTotal,$handoffPage)=$this->Transfer_model->pending(
@@ -35,7 +36,7 @@ class Requests extends MY_Controller
         $this->render(($task?'My Tasks':'My Requests').' · '.ucwords(str_replace('-',' ',$tab)),
            $task?'pages/request/approving_assign_request/index':'pages/request/user_own_all_request/index',[
              'tab'=>$tab,'task'=>$task,'rows'=>$rows,'total'=>$total,'table'=>$state,
-             'history'=>$history,
+             'history'=>$history,'approval_routes'=>$approvalRoutes,
              'handoffs'=>$handoffs,'handoff_total'=>$handoffTotal,
              'handoff_page'=>$handoffPage,
              'users'=>$this->Document_model->active_users(),

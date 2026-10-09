@@ -28,13 +28,13 @@ $dt_filter_values=['status'=>$dt_filter];$dt_badges=['active','status'];
 $dt_create='New Workflow';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Workflow Builder</h1>
-<p>Versioned approval graph: draft, edit steps, publish, or clone without changing history.</p></div></div>
+<p>Configure who receives each request, in order. Each approver must approve before the request moves to the next step.</p></div></div>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
 <div class="workspace-card mt-4"><div class="workspace-card-header">
-<strong>Approval Sequence Editor</strong><p class="text-secondary small mb-0">Edit draft versions only; published versions are immutable.</p>
+<strong>Request Approval Route</strong><p class="text-secondary small mb-0">1. Choose the approver at each stage · 2. Arrange the pass-to order · 3. Publish the workflow version</p>
 </div><div class="accordion accordion-flush" id="wfAccordion">
 <?php foreach($rows as $r):
  $steps=(json_decode($r['graph']??'{"steps":[]}',TRUE)['steps']??[]);
@@ -51,9 +51,37 @@ data-bs-target="#wf-<?= (int)$r['id'] ?>">
  $approver=$step['approver']??[]; ?>
 <div class="workflow-step d-flex align-items-center justify-content-between gap-2">
 <div><strong><?= $index+1 ?>. <?= html_escape($step['name']??'Approval') ?></strong>
-<small class="text-secondary d-block">Assigned by <?= html_escape(ucwords(str_replace('_',' ',$approver['type']??'unknown'))) ?>
-<?php if(!empty($approver['label'])): ?> · <?= html_escape($approver['label']) ?><?php endif; ?></small></div>
+<?php
+$approverType=$approver['type']??'';
+$approverLabel=$approver['label']??'';
+if ($approverType==='user') {
+    foreach ($users as $option) if ((int)$option['id']===(int)($approver['value']??0)) $approverLabel=$option['name'];
+} elseif ($approverType==='role') {
+    foreach ($roles as $option) if ((int)$option['id']===(int)($approver['value']??0)) $approverLabel=$option['name'];
+} elseif ($approverType==='requester_leader') $approverLabel='Requester’s leader';
+elseif ($approverType==='requester') $approverLabel='Requester account';
+?>
+<small class="text-secondary d-block">
+<i class="fa-solid fa-arrow-right-arrow-left me-1" aria-hidden="true"></i>
+Send to <?= html_escape($approverLabel) ?> (<?= html_escape(ucwords(str_replace('_',' ',$approverType))) ?>)
+</small></div>
 <?php if ($draft): ?>
+<div class="d-flex align-items-center gap-1">
+<?php foreach (['up'=>'Move earlier','down'=>'Move later'] as $direction=>$description): ?>
+<?php if (($direction==='up' && $index>0) || ($direction==='down' && $index<count($steps)-1)): ?>
+<button type="button" class="btn-icon js-action"
+ aria-label="<?= $description ?>" title="<?= $description ?>"
+ data-bs-toggle="modal" data-bs-target="#actionModal"
+ data-url="<?= site_url('admin/workflows/step/move') ?>"
+ data-id="<?= $versionId ?>"
+ data-step-key="<?= html_escape($step['key']??'') ?>"
+ data-direction="<?= $direction ?>"
+ data-title="<?= $description ?>"
+ data-description="Move this approver step <?= $direction==='up'?'earlier':'later' ?> in the request approval sequence.">
+ <i class="fa-solid fa-arrow-<?= $direction==='up'?'up':'down' ?>"></i>
+</button>
+<?php endif; ?>
+<?php endforeach; ?>
 <button type="button" class="btn-icon js-action" aria-label="Remove step" title="Remove Step"
  data-bs-toggle="modal" data-bs-target="#actionModal"
  data-url="<?= site_url('admin/workflows/step/remove') ?>"
@@ -61,7 +89,7 @@ data-bs-target="#wf-<?= (int)$r['id'] ?>">
  data-title="Remove Approval Step"
  data-description="Remove this step from the draft. The remaining steps will be renumbered.">
  <i class="fa-solid fa-trash-can"></i>
-</button>
+</button></div>
 <?php endif; ?>
 </div>
 <?php endforeach; ?>

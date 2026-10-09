@@ -25,6 +25,7 @@
             <input type="hidden" name="id" value="">
             <input type="hidden" name="decision" value="">
             <input type="hidden" name="step_key" value="">
+            <input type="hidden" name="direction" value="">
             <input type="hidden" name="confirmed" value="no">
             <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
             <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger" type="submit">Continue</button></div>

@@ -345,6 +345,35 @@
         });
     }
 
+    // When editing an existing hardcopy request, fill the same predefined
+    // upsert fields used by Direct Hardcopy, not only the title.
+    function fillHardcopyRequestFromSelection() {
+        var form=document.querySelector('#editForm[data-hardcopy-upsert]');
+        if (!form || !form.querySelector('[data-hardcopy-existing]')) return;
+        var select=form.querySelector('[name="hardcopy_id"]');
+        var option=select?.options[select.selectedIndex];
+        if (!option?.dataset.hardcopy) return;
+        var record;
+        try { record=JSON.parse(option.dataset.hardcopy); }
+        catch(error) { return; }
+        [
+          'title','area_id','specific_id','asset_id','location_id','sequence_number',
+          'retention_start_date','retention_end_date'
+        ].forEach(function(name) {
+            var input=form.querySelector('[name="'+name+'"]');
+            if (input) input.value=record[name]??'';
+        });
+        var holder=form.querySelector('select[name="holder_id"]');
+        if (holder) holder.value=record.holder_id??'';
+        var retention=form.querySelector('[name="retention_enabled"]');
+        if (retention) retention.checked=Number(record.retention_enabled)===1;
+        updateHardcopyHierarchy();
+        updateHardcopyRetention();
+    }
+    document.addEventListener('change',function(event) {
+        if (event.target?.id==='reqHardcopy') fillHardcopyRequestFromSelection();
+    });
+
     function updateHardcopyRequestAction() {
         var form=document.querySelector('#editForm');
         if (!form || !form.querySelector('[data-hardcopy-existing]')) return;

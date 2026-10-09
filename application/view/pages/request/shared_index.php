@@ -21,7 +21,13 @@ foreach ($rows as $row) {
     $historyText[]=ucfirst($h['action']).' — '.$h['user_name'].' — '.$h['created_at'].
       (!empty($h['comments'])?' — '.$h['comments']:'');
  }
+ $routeText=[];
+ foreach ($approval_routes[$row['id']]??[] as $step) {
+     $routeText[]=$step['label'].' → '.$step['approver_label'].
+         ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
+ }
  $display=[
+ 'Approval Route'=>implode("\n",$routeText)?:'Not submitted yet',
  'Controlled File'=>isset($payload['controlled_file_id']) || isset($payload['revision_file_id'])
    ? 'Attached for approval' : 'Not attached',
  'Reference'=>$row['reference'],'Action'=>ucwords(str_replace('_',' ',$row['type'])),
@@ -108,6 +114,7 @@ href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>"><?= html_escape
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
 action="<?= site_url('my-requests/'.$tab.'/save') ?>"
+<?= $tab==='hardcopy'?'data-hardcopy-upsert':'' ?>
 data-confirm="Save request draft?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">New Request</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
@@ -136,7 +143,8 @@ data-confirm="Save request draft?">
     <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable>
       <option value="">Choose a document</option>
       <?php foreach ($hardcopy_options as $item): ?>
-        <option value="<?= (int)$item['id'] ?>"><?= html_escape($item['title']) ?></option>
+        <option value="<?= (int)$item['id'] ?>"
+          data-hardcopy="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"><?= html_escape($item['title']) ?></option>
       <?php endforeach; ?>
     </select>
   </div>

@@ -60,7 +60,9 @@ class Document_model extends CI_Model
         $c=$this->config($domain);
         $this->db->from($c['table'])->where('status', 'active');
         return $this->db->select($domain==='softcopy'
-              ? 'id,document_number,title' : 'id,title')
+              ? 'id,document_number,title' :
+              'id,title,area_id,specific_id,asset_id,location_id,sequence_number,
+               retention_enabled,retention_start_date,retention_end_date,holder_id')
             ->order_by('title')->get()->result_array();
     }
 
