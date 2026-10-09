@@ -7,9 +7,14 @@ echo 'CASE: sequential Workflow Builder user -> role routing'
 WF_ID=$(db "SELECT id FROM workflows WHERE workflow_key='softcopy_cancel'")
 test -n "$WF_ID"
 WORKFLOWS_BEFORE=$(db "SELECT COUNT(*) FROM workflows")
-post_form admin/workflows admin/workflows/save \
- 'workflow_key=unauthorized_new_flow' 'name=Not Allowed' \
- 'request_type=softcopy_cancel'
+TOKEN=$(token_for admin/workflows)
+DENY_STATUS=$(curl -sS -o /dev/null -w '%{http_code}' -b /tmp/pk-cookie \
+ --data-urlencode "pk_csrf_token=$TOKEN" --data-urlencode 'confirmed=yes' \
+ --data-urlencode 'workflow_key=unauthorized_new_flow' \
+ --data-urlencode 'name=Not Allowed' \
+ --data-urlencode 'request_type=softcopy_cancel' \
+ http://127.0.0.1:8089/admin/workflows/save)
+test "$DENY_STATUS" = 404
 test "$(db "SELECT COUNT(*) FROM workflows")" = "$WORKFLOWS_BEFORE"
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-wf-fixed.html \
  http://127.0.0.1:8089/admin/workflows

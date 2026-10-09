@@ -164,7 +164,7 @@ foreach (['move_workflow_step','validate_approval_graph','active_request_type'] 
 }
 if (strpos($requestSvc,"'superseded'")===FALSE ||
     strpos($requestCtl,'(new Request_service())->decide')===FALSE ||
-    strpos($wfView,'Request Approval Route')===FALSE) {
+    strpos($wfView,'Predefined Approval Workflows')===FALSE) {
     $fail[]='Sequential approver route not implemented.';
 }
 if (!is_file($root.'/tests/workflow_builder_smoke.sh')) {
@@ -202,8 +202,8 @@ if (strpos($wfUi,'New Workflow')!==FALSE ||
     strpos($wfCtl,'function save_workflow()')!==FALSE ||
     strpos($routes,"'admin/workflows/save'")!==FALSE)
     $fail[]='Predefined workflows must not be user creatable.';
-foreach (['data-transfer-source','data-transfer-origin','destination_area_id',
-    'destination_specific_id','destination_asset_id','destination_location_id',
+foreach (['data-transfer-source','data-transfer-origin',
+    'destination_<?= $level ?>_id','data-area-id','data-specific-id',
     'holder_name','recipient_id'] as $field) {
     if (strpos($trUi,$field)===FALSE) $fail[]='Transfer form missing: '.$field;
 }
