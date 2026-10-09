@@ -27,5 +27,34 @@ foreach (['login-shell','login-cover','login-panel','login-card','assets/images/
 foreach (['.login-page::before','.login-shell','.login-card','background-size: cover'] as $style) {
     if (strpos($css,$style)===FALSE) $fail[]='Full-cover login CSS missing: '.$style;
 }
+// Places navigation: one accessible expandable group and six distinct icon assets.
+$sidebar = file_get_contents($root.'/application/view/layout/sidebar_top_nav.php');
+foreach (['<details', '<summary', 'placesSidebarGroup', 'placesSidebarLinks',
+    'strpos($path, \'places/\') === 0', '$visible($place[\'module\'])',
+    'aria-current="page"'] as $token) {
+    if (strpos($sidebar, $token) === FALSE) {
+        $fail[] = 'Places dropdown markup missing: ' . $token;
+    }
+}
+preg_match_all("/'icon'\s*=>\s*'(fa-[a-z0-9-]+)'/", $sidebar, $foundPlaceIcons);
+if (count($foundPlaceIcons[1]) !== 6 ||
+    count(array_unique($foundPlaceIcons[1])) !== 6) {
+    $fail[] = 'Every Places child must have a unique Font Awesome icon.';
+}
+foreach (['area'=>'areas', 'specific'=>'specifics', 'asset'=>'assets',
+    'location'=>'locations', 'sequence'=>'sequences',
+    'softcopy-categories'=>'categories'] as $slug=>$module) {
+    if (strpos($sidebar, "'$slug' =>") === FALSE ||
+        strpos($sidebar, "'module' => '$module'") === FALSE) {
+        $fail[] = "Places route/permission mapping missing: $slug";
+    }
+}
+$sidebarCss = file_get_contents($root.'/public/assets/css/app.css');
+foreach (['.side-link-parent', '.side-submenu', '.sidebar-chevron',
+    '.sidebar-group[open]'] as $selector) {
+    if (strpos($sidebarCss, $selector) === FALSE) {
+        $fail[] = 'Places dropdown style missing: '.$selector;
+    }
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
