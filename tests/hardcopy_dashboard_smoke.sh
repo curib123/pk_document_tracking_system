@@ -6,7 +6,7 @@ echo 'CASE: personal dashboard greeting'
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-welcome.html http://127.0.0.1:8089/dashboard
 grep -Eq 'Good (morning|afternoon|evening),' /tmp/pk-welcome.html
 grep -q 'dashboardGreeting' /tmp/pk-welcome.html
-grep -q '<span>Test</span>' /tmp/pk-welcome.html
+grep -Eq '<span>Test!?<\/span>' /tmp/pk-welcome.html
 grep -q 'PK Document Control Workspace' /tmp/pk-welcome.html
 if grep -q '<span class="eyebrow">Overview</span>' /tmp/pk-welcome.html; then
     echo 'Old generic Dashboard heading remains.'
