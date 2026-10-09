@@ -72,13 +72,7 @@
     var pendingForm = null;
     var pendingParent = null;
     function showConfirmation() {
-        pendingParent = form.closest('.modal.show');
-        if (pendingParent) {
-            pendingParent.addEventListener('hidden.bs.modal', showConfirmation, {once: true});
-            window.bootstrap.Modal.getOrCreateInstance(pendingParent).hide();
-        } else {
-            showConfirmation();
-        }
+        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).show();
     }
     var confirmation = document.getElementById('confirmModal');
     if (confirmation) confirmation.addEventListener('hidden.bs.modal', function () {
@@ -86,6 +80,7 @@
             window.bootstrap.Modal.getOrCreateInstance(pendingParent).show();
         }
         pendingParent = null;
+        pendingForm = null;
     });
     document.addEventListener('submit', function (event) {
         var form = event.target;
@@ -94,7 +89,13 @@
         event.preventDefault();
         pendingForm = form;
         document.getElementById('confirmMessage').textContent = form.getAttribute('data-confirm') || 'Continue?';
-        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).show();
+        pendingParent = form.closest('.modal.show');
+        if (pendingParent) {
+            pendingParent.addEventListener('hidden.bs.modal', showConfirmation, {once: true});
+            window.bootstrap.Modal.getOrCreateInstance(pendingParent).hide();
+        } else {
+            showConfirmation();
+        }
     });
 
     var confirmButton = document.getElementById('confirmProceed');
