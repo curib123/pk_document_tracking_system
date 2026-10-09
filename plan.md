@@ -24,3 +24,5 @@ When creating a new workflow step, the user must provide the following details:
 3.Make sure each pages have neccesary filter dropdown
 
 4.fix the issues of roles and permission all issues in both client side and server side and also runtime conflixt issues
+
+5.first create account generate random password and when sign in on that auto show change password modal
