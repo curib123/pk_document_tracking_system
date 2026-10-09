@@ -10,6 +10,11 @@ class Administration_model extends CI_Model
             ->join('users leader', 'leader.id = u.leader_id', 'left')
             ->order_by('u.name')->get()->result_array();
     }
+    public function role_grants()
+    {
+        return $this->db->get('role_permissions')->result_array();
+    }
+
     public function roles()
     {
         return $this->db->order_by('name')->get('roles')->result_array();
