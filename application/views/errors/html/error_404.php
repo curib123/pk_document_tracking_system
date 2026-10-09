@@ -1,1 +1,0 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Request could not be completed</title></head><body><h1>Request could not be completed</h1><p>Check the URL or ask the administrator to inspect the private server logs.</p></body></html>
