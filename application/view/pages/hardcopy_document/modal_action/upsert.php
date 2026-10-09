@@ -6,10 +6,7 @@ $myHolderId = (int) ($user['id'] ?? 0);
 $myHolderName = trim((string) ($user['name'] ?? ''));
 
 ?>
-<div class="col-12">
-  <h3 class="fs-6 fw-bold mb-0">Document details</h3>
-  <p class="small text-secondary mb-0">Create or update the physical document's metadata and location.</p>
-</div>
+
 <div class="col-md-8">
   <label class="form-label" for="hardcopyTitle">Document Title</label>
   <input class="form-control" id="hardcopyTitle" name="title" required maxlength="255"
@@ -20,10 +17,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100"
     placeholder="e.g. PK-REC-01">
 </div>
-<div class="col-12 mt-3">
-  <h3 class="fs-6 fw-bold mb-0">Predefined physical location</h3>
-  <p class="small text-secondary mb-0">Choose existing records from Area, Specific, Asset and Location. Selecting a child automatically fills its parent hierarchy.</p>
-</div>
+
 <div class="col-md-6">
   <label class="form-label" for="hardcopyArea">Area <span class="optional-label">(optional)</span></label>
   <select class="form-select" id="hardcopyArea" name="area_id"
@@ -71,11 +65,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   </select>
   <small class="form-text">Only active, predefined locations are available.</small>
 </div>
-<div class="col-12">
-  <p class="form-text mb-0" id="hardcopyHierarchyHelp" role="status">
-    Choose any available location or filter locations by area, specific or asset.
-  </p>
-</div>
+
 <div class="col-12 mt-3">
   <h3 class="fs-6 fw-bold mb-0">Document custody</h3>
 </div>

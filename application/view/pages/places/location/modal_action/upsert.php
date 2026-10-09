@@ -17,10 +17,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
            maxlength="100" placeholder="e.g. ARC-SHELF-A" required>
     <div class="form-text">Code must be unique in all locations.</div>
 </div>
-<div class="col-12 mt-3">
-    <h3 class="fs-6 fw-bold mb-1">Predefined place hierarchy</h3>
-    <p class="text-secondary small mb-0">Choose existing records. Specifics are filtered by area, and assets by specific. Selecting an asset automatically selects its parents.</p>
-</div>
+
 <div class="col-md-4">
     <label class="form-label" for="location-area">Area</label>
     <select class="form-select" id="location-area" name="area_id"
