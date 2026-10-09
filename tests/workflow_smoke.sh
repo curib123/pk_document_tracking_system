@@ -125,6 +125,62 @@ post_form my-tasks/hardcopy my-tasks/hardcopy/decide "id=$RID" 'decision=approve
 HARD_ID=$(db "SELECT id FROM hardcopy_documents WHERE title='Physical Guide'")
 test -n "$HARD_ID"
 
+echo 'CASE: Hardcopy Request uses Direct form but waits for workflow approval'
+post_form places/area places/area/save 'name=Workflow Warehouse' 'active=1'
+WF_AREA=$(db "SELECT id FROM areas WHERE name='Workflow Warehouse'")
+post_form places/specific places/specific/save 'name=Workflow Cabinet' "area_id=$WF_AREA" 'active=1'
+WF_SPEC=$(db "SELECT id FROM specifics WHERE name='Workflow Cabinet'")
+post_form places/asset places/asset/save 'asset_number=WF-CABINET-2026' "specific_id=$WF_SPEC" 'active=1'
+WF_ASSET=$(db "SELECT id FROM assets WHERE asset_number='WF-CABINET-2026'")
+post_form places/location places/location/save 'name=Workflow Shelf' 'code=WF-LOC-2026' \
+    "area_id=$WF_AREA" "specific_id=$WF_SPEC" "asset_id=$WF_ASSET" 'active=1'
+WF_LOC=$(db "SELECT id FROM locations WHERE code='WF-LOC-2026'")
+test -n "$WF_LOC"
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-hardcopy-request-modal.html \
+    http://127.0.0.1:8089/my-requests/hardcopy
+grep -q 'hardcopy_document/modal_action/upsert' /tmp/pk-hardcopy-request-modal.html || \
+    grep -q 'data-hardcopy-level="location"' /tmp/pk-hardcopy-request-modal.html
+grep -q 'data-hardcopy-retention hidden' /tmp/pk-hardcopy-request-modal.html
+
+post_form my-requests/hardcopy my-requests/hardcopy/save \
+    'type=hardcopy_create' 'subject=Workflow Cabinet Request' \
+    'title=Workflow Controlled Hardcopy' 'sequence_number=WF-001' \
+    "area_id=$WF_AREA" "specific_id=$WF_SPEC" "asset_id=$WF_ASSET" \
+    "location_id=$WF_LOC" "holder_id=$REC_ID" 'retention_enabled=1' \
+    'retention_start_date=2026-10-09' 'retention_end_date=2027-10-09' \
+    'creation_reason=Plant document request'
+WF_REQ=$(db "SELECT id FROM requests WHERE type='hardcopy_create' AND JSON_UNQUOTE(JSON_EXTRACT(payload,'$.sequence_number'))='WF-001' ORDER BY id DESC LIMIT 1")
+test -n "$WF_REQ"
+test "$(db "SELECT COUNT(*) FROM hardcopy_documents WHERE title='Workflow Controlled Hardcopy'")" = 0
+post_form my-requests/hardcopy my-requests/hardcopy/submit "id=$WF_REQ"
+test "$(db "SELECT status FROM requests WHERE id=$WF_REQ")" = submitted
+post_form my-tasks/hardcopy my-tasks/hardcopy/decide "id=$WF_REQ" 'decision=approved'
+WF_DOC=$(db "SELECT id FROM hardcopy_documents WHERE title='Workflow Controlled Hardcopy'")
+test -n "$WF_DOC"
+test "$(db "SELECT CONCAT_WS(',',area_id,specific_id,asset_id,location_id,holder_id)
+    FROM hardcopy_documents WHERE id=$WF_DOC")" = "$WF_AREA,$WF_SPEC,$WF_ASSET,$WF_LOC,$REC_ID"
+test "$(db "SELECT retention_start_date FROM hardcopy_documents WHERE id=$WF_DOC")" = 2026-10-09
+test "$(db "SELECT retention_end_date FROM hardcopy_documents WHERE id=$WF_DOC")" = 2027-10-09
+test "$(db "SELECT creation_source FROM hardcopy_documents WHERE id=$WF_DOC")" = request
+test "$(db "SELECT source_request_id FROM hardcopy_documents WHERE id=$WF_DOC")" = "$WF_REQ"
+
+post_form my-requests/hardcopy my-requests/hardcopy/save \
+    'type=hardcopy_update' 'subject=Workflow controlled update' \
+    "hardcopy_id=$WF_DOC" 'title=Updated Workflow Hardcopy' \
+    'sequence_number=WF-001-REV' "area_id=$WF_AREA" "specific_id=$WF_SPEC" \
+    "asset_id=$WF_ASSET" "location_id=$WF_LOC" "holder_id=$REC_ID" \
+    'retention_enabled=0'
+UPDATE_REQ=$(db "SELECT id FROM requests WHERE type='hardcopy_update' ORDER BY id DESC LIMIT 1")
+test -n "$UPDATE_REQ"
+test "$(db "SELECT title FROM hardcopy_documents WHERE id=$WF_DOC")" = 'Workflow Controlled Hardcopy'
+post_form my-requests/hardcopy my-requests/hardcopy/submit "id=$UPDATE_REQ"
+post_form my-tasks/hardcopy my-tasks/hardcopy/decide "id=$UPDATE_REQ" 'decision=approved'
+test "$(db "SELECT title FROM hardcopy_documents WHERE id=$WF_DOC")" = 'Updated Workflow Hardcopy'
+test "$(db "SELECT retention_enabled FROM hardcopy_documents WHERE id=$WF_DOC")" = 0
+test "$(db "SELECT COUNT(*) FROM hardcopy_documents WHERE id=$WF_DOC AND retention_start_date IS NULL AND retention_end_date IS NULL")" = 1
+test "$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$WF_DOC")" = "$REC_ID"
+echo 'Hardcopy create/update proposals remained pending until approved and retained direct-form fields.'
+
 echo 'CASE: assignment'
 # Assignment is linked to softcopy_id; transfer is linked to hardcopy_id.
 post_form my-requests/document-assign my-requests/document-assign/save \
