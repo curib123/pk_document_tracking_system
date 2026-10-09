@@ -24,4 +24,20 @@ CodeIgniter 3 server-rendered rebuild started from the original master-branch em
 - No REST API. Page lists use SQL LIMIT/OFFSET and status/search query filters.
 - Approval runtime references `requests`, `workflow_versions`, `workflow_steps` and `workflow_history`, with a graph snapshot per submitted request.
 
-**Verification scope:** The restored schema and basic modules can be checked by the included tests. Full historical behavior (especially file revisions, transfer acceptance, and existing production data migration) needs additional integration QA before production deployment.
+## Implemented modules and effects
+
+- Red/navy SaaS layout, white topbar and content, responsive navigation and shared modal confirmation.
+- Original-table hardcopy and softcopy document registers with separate location/category references.
+- Six Places modules: area, specific, asset, location, sequence and softcopy category, with foreign-key relationships.
+- My Requests and My Tasks using the real workflow and audit tables. The Request View modal includes approval history and optional remarks.
+- Workflow Builder can create and clone versions, add and remove approval steps in draft, and publish immutable default versions. Approvers may be specific users, roles, requester or requester leader.
+- Final approval writes document creation/update/cancellation, disposal, assignments and access grants to their original tables.
+- A hardcopy transfer requires holder dispatch followed by named recipient acceptance; only acceptance changes the physical holder/location.
+- Softcopy document files are private under `storage/documents/` and downloads require authorization. The schema's `files` and `softcopy_revisions` tables hold approved direct revisions or pending revision uploads that become approved after the correct workflow ends.
+- Normal CI3 server form posts and SQL paginated DataTables; no REST or AJAX API endpoints.
+
+## Verification
+
+GitHub Actions validates PHP syntax, JS syntax, baseline schema and MariaDB integration using only a disposable `pk_dts_test` database. See `tests/smoke.sh`, `tests/workflow_smoke.sh` and `tests/places_smoke.sh` for exercised operations.
+
+**Production/cutover limitations:** Automated tests cannot prove real Windows XAMPP UX quality, file security against all formats, concurrent approvals, full migration of historical attachment bytes, environment-specific access rights, or backup/restore recovery. The earlier incomplete PR #14 using invented tables must not be merged. Validate against the existing database backup, preserve original data, and complete a local browser audit before production replacement.
