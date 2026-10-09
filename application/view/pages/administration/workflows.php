@@ -38,7 +38,10 @@ $dt_create = $may('create') ? 'Create Workflow Version' : '';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Workflow Builder</h1>
 <p>Build versioned approval sequences. In-use workflow versions cannot have their steps changed.</p></div></div>
-<?php $this->load->view('components/datatable'); ?>
+<?php $this->load->view('components/datatable', compact(
+    'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+)); ?>
 <div class="workspace-card mt-4">
     <div class="workspace-card-header"><strong>Approval Steps</strong><p class="text-secondary small mb-0">Configure approvers in order, using a user, role, requester leader or requester.</p></div>
     <div class="accordion accordion-flush" id="workflowAccordion">
