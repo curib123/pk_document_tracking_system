@@ -126,5 +126,33 @@ if (strpos($docView, "pages/hardcopy_document/modal_action/upsert")===FALSE ||
 if (!is_file($root.'/tests/hardcopy_dashboard_smoke.sh')) {
     $fail[]='Hardcopy/Dashboard integration tests missing.';
 }
+// Controlled files must be reviewable only by the assigned approver.
+$softcopyFields=file_get_contents($root.'/application/view/pages/request/softcopy_fields.php');
+$hcFields=file_get_contents($root.'/application/view/pages/hardcopy_document/modal_action/upsert.php');
+$requestSvc=file_get_contents($root.'/application/services/request/request_service.php');
+$softSvc=file_get_contents($root.'/application/services/softcopy/softcopy_operation_service.php');
+$fileModel=file_get_contents($root.'/application/models/File_model.php');
+$fileCtl=file_get_contents($root.'/application/controllers/Files.php');
+$routeCode=file_get_contents($root.'/application/config/routes.php');
+foreach (['controlled_file_id','revision_file_id'] as $key) {
+    if (strpos($requestSvc,$key)===FALSE) $fail[]='Missing pending file reference: '.$key;
+}
+foreach (['stage_creation','stage_revision'] as $stage) {
+    if (strpos(file_get_contents($root.'/application/services/files/file_service.php'),$stage)===FALSE)
+        $fail[]='Missing upload staging: '.$stage;
+}
+if (strpos($softcopyFields,'Controlled File')===FALSE ||
+    strpos($softSvc,'controlled_file_id')===FALSE ||
+    strpos($fileModel,'review_file(')===FALSE ||
+    strpos($fileCtl,'function review(')===FALSE ||
+    strpos($routeCode,'files/review/')===FALSE) {
+    $fail[]='Controlled File create/revise upload and review flow incomplete.';
+}
+if (strpos($hcFields,'data-hardcopy-retention hidden')===FALSE ||
+    strpos($placeJs,'updateHardcopyRetention')===FALSE ||
+    strpos($reqView, 'hardcopy_document/modal_action/upsert')===FALSE ||
+    strpos($requestSvc, 'validate_hardcopy_proposal')===FALSE) {
+    $fail[]='Conditional retention or shared hardcopy request form missing.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";

@@ -98,6 +98,8 @@
             if (target.id === 'stepForm') updateStepApprover();
             if (target.hasAttribute('data-location-upsert')) updateLocationHierarchy();
             if (target.hasAttribute('data-hardcopy-upsert')) updateHardcopyHierarchy();
+            updateHardcopyRequestAction();
+            updateHardcopyRetention();
         }
 
         var view = event.target.closest('.js-view');
@@ -222,7 +224,7 @@
             date_received: ['softcopy_revise'],
             date_released: ['softcopy_revise'],
             page_number: ['softcopy_revise'],
-            revision_attachment: ['softcopy_revise']
+            revision_attachment: ['softcopy_create','softcopy_revise']
         };
         Object.keys(required).forEach(function (name) {
             var field = select.form.querySelector('[name="' + name + '"]');
@@ -236,6 +238,9 @@
             var direct = select.form.dataset.softcopyDirect === 'yes';
             field.required = show && (name !== 'revision_attachment' || direct)
                 && name !== 'series_number';
+            if (name === 'revision_attachment' && !direct && !select.form.querySelector('[name="id"]')?.value) {
+                field.required = show;
+            }
         });
     }
     document.addEventListener('change', function (event) {
@@ -324,6 +329,54 @@
 
     // Hardcopy Upsert uses predefined pk_dts references; all relationships
     // are rechecked by the PHP model/service regardless of browser input.
+    function updateHardcopyRetention() {
+        document.querySelectorAll('#editForm [name="retention_enabled"]').forEach(function (toggle) {
+            var form=toggle.form;
+            if (!form) return;
+            var checked=toggle.checked;
+            form.querySelectorAll('[data-hardcopy-retention]').forEach(function (section) {
+                section.hidden=!checked;
+                section.querySelectorAll('input').forEach(function (field) {
+                    field.disabled=!checked;
+                    field.required=checked;
+                    if (!checked) field.value='';
+                });
+            });
+        });
+    }
+
+    function updateHardcopyRequestAction() {
+        var form=document.querySelector('#editForm');
+        if (!form || !form.querySelector('[data-hardcopy-existing]')) return;
+        var type=form.querySelector('#reqType')?.value;
+        var existing=form.querySelector('[data-hardcopy-existing]');
+        var details=form.querySelector('[data-hardcopy-details]');
+        var requiresExisting=type==='hardcopy_update' || type==='disposal';
+        existing.hidden=!requiresExisting;
+        existing.querySelectorAll('select').forEach(function (field) {
+            field.disabled=!requiresExisting;
+            field.required=requiresExisting;
+        });
+        var showDetails=type==='hardcopy_create' || type==='hardcopy_update';
+        details.hidden=!showDetails;
+        details.querySelectorAll('input, select, textarea').forEach(function (field) {
+            if (field.name==='holder_id' && field.type==='hidden') return;
+            field.disabled=!showDetails;
+            if (!showDetails) field.required=false;
+        });
+        if (showDetails) {
+            var title=details.querySelector('[name="title"]');
+            if (title) title.required=true;
+        }
+        updateHardcopyRetention();
+    }
+    document.addEventListener('change', function (e) {
+        if (e.target?.name==='retention_enabled') updateHardcopyRetention();
+        if (e.target?.id==='reqType') updateHardcopyRequestAction();
+    });
+    updateHardcopyRetention();
+    updateHardcopyRequestAction();
+
     function updateHardcopyHierarchy(changed) {
         var form=document.querySelector('#editForm[data-hardcopy-upsert]');
         if (!form) return;

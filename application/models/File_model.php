@@ -3,6 +3,38 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class File_model extends CI_Model
 {
+    /** Controlled request files: owner or actively assigned approver only. */
+    public function review_file($requestId,$viewer)
+    {
+        $r=$this->db->get_where('requests',['id'=>(int)$requestId])->row_array();
+        if (!$r || !in_array($r['type'],['softcopy_create','softcopy_revise'],TRUE)) return NULL;
+        $allowed=(int)$r['requested_by']===(int)$viewer['id'];
+        if (!$allowed && $r['status']==='submitted') {
+            $steps=$this->db->get_where('workflow_steps',[
+                'request_id'=>(int)$requestId,'status'=>'active'
+            ])->result_array();
+            foreach ($steps as $step) {
+                $a=json_decode($step['assignment'],TRUE)?:[];
+                if ((int)($step['assigned_user_id']??0)===(int)$viewer['id'] ||
+                   (($a['type']??'')==='role' &&
+                    (int)($a['value']??0)===(int)$viewer['role_id'])) {
+                    $allowed=TRUE; break;
+                }
+            }
+        }
+        if (!$allowed) return NULL;
+        $data=json_decode($r['payload'],TRUE)?:[];
+        $create=$r['type']==='softcopy_create';
+        $fileId=(int)($data[$create?'controlled_file_id':'revision_file_id']??0);
+        if (!$fileId) return NULL;
+        return $this->db->get_where('files',[
+            'id'=>$fileId,'uploaded_by'=>(int)$r['requested_by'],
+            'purpose'=>$create?'creation':'revision','domain'=>'softcopy',
+            'document_id'=>$create?NULL:(int)$r['softcopy_id'],
+            'status'=>'pending'
+        ])->row_array();
+    }
+
     public function approved_file($id)
     {
         return $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')

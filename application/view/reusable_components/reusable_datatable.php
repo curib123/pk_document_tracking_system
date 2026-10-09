@@ -103,6 +103,10 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                                         data-bs-toggle="modal" data-bs-target="#uploadModal"
                                         data-document-id="<?= (int) $dt_row['id'] ?>"
                                         data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                <?php elseif ($button['type'] === 'review'): ?>
+                                    <a class="btn-icon" title="Review Controlled File" aria-label="Review Controlled File"
+                                       target="_blank" rel="noopener"
+                                       href="<?= site_url($button['url']) ?>"><i class="fa-solid fa-file-circle-check"></i></a>
                                 <?php elseif ($button['type'] === 'download'): ?>
                                     <a class="btn-icon" title="Download File" aria-label="Download File" href="<?= site_url($button['url']) ?>"><i class="fa-solid fa-download"></i></a>
                                 <?php elseif ($button['type'] === 'action'): ?>

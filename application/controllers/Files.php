@@ -28,6 +28,28 @@ class Files extends MY_Controller
         redirect('documents/softcopy');
     }
 
+    public function review($requestId)
+    {
+        $this->authenticate();
+        $file=$this->File_model->review_file((int)$requestId,$this->user);
+        if (!$file) { show_error('Controlled file is not available for your review.',403); return; }
+        if (!preg_match('/^[a-f0-9]{64}$/',(string)$file['storage_name'])) {
+            show_404(); return;
+        }
+        $path=PK_ROOT.'/storage/documents/'.$file['storage_name'];
+        if (!is_file($path)) { show_404(); return; }
+        $inline=in_array($file['mime_type'],['application/pdf','image/png','image/jpeg','text/plain'],TRUE);
+        header('Content-Type: '.($inline?$file['mime_type']:'application/octet-stream'));
+        header('Cache-Control: private, no-store');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Security-Policy: sandbox');
+        header('Content-Disposition: '.($inline?'inline':'attachment').'; filename="'.
+            str_replace(['"', "\\r", "\\n"],'_',$file['original_name']).'"');
+        header('Content-Length: '.filesize($path));
+        readfile($path);
+        exit;
+    }
+
     public function download($id)
     {
         $this->authenticate();

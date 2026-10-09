@@ -96,6 +96,10 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
            'softcopyDirect'=>TRUE
        ]); ?>
    <?php else: ?>
+       <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
+           'options'=>$options,'user'=>$user,'is_administrator'=>$is_administrator
+       ]); ?>
+   <?php if (FALSE): ?>
    <?php foreach ($cfg['fields'] as $field):
     $references=['area_id'=>'areas','specific_id'=>'specifics','asset_id'=>'assets',
       'location_id'=>'locations','category_id'=>'categories','holder_id'=>'users'];
@@ -120,6 +124,7 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
     <?php endif; endforeach; ?>
     <div class="col-12"><label class="form-label" for="creationReason">Reason <span class="optional-label">(optional)</span></label>
      <textarea class="form-control" id="creationReason" name="creation_reason" rows="2"></textarea></div>
+   <?php endif; ?>
    <?php endif; ?>
  </div></div>
  <input type="hidden" name="confirmed" value="no">

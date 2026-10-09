@@ -81,6 +81,74 @@ class Document_service
         }
         $this->ci->db->trans_commit();
     }
+    /**
+     * Shared validation for direct Hardcopy and Hardcopy Request submissions.
+     * The pending request stores a proposal; only the final approver applies it.
+     */
+    public function validate_hardcopy_proposal(&$payload,$owner,$documentId=0)
+    {
+        $ownerId=(int)$owner['id'];
+        $admin=strcasecmp((string)($owner['role']??''),'Administrator')===0;
+        $title=trim((string)($payload['title']??''));
+        if ($title==='' || mb_strlen($title)>255)
+            throw new DomainException('Hardcopy title is required (maximum 255 characters).');
+        $data=['title'=>$title];
+        foreach (['area_id','specific_id','asset_id','location_id'] as $field)
+            $data[$field]=!empty($payload[$field])?(int)$payload[$field]:NULL;
+        $this->validate_hardcopy_location($data,(int)$documentId);
+        $sequence=trim((string)($payload['sequence_number']??''));
+        if (mb_strlen($sequence)>100) throw new DomainException('Sequence number is too long.');
+        $data['sequence_number']=$sequence?:NULL;
+        $data['retention_enabled']=!empty($payload['retention_enabled'])?1:0;
+        $data['retention_start_date']=$data['retention_enabled']
+            ? $this->valid_date($payload['retention_start_date']??'') : NULL;
+        $data['retention_end_date']=$data['retention_enabled']
+            ? $this->valid_date($payload['retention_end_date']??'') : NULL;
+        if ($data['retention_enabled'] && (!$data['retention_start_date'] ||
+            !$data['retention_end_date'] ||
+            $data['retention_end_date']<$data['retention_start_date'])) {
+            throw new DomainException('Retention dates must be valid and ordered.');
+        }
+        $existing=$documentId?$this->ci->Document_model->find('hardcopy',$documentId):NULL;
+        if ($documentId && (!$existing || $existing['status']!=='active'))
+            throw new DomainException('Hardcopy is not available for update.');
+        if ($existing && !$admin && (int)$existing['holder_id']!==$ownerId)
+            throw new DomainException('Only the current holder may request this update.');
+        $holder=$admin
+            ? ((int)($payload['holder_id']??0)?:($existing['holder_id']??$ownerId))
+            : $ownerId;
+        if (!$this->ci->db->get_where('users',['id'=>$holder,'active'=>1])->row_array())
+            throw new DomainException('Select an active holder.');
+        $data['holder_id']=$holder;
+        foreach ($data as $field=>$value) $payload[$field]=$value;
+        return $data;
+    }
+
+    public function apply_hardcopy_request($type,$payload,$ownerId,$approverId,$requestId,$documentId)
+    {
+        $owner=$this->ci->db->select('u.*,r.name AS role')->from('users u')
+            ->join('roles r','r.id=u.role_id')->where('u.id',$ownerId)->limit(1)
+            ->get()->row_array();
+        if (!$owner || !$owner['active']) throw new DomainException('Requester is no longer active.');
+        $data=$this->validate_hardcopy_proposal($payload,$owner,$documentId);
+        if ($type==='hardcopy_create') {
+            $data['created_by']=(int)$ownerId;
+            $data['creation_source']='request';
+            $data['creation_reason']=trim((string)($payload['creation_reason']??$payload['remarks']??''));
+            $data['source_request_id']=(int)$requestId;
+            if (!$this->ci->db->insert('hardcopy_documents',$data))
+                throw new DomainException('Cannot create hardcopy from approved request.');
+            $newId=(int)$this->ci->db->insert_id();
+            $this->ci->db->where('id',$requestId)->update('requests',['hardcopy_id'=>$newId]);
+            return ['document_id'=>$newId];
+        }
+        if ($type!=='hardcopy_update' || !$documentId)
+            throw new DomainException('Invalid approved hardcopy action.');
+        $this->ci->db->where('id',$documentId)->where('status','active')
+            ->update('hardcopy_documents',$data);
+        return ['document_id'=>(int)$documentId];
+    }
+
     private function valid_date($value)
     {
         $value=trim((string)$value);

@@ -10,63 +10,67 @@ class File_service
         $this->ci =& get_instance();
     }
 
-    // Pending uploads belong to a request until its complete approval.
-    // They are never downloadable while pending.
-    public function stage_revision($docId, $actorId, $upload)
+    // Controlled files are private while awaiting approval.
+    // A new document has no document ID until the final approval is applied.
+    public function stage_creation($actorId,$upload)
     {
-        $document = $this->ci->db->get_where('softcopy_documents', [
-            'id' => (int) $docId, 'status' => 'active'
+        return $this->stage_controlled(NULL,$actorId,$upload,'creation');
+    }
+
+    public function stage_revision($docId,$actorId,$upload)
+    {
+        $document=$this->ci->db->get_where('softcopy_documents',[
+            'id'=>(int)$docId,'status'=>'active'
         ])->row_array();
         if (!$document) throw new DomainException('Select an active softcopy document.');
-        if (!is_array($upload) || (int)($upload['error'] ?? -1) !== UPLOAD_ERR_OK ||
+        return $this->stage_controlled((int)$docId,$actorId,$upload,'revision');
+    }
+
+    private function stage_controlled($docId,$actorId,$upload,$purpose)
+    {
+        if (!is_array($upload) || (int)($upload['error']??-1)!==UPLOAD_ERR_OK ||
             empty($upload['tmp_name']) || !is_uploaded_file($upload['tmp_name'])) {
-            throw new DomainException('Attach a valid revision file.');
+            throw new DomainException('A controlled file is required for Create and Revise.');
         }
-        $size = (int) ($upload['size'] ?? 0);
-        if ($size < 1 || $size > 15 * 1024 * 1024) {
-            throw new DomainException('Revision attachment must be 15 MB or smaller.');
+        $size=(int)($upload['size']??0);
+        if ($size<1 || $size>15*1024*1024) {
+            throw new DomainException('Controlled file must be between 1 byte and 15 MB.');
         }
-        $name = preg_replace('/[^a-zA-Z0-9._ -]/', '_',
-            basename(str_replace('\\', '/', (string) ($upload['name'] ?? ''))));
-        $extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
-        $allow = [
-            'pdf' => ['application/pdf'], 'txt' => ['text/plain'],
-            'png' => ['image/png'], 'jpg' => ['image/jpeg'],
-            'jpeg' => ['image/jpeg'],
-            'docx' => ['application/zip',
-                'application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
-            'xlsx' => ['application/zip',
-                'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
+        $name=preg_replace('/[^a-zA-Z0-9._ -]/','_',
+            basename(str_replace('\\',(string)'/',(string)($upload['name']??''))));
+        $ext=strtolower(pathinfo($name,PATHINFO_EXTENSION));
+        $allowed=[
+            'pdf'=>['application/pdf'],'txt'=>['text/plain'],
+            'png'=>['image/png'],'jpg'=>['image/jpeg'],'jpeg'=>['image/jpeg'],
+            'docx'=>['application/zip','application/vnd.openxmlformats-officedocument.wordprocessingml.document'],
+            'xlsx'=>['application/zip','application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
         ];
-        $mime = (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
-        if (!$name || strlen($name) > 255 || !isset($allow[$extension]) ||
-            !in_array($mime, $allow[$extension], TRUE)) {
-            throw new DomainException('Revision file type is not supported.');
+        $mime=(new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
+        if (!$name || strlen($name)>255 || !isset($allowed[$ext]) ||
+            !in_array($mime,$allowed[$ext],TRUE)) {
+            throw new DomainException('Unsupported controlled file format.');
         }
-        $directory = PK_ROOT . '/storage/documents';
-        if (!is_dir($directory) && !mkdir($directory, 0700, TRUE)) {
-            throw new DomainException('Private storage directory unavailable.');
+        $directory=PK_ROOT.'/storage/documents';
+        if (!is_dir($directory) && !mkdir($directory,0700,TRUE)) {
+            throw new DomainException('Private file storage is unavailable.');
         }
-        $storage = bin2hex(random_bytes(32));
-        $path = $directory . '/' . $storage;
-        if (!move_uploaded_file($upload['tmp_name'], $path)) {
-            throw new DomainException('Could not store pending revision file.');
+        $storage=bin2hex(random_bytes(32));
+        $path=$directory.'/'.$storage;
+        if (!move_uploaded_file($upload['tmp_name'],$path)) {
+            throw new DomainException('Could not store the controlled file.');
         }
-        chmod($path, 0600);
-        $saved = $this->ci->db->insert('files', [
-            'original_name' => $name, 'storage_name' => $storage,
-            'size' => $size, 'mime_type' => $mime,
-            'fingerprint' => hash_file('sha256', $path),
-            'extension' => $extension,
-            'purpose' => 'revision', 'domain' => 'softcopy',
-            'document_id' => $docId, 'uploaded_by' => $actorId,
-            'status' => 'pending'
+        chmod($path,0600);
+        $saved=$this->ci->db->insert('files',[
+            'original_name'=>$name,'storage_name'=>$storage,'size'=>$size,
+            'mime_type'=>$mime,'fingerprint'=>hash_file('sha256',$path),
+            'extension'=>$ext,'purpose'=>$purpose,'domain'=>'softcopy',
+            'document_id'=>$docId,'uploaded_by'=>(int)$actorId,'status'=>'pending'
         ]);
         if (!$saved) {
             @unlink($path);
-            throw new DomainException('Could not record revision attachment.');
+            throw new DomainException('Unable to record controlled file.');
         }
-        return (int) $this->ci->db->insert_id();
+        return (int)$this->ci->db->insert_id();
     }
 
     public function save_revision($docId, $actorId, $upload, $post)

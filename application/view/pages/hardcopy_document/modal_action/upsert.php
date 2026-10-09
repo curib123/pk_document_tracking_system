@@ -104,11 +104,11 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
       name="retention_enabled" value="1"> Track retention period
   </label>
 </div>
-<div class="col-md-6">
+<div class="col-md-6" data-hardcopy-retention hidden>
   <label class="form-label" for="hardcopyRetentionStart">Retention Start <span class="optional-label">(optional)</span></label>
   <input class="form-control" id="hardcopyRetentionStart" type="date" name="retention_start_date">
 </div>
-<div class="col-md-6">
+<div class="col-md-6" data-hardcopy-retention hidden>
   <label class="form-label" for="hardcopyRetentionEnd">Retention End <span class="optional-label">(optional)</span></label>
   <input class="form-control" id="hardcopyRetentionEnd" type="date" name="retention_end_date">
 </div>

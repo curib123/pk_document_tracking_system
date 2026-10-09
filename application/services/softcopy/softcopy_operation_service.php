@@ -65,13 +65,47 @@ class Softcopy_operation_service
                 'source_request_id'=>$requestId
             ])) throw new DomainException('Unable to create the softcopy document.');
             $newId=(int)$db->insert_id();
+            $fileId=(int)($payload['controlled_file_id']??0);
+            $file=$db->get_where('files',[
+                'id'=>$fileId,'domain'=>'softcopy','document_id'=>NULL,
+                'uploaded_by'=>$ownerId,'purpose'=>'creation','status'=>'pending'
+            ])->row_array();
+            if (!$file) throw new DomainException('A pending controlled file is required to create a softcopy.');
+            $today=date('Y-m-d');
+            $revisionLevel=trim((string)($payload['new_revision_level']??''))?:'00';
+            $effective=(string)($payload['effective_date']??'');
+            $received=(string)($payload['date_received']??'');
+            $released=(string)($payload['date_released']??'');
+            foreach (['effective'=>&$effective,'received'=>&$received,'released'=>&$released] as &$date) {
+                $parsed=DateTime::createFromFormat('!Y-m-d',$date);
+                if (!$parsed || $parsed->format('Y-m-d')!==$date) $date=$today;
+            }
+            unset($date);
+            if (!$db->insert('softcopy_revisions',[
+                'document_id'=>$newId,'revision_number'=>1,
+                'reason'=>$reason?:trim((string)($payload['subject']??'')),
+                'effective_date'=>$effective,'page_number'=>max(1,(int)($payload['page_number']??1)),
+                'series_number'=>$series?:NULL,'document_title'=>$title,
+                'previous_revision_level'=>NULL,'new_revision_level'=>$revisionLevel,
+                'previous_effective_date'=>NULL,'new_effective_date'=>$effective,
+                'date_received'=>$received,'date_released'=>$released,
+                'approval_date'=>$today,'file_id'=>$fileId,
+                'uploaded_by'=>$ownerId,'approved_by'=>$actorId
+            ])) throw new DomainException('Unable to register initial controlled revision.');
+            $revisionId=(int)$db->insert_id();
+            $db->where('id',$newId)->update('softcopy_documents',[
+                'current_revision_id'=>$revisionId
+            ]);
+            $db->where('id',$fileId)->update('files',[
+                'document_id'=>$newId,'status'=>'approved','approved_by'=>$actorId,
+                'approved_at'=>date('Y-m-d H:i:s')
+            ]);
             if ($requestId!==NULL) {
                 $db->where('id',$requestId)->update('requests',['softcopy_id'=>$newId]);
-            }
-            if ($requestId===NULL) {
+            } else {
                 $this->audit($newId,'new','active','direct_create',$actorId,$reason);
             }
-            return ['document_id'=>$newId];
+            return ['document_id'=>$newId,'file_id'=>$fileId,'revision_id'=>$revisionId];
         }
 
         $rows=$db->query('SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE',[(int)$softcopyId])

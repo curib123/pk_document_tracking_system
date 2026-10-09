@@ -17,15 +17,26 @@ for field in type subject softcopy_id title document_number series_number \
 done
 grep -q 'Approve Directly' /tmp/pk-direct-form.html
 
-post_form documents/softcopy documents/softcopy/direct \
-    'type=softcopy_create' 'subject=Direct quality record' \
-    'title=Direct Control Checklist' 'document_number=DIRECT-QA-001' \
-    'series_number=SER-2026' "category_id=$CAT_ID" 'remarks=Immediate authorized creation'
+# Creation must include a controlled file, approved immediately.
+printf 'Direct initial controlled document\n' > /tmp/pk-direct-create.txt
+DIRECT_TOKEN=$(token_for documents/softcopy)
+curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \
+    -F "pk_csrf_token=$DIRECT_TOKEN" -F 'confirmed=yes' \
+    -F 'type=softcopy_create' -F 'subject=Direct quality record' \
+    -F 'title=Direct Control Checklist' -F 'document_number=DIRECT-QA-001' \
+    -F 'series_number=SER-2026' -F "category_id=$CAT_ID" \
+    -F 'remarks=Immediate authorized creation' \
+    -F 'revision_attachment=@/tmp/pk-direct-create.txt;type=text/plain' \
+    http://127.0.0.1:8089/documents/softcopy/direct
 DIRECT_ID=$(db "SELECT id FROM softcopy_documents WHERE document_number='DIRECT-QA-001'")
 test -n "$DIRECT_ID"
 test "$(db "SELECT creation_source FROM softcopy_documents WHERE id=$DIRECT_ID")" = direct
 test "$(db "SELECT series_number FROM softcopy_documents WHERE id=$DIRECT_ID")" = SER-2026
 test "$(db "SELECT status FROM softcopy_documents WHERE id=$DIRECT_ID")" = active
+FIRST_FILE=$(db "SELECT f.id FROM files f
+    WHERE f.document_id=$DIRECT_ID AND f.purpose='creation' AND f.status='approved'")
+test -n "$FIRST_FILE"
+test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE document_id=$DIRECT_ID AND file_id=$FIRST_FILE")" = 1
 test "$(db "SELECT COUNT(*) FROM status_history WHERE domain='softcopy'
   AND document_id=$DIRECT_ID AND action='direct_create'")" = 1
 test "$(db "SELECT COUNT(*) FROM requests")" = "$before_requests"
@@ -51,6 +62,13 @@ test "$(db "SELECT status FROM files WHERE id=$DIRECT_FILE")" = approved
 test "$(db "SELECT COUNT(*) FROM status_history WHERE domain='softcopy'
   AND document_id=$DIRECT_ID AND action='direct_revise'")" = 1
 test "$(db "SELECT COUNT(*) FROM requests")" = "$before_requests"
+
+# Missing controlled creation file must not create a document.
+post_form documents/softcopy documents/softcopy/direct \
+    'type=softcopy_create' 'subject=Missing file' \
+    'title=Missing controlled file' 'document_number=NO-CONTROLLED-FILE' \
+    "category_id=$CAT_ID"
+test "$(db "SELECT COUNT(*) FROM softcopy_documents WHERE document_number='NO-CONTROLLED-FILE'")" = 0
 
 # Invalid/missing revision attachment must not change the approved revision.
 post_form documents/softcopy documents/softcopy/direct \

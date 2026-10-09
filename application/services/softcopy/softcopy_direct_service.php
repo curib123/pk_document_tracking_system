@@ -44,14 +44,18 @@ class Softcopy_direct_service
         if ($type!=='softcopy_create' && $docId<=0) {
             throw new DomainException('Select an existing softcopy document.');
         }
-        if ($type==='softcopy_revise') {
-            if ($payload['title']==='' || mb_strlen($payload['title'])>255) {
+        if (in_array($type,['softcopy_create','softcopy_revise'],TRUE)) {
+            if ($type==='softcopy_revise' &&
+                ($payload['title']==='' || mb_strlen($payload['title'])>255)) {
                 throw new DomainException('Proposed document title is required for a revision.');
             }
-            $service->validate_revision($payload);
+            if ($type==='softcopy_revise') $service->validate_revision($payload);
             require_once APPPATH.'services/files/file_service.php';
-            $stagedFileId=(new File_service())->stage_revision($docId,$actorId,$attachment);
-            $payload['revision_file_id']=$stagedFileId;
+            $files=new File_service();
+            $stagedFileId=$type==='softcopy_create'
+                ? $files->stage_creation($actorId,$attachment)
+                : $files->stage_revision($docId,$actorId,$attachment);
+            $payload[$type==='softcopy_create'?'controlled_file_id':'revision_file_id']=$stagedFileId;
         }
 
         $this->ci->db->trans_begin();

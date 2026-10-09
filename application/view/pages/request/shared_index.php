@@ -22,6 +22,8 @@ foreach ($rows as $row) {
       (!empty($h['comments'])?' — '.$h['comments']:'');
  }
  $display=[
+ 'Controlled File'=>isset($payload['controlled_file_id']) || isset($payload['revision_file_id'])
+   ? 'Attached for approval' : 'Not attached',
  'Reference'=>$row['reference'],'Action'=>ucwords(str_replace('_',' ',$row['type'])),
  'Subject'=>$payload['subject']??'','Remarks'=>$payload['remarks']??'',
  'Requester'=>$row['requester_name'],'Status'=>$row['status'],
@@ -41,9 +43,22 @@ foreach ($rows as $row) {
  'date_received'=>$payload['date_received']??'',
  'date_released'=>$payload['date_released']??'',
  'page_number'=>$payload['page_number']??1,
+ 'area_id'=>$payload['area_id']??'', 'specific_id'=>$payload['specific_id']??'',
+ 'asset_id'=>$payload['asset_id']??'', 'location_id'=>$payload['location_id']??'',
+ 'sequence_number'=>$payload['sequence_number']??'',
+ 'holder_id'=>$payload['holder_id']??'', 'holder_name'=>$user['name']??'',
+ 'retention_enabled'=>$payload['retention_enabled']??0,
+ 'retention_start_date'=>$payload['retention_start_date']??'',
+ 'retention_end_date'=>$payload['retention_end_date']??'',
+ 'creation_reason'=>$payload['creation_reason']??'',
  'destination_location_id'=>$payload['destination_location_id']??''
  ];
  $buttons=[['type'=>'view']];
+ if (in_array($row['type'],['softcopy_create','softcopy_revise'],TRUE) &&
+     !empty($payload[$row['type']==='softcopy_create'?'controlled_file_id':'revision_file_id']) &&
+     (!$task || $row['status']==='submitted')) {
+    $buttons[]=['type'=>'review','url'=>'files/review/'.$row['id']];
+ }
  $canEdit=isset($permissions['*']) || !empty($permissions['requests']['edit']);
  if (!$task && in_array($row['status'],['draft','returned'],TRUE)) {
     if ($canEdit) $buttons[]=['type'=>'edit'];
@@ -103,6 +118,34 @@ data-confirm="Save request draft?">
         'softcopy_options'=>$softcopy_options,'category_options'=>$category_options,
         'softcopyDirect'=>FALSE
     ]); ?>
+<?php elseif ($tab==='hardcopy'): ?>
+  <div class="col-md-6">
+    <label class="form-label" for="reqType">Request Action</label>
+    <select class="form-select" name="type" id="reqType" required>
+       <option value="hardcopy_create">Create Hardcopy</option>
+       <option value="hardcopy_update">Update Hardcopy</option>
+       <option value="disposal">Dispose Hardcopy</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label" for="reqSubject">Subject / Reason</label>
+    <input class="form-control" id="reqSubject" name="subject" maxlength="255" required>
+  </div>
+  <div class="col-12" data-hardcopy-existing>
+    <label class="form-label" for="reqHardcopy">Existing Hardcopy Document</label>
+    <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable>
+      <option value="">Choose a document</option>
+      <?php foreach ($hardcopy_options as $item): ?>
+        <option value="<?= (int)$item['id'] ?>"><?= html_escape($item['title']) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+  <div class="col-12" data-hardcopy-details>
+    <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
+      'options'=>$hardcopy_form_options,'user'=>$user,
+      'is_administrator'=>$is_administrator
+    ]); ?>
+  </div>
 <?php else: ?>
 
 <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>

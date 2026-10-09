@@ -42,19 +42,35 @@ for t in softcopy_create softcopy_revise softcopy_cancel hardcopy_create hardcop
 done
 
 echo 'CASE: create softcopy'
-# Create a softcopy through request approval.
-post_form my-requests/softcopy my-requests/softcopy/save \
-    'type=softcopy_create' 'subject=QA Softcopy Create' \
-    'title=Control Checklist' 'document_number=QA-001' "category_id=$CAT_ID"
+# Create requires an uploaded controlled file that the approver must review.
+printf 'Original controlled document awaiting sign-off\n' >/tmp/pk-create-controlled.txt
+NEW_TOKEN=$(token_for my-requests/softcopy)
+curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \
+    -F "pk_csrf_token=$NEW_TOKEN" -F 'confirmed=yes' \
+    -F 'type=softcopy_create' -F 'subject=QA Softcopy Create' \
+    -F 'title=Control Checklist' -F 'document_number=QA-001' \
+    -F "category_id=$CAT_ID" \
+    -F 'revision_attachment=@/tmp/pk-create-controlled.txt;type=text/plain' \
+    http://127.0.0.1:8089/my-requests/softcopy/save
 RID=$(db "SELECT id FROM requests WHERE type='softcopy_create' ORDER BY id DESC LIMIT 1")
 test -n "$RID"
+PENDING_CREATE_ID=$(db "SELECT id FROM files WHERE purpose='creation' AND status='pending' ORDER BY id DESC LIMIT 1")
+test -n "$PENDING_CREATE_ID"
+test "$(db "SELECT COUNT(*) FROM softcopy_documents WHERE document_number='QA-001'")" = 0
 post_form my-requests/softcopy my-requests/softcopy/submit "id=$RID"
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-controlled-review.txt "http://127.0.0.1:8089/files/review/$RID"
+cmp /tmp/pk-create-controlled.txt /tmp/pk-controlled-review.txt
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-review-action.html http://127.0.0.1:8089/my-tasks/softcopy
+grep -q "files/review/$RID" /tmp/pk-review-action.html
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = submitted
 post_form my-tasks/softcopy my-tasks/softcopy/decide "id=$RID" 'decision=approved'
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = completed
 SOFT_ID=$(db "SELECT id FROM softcopy_documents WHERE document_number='QA-001'")
 test -n "$SOFT_ID"
 test "$(db "SELECT COUNT(*) FROM workflow_history WHERE request_id=$RID")" -ge 2
+test "$(db "SELECT status FROM files WHERE id=$PENDING_CREATE_ID")" = approved
+test "$(db "SELECT document_id FROM files WHERE id=$PENDING_CREATE_ID")" = "$SOFT_ID"
+test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE document_id=$SOFT_ID AND file_id=$PENDING_CREATE_ID")" = 1
 
 echo 'CASE: direct private revision upload'
 # Private files use the original files + softcopy_revisions tables, not a new file schema.

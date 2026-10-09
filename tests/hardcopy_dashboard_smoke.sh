@@ -32,6 +32,8 @@ grep -q "data-specific-id=\"$HC_SPEC\"" /tmp/pk-hardcopy-admin.html
 grep -q "data-area-id=\"$HC_AREA\"" /tmp/pk-hardcopy-admin.html
 grep -q "data-asset-id=\"$HC_ASSET\"" /tmp/pk-hardcopy-admin.html
 grep -q 'Administrators may assign a different active holder' /tmp/pk-hardcopy-admin.html
+grep -q 'data-hardcopy-retention hidden' /tmp/pk-hardcopy-admin.html
+grep -q 'name="retention_enabled"' /tmp/pk-hardcopy-admin.html
 
 ADMIN_ID=$(db "SELECT id FROM users WHERE username='test_admin'")
 post_form documents/hardcopy documents/hardcopy/save \

@@ -27,7 +27,17 @@ class Request_service
           'effective_date'=>trim((string)($post['effective_date']??'')),
           'date_received'=>trim((string)($post['date_received']??'')),
           'date_released'=>trim((string)($post['date_released']??'')),
-          'page_number'=>max(1,(int)($post['page_number']??1))
+          'page_number'=>max(1,(int)($post['page_number']??1)),
+          'area_id'=>(int)($post['area_id']??0),
+          'specific_id'=>(int)($post['specific_id']??0),
+          'asset_id'=>(int)($post['asset_id']??0),
+          'location_id'=>(int)($post['location_id']??0),
+          'sequence_number'=>trim((string)($post['sequence_number']??'')),
+          'holder_id'=>(int)($post['holder_id']??0),
+          'retention_enabled'=>!empty($post['retention_enabled'])?1:0,
+          'retention_start_date'=>trim((string)($post['retention_start_date']??'')),
+          'retention_end_date'=>trim((string)($post['retention_end_date']??'')),
+          'creation_reason'=>trim((string)($post['creation_reason']??''))
         ];
         $softcopyId=(int)($post['softcopy_id']??0);
         $hardcopyId=(int)($post['hardcopy_id']??0);
@@ -42,34 +52,44 @@ class Request_service
             throw new DomainException('Select an access expiry date.');
         if ($type==='transfer' && !$payload['destination_location_id'])
             throw new DomainException('Choose the destination location.');
-        $revisionFile=NULL;
-        if ($type==='softcopy_revise') {
-            if (!$this->ci->db->get_where('softcopy_documents',[
-                'id'=>$softcopyId, 'status'=>'active'
-            ])->row_array()) throw new DomainException('Choose an active softcopy to revise.');
-            if ($payload['new_revision_level']==='' ||
-                strlen($payload['new_revision_level'])>30)
-                throw new DomainException('Enter the proposed revision level.');
-            foreach (['effective_date','date_received','date_released'] as $key) {
-                $date=$payload[$key];
-                $parsed=DateTime::createFromFormat('!Y-m-d',$date);
-                if (!$parsed || $parsed->format('Y-m-d')!==$date)
-                    throw new DomainException('Enter valid revision dates.');
+        $fileId=NULL;
+        $fileField=$type==='softcopy_create'?'controlled_file_id':'revision_file_id';
+        if (in_array($type,['softcopy_create','softcopy_revise'],TRUE)) {
+            if ($type==='softcopy_revise') {
+                if (!$this->ci->db->get_where('softcopy_documents',[
+                    'id'=>$softcopyId,'status'=>'active'
+                ])->row_array()) throw new DomainException('Choose an active softcopy to revise.');
+                require_once APPPATH.'services/softcopy/softcopy_operation_service.php';
+                (new Softcopy_operation_service())->validate_revision($payload);
             }
             if (!empty($attachment['name'])) {
                 require_once APPPATH.'services/files/file_service.php';
-                $revisionFile=(new File_service())->stage_revision(
-                    $softcopyId,(int)$user['id'],$attachment
-                );
+                $files=new File_service();
+                $fileId=$type==='softcopy_create'
+                    ? $files->stage_creation((int)$user['id'],$attachment)
+                    : $files->stage_revision($softcopyId,(int)$user['id'],$attachment);
+            }
+            if ($id) {
+                $existing=$this->ci->Request_model->request($id);
+                $old=json_decode($existing['payload']??'{}',TRUE)?:[];
+                if (!$existing || (int)$existing['requested_by']!==(int)$user['id'] ||
+                    !in_array($existing['status'],['draft','returned'],TRUE) ||
+                    $existing['type']!==$type) {
+                    throw new DomainException('Only your matching draft may be edited.');
+                }
+                $payload[$fileField]=$fileId?:((int)($old[$fileField]??0));
+            } elseif ($fileId) {
+                $payload[$fileField]=$fileId;
             }
         }
-        if ($id && $type==='softcopy_revise') {
-            $existing=$this->ci->Request_model->request($id);
-            $old=json_decode($existing['payload']??'{}',TRUE)?:[];
-            $payload['revision_file_id']=$revisionFile ?:
-                (int)($old['revision_file_id']??0);
-        } elseif ($revisionFile) {
-            $payload['revision_file_id']=$revisionFile;
+        if (in_array($type,['hardcopy_create','hardcopy_update'],TRUE)) {
+            $payload['holder_id']=strcasecmp((string)$user['role'],'Administrator')===0
+                ? ($payload['holder_id']?:$user['id'])
+                : (int)$user['id'];
+            if ($payload['title']==='') throw new DomainException('Hardcopy title is required.');
+            // Match the direct hardcopy modal's validation before queuing approval.
+            require_once APPPATH.'services/documents/document_service.php';
+            (new Document_service())->validate_hardcopy_proposal($payload,$user,$hardcopyId);
         }
 
         $data=['type'=>$type,'payload'=>json_encode($payload,JSON_UNESCAPED_UNICODE),
@@ -100,15 +120,26 @@ class Request_service
                 !in_array($r['status'],['draft','returned'],TRUE) ||
                 !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE))
                 throw new DomainException('Request cannot be submitted.');
-            if ($r['type']==='softcopy_revise') {
+            if (in_array($r['type'],['softcopy_create','softcopy_revise'],TRUE)) {
                 $payload=json_decode($r['payload'],TRUE)?:[];
+                $creation=$r['type']==='softcopy_create';
                 $file=$this->ci->db->get_where('files',[
-                    'id'=>(int)($payload['revision_file_id']??0),
-                    'document_id'=>(int)$r['softcopy_id'],
+                    'id'=>(int)($payload[$creation?'controlled_file_id':'revision_file_id']??0),
+                    'document_id'=>$creation?NULL:(int)$r['softcopy_id'],
                     'uploaded_by'=>(int)$r['requested_by'],
-                    'status'=>'pending', 'purpose'=>'revision'
+                    'status'=>'pending','domain'=>'softcopy',
+                    'purpose'=>$creation?'creation':'revision'
                 ])->row_array();
-                if (!$file) throw new DomainException('Upload a revision attachment before submitting.');
+                if (!$file) throw new DomainException('Upload a controlled file for review before submitting.');
+            }
+            if (in_array($r['type'],['hardcopy_create','hardcopy_update'],TRUE)) {
+                require_once APPPATH.'services/documents/document_service.php';
+                $payload=json_decode($r['payload'],TRUE)?:[];
+                $owner=$this->ci->db->select('u.*,r.name AS role')->from('users u')
+                    ->join('roles r','r.id=u.role_id')
+                    ->where('u.id',$r['requested_by'])->get()->row_array();
+                if (!$owner) throw new DomainException('Requester is no longer active.');
+                (new Document_service())->validate_hardcopy_proposal($payload,$owner,(int)$r['hardcopy_id']);
             }
             $workflow=$this->ci->Request_model->active_workflow($r['type']);
             if (!$workflow) throw new DomainException('A published default workflow is required.');
@@ -191,14 +222,10 @@ class Request_service
             );
         }
         if ($type==='hardcopy_create') {
-            if ($title==='') throw new DomainException('A hardcopy title is required.');
-            $this->ci->db->insert('hardcopy_documents',[
-                'title'=>$title,'created_by'=>$owner,'holder_id'=>$owner,
-                'creation_source'=>'request','creation_reason'=>$reason,'source_request_id'=>$id
-            ]);
-            $newId=(int)$this->ci->db->insert_id();
-            $this->ci->db->where('id',$id)->update('requests',['hardcopy_id'=>$newId]);
-            return ['document_id'=>$newId];
+            require_once APPPATH.'services/documents/document_service.php';
+            return (new Document_service())->apply_hardcopy_request(
+                'hardcopy_create',$payload,$owner,$actor,$id,0
+            );
         }
         if ($type==='softcopy_revise') {
             require_once APPPATH.'services/softcopy/softcopy_operation_service.php';
@@ -207,12 +234,10 @@ class Request_service
             );
         }
         if ($type==='hardcopy_update') {
-            if ($title==='') throw new DomainException('Updated hardcopy title is required.');
-            $this->ci->db->where('id',$hard)->where('status','active')
-                ->update('hardcopy_documents',['title'=>$title]);
-            if (!$this->ci->db->affected_rows())
-                throw new DomainException('Hardcopy was not updated; it may have changed.');
-            return ['document_id'=>$hard];
+            require_once APPPATH.'services/documents/document_service.php';
+            return (new Document_service())->apply_hardcopy_request(
+                'hardcopy_update',$payload,$owner,$actor,$id,$hard
+            );
         }
         if ($type==='softcopy_cancel') {
             require_once APPPATH.'services/softcopy/softcopy_operation_service.php';

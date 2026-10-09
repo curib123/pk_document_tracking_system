@@ -42,7 +42,15 @@ class Requests extends MY_Controller
              'softcopy_options'=>$this->Document_model->options('softcopy'),
              'hardcopy_options'=>$this->Document_model->options('hardcopy'),
              'category_options'=>$this->Place_model->options('categories'),
-             'location_options'=>$this->Place_model->options('locations')
+             'location_options'=>$this->Place_model->options('locations'),
+             'hardcopy_form_options'=>[
+               'areas'=>$this->Place_model->options('areas'),
+               'specifics'=>$this->Place_model->options('specifics'),
+               'assets'=>$this->Place_model->options('assets'),
+               'locations'=>$this->Document_model->hardcopy_locations(),
+               'users'=>$this->Document_model->active_users()
+             ],
+             'is_administrator'=>strcasecmp((string)$this->user['role'],'Administrator')===0
            ]);
     }
     public function mine($tab) { $this->listing($tab,FALSE); }
