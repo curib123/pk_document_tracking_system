@@ -32,7 +32,7 @@ LOC_ID=$(db "SELECT id FROM locations WHERE name='QA Archive'")
 REC_ID=$(db "SELECT id FROM users WHERE username='recipient_test'")
 ADMIN_ROLE=$(db "SELECT id FROM roles WHERE name='Administrator'")
 
-for t in softcopy_create hardcopy_create transfer assignment access disposal softcopy_cancel hardcopy_update; do
+for t in softcopy_create softcopy_revise hardcopy_create transfer assignment access disposal softcopy_cancel hardcopy_update; do
     db "INSERT INTO workflows(workflow_key,name,request_type,active,created_by)
         VALUES ('qa_$t','QA $t','$t',1,$ADMIN_ID);
         INSERT INTO workflow_versions(workflow_id,version_number,status,is_default,graph,created_by,published_at)
