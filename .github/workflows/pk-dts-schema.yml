@@ -21,6 +21,16 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Archive tracked source for reproducible verification
+        if: matrix.php == '8.2'
+        run: git archive --format=tar HEAD > "$RUNNER_TEMP/pk-dts-source.tar"
+      - name: Retain exact source without credentials or runtime files
+        if: matrix.php == '8.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pk-dts-source
+          path: ${{ runner.temp }}/pk-dts-source.tar
+          retention-days: 3
       - uses: shivammathur/setup-php@v2
         with:
           php-version: ${{ matrix.php }}
@@ -50,12 +60,15 @@ jobs:
           --health-retries=20
     env:
       PK_BROWSER_TEST: '1'
-      PK_BROWSER_ASSETS: ${{ runner.temp }}/pk-browser-assets
-      PK_BROWSER_RESULTS: ${{ runner.temp }}/pk-browser-results
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Resolve runtime paths on the allocated runner
+        shell: bash
+        run: |
+          echo "PK_BROWSER_ASSETS=$RUNNER_TEMP/pk-browser-assets" >> "$GITHUB_ENV"
+          echo "PK_BROWSER_RESULTS=$RUNNER_TEMP/pk-browser-results" >> "$GITHUB_ENV"
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
