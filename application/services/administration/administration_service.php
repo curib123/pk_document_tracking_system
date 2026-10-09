@@ -5,94 +5,183 @@ class Administration_service
     private $ci;
     public function __construct() { $this->ci =& get_instance(); }
 
-    private function safe_username($value)
+    private function permission_ids($roleId)
     {
-        if (!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$value))
-            throw new DomainException('Invalid username.');
-        return $value;
+        return array_column($this->ci->db->select('permission_id')->get_where(
+            'role_permissions', ['role_id'=>(int)$roleId])->result_array(), 'permission_id');
     }
-    public function save_user($post,$actorId)
+
+    private function account_actor($actorId)
     {
-        $id=(int)($post['id']??0);
-        $data=[
-            'first_name'=>trim((string)($post['first_name']??'')),
-            'middle_name'=>trim((string)($post['middle_name']??''))?:NULL,
-            'last_name'=>trim((string)($post['last_name']??'')),
-            'username'=>$this->safe_username(trim((string)($post['username']??''))),
-            'position_title'=>trim((string)($post['position_title']??'')),
-            'role_id'=>(int)($post['role_id']??0),
-            'leader_id'=>!empty($post['leader_id'])?(int)$post['leader_id']:NULL,
-            'active'=>!empty($post['active'])?1:0
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $actor = $this->ci->Identity_model->active_user((int)$actorId);
+        if (!$actor) throw new DomainException('Your account is no longer active.');
+        return $actor;
+    }
+
+    private function ensure_delegation($actor, $role, $permissions = NULL)
+    {
+        require_once APPPATH.'services/administration/account_policy.php';
+        if (!Account_policy::can_delegate($actor['role'], $role['name'],
+            $this->permission_ids($actor['role_id']),
+            $permissions ?? $this->permission_ids($role['id']))) {
+            throw new DomainException('You cannot manage or delegate privileges beyond your own role.');
+        }
+    }
+
+    public function save_user($post, $actorId)
+    {
+        $actor = $this->account_actor($actorId);
+        $id = (int)($post['id'] ?? 0);
+        if (!$this->ci->Permission_model->allowed($actor, 'users', $id ? 'edit' : 'add'))
+            throw new DomainException('User management permission is required.');
+        $data = [
+            'username'=>trim((string)($post['username'] ?? '')),
+            'first_name'=>trim((string)($post['first_name'] ?? '')),
+            'middle_name'=>trim((string)($post['middle_name'] ?? '')) ?: NULL,
+            'last_name'=>trim((string)($post['last_name'] ?? '')),
+            'position_title'=>trim((string)($post['position_title'] ?? '')),
+            'role_id'=>(int)($post['role_id'] ?? 0),
+            'leader_id'=>!empty($post['leader_id']) ? (int)$post['leader_id'] : NULL,
+            'active'=>!empty($post['active']) ? 1 : 0
         ];
-        if ($data['first_name']==='' || $data['last_name']==='' || $data['position_title']==='')
-            throw new DomainException('First name, last name and position are required.');
-        if (!$this->ci->db->get_where('roles',['id'=>$data['role_id'],'active'=>1])->row_array())
-            throw new DomainException('Choose an active role.');
-        if ($id && $data['leader_id']===$id) throw new DomainException('A user cannot be their own leader.');
-        $password=(string)($post['password']??'');
-        if ($password!=='') {
-            if (strlen($password)<12) throw new DomainException('Password must be at least 12 characters.');
-            $data['password_hash']=password_hash($password,PASSWORD_DEFAULT);
-            $data['require_password_change']=1;
-        } elseif (!$id) throw new DomainException('A new user requires an initial password.');
+        if (!preg_match('/^[a-zA-Z0-9._-]{3,80}$/', $data['username']))
+            throw new DomainException('Use a username with 3 to 80 letters, numbers, dots, underscores or hyphens.');
+        foreach (['first_name'=>100,'middle_name'=>100,'last_name'=>100,'position_title'=>150] as $field=>$max) {
+            if (($field !== 'middle_name' && $data[$field] === '') || mb_strlen((string)$data[$field]) > $max)
+                throw new DomainException('Enter a valid '.str_replace('_',' ',$field).'.');
+        }
+        $temporary = NULL;
         $this->ci->db->trans_begin();
-        if ($id) {
-            $old=$this->ci->db->get_where('users',['id'=>$id])->row_array();
-            if (!$old) throw new DomainException('User not found.');
-            $admin=$this->ci->db->get_where('roles',['name'=>'Administrator'])->row_array();
-            if ($admin && $old['role_id']==$admin['id'] && $old['active'] &&
-                ($data['role_id']!=$admin['id'] || !$data['active'])) {
-                $remaining=$this->ci->db->from('users')->where('role_id',$admin['id'])
-                    ->where('active',1)->where('id !=',$id)->count_all_results();
-                if (!$remaining) throw new DomainException('Cannot remove the last administrator.');
+        try {
+            // Serialize role/user changes, including last-administrator checks.
+            $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
+            $role = $this->ci->db->get_where('roles',['id'=>$data['role_id'],'active'=>1])->row_array();
+            if (!$role) throw new DomainException('Choose an active role.');
+            $this->ensure_delegation($actor, $role);
+            $old = $id ? $this->ci->db->query('SELECT * FROM users WHERE id=? FOR UPDATE',[$id])->row_array() : NULL;
+            if ($id && !$old) throw new DomainException('User not found.');
+            if ($old) {
+                $oldRole = $this->ci->db->get_where('roles',['id'=>$old['role_id']])->row_array();
+                $this->ensure_delegation($actor, $oldRole);
+                if ($id === (int)$actorId && (!$data['active'] || (int)$old['role_id'] !== $data['role_id']))
+                    throw new DomainException('You cannot disable your own account or change your own role.');
+                if (isset($post['version']) && (int)$post['version'] !== (int)$old['version'])
+                    throw new DomainException('This account changed. Reload it before saving.');
+                if (strcasecmp($oldRole['name'],'Administrator') === 0 && $old['active'] &&
+                    (!$data['active'] || $data['role_id'] !== (int)$old['role_id'])) {
+                    $others = $this->ci->db->from('users')->where('role_id',$old['role_id'])
+                        ->where('active',1)->where('id !=',$id)->count_all_results();
+                    if (!$others) throw new DomainException('Cannot remove the last administrator.');
+                }
             }
-            $data['session_version']=(int)$old['session_version']+1;
-            $this->ci->db->where('id',$id)->update('users',$data);
-        } else $this->ci->db->insert('users',$data);
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback();throw new DomainException('Could not save user. Check unique username.');
+            $seen = $id ? [$id=>TRUE] : [];
+            $leader = $data['leader_id'];
+            while ($leader) {
+                if (isset($seen[$leader]) || count($seen) >= 100)
+                    throw new DomainException('The reporting line contains a cycle or is too deep.');
+                $seen[$leader] = TRUE;
+                $row = $this->ci->db->get_where('users',['id'=>$leader,'active'=>1])->row_array();
+                if (!$row) throw new DomainException('Choose an active leader.');
+                $leader = (int)($row['leader_id'] ?? 0);
+            }
+            if (!$id || !empty($post['reset_password'])) {
+                require_once APPPATH.'services/authentication/authentication_service.php';
+                $temporary = Authentication_service::temporary_password();
+                $data['password_hash'] = password_hash($temporary, PASSWORD_DEFAULT);
+                $data['require_password_change'] = 1;
+            }
+            if ($id) {
+                $data['session_version'] = (int)$old['session_version'] + 1;
+                $data['version'] = (int)$old['version'] + 1;
+                $this->ci->db->where('id',$id)->update('users',$data);
+            } else {
+                $this->ci->db->insert('users',$data);
+                $id = (int)$this->ci->db->insert_id();
+            }
+            if ($this->ci->db->trans_status() === FALSE)
+                throw new DomainException('Could not save user. Check the unique username and relationships.');
+            $this->ci->db->trans_commit();
+            // Returned only to the authorized POST response, never a log/session/DB plaintext field.
+            return ['id'=>$id,'username'=>$data['username'],'temporary_password'=>$temporary];
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Could not save the account.');
         }
-        $this->ci->db->trans_commit();
     }
-    public function deactivate_user($id,$actorId)
+
+    public function deactivate_user($id, $actorId)
     {
-        if ($id===$actorId) throw new DomainException('You cannot deactivate yourself.');
-        $user=$this->ci->db->get_where('users',['id'=>$id])->row_array();
-        if (!$user) throw new DomainException('User not found.');
-        $admin=$this->ci->db->get_where('roles',['name'=>'Administrator'])->row_array();
-        if ($admin && $user['role_id']==$admin['id']) {
-            $others=$this->ci->db->from('users')->where('role_id',$admin['id'])
-                ->where('active',1)->where('id !=',$id)->count_all_results();
-            if (!$others) throw new DomainException('Last administrator cannot be deactivated.');
-        }
-        $this->ci->db->where('id',$id)->set('active',0)
-            ->set('session_version','session_version+1',FALSE)->update('users');
-    }
-    public function save_role($post)
-    {
-        $id=(int)($post['id']??0);
-        $name=trim((string)($post['name']??''));
-        if ($name==='' || mb_strlen($name)>120) throw new DomainException('Enter a role name.');
-        $ids=array_values(array_unique(array_filter(array_map('intval',(array)($post['permissions']??[])))));
+        $actor = $this->account_actor($actorId);
+        if (!$this->ci->Permission_model->allowed($actor,'users','delete'))
+            throw new DomainException('User deactivation permission is required.');
+        if ((int)$id === (int)$actorId) throw new DomainException('You cannot deactivate yourself.');
         $this->ci->db->trans_begin();
-        if ($id) {
-            $existing=$this->ci->db->get_where('roles',['id'=>$id])->row_array();
-            if (!$existing) throw new DomainException('Role not found.');
-            if ($existing['name']==='Administrator') throw new DomainException('Administrator privileges are fixed.');
-            $this->ci->db->where('id',$id)->update('roles',['name'=>$name,'active'=>!empty($post['active'])?1:0]);
-        } else {
-            $this->ci->db->insert('roles',['name'=>$name,'active'=>1]);
-            $id=(int)$this->ci->db->insert_id();
+        try {
+            $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
+            $user = $this->ci->db->query('SELECT * FROM users WHERE id=? FOR UPDATE',[(int)$id])->row_array();
+            if (!$user) throw new DomainException('User not found.');
+            $role = $this->ci->db->get_where('roles',['id'=>$user['role_id']])->row_array();
+            $this->ensure_delegation($actor,$role);
+            if (strcasecmp($role['name'],'Administrator') === 0 && $user['active']) {
+                $others = $this->ci->db->from('users')->where('role_id',$user['role_id'])
+                    ->where('active',1)->where('id !=',(int)$id)->count_all_results();
+                if (!$others) throw new DomainException('Last administrator cannot be deactivated.');
+            }
+            $this->ci->db->where('id',(int)$id)->set('active',0)
+                ->set('session_version','session_version+1',FALSE)->set('version','version+1',FALSE)->update('users');
+            if ($this->ci->db->trans_status() === FALSE) throw new DomainException('Could not deactivate account.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Could not deactivate account.');
         }
-        $this->ci->db->where('role_id',$id)->delete('role_permissions');
-        foreach ($ids as $perm) {
-            if ($this->ci->db->get_where('permissions',['id'=>$perm])->row_array())
-                $this->ci->db->insert('role_permissions',['role_id'=>$id,'permission_id'=>$perm]);
+    }
+
+    public function save_role($post, $actorId)
+    {
+        $actor = $this->account_actor($actorId);
+        $id = (int)($post['id'] ?? 0);
+        if (!$this->ci->Permission_model->allowed($actor,'roles',$id ? 'edit' : 'add'))
+            throw new DomainException('Role management permission is required.');
+        $name = trim((string)($post['name'] ?? ''));
+        if ($name === '' || mb_strlen($name) > 120 || strcasecmp($name,'Administrator') === 0)
+            throw new DomainException('Enter a non-reserved role name, up to 120 characters.');
+        $ids = array_values(array_unique(array_filter(array_map('intval',(array)($post['permissions'] ?? [])))));
+        $this->ensure_delegation($actor, ['id'=>$id,'name'=>$name], $ids);
+        $this->ci->db->trans_begin();
+        try {
+            $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
+            if ($ids && $this->ci->db->where_in('id',$ids)->count_all_results('permissions') !== count($ids))
+                throw new DomainException('One or more selected permissions do not exist.');
+            if ($id) {
+                $old = $this->ci->db->get_where('roles',['id'=>$id])->row_array();
+                if (!$old) throw new DomainException('Role not found.');
+                if (strcasecmp($old['name'],'Administrator') === 0)
+                    throw new DomainException('Administrator privileges are fixed.');
+                $this->ensure_delegation($actor,$old);
+                $this->ci->db->where('id',$id)->update('roles',[
+                    'name'=>$name,'active'=>!empty($post['active'])?1:0,'version'=>(int)$old['version']+1
+                ]);
+            } else {
+                $this->ci->db->insert('roles',['name'=>$name,'active'=>!empty($post['active'])?1:0]);
+                $id = (int)$this->ci->db->insert_id();
+            }
+            $this->ci->db->where('role_id',$id)->delete('role_permissions');
+            foreach ($ids as $permission) $this->ci->db->insert('role_permissions',[
+                'role_id'=>$id,'permission_id'=>$permission
+            ]);
+            $this->ci->db->where('role_id',$id)->set('session_version','session_version+1',FALSE)->update('users');
+            if ($this->ci->db->trans_status() === FALSE) throw new DomainException('Role update failed. Check duplicate names.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Could not save the role.');
         }
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback();throw new DomainException('Role or permission update failed.');
-        }
-        $this->ci->db->trans_commit();
     }
     // Workflow definitions are seeded and fixed; only their versioned approval
     // steps may be edited. Never add arbitrary new request-type workflows.
@@ -100,194 +189,17 @@ class Administration_service
     {
         throw new DomainException('Workflow definitions are predefined. Edit approval steps in an existing seeded workflow.');
     }
-    public function save_workflow_step($post)
+    // Workflow graph validation and active_request_type publication locking live
+    // in one domain service, separate from account and role administration.
+    private function workflow_builder()
     {
-        $versionId=(int)($post['workflow_version_id']??0);
-        $version=$this->ci->db->get_where('workflow_versions',['id'=>$versionId,'status'=>'draft'])->row_array();
-        if (!$version) throw new DomainException('Only draft workflow versions can be edited.');
-        $graph=json_decode($version['graph'],TRUE);
-        if (!is_array($graph)) $graph=['steps'=>[]];
-        $name=trim((string)($post['name']??''));
-        $type=(string)($post['approver_type']??'');
-        $value=$type==='user'?(int)($post['approver_user_id']??0):
-            ($type==='role'?(int)($post['approver_role_id']??0):0);
-        if ($name==='' || mb_strlen($name)>120 ||
-            !in_array($type,['user','role','requester_leader','requester'],TRUE))
-            throw new DomainException('Choose a valid approver type and step name (maximum 120 characters).');
-        if ($type==='user' && (!$value || !$this->ci->db->get_where('users',[
-            'id'=>$value,'active'=>1
-        ])->row_array())) throw new DomainException('Choose an active user approver.');
-        if ($type==='role' && (!$value || !$this->ci->db->get_where('roles',[
-            'id'=>$value,'active'=>1
-        ])->row_array())) throw new DomainException('Choose an active approver role.');
-        $editKey=trim((string)($post['step_key']??''));
-        if ($editKey!=='' && !preg_match('/^step_[0-9]+$/',$editKey)) {
-            throw new DomainException('Invalid approval step selected for editing.');
-        }
-        $key=$editKey?:('step_'.(count($graph['steps']??[])+1));
-        $target='Requester account';
-        if ($type==='user') {
-            $assigned=$this->ci->db->select('first_name,last_name')->get_where('users',['id'=>$value])->row_array();
-            $target=trim($assigned['first_name'].' '.$assigned['last_name']);
-        } elseif ($type==='role') {
-            $assigned=$this->ci->db->get_where('roles',['id'=>$value])->row_array();
-            $target=$assigned['name'];
-        } elseif ($type==='requester_leader') {
-            $target='Requester leader';
-        }
-        $step=['key'=>$key,'name'=>$name,'approver'=>[
-            'type'=>$type,'value'=>in_array($type,['user','role'],TRUE)?$value:NULL,
-            'label'=>$target
-        ]];
-        if ($editKey!=='') {
-            $found=FALSE;
-            foreach ($graph['steps'] as $i=>$existing) {
-                if (($existing['key']??'')===$editKey) {
-                    $graph['steps'][$i]=$step;
-                    $found=TRUE;
-                    break;
-                }
-            }
-            if (!$found) throw new DomainException('Draft approval step was not found.');
-        } else {
-            $graph['steps'][]=$step;
-        }
-        $this->ci->db->where('id',$versionId)->update('workflow_versions',[
-            'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
-        ]);
+        require_once APPPATH.'services/workflow/workflow_builder_service.php';
+        return new Workflow_builder_service();
     }
-    public function remove_workflow_step($post)
-    {
-        $versionId=(int)($post['id']??0);
-        $key=(string)($post['step_key']??'');
-        $version=$this->ci->db->get_where('workflow_versions',[
-            'id'=>$versionId,'status'=>'draft'
-        ])->row_array();
-        if (!$version || !preg_match('/^step_[0-9]+$/',$key))
-            throw new DomainException('Select a valid draft workflow step.');
-        $graph=json_decode($version['graph'],TRUE);
-        if (!is_array($graph) || !isset($graph['steps']) || !is_array($graph['steps']))
-            throw new DomainException('Workflow graph is invalid.');
-        $original=count($graph['steps']);
-        $steps=array_values(array_filter($graph['steps'],function($step)use($key){
-            return ($step['key']??'')!==$key;
-        }));
-        if (count($steps)===$original) throw new DomainException('Approval step was not found.');
-        foreach($steps as $i=>&$step) $step['key']='step_'.($i+1);
-        unset($step);
-        $graph['steps']=$steps;
-        $this->ci->db->where('id',$versionId)->update('workflow_versions',[
-            'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
-        ]);
-    }
-
-    /**
-     * Draft-only step positioning. Routing follows array order, so the current
-     * request always passes to the next unresolved approver in this sequence.
-     */
-    public function move_workflow_step($post)
-    {
-        $id=(int)($post['id']??0);
-        $key=(string)($post['step_key']??'');
-        $direction=(string)($post['direction']??'');
-        if (!in_array($direction,['up','down'],TRUE) || !preg_match('/^step_[0-9]+$/',$key))
-            throw new DomainException('Choose a valid step and direction.');
-        $version=$this->ci->db->get_where('workflow_versions',[
-            'id'=>$id,'status'=>'draft'
-        ])->row_array();
-        if (!$version) throw new DomainException('Only draft approval routes can be reordered.');
-        $graph=json_decode($version['graph'],TRUE);
-        if (!isset($graph['steps']) || !is_array($graph['steps']))
-            throw new DomainException('Approval graph is invalid.');
-        $index=NULL;
-        foreach ($graph['steps'] as $i=>$step) {
-            if (($step['key']??'')===$key) {$index=$i;break;}
-        }
-        if ($index===NULL) throw new DomainException('Approval step was not found.');
-        $swap=$index+($direction==='up'?-1:1);
-        if ($swap<0 || $swap>=count($graph['steps']))
-            throw new DomainException('Approval step is already at the end of the route.');
-        [$graph['steps'][$index],$graph['steps'][$swap]]=
-            [$graph['steps'][$swap],$graph['steps'][$index]];
-        foreach ($graph['steps'] as $i=>&$step) $step['key']='step_'.($i+1);
-        unset($step);
-        $this->ci->db->where('id',$id)->where('status','draft')
-            ->update('workflow_versions',['graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)]);
-    }
-
-    private function validate_approval_graph($graph)
-    {
-        $steps=$graph['steps']??NULL;
-        if (!is_array($steps) || !$steps || count($steps)>30)
-            throw new DomainException('An approval route must contain between 1 and 30 steps.');
-        foreach ($steps as $i=>$step) {
-            if (($step['key']??'')!=='step_'.($i+1) ||
-                trim((string)($step['name']??''))==='' ||
-                mb_strlen((string)$step['name'])>120) {
-                throw new DomainException('Approval steps must have ordered keys and a name.');
-            }
-            $assignee=$step['approver']??[];
-            $type=(string)($assignee['type']??'');
-            $value=(int)($assignee['value']??0);
-            if (!in_array($type,['user','role','requester_leader','requester'],TRUE))
-                throw new DomainException('Every approval step needs a valid approver type.');
-            if ($type==='user' &&
-                !$this->ci->db->get_where('users',['id'=>$value,'active'=>1])->row_array())
-                throw new DomainException('An approver user is no longer active.');
-            if ($type==='role') {
-                $role=$this->ci->db->get_where('roles',['id'=>$value,'active'=>1])->row_array();
-                if (!$role || !$this->ci->db->get_where('users',[
-                    'role_id'=>$value,'active'=>1
-                ])->row_array()) {
-                    throw new DomainException('Every approver role must be active and contain an active user.');
-                }
-            }
-        }
-    }
-
-    public function publish_workflow($versionId,$actorId)
-    {
-        $v=$this->ci->db->get_where('workflow_versions',['id'=>$versionId,'status'=>'draft'])->row_array();
-        if (!$v) throw new DomainException('Only draft versions can be published.');
-        $this->validate_approval_graph(json_decode($v['graph'],TRUE)?:[]);
-        $this->ci->db->trans_begin();
-        $workflow=$this->ci->db->get_where('workflows',['id'=>$v['workflow_id']])->row_array();
-        if (!$workflow) throw new DomainException('Workflow not found.');
-        $related=$this->ci->db->select('id')->get_where('workflows',[
-            'request_type'=>$workflow['request_type']
-        ])->result_array();
-        $ids=array_column($related,'id');
-        if ($ids) {
-            $this->ci->db->where_in('workflow_id',$ids)
-                ->update('workflow_versions',['is_default'=>0]);
-            // The source schema enforces UNIQUE(active_request_type) in
-            // workflows: deactivate the old route BEFORE activating the new.
-            $this->ci->db->where_in('id',$ids)->where('id !=',$v['workflow_id'])
-                ->update('workflows',['active'=>0]);
-        }
-        $this->ci->db->where('id',$versionId)->update('workflow_versions',[
-            'status'=>'published','is_default'=>1,'published_at'=>date('Y-m-d H:i:s')
-        ]);
-        $this->ci->db->where('id',$v['workflow_id'])->update('workflows',['active'=>1]);
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback();throw new DomainException('Could not publish.');
-        }
-        $this->ci->db->trans_commit();
-    }
-    public function clone_workflow($workflowId,$actorId)
-    {
-        $existingDraft=$this->ci->db->get_where('workflow_versions',[
-            'workflow_id'=>$workflowId,'status'=>'draft'
-        ])->row_array();
-        if ($existingDraft) {
-            throw new DomainException('An editable draft already exists for this workflow.');
-        }
-        $v=$this->ci->db->from('workflow_versions')->where('workflow_id',$workflowId)
-            ->order_by('version_number','DESC')->limit(1)->get()->row_array();
-        if (!$v) throw new DomainException('No workflow version to copy.');
-        $this->ci->db->insert('workflow_versions',[
-            'workflow_id'=>$workflowId,'version_number'=>(int)$v['version_number']+1,
-            'status'=>'draft','is_default'=>0,'graph'=>$v['graph'],'created_by'=>$actorId
-        ]);
-    }
+    public function save_workflow_step($post) { $this->workflow_builder()->save_workflow_step($post); }
+    public function remove_workflow_step($post) { $this->workflow_builder()->remove_workflow_step($post); }
+    public function move_workflow_step($post) { $this->workflow_builder()->move_workflow_step($post); }
+    public function validate_approval_graph($graph) { $this->workflow_builder()->validate_approval_graph($graph); }
+    public function publish_workflow($id,$actorId,$post=[]) { $this->workflow_builder()->publish_workflow($id,$actorId,$post); }
+    public function clone_workflow($id,$actorId) { $this->workflow_builder()->clone_workflow($id,$actorId); }
 }

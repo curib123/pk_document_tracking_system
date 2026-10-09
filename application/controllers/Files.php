@@ -16,6 +16,10 @@ class Files extends MY_Controller
         $this->require_permission('softcopy', 'direct');
         $this->confirmed();
         try {
+            $this->load->model('Document_model');
+            if (!$this->Document_model->manageable('softcopy',(int)$this->input->post('document_id'),$this->user)) {
+                throw new DomainException('Document is not available in your authorized scope.');
+            }
             (new File_service())->save_revision(
                 (int) $this->input->post('document_id'),
                 (int) $this->user['id'],
@@ -44,7 +48,7 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Content-Security-Policy: sandbox');
         header('Content-Disposition: '.($inline?'inline':'attachment').'; filename="'.
-            str_replace(['"', "\\r", "\\n"],'_',$file['original_name']).'"');
+            str_replace(['"', "\r", "\n"],'_',$file['original_name']).'"');
         header('Content-Length: '.filesize($path));
         readfile($path);
         exit;
@@ -58,6 +62,7 @@ class Files extends MY_Controller
             show_error('File download is not permitted.', 403);
             return;
         }
+        if (!preg_match('/^[a-f0-9]{64}$/',(string)$file['storage_name'])) { show_404(); return; }
         $filePath = PK_ROOT . '/storage/documents/' . $file['storage_name'];
         if (!is_file($filePath)) {
             show_404();

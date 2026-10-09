@@ -21,18 +21,13 @@ class MY_Controller extends CI_Controller
     protected function authenticate()
     {
         if (!$this->user) { redirect('login'); exit; }
-        // Enforce onboarding at the server boundary for every protected route,
-        // including task routes that only call authenticate().
-        if (!empty($this->user['require_password_change'])) {
-            $controller = strtolower($this->router->fetch_class());
-            $method = strtolower($this->router->fetch_method());
-            $passwordAction = $controller === 'auth' &&
-                in_array($method, ['change_password', 'logout'], TRUE);
-            $setupScreen = $controller === 'dashboard' && $method === 'index';
-            if (!$passwordAction && !$setupScreen) {
-                show_error('Change your temporary password before using this module.', 403);
-                exit;
-            }
+        require_once APPPATH.'services/authentication/authentication_service.php';
+        if (!empty($this->user['require_password_change']) &&
+            !Authentication_service::is_setup_action(
+                $this->router->fetch_class(), $this->router->fetch_method())) {
+            // The setup page has no dashboard/role dependency and no protected data.
+            redirect('change-password');
+            exit;
         }
     }
 
@@ -75,6 +70,7 @@ class MY_Controller extends CI_Controller
     protected function render($title, $view, $data = [])
     {
         $this->authenticate();
+        $this->output->set_header('Cache-Control: no-store, private');
         $data['title'] = $title;
         $data['user'] = $this->user;
         $data['permissions'] = $this->Permission_model->for_user($this->user);
@@ -87,14 +83,12 @@ class MY_Controller extends CI_Controller
 
     protected function table_state($defaultSort = 'created_at')
     {
-        $limit = (int) $this->input->get('limit');
-        if (!in_array($limit, [10,25,50,100], TRUE)) $limit = 10;
-        return [
-            'q' => mb_substr(trim((string) $this->input->get('q', TRUE)), 0, 100),
-            'status' => (string) $this->input->get('status', TRUE),
-            'page' => max(1, min(1000000, (int) $this->input->get('page'))),
-            'limit' => $limit, 'sort' => (string) ($this->input->get('sort') ?: $defaultSort),
-            'dir' => strtolower((string) $this->input->get('dir')) === 'desc' ? 'DESC' : 'ASC'
-        ];
+        require_once APPPATH.'services/presentation/query_state.php';
+        try {
+            return Query_state::parse($this->input->get(NULL,TRUE)?:[], $defaultSort);
+        } catch (DomainException $e) {
+            show_error($e->getMessage(),400);
+            exit;
+        }
     }
 }

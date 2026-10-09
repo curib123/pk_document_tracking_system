@@ -7,6 +7,7 @@ $route['translate_uri_dashes'] = FALSE;
 $route['login']['GET'] = 'Auth/index';
 $route['login']['POST'] = 'Auth/login';
 $route['logout']['POST'] = 'Auth/logout';
+$route['change-password']['GET'] = 'Auth/setup';
 $route['change-password']['POST'] = 'Auth/change_password';
 
 $route['dashboard']['GET'] = 'Dashboard/index';

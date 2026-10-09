@@ -40,6 +40,17 @@ class Softcopy_direct_service
             'date_released'=>'',
             'page_number'=>(int)($post['page_number']??0)
         ];
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $this->ci->load->model('Document_model');
+        $actor=$this->ci->Identity_model->active_user((int)$actorId);
+        if (!$actor || !empty($actor['require_password_change']) ||
+            !$this->ci->Permission_model->allowed($actor,'softcopy','direct')) {
+            throw new DomainException('Direct softcopy permission is required.');
+        }
+        if ($type!=='softcopy_create' && !$this->ci->Document_model->manageable('softcopy',$docId,$actor)) {
+            throw new DomainException('Document is not available for direct modification.');
+        }
         $stagedFileId=NULL;
         if ($type!=='softcopy_create' && $docId<=0) {
             throw new DomainException('Select an existing softcopy document.');

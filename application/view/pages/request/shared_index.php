@@ -12,6 +12,10 @@ $typeMap=[
 ];
 $dt_columns=['reference'=>'Reference','type'=>'Action','subject'=>'Subject',
     'requester'=>'Requester','status'=>'Status','updated'=>'Updated'];
+$canRequest=static function($action) use($permissions) {
+    return isset($permissions['*']) || !empty($permissions['requests'][$action]);
+};
+$allowed_request_types=$allowed_request_types??array_keys($typeMap[$tab]);
 $dt_rows=[];
 foreach ($rows as $row) {
  $payload=json_decode($row['payload'],TRUE)?:[];
@@ -36,8 +40,9 @@ foreach ($rows as $row) {
  'Workflow History'=>implode("\n",$historyText)?:'No decisions yet',
  'Created At'=>$row['created_at']
  ];
+ $display=array_merge($display,$row['detail_labels']??[]);
  $record=[
- 'id'=>$row['id'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
+ 'id'=>$row['id'],'version'=>$row['version'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
  'remarks'=>$payload['remarks']??'','title'=>$payload['title']??'',
  'series_number'=>$payload['series_number']??'',
  'document_number'=>$payload['document_number']??'',
@@ -68,20 +73,21 @@ foreach ($rows as $row) {
  $buttons=[['type'=>'view']];
  if (in_array($row['type'],['softcopy_create','softcopy_revise'],TRUE) &&
      !empty($payload[$row['type']==='softcopy_create'?'controlled_file_id':'revision_file_id']) &&
-     (!$task || $row['status']==='submitted')) {
+     in_array($row['status'],['draft','returned','submitted'],TRUE)) {
     $buttons[]=['type'=>'review','url'=>'files/review/'.$row['id']];
  }
  $canEdit=isset($permissions['*']) || !empty($permissions['requests']['edit']);
- if (!$task && in_array($row['status'],['draft','returned'],TRUE)) {
+ if (!$task && in_array($row['status'],['draft','returned'],TRUE) && in_array($row['type'],$allowed_request_types,TRUE)) {
     if ($canEdit) $buttons[]=['type'=>'edit'];
-    $buttons[]=['type'=>'action','url'=>'my-requests/'.$tab.'/submit',
+    if ($canRequest('submit')) $buttons[]=['type'=>'action','url'=>'my-requests/'.$tab.'/submit',
        'label'=>'Submit','description'=>'Submit this request to the published approval workflow.',
        'icon'=>'fa-solid fa-paper-plane'];
  }
- if (!$task && $row['status']==='draft') $buttons[]=['type'=>'action',
+ if (!$task && $canRequest('cancel') && $row['status']==='draft') $buttons[]=['type'=>'action',
     'url'=>'my-requests/'.$tab.'/cancel','label'=>'Cancel',
     'description'=>'Cancel this draft request.','icon'=>'fa-solid fa-xmark'];
- if ($task && (isset($permissions['*']) || !empty($permissions['requests']['manage'])))
+ // Rows are already scoped to this user's exact active approval assignment.
+ if ($task && $row['status']==='submitted')
  foreach (['approved'=>'Approve','rejected'=>'Reject','returned'=>'Return'] as $decision=>$label) {
     $buttons[]=['type'=>'action','url'=>'my-tasks/'.$tab.'/decide',
        'decision'=>$decision,'label'=>$label,
@@ -96,10 +102,14 @@ foreach ($rows as $row) {
 }
 $dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
-$dt_sort='updated_at';$dt_dir='desc';$dt_sortable=[];$dt_filter_values=['status'=>$dt_filter];
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
+$dt_sortable=['reference','type','requester','status','updated'];
+$dt_date_filters=TRUE;
+$dt_filter_values=['status'=>$dt_filter,'type'=>$table['type'],'from'=>$table['from'],'to'=>$table['to']];
 $dt_filters=['status'=>[''=>'All Statuses','draft'=>'Draft','submitted'=>'Submitted',
- 'approved'=>'Approved','rejected'=>'Rejected','returned'=>'Returned','cancelled'=>'Cancelled']];
-$dt_badges=['status'];$dt_create=$task?'':'New Request';
+ 'completed'=>'Completed','approved'=>'Approved','rejected'=>'Rejected','returned'=>'Returned','cancelled'=>'Cancelled']];
+$dt_filters['type']=[''=>'All Actions']+$typeMap[$tab];
+$dt_badges=['status'];$dt_create=!$task && $canRequest('add') && $allowed_request_types?'New Request':'';
 $dt_path=($task?'my-tasks/':'my-requests/').$tab;
 ?>
 <div class="page-heading"><div><span class="eyebrow">Request Center</span>
@@ -113,19 +123,20 @@ href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>"><?= html_escape
 <?php endforeach; ?></nav>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
-'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
+'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
 <?php if (!$task): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
 action="<?= site_url('my-requests/'.$tab.'/save') ?>"
-<?= $tab==='hardcopy'?'data-hardcopy-upsert':($tab==='hardcopy-transfer'?'data-hardcopy-transfer':'') ?>
+ data-allowed-request-types="<?= html_escape(json_encode($allowed_request_types)) ?>"
+<?= $tab==='hardcopy'?' data-hardcopy-upsert="yes" ':($tab==='hardcopy-transfer'?' data-hardcopy-transfer="yes" ':'') ?>
 data-confirm="Save request draft?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">New Request</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body"><div class="row g-3">
-<input type="hidden" name="id" value="">
+<input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
 <?php if ($tab==='softcopy'): ?>
     <?php $this->load->view('pages/request/softcopy_fields', [
         'softcopy_options'=>$softcopy_options,'category_options'=>$category_options,

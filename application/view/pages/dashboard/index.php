@@ -28,25 +28,64 @@ $displayName = $firstName !== '' ? $firstName : ($user['username'] ?? 'there');
   </div>
 </section>
 <div class="row g-3 mb-4">
-<?php foreach (['draft'=>'Drafts','pending'=>'Pending','approved'=>'Approved','completed'=>'Completed'] as $key=>$label): ?>
-  <div class="col-6 col-xl-3"><div class="stat-card">
-    <span class="stat-label"><?= $label ?> Requests</span>
-    <strong><?= (int) ($stats[$key] ?? 0) ?></strong>
-    <small class="text-muted">My requests</small>
-  </div></div>
+<?php foreach ([
+ 'documents'=>['Accessible documents','All authorized records'],
+ 'created'=>['Created by you','Within your document access'],
+ 'pending_tasks'=>['Pending approvals','Assigned to you or your role'],
+ 'transfers'=>['Outstanding handoffs','Your dispatch / receipt tasks']
+] as $key=>$info): ?>
+ <div class="col-6 col-xl-3"><div class="stat-card h-100">
+  <span class="stat-label"><?= html_escape($info[0]) ?></span>
+  <strong data-metric="<?= $key ?>"><?= (int)$metrics[$key] ?></strong>
+  <small class="text-muted"><?= html_escape($info[1]) ?></small>
+ </div></div>
 <?php endforeach; ?>
 </div>
-<div class="workspace-card"><div class="workspace-card-header">
-  <strong>Request Status</strong><p class="text-secondary small mb-0">Based on your saved requests in pk_dts</p>
-</div><div class="chart-box"><canvas id="requestChart" aria-label="Request counts by status"></canvas></div></div>
-<script>
-document.addEventListener('DOMContentLoaded', function () {
- const node = document.getElementById('requestChart');
- if (!node || !window.Chart) return;
- const statuses = <?= json_encode(array_keys($stats), JSON_HEX_TAG | JSON_HEX_AMP) ?>;
- const counts = <?= json_encode(array_values($stats), JSON_HEX_TAG | JSON_HEX_AMP) ?>;
- new Chart(node, {type:'bar',
-   data:{labels:statuses.map(x => x.replaceAll('_',' ')),datasets:[{label:'Requests',data:counts,backgroundColor:'#d4263a',borderRadius:6}]},
-   options:{responsive:true,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{precision:0}}}}});
-});
-</script>
+<div class="row g-4 mb-4">
+ <section class="col-12 col-xl-5" aria-labelledby="documentChartTitle">
+  <div class="workspace-card h-100">
+   <div class="workspace-card-header"><h2 class="fs-6 fw-bold mb-1" id="documentChartTitle">Your document register</h2>
+    <p class="text-secondary small mb-0">All time · same access rules as the document registers</p></div>
+   <?php if (array_sum($document_counts)): ?>
+   <div class="chart-box"><canvas id="documentTypeChart" role="img" aria-label="Accessible hardcopy and softcopy document counts"
+       data-chart-type="doughnut" data-chart-labels='["Hardcopy","Softcopy"]'
+       data-chart-counts="<?= html_escape(json_encode(array_values($document_counts))) ?>"></canvas></div>
+   <?php else: ?><p class="empty-state mb-0">No accessible documents yet.</p><?php endif; ?>
+   <table class="table mb-0" aria-label="Document distribution counts and percentages">
+    <thead><tr><th>Type</th><th class="text-end">Count</th><th class="text-end">Share</th></tr></thead>
+    <tbody><?php foreach ($document_counts as $kind=>$count): ?>
+     <tr><td><?= ucfirst($kind) ?></td><td class="text-end"><?= (int)$count ?></td>
+      <td class="text-end"><?= $metrics['documents']?round(100*$count/$metrics['documents'],1):0 ?>%</td></tr>
+    <?php endforeach; ?></tbody>
+   </table>
+  </div>
+ </section>
+ <section class="col-12 col-xl-7" aria-labelledby="requestChartTitle">
+  <div class="workspace-card h-100">
+   <div class="workspace-card-header"><h2 class="fs-6 fw-bold mb-1" id="requestChartTitle">My request status</h2>
+    <p class="text-secondary small mb-0">All time · <?= (int)$metrics['completion_rate'] ?>% of finalized requests approved or completed</p></div>
+   <?php if (array_sum($stats)): ?>
+   <div class="chart-box"><canvas id="requestChart" role="img" aria-label="My requests by current status"
+      data-chart-type="bar" data-chart-labels="<?= html_escape(json_encode(array_map('ucfirst',array_keys($stats)))) ?>"
+      data-chart-counts="<?= html_escape(json_encode(array_values($stats))) ?>"></canvas></div>
+   <?php else: ?><p class="empty-state mb-0">No requests submitted yet.</p><?php endif; ?>
+   <div class="dashboard-status-summary p-3" aria-label="Request counts">
+    <?php foreach ($stats as $status=>$count): ?>
+     <span class="badge-status status-<?= html_escape($status) ?>"><?= html_escape(ucfirst($status)) ?>: <?= (int)$count ?></span>
+    <?php endforeach; ?>
+   </div>
+  </div>
+ </section>
+</div>
+<section class="workspace-card" aria-labelledby="recentActivityTitle">
+ <div class="workspace-card-header"><h2 class="fs-6 fw-bold mb-0" id="recentActivityTitle">Recent document activity</h2></div>
+ <?php if (!$recent_activities): ?><p class="empty-state mb-0">No recent document activity in your authorized scope.</p>
+ <?php else: ?>
+ <div class="table-responsive"><table class="table mb-0"><thead><tr><th>Document</th><th>Type</th><th>Action</th><th>Date</th></tr></thead>
+ <tbody><?php foreach ($recent_activities as $activity): ?><tr>
+  <td><?= html_escape($activity['title']) ?></td><td><?= html_escape(ucfirst($activity['domain'])) ?></td>
+  <td><?= html_escape(ucwords(str_replace('_',' ',$activity['action']))) ?></td>
+  <td><?= html_escape($activity['created_at']) ?></td>
+ </tr><?php endforeach; ?></tbody></table></div>
+ <?php endif; ?>
+</section>

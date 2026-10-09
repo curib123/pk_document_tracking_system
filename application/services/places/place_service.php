@@ -31,17 +31,35 @@ class Place_service
         }
         if ($c['active']) $data['active'] = !empty($post['active']) ? 1 : 0;
         $this->ci->db->trans_begin();
-        if ($id) {
-            $old=$this->ci->Place_model->find($c,$id);
-            if (!$old) throw new DomainException('Record not found.');
-            $this->ci->db->where('id',$id)->update($c['table'],$data);
-        } else {
-            $this->ci->db->insert($c['table'],$data);
+        try {
+            if ($c['slug']==='softcopy-categories') {
+                require_once APPPATH.'services/places/category_parent_policy.php';
+                $categories=$this->ci->db->query('SELECT id,parent_id,active FROM categories ORDER BY id FOR UPDATE')->result_array();
+                Category_parent_policy::validate($categories,$id,(int)$data['parent_id']);
+            }
+            if ($c['slug']==='specific' && !$this->ci->db->get_where('areas',[
+                'id'=>$data['area_id'],'active'=>1])->row_array())
+                throw new DomainException('Choose an active parent area.');
+            if ($c['slug']==='asset' && !$this->ci->db->select('s.id')->from('specifics s')
+                ->join('areas a','a.id=s.area_id')->where('s.id',$data['specific_id'])
+                ->where('s.active',1)->where('a.active',1)->get()->row_array())
+                throw new DomainException('Choose an active specific in an active area.');
+            if ($id) {
+                $old=$this->ci->db->query('SELECT * FROM '.$c['table'].' WHERE id=? FOR UPDATE',[$id])->row_array();
+                if (!$old) throw new DomainException('Record not found.');
+                if (isset($post['version']) && $post['version']!=='' && (int)$post['version']!==(int)$old['version'])
+                    throw new DomainException('This place changed in another session. Refresh before editing.');
+                $data['version']=(int)$old['version']+1;
+                $this->ci->db->where('id',$id)->update($c['table'],$data);
+            } else $this->ci->db->insert($c['table'],$data);
+            if ($this->ci->db->trans_status()===FALSE)
+                throw new DomainException('Could not save. Check unique values and relations.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Could not save this place. Refresh and try again.');
         }
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback(); throw new DomainException('Could not save. Check unique values and relations.');
-        }
-        $this->ci->db->trans_commit();
     }
     /**
      * Predefined Location hierarchy, strictly resolved from the existing pk_dts
@@ -112,6 +130,7 @@ class Place_service
         if (!$c['active']) throw new DomainException('Sequences cannot be deactivated.');
         $record=$this->ci->Place_model->find($c,$id);
         if (!$record) throw new DomainException('Record not found.');
-        $this->ci->db->where('id',(int)$id)->update($c['table'],['active'=>0]);
+        $this->ci->db->where('id',(int)$id)->set('version','version+1',FALSE)->update($c['table'],['active'=>0]);
+        if ($this->ci->db->error()['code']) throw new DomainException('This place could not be deactivated.');
     }
 }

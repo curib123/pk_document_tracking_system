@@ -47,48 +47,37 @@ class File_model extends CI_Model
 
     public function allowed($user, $file)
     {
-        if (!$user || !$file || $file['document_status'] !== 'active') return FALSE;
-        $ci =& get_instance();
-        if ($ci->Permission_model->allowed($user, 'files', 'view_all')) return TRUE;
-        if ((int) $file['owner_id'] === (int) $user['id']) return TRUE;
-
-        $assigned = $this->db->from('assignments')
-            ->where('softcopy_id', $file['document_id'])
-            ->where('user_id', $user['id'])
-            ->where('active', 1)->count_all_results();
-        if ($assigned > 0) return TRUE;
-
-        return $this->db->from('access_grants')
-            ->where('domain', 'softcopy')
-            ->where('document_id', $file['document_id'])
-            ->where('user_id', $user['id'])
-            ->where('status', 'access_granted')
-            ->where('revoked_at IS NULL', NULL, FALSE)
-            ->where('expires_at >=', date('Y-m-d H:i:s'))
-            ->count_all_results() > 0;
+        if (!$user || !$file || $file['document_status']!=='active') return FALSE;
+        $scope=$this->file_scope($user);
+        return $this->db->from('softcopy_documents d')
+            ->where('d.id',(int)$file['document_id'])->where('d.status','active')
+            ->where($scope,NULL,FALSE)->count_all_results()>0;
     }
 
-    public function latest_for_documents($ids)
+    private function file_scope($user)
+    {
+        require_once APPPATH.'services/security/document_scope.php';
+        $this->load->model('Permission_model');
+        $permissions=$this->Permission_model->for_user($user);
+        return Document_scope::file_predicate($user['id']??0,$permissions);
+    }
+
+    /** One query per page, capped per document; no N+1 permission/history reads. */
+    public function histories_for_documents($ids,$user)
     {
         if (!$ids) return [];
-        $rows = $this->db->select('id, document_id, original_name, status, created_at')
-            ->from('files')->where('domain', 'softcopy')->where('status', 'approved')
-            ->where_in('document_id', $ids)
-            ->order_by('id', 'DESC')->get()->result_array();
-        $latest = [];
-        foreach ($rows as $row) {
-            if (!isset($latest[$row['document_id']])) $latest[$row['document_id']] = $row;
-        }
-        return $latest;
-    }
-
-    public function history($docId)
-    {
-        return $this->db->select('f.id, f.original_name, f.size, f.created_at,
-                f.status, u.first_name, u.last_name')
-            ->from('files f')->join('users u', 'u.id = f.uploaded_by')
-            ->where('f.domain', 'softcopy')->where('f.document_id', (int) $docId)
-            ->where('f.status', 'approved')->order_by('f.id', 'DESC')
-            ->get()->result_array();
+        $scope=$this->file_scope($user);
+        $sql=$this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
+                f.status,u.first_name,u.last_name,
+                ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY f.id DESC) AS history_rank',FALSE)
+            ->from('files f')->join('softcopy_documents d','d.id=f.document_id')
+            ->join('users u','u.id=f.uploaded_by')
+            ->where('f.domain','softcopy')->where('f.status','approved')->where('d.status','active')
+            ->where_in('f.document_id',array_map('intval',$ids))
+            ->where($scope,NULL,FALSE)->get_compiled_select();
+        $rows=$this->db->query('SELECT * FROM ('.$sql.') file_history WHERE history_rank<=25 ORDER BY id DESC')->result_array();
+        $result=[];
+        foreach ($rows as $file) $result[$file['document_id']][]=$file;
+        return $result;
     }
 }

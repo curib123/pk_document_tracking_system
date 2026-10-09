@@ -20,7 +20,7 @@
  <h3 class="fs-6 fw-bold mb-1">Original Places and Holder</h3>
  <p class="small text-secondary">Automatically loaded from the selected hardcopy record.</p>
 </div>
-<?php foreach(['area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
+<?php foreach(['title'=>'Document Title','sequence_number'=>'Reference / Copy Number','area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
  'location_name'=>'Location','location_code'=>'Location Code',
  'holder_name'=>'Current Holder'] as $key=>$label): ?>
 <div class="col-md-6">
