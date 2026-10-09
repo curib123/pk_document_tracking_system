@@ -40,7 +40,11 @@ class Records extends MY_Controller
         $fileAllowed = $this->Document_file_model->authorized_document_ids(
             $this->user, $rows, $this->can($kind, 'edit')
         );
+        $histories = $kind === 'softcopy' ? $this->Records_model->file_histories(
+            array_keys($fileAllowed)
+        ) : [];
         $this->render($this->kinds[$kind], 'pages/records/index', [
+            'file_histories' => $histories,
             'mode' => 'documents', 'module' => $kind, 'current' => $kind,
             'tabs' => $this->kinds, 'rows' => $rows, 'file_allowed' => $fileAllowed, 'total' => $total,
             'page' => $page, 'limit' => $limit, 'q' => $q, 'status' => $status,
