@@ -152,7 +152,11 @@ class Administration_service
         if ($type==='role' && (!$value || !$this->ci->db->get_where('roles',[
             'id'=>$value,'active'=>1
         ])->row_array())) throw new DomainException('Choose an active approver role.');
-        $key='step_'.(count($graph['steps']??[])+1);
+        $editKey=trim((string)($post['step_key']??''));
+        if ($editKey!=='' && !preg_match('/^step_[0-9]+$/',$editKey)) {
+            throw new DomainException('Invalid approval step selected for editing.');
+        }
+        $key=$editKey?:('step_'.(count($graph['steps']??[])+1));
         $target='Requester account';
         if ($type==='user') {
             $assigned=$this->ci->db->select('first_name,last_name')->get_where('users',['id'=>$value])->row_array();
@@ -163,10 +167,23 @@ class Administration_service
         } elseif ($type==='requester_leader') {
             $target='Requester leader';
         }
-        $graph['steps'][]=['key'=>$key,'name'=>$name,'approver'=>[
+        $step=['key'=>$key,'name'=>$name,'approver'=>[
             'type'=>$type,'value'=>in_array($type,['user','role'],TRUE)?$value:NULL,
             'label'=>$target
         ]];
+        if ($editKey!=='') {
+            $found=FALSE;
+            foreach ($graph['steps'] as $i=>$existing) {
+                if (($existing['key']??'')===$editKey) {
+                    $graph['steps'][$i]=$step;
+                    $found=TRUE;
+                    break;
+                }
+            }
+            if (!$found) throw new DomainException('Draft approval step was not found.');
+        } else {
+            $graph['steps'][]=$step;
+        }
         $this->ci->db->where('id',$versionId)->update('workflow_versions',[
             'graph'=>json_encode($graph,JSON_UNESCAPED_UNICODE)
         ]);

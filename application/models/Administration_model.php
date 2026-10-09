@@ -70,7 +70,8 @@ class Administration_model extends CI_Model
     public function document_assignments()
     {
         // Latest assignments from BOTH pk_dts sources, no substitute table.
-        $soft=$this->db->select("'softcopy' AS domain, d.document_number AS code,
+        $soft=$this->db->select("'softcopy' AS domain,d.id AS document_id,a.user_id AS recipient_id,
+            d.document_number AS code,
             d.title, CONCAT_WS(' ',u.first_name,u.last_name) AS assignee,
             a.assigned_at AS assigned_date",FALSE)
             ->from('assignments a')
@@ -78,7 +79,8 @@ class Administration_model extends CI_Model
             ->join('users u','u.id=a.user_id')
             ->where('a.active',1)->order_by('a.assigned_at','DESC')
             ->limit(25)->get()->result_array();
-        $hard=$this->db->select("'hardcopy' AS domain,d.sequence_number AS code,
+        $hard=$this->db->select("'hardcopy' AS domain,d.id AS document_id,d.holder_id AS recipient_id,
+            d.sequence_number AS code,
             d.title, CONCAT_WS(' ',u.first_name,u.last_name) AS assignee,
             d.updated_at AS assigned_date",FALSE)
             ->from('hardcopy_documents d')

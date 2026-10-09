@@ -101,6 +101,7 @@
             updateDocumentDomain();
             updateDisposalReason();
             updateHardcopyRequestAction();
+            if (target.id==='assignmentForm') updateDocumentDomain();
             updateHardcopyRetention();
         }
 
@@ -240,7 +241,13 @@
             var field = select.form.querySelector('[name="' + name + '"]');
             if (!field) return;
             var show = required[name].includes(operation);
-            var parent = field.closest('.col-md-6, .col-12');
+            var selectedDomain = select.form.querySelector('[name="document_domain"]')?.value;
+            if (selectedDomain && ['assignment','access'].includes(operation)) {
+                if (name==='softcopy_id') show=selectedDomain==='softcopy';
+                if (name==='hardcopy_id') show=selectedDomain==='hardcopy';
+            }
+            var parent = field.closest('[data-document-domain]') ||
+                field.closest('.col-md-6, .col-12');
             if (parent) parent.hidden = !show;
             field.disabled = !show;
             // Requests may retain a staged revision, but direct revisions

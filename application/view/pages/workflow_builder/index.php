@@ -67,6 +67,18 @@ Send to <?= html_escape($approverLabel) ?> (<?= html_escape(ucwords(str_replace(
 </small></div>
 <?php if ($draft): ?>
 <div class="d-flex align-items-center gap-1">
+<button type="button" class="btn-icon js-edit"
+  data-bs-toggle="modal" data-bs-target="#stepModal" data-target="#stepForm"
+  data-record="<?= html_escape(json_encode([
+     'workflow_version_id'=>$versionId,'step_key'=>$step['key']??'',
+     'name'=>$step['name']??'',
+     'approver_type'=>$approver['type']??'user',
+     'approver_user_id'=>($approver['type']??'')==='user' ? ($approver['value']??'') : '',
+     'approver_role_id'=>($approver['type']??'')==='role' ? ($approver['value']??'') : ''
+   ])) ?>"
+  data-title="Edit Approval Step" title="Edit Approver" aria-label="Edit Approver">
+  <i class="fa-solid fa-pen"></i>
+</button>
 <?php foreach (['up'=>'Move earlier','down'=>'Move later'] as $direction=>$description): ?>
 <?php if (($direction==='up' && $index>0) || ($direction==='down' && $index<count($steps)-1)): ?>
 <button type="button" class="btn-icon js-action"
@@ -144,6 +156,7 @@ id="wKey" name="workflow_key" required pattern="[a-z0-9_]{3,80}"></div>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body">
 <input type="hidden" name="workflow_version_id" value="">
+<input type="hidden" name="step_key" value="">
 <div class="mb-3"><label class="form-label" for="sName">Step Name</label>
 <input class="form-control" id="sName" name="name" maxlength="120" required></div>
 <div class="mb-3"><label class="form-label" for="sType">Approver Type</label>
@@ -168,4 +181,4 @@ Requester and leader approvers are determined automatically when the request is 
 </div></div><input type="hidden" name="confirmed" value="no">
 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
 <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-<button class="btn btn-primary" type="submit">Add Step</button></div></form></div></div></div>
+<button class="btn btn-primary" type="submit">Save Approval Step</button></div></form></div></div></div>

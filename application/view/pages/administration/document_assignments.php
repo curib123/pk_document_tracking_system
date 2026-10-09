@@ -7,7 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 </div>
 <div class="workspace-card p-4 mb-4">
  <h2 class="fs-6 fw-bold mb-3">New Administrative Assignment</h2>
- <form method="post" action="<?= site_url('admin/document-assignments/save') ?>"
+ <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"
        data-confirm="Assign this document to the selected user?">
  <div class="row g-3">
   <div class="col-md-4">
@@ -60,15 +60,27 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  </div>
  <div class="table-responsive"><table class="table align-middle">
   <thead><tr><th>Type</th><th>Document</th><th>Reference</th>
-    <th>Assigned To</th><th>Updated</th></tr></thead>
+    <th>Assigned To</th><th>Updated</th><th>Action</th></tr></thead>
   <tbody>
-   <?php if (!$assignment_rows): ?><tr><td colspan="5">No document assignments yet.</td></tr><?php endif; ?>
+   <?php if (!$assignment_rows): ?><tr><td colspan="6">No document assignments yet.</td></tr><?php endif; ?>
    <?php foreach ($assignment_rows as $item): ?>
    <tr><td><?= html_escape(ucfirst($item['domain'])) ?></td>
     <td><?= html_escape($item['title']) ?></td>
     <td><?= html_escape($item['code']?:'—') ?></td>
     <td><?= html_escape($item['assignee']) ?></td>
-    <td><?= html_escape($item['assigned_date']) ?></td></tr>
+    <td><?= html_escape($item['assigned_date']) ?></td>
+<td>
+ <button type="button" class="btn btn-light btn-sm js-edit"
+   data-target="#assignmentForm"
+   data-record="<?= html_escape(json_encode([
+      'document_domain'=>$item['domain'],
+      'softcopy_id'=>$item['domain']==='softcopy'?$item['document_id']:'',
+      'hardcopy_id'=>$item['domain']==='hardcopy'?$item['document_id']:'',
+      'recipient_id'=>$item['recipient_id']
+   ])) ?>" data-title="Change Assignment">
+   <i class="fa-solid fa-pen me-1"></i> Change
+ </button>
+</td></tr>
    <?php endforeach; ?>
   </tbody>
  </table></div>
