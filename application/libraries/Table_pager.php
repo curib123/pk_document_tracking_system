@@ -9,6 +9,14 @@ class Table_pager
 {
     public function read($input, $sorts, $defaultSort, $statuses = [], $extraFilters = [], $defaultDir = 'asc')
     {
+        // Malformed array-style query params are ignored, not coerced into warnings.
+        foreach (['limit', 'page', 'sort', 'dir', 'q', 'status'] as $key) {
+            if (isset($input[$key]) && !is_scalar($input[$key])) unset($input[$key]);
+        }
+        foreach (array_keys($extraFilters) as $key) {
+            if (isset($input[$key]) && !is_scalar($input[$key])) unset($input[$key]);
+        }
+
         $limit = (int) ($input['limit'] ?? 10);
         if (!in_array($limit, [10, 25, 50, 100], TRUE)) $limit = 10;
 
