@@ -48,7 +48,8 @@ foreach ($rows as $row) {
  if (!$task && $row['status']==='draft') $buttons[]=['type'=>'action',
     'url'=>'my-requests/'.$tab.'/cancel','label'=>'Cancel',
     'description'=>'Cancel this draft request.','icon'=>'fa-solid fa-xmark'];
- if ($task) foreach (['approved'=>'Approve','rejected'=>'Reject','returned'=>'Return'] as $decision=>$label) {
+ if ($task && (isset($permissions['*']) || !empty($permissions['requests']['manage'])))
+ foreach (['approved'=>'Approve','rejected'=>'Reject','returned'=>'Return'] as $decision=>$label) {
     $buttons[]=['type'=>'action','url'=>'my-tasks/'.$tab.'/decide',
        'decision'=>$decision,'label'=>$label,
        'description'=>'Record '.$label.' for this workflow step.',
@@ -138,4 +139,51 @@ data-confirm="Save request draft?">
 <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
 <button class="btn btn-primary" type="submit">Save Draft</button></div>
 </form></div></div></div>
+<?php endif; ?>
+
+<?php if ($task && $tab==='hardcopy-transfer'
+    && (isset($permissions['*']) || !empty($permissions['transfer']['view']))): ?>
+<section class="workspace-card mt-4">
+ <div class="workspace-card-header">
+   <strong>Physical Transfer Handoffs</strong>
+   <p class="small text-secondary mb-0">Only the current holder can dispatch; only the assigned recipient can accept.</p>
+ </div>
+ <div class="table-responsive"><table class="table align-middle">
+ <thead><tr><th scope="col">Hardcopy</th><th scope="col">Current Holder</th>
+ <th scope="col">Recipient</th><th scope="col">Stage</th><th scope="col" class="text-end">Action</th></tr></thead>
+ <tbody>
+ <?php if (!$handoffs): ?><tr><td colspan="5" class="empty-state">No physical handoffs assigned to you.</td></tr><?php endif; ?>
+ <?php foreach ($handoffs as $handoff): ?>
+ <tr><td><?= html_escape($handoff['document_title']) ?></td>
+ <td><?= html_escape($handoff['holder_name']) ?></td>
+ <td><?= html_escape($handoff['recipient_name']) ?></td>
+ <td><span class="badge-status status-pending"><?= html_escape(ucwords(str_replace('_',' ',$handoff['status']))) ?></span></td>
+ <td class="text-end">
+ <?php $isHolder=(int)$handoff['current_holder_id']===(int)$user['id'];
+ $isRecipient=(int)$handoff['recipient_id']===(int)$user['id']; ?>
+ <?php if ($isHolder && $handoff['status']==='for_transfer'): ?>
+ <button class="btn btn-outline-primary btn-sm js-action" type="button"
+   data-bs-toggle="modal" data-bs-target="#actionModal"
+   data-url="<?= site_url('my-tasks/hardcopy-transfer/dispatch') ?>"
+   data-id="<?= (int)$handoff['id'] ?>" data-title="Dispatch Hardcopy"
+   data-description="Confirm physical release of this document to the intended recipient.">Dispatch</button>
+ <?php elseif ($isRecipient && $handoff['status']==='in_transit'): ?>
+ <button class="btn btn-primary btn-sm js-action" type="button"
+   data-bs-toggle="modal" data-bs-target="#actionModal"
+   data-url="<?= site_url('my-tasks/hardcopy-transfer/accept') ?>"
+   data-id="<?= (int)$handoff['id'] ?>" data-title="Accept Hardcopy"
+   data-description="Confirm physical receipt of the document and update its custodian and location.">Accept</button>
+ <?php else: ?><span class="text-secondary small">Awaiting next party</span><?php endif; ?>
+ </td></tr>
+ <?php endforeach; ?></tbody></table></div>
+ <?php $handoffPages=max(1,(int)ceil($handoff_total/10)); ?>
+ <div class="table-footer"><small>Assigned handoffs: <?= (int)$handoff_total ?></small>
+ <div class="d-flex align-items-center gap-2">
+ <a class="btn btn-light btn-sm <?= $handoff_page<=1?'disabled':'' ?>"
+   href="<?= site_url('my-tasks/hardcopy-transfer').'?handoff_page='.max(1,$handoff_page-1) ?>">Previous</a>
+ <span class="small"><?= (int)$handoff_page ?> / <?= $handoffPages ?></span>
+ <a class="btn btn-light btn-sm <?= $handoff_page>=$handoffPages?'disabled':'' ?>"
+   href="<?= site_url('my-tasks/hardcopy-transfer').'?handoff_page='.min($handoffPages,$handoff_page+1) ?>">Next</a>
+ </div></div>
+</section>
 <?php endif; ?>

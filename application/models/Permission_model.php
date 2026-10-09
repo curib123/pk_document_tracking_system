@@ -27,7 +27,8 @@ class Permission_model extends CI_Model
             ->where('rp.role_id',(int) $user['role_id'])->get()->result_array();
         $result = [];
         foreach ($rows as $p) $result[$p['module_key']][$p['action_key']] = TRUE;
-        $result['tasks']['view'] = !empty($result['requests']['manage']);
+        $result['tasks']['view'] = !empty($result['requests']['manage']) ||
+            !empty($result['transfer']['view']);
         return $result;
     }
 }

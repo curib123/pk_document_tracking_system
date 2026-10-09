@@ -25,6 +25,8 @@ $route['my-requests/(:any)/submit']['POST'] = 'Requests/submit/$1';
 $route['my-requests/(:any)/cancel']['POST'] = 'Requests/cancel/$1';
 $route['my-tasks/(:any)']['GET'] = 'Requests/tasks/$1';
 $route['my-tasks/(:any)/decide']['POST'] = 'Requests/decide/$1';
+$route['my-tasks/hardcopy-transfer/dispatch']['POST'] = 'Requests/dispatch_transfer';
+$route['my-tasks/hardcopy-transfer/accept']['POST'] = 'Requests/accept_transfer';
 
 $route['admin/users']['GET'] = 'Administration/users';
 $route['admin/users/save']['POST'] = 'Administration/save_user';
