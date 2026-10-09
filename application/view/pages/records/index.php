@@ -139,3 +139,34 @@ foreach ($rows as $row) {
     </div></div>
 </div>
 <?php endif; ?>
+
+<?php if ($mode === 'documents' && $current === 'softcopy' && $may('edit')): ?>
+    <?php foreach ($rows as $doc): if (!empty($file_grants[$doc['id']])): ?>
+    <div class="modal fade" id="grantModal-<?= (int) $doc['id'] ?>" tabindex="-1"
+         aria-labelledby="grantTitle-<?= (int) $doc['id'] ?>" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+            <div class="modal-header"><h2 class="modal-title fs-6" id="grantTitle-<?= (int) $doc['id'] ?>">
+                Document Access · <?= html_escape($doc['title']) ?>
+            </h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+            <div class="modal-body">
+                <?php foreach ($file_grants[$doc['id']] as $grant): ?>
+                    <div class="d-flex align-items-center justify-content-between gap-3 border-bottom py-3">
+                        <div><strong><?= html_escape($grant['recipient']) ?></strong>
+                            <small class="d-block text-secondary">Expires: <?= html_escape($grant['expires_at'] ?: 'Never') ?></small>
+                        </div>
+                        <form action="<?= site_url('documents/softcopy/grant/revoke') ?>" method="post"
+                              data-confirm="Revoke this document access grant?">
+                            <input type="hidden" name="id" value="<?= (int) $grant['id'] ?>">
+                            <input type="hidden" name="confirmed" value="no">
+                            <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                                   value="<?= $this->security->get_csrf_hash() ?>">
+                            <button class="btn btn-outline-primary btn-sm" type="submit">Revoke</button>
+                        </form>
+                    </div>
+                <?php endforeach; ?>
+            </div>
+            <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
+        </div></div>
+    </div>
+    <?php endif; endforeach; ?>
+<?php endif; ?>
