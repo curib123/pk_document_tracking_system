@@ -41,3 +41,4 @@ for route in dashboard documents/hardcopy documents/softcopy places/area places/
 done
 echo 'Authoritative pk_dts SQL import, login and 22 module routes passed.'
 source tests/workflow_smoke.sh
+source tests/places_smoke.sh
