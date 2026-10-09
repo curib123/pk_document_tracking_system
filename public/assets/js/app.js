@@ -94,6 +94,7 @@
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
             target.dataset.confirmed = '';
             if (target.dataset.requestType) refreshRequestForm();
+            updateRequestActionFields();
         }
 
         var view = event.target.closest('.js-view');
@@ -195,6 +196,42 @@
         if (event.target.matches('#requestOperation')) refreshRequestForm();
     });
     refreshRequestForm();
+
+    // One request modal is reused across all request types; hide irrelevant fields.
+    function updateRequestActionFields() {
+        var select = document.getElementById('reqType');
+        if (!select) return;
+        var operation = select.value;
+        var required = {
+            softcopy_id: ['softcopy_revise','softcopy_cancel','assignment','access'],
+            hardcopy_id: ['hardcopy_update','disposal','transfer'],
+            title: ['softcopy_create','hardcopy_create','hardcopy_update','softcopy_revise'],
+            document_number: ['softcopy_create'],
+            category_id: ['softcopy_create'],
+            recipient_id: ['assignment','access','transfer'],
+            expires_at: ['access'],
+            destination_location_id: ['transfer'],
+            new_revision_level: ['softcopy_revise'],
+            effective_date: ['softcopy_revise'],
+            date_received: ['softcopy_revise'],
+            date_released: ['softcopy_revise'],
+            page_number: ['softcopy_revise'],
+            revision_attachment: ['softcopy_revise']
+        };
+        Object.keys(required).forEach(function (name) {
+            var field = select.form.querySelector('[name="' + name + '"]');
+            if (!field) return;
+            var show = required[name].includes(operation);
+            var parent = field.closest('.col-md-6, .col-12');
+            if (parent) parent.hidden = !show;
+            field.disabled = !show;
+            field.required = show && name !== 'revision_attachment';
+        });
+    }
+    document.addEventListener('change', function (event) {
+        if (event.target && event.target.id === 'reqType') updateRequestActionFields();
+    });
+    updateRequestActionFields();
 
     var pendingForm = null;
     var pendingParent = null;
