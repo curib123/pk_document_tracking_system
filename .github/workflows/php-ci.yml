@@ -16,6 +16,8 @@ jobs:
         run: php tests/lint.php
       - name: Verify architecture and routes
         run: php tests/static_contract.php
+      - name: Validate browser JavaScript syntax
+        run: node --check public/assets/js/app.js
   mysql-smoke:
     runs-on: ubuntu-latest
     services:
