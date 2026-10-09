@@ -5,8 +5,9 @@ class Request_model extends CI_Model
 {
     public function mine($type, $userId)
     {
-        return $this->db->select('r.*, d.code AS document_code, d.title AS document_title')
+        return $this->db->select('r.*, d.code AS document_code, d.title AS document_title, ws.label AS current_step_label')
             ->from('requests r')->join('documents d', 'd.id = r.document_id', 'left')
+            ->join('workflow_steps ws', 'ws.workflow_id = r.workflow_id AND ws.step_order = r.current_step', 'left')
             ->where('r.request_type', $type)->where('r.requester_id', $userId)
             ->order_by('r.updated_at', 'DESC')->get()->result_array();
     }
@@ -27,6 +28,24 @@ class Request_model extends CI_Model
                       OR (ws.approver_type = 'requester' AND creator.id = ?))
                 ORDER BY r.updated_at DESC";
         return $this->db->query($sql, [$type, $user['id'], $user['role_id'], $user['id'], $user['id']])->result_array();
+    }
+
+    public function histories($ids)
+    {
+        if (!$ids) return [];
+        $decisions = $this->db->select('d.request_id,d.step_order,d.decision,d.remark,d.created_at,u.name AS actor')
+            ->from('request_decisions d')->join('users u', 'u.id = d.actor_id')
+            ->where_in('d.request_id', $ids)
+            ->order_by('d.created_at', 'ASC')->order_by('d.id', 'ASC')
+            ->get()->result_array();
+        $result = [];
+        foreach ($decisions as $item) {
+            $line = 'Step ' . $item['step_order'] . ': ' . ucfirst($item['decision']) .
+                ' by ' . $item['actor'] . ' on ' . $item['created_at'];
+            if ($item['remark'] !== '') $line .= ' — ' . $item['remark'];
+            $result[$item['request_id']][] = $line;
+        }
+        return $result;
     }
 
     public function available_workflow($type)
