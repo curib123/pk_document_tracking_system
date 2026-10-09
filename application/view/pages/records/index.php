@@ -52,7 +52,10 @@ foreach ($rows as $row) {
         <a href="<?= site_url($prefix . $slug) ?>" class="tab-link <?= $current === $slug ? 'active' : '' ?>"><?= html_escape($label) ?></a>
     <?php endif; endforeach; ?>
 </nav>
-<?php $this->load->view('components/datatable'); ?>
+<?php $this->load->view('components/datatable', compact(
+    'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+)); ?>
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
