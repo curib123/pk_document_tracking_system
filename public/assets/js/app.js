@@ -96,6 +96,7 @@
             if (target.dataset.requestType) refreshRequestForm();
             updateRequestActionFields();
             if (target.id === 'stepForm') updateStepApprover();
+            if (target.hasAttribute('data-location-upsert')) updateLocationHierarchy();
         }
 
         var view = event.target.closest('.js-view');
@@ -255,6 +256,65 @@
         if (event.target && event.target.id === 'sType') updateStepApprover();
     });
     updateStepApprover();
+
+    // Location upsert uses live predefined Area > Specific > Asset relationships.
+    // The PHP service validates all relationships again before writing to MySQL.
+    function updateLocationHierarchy(changed) {
+        var form = document.querySelector('#editForm[data-location-upsert]');
+        if (!form) return;
+        var area = form.querySelector('[data-location-level="area"]');
+        var specific = form.querySelector('[data-location-level="specific"]');
+        var asset = form.querySelector('[data-location-level="asset"]');
+        if (!area || !specific || !asset) return;
+
+        function selectedOption(select) {
+            return select.options[select.selectedIndex] || null;
+        }
+
+        if (changed === 'asset' && asset.value) {
+            var chosenAsset = selectedOption(asset);
+            specific.value = chosenAsset.dataset.specificId || '';
+            area.value = chosenAsset.dataset.areaId || '';
+        } else if (changed === 'specific' && specific.value) {
+            var chosenSpecific = selectedOption(specific);
+            area.value = chosenSpecific.dataset.areaId || '';
+        }
+
+        Array.from(specific.options).forEach(function (option) {
+            if (!option.value) return;
+            var available = !area.value || option.dataset.areaId === area.value;
+            option.hidden = !available;
+            option.disabled = !available;
+        });
+        if (selectedOption(specific) && selectedOption(specific).disabled) {
+            specific.value = '';
+        }
+
+        Array.from(asset.options).forEach(function (option) {
+            if (!option.value) return;
+            var matchesSpecific = !specific.value || option.dataset.specificId === specific.value;
+            var matchesArea = !area.value || option.dataset.areaId === area.value;
+            var available = matchesSpecific && matchesArea;
+            option.hidden = !available;
+            option.disabled = !available;
+        });
+        if (selectedOption(asset) && selectedOption(asset).disabled) {
+            asset.value = '';
+        }
+
+        var help = form.querySelector('#location-hierarchy-help');
+        if (help) {
+            help.textContent = asset.value ? 'Area and specific automatically match the selected asset.'
+                : specific.value ? 'Area automatically matches the selected specific.'
+                : 'Select an area to filter specifics and assets, or leave the hierarchy optional.';
+        }
+    }
+
+    document.addEventListener('change', function (event) {
+        var level = event.target && event.target.getAttribute('data-location-level');
+        if (level) updateLocationHierarchy(level);
+    });
+    updateLocationHierarchy();
 
     var pendingForm = null;
     var pendingParent = null;

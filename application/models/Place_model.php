@@ -7,7 +7,7 @@ class Place_model extends CI_Model
         'specific' => ['table'=>'specifics','label'=>'Specifics','key'=>'name','fields'=>['name','area_id']],
         'asset' => ['table'=>'assets','label'=>'Assets','key'=>'asset_number','fields'=>['asset_number','specific_id']],
         'location' => ['table'=>'locations','label'=>'Locations','key'=>'name',
-            'fields'=>['name','code','area_id','specific_id','asset_id']],
+            'fields'=>['name','code','area_id','specific_id','asset_id','archive_date']],
         'sequence' => ['table'=>'sequences','label'=>'Sequences','key'=>'sequence_key',
             'fields'=>['sequence_key','value']],
         'softcopy-categories' => ['table'=>'categories','label'=>'Softcopy Categories',
@@ -56,6 +56,23 @@ class Place_model extends CI_Model
         $defs=['areas'=>'name','specifics'=>'name','assets'=>'asset_number',
             'locations'=>'name','categories'=>'name'];
         if (!isset($defs[$table])) throw new DomainException('Unknown option list.');
+
+        // Location Upsert: preload the real Area -> Specific -> Asset relationships.
+        // No artificial presets, extra tables, APIs or invented identifiers.
+        if ($table==='specifics') {
+            return $this->db->select('s.id,s.name,s.area_id')
+                ->from('specifics s')
+                ->join('areas a','a.id=s.area_id')
+                ->where('s.active',1)->where('a.active',1)
+                ->order_by('s.name')->order_by('s.id')->get()->result_array();
+        }
+        if ($table==='assets') {
+            return $this->db->select('b.id,b.asset_number AS name,b.specific_id,s.area_id')
+                ->from('assets b')->join('specifics s','s.id=b.specific_id')
+                ->join('areas a','a.id=s.area_id')
+                ->where('b.active',1)->where('s.active',1)->where('a.active',1)
+                ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
+        }
         return $this->db->select('id,'.$defs[$table].' AS name')->from($table)
             ->where('active',1)->order_by($defs[$table])->get()->result_array();
     }

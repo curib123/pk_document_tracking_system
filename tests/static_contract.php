@@ -56,5 +56,24 @@ foreach (['.side-link-parent', '.side-submenu', '.sidebar-chevron',
         $fail[] = 'Places dropdown style missing: '.$selector;
     }
 }
+// Ensure predefined Location Upsert stays aligned with pk_dts relationships.
+$location = file_get_contents($root.'/application/view/pages/places/location/modal_action/upsert.php');
+$places = file_get_contents($root.'/application/services/places/place_service.php');
+$placeModel = file_get_contents($root.'/application/models/Place_model.php');
+$placeJs = file_get_contents($root.'/public/assets/js/app.js');
+foreach (['name="name"', 'name="code"', 'name="area_id"',
+    'name="specific_id"', 'name="asset_id"', 'name="archive_date"',
+    'data-specific-id', 'data-area-id'] as $field) {
+    if (strpos($location, $field) === FALSE) $fail[] = 'Location Upsert field missing: '.$field;
+}
+foreach (['prepare_location', "join('specifics s'", "join('areas a'",
+    "'archive_date'"] as $part) {
+    if (strpos($places, $part) === FALSE && strpos($placeModel, $part) === FALSE) {
+        $fail[] = 'Location hierarchy validation missing: '.$part;
+    }
+}
+if (strpos($placeJs, 'updateLocationHierarchy') === FALSE) {
+    $fail[] = 'Location hierarchy filtering script missing.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
