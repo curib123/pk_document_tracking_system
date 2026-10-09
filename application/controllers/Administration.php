@@ -44,7 +44,7 @@ class Administration extends MY_Controller
     public function roles()
     {
         $this->require_permission('roles');
-        $granted = $this->db->get('role_permissions')->result_array();
+        $granted = $this->Administration_model->role_grants();
         $this->render('Roles & Permissions', 'pages/administration/roles', [
             'module' => 'roles', 'rows' => $this->Administration_model->roles(),
             'permission_rows' => $this->Administration_model->permissions(),
