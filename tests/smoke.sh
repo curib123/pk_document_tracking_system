@@ -74,3 +74,4 @@ source tests/places_smoke.sh
 source tests/hardcopy_dashboard_smoke.sh
 source tests/workflow_builder_smoke.sh
 source tests/direct_softcopy_smoke.sh
+source tests/domain_audit_smoke.sh

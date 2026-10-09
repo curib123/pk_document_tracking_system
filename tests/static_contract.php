@@ -170,5 +170,21 @@ if (strpos($requestSvc,"'superseded'")===FALSE ||
 if (!is_file($root.'/tests/workflow_builder_smoke.sh')) {
     $fail[]='Workflow Builder integration test missing.';
 }
+// No replacement access/assignment schema; explicit two-domain routing.
+$accessSvc=file_get_contents($root.'/application/services/documents/document_access_service.php');
+$audit=file_get_contents($root.'/application/libraries/Audit_file.php');
+$softcopyRevision=file_get_contents($root.'/application/services/softcopy/softcopy_operation_service.php');
+foreach (["'softcopy','hardcopy'", "'hardcopy_documents'", "'assignments'"] as $key) {
+    if (strpos($accessSvc,$key)===FALSE)
+        $fail[]='Missing schema-native cross-domain assignment: '.$key;
+}
+foreach (['/storage/audit','LOCK_EX','JSON_PRETTY_PRINT'] as $key) {
+    if (strpos($audit,$key)===FALSE) $fail[]='Daily filesystem JSON audit missing: '.$key;
+}
+if (strpos($softcopyRevision,'$effective=')===FALSE ||
+    strpos($softcopyRevision,"'date_released'=>$date")===FALSE)
+    $fail[]='Softcopy automatic dates are incomplete.';
+if (!is_file($root.'/tests/domain_audit_smoke.sh'))
+    $fail[]='Missing domain + audit tests.';
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";

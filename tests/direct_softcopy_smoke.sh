@@ -11,8 +11,8 @@ before_history=$(db "SELECT COUNT(*) FROM workflow_history")
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-direct-form.html http://127.0.0.1:8089/documents/softcopy
 grep -q 'action="http://127.0.0.1:8089/documents/softcopy/direct"' /tmp/pk-direct-form.html
 for field in type subject softcopy_id title document_number series_number \
-    category_id new_revision_level page_number effective_date date_received \
-    date_released revision_attachment remarks; do
+    category_id new_revision_level page_number effective_date \
+    revision_attachment remarks; do
     grep -q "name=\"$field\"" /tmp/pk-direct-form.html
 done
 grep -q 'Approve Directly' /tmp/pk-direct-form.html
