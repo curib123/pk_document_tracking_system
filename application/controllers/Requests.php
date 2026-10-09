@@ -50,7 +50,8 @@ class Requests extends MY_Controller
     public function save($tab)
     {
         $this->Request_model->types($tab);
-        $this->require_permission('requests','add');$this->confirmed();
+        $this->require_permission('requests',(int)$this->input->post('id')?'edit':'add');
+        $this->confirmed();
         try {
             (new Request_service())->save($tab,$this->input->post(),$this->user,
                 $_FILES['revision_attachment']??NULL);
