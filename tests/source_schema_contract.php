@@ -34,6 +34,13 @@ foreach ($contract['tables'] as $table) {
     if (count($found[$name]) !== count($table['columns'])) $errors[] = "Unexpected columns in $name";
 }
 if (count($found) !== count($contract['tables'])) $errors[] = 'Source table count changed';
+// Preserve all source primary keys, UNIQUE constraints, and regular indexes.
+foreach ($contract['indexStatements'] ?? [] as $statement) {
+    $exact = 'ALTER TABLE `'.$statement['table']."`\n  ".$statement['body'].';';
+    if (strpos($schema, $exact) === false) {
+        $errors[] = 'Missing source index declaration for '.$statement['table'];
+    }
+}
 foreach ($contract['foreignKeys'] as $foreignKey) {
     $constraint = 'ADD CONSTRAINT `'.$foreignKey['name'].'` FOREIGN KEY (`'.
         $foreignKey['column'].'`) REFERENCES `'.$foreignKey['references'].'` (`'.
@@ -51,4 +58,5 @@ if ($errors) {
     exit(1);
 }
 echo 'Source schema contract passed: '.count($found).' tables, '.
-    count($contract['foreignKeys'])." foreign keys, unchanged column definitions.\n";
+    count($contract['foreignKeys']).' foreign keys, '.
+    count($contract['indexStatements'])." index declarations, unchanged column definitions.\n";
