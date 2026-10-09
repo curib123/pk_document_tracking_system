@@ -18,7 +18,7 @@ foreach($rows as $r){
  'display'=>['Workflow'=>$r['name'],'Request Type'=>$r['request_type'],
     'Latest Version'=>$r['version_number']??0,'Status'=>$state,
     'Approval Steps'=>implode(' → ',array_column($steps,'name'))],
- 'buttons'=>[['type'=>'view']]];
+ 'buttons'=>[['type'=>'view'], ['type'=>'workflow']]];
 }
 $dt_path='admin/workflows';$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
@@ -26,7 +26,6 @@ $dt_sort='name';$dt_dir='asc';$dt_sortable=[];
 $dt_filters=['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']];
 $dt_filter_values=['status'=>$dt_filter];$dt_badges=['active','status'];
 $dt_create='';
-$dt_badges=['active','status'];
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Workflow Builder</h1>
 <p>These request workflows are predefined. Customize the approver steps, then publish the updated version to use it for future requests.</p></div></div>
@@ -43,7 +42,7 @@ $dt_badges=['active','status'];
  $versionId=(int)($r['latest_version_id']??0); ?>
 <div class="accordion-item"><h2 class="accordion-header">
 <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
-data-bs-target="#wf-<?= (int)$r['id'] ?>">
+data-bs-target="#wf-<?= (int)$r['id'] ?>" aria-controls="wf-<?= (int)$r['id'] ?>" aria-expanded="false">
 <i class="fa-solid fa-route me-2 text-secondary" aria-hidden="true"></i>
 <?= html_escape($r['name']) ?>
 <span class="ms-2 small text-secondary">v<?= (int)$r['version_number'] ?> · <?= html_escape(ucwords($r['version_status'])) ?></span>
@@ -108,7 +107,7 @@ Send to <?= html_escape($approverLabel) ?> (<?= html_escape(ucwords(str_replace(
 <?php endif; ?>
 </div>
 <?php endforeach; ?>
-<?php if(!$steps): ?><p class="text-muted small">No approval steps configured. Add the first approver before publishing.</p><?php endif; ?>
+<?php if(!$steps): ?><p class="text-muted small" role="status">No approval steps configured. Add the first approver before publishing.</p><?php endif; ?>
 <?php if($steps): ?><p class="text-secondary small mt-3 mb-0">
 <i class="fa-solid fa-flag-checkered me-1" aria-hidden="true"></i>
 After the final approval, the requested document action is applied.
