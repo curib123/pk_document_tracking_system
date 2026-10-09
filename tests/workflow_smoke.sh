@@ -19,8 +19,9 @@ post_form() {
 }
 
 # All fixtures use the original pk_dts tables, not the previous invented ones.
+ADMIN_ID=$(db "SELECT id FROM users WHERE username='test_admin'")
 db "INSERT INTO categories(name,folder_name,created_by,active)
- VALUES ('Quality','quality',1,1);
+ VALUES ('Quality','quality',$ADMIN_ID,1);
  INSERT INTO locations(name,code,active) VALUES ('QA Archive','QA-A',1);
  INSERT INTO users(username,first_name,last_name,position_title,role_id,password_hash,require_password_change,active)
  SELECT 'recipient_test','Document','Recipient','Staff',id,'$HASH',0,1
@@ -32,11 +33,11 @@ ADMIN_ROLE=$(db "SELECT id FROM roles WHERE name='Administrator'")
 
 for t in softcopy_create hardcopy_create transfer assignment access disposal softcopy_cancel hardcopy_update; do
     db "INSERT INTO workflows(workflow_key,name,request_type,active,created_by)
-        VALUES ('qa_$t','QA $t','$t',1,1);
+        VALUES ('qa_$t','QA $t','$t',1,$ADMIN_ID);
         INSERT INTO workflow_versions(workflow_id,version_number,status,is_default,graph,created_by,published_at)
         SELECT id,1,'published',1,
         '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Admin Approval\",\"approver\":{\"type\":\"role\",\"value\":$ADMIN_ROLE,\"label\":\"Administrator\"}}]}',
-        1,NOW() FROM workflows WHERE workflow_key='qa_$t';"
+        $ADMIN_ID,NOW() FROM workflows WHERE workflow_key='qa_$t';"
 done
 
 # Create a softcopy through request approval.
