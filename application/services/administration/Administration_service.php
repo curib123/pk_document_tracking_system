@@ -36,7 +36,9 @@ class Administration_service
             throw new DomainException('Enter an initial password with at least 12 characters.');
         }
         if ($id) {
-            if (!$this->ci->db->get_where('users', ['id' => $id])->row_array()) throw new DomainException('User not found.');
+            $existing = $this->ci->db->get_where('users', ['id' => $id])->row_array();
+            if (!$existing) throw new DomainException('User not found.');
+            $this->protect_last_admin($existing, $roleId, $data['active']);
             $this->ci->db->where('id', $id)->update('users', $data);
         } else {
             $this->ci->db->insert('users', $data);
@@ -44,10 +46,23 @@ class Administration_service
         if ($this->ci->db->error()['code']) throw new DomainException('Username or email already exists.');
     }
 
+    private function protect_last_admin($existing, $nextRole, $nextActive)
+    {
+        $super = $this->ci->db->get_where('roles', ['name' => 'super_admin'])->row_array();
+        if (!$super || (int) $existing['role_id'] !== (int) $super['id'] || !(int) $existing['active']) return;
+        if ((int) $nextRole === (int) $super['id'] && (int) $nextActive === 1) return;
+        $remaining = $this->ci->db->from('users')
+            ->where('role_id', $super['id'])->where('active', 1)
+            ->where('id !=', $existing['id'])->count_all_results();
+        if (!$remaining) throw new DomainException('At least one active super administrator is required.');
+    }
+
     public function deactivate_user($id, $actorId)
     {
         if ($id === $actorId) throw new DomainException('You cannot deactivate your own account.');
-        if (!$this->ci->db->get_where('users', ['id' => $id])->row_array()) throw new DomainException('User not found.');
+        $existing = $this->ci->db->get_where('users', ['id' => $id])->row_array();
+        if (!$existing) throw new DomainException('User not found.');
+        $this->protect_last_admin($existing, $existing['role_id'], 0);
         $this->ci->db->where('id', $id)->update('users', ['active' => 0]);
     }
 
