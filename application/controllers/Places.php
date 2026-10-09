@@ -27,6 +27,7 @@ class Places extends MY_Controller
     public function save($slug)
     {
         $cfg=$this->Place_model->config($slug);
+        if (!empty($cfg['read_only'])) show_error('System sequences are read-only.', 403);
         $this->require_permission($cfg['table'],(int)$this->input->post('id')?'edit':'add');
         $this->confirmed();
         try {

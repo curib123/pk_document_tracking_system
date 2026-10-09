@@ -18,6 +18,7 @@ class Place_model extends CI_Model
         if (!isset($this->definitions[$slug])) show_404();
         $c = $this->definitions[$slug]; $c['slug'] = $slug;
         $c['active'] = $slug !== 'sequence';
+        $c['read_only'] = $slug === 'sequence';
         return $c;
     }
     private function scope($c, $q, $status)

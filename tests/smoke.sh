@@ -11,6 +11,9 @@ INSERT INTO users(username,first_name,last_name,position_title,role_id,password_
 SELECT 'test_admin','Test','Administrator','System Admin',id,'$HASH',0,1
 FROM roles WHERE name='Administrator';
 "
+# Import original workflow graph presets only AFTER the administrator exists.
+mysql -h127.0.0.1 -uroot -prootpass pk_dts_test < database/seed_workflows.sql
+php tests/source_schema_contract.php
 
 php -S 127.0.0.1:8089 -t public public/index.php >/tmp/pk-server.log 2>&1 &
 PID=$!
@@ -20,10 +23,16 @@ for i in {1..20}; do
   if curl -fsS -o /tmp/pk-login.html http://127.0.0.1:8089/login; then break; fi
   sleep 1
 done
-grep -q 'Sign in to your account' /tmp/pk-login.html
+if ! grep -q 'name="login"' /tmp/pk-login.html; then
+  echo 'Login form was not rendered after database import:'
+  grep -o -m 1 '<title>[^<]*</title>' /tmp/pk-login.html || true
+  head -c 500 /tmp/pk-login.html || true
+  echo
+  exit 1
+fi
 
 curl -fsS -c /tmp/pk-cookie -o /tmp/pk-login.html http://127.0.0.1:8089/login
-TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-login.html | head -1 | sed 's/.*value="//;s/"$//')
+TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-login.html)
 test -n "$TOKEN"
 curl -sS -L -b /tmp/pk-cookie -c /tmp/pk-cookie -o /tmp/pk-home.html \
   --data-urlencode "pk_csrf_token=$TOKEN" --data-urlencode 'login=test_admin' \

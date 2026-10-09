@@ -2,16 +2,16 @@
 
 CodeIgniter 3 server-rendered rebuild started from the original master-branch empty-file module scaffold.
 
-**Database source of truth:** `database/pk_dts.sql`, recovered from historical commit `f232511d4684e844ad88dcdb9477a5046b84159c` (Git blob `6cc10eb338c39a454ae3cceffe185e2dfe31e67f`). The source DDL structure, columns, indexes, and foreign keys have been retained; historical INSERT statements were intentionally excluded to avoid exposing user/password data. Role and permission metadata is available separately in `database/seed.sql`.
+**Database source of truth:** The user-supplied October 9, 2026 phpMyAdmin export (normalized Git blob `65660f3a1dc48874c86540db5728156fd31f587d`). `database/pk_dts.sql` retains its **29 tables, 298 column definitions, indexes, and 60 foreign keys**, excluding exported data rows. `database/source_schema_contract.json` and `tests/source_schema_contract.php` enforce the uploaded structure.
 
-**Do not import this schema into a populated or live database.** Create an empty `pk_dts` database for new installations. Existing databases should be backed up and checked against the recovered schema rather than overwritten.
+**Never import the installation SQL files into an existing database.** The uploaded export contains a historical administrator password hash and login-attempt metadata; the GitHub install files omit those sensitive rows. Back up real users, attachments, requests and workflow history before any live changes.
 
 ## Setup
 
 1. Use PHP 8+, MySQL/MariaDB, XAMPP Apache with mod_rewrite and Composer.
 2. Run `composer install` at the repository root.
-3. On a **new empty** database import `database/pk_dts.sql` then `database/seed.sql`.
-4. Create a first admin with `php tools/create_admin.php admin`.
+3. On a **new empty** database import `database/pk_dts.sql` then `database/seed.sql`. The latter contains only original role/permission definitions and the appearance setting.
+4. Create a first admin with `php tools/create_admin.php admin` using your own strong password. Then import `database/seed_workflows.sql` to install the uploaded nine default approval graphs, resolving the administrator ID dynamically.
 5. Set DB_HOST, DB_PORT, DB_DATABASE, DB_USERNAME, DB_PASSWORD and PK_ENCRYPTION_KEY in the PHP environment.
 6. Point Apache DocumentRoot at `public/` and make `storage/` writable but not publicly accessible.
 7. Sign in through `/login`.
@@ -41,3 +41,9 @@ CodeIgniter 3 server-rendered rebuild started from the original master-branch em
 GitHub Actions validates PHP syntax, JS syntax, baseline schema and MariaDB integration using only a disposable `pk_dts_test` database. See `tests/smoke.sh`, `tests/workflow_smoke.sh` and `tests/places_smoke.sh` for exercised operations.
 
 **Production/cutover limitations:** Automated tests cannot prove real Windows XAMPP UX quality, file security against all formats, concurrent approvals, full migration of historical attachment bytes, environment-specific access rights, or backup/restore recovery. The earlier incomplete PR #14 using invented tables must not be merged. Validate against the existing database backup, preserve original data, and complete a local browser audit before production replacement.
+
+## Mapping to the uploaded SQL
+
+Documents use `hardcopy_documents`, `softcopy_documents`, `files`, and `softcopy_revisions`, not an invented shared `documents` table. Places use `areas`, `specifics`, `assets`, `locations`, `categories` and `sequences`. **The `sequences` table is a read-only system counter keyed by `sequence_key`; it has no numeric ID.** Requests use `requests`, `workflow_versions`, `workflow_steps`, and `workflow_history`, with controlled effects recorded in `transfers`, `assignments`, `access_grants`, `disposals` and `status_history`.
+
+Read [database/SQL_SOURCE_OF_TRUTH.md](database/SQL_SOURCE_OF_TRUTH.md) before importing or modifying any schema. Functional tests run against disposable MariaDB, not the existing production database.

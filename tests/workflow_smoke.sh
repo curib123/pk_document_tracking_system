@@ -6,8 +6,7 @@ db() { mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test -e "$1"; }
 token_for() {
     curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie \
       -o /tmp/pk-form.html "http://127.0.0.1:8089/$1"
-    grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-form.html |
-      head -1 | sed 's/.*value="//;s/"$//'
+    perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-form.html
 }
 post_form() {
     local page="$1" action="$2"; shift 2
@@ -32,13 +31,14 @@ LOC_ID=$(db "SELECT id FROM locations WHERE name='QA Archive'")
 REC_ID=$(db "SELECT id FROM users WHERE username='recipient_test'")
 ADMIN_ROLE=$(db "SELECT id FROM roles WHERE name='Administrator'")
 
-for t in softcopy_create softcopy_revise hardcopy_create transfer assignment access disposal softcopy_cancel hardcopy_update; do
-    db "INSERT INTO workflows(workflow_key,name,request_type,active,created_by)
-        VALUES ('qa_$t','QA $t','$t',1,$ADMIN_ID);
-        INSERT INTO workflow_versions(workflow_id,version_number,status,is_default,graph,created_by,published_at)
-        SELECT id,1,'published',1,
-        '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Admin Approval\",\"approver\":{\"type\":\"role\",\"value\":$ADMIN_ROLE,\"label\":\"Administrator\"}}]}',
-        $ADMIN_ID,NOW() FROM workflows WHERE workflow_key='qa_$t';"
+# The nine published workflow presets are imported from the original SQL seed
+# with created_by resolved to the generated administrator. Never create a
+# duplicate active workflow for a type (pk_dts enforces one_active_workflow).
+for t in softcopy_create softcopy_revise softcopy_cancel hardcopy_create hardcopy_update transfer assignment access disposal; do
+    test "$(db "SELECT COUNT(*) FROM workflows w
+      JOIN workflow_versions v ON v.workflow_id=w.id
+      WHERE w.request_type='$t' AND w.active=1
+      AND v.is_default=1 AND v.status='published'")" = 1
 done
 
 echo 'CASE: create softcopy'
@@ -146,7 +146,7 @@ post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/dispatch "id=$TR
 test "$(db "SELECT status FROM transfers WHERE id=$TRANSFER_ID")" = in_transit
 
 curl -fsS -c /tmp/pk-recipient-cookie -o /tmp/pk-recipient-login.html http://127.0.0.1:8089/login
-REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-recipient-login.html | head -1 | sed 's/.*value="//;s/"$//')
+REC_TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-recipient-login.html)
 curl -sS -L -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie \
     -o /tmp/pk-recipient-home.html --data-urlencode "pk_csrf_token=$REC_TOKEN" \
     --data-urlencode 'login=recipient_test' --data-urlencode 'password=TemporaryTestPassword2026!' \
@@ -157,7 +157,7 @@ grep -q 'Dashboard' /tmp/pk-recipient-home.html
 curl -fsS -b /tmp/pk-recipient-cookie -o /tmp/pk-transfer-task.html \
     http://127.0.0.1:8089/my-tasks/hardcopy-transfer
 grep -q 'Accept Hardcopy' /tmp/pk-transfer-task.html
-REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-transfer-task.html | head -1 | sed 's/.*value="//;s/"$//')
+REC_TOKEN=$(perl -0777 -ne 'if (/name="pk_csrf_token"\s+value="([^"]+)"/) { print $1 }' /tmp/pk-transfer-task.html)
 curl -fsS -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie -o /dev/null \
     --data-urlencode "pk_csrf_token=$REC_TOKEN" --data-urlencode 'confirmed=yes' \
     --data-urlencode "id=$TRANSFER_ID" http://127.0.0.1:8089/my-tasks/hardcopy-transfer/accept
