@@ -6,6 +6,6 @@ class Dashboard_service
     {
         $ci =& get_instance();
         $ci->load->model('Dashboard_model');
-        return ['stats'=>$ci->Dashboard_model->counts($user)];
+        return $ci->Dashboard_model->summary($user);
     }
 }

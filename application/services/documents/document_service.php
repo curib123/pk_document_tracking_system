@@ -6,80 +6,44 @@ class Document_service
     public function __construct() { $this->ci =& get_instance(); $this->ci->load->model('Document_model'); }
     public function save($domain,$post,$actor)
     {
-        // Caller is the authenticated CI session user, never a posted role.
-        $actorId=(int)$actor['id'];
-        $isAdmin=strcasecmp((string)($actor['role']??''),'Administrator')===0;
         $cfg=$this->ci->Document_model->config($domain);
+        if ($domain!=='hardcopy') throw new DomainException('Use the controlled softcopy action form.');
+        $this->ci->load->model('Permission_model');
+        if (!$this->ci->Permission_model->allowed($actor,$domain,'direct'))
+            throw new DomainException('Direct document permission is required.');
         $id=(int)($post['id']??0);
-        $title=trim((string)($post['title']??''));
-        if ($title==='' || mb_strlen($title)>255) throw new DomainException('Document title is required.');
-        $data=['title'=>$title];
-        if ($domain==='hardcopy') {
-            foreach (['area_id','specific_id','asset_id','location_id'] as $field) {
-                $data[$field]=!empty($post[$field])?(int)$post[$field]:NULL;
-            }
-            $this->validate_hardcopy_location($data, $id);
-
-            $sequence=trim((string)($post['sequence_number']??''));
-            if (mb_strlen($sequence)>100) throw new DomainException('Sequence / copy number is too long.');
-            $data['sequence_number']=$sequence?:NULL;
-            $data['retention_enabled']=!empty($post['retention_enabled'])?1:0;
-            $data['retention_start_date']=$this->valid_date($post['retention_start_date']??'');
-            $data['retention_end_date']=$this->valid_date($post['retention_end_date']??'');
-            if ($data['retention_enabled'] && (!$data['retention_start_date'] ||
-                !$data['retention_end_date'] ||
-                $data['retention_end_date']<$data['retention_start_date'])) {
-                throw new DomainException('Retention period requires valid start and end dates.');
-            }
-            if (!$data['retention_enabled']) {
-                $data['retention_start_date']=NULL;
-                $data['retention_end_date']=NULL;
-            }
-
-            $oldHolder=NULL;
-            if ($id) {
-                $existing=$this->ci->Document_model->find('hardcopy',$id);
-                if (!$existing) throw new DomainException('Hardcopy document was not found.');
-                $oldHolder=(int)$existing['holder_id'];
-                if (!$isAdmin && $oldHolder!==$actorId) {
-                    throw new DomainException('Only the current holder or an Administrator can edit this hardcopy.');
-                }
-            }
-
-            // For non-admin users the session account is always the holder;
-            // never accept an arbitrary holder_id or role from the request body.
-            $holderId=$isAdmin
-                ? ((int)($post['holder_id']??0) ?: ($oldHolder?:$actorId))
-                : $actorId;
-            if (!$this->ci->db->select('id')->get_where('users',[
-                'id'=>$holderId,'active'=>1
-            ])->row_array()) throw new DomainException('Choose an active document holder.');
-            $data['holder_id']=$holderId;
-        } else {
-            $data['document_number']=trim((string)($post['document_number']??''));
-            $data['series_number']=trim((string)($post['series_number']??'')) ?: NULL;
-            $data['category_id']=(int)($post['category_id']??0);
-            if ($data['document_number']==='' || !$data['category_id']) {
-                throw new DomainException('Document number and category are required.');
-            }
-        }
-        if (!$id) {
-            $data['created_by']=$actorId;
-            $data['creation_source']='direct';
-            $data['creation_reason']=trim((string)($post['creation_reason']??''));
-        }
         $this->ci->db->trans_begin();
-        if ($id) {
-            if (!$this->ci->Document_model->find($domain,$id)) {
-                $this->ci->db->trans_rollback();throw new DomainException('Document was not found.');
+        try {
+            $old=NULL;
+            if ($id) {
+                $old=$this->ci->db->query('SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE',[$id])->row_array();
+                if (!$old || !$this->ci->Document_model->manageable($domain,$id,$actor))
+                    throw new DomainException('Only the current holder or an Administrator can edit this active hardcopy.');
+                if (isset($post['version']) && $post['version']!=='' && (int)$post['version']!==(int)$old['version'])
+                    throw new DomainException('This document changed in another session. Refresh before editing.');
             }
-            $this->ci->db->where('id',$id)->update($cfg['table'],$data);
-        } else $this->ci->db->insert($cfg['table'],$data);
-        if ($this->ci->db->trans_status()===FALSE) {
+            $data=$this->validate_hardcopy_proposal($post,$actor,$id);
+            if ($old) {
+                $data['version']=(int)$old['version']+1;
+                $this->ci->db->where('id',$id)->update($cfg['table'],$data);
+            } else {
+                $data+=['created_by'=>(int)$actor['id'],'creation_source'=>'direct',
+                    'creation_reason'=>trim((string)($post['creation_reason']??''))];
+                $this->ci->db->insert($cfg['table'],$data);
+                $id=(int)$this->ci->db->insert_id();
+            }
+            $this->ci->db->insert('status_history',[
+                'domain'=>$domain,'document_id'=>$id,'previous_status'=>$old['status']??'',
+                'new_status'=>'active','action'=>$old?'direct_update':'direct_create',
+                'user_id'=>(int)$actor['id'],'remarks'=>$old?'Direct metadata update':$data['creation_reason']]);
+            if ($this->ci->db->trans_status()===FALSE)
+                throw new DomainException('Document save failed. Check unique numbers and related records.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
-            throw new DomainException('Document save failed. Check unique numbers and existing related records.');
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Document could not be saved. Refresh and try again.');
         }
-        $this->ci->db->trans_commit();
     }
     /**
      * Shared validation for direct Hardcopy and Hardcopy Request submissions.
@@ -126,6 +90,7 @@ class Document_service
 
     public function apply_hardcopy_request($type,$payload,$ownerId,$approverId,$requestId,$documentId)
     {
+        if ($documentId) $this->ci->db->query('SELECT id FROM hardcopy_documents WHERE id=? FOR UPDATE',[(int)$documentId]);
         $owner=$this->ci->db->select('u.*,r.name AS role')->from('users u')
             ->join('roles r','r.id=u.role_id')->where('u.id',$ownerId)->limit(1)
             ->get()->row_array();
@@ -144,7 +109,7 @@ class Document_service
         }
         if ($type!=='hardcopy_update' || !$documentId)
             throw new DomainException('Invalid approved hardcopy action.');
-        $this->ci->db->where('id',$documentId)->where('status','active')
+        $this->ci->db->where('id',$documentId)->where('status','active')->set('version','version+1',FALSE)
             ->update('hardcopy_documents',$data);
         return ['document_id'=>(int)$documentId];
     }
@@ -231,24 +196,32 @@ class Document_service
 
     public function dispose($domain,$id,$actorId,$reason='',$action='other')
     {
-        $c=$this->ci->Document_model->config($domain);
-        $row=$this->ci->Document_model->find($domain,$id);
-        if (!$row || $row['status']==='disposed') throw new DomainException('Active document was not found.');
+        $cfg=$this->ci->Document_model->config($domain);
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $actor=$this->ci->Identity_model->active_user($actorId);
+        if (!$actor || !$this->ci->Permission_model->allowed($actor,'disposal','direct'))
+            throw new DomainException('Direct disposal permission is required.');
         $this->ci->db->trans_begin();
-        $this->ci->db->where('id',$id)->update($c['table'],['previous_status'=>$row['status'],'status'=>'disposed']);
-        $this->ci->db->insert('disposals',[
-            'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],
-            'previous_state'=>json_encode($row,JSON_UNESCAPED_UNICODE),
-            'disposal_action'=>$action,'remarks'=>trim($reason),'disposed_by'=>$actorId
-        ]);
-        $this->ci->db->insert('status_history',[
-            'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],
-            'new_status'=>'disposed','action'=>'direct_dispose','user_id'=>$actorId,
-            'remarks'=>trim($reason)
-        ]);
-        if ($this->ci->db->trans_status()===FALSE) {
-            $this->ci->db->trans_rollback();throw new DomainException('Disposal could not be recorded.');
+        try {
+            $row=$this->ci->db->query('SELECT * FROM '.$cfg['table'].' WHERE id=? FOR UPDATE',[(int)$id])->row_array();
+            if (!$row || !$this->ci->Document_model->manageable($domain,$id,$actor))
+                throw new DomainException('Active document is not available for disposal.');
+            $this->ci->db->where('id',$id)->update($cfg['table'],[
+                'previous_status'=>$row['status'],'status'=>'disposed','version'=>(int)$row['version']+1]);
+            $this->ci->db->insert('disposals',[
+                'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],
+                'previous_state'=>json_encode($row,JSON_UNESCAPED_UNICODE),
+                'disposal_action'=>$action,'remarks'=>trim($reason),'disposed_by'=>$actorId]);
+            $this->ci->db->insert('status_history',[
+                'domain'=>$domain,'document_id'=>$id,'previous_status'=>$row['status'],
+                'new_status'=>'disposed','action'=>'direct_dispose','user_id'=>$actorId,'remarks'=>trim($reason)]);
+            if ($this->ci->db->trans_status()===FALSE) throw new DomainException('Disposal could not be recorded.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Disposal could not be recorded. Refresh and try again.');
         }
-        $this->ci->db->trans_commit();
     }
 }

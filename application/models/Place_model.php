@@ -21,20 +21,30 @@ class Place_model extends CI_Model
         $c['read_only'] = $slug === 'sequence';
         return $c;
     }
-    private function scope($c, $q, $status)
+    private function scope($c, $q, $status, $state=[])
     {
         $this->db->from($c['table'] . ' p');
-        if ($q !== '') $this->db->like('p.' . $c['key'], $q);
+        if ($q !== '') {
+            $this->db->group_start()->like('p.'.$c['key'], $q);
+            foreach (['code','folder_name','description'] as $field) {
+                if (in_array($field,$c['fields'],TRUE)) $this->db->or_like('p.'.$field,$q);
+            }
+            $this->db->group_end();
+        }
+        $parents=['specific'=>'area_id','asset'=>'specific_id','location'=>'area_id',
+            'softcopy-categories'=>'parent_id'];
+        if (!empty($state['parent']) && isset($parents[$c['slug']]))
+            $this->db->where('p.'.$parents[$c['slug']],(int)$state['parent']);
         if ($c['active'] && $status !== '' && in_array($status, ['0','1'], TRUE)) {
             $this->db->where('p.active',(int) $status);
         }
     }
-    public function listing($c, $q, $status, $page, $limit)
+    public function listing($c, $q, $status, $page, $limit, $state=[])
     {
-        $this->scope($c,$q,$status);
+        $this->scope($c,$q,$status,$state);
         $total = (int) $this->db->count_all_results();
         $page = min(max(1,$page),max(1,(int) ceil($total/$limit)));
-        $this->scope($c,$q,$status);
+        $this->scope($c,$q,$status,$state);
         $this->db->select('p.*');
         $joins = [
             'specific'=>[['areas a','a.id=p.area_id','a.name AS area_name']],
@@ -47,7 +57,11 @@ class Place_model extends CI_Model
         foreach ($joins[$c['slug']] ?? [] as $join) {
             $this->db->join($join[0],$join[1],'left')->select($join[2]);
         }
-        $rows = $this->db->order_by('p.'.$c['key'],'ASC')
+        $sorts=array_intersect($c['fields'],['name','code','asset_number','folder_name','sequence_key','value']);
+        if ($c['active']) $sorts[]='active';
+        $sort=in_array($state['sort']??'',$sorts,TRUE)?$state['sort']:$c['key'];
+        $dir=($state['dir']??'ASC')==='DESC'?'DESC':'ASC';
+        $rows = $this->db->order_by('p.'.$sort,$dir)->order_by('p.'.$c['key'],'ASC')
             ->limit($limit,($page-1)*$limit)->get()->result_array();
         return [$rows,$total,$page];
     }

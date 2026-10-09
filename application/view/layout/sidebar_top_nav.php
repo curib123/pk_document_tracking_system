@@ -14,9 +14,16 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
         break;
     }
 }
+$navModule='Overview';
+foreach (['documents/'=>'System Documents','places'=>'Master Data','my-requests/'=>'Request Center',
+    'my-tasks/'=>'Request Center','admin/'=>'Administration'] as $prefix=>$label) {
+    if (strpos($path,$prefix)===0) {$navModule=$label;break;}
+}
+$navParts=explode(' · ',$title);$navPage=end($navParts);
 ?>
 <div class="app-shell">
-    <aside class="app-sidebar" id="appSidebar">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation panel">
+        <button class="sidebar-close d-lg-none" id="sidebarClose" type="button">Close navigation</button>
         <a href="<?= site_url('dashboard') ?>" class="brand">
             <img src="<?= base_url('assets/images/peanut-kisses.jpg') ?>" alt="Peanut Kisses">
             <span><strong>PK Document Control</strong><small>Record Workspace</small></span>
@@ -57,10 +64,11 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
         </nav>
         <div class="sidebar-bottom"><span class="status-dot"></span> Document Control System</div>
     </aside>
+    <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation" hidden></button>
     <main class="app-main">
         <header class="topbar">
-            <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
-            <span class="topbar-label">Document Management Workspace</span>
+            <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="appSidebar" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
+            <div class="topbar-context" aria-label="Current page"><span><?= html_escape($navModule) ?></span><strong><?= html_escape($navPage) ?></strong></div>
             <div class="user-menu dropdown">
                 <button class="user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="user-avatar"><?= html_escape(strtoupper(mb_substr($user['name'], 0, 1))) ?></span>

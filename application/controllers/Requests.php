@@ -26,7 +26,14 @@ class Requests extends MY_Controller
         }
         $state=$this->table_state('updated_at');
         list($rows,$total,$state['page'])=$this->Request_model->listing(
-           $tab,$this->user,$task,$state['q'],$state['status'],$state['page'],$state['limit']);
+           $tab,$this->user,$task,$state['q'],$state['status'],$state['page'],$state['limit'],$state);
+        $actionModules=['softcopy_create'=>'softcopy','softcopy_revise'=>'softcopy',
+            'softcopy_cancel'=>'softcopy','hardcopy_create'=>'hardcopy','hardcopy_update'=>'hardcopy',
+            'disposal'=>'disposal','transfer'=>'transfer','assignment'=>'assignment','access'=>'access'];
+        $requestTypes=[];
+        foreach ($this->Request_model->types($tab) as $type) {
+            if ($this->can($actionModules[$type],'request')) $requestTypes[]=$type;
+        }
         $history=$this->Request_model->histories(array_column($rows,'id'));
         $approvalRoutes=$this->Request_model->approval_routes(array_column($rows,'id'));
         $handoffs=[];$handoffPage=1;$handoffTotal=0;
@@ -37,16 +44,16 @@ class Requests extends MY_Controller
         }
         $this->render(($task?'My Tasks':'My Requests').' · '.ucwords(str_replace('-',' ',$tab)),
            $task?'pages/request/approving_assign_request/index':'pages/request/user_own_all_request/index',[
-             'tab'=>$tab,'task'=>$task,'rows'=>$rows,'total'=>$total,'table'=>$state,
+             'tab'=>$tab,'task'=>$task,'allowed_request_types'=>$requestTypes,'rows'=>$rows,'total'=>$total,'table'=>$state,
              'history'=>$history,'approval_routes'=>$approvalRoutes,
              'handoffs'=>$handoffs,'handoff_total'=>$handoffTotal,
              'handoff_page'=>$handoffPage,
-             'users'=>$this->Document_model->active_users(),
-             'softcopy_options'=>$this->Document_model->options('softcopy'),
-             'hardcopy_options'=>$this->Document_model->options('hardcopy'),
-             'transfer_sources'=>$tab==='hardcopy-transfer' ?
-                 $this->Document_model->transfer_sources() : [],
-             'transfer_options'=>$tab==='hardcopy-transfer' ? [
+             'users'=>$task?[]:$this->Document_model->active_users(),
+             'softcopy_options'=>$task?[]:$this->Document_model->options('softcopy',$this->user,in_array($tab,['access-grant','document-assign'],TRUE)),
+             'hardcopy_options'=>$task?[]:$this->Document_model->options('hardcopy',$this->user,in_array($tab,['access-grant','document-assign'],TRUE)),
+             'transfer_sources'=>!$task && $tab==='hardcopy-transfer' ?
+                 $this->Document_model->transfer_sources($this->user) : [],
+             'transfer_options'=>!$task && $tab==='hardcopy-transfer' ? [
                 'areas'=>$this->Place_model->options('areas'),
                 'specifics'=>$this->Place_model->options('specifics'),
                 'assets'=>$this->Place_model->options('assets'),

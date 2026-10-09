@@ -4,7 +4,7 @@ class Auth extends MY_Controller
 {
     public function index()
     {
-        if ($this->user) return redirect('dashboard');
+        if ($this->user) return redirect(!empty($this->user['require_password_change']) ? 'change-password' : 'dashboard');
         $this->load->view('pages/authentication/index');
     }
 
@@ -39,7 +39,7 @@ class Auth extends MY_Controller
             'user_id' => (int) $user['id'],
             'session_version' => (int) $user['session_version']
         ]);
-        redirect('dashboard');
+        redirect(!empty($user['require_password_change']) ? 'change-password' : 'dashboard');
     }
 
     public function logout()
@@ -49,24 +49,49 @@ class Auth extends MY_Controller
         redirect('login');
     }
 
+    public function setup()
+    {
+        $this->authenticate();
+        if (empty($this->user['require_password_change'])) return redirect('dashboard');
+        $this->output->set_header('Cache-Control: no-store, private');
+        $this->load->view('layout/header', ['title'=>'Secure Your Account']);
+        $this->load->view('pages/authentication/first_login');
+    }
+
     public function change_password()
     {
         $this->authenticate();
         $this->confirmed();
-        $row = $this->db->get_where('users', ['id' => $this->user['id']])->row_array();
-        $old = (string) $this->input->post('current_password');
-        $new = (string) $this->input->post('new_password');
-        if (!password_verify($old, $row['password_hash']) || strlen($new) < 12) {
-            $this->notice('Incorrect current password or new password shorter than 12 characters.', 'danger');
-            return redirect('dashboard');
+        $target = !empty($this->user['require_password_change']) ? 'change-password' : 'dashboard';
+        require_once APPPATH.'services/authentication/authentication_service.php';
+        $old = (string)$this->input->post('current_password');
+        $new = (string)$this->input->post('new_password');
+        try {
+            Authentication_service::validate_new_password($old, $new,
+                (string)$this->input->post('confirm_password'));
+            $this->db->trans_begin();
+            $row = $this->db->query('SELECT * FROM users WHERE id=? FOR UPDATE',
+                [(int)$this->user['id']])->row_array();
+            if (!$row || !$row['active'] ||
+                (int)$row['session_version'] !== (int)$this->user['session_version'] ||
+                !password_verify($old, $row['password_hash'])) {
+                throw new DomainException('Your current password or session is no longer valid.');
+            }
+            $version = (int)$row['session_version'] + 1;
+            $this->db->where('id', $row['id'])->update('users', [
+                'password_hash'=>password_hash($new, PASSWORD_DEFAULT),
+                'require_password_change'=>0, 'session_version'=>$version
+            ]);
+            if ($this->db->trans_status() === FALSE) throw new DomainException('Password could not be changed.');
+            $this->db->trans_commit();
+            $this->session->sess_regenerate(TRUE);
+            $this->session->set_userdata('session_version', $version);
+            $this->notice('Password changed successfully.');
+            redirect('dashboard');
+        } catch (DomainException $e) {
+            $this->db->trans_rollback();
+            $this->notice($e->getMessage(), 'danger');
+            redirect($target);
         }
-        $this->db->where('id', $this->user['id'])->update('users', [
-            'password_hash' => password_hash($new, PASSWORD_DEFAULT),
-            'require_password_change' => 0,
-            'session_version' => (int) $row['session_version'] + 1
-        ]);
-        $this->session->set_userdata('session_version', (int) $row['session_version'] + 1);
-        $this->notice('Password changed successfully.');
-        redirect('dashboard');
     }
 }

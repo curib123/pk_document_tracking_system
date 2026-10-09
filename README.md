@@ -79,3 +79,12 @@ Do not serve `storage/` through Apache. Back up the audit folder with private st
 - Every ordinary DataTable data cell opens the existing **View modal** on click or Enter/Space. Row action buttons, links and dropdowns retain their original behavior. Folder selection remains active through search, filters, pagination and row-limit controls.
 - No new database tables, filesystem document folders, REST API or AJAX endpoints are introduced. This is a read-only virtual navigation layer for the original `pk_dts.sql` structure.
 - CI tests `tests/folder_browser_smoke.sh` validate real folder hierarchy, document filtering, denial of invalid/cross-domain folders, and folder-scoped administrative assignments. Browser UX and large-volume tests remain required in the local XAMPP setup.
+
+
+## plan.md repair and verification (2026-10-09)
+
+The consolidated requirements, confirmed defects, root causes, implemented fixes and actual test results are in [`docs/PLAN_ISSUE_REPORT.md`](docs/PLAN_ISSUE_REPORT.md), with a machine-readable issue register alongside it. The original `plan.md` is unchanged.
+
+Run `bash tests/run_unit.sh` for all source/policy/view checks and `bash tests/smoke.sh` only against a fresh disposable `pk_dts_test` database. The smoke suite includes 53 additional plan-specific HTTP/SQL checks. Optional Chromium rendering/interaction verification runs with `PK_BROWSER_TEST=1`; see the report for setup and the explicit distinction between offline browser rendering and live HTTP submission tests.
+
+Do not import installation SQL into an existing database. These changes do not alter the authoritative database schema or deploy to Windows/XAMPP automatically.

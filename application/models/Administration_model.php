@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 class Administration_model extends CI_Model
 {
-    private function count_and_page($table,$select,$joins,$filter,$q,$searchFields,$page,$limit,$sort)
+    private function count_and_page($table,$select,$joins,$filter,$q,$searchFields,$page,$limit,$sort,$direction='ASC')
     {
         $apply=function() use($table,$joins,$filter,$q,$searchFields) {
             $this->db->from($table);
@@ -20,54 +20,66 @@ class Administration_model extends CI_Model
         $apply();$total=(int)$this->db->count_all_results();
         $page=min(max(1,$page),max(1,(int)ceil($total/$limit)));
         $apply();
-        $rows=$this->db->select($select,FALSE)->order_by($sort,'ASC')
+        $rows=$this->db->select($select,FALSE)->order_by($sort,$direction)
             ->limit($limit,($page-1)*$limit)->get()->result_array();
         return [$rows,$total,$page];
     }
-    public function users($q,$status,$page,$limit)
+    public function users($q,$status,$page,$limit,$state=[])
     {
+        $sorts=['username'=>'u.username','name'=>'u.first_name','position'=>'u.position_title',
+            'role'=>'r.name','active'=>'u.active'];
+        $filter=in_array($status,['0','1'],TRUE)?['u.active'=>(int)$status]:[];
+        if (!empty($state['role'])) $filter['u.role_id']=(int)$state['role'];
         return $this->count_and_page('users u',
             'u.id,u.username,u.first_name,u.middle_name,u.last_name,u.position_title,u.role_id,
              u.leader_id,u.active,u.require_password_change,u.version,
              r.name AS role_name,
              CONCAT_WS(" ",l.first_name,l.last_name) AS leader_name',
             [['roles r','r.id=u.role_id'],['users l','l.id=u.leader_id','left']],
-            in_array($status,['0','1'],TRUE)?['u.active'=>(int)$status]:[],
-            $q,['u.username','u.first_name','u.last_name'],$page,$limit,'u.username');
+            $filter,$q,['u.username','u.first_name','u.last_name','u.position_title','r.name'],
+            $page,$limit,$sorts[$state['sort']??'']??'u.username',
+            ($state['dir']??'ASC')==='DESC'?'DESC':'ASC');
     }
-    public function roles($q,$status,$page,$limit)
+    public function roles($q,$status,$page,$limit,$state=[])
     {
         return $this->count_and_page('roles r','r.*',[],
             in_array($status,['0','1'],TRUE)?['r.active'=>(int)$status]:[],
-            $q,['r.name'],$page,$limit,'r.name');
+            $q,['r.name'],$page,$limit,($state['sort']??'')==='active'?'r.active':'r.name',
+            ($state['dir']??'ASC')==='DESC'?'DESC':'ASC');
     }
-    public function workflows($q,$status,$page,$limit)
+    public function workflows($q,$status,$page,$limit,$state=[])
     {
+        $filter=in_array($status,['0','1'],TRUE)?['w.active'=>(int)$status]:[];
+        if (!empty($state['type'])) $filter['w.request_type']=$state['type'];
+        if (in_array($state['publication']??'',['draft','published'],TRUE)) {
+            $publication=$this->db->escape($state['publication']);
+            $filter["EXISTS (SELECT 1 FROM workflow_versions pv WHERE pv.workflow_id=w.id AND pv.status=$publication)"]=NULL;
+        }
+        $sorts=['name'=>'w.name','type'=>'w.request_type','active'=>'w.active'];
         $rows=$this->count_and_page('workflows w',
             'w.id,w.workflow_key,w.name,w.description,w.request_type,w.active,w.version',
-            [],in_array($status,['0','1'],TRUE)?['w.active'=>(int)$status]:[],
-            $q,['w.name','w.request_type'],$page,$limit,'w.name');
+            [],$filter,$q,['w.name','w.request_type'],$page,$limit,
+            $sorts[$state['sort']??'']??'w.name',($state['dir']??'ASC')==='DESC'?'DESC':'ASC');
         $ids=array_column($rows[0],'id');
         if ($ids) {
-            $versions=$this->db->select('*')->from('workflow_versions')
-                ->where_in('workflow_id',$ids)->order_by('version_number','DESC')->get()->result_array();
-            $versionsByWorkflow=[];
-            foreach ($versions as $v) if (!isset($versionsByWorkflow[$v['workflow_id']])) {
-                $versionsByWorkflow[$v['workflow_id']]=$v;
+            $versions=$this->db->from('workflow_versions')->where_in('workflow_id',$ids)
+                ->order_by('version_number','DESC')->order_by('id','DESC')->get()->result_array();
+            $byWorkflow=[];
+            foreach ($versions as $version) $byWorkflow[$version['workflow_id']][]=$version;
+            foreach ($rows[0] as &$workflow) {
+                $workflow['versions']=$byWorkflow[$workflow['id']]??[];
+                $latest=$workflow['versions'][0]??[];
+                $workflow['latest_version_id']=$latest['id']??NULL;
+                $workflow['version_number']=$latest['version_number']??0;
+                $workflow['version_status']=$latest['status']??'not configured';
+                $workflow['is_default']=$latest['is_default']??0;
+                $workflow['graph']=$latest['graph']??'{"steps":[]}';
             }
-            foreach ($rows[0] as &$w) {
-                $v=$versionsByWorkflow[$w['id']]??NULL;
-                $w['latest_version_id']=$v['id']??NULL;
-                $w['version_number']=$v['version_number']??0;
-                $w['version_status']=$v['status']??'not configured';
-                $w['is_default']=$v['is_default']??0;
-                $w['graph']=$v['graph']??'{"steps":[]}';
-            }
-            unset($w);
+            unset($workflow);
         }
         return $rows;
     }
-    public function document_assignments($domain,$browser)
+    public function document_assignments($domain,$browser,$state=[])
     {
         // Flat assignment records are scoped by the selected source folder.
         // No separate assignment/location table is introduced.
@@ -91,8 +103,19 @@ class Administration_model extends CI_Model
                 ->where('d.status','active');
         }
         $this->Folder_model->scope_documents($domain,$browser,'d');
-        return $this->db->order_by('assigned_date','DESC')
-            ->limit(100)->get()->result_array();
+        if (!empty($state['q'])) $this->db->group_start()->like('d.title',$state['q'])
+            ->or_like($domain==='softcopy'?'d.document_number':'d.sequence_number',$state['q'])
+            ->or_like('u.first_name',$state['q'])->or_like('u.last_name',$state['q'])->group_end();
+        if (!empty($state['owner'])) $this->db->where('u.id',(int)$state['owner']);
+        $query=$this->db->get_compiled_select();
+        $total=(int)$this->db->query('SELECT COUNT(*) AS total FROM ('.$query.') scoped_assignments')->row()->total;
+        $limit=in_array((int)($state['limit']??10),[10,25,50,100],TRUE)?(int)($state['limit']??10):10;
+        $page=min(max(1,(int)($state['page']??1)),max(1,(int)ceil($total/$limit)));
+        $sort=in_array($state['sort']??'',['title','code','assignee','assigned_date'],TRUE)?$state['sort']:'assigned_date';
+        $direction=($state['dir']??'DESC')==='ASC'?'ASC':'DESC';
+        $rows=$this->db->query('SELECT * FROM ('.$query.') scoped_assignments ORDER BY '.$sort.' '.$direction.
+            ',document_id '.$direction.',recipient_id '.$direction.' LIMIT '.$limit.' OFFSET '.(($page-1)*$limit))->result_array();
+        return [$rows,$total,$page];
     }
 
     public function role_options()

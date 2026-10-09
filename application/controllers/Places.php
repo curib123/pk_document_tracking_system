@@ -35,7 +35,7 @@ class Places extends MY_Controller
         $this->require_permission($cfg['table'],'view');
         $state=$this->table_state($cfg['key']);
         list($rows,$total,$state['page'])=$this->Place_model->listing($cfg,
-            $state['q'],$state['status'],$state['page'],$state['limit']);
+            $state['q'],$state['status'],$state['page'],$state['limit'],$state);
         $options=[];
         foreach (['areas','specifics','assets','categories'] as $source) {
             $options[$source]=$this->Place_model->options($source);

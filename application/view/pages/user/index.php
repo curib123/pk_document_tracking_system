@@ -1,4 +1,5 @@
 <?php
+$canUser = function ($action) use ($permissions) { return isset($permissions['*']) || !empty($permissions['users'][$action]); };
 $dt_columns=['name'=>'Full Name','username'=>'Username','position'=>'Position',
  'role'=>'Role','leader'=>'Leader','active'=>'Status'];
 $dt_rows=[];
@@ -12,18 +13,19 @@ foreach($rows as $r){
  'record'=>['id'=>$r['id'],'username'=>$r['username'],'first_name'=>$r['first_name'],
  'middle_name'=>$r['middle_name'],'last_name'=>$r['last_name'],
  'position_title'=>$r['position_title'],'role_id'=>$r['role_id'],
- 'leader_id'=>$r['leader_id'],'active'=>$r['active']],
- 'buttons'=>[['type'=>'view'],['type'=>'edit']]];
- if ($r['active'] && $r['id']!=$user['id']) $dt_rows[count($dt_rows)-1]['buttons'][]=
+ 'leader_id'=>$r['leader_id'],'active'=>$r['active'],'version'=>$r['version']],
+ 'buttons'=>$canUser('edit') && (isset($permissions['*']) || strcasecmp($r['role_name'],'Administrator')!==0) ? [['type'=>'view'],['type'=>'edit']] : [['type'=>'view']]];
+ if ($canUser('delete') && (isset($permissions['*']) || strcasecmp($r['role_name'],'Administrator')!==0) && $r['active'] && $r['id']!=$user['id']) $dt_rows[count($dt_rows)-1]['buttons'][]=
   ['type'=>'action','url'=>'admin/users/deactivate','label'=>'Deactivate',
   'description'=>'Disable this user while preserving related history.','icon'=>'fa-solid fa-user-slash'];
 }
 $dt_path='admin/users';$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
-$dt_sort='username';$dt_dir='asc';$dt_sortable=[];
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);$dt_sortable=['name','username','position','role','active'];
 $dt_filters=['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']];
-$dt_filter_values=['status'=>$dt_filter];$dt_badges=['active'];
-$dt_create='Add User';
+$dt_filters['role']=[''=>'All Roles']+array_column($roles,'name','id');
+$dt_filter_values=['status'=>$dt_filter,'role'=>$table['role']];$dt_badges=['active'];
+$dt_create=$canUser('add')?'Add User':'';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>User Management</h1>
 <p>Manage staff accounts and reporting lines with server-enforced permissions.</p></div></div>
@@ -37,7 +39,7 @@ $dt_create='Add User';
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">User</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body"><div class="row g-3">
-<input type="hidden" name="id" value="">
+<input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
 <?php foreach(['first_name'=>'First Name','middle_name'=>'Middle Name','last_name'=>'Last Name',
  'username'=>'Username','position_title'=>'Position Title'] as $field=>$label): ?>
 <div class="col-md-6"><label class="form-label" for="u-<?= $field ?>"><?= $label ?></label>
@@ -54,9 +56,11 @@ $dt_create='Add User';
 <option value="">No leader</option>
 <?php foreach($users as $u): ?><option value="<?= (int)$u['id'] ?>"><?= html_escape($u['name']) ?></option>
 <?php endforeach; ?></select></div>
-<div class="col-md-6"><label class="form-label" for="u-password">Initial / New Password</label>
-<input class="form-control" id="u-password" name="password" type="password" minlength="12"
-autocomplete="new-password"><div class="form-text">Minimum 12 characters. Leave empty when editing to keep password.</div></div>
+<div class="col-12"><div class="alert alert-light border mb-0">
+A secure temporary password is generated automatically for new accounts and shown once after saving.
+<label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="reset_password" value="1">
+Generate a new temporary password for this existing account</label>
+</div></div>
 <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox"
 name="active" value="1" checked> Active account</label></div>
 </div></div>

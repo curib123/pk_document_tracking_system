@@ -182,7 +182,7 @@ foreach (['/storage/audit','LOCK_EX','JSON_PRETTY_PRINT'] as $key) {
     if (strpos($audit,$key)===FALSE) $fail[]='Daily filesystem JSON audit missing: '.$key;
 }
 if (strpos($softcopyRevision,'$effective=')===FALSE ||
-    strpos($softcopyRevision,"'date_released'=>$date")===FALSE)
+    strpos($softcopyRevision,"'date_released'=>\$date")===FALSE)
     $fail[]='Softcopy automatic dates are incomplete.';
 if (!is_file($root.'/tests/domain_audit_smoke.sh'))
     $fail[]='Missing domain + audit tests.';
@@ -228,7 +228,8 @@ if (strpos($docModel,'options_in_folder')===FALSE ||
 }
 if (strpos($docView,'reusable_components/folder_browser')===FALSE ||
     strpos($assignmentView,'reusable_components/folder_browser')===FALSE ||
-    strpos($assignmentView,'data-row-view')===FALSE ||
+    strpos($assignmentView,'reusable_components/reusable_datatable')===FALSE ||
+    strpos($tableView,'data-row-view')===FALSE ||
     strpos($tableView,'class="table-cell-view"')===FALSE ||
     strpos($ui,'showTableCellDetails')===FALSE) {
     $fail[]='Shared folder navigator or cell-click view missing.';
