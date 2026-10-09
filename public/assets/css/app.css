@@ -1182,3 +1182,88 @@ a {
         min-height: 650px;
     }
 }
+
+/* =========================================================
+   PLACES SIDEBAR ACCORDION
+   Native <details> works on desktop/mobile, online/offline.
+========================================================= */
+
+.sidebar-group {
+    margin: 7px 0;
+}
+
+.side-link-parent {
+    width: 100%;
+    margin: 0;
+    list-style: none;
+    cursor: pointer;
+    user-select: none;
+}
+
+.side-link-parent::-webkit-details-marker {
+    display: none;
+}
+
+.side-link-parent::marker {
+    content: "";
+}
+
+.side-link-parent:focus-visible,
+.side-submenu .side-link:focus-visible {
+    outline: 2px solid #ffb8c1;
+    outline-offset: 2px;
+}
+
+.side-link-parent .side-link-label {
+    flex: 1;
+}
+
+.side-link-parent .sidebar-chevron {
+    width: 13px;
+    margin-left: auto;
+    color: #8c9ab0;
+    font-size: 11px;
+    transition: transform 0.18s ease, color 0.18s ease;
+}
+
+.sidebar-group[open] > .side-link-parent .sidebar-chevron {
+    transform: rotate(180deg);
+    color: #e6edf7;
+}
+
+.sidebar-group.is-current > .side-link-parent,
+.sidebar-group[open] > .side-link-parent {
+    background: #243047;
+    color: #fff;
+}
+
+.side-submenu {
+    display: grid;
+    gap: 2px;
+    margin: 7px 0 12px 24px;
+    padding-left: 12px;
+    border-left: 1px solid #39465b;
+}
+
+.side-submenu .side-link {
+    margin: 0;
+    padding: 9px 10px;
+    gap: 11px;
+    font-size: 12px;
+}
+
+.side-submenu .side-link i {
+    width: 18px;
+    font-size: 13px;
+}
+
+.side-submenu .side-link.active {
+    background: var(--accent);
+    color: #fff;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .side-link-parent .sidebar-chevron {
+        transition: none;
+    }
+}
