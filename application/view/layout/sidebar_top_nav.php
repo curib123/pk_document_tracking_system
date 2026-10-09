@@ -18,7 +18,7 @@ foreach ($places as $module) if ($visible($module)) $anyPlace = TRUE;
     <aside class="app-sidebar" id="appSidebar">
         <a href="<?= site_url('dashboard') ?>" class="brand">
             <img src="<?= base_url('assets/images/peanut-kisses.jpg') ?>" alt="Peanut Kisses">
-            <span><strong>PK Document Control</strong><small>Enterprise Workspace</small></span>
+            <span><strong>PK Document Control</strong><small>Record Workspace</small></span>
         </a>
         <nav class="side-links" aria-label="Main navigation">
             <?php if ($visible('dashboard')): ?>
