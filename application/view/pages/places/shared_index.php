@@ -74,11 +74,15 @@ $dt_sortable=[];
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
  <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
- <form id="editForm" method="post" action="<?= site_url('places/'.$cfg['slug'].'/save') ?>" data-confirm="Save these changes?">
+ <form id="editForm" method="post" action="<?= site_url('places/'.$cfg['slug'].'/save') ?>"
+       data-confirm="Save these changes?" <?= $cfg['slug']==='location' ? 'data-location-upsert' : '' ?>>
   <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body"><div class="row g-3">
    <input type="hidden" name="id" value="">
+   <?php if ($cfg['slug']==='location'): ?>
+       <?php $this->load->view('pages/places/location/modal_action/upsert', ['options'=>$options]); ?>
+   <?php else: ?>
    <?php foreach ($cfg['fields'] as $field):
     $references=['area_id'=>'areas','specific_id'=>'specifics','asset_id'=>'assets','parent_id'=>'categories'];
     if (isset($references[$field])):
@@ -103,6 +107,7 @@ $dt_sortable=[];
       <?= $field==='value'?'type="number" min="0"':'maxlength="150"' ?>>
      <?php endif; ?></div>
     <?php endif; endforeach; ?>
+   <?php endif; ?>
    <?php if ($cfg['active']): ?>
     <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="active" value="1" checked> Active</label></div>
    <?php endif; ?>

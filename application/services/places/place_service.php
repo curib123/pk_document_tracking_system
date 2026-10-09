@@ -23,7 +23,7 @@ class Place_service
         }
         if ($c['slug']==='specific' && !$data['area_id']) throw new DomainException('Choose an area.');
         if ($c['slug']==='asset' && !$data['specific_id']) throw new DomainException('Choose a specific.');
-        if ($c['slug']==='location' && empty($data['code'])) throw new DomainException('Location code is required.');
+        if ($c['slug']==='location') $this->prepare_location($data);
         if ($c['slug']==='softcopy-categories') {
             if (!$data['folder_name']) throw new DomainException('Folder name is required.');
             if (!$id) $data['created_by']=$actorId;
@@ -43,6 +43,70 @@ class Place_service
         }
         $this->ci->db->trans_commit();
     }
+    /**
+     * Predefined Location hierarchy, strictly resolved from the existing pk_dts
+     * areas, specifics and assets (not from client-supplied parent IDs).
+     * The source SQL allows each of the three references to be nullable.
+     */
+    private function prepare_location(&$data)
+    {
+        if (empty($data['code'])) throw new DomainException('Location code is required.');
+        if (mb_strlen($data['name'])>150 || mb_strlen($data['code'])>100) {
+            throw new DomainException('Location name must be 150 characters or less and code 100 or less.');
+        }
+
+        $date=$data['archive_date'] ?? '';
+        if ($date==='') $data['archive_date']=NULL;
+        else {
+            $parsed=DateTime::createFromFormat('!Y-m-d',$date);
+            if (!$parsed || $parsed->format('Y-m-d')!==$date) {
+                throw new DomainException('Archive date must be a valid date.');
+            }
+        }
+
+        $areaId=(int)($data['area_id']??0);
+        $specificId=(int)($data['specific_id']??0);
+        $assetId=(int)($data['asset_id']??0);
+
+        if ($assetId) {
+            $asset=$this->ci->db->select('b.id,b.specific_id,s.area_id')
+                ->from('assets b')->join('specifics s','s.id=b.specific_id')
+                ->join('areas a','a.id=s.area_id')
+                ->where('b.id',$assetId)->where('b.active',1)
+                ->where('s.active',1)->where('a.active',1)
+                ->limit(1)->get()->row_array();
+            if (!$asset) throw new DomainException('Choose an active asset linked to an active specific and area.');
+            if ($specificId && $specificId!==(int)$asset['specific_id']) {
+                throw new DomainException('Selected asset does not belong to the chosen specific.');
+            }
+            if ($areaId && $areaId!==(int)$asset['area_id']) {
+                throw new DomainException('Selected asset does not belong to the chosen area.');
+            }
+            $specificId=(int)$asset['specific_id'];
+            $areaId=(int)$asset['area_id'];
+        }
+
+        if ($specificId) {
+            $specific=$this->ci->db->select('s.id,s.area_id')
+                ->from('specifics s')->join('areas a','a.id=s.area_id')
+                ->where('s.id',$specificId)->where('s.active',1)
+                ->where('a.active',1)->limit(1)->get()->row_array();
+            if (!$specific) throw new DomainException('Choose a specific linked to an active area.');
+            if ($areaId && $areaId!==(int)$specific['area_id']) {
+                throw new DomainException('Selected specific does not belong to the chosen area.');
+            }
+            $areaId=(int)$specific['area_id'];
+        }
+
+        if ($areaId && !$this->ci->db->select('id')->get_where('areas',[
+            'id'=>$areaId,'active'=>1
+        ])->row_array()) throw new DomainException('Choose an active area.');
+
+        $data['area_id']=$areaId?:NULL;
+        $data['specific_id']=$specificId?:NULL;
+        $data['asset_id']=$assetId?:NULL;
+    }
+
     public function deactivate($c,$id)
     {
         if (!$c['active']) throw new DomainException('Sequences cannot be deactivated.');
