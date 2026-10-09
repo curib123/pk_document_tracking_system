@@ -12,6 +12,7 @@ export PK_ENCRYPTION_KEY=integration-tests-only-do-not-use-in-production
 export CI_ENV=development
 
 sed 's/pk_dts/pk_dts_test/g' database/schema.sql | mysql -h127.0.0.1 -uroot -prootpass
+mysql -h127.0.0.1 -uroot -prootpass pk_dts_test < database/migrations/20261009_document_workflows.sql
 sed 's/pk_dts/pk_dts_test/g' database/seed.sql | mysql -h127.0.0.1 -uroot -prootpass
 HASH=$(php -r 'echo password_hash("TemporaryTestPassword!2026", PASSWORD_DEFAULT);')
 mysql -h127.0.0.1 -uroot -prootpass pk_dts_test -e "
@@ -101,6 +102,10 @@ REQ_CSRF=$(token /tmp/pk-requests.html)
 curl -sS -b /tmp/pk-staff.cookies -c /tmp/pk-staff.cookies -o /dev/null \
     --data-urlencode "pk_csrf_token=$REQ_CSRF" --data-urlencode 'confirmed=yes' \
     --data-urlencode 'subject=Quality document approval' \
+    --data-urlencode 'operation=create' \
+    --data-urlencode 'proposed_code=QA-2026' \
+    --data-urlencode 'proposed_title=Quality Assurance Guide' \
+    --data-urlencode 'proposed_version=1' \
     http://127.0.0.1:8081/my-requests/softcopy/save
 REQ_ID=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
     -e "SELECT id FROM requests WHERE subject='Quality document approval' AND status='draft' LIMIT 1")
@@ -139,5 +144,8 @@ test "$CURRENT" = approved
 DECISION_COUNT=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
     -e "SELECT COUNT(*) FROM request_decisions WHERE request_id=$REQ_ID AND decision='approved'")
 test "$DECISION_COUNT" = 1
-echo "Integration smoke passed: auth, RBAC, documents, places, admin pages, request draft, workflow approval."
+CREATED_DOC=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
+    -e "SELECT COUNT(*) FROM documents WHERE kind='softcopy' AND code='QA-2026' AND title='Quality Assurance Guide'")
+test "$CREATED_DOC" = 1
+echo "Integration smoke passed: auth, RBAC, routes, draft, approval and document creation effect."
 
