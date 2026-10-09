@@ -45,6 +45,8 @@ class Records extends MY_Controller
         ) : [];
         $this->render($this->kinds[$kind], 'pages/records/index', [
             'file_histories' => $histories,
+            'file_grants' => ($kind === 'softcopy' && $this->can('softcopy', 'edit'))
+                ? $this->Records_model->active_grants(array_column($rows, 'id')) : [],
             'mode' => 'documents', 'module' => $kind, 'current' => $kind,
             'tabs' => $this->kinds, 'rows' => $rows, 'file_allowed' => $fileAllowed, 'total' => $total,
             'page' => $page, 'limit' => $limit, 'q' => $q, 'status' => $status,
@@ -94,6 +96,22 @@ class Records extends MY_Controller
             $this->notice('New softcopy file version uploaded.');
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('documents/softcopy');
+    }
+
+    public function revoke_access()
+    {
+        $this->require_permission('softcopy', 'edit');
+        $this->confirmed();
+        $id = (int) $this->input->post('id');
+        $grant = $this->db->get_where('document_access_grants', ['id' => $id])->row_array();
+        if (!$grant || $grant['revoked_at']) {
+            $this->notice('Active grant was not found.', 'danger');
+        } else {
+            $this->db->where('id', $id)->where('revoked_at IS NULL', NULL, FALSE)
+                ->update('document_access_grants', ['revoked_at' => date('Y-m-d H:i:s')]);
+            $this->notice('Document access has been revoked.');
         }
         redirect('documents/softcopy');
     }
