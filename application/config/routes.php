@@ -15,6 +15,7 @@ $route['documents/(:any)']['GET'] = 'Records/documents/$1';
 $route['documents/(:any)/save']['POST'] = 'Records/save_document/$1';
 $route['documents/(:any)/delete']['POST'] = 'Records/delete_document/$1';
 $route['documents/softcopy/upload']['POST'] = 'Records/upload_document';
+$route['documents/softcopy/grant/revoke']['POST'] = 'Records/revoke_access';
 $route['documents/softcopy/files/(:num)']['GET'] = 'Records/download_document/$1';
 $route['places/(:any)']['GET'] = 'Records/places/$1';
 $route['places/(:any)/save']['POST'] = 'Records/save_place/$1';
