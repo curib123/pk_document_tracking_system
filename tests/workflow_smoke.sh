@@ -57,10 +57,10 @@ test "$(db "SELECT COUNT(*) FROM workflow_history WHERE request_id=$RID")" -ge 2
 # Private files use the original files + softcopy_revisions tables, not a new file schema.
 printf 'PK DTS private revision content\\n' > /tmp/pk-private-revision.txt
 UPLOAD_TOKEN=$(token_for documents/softcopy)
-curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \\
-  -F "pk_csrf_token=$UPLOAD_TOKEN" -F 'confirmed=yes' \\
-  -F "document_id=$SOFT_ID" -F 'new_revision_level=REV-A' \\
-  -F 'page_number=1' -F 'attachment=@/tmp/pk-private-revision.txt;type=text/plain' \\
+curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \
+  -F "pk_csrf_token=$UPLOAD_TOKEN" -F 'confirmed=yes' \
+  -F "document_id=$SOFT_ID" -F 'new_revision_level=REV-A' \
+  -F 'page_number=1' -F 'attachment=@/tmp/pk-private-revision.txt;type=text/plain' \
   http://127.0.0.1:8089/files/upload
 FILE_ID=$(db "SELECT id FROM files WHERE domain='softcopy' AND document_id=$SOFT_ID AND status='approved' ORDER BY id DESC LIMIT 1")
 test -n "$FILE_ID"
