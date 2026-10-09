@@ -254,7 +254,7 @@
             // must always attach a file for immediate approval.
             var direct = select.form.dataset.softcopyDirect === 'yes';
             field.required = show && (name !== 'revision_attachment' || direct)
-                && name !== 'series_number';
+                && name !== 'series_number' && name !== 'effective_date';
             if (name === 'revision_attachment' && !direct && !select.form.querySelector('[name="id"]')?.value) {
                 field.required = show;
             }

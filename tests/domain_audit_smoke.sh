@@ -17,11 +17,21 @@ post_form admin/document-assignments admin/document-assignments/save \
 test "$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$WF_DOC")" = "$REC_ID"
 test "$(db 'SELECT COUNT(*) FROM requests')" = "$ADMIN_ASSIGN_BEFORE"
 
-# Softcopy administrative assignment still uses the original assignments table.
+# A fresh active softcopy is assigned through pk_dts assignments without
+# relying on an unrelated fixture which has already been cancelled.
+db "INSERT INTO softcopy_documents
+  (document_number, title, category_id, created_by, creation_source, creation_reason)
+  VALUES ('ASSIGN-QA-NEW','Assignment Fixture',$CAT_ID,$ADMIN_ID,'direct','QA')"
+SOFT_ASSIGN_ID=$(db "SELECT id FROM softcopy_documents WHERE document_number='ASSIGN-QA-NEW'")
+test -n "$SOFT_ASSIGN_ID"
 post_form admin/document-assignments admin/document-assignments/save \
-  'document_domain=softcopy' "softcopy_id=$SOFT_ID" "recipient_id=$REC_ID"
+  'document_domain=softcopy' "softcopy_id=$SOFT_ASSIGN_ID" "recipient_id=$REC_ID"
 test "$(db "SELECT COUNT(*) FROM assignments
-  WHERE softcopy_id=$SOFT_ID AND user_id=$REC_ID AND active=1")" = 1
+  WHERE softcopy_id=$SOFT_ASSIGN_ID AND user_id=$REC_ID AND active=1")" = 1
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-admin-assignments-updated.html \
+  http://127.0.0.1:8089/admin/document-assignments
+grep -q 'Assignment Fixture' /tmp/pk-admin-assignments-updated.html
+grep -q 'data-record=' /tmp/pk-admin-assignments-updated.html
 
 # access_grants is polymorphic. Hardcopy access is supported without altering SQL.
 post_form my-requests/access-grant my-requests/access-grant/save \

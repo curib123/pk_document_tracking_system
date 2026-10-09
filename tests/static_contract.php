@@ -186,5 +186,9 @@ if (strpos($softcopyRevision,'$effective=')===FALSE ||
     $fail[]='Softcopy automatic dates are incomplete.';
 if (!is_file($root.'/tests/domain_audit_smoke.sh'))
     $fail[]='Missing domain + audit tests.';
+$uiScript=file_get_contents($root.'/public/assets/js/app.js');
+if (strpos($uiScript, "name !== 'effective_date'")===FALSE) {
+    $fail[]='Softcopy revision effective date must remain optional in the browser.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";

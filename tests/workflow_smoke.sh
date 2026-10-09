@@ -113,6 +113,9 @@ post_form my-tasks/softcopy my-tasks/softcopy/decide "id=$REV_REQUEST_ID" 'decis
 test "$(db "SELECT status FROM requests WHERE id=$REV_REQUEST_ID")" = completed
 test "$(db "SELECT status FROM files WHERE id=$PENDING_ID")" = approved
 test "$(db "SELECT COUNT(*) FROM softcopy_revisions WHERE file_id=$PENDING_ID AND new_revision_level='REV-B'")" = 1
+# Browser-provided received/released dates cannot override automatic dates.
+test "$(db "SELECT date_received FROM softcopy_revisions WHERE file_id=$PENDING_ID")" = "$(TZ=Asia/Manila date +%Y-%m-%d)"
+test "$(db "SELECT date_released FROM softcopy_revisions WHERE file_id=$PENDING_ID")" = "$(TZ=Asia/Manila date +%Y-%m-%d)"
 test "$(db "SELECT current_revision_id FROM softcopy_documents WHERE id=$SOFT_ID")" != "$REV_ID"
 
 echo 'CASE: create hardcopy'
