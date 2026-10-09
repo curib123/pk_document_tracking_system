@@ -604,8 +604,11 @@
         details.hidden=!showDetails;
         details.querySelectorAll('input, select, textarea').forEach(function (field) {
             if (field.name==='holder_id' && field.type==='hidden') return;
+            if (!field.hasAttribute('data-original-required')) {
+                field.setAttribute('data-original-required', field.required ? 'yes' : 'no');
+            }
             field.disabled=!showDetails;
-            if (!showDetails) field.required=false;
+            field.required=showDetails && field.getAttribute('data-original-required')==='yes';
         });
         if (showDetails) {
             var title=details.querySelector('[name="title"]');
@@ -866,12 +869,8 @@
 
             function open() {
                 if (input.disabled) return;
-                document.querySelectorAll('.searchable-options:not([hidden])').forEach(function (other) {
-                    if (other !== list) {
-                        other.hidden = true;
-                        other.parentElement.querySelector('.searchable-input')
-                            ?.setAttribute('aria-expanded', 'false');
-                    }
+                searchableSelects.forEach(function (control) {
+                    if (control.input !== input) control.close();
                 });
                 list.hidden = false;
                 positionList();
