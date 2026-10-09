@@ -153,4 +153,45 @@ CLONED_ID=$(db "SELECT id FROM workflows WHERE request_type='softcopy' AND versi
 test -n "$CLONED_ID"
 test "$(db "SELECT COUNT(*) FROM workflow_steps WHERE workflow_id=$CLONED_ID")" = 1
 test "$(db "SELECT is_default FROM workflows WHERE id=$CLONED_ID")" = 0
-echo 'Extended MySQL smoke passed: uploads, private downloads, revisions, transfers, grants, assignments, disposal, workflow clone.'
+# Returned requests can be corrected and resubmitted without losing decision history.
+ID=$(save_request softcopy 'CI returned request' 'operation=create' \
+    'proposed_code=RET-001' 'proposed_title=To Be Corrected' 'proposed_version=1')
+T=$(csrf_for /tmp/pk-staff.cookies my-requests/softcopy)
+curl -sS -b /tmp/pk-staff.cookies -c /tmp/pk-staff.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$T" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$ID" "$BASE/my-requests/softcopy/submit"
+T=$(csrf_for /tmp/pk-manager.cookies my-tasks/softcopy)
+curl -sS -b /tmp/pk-manager.cookies -c /tmp/pk-manager.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$T" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$ID" --data-urlencode 'decision=returned' \
+    "$BASE/my-tasks/softcopy/decide"
+test "$(db "SELECT status FROM requests WHERE id=$ID")" = returned
+T=$(csrf_for /tmp/pk-staff.cookies my-requests/softcopy)
+curl -sS -b /tmp/pk-staff.cookies -c /tmp/pk-staff.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$T" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$ID" --data-urlencode 'subject=CI returned request' \
+    --data-urlencode 'operation=create' --data-urlencode 'proposed_code=RET-002' \
+    --data-urlencode 'proposed_title=Corrected Document' \
+    --data-urlencode 'proposed_version=1' \
+    "$BASE/my-requests/softcopy/save"
+submit_and_approve softcopy "$ID"
+test "$(db "SELECT COUNT(*) FROM request_decisions WHERE request_id=$ID")" = 2
+test "$(db "SELECT COUNT(*) FROM documents WHERE code='RET-002'")" = 1
+
+# Finalized requests cannot be approved a second time.
+T=$(csrf_for /tmp/pk-manager.cookies my-tasks/softcopy)
+curl -sS -b /tmp/pk-manager.cookies -c /tmp/pk-manager.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$T" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$ID" --data-urlencode 'decision=approved' \
+    "$BASE/my-tasks/softcopy/decide"
+test "$(db "SELECT COUNT(*) FROM request_decisions WHERE request_id=$ID")" = 2
+
+# Last super-admin must not be deactivated by a crafted user save form.
+ADMIN_ID=$(db "SELECT id FROM users WHERE username='pk_test_admin'")
+ADMIN_ROLE=$(db "SELECT id FROM roles WHERE name='super_admin'")
+admin_post 'admin/users' 'admin/users/save' "id=$ADMIN_ID" \
+    'name=Test Admin' 'username=pk_test_admin' 'email=pk_admin@example.test' \
+    "role_id=$ADMIN_ROLE" 'active=0'
+test "$(db "SELECT active FROM users WHERE id=$ADMIN_ID")" = 1
+echo 'Extended MySQL smoke passed: uploads, protected downloads, document lifecycle, grants/revoke, assignments, return/retry, duplicate-approval protection and workflow versioning.'
+
