@@ -44,4 +44,8 @@ Controlled softcopy register based on the original database.
 
  12. fix the view folder strucute some index have a little code and can clean it and re structure all files and folder to a clean and organize setup
 
+ 13. request page and places page issues in view
+
+ 14. Appli pie chart visual in dashboard
+
  analzye ,check and test the system find issues and list it here
