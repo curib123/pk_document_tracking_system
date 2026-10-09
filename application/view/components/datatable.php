@@ -49,7 +49,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                             <td>
                                 <?php $value = $dt_row['cells'][$key] ?? ''; ?>
                                 <?php if (in_array($key, $dt_badges ?? [], TRUE)): ?>
-                                    <span class="badge-status status-<?= html_escape(strtolower((string) $value)) ?>"><?= html_escape(ucwords(str_replace('_', ' ', (string) $value))) ?></span>
+                                    <span class="badge-status status-<?= html_escape(strtolower((string) $value)) ?>"><?= html_escape((string) $value === '0' ? 'Inactive' : ucwords(str_replace('_', ' ', (string) $value))) ?></span>
                                 <?php else: ?><?= html_escape((string) ($value === '' || $value === NULL ? '—' : $value)) ?><?php endif; ?>
                             </td>
                         <?php endforeach; ?>
