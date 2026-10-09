@@ -28,6 +28,7 @@ class Catalog_controller extends MY_Web_Controller
 
         try {
             $definition = $this->definition($module);
+            $this->require_permission($module . '.view', $context);
             $query = $this->input->get(null, false) ?: [];
             $records = (new Read_service($context))->listing($module, $query);
 
@@ -62,7 +63,7 @@ class Catalog_controller extends MY_Web_Controller
 
         try {
             $definition = $this->definition($module);
-            $context->require($module . '.' . ($id ? 'edit' : 'add'));
+            $this->require_permission($module . '.' . ($id ? 'edit' : 'add'), $context);
             $read = new Read_service($context);
             $record = $id ? $read->detail($module, $id)['row'] : [];
 
@@ -116,14 +117,13 @@ class Catalog_controller extends MY_Web_Controller
             }
 
             $errors = null;
-            if ($resuming && isset($_SESSION['pk_catalog_error'])) {
-                $candidate = $_SESSION['pk_catalog_error'];
+            $candidate = $this->session->flashdata('pk_catalog_error');
+            if ($resuming && is_array($candidate)) {
                 if (($candidate['module'] ?? '') === $module
                     && (int) ($candidate['id'] ?? 0) === (int) $id) {
                     $errors = $candidate;
                 }
             }
-            unset($_SESSION['pk_catalog_error']);
 
             $this->webView('catalog_form', $context, [
                 'page_title' => ($id ? 'Edit ' : 'Add ') . $definition['label'],
@@ -147,7 +147,7 @@ class Catalog_controller extends MY_Web_Controller
 
     private function draft(int $userId, string $module, ?int $id): ?array
     {
-        $draft = $_SESSION['pk_catalog_draft'] ?? null;
+        $draft = $this->session->userdata('pk_catalog_draft');
         if (!is_array($draft)
             || (int) ($draft['owner'] ?? 0) !== $userId
             || ($draft['module'] ?? '') !== $module
@@ -177,20 +177,20 @@ class Catalog_controller extends MY_Web_Controller
             $values['version'] = (int) ($input['version'] ?? 0);
         }
 
-        $_SESSION['pk_catalog_draft'] = [
+        $this->session->set_userdata('pk_catalog_draft', [
             'owner' => $userId,
             'module' => $module,
             'id' => $id,
             'time' => time(),
             'values' => $values,
-        ];
+        ]);
 
         return $id;
     }
 
     private function forgetDraft(): void
     {
-        unset($_SESSION['pk_catalog_draft'], $_SESSION['pk_catalog_error']);
+        $this->session->unset_userdata(['pk_catalog_draft', 'pk_catalog_error']);
     }
 
     public function lookup(string $module): void
@@ -202,7 +202,7 @@ class Catalog_controller extends MY_Web_Controller
             $definition = $this->definition($module);
             $id = filter_var($input['id'] ?? null, FILTER_VALIDATE_INT);
             $id = $id !== false && $id > 0 ? $id : null;
-            $context->require($module . '.' . ($id ? 'edit' : 'add'));
+            $this->require_permission($module . '.' . ($id ? 'edit' : 'add'), $context);
 
             $field = (string) ($input['lookup_field'] ?? '');
             $valid = false;
@@ -242,6 +242,9 @@ class Catalog_controller extends MY_Web_Controller
         try {
             $this->definition($module);
             $input = $this->webPost();
+            $candidateId = filter_var($input['id'] ?? null, FILTER_VALIDATE_INT);
+            $editing = $candidateId !== false && $candidateId > 0;
+            $this->require_permission($module . '.' . ($editing ? 'edit' : 'add'), $context);
             $id = $this->rememberDraft($context->id(), $module, $input);
 
             // Business mutation and audit run in the existing transactional service.
@@ -254,14 +257,14 @@ class Catalog_controller extends MY_Web_Controller
             $this->webRedirect('web/catalog/' . $module);
         } catch (Throwable $error) {
             if ($input !== null) {
-                $_SESSION['pk_catalog_error'] = [
+                $this->session->set_flashdata('pk_catalog_error', [
                     'module' => $module,
                     'id' => $id,
                     'message' => $error instanceof Problem
                         ? $error->getMessage()
                         : 'The record could not be saved.',
                     'fields' => $error instanceof Problem ? $error->fields : [],
-                ];
+                ]);
 
                 if (!($error instanceof Problem)) {
                     log_message('error', $error->getMessage());
@@ -280,7 +283,7 @@ class Catalog_controller extends MY_Web_Controller
 
         try {
             $definition = $this->definition($module);
-            $context->require($module . '.delete');
+            $this->require_permission($module . '.delete', $context);
             $record = (new Read_service($context))->detail($module, $id)['row'];
             $this->webView('catalog_delete', $context, [
                 'page_title' => 'Delete ' . $definition['label'],
@@ -299,6 +302,7 @@ class Catalog_controller extends MY_Web_Controller
 
         try {
             $this->definition($module);
+            $this->require_permission($module . '.delete', $context);
             $input = $this->webPost();
             $result = $context->db->transaction(static fn(): array =>
                 (new Catalog_service($context))->delete($module, $input)

@@ -28,4 +28,5 @@ jobs:
         run: |
           php tests/web_mvc.php
           php tests/modular_mvc.php
+          php tests/ci_session.php
           php tests/enterprise_ui.php

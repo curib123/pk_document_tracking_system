@@ -2,24 +2,21 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 use Pk\Core\Context;
-use Pk\Core\Database;
 use Pk\Core\Problem;
 use Pk\Core\Security;
 use Pk\Core\UiSchema;
 
 /**
- * Browser-only HTTP mechanics. Controllers dispatch; services own rules;
- * models handle persistence. No client-side API or JavaScript is required.
+ * Browser HTML response layout only. Session and permission mechanics are
+ * centralized in MY_Controller; the controller modules own action gates.
  */
 class MY_Web_Controller extends MY_Controller
 {
     protected function webContext(bool $guestAllowed = false, bool $passwordAllowed = false): Context
     {
         $this->load->helper(['url', 'ui', 'web_ui']);
-        Security::startSession();
         Security::headers();
 
-        // Browser enhancements only: PHP forms work without JS or external APIs.
         header(
             "Content-Security-Policy: default-src 'self'; " .
             "script-src 'self'; " .
@@ -29,52 +26,18 @@ class MY_Web_Controller extends MY_Controller
             "frame-ancestors 'none'; form-action 'self'; connect-src 'self'"
         );
 
-        $context = new Context(Database::connect());
-
-        if (!empty($_SESSION['user_id'])) {
-            try {
-                if (Security::expired($_SESSION, time())) {
-                    throw new Problem('Session expired.', 401);
-                }
-
-                $context->identify((int) $_SESSION['user_id']);
-
-                if ((int) $context->user['session_version'] !== (int) ($_SESSION['session_version'] ?? -1)) {
-                    throw new Problem('Your session is no longer valid.', 401);
-                }
-
-                $_SESSION['last_seen'] = time();
-            } catch (Problem $error) {
-                // Expired or disabled accounts cannot keep their old permissions.
-                $context = new Context(Database::connect());
-                $_SESSION = ['csrf' => bin2hex(random_bytes(32))];
-                session_regenerate_id(true);
-            }
-        }
-
-        if (!$guestAllowed && !$context->id()) {
-            $this->webRedirect('web/login');
-        }
-
-        if ($context->id() && !empty($context->user['require_password_change']) && !$passwordAllowed) {
-            $this->webRedirect('web/password');
-        }
-
-        return $context;
+        return $this->sessionContext($guestAllowed, $passwordAllowed);
     }
 
     protected function webPost(): array
     {
-        Security::method($_SERVER['REQUEST_METHOD'] ?? 'GET', true);
-        Security::csrf((string) ($_SESSION['csrf'] ?? ''), (string) ($_POST['csrf'] ?? ''));
-
-        return $_POST;
+        return $this->verifyPost();
     }
 
     protected function webView(string $view, Context $context, array $data = []): void
     {
         $data['viewer'] = $context->safeUser();
-        $data['csrf'] = (string) ($_SESSION['csrf'] ?? '');
+        $data['csrf'] = (string) $this->session->userdata('csrf');
         $data['navigation'] = array_filter(
             UiSchema::modules(),
             static fn(array $module): bool =>
@@ -82,14 +45,28 @@ class MY_Web_Controller extends MY_Controller
                 && empty($module['navigation_hidden'])
         );
         $data['current_route'] = trim((string) $this->uri->uri_string(), '/');
-        $data['flash'] = $_SESSION['web_flash'] ?? null;
-        unset($_SESSION['web_flash']);
+        $data['flash'] = $this->session->flashdata('web_flash');
 
         $this->load->view('web/header', $data);
-        // Internal module views are supported without changing public routes.
-        // Only trusted controller-supplied view names may reach this method.
-        $path = str_starts_with($view, 'modules/') ? $view : 'web/' . $view;
-        $this->load->view($path, $data);
+        // CI3 normally searches application/views/. Module-owned views need
+        // their package root registered with the CI Loader for this render.
+        if (str_starts_with($view, 'modules/')) {
+            if (!preg_match('~^modules/([a-z_]+)/views/([a-z_][a-z0-9_/]*)$~', $view, $matches)) {
+                throw new \LogicException('Invalid trusted module view path.');
+            }
+
+            $package = APPPATH . 'modules/' . $matches[1] . '/';
+            $this->load->add_package_path($package, false);
+
+            try {
+                $this->load->view($matches[2], $data);
+            } finally {
+                $this->load->remove_package_path($package);
+            }
+        } else {
+            $this->load->view('web/' . $view, $data);
+        }
+
         $this->load->view('web/footer', $data);
     }
 
@@ -101,7 +78,10 @@ class MY_Web_Controller extends MY_Controller
 
     protected function webFlash(string $message, string $type = 'success'): void
     {
-        $_SESSION['web_flash'] = ['message' => $message, 'type' => $type];
+        $this->session->set_flashdata('web_flash', [
+            'message' => $message,
+            'type' => $type,
+        ]);
     }
 
     protected function webFailure(Throwable $error, string $route): void
@@ -126,7 +106,9 @@ class MY_Web_Controller extends MY_Controller
 
         $this->webView('error', $context, [
             'page_title' => 'Request unavailable',
-            'message' => $error instanceof Problem ? $error->getMessage() : 'The requested page is unavailable.',
+            'message' => $error instanceof Problem
+                ? $error->getMessage()
+                : 'The requested page is unavailable.',
         ]);
     }
 }

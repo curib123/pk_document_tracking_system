@@ -63,15 +63,7 @@ class Auth_service
             );
         }
 
-        session_regenerate_id(true);
-
-        $_SESSION = [
-            'user_id' => (int) $result['user']['id'],
-            'session_version' =>
-                (int) $result['user']['session_version'],
-            'csrf' => bin2hex(random_bytes(32)),
-            'last_seen' => time(),
-        ];
+        // Session ID and userdata are committed by MY_Controller after login.
 
         return [
             'user' => $this->ctx->safeUser(),
@@ -300,13 +292,8 @@ class Auth_service
             ]
         );
 
-        $_SESSION['session_version'] =
-            $nextSessionVersion;
-
-        $_SESSION['csrf'] =
-            bin2hex(random_bytes(32));
-
-        session_regenerate_id(true);
+        // Refresh the account row before the controller rotates the CI session.
+        $this->ctx->identify($this->ctx->id());
 
         $this->ctx->audit(
             'auth',
@@ -327,11 +314,7 @@ class Auth_service
             $this->ctx->id()
         );
 
-        $_SESSION = [];
-        session_regenerate_id(true);
-
-        $_SESSION['csrf'] =
-            bin2hex(random_bytes(32));
+        // Session invalidation is handled by MY_Controller, not the service.
 
         return [
             'message' => 'Signed out.',
