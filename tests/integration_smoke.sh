@@ -66,4 +66,78 @@ curl -sS -b /tmp/pk-admin.cookies -c /tmp/pk-admin.cookies -o /dev/null \
 COUNT=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
     -e "SELECT COUNT(*) FROM places WHERE type='area' AND name='Quality Control'")
 test "$COUNT" = 1
-echo "Integration smoke passed: login, dashboard, admin access, staff denial and area creation."
+
+# All sidebar pages must render successfully with database data.
+for path in dashboard documents/hardcopy documents/softcopy \
+    my-requests/softcopy my-requests/hardcopy my-requests/hardcopy-transfer \
+    my-requests/access-grant my-requests/document-assign \
+    my-tasks/softcopy my-tasks/hardcopy my-tasks/hardcopy-transfer \
+    my-tasks/access-grant my-tasks/document-assign \
+    places/area places/specific places/asset places/location \
+    places/sequence places/softcopy-categories \
+    admin/users admin/roles admin/workflows
+do
+    curl -fsS -b /tmp/pk-admin.cookies \
+        -o /tmp/pk-module.html "http://127.0.0.1:8081/$path"
+    grep -q '</html>' /tmp/pk-module.html
+done
+
+# A five-part request must progress only through its configured approver.
+mysql -h127.0.0.1 -uroot -prootpass pk_dts_test -e "
+INSERT INTO users (role_id,name,username,email,password_hash)
+SELECT id,'Test Manager','pk_test_manager','pk_manager@example.test','$HASH'
+FROM roles WHERE name='plant_manager';
+INSERT INTO workflows (request_type,name,version,is_default,active)
+VALUES ('softcopy','CI Softcopy Review',1,1,1);
+INSERT INTO workflow_steps (workflow_id,step_order,label,approver_type,approver_user_id)
+SELECT w.id,1,'Manager Review','user',u.id
+FROM workflows w CROSS JOIN users u
+WHERE w.request_type='softcopy' AND u.username='pk_test_manager';
+"
+
+curl -fsS -b /tmp/pk-staff.cookies -o /tmp/pk-requests.html \
+    http://127.0.0.1:8081/my-requests/softcopy
+REQ_CSRF=$(token /tmp/pk-requests.html)
+curl -sS -b /tmp/pk-staff.cookies -c /tmp/pk-staff.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$REQ_CSRF" --data-urlencode 'confirmed=yes' \
+    --data-urlencode 'subject=Quality document approval' \
+    http://127.0.0.1:8081/my-requests/softcopy/save
+REQ_ID=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
+    -e "SELECT id FROM requests WHERE subject='Quality document approval' AND status='draft' LIMIT 1")
+test -n "$REQ_ID"
+curl -fsS -b /tmp/pk-staff.cookies -o /tmp/pk-requests.html \
+    http://127.0.0.1:8081/my-requests/softcopy
+REQ_CSRF=$(token /tmp/pk-requests.html)
+curl -sS -b /tmp/pk-staff.cookies -c /tmp/pk-staff.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$REQ_CSRF" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$REQ_ID" \
+    http://127.0.0.1:8081/my-requests/softcopy/submit
+CURRENT=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
+    -e "SELECT status FROM requests WHERE id=$REQ_ID")
+test "$CURRENT" = pending
+
+curl -fsS -c /tmp/pk-manager.cookies -o /tmp/pk-manager-login.html \
+    http://127.0.0.1:8081/login
+MANAGER_CSRF=$(token /tmp/pk-manager-login.html)
+curl -sS -L -b /tmp/pk-manager.cookies -c /tmp/pk-manager.cookies -o /tmp/pk-manager.html \
+    --data-urlencode "pk_csrf_token=$MANAGER_CSRF" \
+    --data-urlencode 'login=pk_test_manager' \
+    --data-urlencode 'password=TemporaryTestPassword!2026' \
+    http://127.0.0.1:8081/login
+grep -q 'Dashboard' /tmp/pk-manager.html
+curl -fsS -b /tmp/pk-manager.cookies -o /tmp/pk-tasks.html \
+    http://127.0.0.1:8081/my-tasks/softcopy
+grep -q 'Quality document approval' /tmp/pk-tasks.html
+MANAGER_CSRF=$(token /tmp/pk-tasks.html)
+curl -sS -b /tmp/pk-manager.cookies -c /tmp/pk-manager.cookies -o /dev/null \
+    --data-urlencode "pk_csrf_token=$MANAGER_CSRF" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$REQ_ID" --data-urlencode 'decision=approved' \
+    http://127.0.0.1:8081/my-tasks/softcopy/decide
+CURRENT=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
+    -e "SELECT status FROM requests WHERE id=$REQ_ID")
+test "$CURRENT" = approved
+DECISION_COUNT=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
+    -e "SELECT COUNT(*) FROM request_decisions WHERE request_id=$REQ_ID AND decision='approved'")
+test "$DECISION_COUNT" = 1
+echo "Integration smoke passed: auth, RBAC, documents, places, admin pages, request draft, workflow approval."
+
