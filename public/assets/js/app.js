@@ -1,0 +1,101 @@
+/* Shared progressive enhancements: all writes use ordinary CI3 forms, no API calls. */
+(function () {
+    'use strict';
+
+    var sidebar = document.getElementById('appSidebar');
+    var toggle = document.getElementById('sidebarToggle');
+    if (toggle && sidebar) toggle.addEventListener('click', function () {
+        sidebar.classList.toggle('is-open');
+    });
+
+    function parse(button, key) {
+        try { return JSON.parse(button.getAttribute('data-' + key) || '{}'); }
+        catch (error) { return {}; }
+    }
+
+    document.addEventListener('click', function (event) {
+        var edit = event.target.closest('.js-edit');
+        if (edit) {
+            var target = document.querySelector(edit.getAttribute('data-target') || '#editForm');
+            if (!target) return;
+            target.reset();
+            var record = parse(edit, 'record');
+            target.querySelectorAll('[name]').forEach(function (field) {
+                if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
+                if (field.type === 'checkbox') field.checked = !!Number(record[field.name]);
+                else if (field.type !== 'hidden' || field.name === 'id') field.value = record[field.name] == null ? '' : record[field.name];
+            });
+            var heading = document.getElementById('editTitle');
+            if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
+            target.dataset.confirmed = '';
+        }
+
+        var view = event.target.closest('.js-view');
+        if (view) {
+            var data = parse(view, 'display');
+            var details = document.getElementById('viewDetails');
+            var title = document.getElementById('viewModalTitle');
+            if (title) title.textContent = view.getAttribute('data-title') || 'Details';
+            if (details) {
+                details.replaceChildren();
+                Object.keys(data).forEach(function (key) {
+                    var dt = document.createElement('dt');
+                    var dd = document.createElement('dd');
+                    dt.textContent = key;
+                    dd.textContent = data[key] == null || data[key] === '' ? '—' : String(data[key]);
+                    details.appendChild(dt);
+                    details.appendChild(dd);
+                });
+            }
+        }
+
+        var action = event.target.closest('.js-action');
+        if (action) {
+            var form = document.getElementById('actionForm');
+            if (!form) return;
+            form.reset();
+            form.dataset.confirmed = '';
+            form.action = action.getAttribute('data-url');
+            form.querySelector('[name="id"]').value = action.getAttribute('data-id') || '';
+            form.querySelector('[name="decision"]').value = action.getAttribute('data-decision') || '';
+            var title = action.getAttribute('data-title') || 'Confirm Action';
+            document.getElementById('actionTitle').textContent = title;
+            document.getElementById('actionDescription').textContent =
+                action.getAttribute('data-description') || 'This action will be saved to the system.';
+            form.setAttribute('data-confirm', title + '?');
+        }
+    });
+
+    var pendingForm = null;
+    document.addEventListener('submit', function (event) {
+        var form = event.target;
+        if (!form.matches('form[data-confirm]') || form.dataset.confirmed === 'yes') return;
+        if (!window.bootstrap) return; // Server also checks confirmed=yes.
+        event.preventDefault();
+        pendingForm = form;
+        document.getElementById('confirmMessage').textContent = form.getAttribute('data-confirm') || 'Continue?';
+        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).show();
+    });
+
+    var confirmButton = document.getElementById('confirmProceed');
+    if (confirmButton) confirmButton.addEventListener('click', function () {
+        if (!pendingForm) return;
+        var form = pendingForm;
+        pendingForm = null;
+        window.bootstrap.Modal.getOrCreateInstance(document.getElementById('confirmModal')).hide();
+        form.dataset.confirmed = 'yes';
+        var flag = form.querySelector('[name="confirmed"]');
+        if (flag) flag.value = 'yes';
+        form.requestSubmit();
+    });
+
+    document.querySelectorAll('[data-auto-submit]').forEach(function (control) {
+        control.addEventListener('change', function () {
+            if (this.form) {
+                var page = this.form.querySelector('[name="page"]');
+                if (page) page.value = '1';
+                this.form.submit();
+            }
+        });
+    });
+})();
