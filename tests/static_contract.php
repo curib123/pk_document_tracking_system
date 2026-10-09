@@ -6,6 +6,8 @@ $files=['application/bootstrap.php','application/core/MY_Controller.php',
  'application/controllers/Requests.php','application/controllers/Administration.php',
  'application/models/Place_model.php','application/models/Document_model.php',
   'application/services/places/place_service.php',
+  'application/view/pages/request/user_own_all_request/index.php',
+  'application/view/pages/request/approving_assign_request/index.php',
  'application/models/Request_model.php','application/models/Administration_model.php',
  'application/view/reusable_components/reusable_datatable.php',
  'database/pk_dts.sql','database/seed.sql'];
