@@ -7,7 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 class Audit_file
 {
-    public function append($actorId,$action,$subject=NULL,$meta=[])
+    public function append($actorId,$action,$subject=NULL,$meta=[],$status='success')
     {
         $dir=PK_ROOT.'/storage/audit';
         if (!is_dir($dir) && !mkdir($dir,0700,TRUE)) return FALSE;
@@ -26,7 +26,7 @@ class Audit_file
                 'actor_id'=>(int)$actorId,
                 'action'=>substr((string)$action,0,120),
                 'subject'=>$subject===NULL?NULL:(string)$subject,
-                'status'=>'success',
+                'status'=>in_array($status,['success','failed'],TRUE)?$status:'failed',
                 'metadata'=>is_array($meta)?$meta:[]
             ];
             $json=json_encode($entries,JSON_PRETTY_PRINT|JSON_UNESCAPED_SLASHES|JSON_INVALID_UTF8_SUBSTITUTE);

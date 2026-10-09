@@ -56,10 +56,11 @@ class MY_Controller extends CI_Controller
     {
         // Daily JSON audit is filesystem-only; never insert operational audit
         // events into an additional SQL table.
-        if ($type==='success' && $this->user && $this->input->method(TRUE)==='POST') {
+        if ($this->user && $this->input->method(TRUE)==='POST') {
             $this->load->library('Audit_file');
             if (!$this->audit_file->append((int)$this->user['id'],
-                trim(uri_string(),'/'))) {
+                trim(uri_string(),'/'),NULL,[],
+                $type==='success'?'success':'failed')) {
                 log_message('error','Unable to write JSON audit file for successful action.');
             }
         }

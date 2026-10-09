@@ -155,10 +155,12 @@ data-confirm="Save request draft?">
     <?php $this->load->view('pages/request/disposal_fields'); ?>
   </div>
   <div class="col-12" data-hardcopy-details>
-    <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
-      'options'=>$hardcopy_form_options,'user'=>$user,
-      'is_administrator'=>$is_administrator
-    ]); ?>
+    <div class="row g-3">
+      <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
+        'options'=>$hardcopy_form_options,'user'=>$user,
+        'is_administrator'=>$is_administrator
+      ]); ?>
+    </div>
   </div>
 <?php else: ?>
 

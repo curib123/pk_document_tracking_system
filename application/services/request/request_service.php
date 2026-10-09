@@ -25,7 +25,7 @@ class Request_service
           'destination_location_id'=>(int)($post['destination_location_id']??0),
           'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
           'effective_date'=>trim((string)($post['effective_date']??'')),
-          'date_received'=>date('Y-m-d'),
+          'date_received'=>(new DateTimeImmutable('now',new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
           'date_released'=>'',
           'page_number'=>max(1,(int)($post['page_number']??1)),
           'document_domain'=>trim((string)($post['document_domain']??'softcopy')),

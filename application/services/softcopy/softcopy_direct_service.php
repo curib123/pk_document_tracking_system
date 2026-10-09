@@ -36,7 +36,7 @@ class Softcopy_direct_service
             'category_id'=>(int)($post['category_id']??0),
             'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
             'effective_date'=>trim((string)($post['effective_date']??'')),
-            'date_received'=>date('Y-m-d'),
+            'date_received'=>(new DateTimeImmutable('now',new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
             'date_released'=>'',
             'page_number'=>(int)($post['page_number']??0)
         ];
