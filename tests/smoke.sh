@@ -23,7 +23,13 @@ for i in {1..20}; do
   if curl -fsS -o /tmp/pk-login.html http://127.0.0.1:8089/login; then break; fi
   sleep 1
 done
-grep -q 'Sign in to your account' /tmp/pk-login.html
+if ! grep -q 'name="login"' /tmp/pk-login.html; then
+  echo 'Login form was not rendered after database import:'
+  grep -o -m 1 '<title>[^<]*</title>' /tmp/pk-login.html || true
+  head -c 500 /tmp/pk-login.html || true
+  echo
+  exit 1
+fi
 
 curl -fsS -c /tmp/pk-cookie -o /tmp/pk-login.html http://127.0.0.1:8089/login
 TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-login.html | head -1 | sed 's/.*value="//;s/"$//')
