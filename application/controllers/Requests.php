@@ -17,10 +17,12 @@ class Requests extends MY_Controller
         $this->Request_model->types($tab);
         // Physical handoff tasks are visible to authorized recipients
         // even when they cannot approve other workflow requests.
-        if ($task && $tab==='hardcopy-transfer' && $this->can('transfer','view')) {
+        if ($task) {
+            // My Tasks is scoped to the current approver in Request_model.
+            // Assignment, not broad module-management access, controls who can act.
             $this->authenticate();
         } else {
-            $this->require_permission('requests',$task?'manage':'view');
+            $this->require_permission('requests','view');
         }
         $state=$this->table_state('updated_at');
         list($rows,$total,$state['page'])=$this->Request_model->listing(
@@ -81,7 +83,8 @@ class Requests extends MY_Controller
     public function decide($tab)
     {
         $this->Request_model->types($tab);
-        $this->require_permission('requests','manage');$this->confirmed();
+        // The service verifies the locked request's active approver step.
+        $this->authenticate();$this->confirmed();
         try {
             (new Request_service())->decide($tab,(int)$this->input->post('id'),
                 $this->user,(string)$this->input->post('decision'),(string)$this->input->post('remark'));
