@@ -109,7 +109,7 @@ $dt_path=($task?'my-tasks/':'my-requests/').$tab;
 <nav class="tab-bar" aria-label="Request category tabs">
 <?php foreach ($tabs as $slug=>$name): ?>
 <a class="tab-link <?= $tab===$slug?'active':'' ?>"
-href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>"><?= html_escape($name) ?></a>
+href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>" <?= $tab===$slug?'aria-current="page"':'' ?>><?= html_escape($name) ?></a>
 <?php endforeach; ?></nav>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
