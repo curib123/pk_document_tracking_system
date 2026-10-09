@@ -212,6 +212,27 @@ post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/decide "id=$RID"
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = approved
 test "$(db "SELECT COUNT(*) FROM transfers WHERE request_id=$RID AND recipient_status='pending'")" = 1
 
+# Predefined Hardcopy Transfer selects the original Places and receiving user.
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-transfer-form.html \
+  http://127.0.0.1:8089/my-requests/hardcopy-transfer
+for field in hardcopy_id destination_area_id destination_specific_id \
+    destination_asset_id destination_location_id recipient_id; do
+    grep -q "name=\"$field\"" /tmp/pk-transfer-form.html
+done
+grep -q 'data-transfer-origin="holder_name"' /tmp/pk-transfer-form.html
+grep -q 'data-transfer-origin="area_name"' /tmp/pk-transfer-form.html
+grep -q 'data-transfer-origin="specific_name"' /tmp/pk-transfer-form.html
+grep -q 'data-transfer-origin="asset_name"' /tmp/pk-transfer-form.html
+grep -q 'data-transfer-doc=' /tmp/pk-transfer-form.html
+
+# A destination with an incorrect parent ID or the same original location
+# must be rejected even if a user tampers with the form.
+post_form my-requests/hardcopy-transfer my-requests/hardcopy-transfer/save \
+  'type=transfer' 'subject=Conflicting target' \
+  "hardcopy_id=$HARD_ID" "recipient_id=$REC_ID" \
+  "destination_location_id=$LOC_ID" 'destination_area_id=999999'
+test "$(db "SELECT COUNT(*) FROM requests WHERE type='transfer' AND
+    JSON_UNQUOTE(JSON_EXTRACT(payload,'$.subject'))='Conflicting target'")" = 0
 echo 'CASE: physical transfer dispatch and acceptance'
 TRANSFER_ID=$(db "SELECT id FROM transfers WHERE request_id=$RID")
 test -n "$TRANSFER_ID"

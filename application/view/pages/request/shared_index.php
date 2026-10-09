@@ -60,7 +60,10 @@ foreach ($rows as $row) {
  'retention_start_date'=>$payload['retention_start_date']??'',
  'retention_end_date'=>$payload['retention_end_date']??'',
  'creation_reason'=>$payload['creation_reason']??'',
- 'destination_location_id'=>$payload['destination_location_id']??''
+ 'destination_location_id'=>$payload['destination_location_id']??'',
+ 'destination_area_id'=>$payload['destination_area_id']??'',
+ 'destination_specific_id'=>$payload['destination_specific_id']??'',
+ 'destination_asset_id'=>$payload['destination_asset_id']??''
  ];
  $buttons=[['type'=>'view']];
  if (in_array($row['type'],['softcopy_create','softcopy_revise'],TRUE) &&
@@ -117,7 +120,7 @@ href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>"><?= html_escape
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
 action="<?= site_url('my-requests/'.$tab.'/save') ?>"
-<?= $tab==='hardcopy'?'data-hardcopy-upsert':'' ?>
+<?= $tab==='hardcopy'?'data-hardcopy-upsert':($tab==='hardcopy-transfer'?'data-hardcopy-transfer':'') ?>
 data-confirm="Save request draft?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">New Request</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
@@ -162,6 +165,10 @@ data-confirm="Save request draft?">
       ]); ?>
     </div>
   </div>
+<?php elseif ($tab==='hardcopy-transfer'): ?>
+    <?php $this->load->view('pages/request/hardcopy_transfer_fields',[
+        'transfer_sources'=>$transfer_sources,'transfer_options'=>$transfer_options
+    ]); ?>
 <?php else: ?>
 
 <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>

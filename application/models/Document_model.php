@@ -85,6 +85,24 @@ class Document_model extends CI_Model
             ->order_by('l.name')->order_by('l.id')->get()->result_array();
     }
 
+    // Immutable original place/holder descriptions for transfer requests.
+    public function transfer_sources()
+    {
+        return $this->db->select('d.id,d.title,d.sequence_number,d.area_id,
+            d.specific_id,d.asset_id,d.location_id,d.holder_id,
+            a.name AS area_name,s.name AS specific_name,b.asset_number AS asset_name,
+            l.name AS location_name,l.code AS location_code,
+            CONCAT_WS(" ",h.first_name,h.last_name) AS holder_name',FALSE)
+            ->from('hardcopy_documents d')
+            ->join('areas a','a.id=d.area_id','left')
+            ->join('specifics s','s.id=d.specific_id','left')
+            ->join('assets b','b.id=d.asset_id','left')
+            ->join('locations l','l.id=d.location_id','left')
+            ->join('users h','h.id=d.holder_id')
+            ->where('d.status','active')
+            ->order_by('d.title')->order_by('d.id')->get()->result_array();
+    }
+
     public function active_users()
     {
         return $this->db->select('id,CONCAT_WS(" ",first_name,last_name) AS name',FALSE)

@@ -44,6 +44,15 @@ class Requests extends MY_Controller
              'users'=>$this->Document_model->active_users(),
              'softcopy_options'=>$this->Document_model->options('softcopy'),
              'hardcopy_options'=>$this->Document_model->options('hardcopy'),
+             'transfer_sources'=>$tab==='hardcopy-transfer' ?
+                 $this->Document_model->transfer_sources() : [],
+             'transfer_options'=>$tab==='hardcopy-transfer' ? [
+                'areas'=>$this->Place_model->options('areas'),
+                'specifics'=>$this->Place_model->options('specifics'),
+                'assets'=>$this->Place_model->options('assets'),
+                'locations'=>$this->Document_model->hardcopy_locations(),
+                'users'=>$this->Document_model->active_users()
+             ] : [],
              'category_options'=>$this->Place_model->options('categories'),
              'location_options'=>$this->Place_model->options('locations'),
              'hardcopy_form_options'=>[

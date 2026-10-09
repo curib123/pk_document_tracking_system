@@ -190,5 +190,25 @@ $uiScript=file_get_contents($root.'/public/assets/js/app.js');
 if (strpos($uiScript, "name !== 'effective_date'")===FALSE) {
     $fail[]='Softcopy revision effective date must remain optional in the browser.';
 }
+// Fixed workflow definitions are seeded; admin users customize published steps.
+$wfUi=file_get_contents($root.'/application/view/pages/workflow_builder/index.php');
+$wfCtl=file_get_contents($root.'/application/controllers/Administration.php');
+$routes=file_get_contents($root.'/application/config/routes.php');
+$trUi=file_get_contents($root.'/application/view/pages/request/hardcopy_transfer_fields.php');
+$trJs=file_get_contents($root.'/public/assets/js/app.js');
+$trSvc=file_get_contents($root.'/application/services/request/request_service.php');
+if (strpos($wfUi,'New Workflow')!==FALSE ||
+    strpos($wfUi,'admin/workflows/save')!==FALSE ||
+    strpos($wfCtl,'function save_workflow()')!==FALSE ||
+    strpos($routes,"'admin/workflows/save'")!==FALSE)
+    $fail[]='Predefined workflows must not be user creatable.';
+foreach (['data-transfer-source','data-transfer-origin','destination_area_id',
+    'destination_specific_id','destination_asset_id','destination_location_id',
+    'holder_name','recipient_id'] as $field) {
+    if (strpos($trUi,$field)===FALSE) $fail[]='Transfer form missing: '.$field;
+}
+if (strpos($trJs,'updateHardcopyTransfer')===FALSE ||
+    strpos($trSvc,'validate_transfer_destination')===FALSE)
+    $fail[]='Destination auto population and server validation missing.';
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";

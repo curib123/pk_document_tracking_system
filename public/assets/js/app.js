@@ -534,6 +534,61 @@
     });
     updateHardcopyHierarchy();
 
+    function updateHardcopyTransfer(changed) {
+        var form=document.querySelector('#editForm[data-hardcopy-transfer]');
+        if (!form) return;
+        var source=form.querySelector('[data-transfer-source]');
+        var area=form.querySelector('[data-transfer-level="area"]');
+        var specific=form.querySelector('[data-transfer-level="specific"]');
+        var asset=form.querySelector('[data-transfer-level="asset"]');
+        var location=form.querySelector('[data-transfer-level="location"]');
+        if (!source || !area || !specific || !asset || !location) return;
+        var doc={};
+        try {doc=JSON.parse(source.options[source.selectedIndex]?.dataset.transferDoc||'{}');}
+        catch(e) {doc={};}
+        form.querySelectorAll('[data-transfer-origin]').forEach(function(input) {
+            input.value=doc[input.dataset.transferOrigin]||'Not assigned';
+        });
+        if (changed==='location' && location.value) {
+            var chosen=location.options[location.selectedIndex];
+            area.value=chosen.dataset.areaId==='0'?'':(chosen.dataset.areaId||'');
+            specific.value=chosen.dataset.specificId==='0'?'':(chosen.dataset.specificId||'');
+            asset.value=chosen.dataset.assetId==='0'?'':(chosen.dataset.assetId||'');
+        } else if (changed==='asset' && asset.value) {
+            var chosen=asset.options[asset.selectedIndex];
+            specific.value=chosen.dataset.specificId||'';
+            area.value=chosen.dataset.areaId||'';
+        } else if (changed==='specific' && specific.value) {
+            area.value=specific.options[specific.selectedIndex].dataset.areaId||'';
+        }
+        function filter(select,valid) {
+            Array.from(select.options).forEach(function(o) {
+                if (!o.value) return;
+                o.disabled=o.hidden=!valid(o);
+            });
+            if (select.options[select.selectedIndex]?.disabled) select.value='';
+        }
+        filter(specific,function(o){return !area.value||o.dataset.areaId===area.value;});
+        filter(asset,function(o){return (!area.value||o.dataset.areaId===area.value) &&
+            (!specific.value||o.dataset.specificId===specific.value);});
+        filter(location,function(o){
+            return (!area.value||o.dataset.areaId==='0'||o.dataset.areaId===area.value) &&
+                (!specific.value||o.dataset.specificId==='0'||o.dataset.specificId===specific.value) &&
+                (!asset.value||o.dataset.assetId==='0'||o.dataset.assetId===asset.value) &&
+                (!doc.location_id||String(doc.location_id)!==o.value);
+        });
+        var hint=form.querySelector('#transferHelp');
+        if (hint) hint.textContent=location.value?
+            'Destination selected. Its parent Places were populated.' :
+            'Select a predefined destination different from the original location.';
+    }
+    document.addEventListener('change',function(e) {
+        if (e.target?.hasAttribute('data-transfer-source')) updateHardcopyTransfer('source');
+        var level=e.target?.getAttribute('data-transfer-level');
+        if (level) updateHardcopyTransfer(level);
+    });
+    updateHardcopyTransfer();
+
     var pendingForm = null;
     var pendingParent = null;
     function showConfirmation() {

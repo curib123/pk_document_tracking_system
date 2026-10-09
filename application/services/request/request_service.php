@@ -23,6 +23,9 @@ class Request_service
           'recipient_id'=>(int)($post['recipient_id']??0),
           'expires_at'=>trim((string)($post['expires_at']??'')),
           'destination_location_id'=>(int)($post['destination_location_id']??0),
+          'destination_area_id'=>(int)($post['destination_area_id']??0),
+          'destination_specific_id'=>(int)($post['destination_specific_id']??0),
+          'destination_asset_id'=>(int)($post['destination_asset_id']??0),
           'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
           'effective_date'=>trim((string)($post['effective_date']??'')),
           'date_received'=>(new DateTimeImmutable('now',new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
@@ -69,8 +72,7 @@ class Request_service
             require_once APPPATH.'services/documents/disposal_service.php';
             $payload['disposal_description']=(new Disposal_service())->reason($payload);
         }
-        if ($type==='transfer' && !$payload['destination_location_id'])
-            throw new DomainException('Choose the destination location.');
+        if ($type==='transfer') $this->validate_transfer_destination($hardcopyId,$payload);
         $fileId=NULL;
         $fileField=$type==='softcopy_create'?'controlled_file_id':'revision_file_id';
         if (in_array($type,['softcopy_create','softcopy_revise'],TRUE)) {
@@ -127,6 +129,57 @@ class Request_service
             'status'=>'draft','requested_by'=>$user['id']];
         if (!$this->ci->db->insert('requests',$data)) throw new DomainException('Could not create request.');
         return (int)$this->ci->db->insert_id();
+    }
+
+    // Original metadata is never accepted from the form as authoritative.
+    // Destination must be a valid active place, distinct from current location.
+    private function validate_transfer_destination($hardcopyId,$payload)
+    {
+        $document=$this->ci->db->get_where('hardcopy_documents',[
+            'id'=>(int)$hardcopyId,'status'=>'active'
+        ])->row_array();
+        $destination=(int)($payload['destination_location_id']??0);
+        if (!$document || !$destination)
+            throw new DomainException('Choose an active hardcopy and a predefined destination.');
+        $location=$this->ci->db->get_where('locations',[
+            'id'=>$destination,'active'=>1
+        ])->row_array();
+        if (!$location) throw new DomainException('Destination is unavailable.');
+        if ((int)($document['location_id']??0)===$destination)
+            throw new DomainException('Destination must differ from the original location.');
+        foreach (['area','specific','asset'] as $level) {
+            $given=(int)($payload['destination_'.$level.'_id']??0);
+            $actual=(int)($location[$level.'_id']??0);
+            if ($given && $given!==$actual) {
+                throw new DomainException('Destination does not match the selected '.$level.'.');
+            }
+        }
+        if (!empty($location['asset_id'])) {
+            $asset=$this->ci->db->select('b.specific_id,s.area_id')
+                ->from('assets b')->join('specifics s','s.id=b.specific_id')
+                ->join('areas a','a.id=s.area_id')
+                ->where('b.id',$location['asset_id'])->where('b.active',1)
+                ->where('s.active',1)->where('a.active',1)->get()->row_array();
+            if (!$asset || (int)$asset['specific_id']!==(int)$location['specific_id'] ||
+                (int)$asset['area_id']!==(int)$location['area_id']) {
+                throw new DomainException('Destination location has an invalid hierarchy.');
+            }
+        } elseif (!empty($location['specific_id'])) {
+            $specific=$this->ci->db->get_where('specifics',[
+                'id'=>$location['specific_id'],'active'=>1
+            ])->row_array();
+            if (!$specific || (!empty($location['area_id']) &&
+                (int)$specific['area_id']!==(int)$location['area_id'])) {
+                throw new DomainException('Destination specific is no longer valid.');
+            }
+        }
+        if (!empty($location['area_id']) &&
+            !$this->ci->db->get_where('areas',[
+                'id'=>$location['area_id'],'active'=>1
+            ])->row_array()) throw new DomainException('Destination area is inactive.');
+        if (!$this->ci->db->get_where('users',[
+            'id'=>(int)($payload['recipient_id']??0),'active'=>1
+        ])->row_array()) throw new DomainException('Choose an active receiving user.');
     }
 
     public function submit($tab,$id,$user)
@@ -288,6 +341,7 @@ class Request_service
             $loc=$this->ci->db->get_where('locations',[
                 'id'=>(int)($payload['destination_location_id']??0),'active'=>1
             ])->row_array();
+            $this->validate_transfer_destination($hard,$payload);
             if (!$doc || !$loc || !$recipient) throw new DomainException('Hardcopy, recipient and destination must be active.');
             $destination=[
                 'area_id'=>$loc['area_id'],'specific_id'=>$loc['specific_id'],
