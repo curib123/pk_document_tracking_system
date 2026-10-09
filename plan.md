@@ -42,4 +42,6 @@ Controlled softcopy register based on the original database.
 
  11. direct and request modal is the same they only different is in direct its direct create or update or revised but in request its follow the published workflow in workflow builder.
 
+ 12. fix the view folder strucute some index have a little code and can clean it and re structure all files and folder to a clean and organize setup
+
  analzye ,check and test the system find issues and list it here
