@@ -64,6 +64,11 @@ class Administration extends MY_Controller
             (new Administration_service())->save_workflow_step($this->input->post());
         },'admin/workflows');
     }
+    public function remove_workflow_step() {
+        $this->mutate('workflows','edit',function(){
+            (new Administration_service())->remove_workflow_step($this->input->post());
+        },'admin/workflows');
+    }
     public function publish_workflow() {
         $this->mutate('workflows','edit',function(){
             (new Administration_service())->publish_workflow((int)$this->input->post('id'),$this->user['id']);
