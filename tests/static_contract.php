@@ -154,5 +154,21 @@ if (strpos($hcFields,'data-hardcopy-retention hidden')===FALSE ||
     strpos($requestSvc, 'validate_hardcopy_proposal')===FALSE) {
     $fail[]='Conditional retention or shared hardcopy request form missing.';
 }
+// Workflow Editor controls who receives each request at each approval stage.
+$wfService=file_get_contents($root.'/application/services/administration/administration_service.php');
+$requestSvc=file_get_contents($root.'/application/services/request/request_service.php');
+$requestCtl=file_get_contents($root.'/application/controllers/Requests.php');
+$wfView=file_get_contents($root.'/application/view/pages/workflow_builder/index.php');
+foreach (['move_workflow_step','validate_approval_graph','active_request_type'] as $key) {
+    if (strpos($wfService,$key)===FALSE) $fail[]='Workflow routing missing: '.$key;
+}
+if (strpos($requestSvc,"'superseded'")===FALSE ||
+    strpos($requestCtl,'exact active step')===FALSE ||
+    strpos($wfView,'Request Approval Route')===FALSE) {
+    $fail[]='Sequential approver route not implemented.';
+}
+if (!is_file($root.'/tests/workflow_builder_smoke.sh')) {
+    $fail[]='Workflow Builder integration test missing.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";
