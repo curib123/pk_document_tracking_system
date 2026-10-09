@@ -100,5 +100,31 @@ if (strpos($docCtl, "require_permission('softcopy','direct')")===FALSE ||
 if (!is_file($root.'/tests/direct_softcopy_smoke.sh')) {
     $fail[] = 'Missing database-backed Softcopy Direct tests.';
 }
+$dashboard = file_get_contents($root.'/application/view/pages/dashboard/index.php');
+$hardcopy = file_get_contents($root.'/application/view/pages/hardcopy_document/modal_action/upsert.php');
+$docService = file_get_contents($root.'/application/services/documents/document_service.php');
+$docModel = file_get_contents($root.'/application/models/Document_model.php');
+$docView = file_get_contents($root.'/application/view/pages/documents/shared_index.php');
+foreach (['dashboardGreeting', 'Good morning', 'Good afternoon', 'Good evening',
+    'Asia/Manila', 'first_name'] as $text) {
+    if (strpos($dashboard, $text)===FALSE) $fail[]='Dashboard greeting missing: '.$text;
+}
+foreach (['name="holder_name"','readonly','name="holder_id"',
+    'is_administrator','data-hardcopy-level="area"',
+    'data-hardcopy-level="specific"','data-hardcopy-level="asset"',
+    'data-hardcopy-level="location"'] as $text) {
+    if (strpos($hardcopy, $text)===FALSE) $fail[]='Hardcopy upsert field missing: '.$text;
+}
+if (strpos($docView, "pages/hardcopy_document/modal_action/upsert")===FALSE ||
+    strpos($docView, 'data-hardcopy-upsert')===FALSE ||
+    strpos($docModel, 'function hardcopy_locations(')===FALSE ||
+    strpos($placeJs, 'updateHardcopyHierarchy')===FALSE ||
+    strpos($docService, 'validate_hardcopy_location')===FALSE ||
+    strpos($docService, "'Administrator'")===FALSE) {
+    $fail[]='Hardcopy predefined hierarchy or server-side holder protection missing.';
+}
+if (!is_file($root.'/tests/hardcopy_dashboard_smoke.sh')) {
+    $fail[]='Hardcopy/Dashboard integration tests missing.';
+}
 if ($fail) {fwrite(STDERR,implode(PHP_EOL,$fail).PHP_EOL);exit(1);}
 echo "Source-of-truth schema and module contract passed.\n";

@@ -18,6 +18,10 @@ foreach ($rows as $r) {
  }
  $rec=[];
  foreach (array_merge(['id'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
+ if ($cfg['domain']==='hardcopy') {
+     $rec['holder_name']=$user['name'];
+     if (!$is_administrator) $rec['holder_id']=$user['id'];
+ }
  if ($cfg['domain']==='softcopy') {
      // Table edit is a direct revision, never a generic metadata patch.
      $rec=[
@@ -28,7 +32,9 @@ foreach ($rows as $r) {
      ];
  }
  $buttons=[['type'=>'view']];
- if ($can) $buttons[]=['type'=>'edit'];
+ $canEdit=$can && ($cfg['domain']!=='hardcopy' ||
+     $is_administrator || (int)$r['holder_id']===(int)$user['id']);
+ if ($canEdit) $buttons[]=['type'=>'edit'];
  if ($cfg['domain']==='softcopy') {
      if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
          $buttons[]=['type'=>'upload'];
@@ -77,7 +83,7 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
  action="<?= $cfg['domain']==='softcopy' ? site_url('documents/softcopy/direct') : site_url('documents/hardcopy/save') ?>"
- <?= $cfg['domain']==='softcopy'?'data-softcopy-direct="yes"':'' ?>
+ <?= $cfg['domain']==='softcopy'?'data-softcopy-direct="yes"':'data-hardcopy-upsert' ?>
  data-confirm="<?= $cfg['domain']==='softcopy'?'Approve and apply this softcopy action directly?':'Save document metadata?' ?>">
  <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Document</h2>
  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>

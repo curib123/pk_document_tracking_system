@@ -97,6 +97,7 @@
             updateRequestActionFields();
             if (target.id === 'stepForm') updateStepApprover();
             if (target.hasAttribute('data-location-upsert')) updateLocationHierarchy();
+            if (target.hasAttribute('data-hardcopy-upsert')) updateHardcopyHierarchy();
         }
 
         var view = event.target.closest('.js-view');
@@ -320,6 +321,72 @@
         if (level) updateLocationHierarchy(level);
     });
     updateLocationHierarchy();
+
+    // Hardcopy Upsert uses predefined pk_dts references; all relationships
+    // are rechecked by the PHP model/service regardless of browser input.
+    function updateHardcopyHierarchy(changed) {
+        var form=document.querySelector('#editForm[data-hardcopy-upsert]');
+        if (!form) return;
+        var area=form.querySelector('[data-hardcopy-level="area"]');
+        var specific=form.querySelector('[data-hardcopy-level="specific"]');
+        var asset=form.querySelector('[data-hardcopy-level="asset"]');
+        var location=form.querySelector('[data-hardcopy-level="location"]');
+        if (!area || !specific || !asset || !location) return;
+
+        function chosen(select) {
+            return select.options[select.selectedIndex] || null;
+        }
+        function filter(select, match) {
+            Array.from(select.options).forEach(function (option) {
+                if (!option.value) return;
+                var valid=match(option);
+                option.disabled=!valid;
+                option.hidden=!valid;
+            });
+            var selected=chosen(select);
+            if (selected && selected.disabled) select.value='';
+        }
+        if (changed==='location' && location.value) {
+            var loc=chosen(location);
+            area.value=loc.dataset.areaId==='0'?'':(loc.dataset.areaId||'');
+            specific.value=loc.dataset.specificId==='0'?'':(loc.dataset.specificId||'');
+            asset.value=loc.dataset.assetId==='0'?'':(loc.dataset.assetId||'');
+        } else if (changed==='asset' && asset.value) {
+            var a=chosen(asset);
+            area.value=a.dataset.areaId||'';
+            specific.value=a.dataset.specificId||'';
+        } else if (changed==='specific' && specific.value) {
+            area.value=chosen(specific).dataset.areaId||'';
+        }
+        filter(specific,function(opt) {
+            return !area.value || opt.dataset.areaId===area.value;
+        });
+        filter(asset,function(opt) {
+            return (!area.value || opt.dataset.areaId===area.value) &&
+                   (!specific.value || opt.dataset.specificId===specific.value);
+        });
+        filter(location,function(opt) {
+            return (!area.value || !opt.dataset.areaId || opt.dataset.areaId==='0' ||
+                    opt.dataset.areaId===area.value) &&
+                   (!specific.value || !opt.dataset.specificId ||
+                    opt.dataset.specificId==='0' || opt.dataset.specificId===specific.value) &&
+                   (!asset.value || !opt.dataset.assetId || opt.dataset.assetId==='0' ||
+                    opt.dataset.assetId===asset.value);
+        });
+        var help=form.querySelector('#hardcopyHierarchyHelp');
+        if (help) {
+            help.textContent=location.value
+                ? 'Location selected. Its predefined area, specific and asset have been populated.'
+                : asset.value ? 'Asset selected. Its area and specific are populated automatically.'
+                : specific.value ? 'Specific selected. The parent area is populated automatically.'
+                : 'Choose an area to filter the available specifics, assets and locations.';
+        }
+    }
+    document.addEventListener('change', function(event) {
+        var level=event.target && event.target.getAttribute('data-hardcopy-level');
+        if (level) updateHardcopyHierarchy(level);
+    });
+    updateHardcopyHierarchy();
 
     var pendingForm = null;
     var pendingParent = null;

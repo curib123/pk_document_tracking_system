@@ -69,7 +69,7 @@ class Documents extends MY_Controller
         $this->require_permission($domain,'direct');
         $this->confirmed();
         try {
-            (new Document_service())->save($domain,$this->input->post(),(int)$this->user['id']);
+            (new Document_service())->save($domain,$this->input->post(),$this->user);
             $this->notice('Document saved.');
         } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
         redirect('documents/'.$domain);

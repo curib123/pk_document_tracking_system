@@ -64,6 +64,25 @@ class Document_model extends CI_Model
             ->order_by('title')->get()->result_array();
     }
 
+    // Predefined active location choices carry the existing hierarchy.
+    // They never require a new schema, and inactive parents are not selectable.
+    public function hardcopy_locations()
+    {
+        return $this->db->select('l.id,l.name,l.code,l.area_id,l.specific_id,l.asset_id')
+            ->from('locations l')
+            ->join('areas a','a.id=l.area_id','left')
+            ->join('specifics s','s.id=l.specific_id','left')
+            ->join('assets b','b.id=l.asset_id','left')
+            ->where('l.active',1)
+            ->group_start()->where('l.area_id IS NULL',NULL,FALSE)
+                ->or_where('a.active',1)->group_end()
+            ->group_start()->where('l.specific_id IS NULL',NULL,FALSE)
+                ->or_where('s.active',1)->group_end()
+            ->group_start()->where('l.asset_id IS NULL',NULL,FALSE)
+                ->or_where('b.active',1)->group_end()
+            ->order_by('l.name')->order_by('l.id')->get()->result_array();
+    }
+
     public function active_users()
     {
         return $this->db->select('id,CONCAT_WS(" ",first_name,last_name) AS name',FALSE)

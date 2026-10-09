@@ -71,4 +71,5 @@ echo 'Single Places link, authorized landing page and six in-page tabs passed.'
 echo 'Authoritative pk_dts SQL import, login and 22 module routes passed.'
 source tests/workflow_smoke.sh
 source tests/places_smoke.sh
+source tests/hardcopy_dashboard_smoke.sh
 source tests/direct_softcopy_smoke.sh
