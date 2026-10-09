@@ -109,8 +109,13 @@ class Administration_service
             'description'=>trim((string)($post['description']??''))];
         $this->ci->db->trans_begin();
         if ($id) {
-            if (!$this->ci->db->get_where('workflows',['id'=>$id])->row_array())
-                throw new DomainException('Workflow not found.');
+            $existing=$this->ci->db->get_where('workflows',['id'=>$id])->row_array();
+            if (!$existing) throw new DomainException('Workflow not found.');
+            if ($existing['request_type']!==$type &&
+                $this->ci->db->from('workflow_versions')->where('workflow_id',$id)
+                    ->where('status','published')->count_all_results()>0) {
+                throw new DomainException('Published workflow request type is immutable. Create a new workflow.');
+            }
             $this->ci->db->where('id',$id)->update('workflows',$data);
         } else {
             $data['created_by']=$actorId;
@@ -186,7 +191,14 @@ class Administration_service
         $steps=(json_decode($v['graph'],TRUE)['steps']??[]);
         if (!$steps) throw new DomainException('Add at least one approval step before publishing.');
         $this->ci->db->trans_begin();
-        $this->ci->db->where('workflow_id',$v['workflow_id'])->update('workflow_versions',['is_default'=>0]);
+        $workflow=$this->ci->db->get_where('workflows',['id'=>$v['workflow_id']])->row_array();
+        if (!$workflow) throw new DomainException('Workflow not found.');
+        $related=$this->ci->db->select('id')->get_where('workflows',[
+            'request_type'=>$workflow['request_type']
+        ])->result_array();
+        $ids=array_column($related,'id');
+        if ($ids) $this->ci->db->where_in('workflow_id',$ids)
+            ->update('workflow_versions',['is_default'=>0]);
         $this->ci->db->where('id',$versionId)->update('workflow_versions',[
             'status'=>'published','is_default'=>1,'published_at'=>date('Y-m-d H:i:s')
         ]);
