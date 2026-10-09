@@ -148,4 +148,5 @@ CREATED_DOC=$(mysql -N -s -h127.0.0.1 -uroot -prootpass pk_dts_test \
     -e "SELECT COUNT(*) FROM documents WHERE kind='softcopy' AND code='QA-2026' AND title='Quality Assurance Guide'")
 test "$CREATED_DOC" = 1
 echo "Integration smoke passed: auth, RBAC, routes, draft, approval and document creation effect."
+source tests/business_flows.sh
 
