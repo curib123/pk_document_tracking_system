@@ -6,21 +6,21 @@ $roleGrants = [];
 foreach ($granted as $g) $roleGrants[$g['role_id']][] = (int) $g['permission_id'];
 $dt_columns = ['name' => 'Role Name', 'description' => 'Description', 'category' => 'Category', 'access' => 'Permissions'];
 $dt_badges = [];
-$dt_filters = [];
+$dt_filters = ['status' => ['' => 'All Roles', 'system' => 'System', 'custom' => 'Custom']];
 $dt_path = 'admin/roles';
-$dt_q = trim((string) $this->input->get('q', TRUE));
-$dt_filter = '';
-$dt_limit = (int) $this->input->get('limit');
-if (!in_array($dt_limit, [10,25,50,100], TRUE)) $dt_limit = 10;
-$dt_page = max(1, (int) $this->input->get('page'));
-$filtered = array_values(array_filter($rows, function ($r) use ($dt_q) {
-    return $dt_q === '' || stripos($r['name'], $dt_q) !== FALSE;
-}));
-$dt_total = count($filtered);
+$dt_q = $table['q'];
+$dt_filter = $table['status'];
+$dt_page = $table['page'];
+$dt_limit = $table['limit'];
+$dt_sort = $table['sort'];
+$dt_dir = $table['dir'];
+$dt_filter_values = $table['filters'];
+$dt_sortable = array_keys($dt_columns);
+$dt_total = $total;
 $dt_rows = [];
 $allPermissions = [];
 foreach ($permission_rows as $p) $allPermissions[$p['id']] = $p['module'] . ' · ' . $p['action'];
-foreach (array_slice($filtered, ($dt_page - 1) * $dt_limit, $dt_limit) as $r) {
+foreach ($rows as $r) {
     $names = [];
     foreach ($roleGrants[$r['id']] ?? [] as $pid) if (isset($allPermissions[$pid])) $names[] = $allPermissions[$pid];
     $buttons = [['type' => 'view']];
@@ -40,7 +40,8 @@ $dt_create = $may('create') ? 'Create Role' : '';
 <p>Assign module-level permissions for every page and action. Server-side checks are authoritative.</p></div></div>
 <?php $this->load->view('components/datatable', compact(
     'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
-    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create',
+    'dt_sort', 'dt_dir', 'dt_filter_values', 'dt_sortable'
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content">

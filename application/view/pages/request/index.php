@@ -12,8 +12,10 @@ $dt_columns = $task
        'step' => 'Current Step', 'status' => 'Status']
     : ['subject' => 'Subject', 'operation' => 'Action', 'document' => 'Document',
        'status' => 'Status', 'created' => 'Created'];
-$dt_filters = ['status' => ['' => 'All Statuses', 'draft' => 'Draft', 'pending' => 'Pending',
-    'returned' => 'Returned', 'approved' => 'Approved', 'rejected' => 'Rejected']];
+$dt_filters = ['status' => $task
+    ? ['' => 'All Pending', 'pending' => 'Pending']
+    : ['' => 'All Statuses', 'draft' => 'Draft', 'pending' => 'Pending',
+       'returned' => 'Returned', 'approved' => 'Approved', 'rejected' => 'Rejected']];
 $dt_badges = ['status'];
 $dt_path = $base_path;
 $dt_q = $q;
@@ -21,6 +23,11 @@ $dt_filter = $status;
 $dt_page = $page;
 $dt_limit = $limit;
 $dt_total = $total;
+$dt_sort = $sort;
+$dt_dir = $dir;
+$dt_filter_values = $filter_values;
+$dt_sortable = $task ? ['subject','requester','document','step','status']
+    : ['subject','document','status','created'];
 $dt_create = !$task && $allowed('create') ? 'New Request' : '';
 $dt_rows = [];
 
@@ -111,7 +118,8 @@ foreach ($rows as $row) {
 </nav>
 <?php $this->load->view('components/datatable', compact(
     'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
-    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create',
+    'dt_sort', 'dt_dir', 'dt_filter_values', 'dt_sortable'
 )); ?>
 
 <?php if (!$task): ?>

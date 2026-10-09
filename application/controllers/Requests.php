@@ -16,6 +16,7 @@ class Requests extends MY_Controller
         parent::__construct();
         $this->load->model('Request_model');
         $this->load->model('Records_model');
+        $this->load->library('Table_pager');
         require_once APPPATH . 'services/request/request_service.php';
     }
 
@@ -29,20 +30,22 @@ class Requests extends MY_Controller
     {
         $type = $this->valid($type);
         $this->require_permission($task ? 'tasks' : 'requests');
-        $rows = $task ? $this->Request_model->tasks($type, $this->user)
-            : $this->Request_model->mine($type, $this->user['id']);
-        $q = trim((string) $this->input->get('q', TRUE));
-        $status = trim((string) $this->input->get('status', TRUE));
-        $rows = array_values(array_filter($rows, function ($row) use ($q, $status) {
-            return ($q === '' || stripos($row['subject'], $q) !== FALSE
-                    || stripos($row['document_code'] ?? '', $q) !== FALSE)
-                && ($status === '' || $row['status'] === $status);
-        }));
-        $limit = (int) $this->input->get('limit');
-        if (!in_array($limit, [10,25,50,100], TRUE)) $limit = 10;
-        $page = max(1, (int) $this->input->get('page'));
-        $total = count($rows);
-        $visibleRows = array_slice($rows, ($page - 1) * $limit, $limit);
+        $sorts = $task
+            ? ['subject','requester','document','step','status','updated']
+            : ['subject','document','status','created','updated'];
+        $params = $this->table_pager->read(
+            (array) $this->input->get(NULL, TRUE), $sorts, 'updated',
+            $task ? ['pending'] : ['draft','pending','returned','approved','rejected'],
+            [], 'desc'
+        );
+        $total = $this->Request_model->count_listing(
+            $type, $this->user, $task, $params['q'], $params['status']
+        );
+        $offset = $this->table_pager->clamp($params, $total);
+        $visibleRows = $this->Request_model->page_listing(
+            $type, $this->user, $task, $params['q'], $params['status'],
+            $params['limit'], $offset, $params['sort'], $params['dir']
+        );
         $histories = $this->Request_model->histories(array_column($visibleRows, 'id'));
         foreach ($visibleRows as &$item) {
             $item['history_text'] = implode("\n", $histories[$item['id']] ?? []);
@@ -52,8 +55,10 @@ class Requests extends MY_Controller
             'task' => $task, 'module' => $task ? 'tasks' : 'requests',
             'tabs' => $this->types, 'current' => $type,
             'rows' => $visibleRows,
-            'total' => $total, 'page' => $page, 'limit' => $limit, 'q' => $q,
-            'status' => $status,
+            'total' => $total, 'page' => $params['page'], 'limit' => $params['limit'],
+            'q' => $params['q'], 'status' => $params['status'],
+            'sort' => $params['sort'], 'dir' => $params['dir'],
+            'filter_values' => $params['filters'],
             'base_path' => ($task ? 'my-tasks/' : 'my-requests/') . $type,
             'form_action' => 'my-requests/' . $type . '/save',
             'document_options' => $this->Records_model->document_options(

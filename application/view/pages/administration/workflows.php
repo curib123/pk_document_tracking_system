@@ -6,20 +6,22 @@ $typeNames = ['softcopy'=>'Softcopy Request','hardcopy'=>'Hardcopy Request',
     'hardcopy-transfer'=>'Hardcopy Transfer','access-grant'=>'Document Access Grant','document-assign'=>'Document Assign'];
 $dt_columns = ['name' => 'Workflow', 'type' => 'Request Type', 'version' => 'Version', 'steps' => 'Steps', 'default' => 'Default', 'active' => 'Status'];
 $dt_badges = ['active'];
-$dt_filters = [];
+$dt_filters = [
+    'status' => ['' => 'All Statuses', '1' => 'Active', '0' => 'Inactive'],
+    'type' => ['' => 'All Request Types'] + $typeNames
+];
 $dt_path = 'admin/workflows';
-$dt_q = trim((string) $this->input->get('q', TRUE));
-$dt_filter = '';
-$dt_limit = (int) $this->input->get('limit');
-if (!in_array($dt_limit, [10,25,50,100], TRUE)) $dt_limit = 10;
-$dt_page = max(1, (int) $this->input->get('page'));
-$filtered = array_values(array_filter($rows, function ($r) use ($dt_q, $typeNames) {
-    return $dt_q === '' || stripos($r['name'], $dt_q) !== FALSE ||
-        stripos($typeNames[$r['request_type']] ?? '', $dt_q) !== FALSE;
-}));
-$dt_total = count($filtered);
+$dt_q = $table['q'];
+$dt_filter = $table['status'];
+$dt_page = $table['page'];
+$dt_limit = $table['limit'];
+$dt_sort = $table['sort'];
+$dt_dir = $table['dir'];
+$dt_filter_values = $table['filters'];
+$dt_sortable = array_keys($dt_columns);
+$dt_total = $total;
 $dt_rows = [];
-foreach (array_slice($filtered, ($dt_page - 1) * $dt_limit, $dt_limit) as $r) {
+foreach ($rows as $r) {
     $buttons = [['type' => 'view']];
     if ($may('edit')) $buttons[] = ['type' => 'edit'];
     $dt_rows[] = ['id' => $r['id'],
@@ -40,7 +42,8 @@ $dt_create = $may('create') ? 'Create Workflow Version' : '';
 <p>Build versioned approval sequences. In-use workflow versions cannot have their steps changed.</p></div></div>
 <?php $this->load->view('components/datatable', compact(
     'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
-    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create',
+    'dt_sort', 'dt_dir', 'dt_filter_values', 'dt_sortable'
 )); ?>
 <div class="workspace-card mt-4">
     <div class="workspace-card-header"><strong>Approval Steps</strong><p class="text-secondary small mb-0">Configure approvers in order, using a user, role, requester leader or requester.</p></div>

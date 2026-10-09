@@ -20,7 +20,7 @@ class Dashboard_service
         $tasks = 0;
         if ($includeTasks) {
             foreach (['softcopy','hardcopy','hardcopy-transfer','access-grant','document-assign'] as $type) {
-                $tasks += count($this->ci->Request_model->tasks($type, $user));
+                $tasks += $this->ci->Request_model->count_listing($type, $user, TRUE, '', '');
             }
         }
         return ['stats' => $stats, 'assigned_count' => $tasks];

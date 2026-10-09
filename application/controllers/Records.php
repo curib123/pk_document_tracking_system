@@ -12,6 +12,7 @@ class Records extends MY_Controller
         parent::__construct();
         $this->load->model('Records_model');
         $this->load->model('Document_file_model');
+        $this->load->library('Table_pager');
         require_once APPPATH . 'services/records/Records_service.php';
     }
 
@@ -21,22 +22,21 @@ class Records extends MY_Controller
         return $value;
     }
 
-    private function paging()
-    {
-        $limit = (int) $this->input->get('limit');
-        $limit = in_array($limit, [10,25,50,100], TRUE) ? $limit : 10;
-        return [max(1, (int) $this->input->get('page')), $limit];
-    }
-
     public function documents($kind)
     {
         $kind = $this->valid($kind, $this->kinds);
         $this->require_permission($kind);
-        list($page, $limit) = $this->paging();
-        $q = trim((string) $this->input->get('q', TRUE));
-        $status = (string) $this->input->get('status', TRUE);
-        if (!in_array($status, ['','active','archived','disposed'], TRUE)) $status = '';
-        list($rows, $total) = $this->Records_model->documents($kind, $q, $status, $limit, ($page - 1) * $limit);
+        $params = $this->table_pager->read(
+            (array) $this->input->get(NULL, TRUE),
+            ['code','title','version','place','status','updated'],
+            'updated', ['active','archived','disposed'], [], 'desc'
+        );
+        $total = $this->Records_model->count_documents($kind, $params['q'], $params['status']);
+        $offset = $this->table_pager->clamp($params, $total);
+        $rows = $this->Records_model->page_documents(
+            $kind, $params['q'], $params['status'], $params['limit'], $offset,
+            $params['sort'], $params['dir']
+        );
         $fileAllowed = $this->Document_file_model->authorized_document_ids(
             $this->user, $rows, $this->can($kind, 'edit')
         );
@@ -49,7 +49,10 @@ class Records extends MY_Controller
                 ? $this->Records_model->active_grants(array_column($rows, 'id')) : [],
             'mode' => 'documents', 'module' => $kind, 'current' => $kind,
             'tabs' => $this->kinds, 'rows' => $rows, 'file_allowed' => $fileAllowed, 'total' => $total,
-            'page' => $page, 'limit' => $limit, 'q' => $q, 'status' => $status,
+            'page' => $params['page'], 'limit' => $params['limit'],
+            'q' => $params['q'], 'status' => $params['status'],
+            'sort' => $params['sort'], 'dir' => $params['dir'],
+            'filter_values' => $params['filters'],
             'base_path' => 'documents/' . $kind,
             'form_action' => 'documents/' . $kind . '/save',
             'delete_action' => 'documents/' . $kind . '/delete',
@@ -143,15 +146,23 @@ class Records extends MY_Controller
     {
         $type = $this->valid($type, $this->places);
         $this->require_permission($type);
-        list($page, $limit) = $this->paging();
-        $q = trim((string) $this->input->get('q', TRUE));
-        $status = (string) $this->input->get('status', TRUE);
-        if (!in_array($status, ['','0','1'], TRUE)) $status = '';
-        list($rows, $total) = $this->Records_model->places($type, $q, $status, $limit, ($page - 1) * $limit);
+        $params = $this->table_pager->read(
+            (array) $this->input->get(NULL, TRUE),
+            ['name','description','active'], 'name', ['0','1']
+        );
+        $total = $this->Records_model->count_places($type, $params['q'], $params['status']);
+        $offset = $this->table_pager->clamp($params, $total);
+        $rows = $this->Records_model->page_places(
+            $type, $params['q'], $params['status'], $params['limit'], $offset,
+            $params['sort'], $params['dir']
+        );
         $this->render('Places · ' . $this->places[$type], 'pages/records/index', [
             'mode' => 'places', 'module' => $type, 'current' => $type,
             'tabs' => $this->places, 'rows' => $rows, 'total' => $total,
-            'page' => $page, 'limit' => $limit, 'q' => $q, 'status' => $status,
+            'page' => $params['page'], 'limit' => $params['limit'],
+            'q' => $params['q'], 'status' => $params['status'],
+            'sort' => $params['sort'], 'dir' => $params['dir'],
+            'filter_values' => $params['filters'],
             'base_path' => 'places/' . $type,
             'form_action' => 'places/' . $type . '/save',
             'delete_action' => 'places/' . $type . '/delete'

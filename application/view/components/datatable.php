@@ -3,8 +3,18 @@
 // Inputs: dt_rows/cells/buttons, dt_columns, dt_filters, dt_path and metadata.
 $dt_pages = max(1, (int) ceil($dt_total / $dt_limit));
 $dt_page = min($dt_page, $dt_pages);
-$dt_link = function ($page) use ($dt_path, $dt_q, $dt_filter, $dt_limit) {
-    return site_url($dt_path) . '?' . http_build_query(['q' => $dt_q, 'status' => $dt_filter, 'page' => $page, 'limit' => $dt_limit]);
+$dt_filter_values = $dt_filter_values ?? ['status' => $dt_filter];
+$dt_sort = $dt_sort ?? '';
+$dt_dir = $dt_dir ?? 'asc';
+$dt_sortable = $dt_sortable ?? [];
+$dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
+    $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir
+) {
+    $params = array_merge(['q' => $dt_q], $dt_filter_values, [
+        'page' => $page, 'limit' => $dt_limit,
+        'sort' => $sortOverride ?? $dt_sort, 'dir' => $dirOverride ?? $dt_dir
+    ]);
+    return site_url($dt_path) . '?' . http_build_query($params);
 };
 $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page * $dt_limit, $dt_total) : '0';
 ?>
@@ -13,7 +23,9 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
         <form id="tableFilter" class="table-search" method="get" action="<?= site_url($dt_path) ?>">
             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             <input class="form-control" name="q" aria-label="Search records" placeholder="Search records..." value="<?= html_escape($dt_q) ?>">
-            <input type="hidden" name="page" value="<?= (int) $dt_page ?>">
+            <input type="hidden" name="page" value="1">
+            <input type="hidden" name="sort" value="<?= html_escape($dt_sort) ?>">
+            <input type="hidden" name="dir" value="<?= html_escape($dt_dir) ?>">
         </form>
         <?php if (!empty($dt_create)): ?>
             <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#editModal"
@@ -26,17 +38,31 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
         <?php foreach ($dt_filters as $field => $options): ?>
             <select form="tableFilter" class="form-select" name="<?= html_escape($field) ?>" aria-label="<?= html_escape(ucfirst($field)) ?>" data-auto-submit>
                 <?php foreach ($options as $value => $label): ?>
-                    <option value="<?= html_escape((string) $value) ?>" <?= (string) $dt_filter === (string) $value ? 'selected' : '' ?>><?= html_escape($label) ?></option>
+                    <option value="<?= html_escape((string) $value) ?>" <?= (string) ($dt_filter_values[$field] ?? '') === (string) $value ? 'selected' : '' ?>><?= html_escape($label) ?></option>
                 <?php endforeach; ?>
             </select>
         <?php endforeach; ?>
         <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i> Apply</button>
-        <?php if ($dt_q !== '' || $dt_filter !== ''): ?><a class="btn btn-light" href="<?= site_url($dt_path) ?>">Clear</a><?php endif; ?>
+        <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?><a class="btn btn-light" href="<?= site_url($dt_path) ?>">Clear</a><?php endif; ?>
     </div>
     <div class="table-responsive">
         <table class="table table-hover align-middle">
             <thead><tr>
-                <?php foreach ($dt_columns as $label): ?><th scope="col"><?= html_escape($label) ?></th><?php endforeach; ?>
+                <?php foreach ($dt_columns as $key => $label): ?>
+                    <th scope="col">
+                        <?php if (in_array($key, $dt_sortable, TRUE)): ?>
+                            <?php $nextDir = ($dt_sort === $key && $dt_dir === 'asc') ? 'desc' : 'asc'; ?>
+                            <a class="table-sort<?= $dt_sort === $key ? ' is-sorted' : '' ?>"
+                               href="<?= html_escape($dt_link(1, $key, $nextDir)) ?>"
+                               aria-label="Sort by <?= html_escape($label) ?>">
+                                <?= html_escape($label) ?>
+                                <i class="fa-solid <?= $dt_sort === $key
+                                    ? ($dt_dir === 'asc' ? 'fa-sort-up' : 'fa-sort-down') : 'fa-sort' ?>"
+                                   aria-hidden="true"></i>
+                            </a>
+                        <?php else: ?><?= html_escape($label) ?><?php endif; ?>
+                    </th>
+                <?php endforeach; ?>
                 <th scope="col" class="text-end">Actions</th>
             </tr></thead>
             <tbody>

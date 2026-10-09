@@ -15,6 +15,10 @@ $dt_filter = $status;
 $dt_page = $page;
 $dt_limit = $limit;
 $dt_total = $total;
+$dt_sort = $sort;
+$dt_dir = $dir;
+$dt_filter_values = $filter_values;
+$dt_sortable = array_keys($dt_columns);
 $dt_create = $may('create') ? ($mode === 'documents' ? 'Add Document' : 'Add Place') : '';
 $dt_rows = [];
 foreach ($rows as $row) {
@@ -76,7 +80,8 @@ foreach ($rows as $row) {
 </nav>
 <?php $this->load->view('components/datatable', compact(
     'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
-    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create',
+    'dt_sort', 'dt_dir', 'dt_filter_values', 'dt_sortable'
 )); ?>
 
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">

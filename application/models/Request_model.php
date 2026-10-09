@@ -3,40 +3,75 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Request_model extends CI_Model
 {
-    public function mine($type, $userId)
+    // Apply exactly the same scope to COUNT(*) and the paged records query.
+    private function scope($type, $user, $task, $q, $status)
     {
-        return $this->db->select('r.*, d.code AS document_code, d.title AS document_title, ws.label AS current_step_label, rd.operation, rd.target_place_id, rd.target_user_id, rd.access_expires_at, rd.proposed_code, rd.proposed_title, rd.proposed_version, rd.proposed_description, destination.name AS destination_name, target.name AS target_user_name')
-            ->from('requests r')->join('documents d', 'd.id = r.document_id', 'left')
-            ->join('workflow_steps ws', 'ws.workflow_id = r.workflow_id AND ws.step_order = r.current_step', 'left')
+        $this->db->from('requests r')
+            ->join('documents d', 'd.id = r.document_id', 'left')
             ->join('request_details rd', 'rd.request_id = r.id', 'left')
             ->join('places destination', 'destination.id = rd.target_place_id', 'left')
             ->join('users target', 'target.id = rd.target_user_id', 'left')
-            ->where('r.request_type', $type)->where('r.requester_id', $userId)
-            ->order_by('r.updated_at', 'DESC')->get()->result_array();
+            ->join('workflow_steps ws',
+                'ws.workflow_id = r.workflow_id AND ws.step_order = r.current_step',
+                $task ? 'inner' : 'left')
+            ->where('r.request_type', $type);
+
+        if ($task) {
+            // Only the currently assigned approver may list this task.
+            $this->db->join('users creator', 'creator.id = r.requester_id')
+                ->where('r.status', 'pending')
+                ->group_start()
+                    ->group_start()->where('ws.approver_type', 'user')
+                        ->where('ws.approver_user_id', (int) $user['id'])->group_end()
+                    ->or_group_start()->where('ws.approver_type', 'role')
+                        ->where('ws.approver_role_id', (int) $user['role_id'])->group_end()
+                    ->or_group_start()->where('ws.approver_type', 'requester_leader')
+                        ->where('creator.leader_id', (int) $user['id'])->group_end()
+                    ->or_group_start()->where('ws.approver_type', 'requester')
+                        ->where('creator.id', (int) $user['id'])->group_end()
+                ->group_end();
+        } else {
+            $this->db->where('r.requester_id', (int) $user['id']);
+        }
+
+        if ($status !== '') $this->db->where('r.status', $status);
+        if ($q !== '') {
+            $this->db->group_start()
+                ->like('r.subject', $q)
+                ->or_like('d.code', $q);
+            if ($task) $this->db->or_like('creator.name', $q);
+            $this->db->group_end();
+        }
     }
 
-    public function tasks($type, $user)
+    public function count_listing($type, $user, $task, $q, $status)
     {
-        $sql = "SELECT r.*, d.code AS document_code, d.title AS document_title,
-                    creator.name AS requester_name, ws.label AS step_label,
-                    rd.operation, rd.target_place_id, rd.target_user_id, rd.access_expires_at,
-                    rd.proposed_code, rd.proposed_title, rd.proposed_version, rd.proposed_description,
-                    destination.name AS destination_name, target.name AS target_user_name
-                FROM requests r
-                JOIN users creator ON creator.id = r.requester_id
-                JOIN workflow_steps ws ON ws.workflow_id = r.workflow_id
-                    AND ws.step_order = r.current_step
-                LEFT JOIN documents d ON d.id = r.document_id
-                LEFT JOIN request_details rd ON rd.request_id = r.id
-                LEFT JOIN places destination ON destination.id = rd.target_place_id
-                LEFT JOIN users target ON target.id = rd.target_user_id
-                WHERE r.request_type = ? AND r.status = 'pending'
-                    AND ((ws.approver_type = 'user' AND ws.approver_user_id = ?)
-                      OR (ws.approver_type = 'role' AND ws.approver_role_id = ?)
-                      OR (ws.approver_type = 'requester_leader' AND creator.leader_id = ?)
-                      OR (ws.approver_type = 'requester' AND creator.id = ?))
-                ORDER BY r.updated_at DESC";
-        return $this->db->query($sql, [$type, $user['id'], $user['role_id'], $user['id'], $user['id']])->result_array();
+        $this->scope($type, $user, $task, $q, $status);
+        return (int) $this->db->count_all_results();
+    }
+
+    public function page_listing($type, $user, $task, $q, $status, $limit, $offset, $sort, $dir)
+    {
+        $this->scope($type, $user, $task, $q, $status);
+        $fields = [
+            'subject' => 'r.subject', 'document' => 'd.code',
+            'status' => 'r.status', 'created' => 'r.created_at',
+            'updated' => 'r.updated_at', 'requester' => 'creator.name',
+            'step' => 'ws.label'
+        ];
+        if (!isset($fields[$sort]) || (!$task && in_array($sort, ['requester', 'step'], TRUE))) {
+            $sort = 'updated';
+        }
+        $direction = strtolower($dir) === 'asc' ? 'ASC' : 'DESC';
+        $this->db->select('r.*, d.code AS document_code, d.title AS document_title,
+            ws.label AS current_step_label, rd.operation, rd.target_place_id,
+            rd.target_user_id, rd.access_expires_at, rd.proposed_code,
+            rd.proposed_title, rd.proposed_version, rd.proposed_description,
+            destination.name AS destination_name, target.name AS target_user_name');
+        if ($task) $this->db->select('creator.name AS requester_name, ws.label AS step_label');
+        return $this->db->order_by($fields[$sort], $direction)
+            ->order_by('r.id', $direction)
+            ->limit($limit, $offset)->get()->result_array();
     }
 
     public function histories($ids)

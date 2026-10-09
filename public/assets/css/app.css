@@ -127,3 +127,9 @@ a{text-decoration:none}
 .offline-ui .align-items-center{align-items:center}
 .offline-ui .btn{cursor:pointer}
 @media(min-width:768px){.offline-ui .col-md-4{width:33.333%}.offline-ui .col-md-5{width:41.667%}.offline-ui .col-md-6{width:50%}.offline-ui .col-md-7{width:58.333%}.offline-ui .col-md-8{width:66.667%}}
+
+/* Reusable server-sorted column headers. */
+.table-sort{display:inline-flex;align-items:center;gap:7px;color:inherit;font-weight:inherit;text-decoration:none}
+.table-sort i{font-size:11px;opacity:.45}
+.table-sort:hover,.table-sort.is-sorted{color:var(--accent)}
+.table-sort.is-sorted i{opacity:1}

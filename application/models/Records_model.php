@@ -3,35 +3,70 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Records_model extends CI_Model
 {
-    public function places($type, $search, $status, $limit, $offset)
+    private function place_scope($type, $search, $status)
     {
-        $this->db->from('places')->where('type', $type);
-        if ($search !== '') $this->db->like('name', $search);
-        if ($status !== '') $this->db->where('active', (int) $status);
-        $total = $this->db->count_all_results('', FALSE);
-        $rows = $this->db->order_by('name', 'ASC')->limit($limit, $offset)->get()->result_array();
-        return [$rows, $total];
+        $this->db->from('places p')->where('p.type', $type);
+        if ($search !== '') {
+            $this->db->group_start()->like('p.name', $search)
+                ->or_like('p.description', $search)->group_end();
+        }
+        if ($status !== '') $this->db->where('p.active', (int) $status);
     }
 
-    public function documents($kind, $search, $status, $limit, $offset)
+    public function count_places($type, $search, $status)
     {
-        $this->db->select('d.*, p.name AS place_name, c.name AS category_name, u.name AS creator_name,
-                 df.id AS latest_file_id, df.original_name AS latest_file_name, df.file_size AS latest_file_size')
-            ->from('documents d')
-            ->join('places p', 'p.id = d.place_id', 'left')
-            ->join('places c', 'c.id = d.category_id', 'left')
-            ->join('users u', 'u.id = d.created_by')
-            ->join('document_files df',
-                'df.id = (SELECT MAX(f.id) FROM document_files f WHERE f.document_id = d.id)', 'left')
-            ->where('d.kind', $kind);
+        $this->place_scope($type, $search, $status);
+        return (int) $this->db->count_all_results();
+    }
+
+    public function page_places($type, $search, $status, $limit, $offset, $sort, $dir)
+    {
+        $this->place_scope($type, $search, $status);
+        $fields = ['name' => 'p.name', 'description' => 'p.description', 'active' => 'p.active'];
+        $sort = isset($fields[$sort]) ? $sort : 'name';
+        $dir = strtolower($dir) === 'desc' ? 'DESC' : 'ASC';
+        return $this->db->select('p.*')->order_by($fields[$sort], $dir)
+            ->order_by('p.id', 'ASC')->limit($limit, $offset)->get()->result_array();
+    }
+
+    private function document_scope($kind, $search, $status)
+    {
+        $this->db->from('documents d')->where('d.kind', $kind);
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search)
                 ->or_like('d.code', $search)->group_end();
         }
         if ($status !== '') $this->db->where('d.status', $status);
-        $total = $this->db->count_all_results('', FALSE);
-        $rows = $this->db->order_by('d.updated_at', 'DESC')->limit($limit, $offset)->get()->result_array();
-        return [$rows, $total];
+    }
+
+    public function count_documents($kind, $search, $status)
+    {
+        $this->document_scope($kind, $search, $status);
+        return (int) $this->db->count_all_results();
+    }
+
+    public function page_documents($kind, $search, $status, $limit, $offset, $sort, $dir)
+    {
+        $this->document_scope($kind, $search, $status);
+        $fields = [
+            'code' => 'd.code', 'title' => 'd.title', 'version' => 'd.version',
+            'place' => 'p.name', 'status' => 'd.status', 'updated' => 'd.updated_at'
+        ];
+        $sort = isset($fields[$sort]) ? $sort : 'updated';
+        $dir = strtolower($dir) === 'asc' ? 'ASC' : 'DESC';
+
+        return $this->db->select('d.*, p.name AS place_name, c.name AS category_name,
+                u.name AS creator_name, df.id AS latest_file_id,
+                df.original_name AS latest_file_name, df.file_size AS latest_file_size')
+            ->join('places p', 'p.id = d.place_id', 'left')
+            ->join('places c', 'c.id = d.category_id', 'left')
+            ->join('users u', 'u.id = d.created_by')
+            ->join('document_files df',
+                'df.id = (SELECT MAX(f.id) FROM document_files f WHERE f.document_id = d.id)',
+                'left')
+            ->order_by($fields[$sort], $dir)
+            ->order_by('d.id', 'DESC')
+            ->limit($limit, $offset)->get()->result_array();
     }
 
     public function place_options($type)
