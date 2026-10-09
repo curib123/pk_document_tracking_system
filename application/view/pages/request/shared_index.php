@@ -35,6 +35,11 @@ foreach ($rows as $row) {
  'category_id'=>$payload['category_id']??'','softcopy_id'=>$row['softcopy_id']??'',
  'hardcopy_id'=>$row['hardcopy_id']??'','recipient_id'=>$payload['recipient_id']??'',
  'expires_at'=>$payload['expires_at']??'',
+ 'new_revision_level'=>$payload['new_revision_level']??'',
+ 'effective_date'=>$payload['effective_date']??'',
+ 'date_received'=>$payload['date_received']??'',
+ 'date_released'=>$payload['date_released']??'',
+ 'page_number'=>$payload['page_number']??1,
  'destination_location_id'=>$payload['destination_location_id']??''
  ];
  $buttons=[['type'=>'view']];
@@ -85,7 +90,8 @@ href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>"><?= html_escape
 <?php if (!$task): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
-<form id="editForm" method="post" action="<?= site_url('my-requests/'.$tab.'/save') ?>"
+<form id="editForm" method="post" enctype="multipart/form-data"
+action="<?= site_url('my-requests/'.$tab.'/save') ?>"
 data-confirm="Save request draft?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">New Request</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
@@ -131,6 +137,29 @@ data-confirm="Save request draft?">
 <option value="">Not selected</option><?php foreach ($location_options as $opt): ?>
 <option value="<?= (int)$opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
 <?php endforeach; ?></select></div>
+<?php if ($tab==='softcopy'): ?>
+<div class="col-md-6" data-only-action="softcopy_revise">
+<label class="form-label" for="newRevisionLevel">New Revision Level</label>
+<input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30"></div>
+<div class="col-md-6" data-only-action="softcopy_revise">
+<label class="form-label" for="revisionPages">Number of Pages</label>
+<input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1"></div>
+<div class="col-md-6" data-only-action="softcopy_revise">
+<label class="form-label" for="revisionEffective">Effective Date</label>
+<input class="form-control" type="date" id="revisionEffective" name="effective_date"></div>
+<div class="col-md-6" data-only-action="softcopy_revise">
+<label class="form-label" for="revisionReceived">Received Date</label>
+<input class="form-control" type="date" id="revisionReceived" name="date_received"></div>
+<div class="col-md-6" data-only-action="softcopy_revise">
+<label class="form-label" for="revisionReleased">Released Date</label>
+<input class="form-control" type="date" id="revisionReleased" name="date_released"></div>
+<div class="col-12" data-only-action="softcopy_revise">
+<label class="form-label" for="revisionFile">Controlled Revision File <span class="optional-label">(15 MB maximum)</span></label>
+<input class="form-control" id="revisionFile" type="file" name="revision_attachment"
+accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx">
+<small class="text-secondary">Required on new revisions. Existing staged file remains when editing without a replacement.</small>
+</div>
+<?php endif; ?>
 <div class="col-12"><label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
 <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea></div>
 </div></div>
