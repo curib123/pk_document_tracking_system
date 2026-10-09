@@ -22,7 +22,7 @@ class Request_service
             throw new DomainException('Select a valid document action.');
         }
 
-        $documentId = (int) ($post['document_id'] ?? 0);
+        $documentId = $operation === 'create' ? 0 : (int) ($post['document_id'] ?? 0);
         $document = NULL;
         if ($operation !== 'create') {
             $document = $this->ci->db->get_where('documents', ['id' => $documentId, 'status' => 'active'])->row_array();
