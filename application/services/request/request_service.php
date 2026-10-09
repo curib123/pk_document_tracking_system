@@ -5,7 +5,7 @@ class Request_service
     private $ci;
     public function __construct() { $this->ci =& get_instance(); $this->ci->load->model('Request_model'); }
 
-    public function save($tab,$post,$user)
+    public function save($tab,$post,$user,$attachment=NULL)
     {
         $allowed=$this->ci->Request_model->types($tab);
         $type=trim((string)($post['type']??$allowed[0]));
@@ -21,7 +21,12 @@ class Request_service
           'category_id'=>(int)($post['category_id']??0),
           'recipient_id'=>(int)($post['recipient_id']??0),
           'expires_at'=>trim((string)($post['expires_at']??'')),
-          'destination_location_id'=>(int)($post['destination_location_id']??0)
+          'destination_location_id'=>(int)($post['destination_location_id']??0),
+          'new_revision_level'=>trim((string)($post['new_revision_level']??'')),
+          'effective_date'=>trim((string)($post['effective_date']??'')),
+          'date_received'=>trim((string)($post['date_received']??'')),
+          'date_released'=>trim((string)($post['date_released']??'')),
+          'page_number'=>max(1,(int)($post['page_number']??1))
         ];
         $softcopyId=(int)($post['softcopy_id']??0);
         $hardcopyId=(int)($post['hardcopy_id']??0);
@@ -36,6 +41,35 @@ class Request_service
             throw new DomainException('Select an access expiry date.');
         if ($type==='transfer' && !$payload['destination_location_id'])
             throw new DomainException('Choose the destination location.');
+        $revisionFile=NULL;
+        if ($type==='softcopy_revise') {
+            if (!$this->ci->db->get_where('softcopy_documents',[
+                'id'=>$softcopyId, 'status'=>'active'
+            ])->row_array()) throw new DomainException('Choose an active softcopy to revise.');
+            if ($payload['new_revision_level']==='' ||
+                strlen($payload['new_revision_level'])>30)
+                throw new DomainException('Enter the proposed revision level.');
+            foreach (['effective_date','date_received','date_released'] as $key) {
+                $date=$payload[$key];
+                $parsed=DateTime::createFromFormat('!Y-m-d',$date);
+                if (!$parsed || $parsed->format('Y-m-d')!==$date)
+                    throw new DomainException('Enter valid revision dates.');
+            }
+            if (!empty($attachment['name'])) {
+                require_once APPPATH.'services/files/file_service.php';
+                $revisionFile=(new File_service())->stage_revision(
+                    $softcopyId,(int)$user['id'],$attachment
+                );
+            }
+        }
+        if ($id && $type==='softcopy_revise') {
+            $existing=$this->ci->Request_model->request($id);
+            $old=json_decode($existing['payload']??'{}',TRUE)?:[];
+            $payload['revision_file_id']=$revisionFile ?:
+                (int)($old['revision_file_id']??0);
+        } elseif ($revisionFile) {
+            $payload['revision_file_id']=$revisionFile;
+        }
 
         $data=['type'=>$type,'payload'=>json_encode($payload,JSON_UNESCAPED_UNICODE),
             'softcopy_id'=>$softcopyId?:NULL,'hardcopy_id'=>$hardcopyId?:NULL];
@@ -162,9 +196,55 @@ class Request_service
             return ['document_id'=>$newId];
         }
         if ($type==='softcopy_revise') {
-            // A revision requires a new approved uploaded file and dated revision
-            // metadata in softcopy_revisions; do not silently invent that record.
-            throw new DomainException('Softcopy revision requires a new file and revision metadata before final approval.');
+            $rows=$this->ci->db->query(
+                'SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE',[$soft]
+            )->result_array();
+            $doc=$rows[0]??NULL;
+            $file=$this->ci->db->get_where('files',[
+                'id'=>(int)($payload['revision_file_id']??0),
+                'document_id'=>$soft, 'domain'=>'softcopy',
+                'uploaded_by'=>$owner, 'purpose'=>'revision', 'status'=>'pending'
+            ])->row_array();
+            if (!$doc || $doc['status']!=='active' || !$file)
+                throw new DomainException('Revision document or pending attachment is unavailable.');
+            $numberRow=$this->ci->db->select_max('revision_number')
+                ->get_where('softcopy_revisions',['document_id'=>$soft])->row_array();
+            $old=$doc['current_revision_id']?$this->ci->db->get_where(
+                'softcopy_revisions',['id'=>$doc['current_revision_id']])->row_array():NULL;
+            $level=trim((string)($payload['new_revision_level']??''));
+            if (!$level || ($old && $level===$old['new_revision_level']))
+                throw new DomainException('New revision level must differ from current revision.');
+            foreach (['effective_date','date_received','date_released'] as $key) {
+                if (!isset($payload[$key]) ||
+                    !DateTime::createFromFormat('!Y-m-d',(string)$payload[$key]))
+                    throw new DomainException('Revision effective, received and released dates are required.');
+            }
+            $date=date('Y-m-d');
+            $this->ci->db->insert('softcopy_revisions',[
+                'document_id'=>$soft,'revision_number'=>(int)($numberRow['revision_number']??0)+1,
+                'reason'=>$reason,'effective_date'=>$payload['effective_date'],
+                'page_number'=>max(1,(int)($payload['page_number']??1)),
+                'series_number'=>$doc['series_number'],
+                'document_title'=>$title?:$doc['title'],
+                'previous_revision_level'=>$old['new_revision_level']??NULL,
+                'new_revision_level'=>$level,
+                'previous_effective_date'=>$old['new_effective_date']??NULL,
+                'new_effective_date'=>$payload['effective_date'],
+                'date_received'=>$payload['date_received'],
+                'date_released'=>$payload['date_released'],
+                'approval_date'=>$date,'file_id'=>$file['id'],
+                'uploaded_by'=>$owner,'approved_by'=>$actor
+            ]);
+            $revisionId=(int)$this->ci->db->insert_id();
+            $this->ci->db->where('id',$soft)->update('softcopy_documents',[
+                'current_revision_id'=>$revisionId,
+                'title'=>$title?:$doc['title']
+            ]);
+            $this->ci->db->where('id',$file['id'])->update('files',[
+                'status'=>'approved', 'approved_by'=>$actor,
+                'approved_at'=>date('Y-m-d H:i:s')
+            ]);
+            return ['document_id'=>$soft,'revision_id'=>$revisionId,'file_id'=>$file['id']];
         }
         if ($type==='hardcopy_update') {
             if ($title==='') throw new DomainException('Updated hardcopy title is required.');
