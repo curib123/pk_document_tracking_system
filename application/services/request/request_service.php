@@ -127,6 +127,135 @@ class Request_service
         ]);
     }
 
+    // Final workflow approval writes the original domain tables atomically.
+    private function applyApproved($request,$actor)
+    {
+        $payload=json_decode($request['payload'],TRUE)?:[];
+        $type=$request['type'];
+        $id=(int)$request['id'];
+        $owner=(int)$request['requested_by'];
+        $soft=(int)$request['softcopy_id'];
+        $hard=(int)$request['hardcopy_id'];
+        $reason=trim((string)($payload['remarks']??''));
+        $title=trim((string)($payload['title']??''));
+        $recipient=(int)($payload['recipient_id']??0);
+        if ($type==='softcopy_create') {
+            if ($title==='' || empty($payload['document_number']) || empty($payload['category_id']))
+                throw new DomainException('Title, number and category are required to create a softcopy.');
+            $this->ci->db->insert('softcopy_documents',[
+                'title'=>$title,'document_number'=>$payload['document_number'],
+                'category_id'=>(int)$payload['category_id'],'created_by'=>$owner,
+                'creation_source'=>'request','creation_reason'=>$reason,'source_request_id'=>$id
+            ]);
+            $newId=(int)$this->ci->db->insert_id();
+            $this->ci->db->where('id',$id)->update('requests',['softcopy_id'=>$newId]);
+            return ['document_id'=>$newId];
+        }
+        if ($type==='hardcopy_create') {
+            if ($title==='') throw new DomainException('A hardcopy title is required.');
+            $this->ci->db->insert('hardcopy_documents',[
+                'title'=>$title,'created_by'=>$owner,'holder_id'=>$owner,
+                'creation_source'=>'request','creation_reason'=>$reason,'source_request_id'=>$id
+            ]);
+            $newId=(int)$this->ci->db->insert_id();
+            $this->ci->db->where('id',$id)->update('requests',['hardcopy_id'=>$newId]);
+            return ['document_id'=>$newId];
+        }
+        if ($type==='softcopy_revise') {
+            // A revision requires a new approved uploaded file and dated revision
+            // metadata in softcopy_revisions; do not silently invent that record.
+            throw new DomainException('Softcopy revision requires a new file and revision metadata before final approval.');
+        }
+        if ($type==='hardcopy_update') {
+            if ($title==='') throw new DomainException('Updated hardcopy title is required.');
+            $this->ci->db->where('id',$hard)->where('status','active')
+                ->update('hardcopy_documents',['title'=>$title]);
+            if (!$this->ci->db->affected_rows())
+                throw new DomainException('Hardcopy was not updated; it may have changed.');
+            return ['document_id'=>$hard];
+        }
+        if ($type==='softcopy_cancel') {
+            $doc=$this->ci->db->get_where('softcopy_documents',['id'=>$soft])->row_array();
+            if (!$doc || $doc['status']==='disposed') throw new DomainException('Softcopy is unavailable.');
+            $this->ci->db->where('id',$soft)->update('softcopy_documents',[
+                'previous_status'=>$doc['status'],'status'=>'cancelled'
+            ]);
+            $this->ci->db->insert('status_history',[
+                'domain'=>'softcopy','document_id'=>$soft,'previous_status'=>$doc['status'],
+                'new_status'=>'cancelled','action'=>'cancelled','user_id'=>$actor,'remarks'=>$reason
+            ]);
+            return ['document_id'=>$soft];
+        }
+        if ($type==='assignment') {
+            if (!$soft || !$recipient) throw new DomainException('Choose a document and assignee.');
+            $match=$this->ci->db->get_where('assignments',[
+                'softcopy_id'=>$soft,'user_id'=>$recipient
+            ])->row_array();
+            if ($match) $this->ci->db->where('id',$match['id'])->update('assignments',[
+                'active'=>1,'assigned_by'=>$actor,'assigned_at'=>date('Y-m-d H:i:s')
+            ]);
+            else $this->ci->db->insert('assignments',[
+                'softcopy_id'=>$soft,'user_id'=>$recipient,'assigned_by'=>$actor
+            ]);
+            return ['softcopy_id'=>$soft,'assigned_to'=>$recipient];
+        }
+        if ($type==='access') {
+            if (!$soft || !$recipient || empty($payload['expires_at']))
+                throw new DomainException('Document, recipient and expiry are required.');
+            $expires=$payload['expires_at'].' 23:59:59';
+            if (strtotime($expires)<time()) throw new DomainException('Access expiry has already passed.');
+            $this->ci->db->insert('access_grants',[
+                'request_id'=>$id,'domain'=>'softcopy','document_id'=>$soft,
+                'user_id'=>$recipient,'granted_by'=>$actor,
+                'expires_at'=>$expires,'reason'=>$reason
+            ]);
+            return ['grant_id'=>$this->ci->db->insert_id()];
+        }
+        if ($type==='transfer') {
+            $doc=$this->ci->db->get_where('hardcopy_documents',['id'=>$hard,'status'=>'active'])->row_array();
+            $loc=$this->ci->db->get_where('locations',[
+                'id'=>(int)($payload['destination_location_id']??0),'active'=>1
+            ])->row_array();
+            if (!$doc || !$loc || !$recipient) throw new DomainException('Hardcopy, recipient and destination must be active.');
+            $destination=[
+                'area_id'=>$loc['area_id'],'specific_id'=>$loc['specific_id'],
+                'asset_id'=>$loc['asset_id'],'location_id'=>$loc['id'],
+                'recipient_id'=>$recipient
+            ];
+            $this->ci->db->insert('transfers',[
+                'request_id'=>$id,'hardcopy_id'=>$hard,
+                'origin'=>json_encode($doc,JSON_UNESCAPED_UNICODE),
+                'destination'=>json_encode($destination),
+                'current_holder_id'=>$doc['holder_id'],'recipient_id'=>$recipient,
+                'document_copy_number'=>$payload['document_number']??$doc['sequence_number']??'',
+                'reason'=>$reason,'status'=>'for_transfer','recipient_status'=>'pending'
+            ]);
+            return ['transfer_id'=>$this->ci->db->insert_id()];
+        }
+        if ($type==='disposal') {
+            $doc=$this->ci->db->get_where('hardcopy_documents',['id'=>$hard])->row_array();
+            if (!$doc || $doc['status']==='disposed') throw new DomainException('Hardcopy already disposed or missing.');
+            $this->ci->db->insert('disposals',[
+                'request_id'=>$id,'domain'=>'hardcopy','document_id'=>$hard,
+                'previous_status'=>$doc['status'],'previous_state'=>json_encode($doc),
+                'disposal_action'=>'dispose','remarks'=>$reason,'disposed_by'=>$actor
+            ]);
+            $this->ci->db->where('id',$hard)->update('hardcopy_documents',[
+                'previous_status'=>$doc['status'],'status'=>'disposed','location_id'=>NULL
+            ]);
+            $this->ci->db->insert('status_history',[
+                'domain'=>'hardcopy','document_id'=>$hard,'previous_status'=>$doc['status'],
+                'new_status'=>'disposed','action'=>'disposed','user_id'=>$actor,'remarks'=>$reason
+            ]);
+            $this->ci->db->where('domain','hardcopy')->where('document_id',$hard)
+                ->where('revoked_at IS NULL',NULL,FALSE)->update('access_grants',[
+                    'revoked_at'=>date('Y-m-d H:i:s'),'revoked_by'=>$actor,'status'=>'revoked'
+                ]);
+            return ['disposal'=>'recorded'];
+        }
+        throw new DomainException('Unsupported request action.');
+    }
+
     public function decide($tab,$id,$user,$decision,$comment)
     {
         if (!in_array($decision,['approved','rejected','returned'],TRUE))
@@ -161,8 +290,12 @@ class Request_service
                     $this->ci->db->where('id',$next['id'])->update('workflow_steps',['status'=>'active']);
                     $this->ci->db->where('id',$id)->update('requests',['current_node'=>$next['node_key']]);
                 } else {
+                    $result=$this->applyApproved($r,(int)$user['id']);
+                    $status=$r['type']==='transfer'?'approved':'completed';
                     $this->ci->db->where('id',$id)->update('requests',[
-                       'status'=>'approved','current_node'=>NULL,'completed_at'=>date('Y-m-d H:i:s')
+                       'status'=>$status,'result'=>json_encode($result),
+                       'current_node'=>NULL,
+                       'completed_at'=>$status==='completed'?date('Y-m-d H:i:s'):NULL
                     ]);
                 }
             } else {
