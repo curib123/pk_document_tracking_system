@@ -87,6 +87,19 @@ class Administration extends MY_Controller
         redirect('admin/workflows');
     }
 
+    public function clone_workflow()
+    {
+        $this->require_permission('workflows', 'create');
+        $this->confirmed();
+        try {
+            (new Administration_service())->clone_workflow((int) $this->input->post('id'));
+            $this->notice('New editable workflow version created. Review the steps before setting it as default.');
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('admin/workflows');
+    }
+
     public function save_step()
     {
         $this->require_permission('workflows', 'edit');
