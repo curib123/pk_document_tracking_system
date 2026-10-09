@@ -21,10 +21,18 @@ class MY_Controller extends CI_Controller
     protected function authenticate()
     {
         if (!$this->user) { redirect('login'); exit; }
-        if (!empty($this->user['require_password_change']) &&
-            !in_array($this->router->fetch_method(), ['change_password','logout'], TRUE)) {
-            // Render a persistent required-password notice, but allow viewing the dashboard.
-            $this->session->set_flashdata('notice', 'Please change your password before continuing.');
+        // Enforce onboarding at the server boundary for every protected route,
+        // including task routes that only call authenticate().
+        if (!empty($this->user['require_password_change'])) {
+            $controller = strtolower($this->router->fetch_class());
+            $method = strtolower($this->router->fetch_method());
+            $passwordAction = $controller === 'auth' &&
+                in_array($method, ['change_password', 'logout'], TRUE);
+            $setupScreen = $controller === 'dashboard' && $method === 'index';
+            if (!$passwordAction && !$setupScreen) {
+                show_error('Change your temporary password before using this module.', 403);
+                exit;
+            }
         }
     }
 
@@ -36,10 +44,6 @@ class MY_Controller extends CI_Controller
     protected function require_permission($module, $action = 'view')
     {
         $this->authenticate();
-        if (!empty($this->user['require_password_change']) && $this->router->fetch_class()!=='Dashboard') {
-            show_error('Change your temporary password before using other modules.', 403);
-            exit;
-        }
         if (!$this->can($module, $action)) {
             show_error('You do not have permission for this action.', 403);
             exit;
