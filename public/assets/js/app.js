@@ -157,6 +157,8 @@
             form.action = action.getAttribute('data-url');
             form.querySelector('[name="id"]').value = action.getAttribute('data-id') || '';
             form.querySelector('[name="decision"]').value = action.getAttribute('data-decision') || '';
+            var stepKey = form.querySelector('[name="step_key"]');
+            if (stepKey) stepKey.value = action.getAttribute('data-step-key') || '';
             var title = action.getAttribute('data-title') || 'Confirm Action';
             document.getElementById('actionTitle').textContent = title;
             document.getElementById('actionDescription').textContent =
