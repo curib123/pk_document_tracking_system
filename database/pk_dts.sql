@@ -1,13 +1,9 @@
--- Exact TABLE/COLUMN/INDEX/FK structure recovered from historical database/pk_dts.sql
--- Source Git object: 6cc10eb338c39a454ae3cceffe185e2dfe31e67f
--- Rows (including original user/password data) omitted intentionally.
--- Run only on a NEW EMPTY pk_dts database, never as a migration over live data.
 -- phpMyAdmin SQL Dump
 -- version 5.2.1
 -- https://www.phpmyadmin.net/
 --
 -- Host: 127.0.0.1
--- Generation Time: Oct 08, 2026 at 11:56 AM
+-- Generation Time: Oct 09, 2026 at 03:08 AM
 -- Server version: 10.4.32-MariaDB
 -- PHP Version: 8.0.30
 
@@ -225,6 +221,8 @@ CREATE TABLE `login_attempts` (
 -- Dumping data for table `login_attempts`
 --
 
+INSERT INTO `login_attempts` (`attempt_key`, `failures`, `window_started`) VALUES
+('a4f92932929927371cae757bdad8b206c113a655e6a834a8b24f696f2ebb4314', 1, '2026-10-08 17:55:11');
 
 -- --------------------------------------------------------
 
@@ -264,6 +262,92 @@ CREATE TABLE `permissions` (
 -- Dumping data for table `permissions`
 --
 
+INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_key`, `action_label`, `description`, `version`) VALUES
+(1, 'Users: View', 'users', 'Users', 'view', 'View', 'Allows view operations for users.', 1),
+(2, 'Users: Add', 'users', 'Users', 'add', 'Add', 'Allows add operations for users.', 1),
+(3, 'Users: Edit', 'users', 'Users', 'edit', 'Edit', 'Allows edit operations for users.', 1),
+(4, 'Users: Delete', 'users', 'Users', 'delete', 'Delete', 'Allows delete operations for users.', 1),
+(5, 'Roles: View', 'roles', 'Roles', 'view', 'View', 'Allows view operations for roles.', 1),
+(6, 'Roles: Add', 'roles', 'Roles', 'add', 'Add', 'Allows add operations for roles.', 1),
+(7, 'Roles: Edit', 'roles', 'Roles', 'edit', 'Edit', 'Allows edit operations for roles.', 1),
+(8, 'Roles: Delete', 'roles', 'Roles', 'delete', 'Delete', 'Allows delete operations for roles.', 1),
+(9, 'Permissions: View', 'permissions', 'Permissions', 'view', 'View', 'Allows view operations for permissions.', 1),
+(10, 'Permissions: Add', 'permissions', 'Permissions', 'add', 'Add', 'Allows add operations for permissions.', 1),
+(11, 'Permissions: Edit', 'permissions', 'Permissions', 'edit', 'Edit', 'Allows edit operations for permissions.', 1),
+(12, 'Permissions: Delete', 'permissions', 'Permissions', 'delete', 'Delete', 'Allows delete operations for permissions.', 1),
+(13, 'Areas: View', 'areas', 'Areas', 'view', 'View', 'Allows view operations for areas.', 1),
+(14, 'Areas: Add', 'areas', 'Areas', 'add', 'Add', 'Allows add operations for areas.', 1),
+(15, 'Areas: Edit', 'areas', 'Areas', 'edit', 'Edit', 'Allows edit operations for areas.', 1),
+(16, 'Areas: Delete', 'areas', 'Areas', 'delete', 'Delete', 'Allows delete operations for areas.', 1),
+(17, 'Specifics: View', 'specifics', 'Specifics', 'view', 'View', 'Allows view operations for specifics.', 1),
+(18, 'Specifics: Add', 'specifics', 'Specifics', 'add', 'Add', 'Allows add operations for specifics.', 1),
+(19, 'Specifics: Edit', 'specifics', 'Specifics', 'edit', 'Edit', 'Allows edit operations for specifics.', 1),
+(20, 'Specifics: Delete', 'specifics', 'Specifics', 'delete', 'Delete', 'Allows delete operations for specifics.', 1),
+(21, 'Assets: View', 'assets', 'Assets', 'view', 'View', 'Allows view operations for assets.', 1),
+(22, 'Assets: Add', 'assets', 'Assets', 'add', 'Add', 'Allows add operations for assets.', 1),
+(23, 'Assets: Edit', 'assets', 'Assets', 'edit', 'Edit', 'Allows edit operations for assets.', 1),
+(24, 'Assets: Delete', 'assets', 'Assets', 'delete', 'Delete', 'Allows delete operations for assets.', 1),
+(25, 'Locations: View', 'locations', 'Locations', 'view', 'View', 'Allows view operations for locations.', 1),
+(26, 'Locations: Add', 'locations', 'Locations', 'add', 'Add', 'Allows add operations for locations.', 1),
+(27, 'Locations: Edit', 'locations', 'Locations', 'edit', 'Edit', 'Allows edit operations for locations.', 1),
+(28, 'Locations: Delete', 'locations', 'Locations', 'delete', 'Delete', 'Allows delete operations for locations.', 1),
+(29, 'Categories: View', 'categories', 'Categories', 'view', 'View', 'Allows view operations for categories.', 1),
+(30, 'Categories: Add', 'categories', 'Categories', 'add', 'Add', 'Allows add operations for categories.', 1),
+(31, 'Categories: Edit', 'categories', 'Categories', 'edit', 'Edit', 'Allows edit operations for categories.', 1),
+(32, 'Categories: Delete', 'categories', 'Categories', 'delete', 'Delete', 'Allows delete operations for categories.', 1),
+(33, 'Dashboard: View', 'dashboard', 'Dashboard', 'view', 'View', 'Allows view operations for dashboard.', 1),
+(34, 'Softcopy: View', 'softcopy', 'Softcopy', 'view', 'View', 'Allows view operations for softcopy.', 1),
+(35, 'Softcopy: Request', 'softcopy', 'Softcopy', 'request', 'Request', 'Allows request operations for softcopy.', 1),
+(36, 'Softcopy: Direct', 'softcopy', 'Softcopy', 'direct', 'Direct', 'Allows direct operations for softcopy.', 1),
+(37, 'Hardcopy: View', 'hardcopy', 'Hardcopy', 'view', 'View', 'Allows view operations for hardcopy.', 1),
+(38, 'Hardcopy: Request', 'hardcopy', 'Hardcopy', 'request', 'Request', 'Allows request operations for hardcopy.', 1),
+(39, 'Hardcopy: Direct', 'hardcopy', 'Hardcopy', 'direct', 'Direct', 'Allows direct operations for hardcopy.', 1),
+(40, 'Documents: Access All', 'documents', 'Documents', 'access_all', 'Access All', 'Allows access_all operations for documents.', 1),
+(41, 'Documents: View Assigned', 'documents', 'Documents', 'view_assigned', 'View Assigned', 'Allows view_assigned operations for documents.', 1),
+(42, 'Documents: View Granted', 'documents', 'Documents', 'view_granted', 'View Granted', 'Allows view_granted operations for documents.', 1),
+(43, 'Documents: View All', 'documents', 'Documents', 'view_all', 'View All', 'Allows view_all operations for documents.', 1),
+(44, 'Documents: Request Catalog', 'documents', 'Documents', 'request_catalog', 'Request Catalog', 'Allows request_catalog operations for documents.', 1),
+(45, 'Files: View', 'files', 'Files', 'view', 'View', 'Allows view operations for files.', 1),
+(46, 'Files: View All', 'files', 'Files', 'view_all', 'View All', 'Allows view_all operations for files.', 1),
+(47, 'Files: Upload', 'files', 'Files', 'upload', 'Upload', 'Allows upload operations for files.', 1),
+(48, 'Files: Approve', 'files', 'Files', 'approve', 'Approve', 'Allows approve operations for files.', 1),
+(49, 'Files: Generate', 'files', 'Files', 'generate', 'Generate', 'Allows generate operations for files.', 1),
+(50, 'Requests: View', 'requests', 'Requests', 'view', 'View', 'Allows view operations for requests.', 1),
+(51, 'Requests: Add', 'requests', 'Requests', 'add', 'Add', 'Allows add operations for requests.', 1),
+(52, 'Requests: Edit', 'requests', 'Requests', 'edit', 'Edit', 'Allows edit operations for requests.', 1),
+(53, 'Requests: Submit', 'requests', 'Requests', 'submit', 'Submit', 'Allows submit operations for requests.', 1),
+(54, 'Requests: Cancel', 'requests', 'Requests', 'cancel', 'Cancel', 'Allows cancel operations for requests.', 1),
+(55, 'Requests: Manage', 'requests', 'Requests', 'manage', 'Manage', 'Allows manage operations for requests.', 1),
+(56, 'Requests: View All', 'requests', 'Requests', 'view_all', 'View All', 'Allows view_all operations for requests.', 1),
+(57, 'Workflows: View', 'workflows', 'Workflows', 'view', 'View', 'Allows view operations for workflows.', 1),
+(58, 'Workflows: Edit', 'workflows', 'Workflows', 'edit', 'Edit', 'Allows edit operations for workflows.', 1),
+(59, 'Workflows: Reassign', 'workflows', 'Workflows', 'reassign', 'Reassign', 'Allows reassign operations for workflows.', 1),
+(60, 'Transfer: View', 'transfer', 'Transfer', 'view', 'View', 'Allows view operations for transfer.', 1),
+(61, 'Transfer: View All', 'transfer', 'Transfer', 'view_all', 'View All', 'Allows view_all operations for transfer.', 1),
+(62, 'Transfer: Request', 'transfer', 'Transfer', 'request', 'Request', 'Allows request operations for transfer.', 1),
+(63, 'Transfer: Manage', 'transfer', 'Transfer', 'manage', 'Manage', 'Allows manage operations for transfer.', 1),
+(64, 'Transfer: Direct', 'transfer', 'Transfer', 'direct', 'Direct', 'Allows direct operations for transfer.', 1),
+(65, 'Access: View', 'access', 'Access', 'view', 'View', 'Allows view operations for access.', 1),
+(66, 'Access: View All', 'access', 'Access', 'view_all', 'View All', 'Allows view_all operations for access.', 1),
+(67, 'Access: Request', 'access', 'Access', 'request', 'Request', 'Allows request operations for access.', 1),
+(68, 'Access: Revoke', 'access', 'Access', 'revoke', 'Revoke', 'Allows revoke operations for access.', 1),
+(69, 'Access: Manage', 'access', 'Access', 'manage', 'Manage', 'Allows manage operations for access.', 1),
+(70, 'Access: Direct', 'access', 'Access', 'direct', 'Direct', 'Allows direct operations for access.', 1),
+(71, 'Assignment: View', 'assignment', 'Assignment', 'view', 'View', 'Allows view operations for assignment.', 1),
+(72, 'Assignment: View All', 'assignment', 'Assignment', 'view_all', 'View All', 'Allows view_all operations for assignment.', 1),
+(73, 'Assignment: Request', 'assignment', 'Assignment', 'request', 'Request', 'Allows request operations for assignment.', 1),
+(74, 'Assignment: Manage', 'assignment', 'Assignment', 'manage', 'Manage', 'Allows manage operations for assignment.', 1),
+(75, 'Assignment: Direct', 'assignment', 'Assignment', 'direct', 'Direct', 'Allows direct operations for assignment.', 1),
+(76, 'Disposal: View', 'disposal', 'Disposal', 'view', 'View', 'Allows view operations for disposal.', 1),
+(77, 'Disposal: View All', 'disposal', 'Disposal', 'view_all', 'View All', 'Allows view_all operations for disposal.', 1),
+(78, 'Disposal: Request', 'disposal', 'Disposal', 'request', 'Request', 'Allows request operations for disposal.', 1),
+(79, 'Disposal: Direct', 'disposal', 'Disposal', 'direct', 'Direct', 'Allows direct operations for disposal.', 1),
+(80, 'Notifications: View', 'notifications', 'Notifications', 'view', 'View', 'Allows view operations for notifications.', 1),
+(81, 'Notifications: Edit', 'notifications', 'Notifications', 'edit', 'Edit', 'Allows edit operations for notifications.', 1),
+(82, 'Audit: View', 'audit', 'Audit', 'view', 'View', 'Allows view operations for audit.', 1),
+(83, 'Sequences: View', 'sequences', 'Sequences', 'view', 'View', 'Allows view operations for sequences.', 1),
+(84, 'Settings: View', 'settings', 'Settings', 'view', 'View', 'Allows view operations for settings.', 1),
+(85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1);
 
 -- --------------------------------------------------------
 
@@ -327,6 +411,12 @@ CREATE TABLE `roles` (
 -- Dumping data for table `roles`
 --
 
+INSERT INTO `roles` (`id`, `name`, `active`, `version`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(2, 'Document Control Officer', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(3, 'Plant Manager', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(4, 'Internal Auditor', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(5, 'Staff', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10');
 
 -- --------------------------------------------------------
 
@@ -343,6 +433,228 @@ CREATE TABLE `role_permissions` (
 -- Dumping data for table `role_permissions`
 --
 
+INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
+(1, 1),
+(1, 2),
+(1, 3),
+(1, 4),
+(1, 5),
+(1, 6),
+(1, 7),
+(1, 8),
+(1, 9),
+(1, 10),
+(1, 11),
+(1, 12),
+(1, 13),
+(1, 14),
+(1, 15),
+(1, 16),
+(1, 17),
+(1, 18),
+(1, 19),
+(1, 20),
+(1, 21),
+(1, 22),
+(1, 23),
+(1, 24),
+(1, 25),
+(1, 26),
+(1, 27),
+(1, 28),
+(1, 29),
+(1, 30),
+(1, 31),
+(1, 32),
+(1, 33),
+(1, 34),
+(1, 35),
+(1, 36),
+(1, 37),
+(1, 38),
+(1, 39),
+(1, 40),
+(1, 41),
+(1, 42),
+(1, 43),
+(1, 44),
+(1, 45),
+(1, 46),
+(1, 47),
+(1, 48),
+(1, 49),
+(1, 50),
+(1, 51),
+(1, 52),
+(1, 53),
+(1, 54),
+(1, 55),
+(1, 56),
+(1, 57),
+(1, 58),
+(1, 59),
+(1, 60),
+(1, 61),
+(1, 62),
+(1, 63),
+(1, 64),
+(1, 65),
+(1, 66),
+(1, 67),
+(1, 68),
+(1, 69),
+(1, 70),
+(1, 71),
+(1, 72),
+(1, 73),
+(1, 74),
+(1, 75),
+(1, 76),
+(1, 77),
+(1, 78),
+(1, 79),
+(1, 80),
+(1, 81),
+(1, 82),
+(1, 83),
+(1, 84),
+(1, 85),
+(2, 13),
+(2, 14),
+(2, 15),
+(2, 16),
+(2, 17),
+(2, 18),
+(2, 19),
+(2, 20),
+(2, 21),
+(2, 22),
+(2, 23),
+(2, 24),
+(2, 25),
+(2, 26),
+(2, 27),
+(2, 28),
+(2, 29),
+(2, 30),
+(2, 31),
+(2, 32),
+(2, 33),
+(2, 34),
+(2, 35),
+(2, 36),
+(2, 37),
+(2, 38),
+(2, 39),
+(2, 40),
+(2, 41),
+(2, 42),
+(2, 44),
+(2, 45),
+(2, 47),
+(2, 48),
+(2, 49),
+(2, 50),
+(2, 51),
+(2, 52),
+(2, 53),
+(2, 54),
+(2, 55),
+(2, 56),
+(2, 60),
+(2, 62),
+(2, 63),
+(2, 64),
+(2, 65),
+(2, 67),
+(2, 68),
+(2, 69),
+(2, 70),
+(2, 71),
+(2, 73),
+(2, 74),
+(2, 75),
+(2, 76),
+(2, 78),
+(2, 79),
+(2, 80),
+(2, 81),
+(2, 82),
+(2, 83),
+(3, 29),
+(3, 33),
+(3, 34),
+(3, 35),
+(3, 37),
+(3, 38),
+(3, 40),
+(3, 41),
+(3, 42),
+(3, 44),
+(3, 45),
+(3, 47),
+(3, 50),
+(3, 51),
+(3, 52),
+(3, 53),
+(3, 54),
+(3, 56),
+(3, 60),
+(3, 62),
+(3, 65),
+(3, 67),
+(3, 71),
+(3, 73),
+(3, 76),
+(3, 78),
+(3, 80),
+(3, 81),
+(4, 29),
+(4, 33),
+(4, 34),
+(4, 37),
+(4, 40),
+(4, 45),
+(4, 46),
+(4, 50),
+(4, 56),
+(4, 60),
+(4, 61),
+(4, 65),
+(4, 66),
+(4, 71),
+(4, 72),
+(4, 76),
+(4, 77),
+(4, 80),
+(4, 81),
+(4, 82),
+(5, 29),
+(5, 33),
+(5, 34),
+(5, 35),
+(5, 37),
+(5, 38),
+(5, 41),
+(5, 42),
+(5, 44),
+(5, 45),
+(5, 47),
+(5, 50),
+(5, 51),
+(5, 52),
+(5, 53),
+(5, 54),
+(5, 60),
+(5, 62),
+(5, 65),
+(5, 67),
+(5, 71),
+(5, 73),
+(5, 76),
+(5, 78),
+(5, 80),
+(5, 81);
 
 -- --------------------------------------------------------
 
@@ -359,6 +671,14 @@ CREATE TABLE `schema_migrations` (
 -- Dumping data for table `schema_migrations`
 --
 
+INSERT INTO `schema_migrations` (`version`, `applied_at`) VALUES
+(1, '2026-10-08 09:50:47'),
+(2, '2026-10-08 09:50:47'),
+(3, '2026-10-08 09:50:47'),
+(4, '2026-10-08 09:50:47'),
+(5, '2026-10-08 09:50:47'),
+(6, '2026-10-08 09:54:25'),
+(7, '2026-10-08 09:54:25');
 
 -- --------------------------------------------------------
 
@@ -389,6 +709,8 @@ CREATE TABLE `settings` (
 -- Dumping data for table `settings`
 --
 
+INSERT INTO `settings` (`id`, `setting_key`, `value`, `version`, `updated_at`) VALUES
+(1, 'appearance', '{\"theme_scope\":\"global\",\"color_mode\":\"system\",\"color_theme\":\"default\",\"styling_enabled\":false}', 1, '2026-10-08 09:51:10');
 
 -- --------------------------------------------------------
 
@@ -532,6 +854,8 @@ CREATE TABLE `users` (
 -- Dumping data for table `users`
 --
 
+INSERT INTO `users` (`id`, `username`, `first_name`, `middle_name`, `last_name`, `position_title`, `role_id`, `leader_id`, `password_hash`, `require_password_change`, `session_version`, `active`, `version`, `created_at`, `updated_at`) VALUES
+(1, 'admin', 'System', NULL, 'Administrator', 'Administrator', 1, NULL, '$2y$10$lFtNfPqH6zqTZwnbAkpdsu03EfPUS2Sa/ip71l5qbJYtFMFFp8Chm', 0, 2, 1, 2, '2026-10-08 09:51:10', '2026-10-08 09:52:09');
 
 -- --------------------------------------------------------
 
@@ -557,6 +881,16 @@ CREATE TABLE `workflows` (
 -- Dumping data for table `workflows`
 --
 
+INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_type`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, 'softcopy_create', 'Softcopy Create approval', NULL, 'softcopy_create', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(2, 'softcopy_revise', 'Softcopy Revise approval', NULL, 'softcopy_revise', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(3, 'softcopy_cancel', 'Softcopy Cancel approval', NULL, 'softcopy_cancel', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(4, 'hardcopy_create', 'Hardcopy Create approval', NULL, 'hardcopy_create', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(5, 'hardcopy_update', 'Hardcopy Update approval', NULL, 'hardcopy_update', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(6, 'transfer', 'Transfer approval', NULL, 'transfer', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(7, 'assignment', 'Assignment approval', NULL, 'assignment', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(8, 'access', 'Access approval', NULL, 'access', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(9, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10');
 
 -- --------------------------------------------------------
 
@@ -628,6 +962,16 @@ CREATE TABLE `workflow_versions` (
 -- Dumping data for table `workflow_versions`
 --
 
+INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`, `is_default`, `graph`, `created_by`, `published_at`, `version`, `created_at`) VALUES
+(1, 1, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(2, 2, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(3, 3, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(4, 4, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(5, 5, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(6, 6, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(7, 7, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(8, 8, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10'),
+(9, 9, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Administrator Approval\",\"approver\":{\"type\":\"role\",\"value\":1,\"label\":\"Administrator\"}}]}', 1, '2026-10-08 17:51:10', 1, '2026-10-08 09:51:10');
 
 --
 -- Indexes for dumped tables
