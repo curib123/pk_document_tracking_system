@@ -7,5 +7,9 @@
     "ext-mysqli": "*",
     "codeigniter/framework": "3.1.13"
   },
+  "scripts": {
+    "test": "php tests/static_contract.php",
+    "test:lint": "php tests/lint.php"
+  },
   "config": {"sort-packages": true}
 }
