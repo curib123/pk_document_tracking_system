@@ -23,7 +23,7 @@ SELECT id,'Test Staff','pk_test_staff','pk_staff@example.test','$HASH' FROM role
 
 php -S 127.0.0.1:8081 -t public public/index.php >/tmp/pk-server.log 2>&1 &
 SERVER_PID=$!
-trap 'code=$?; kill "$SERVER_PID" 2>/dev/null || true; if [ "$code" -ne 0 ]; then echo "=== HTTP login response ==="; head -c 5000 /tmp/pk-login.html 2>/dev/null || true; echo; fi; echo "=== PHP server log ==="; tail -80 /tmp/pk-server.log' EXIT
+trap 'code=$?; kill "$SERVER_PID" 2>/dev/null || true; if [ "$code" -ne 0 ]; then echo "=== HTTP login response ==="; head -c 5000 /tmp/pk-login.html 2>/dev/null || true; echo; fi; echo "=== PHP server log ==="; tail -80 /tmp/pk-server.log; echo "=== CI application logs ==="; find storage/logs -maxdepth 1 -type f -name "log-*.log" -print -exec tail -90 {} \;' EXIT
 
 for i in {1..20}; do
     if curl -fsS -o /tmp/pk-login.html http://127.0.0.1:8081/login; then break; fi
