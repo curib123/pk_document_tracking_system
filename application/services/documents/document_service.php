@@ -6,7 +6,7 @@ class Document_service
     public function __construct() { $this->ci =& get_instance(); $this->ci->load->model('Document_model'); }
     public function save($domain,$post,$actorId)
     {
-        $cfg=$this->ci->Documen_tmodel->config($domain);
+        $cfg=$this->ci->Document_model->config($domain);
         $id=(int)($post['id']??0);
         $title=trim((string)($post['title']??''));
         if ($title==='' || mb_strlen($title)>255) throw new DomainException('Document title is required.');

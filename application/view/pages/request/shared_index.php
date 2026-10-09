@@ -31,6 +31,7 @@ foreach ($rows as $row) {
  $record=[
  'id'=>$row['id'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
  'remarks'=>$payload['remarks']??'','title'=>$payload['title']??'',
+ 'series_number'=>$payload['series_number']??'',
  'document_number'=>$payload['document_number']??'',
  'category_id'=>$payload['category_id']??'','softcopy_id'=>$row['softcopy_id']??'',
  'hardcopy_id'=>$row['hardcopy_id']??'','recipient_id'=>$payload['recipient_id']??'',
@@ -97,6 +98,13 @@ data-confirm="Save request draft?">
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body"><div class="row g-3">
 <input type="hidden" name="id" value="">
+<?php if ($tab==='softcopy'): ?>
+    <?php $this->load->view('pages/request/softcopy_fields', [
+        'softcopy_options'=>$softcopy_options,'category_options'=>$category_options,
+        'softcopyDirect'=>FALSE
+    ]); ?>
+<?php else: ?>
+
 <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>
 <select class="form-select" name="type" id="reqType" required>
 <?php foreach ($typeMap[$tab] as $key=>$name): ?>
@@ -137,31 +145,11 @@ data-confirm="Save request draft?">
 <option value="">Not selected</option><?php foreach ($location_options as $opt): ?>
 <option value="<?= (int)$opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
 <?php endforeach; ?></select></div>
-<?php if ($tab==='softcopy'): ?>
-<div class="col-md-6" data-only-action="softcopy_revise">
-<label class="form-label" for="newRevisionLevel">New Revision Level</label>
-<input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30"></div>
-<div class="col-md-6" data-only-action="softcopy_revise">
-<label class="form-label" for="revisionPages">Number of Pages</label>
-<input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1"></div>
-<div class="col-md-6" data-only-action="softcopy_revise">
-<label class="form-label" for="revisionEffective">Effective Date</label>
-<input class="form-control" type="date" id="revisionEffective" name="effective_date"></div>
-<div class="col-md-6" data-only-action="softcopy_revise">
-<label class="form-label" for="revisionReceived">Received Date</label>
-<input class="form-control" type="date" id="revisionReceived" name="date_received"></div>
-<div class="col-md-6" data-only-action="softcopy_revise">
-<label class="form-label" for="revisionReleased">Released Date</label>
-<input class="form-control" type="date" id="revisionReleased" name="date_released"></div>
-<div class="col-12" data-only-action="softcopy_revise">
-<label class="form-label" for="revisionFile">Controlled Revision File <span class="optional-label">(15 MB maximum)</span></label>
-<input class="form-control" id="revisionFile" type="file" name="revision_attachment"
-accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx">
-<small class="text-secondary">Required on new revisions. Existing staged file remains when editing without a replacement.</small>
-</div>
-<?php endif; ?>
+
 <div class="col-12"><label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
 <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea></div>
+
+<?php endif; ?>
 </div></div>
 <input type="hidden" name="confirmed" value="no">
 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">

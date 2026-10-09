@@ -211,6 +211,7 @@
             hardcopy_id: ['hardcopy_update','disposal','transfer'],
             title: ['softcopy_create','hardcopy_create','hardcopy_update','softcopy_revise'],
             document_number: ['softcopy_create'],
+            series_number: ['softcopy_create'],
             category_id: ['softcopy_create'],
             recipient_id: ['assignment','access','transfer'],
             expires_at: ['access'],
@@ -229,7 +230,11 @@
             var parent = field.closest('.col-md-6, .col-12');
             if (parent) parent.hidden = !show;
             field.disabled = !show;
-            field.required = show && name !== 'revision_attachment';
+            // Requests may retain a staged revision, but direct revisions
+            // must always attach a file for immediate approval.
+            var direct = select.form.dataset.softcopyDirect === 'yes';
+            field.required = show && (name !== 'revision_attachment' || direct)
+                && name !== 'series_number';
         });
     }
     document.addEventListener('change', function (event) {

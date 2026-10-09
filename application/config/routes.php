@@ -11,6 +11,7 @@ $route['change-password']['POST'] = 'Auth/change_password';
 
 $route['dashboard']['GET'] = 'Dashboard/index';
 $route['documents/(:any)']['GET'] = 'Documents/index/$1';
+$route['documents/softcopy/direct']['POST'] = 'Documents/direct_softcopy';
 $route['documents/(:any)/save']['POST'] = 'Documents/save/$1';
 $route['documents/(:any)/dispose']['POST'] = 'Documents/dispose/$1';
 $route['files/upload']['POST'] = 'Files/upload';

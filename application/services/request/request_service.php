@@ -18,6 +18,7 @@ class Request_service
           'remarks'=>trim((string)($post['remarks']??'')),
           'title'=>trim((string)($post['title']??'')),
           'document_number'=>trim((string)($post['document_number']??'')),
+          'series_number'=>trim((string)($post['series_number']??'')),
           'category_id'=>(int)($post['category_id']??0),
           'recipient_id'=>(int)($post['recipient_id']??0),
           'expires_at'=>trim((string)($post['expires_at']??'')),
@@ -184,16 +185,10 @@ class Request_service
         $title=trim((string)($payload['title']??''));
         $recipient=(int)($payload['recipient_id']??0);
         if ($type==='softcopy_create') {
-            if ($title==='' || empty($payload['document_number']) || empty($payload['category_id']))
-                throw new DomainException('Title, number and category are required to create a softcopy.');
-            $this->ci->db->insert('softcopy_documents',[
-                'title'=>$title,'document_number'=>$payload['document_number'],
-                'category_id'=>(int)$payload['category_id'],'created_by'=>$owner,
-                'creation_source'=>'request','creation_reason'=>$reason,'source_request_id'=>$id
-            ]);
-            $newId=(int)$this->ci->db->insert_id();
-            $this->ci->db->where('id',$id)->update('requests',['softcopy_id'=>$newId]);
-            return ['document_id'=>$newId];
+            require_once APPPATH.'services/softcopy/softcopy_operation_service.php';
+            return (new Softcopy_operation_service())->apply(
+                $type,$payload,$soft,$actor,$owner,$id
+            );
         }
         if ($type==='hardcopy_create') {
             if ($title==='') throw new DomainException('A hardcopy title is required.');
@@ -206,55 +201,10 @@ class Request_service
             return ['document_id'=>$newId];
         }
         if ($type==='softcopy_revise') {
-            $rows=$this->ci->db->query(
-                'SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE',[$soft]
-            )->result_array();
-            $doc=$rows[0]??NULL;
-            $file=$this->ci->db->get_where('files',[
-                'id'=>(int)($payload['revision_file_id']??0),
-                'document_id'=>$soft, 'domain'=>'softcopy',
-                'uploaded_by'=>$owner, 'purpose'=>'revision', 'status'=>'pending'
-            ])->row_array();
-            if (!$doc || $doc['status']!=='active' || !$file)
-                throw new DomainException('Revision document or pending attachment is unavailable.');
-            $numberRow=$this->ci->db->select_max('revision_number')
-                ->get_where('softcopy_revisions',['document_id'=>$soft])->row_array();
-            $old=$doc['current_revision_id']?$this->ci->db->get_where(
-                'softcopy_revisions',['id'=>$doc['current_revision_id']])->row_array():NULL;
-            $level=trim((string)($payload['new_revision_level']??''));
-            if (!$level || ($old && $level===$old['new_revision_level']))
-                throw new DomainException('New revision level must differ from current revision.');
-            foreach (['effective_date','date_received','date_released'] as $key) {
-                if (!isset($payload[$key]) ||
-                    !DateTime::createFromFormat('!Y-m-d',(string)$payload[$key]))
-                    throw new DomainException('Revision effective, received and released dates are required.');
-            }
-            $date=date('Y-m-d');
-            $this->ci->db->insert('softcopy_revisions',[
-                'document_id'=>$soft,'revision_number'=>(int)($numberRow['revision_number']??0)+1,
-                'reason'=>$reason,'effective_date'=>$payload['effective_date'],
-                'page_number'=>max(1,(int)($payload['page_number']??1)),
-                'series_number'=>$doc['series_number'],
-                'document_title'=>$title?:$doc['title'],
-                'previous_revision_level'=>$old['new_revision_level']??NULL,
-                'new_revision_level'=>$level,
-                'previous_effective_date'=>$old['new_effective_date']??NULL,
-                'new_effective_date'=>$payload['effective_date'],
-                'date_received'=>$payload['date_received'],
-                'date_released'=>$payload['date_released'],
-                'approval_date'=>$date,'file_id'=>$file['id'],
-                'uploaded_by'=>$owner,'approved_by'=>$actor
-            ]);
-            $revisionId=(int)$this->ci->db->insert_id();
-            $this->ci->db->where('id',$soft)->update('softcopy_documents',[
-                'current_revision_id'=>$revisionId,
-                'title'=>$title?:$doc['title']
-            ]);
-            $this->ci->db->where('id',$file['id'])->update('files',[
-                'status'=>'approved', 'approved_by'=>$actor,
-                'approved_at'=>date('Y-m-d H:i:s')
-            ]);
-            return ['document_id'=>$soft,'revision_id'=>$revisionId,'file_id'=>$file['id']];
+            require_once APPPATH.'services/softcopy/softcopy_operation_service.php';
+            return (new Softcopy_operation_service())->apply(
+                $type,$payload,$soft,$actor,$owner,$id
+            );
         }
         if ($type==='hardcopy_update') {
             if ($title==='') throw new DomainException('Updated hardcopy title is required.');
@@ -265,16 +215,10 @@ class Request_service
             return ['document_id'=>$hard];
         }
         if ($type==='softcopy_cancel') {
-            $doc=$this->ci->db->get_where('softcopy_documents',['id'=>$soft])->row_array();
-            if (!$doc || $doc['status']==='disposed') throw new DomainException('Softcopy is unavailable.');
-            $this->ci->db->where('id',$soft)->update('softcopy_documents',[
-                'previous_status'=>$doc['status'],'status'=>'cancelled'
-            ]);
-            $this->ci->db->insert('status_history',[
-                'domain'=>'softcopy','document_id'=>$soft,'previous_status'=>$doc['status'],
-                'new_status'=>'cancelled','action'=>'cancelled','user_id'=>$actor,'remarks'=>$reason
-            ]);
-            return ['document_id'=>$soft];
+            require_once APPPATH.'services/softcopy/softcopy_operation_service.php';
+            return (new Softcopy_operation_service())->apply(
+                $type,$payload,$soft,$actor,$owner,$id
+            );
         }
         if ($type==='assignment') {
             if (!$soft || !$recipient) throw new DomainException('Choose a document and assignee.');

@@ -21,6 +21,8 @@ class Documents extends MY_Controller
         foreach (['areas','specifics','assets','locations','categories'] as $name)
             $options[$name]=$this->Place_model->options($name);
         $options['users']=$this->Document_model->active_users();
+        $softcopy_options=$domain==='softcopy'?$this->Document_model->options('softcopy'):[];
+        $category_options=$domain==='softcopy'?$options['categories']:[];
         $latest=[];
         $accessible=[];
         $filesByDocument=[];
@@ -39,12 +41,31 @@ class Documents extends MY_Controller
         $view=$domain==='hardcopy'?'pages/hardcopy_document/index':'pages/softcopy_document/index';
         $this->render($c['title'],$view,[
             'cfg'=>$c,'rows'=>$rows,'total'=>$total,'table'=>$state,'options'=>$options,
-            'latest_files'=>$latest,'file_access'=>$accessible,'file_histories'=>$filesByDocument
+            'latest_files'=>$latest,'file_access'=>$accessible,'file_histories'=>$filesByDocument,
+            'softcopy_options'=>$softcopy_options,'category_options'=>$category_options
         ]);
     }
+    public function direct_softcopy()
+    {
+        $this->require_permission('softcopy','direct');
+        $this->confirmed();
+        try {
+            require_once APPPATH.'services/softcopy/softcopy_direct_service.php';
+            (new Softcopy_direct_service())->execute(
+                $this->input->post(),(int)$this->user['id'],
+                $_FILES['revision_attachment']??NULL
+            );
+            $this->notice('Softcopy action approved and applied directly.');
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(),'danger');
+        }
+        redirect('documents/softcopy');
+    }
+
     public function save($domain)
     {
         $c=$this->Document_model->config($domain);
+        if ($domain==='softcopy') return $this->direct_softcopy();
         $this->require_permission($domain,'direct');
         $this->confirmed();
         try {

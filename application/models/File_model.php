@@ -15,7 +15,7 @@ class File_model extends CI_Model
 
     public function allowed($user, $file)
     {
-        if (!$user || !$file || $file['document_status'] === 'disposed') return FALSE;
+        if (!$user || !$file || $file['document_status'] !== 'active') return FALSE;
         $ci =& get_instance();
         if ($ci->Permission_model->allowed($user, 'files', 'view_all')) return TRUE;
         if ((int) $file['owner_id'] === (int) $user['id']) return TRUE;

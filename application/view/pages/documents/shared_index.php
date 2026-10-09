@@ -18,6 +18,15 @@ foreach ($rows as $r) {
  }
  $rec=[];
  foreach (array_merge(['id'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
+ if ($cfg['domain']==='softcopy') {
+     // Table edit is a direct revision, never a generic metadata patch.
+     $rec=[
+         'type'=>'softcopy_revise','softcopy_id'=>$r['id'],
+         'subject'=>'Revision: '.$r['title'],
+         'title'=>$r['title'],'document_number'=>$r['document_number'],
+         'series_number'=>$r['series_number']??'','category_id'=>$r['category_id']
+     ];
+ }
  $buttons=[['type'=>'view']];
  if ($can) $buttons[]=['type'=>'edit'];
  if ($cfg['domain']==='softcopy') {
@@ -49,7 +58,7 @@ $dt_sort='updated_at';$dt_dir='desc';$dt_sortable=[];
 $dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived']];
 $dt_filter_values=['status'=>$dt_filter];
 $dt_badges=['status'];
-$dt_create=$can?'Add Document':'';
+$dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
 ?>
 <div class="page-heading"><div>
 <span class="eyebrow">System Documents</span><h1><?= html_escape($title) ?></h1>
@@ -66,12 +75,21 @@ $dt_create=$can?'Add Document':'';
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
-<form id="editForm" method="post" action="<?= site_url('documents/'.$cfg['domain'].'/save') ?>"
- data-confirm="Save document metadata?">
+<form id="editForm" method="post" enctype="multipart/form-data"
+ action="<?= $cfg['domain']==='softcopy' ? site_url('documents/softcopy/direct') : site_url('documents/hardcopy/save') ?>"
+ <?= $cfg['domain']==='softcopy'?'data-softcopy-direct="yes"':'' ?>
+ data-confirm="<?= $cfg['domain']==='softcopy'?'Approve and apply this softcopy action directly?':'Save document metadata?' ?>">
  <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Document</h2>
  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
  <div class="modal-body"><div class="row g-3">
    <input type="hidden" name="id" value="">
+   <?php if ($cfg['domain']==='softcopy'): ?>
+       <?php $this->load->view('pages/request/softcopy_fields',[
+           'softcopy_options'=>$softcopy_options,
+           'category_options'=>$category_options,
+           'softcopyDirect'=>TRUE
+       ]); ?>
+   <?php else: ?>
    <?php foreach ($cfg['fields'] as $field):
     $references=['area_id'=>'areas','specific_id'=>'specifics','asset_id'=>'assets',
       'location_id'=>'locations','category_id'=>'categories','holder_id'=>'users'];
@@ -96,11 +114,12 @@ $dt_create=$can?'Add Document':'';
     <?php endif; endforeach; ?>
     <div class="col-12"><label class="form-label" for="creationReason">Reason <span class="optional-label">(optional)</span></label>
      <textarea class="form-control" id="creationReason" name="creation_reason" rows="2"></textarea></div>
+   <?php endif; ?>
  </div></div>
  <input type="hidden" name="confirmed" value="no">
  <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
  <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
- <button class="btn btn-primary" type="submit">Save Document</button></div>
+ <button class="btn btn-primary" type="submit"><?= $cfg['domain']==='softcopy'?'Approve Directly':'Save Document' ?></button></div>
 </form></div></div></div>
 
 <?php if ($cfg['domain']==='softcopy'): ?>
