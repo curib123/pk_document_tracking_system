@@ -56,8 +56,8 @@ class Auth extends MY_Controller
         $row = $this->db->get_where('users', ['id' => $this->user['id']])->row_array();
         $old = (string) $this->input->post('current_password');
         $new = (string) $this->input->post('new_password');
-        if (!password_verify($old, $row['password_hash']) || strlen($new) < 12) {
-            $this->notice('Incorrect current password or new password shorter than 12 characters.', 'danger');
+        if (!password_verify($old, $row['password_hash']) || strlen($new) < 12 || hash_equals($old, $new)) {
+            $this->notice('Invalid current password, password shorter than 12 characters, or reused password.', 'danger');
             return redirect('dashboard');
         }
         $this->db->where('id', $this->user['id'])->update('users', [
