@@ -26,3 +26,5 @@ When creating a new workflow step, the user must provide the following details:
 4.fix the issues of roles and permission all issues in both client side and server side and also runtime conflixt issues
 
 5.first create account generate random password and when sign in on that auto show change password modal
+
+6.Add more analytic in Dashboard but based it per user account 
