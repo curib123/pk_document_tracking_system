@@ -99,32 +99,6 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
        <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
            'options'=>$options,'user'=>$user,'is_administrator'=>$is_administrator
        ]); ?>
-   <?php if (FALSE): ?>
-   <?php foreach ($cfg['fields'] as $field):
-    $references=['area_id'=>'areas','specific_id'=>'specifics','asset_id'=>'assets',
-      'location_id'=>'locations','category_id'=>'categories','holder_id'=>'users'];
-    $label=ucwords(str_replace('_',' ',$field));
-    if (isset($references[$field])):
-        $collection=$references[$field]; ?>
-    <div class="col-md-6"><label class="form-label" for="d-<?= html_escape($field) ?>"><?= html_escape($label) ?></label>
-     <select class="form-select" id="d-<?= html_escape($field) ?>" name="<?= html_escape($field) ?>" data-searchable>
-       <option value="">Select <?= html_escape($label) ?></option>
-       <?php foreach ($options[$collection] as $option): ?>
-       <option value="<?= (int)$option['id'] ?>"><?= html_escape($option['name']) ?></option>
-       <?php endforeach; ?>
-     </select></div>
-    <?php elseif ($field==='retention_enabled'): ?>
-       <div class="col-md-6"><label class="form-check"><input class="form-check-input" type="checkbox" name="retention_enabled" value="1"> Enable retention</label></div>
-    <?php else: ?>
-    <div class="col-md-6"><label class="form-label" for="d-<?= html_escape($field) ?>"><?= html_escape($label) ?></label>
-     <input class="form-control" id="d-<?= html_escape($field) ?>" name="<?= html_escape($field) ?>"
-       <?= str_contains($field,'_date')?'type="date"':'maxlength="255"' ?>
-       <?= $field==='title' || $field==='document_number'?'required':'' ?>>
-    </div>
-    <?php endif; endforeach; ?>
-    <div class="col-12"><label class="form-label" for="creationReason">Reason <span class="optional-label">(optional)</span></label>
-     <textarea class="form-control" id="creationReason" name="creation_reason" rows="2"></textarea></div>
-   <?php endif; ?>
    <?php endif; ?>
  </div></div>
  <input type="hidden" name="confirmed" value="no">
