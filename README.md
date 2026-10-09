@@ -40,8 +40,11 @@ Each access is enforced by `MY_Controller::require_permission`, with matching ac
 - `php tests/lint.php` — PHP syntax checks (requires a CLI PHP executable).
 - `composer test` — structural tests.
 - `composer run test:lint` — syntax checks.
+- `bash tests/integration_smoke.sh` — **CI-only disposable MySQL test**, using a temporary `pk_dts_test` database and built-in HTTP server. Do not run on a database with real records.
 
-**Integration status:** These are structural/static checks, not MySQL-backed end-to-end tests. Verify sign-in, CSRF, role restrictions, records CRUD, all five request tabs, workflow assignment and approval concurrency against a freshly provisioned database before deployment. Test in the actual XAMPP environment too.
+GitHub Actions executes both static checks and a MySQL-backed smoke test for login, server-enforced role permissions, all main page routes, creating reference data, creating and submitting a request draft, assigning its configured approver and recording approval.
+
+**Integration status:** Automated smoke tests passed on a fresh schema; they do not prove full visual QA, file-handling capabilities, migration compatibility, concurrent workflow execution or production readiness. Verify end-to-end behavior on XAMPP and map real DTS data before deployment.
 
 ## Safe operational rules
 
