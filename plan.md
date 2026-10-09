@@ -21,10 +21,25 @@ When creating a new workflow step, the user must provide the following details:
   * By Requester Themselves
 
 
-3.Make sure each pages have neccesary filter dropdown
+3. Make sure each pages have neccesary filter dropdown
 
-4.fix the issues of roles and permission all issues in both client side and server side and also runtime conflixt issues
+4. fix the issues of roles and permission all issues in both client side and server side and also runtime conflixt issues
 
-5.first create account generate random password and when sign in on that auto show change password modal
+5. first create account generate random password and when sign in on that auto show change password modal
 
-6.Add more analytic in Dashboard but based it per user account 
+6. Add more analytic in Dashboard but based it per user account 
+
+7. transfer all of this in all pages in top nav just remove the description only the module and page name in top nav right side  System Documents
+Softcopy Documents
+
+Controlled softcopy register based on the original database.
+
+8. support mobile and tablet make it responsive
+
+9. make sure hardcopy and softcopy view modal is have nice aesthetic ux/ui design and have all its details and information all connected on that document like in a clean modern saas enterprise design
+
+10. Hardcopy Transfer request modal why its not auto populate when i select documents
+
+ 11. direct and request modal is the same they only different is in direct its direct create or update or revised but in request its follow the published workflow in workflow builder.
+
+ analzye ,check and test the system find issues and list it here
