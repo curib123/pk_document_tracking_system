@@ -99,6 +99,16 @@ class Request_service
                 !in_array($r['status'],['draft','returned'],TRUE) ||
                 !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE))
                 throw new DomainException('Request cannot be submitted.');
+            if ($r['type']==='softcopy_revise') {
+                $payload=json_decode($r['payload'],TRUE)?:[];
+                $file=$this->ci->db->get_where('files',[
+                    'id'=>(int)($payload['revision_file_id']??0),
+                    'document_id'=>(int)$r['softcopy_id'],
+                    'uploaded_by'=>(int)$r['requested_by'],
+                    'status'=>'pending', 'purpose'=>'revision'
+                ])->row_array();
+                if (!$file) throw new DomainException('Upload a revision attachment before submitting.');
+            }
             $workflow=$this->ci->Request_model->active_workflow($r['type']);
             if (!$workflow) throw new DomainException('A published default workflow is required.');
             $graph=json_decode($workflow['graph'],TRUE);
