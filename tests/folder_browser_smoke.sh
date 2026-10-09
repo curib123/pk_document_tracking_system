@@ -83,10 +83,11 @@ grep -q 'class="table-cell-view"' /tmp/pk-admin-hard-folder.html
 grep -q 'data-row-view=' /tmp/pk-admin-hard-folder.html
 
 # The save route rejects document IDs outside the opened location folder.
+OTHER_HOLDER_BEFORE=$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$HARD_ID")
 post_form admin/document-assignments admin/document-assignments/save \
   'document_domain=hardcopy' "folder=location:$BROWSE_LOC" \
-  "hardcopy_id=$HARD_ID" "recipient_id=$REC_ID"
-test "$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$HARD_ID")" != "$REC_ID"
+  "hardcopy_id=$HARD_ID" "recipient_id=$ADMIN_ID"
+test "$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$HARD_ID")" = "$OTHER_HOLDER_BEFORE"
 
 post_form admin/document-assignments admin/document-assignments/save \
   'document_domain=hardcopy' "folder=location:$BROWSE_LOC" \
