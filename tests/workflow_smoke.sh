@@ -54,6 +54,22 @@ SOFT_ID=$(db "SELECT id FROM softcopy_documents WHERE document_number='QA-001'")
 test -n "$SOFT_ID"
 test "$(db "SELECT COUNT(*) FROM workflow_history WHERE request_id=$RID")" -ge 2
 
+# Private files use the original files + softcopy_revisions tables, not a new file schema.
+printf 'PK DTS private revision content\\n' > /tmp/pk-private-revision.txt
+UPLOAD_TOKEN=$(token_for documents/softcopy)
+curl -fsS -b /tmp/pk-cookie -c /tmp/pk-cookie -o /dev/null \\
+  -F "pk_csrf_token=$UPLOAD_TOKEN" -F 'confirmed=yes' \\
+  -F "document_id=$SOFT_ID" -F 'new_revision_level=REV-A' \\
+  -F 'page_number=1' -F 'attachment=@/tmp/pk-private-revision.txt;type=text/plain' \\
+  http://127.0.0.1:8089/files/upload
+FILE_ID=$(db "SELECT id FROM files WHERE domain='softcopy' AND document_id=$SOFT_ID AND status='approved' ORDER BY id DESC LIMIT 1")
+test -n "$FILE_ID"
+REV_ID=$(db "SELECT current_revision_id FROM softcopy_documents WHERE id=$SOFT_ID")
+test -n "$REV_ID"
+test "$(db "SELECT file_id FROM softcopy_revisions WHERE id=$REV_ID")" = "$FILE_ID"
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-downloaded-revision.txt "http://127.0.0.1:8089/files/download/$FILE_ID"
+cmp /tmp/pk-private-revision.txt /tmp/pk-downloaded-revision.txt
+
 # Create a hardcopy using the same versioned workflow mechanism.
 post_form my-requests/hardcopy my-requests/hardcopy/save \
     'type=hardcopy_create' 'subject=QA Hardcopy Create' 'title=Physical Guide'
