@@ -203,6 +203,27 @@ post_form my-tasks/access-grant my-tasks/access-grant/decide "id=$RID" 'decision
 test "$(db "SELECT COUNT(*) FROM access_grants WHERE request_id=$RID AND status='access_granted'")" = 1
 
 echo 'CASE: transfer approval'
+# Arrange a real original Area -> Specific -> Asset -> Location, so the
+# transfer form can show the document's current Places and holder.
+post_form places/area places/area/save 'name=Original Registry' 'active=1'
+ORIGINAL_AREA=$(db "SELECT id FROM areas WHERE name='Original Registry'")
+post_form places/specific places/specific/save 'name=Original Cabinet' \
+  "area_id=$ORIGINAL_AREA" 'active=1'
+ORIGINAL_SPEC=$(db "SELECT id FROM specifics WHERE name='Original Cabinet'")
+post_form places/asset places/asset/save 'asset_number=ORIGIN-CABINET-01' \
+  "specific_id=$ORIGINAL_SPEC" 'active=1'
+ORIGINAL_ASSET=$(db "SELECT id FROM assets WHERE asset_number='ORIGIN-CABINET-01'")
+post_form places/location places/location/save 'name=Original Physical Shelf' \
+  'code=ORIGINAL-01' "area_id=$ORIGINAL_AREA" "specific_id=$ORIGINAL_SPEC" \
+  "asset_id=$ORIGINAL_ASSET" 'active=1'
+ORIGINAL_LOCATION=$(db "SELECT id FROM locations WHERE code='ORIGINAL-01'")
+test -n "$ORIGINAL_LOCATION"
+post_form documents/hardcopy documents/hardcopy/save \
+  "id=$HARD_ID" 'title=Physical Guide' "location_id=$ORIGINAL_LOCATION" \
+  "holder_id=$ADMIN_ID"
+test "$(db "SELECT CONCAT_WS(',',area_id,specific_id,asset_id,location_id,holder_id)
+ FROM hardcopy_documents WHERE id=$HARD_ID")" = "$ORIGINAL_AREA,$ORIGINAL_SPEC,$ORIGINAL_ASSET,$ORIGINAL_LOCATION,$ADMIN_ID"
+
 post_form my-requests/hardcopy-transfer my-requests/hardcopy-transfer/save \
     'type=transfer' 'subject=QA Transfer' "hardcopy_id=$HARD_ID" \
     "recipient_id=$REC_ID" "destination_location_id=$LOC_ID"
@@ -211,6 +232,12 @@ post_form my-requests/hardcopy-transfer my-requests/hardcopy-transfer/submit "id
 post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/decide "id=$RID" 'decision=approved'
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = approved
 test "$(db "SELECT COUNT(*) FROM transfers WHERE request_id=$RID AND recipient_status='pending'")" = 1
+test "$(db "SELECT JSON_UNQUOTE(JSON_EXTRACT(origin,'$.location_id'))
+ FROM transfers WHERE request_id=$RID")" = "$ORIGINAL_LOCATION"
+test "$(db "SELECT JSON_UNQUOTE(JSON_EXTRACT(origin,'$.holder_id'))
+ FROM transfers WHERE request_id=$RID")" = "$ADMIN_ID"
+test "$(db "SELECT JSON_UNQUOTE(JSON_EXTRACT(destination,'$.location_id'))
+ FROM transfers WHERE request_id=$RID")" = "$LOC_ID"
 
 # Predefined Hardcopy Transfer selects the original Places and receiving user.
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-transfer-form.html \
@@ -224,6 +251,9 @@ grep -q 'data-transfer-origin="area_name"' /tmp/pk-transfer-form.html
 grep -q 'data-transfer-origin="specific_name"' /tmp/pk-transfer-form.html
 grep -q 'data-transfer-origin="asset_name"' /tmp/pk-transfer-form.html
 grep -q 'data-transfer-doc=' /tmp/pk-transfer-form.html
+grep -q 'Original Physical Shelf' /tmp/pk-transfer-form.html
+grep -q 'Original Registry' /tmp/pk-transfer-form.html
+grep -q 'Original Cabinet' /tmp/pk-transfer-form.html
 
 # A destination with an incorrect parent ID or the same original location
 # must be rejected even if a user tampers with the form.
