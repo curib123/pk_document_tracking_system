@@ -1,29 +1,11 @@
 {
   "name": "curib123/pk-document-tracking-system",
-  "description": "Unstyled, modal-operated CodeIgniter 3 document control system",
+  "description": "CodeIgniter 3 MVC document tracking system",
   "type": "project",
   "require": {
     "php": "^8.0",
-    "ext-fileinfo": "*",
-    "ext-mbstring": "*",
-    "ext-zip": "*",
-    "codeigniter/framework": "3.1.13",
-    "setasign/fpdi": "^2.6",
-    "setasign/fpdf": "^1.8",
-    "ext-mysqli": "*"
+    "ext-mysqli": "*",
+    "codeigniter/framework": "3.1.13"
   },
-  "autoload": {
-    "classmap": [
-      "application/libraries/",
-      "application/models/"
-    ]
-  },
-  "scripts": {
-    "test": "php tests/database_layout.php && php tests/run.php && php tests/architecture.php && php tests/mysqli_contract.php && php tests/native_database.php",
-    "test:integration": "php tests/integration.php"
-  },
-  "config": {
-    "allow-plugins": false,
-    "sort-packages": true
-  }
+  "config": {"sort-packages": true}
 }

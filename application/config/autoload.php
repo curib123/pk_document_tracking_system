@@ -1,12 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
-// Minimal autoload intentionally; services/models load only when needed.
 $autoload = [
     'packages' => [],
-    'libraries' => [],
+    'libraries' => ['database', 'session'],
     'drivers' => [],
-    'helper' => [],
+    'helper' => ['url', 'form', 'security'],
     'config' => [],
     'language' => [],
     'model' => [],
