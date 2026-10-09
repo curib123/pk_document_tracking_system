@@ -47,7 +47,14 @@ jobs:
           php-version: '8.2'
           extensions: mysqli,mbstring,fileinfo,zip
       - run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Show active smoke-test route when debugging failures
+      - name: Make failing smoke route visible in logs
         run: |
-          sed -i 's@  curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@  echo "Checking route: $route"; curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@' tests/smoke.sh
-      - run: bash tests/smoke.sh
+          sed -i 's@  curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@  echo "Checking route: $route"; curl --fail-with-body -sS -b /tmp/pk-cookie -o /tmp/pk-module.html@' tests/smoke.sh
+      - name: Check database-backed page routes
+        run: |
+          if ! bash tests/smoke.sh; then
+            echo "Failed route response:"
+            head -c 2200 /tmp/pk-module.html || true
+            echo
+            exit 1
+          fi
