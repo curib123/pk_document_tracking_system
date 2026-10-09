@@ -792,7 +792,10 @@
             input.setAttribute('aria-label', label ? label.textContent.trim() :
                 select.getAttribute('aria-label') || 'Select an option');
 
-            wrapper.append(input, list);
+            wrapper.appendChild(input);
+            // Portal the listbox to body so scrollable Bootstrap modal bodies
+            // cannot clip options near the bottom of a long form.
+            document.body.appendChild(list);
             var active = -1;
             var visibleOptions = [];
 
@@ -849,6 +852,18 @@
                 }
             }
 
+            function positionList() {
+                var rect = input.getBoundingClientRect();
+                var roomBelow = window.innerHeight - rect.bottom - 12;
+                var roomAbove = rect.top - 12;
+                var above = roomBelow < 180 && roomAbove > roomBelow;
+                list.style.left = Math.max(8, rect.left) + 'px';
+                list.style.width = Math.max(160, Math.min(rect.width, window.innerWidth - 16)) + 'px';
+                list.style.maxHeight = Math.max(80, Math.min(285, above ? roomAbove : roomBelow)) + 'px';
+                list.style.top = above ? 'auto' : (rect.bottom + 4) + 'px';
+                list.style.bottom = above ? (window.innerHeight - rect.top + 4) + 'px' : 'auto';
+            }
+
             function open() {
                 if (input.disabled) return;
                 document.querySelectorAll('.searchable-options:not([hidden])').forEach(function (other) {
@@ -859,6 +874,7 @@
                     }
                 });
                 list.hidden = false;
+                positionList();
                 input.setAttribute('aria-expanded', 'true');
                 render('');
             }
@@ -873,7 +889,9 @@
             }
 
             input.addEventListener('focus', open);
-            input.addEventListener('click', open);
+            input.addEventListener('click', function () {
+                if (list.hidden) open();
+            });
             input.addEventListener('input', function () {
                 if (list.hidden) open();
                 render(input.value);
@@ -901,7 +919,13 @@
                 }
             });
             document.addEventListener('pointerdown', function (event) {
-                if (!wrapper.contains(event.target)) close();
+                if (!wrapper.contains(event.target) && !list.contains(event.target)) close();
+            });
+            document.addEventListener('scroll', function () {
+                if (!list.hidden) positionList();
+            }, true);
+            window.addEventListener('resize', function () {
+                if (!list.hidden) positionList();
             });
             searchableSelects.push({select: select, input: input, close: close});
         });
