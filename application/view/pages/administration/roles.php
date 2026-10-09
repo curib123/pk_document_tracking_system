@@ -38,7 +38,10 @@ $dt_create = $may('create') ? 'Create Role' : '';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Access Control</span><h1>Roles & Permissions</h1>
 <p>Assign module-level permissions for every page and action. Server-side checks are authoritative.</p></div></div>
-<?php $this->load->view('components/datatable'); ?>
+<?php $this->load->view('components/datatable', compact(
+    'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+)); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content">
         <form action="<?= site_url('admin/roles/save') ?>" method="post" id="editForm" data-confirm="Save role permissions?">
