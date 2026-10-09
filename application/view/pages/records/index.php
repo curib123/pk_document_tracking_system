@@ -55,6 +55,10 @@ foreach ($rows as $row) {
                 'url' => 'documents/softcopy/files/' . $row['latest_file_id']];
         }
     }
+    if ($mode === 'documents' && $current === 'softcopy' &&
+        $may('edit') && !empty($file_grants[$row['id']])) {
+        $buttons[] = ['type' => 'grants'];
+    }
     if ($may('edit')) $buttons[] = ['type' => 'edit'];
     if ($may('delete')) $buttons[] = ['type' => 'action', 'url' => $delete_action, 'label' => $mode === 'documents' ? 'Dispose' : 'Deactivate',
         'description' => $mode === 'documents' ? 'This document will be marked as disposed.' : 'This place will be made inactive.',
