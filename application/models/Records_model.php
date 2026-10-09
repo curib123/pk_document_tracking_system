@@ -60,6 +60,22 @@ class Records_model extends CI_Model
         return $histories;
     }
 
+    public function active_grants($documentIds)
+    {
+        if (!$documentIds) return [];
+        $rows = $this->db->select('g.id,g.document_id,g.expires_at,g.created_at,u.name AS recipient')
+            ->from('document_access_grants g')
+            ->join('users u', 'u.id = g.user_id')
+            ->where_in('g.document_id', $documentIds)
+            ->where('g.revoked_at IS NULL', NULL, FALSE)
+            ->group_start()->where('g.expires_at IS NULL', NULL, FALSE)
+                ->or_where('g.expires_at >=', date('Y-m-d H:i:s'))->group_end()
+            ->order_by('u.name')->get()->result_array();
+        $byDocument = [];
+        foreach ($rows as $row) $byDocument[$row['document_id']][] = $row;
+        return $byDocument;
+    }
+
     public function user_options()
     {
         return $this->db->select('id,name')->from('users')->where('active', 1)
