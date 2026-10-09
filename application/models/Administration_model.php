@@ -27,7 +27,7 @@ class Administration_model extends CI_Model
     public function users($q,$status,$page,$limit)
     {
         return $this->count_and_page('users u',
-            'u.id,u.username,u.first_name,u.last_name,u.position_title,u.role_id,
+            'u.id,u.username,u.first_name,u.middle_name,u.last_name,u.position_title,u.role_id,
              u.leader_id,u.active,u.require_password_change,u.version,
              r.name AS role_name,
              CONCAT_WS(" ",l.first_name,l.last_name) AS leader_name',
