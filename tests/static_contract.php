@@ -163,7 +163,7 @@ foreach (['move_workflow_step','validate_approval_graph','active_request_type'] 
     if (strpos($wfService,$key)===FALSE) $fail[]='Workflow routing missing: '.$key;
 }
 if (strpos($requestSvc,"'superseded'")===FALSE ||
-    strpos($requestCtl,'exact active step')===FALSE ||
+    strpos($requestCtl,'(new Request_service())->decide')===FALSE ||
     strpos($wfView,'Request Approval Route')===FALSE) {
     $fail[]='Sequential approver route not implemented.';
 }
