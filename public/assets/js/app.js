@@ -125,7 +125,8 @@
                 if (field.type === 'checkbox') field.checked = !!Number(record[field.name]);
                 else field.value = record[field.name] == null ? '' : record[field.name];
             });
-            var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle' : 'editTitle');
+            var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle'
+                : (target.id === 'assignmentForm' ? 'assignmentModalTitle' : 'editTitle'));
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
             target.dataset.confirmed = '';
             if (target.dataset.requestType) refreshRequestForm();
