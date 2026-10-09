@@ -24,6 +24,7 @@ jobs:
           extensions: mysqli,mbstring,fileinfo,zip
       - run: php tests/lint.php
       - run: php tests/static_contract.php
+      - run: php tests/ux_ui_contract.php
       - run: node --check public/assets/js/app.js
   database:
     runs-on: ubuntu-latest
