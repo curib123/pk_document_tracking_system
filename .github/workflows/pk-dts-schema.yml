@@ -4,7 +4,22 @@ on:
     branches: ['feat/pk-dts-sql-master-rebuild']
   pull_request:
     branches: [master]
+permissions:
+  contents: read
 jobs:
+  source-snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Archive the exact tested source without credentials or runtime data
+        run: git archive --format=tar -o "$RUNNER_TEMP/pk-dts-source.tar" HEAD
+      - uses: actions/upload-artifact@v4
+        with:
+          name: pk-dts-source
+          path: ${{ runner.temp }}/pk-dts-source.tar
+          retention-days: 3
   login-layout:
     runs-on: ubuntu-latest
     steps:
