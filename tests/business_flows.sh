@@ -124,11 +124,22 @@ curl -fsS -b /tmp/pk-recipient.cookies -o /tmp/pk-granted-download.txt \
     "$BASE/documents/softcopy/files/$FILE_ID"
 cmp /tmp/pk-version.txt /tmp/pk-granted-download.txt
 
+# Revoke an approved grant through an authorized native form.
+GRANT_ID=$(db "SELECT id FROM document_access_grants WHERE request_id=$ID")
+admin_post 'documents/softcopy' 'documents/softcopy/grant/revoke' "id=$GRANT_ID"
+test "$(db "SELECT COUNT(*) FROM document_access_grants WHERE id=$GRANT_ID AND revoked_at IS NOT NULL")" = 1
+CODE=$(curl -sS -b /tmp/pk-recipient.cookies -o /dev/null -w '%{http_code}' \
+    "$BASE/documents/softcopy/files/$FILE_ID")
+test "$CODE" = 403
+
 # Assignment changes the responsible user with a request reference.
 ID=$(save_request document-assign 'CI assignment' \
     "document_id=$SOFTCOPY_ID" "target_user_id=$RECIPIENT_ID")
 submit_and_approve document-assign "$ID"
 test "$(db "SELECT user_id FROM document_assignments WHERE document_id=$SOFTCOPY_ID")" = "$RECIPIENT_ID"
+curl -fsS -b /tmp/pk-recipient.cookies -o /tmp/pk-assigned-download.txt \
+    "$BASE/documents/softcopy/files/$FILE_ID"
+cmp /tmp/pk-version.txt /tmp/pk-assigned-download.txt
 
 # A document-disposal request has a real lifecycle effect.
 ID=$(save_request hardcopy 'CI dispose' 'operation=dispose' "document_id=$HARDCOPY_ID")
