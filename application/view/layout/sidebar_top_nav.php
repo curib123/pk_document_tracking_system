@@ -6,27 +6,14 @@ $path = uri_string();
 $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
-// Route slug, permission module and icon are intentionally distinct.
-$places = [
-    'area' => ['module' => 'areas', 'label' => 'Areas', 'icon' => 'fa-layer-group'],
-    'specific' => ['module' => 'specifics', 'label' => 'Specifics', 'icon' => 'fa-crosshairs'],
-    'asset' => ['module' => 'assets', 'label' => 'Assets', 'icon' => 'fa-barcode'],
-    'location' => ['module' => 'locations', 'label' => 'Locations', 'icon' => 'fa-map-location-dot'],
-    'sequence' => ['module' => 'sequences', 'label' => 'Sequences', 'icon' => 'fa-arrow-down-1-9'],
-    'softcopy-categories' => [
-        'module' => 'categories',
-        'label' => 'Softcopy Categories',
-        'icon' => 'fa-folder-tree'
-    ]
-];
+// Single Places nav link: each module remains available from the in-page tabs.
 $anyPlace = FALSE;
-foreach ($places as $place) {
-    if ($visible($place['module'])) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'] as $placeModule) {
+    if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;
     }
 }
-$placesActive = strpos($path, 'places/') === 0;
 ?>
 <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar">
@@ -49,29 +36,11 @@ $placesActive = strpos($path, 'places/') === 0;
                 <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks</a><?php endif; ?>
             <?php endif; ?>
             <?php if ($anyPlace): ?>
-                <details class="sidebar-group<?= $placesActive ? ' is-current' : '' ?>"
-                         id="placesSidebarGroup" <?= $placesActive ? 'open' : '' ?>>
-                    <summary class="side-link side-link-parent"
-                             aria-controls="placesSidebarLinks">
-                        <i class="fa-solid fa-sitemap" aria-hidden="true"></i>
-                        <span class="side-link-label">Places</span>
-                        <i class="fa-solid fa-chevron-down sidebar-chevron" aria-hidden="true"></i>
-                    </summary>
-                    <div class="side-submenu" id="placesSidebarLinks">
-                        <?php foreach ($places as $slug => $place): ?>
-                            <?php if ($visible($place['module'])): ?>
-                                <?php $selected = $path === 'places/' . $slug; ?>
-                                <a class="side-link<?= $selected ? ' active' : '' ?>"
-                                   href="<?= site_url('places/' . $slug) ?>"
-                                   <?= $selected ? 'aria-current="page"' : '' ?>>
-                                    <i class="fa-solid <?= html_escape($place['icon']) ?>"
-                                       aria-hidden="true"></i>
-                                    <span><?= html_escape($place['label']) ?></span>
-                                </a>
-                            <?php endif; ?>
-                        <?php endforeach; ?>
-                    </div>
-                </details>
+                <a class="side-link<?= $active('places') ?>"
+                   href="<?= site_url('places') ?>"
+                   <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>>
+                    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Places
+                </a>
             <?php endif; ?>
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
                 <div class="side-heading">Administration</div>

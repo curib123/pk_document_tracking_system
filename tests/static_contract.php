@@ -27,33 +27,35 @@ foreach (['login-shell','login-cover','login-panel','login-card','assets/images/
 foreach (['.login-page::before','.login-shell','.login-card','background-size: cover'] as $style) {
     if (strpos($css,$style)===FALSE) $fail[]='Full-cover login CSS missing: '.$style;
 }
-// Places navigation: one accessible expandable group and six distinct icon assets.
+// Exactly one Places sidebar link; the six authorized module tabs remain inside Places.
 $sidebar = file_get_contents($root.'/application/view/layout/sidebar_top_nav.php');
-foreach (['<details', '<summary', 'placesSidebarGroup', 'placesSidebarLinks',
-    'strpos($path, \'places/\') === 0', '$visible($place[\'module\'])',
-    'aria-current="page"'] as $token) {
-    if (strpos($sidebar, $token) === FALSE) {
-        $fail[] = 'Places dropdown markup missing: ' . $token;
+$placeController = file_get_contents($root.'/application/controllers/Places.php');
+$routes = file_get_contents($root.'/application/config/routes.php');
+$placeView = file_get_contents($root.'/application/view/pages/places/shared_index.php');
+if (substr_count($sidebar, "site_url('places')") !== 1 ||
+    strpos($sidebar, "fa-map-location-dot") === FALSE ||
+    strpos($sidebar, "aria-current=\"page\"") === FALSE) {
+    $fail[] = 'Places must be a single accessible sidebar link.';
+}
+foreach (['placesSidebarGroup', 'placesSidebarLinks', 'side-submenu',
+    'sidebar-chevron', 'site_url(\'places/\' . $slug)'] as $oldDropdown) {
+    if (strpos($sidebar, $oldDropdown) !== FALSE) {
+        $fail[] = 'Old Places sidebar dropdown remains: '.$oldDropdown;
     }
 }
-preg_match_all("/'icon'\s*=>\s*'(fa-[a-z0-9-]+)'/", $sidebar, $foundPlaceIcons);
-if (count($foundPlaceIcons[1]) !== 6 ||
-    count(array_unique($foundPlaceIcons[1])) !== 6) {
-    $fail[] = 'Every Places child must have a unique Font Awesome icon.';
+if (strpos($routes, "'places']['GET'] = 'Places/home'") === FALSE ||
+    strpos($placeController, 'public function home()') === FALSE) {
+    $fail[] = 'Places landing route is missing.';
 }
-foreach (['area'=>'areas', 'specific'=>'specifics', 'asset'=>'assets',
-    'location'=>'locations', 'sequence'=>'sequences',
-    'softcopy-categories'=>'categories'] as $slug=>$module) {
-    if (strpos($sidebar, "'$slug' =>") === FALSE ||
-        strpos($sidebar, "'module' => '$module'") === FALSE) {
-        $fail[] = "Places route/permission mapping missing: $slug";
+foreach (['areas','specifics','assets','locations','sequences','categories'] as $module) {
+    if (strpos($placeController, "'".$module."'") === FALSE) {
+        $fail[] = 'Places landing permission mapping missing: '.$module;
     }
 }
-$sidebarCss = file_get_contents($root.'/public/assets/css/app.css');
-foreach (['.side-link-parent', '.side-submenu', '.sidebar-chevron',
-    '.sidebar-group[open]'] as $selector) {
-    if (strpos($sidebarCss, $selector) === FALSE) {
-        $fail[] = 'Places dropdown style missing: '.$selector;
+foreach (['area', 'specific', 'asset', 'location',
+    'sequence', 'softcopy-categories'] as $tab) {
+    if (strpos($placeView, "'".$tab."'") === FALSE) {
+        $fail[] = 'Places tab missing: '.$tab;
     }
 }
 // Ensure predefined Location Upsert stays aligned with pk_dts relationships.

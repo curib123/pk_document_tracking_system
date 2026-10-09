@@ -8,6 +8,27 @@ class Places extends MY_Controller
         $this->load->model('Place_model');
         require_once APPPATH.'services/places/place_service.php';
     }
+    public function home()
+    {
+        $this->authenticate();
+        // Open the first Places tab this account may view.
+        // Avoid routing users to Areas when they only have other Places permissions.
+        foreach ([
+            'area' => 'areas',
+            'specific' => 'specifics',
+            'asset' => 'assets',
+            'location' => 'locations',
+            'sequence' => 'sequences',
+            'softcopy-categories' => 'categories'
+        ] as $slug => $module) {
+            if ($this->can($module, 'view')) {
+                redirect('places/'.$slug);
+                return;
+            }
+        }
+        show_error('You do not have permission to view Places.', 403);
+    }
+
     public function index($slug)
     {
         $cfg=$this->Place_model->config($slug);

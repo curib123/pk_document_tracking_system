@@ -48,24 +48,26 @@ for route in dashboard documents/hardcopy documents/softcopy places/area places/
   curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html "http://127.0.0.1:8089/$route"
   grep -q '</html>' /tmp/pk-module.html
 done
-# Places group behaves as a native toggle and auto-expands on a child route.
+# Places has a single sidebar link (no dropdown) and an authorized landing page.
 curl -fsS -b /tmp/pk-cookie -o /tmp/pk-sidebar-dashboard.html http://127.0.0.1:8089/dashboard
-grep -q 'id="placesSidebarGroup"' /tmp/pk-sidebar-dashboard.html
-if grep -q 'id="placesSidebarGroup" open' /tmp/pk-sidebar-dashboard.html; then
-  echo 'Places sidebar unexpectedly expanded on Dashboard.'
+grep -q 'href="http://127.0.0.1:8089/places"' /tmp/pk-sidebar-dashboard.html
+if grep -q 'placesSidebarGroup\|placesSidebarLinks\|side-submenu' /tmp/pk-sidebar-dashboard.html; then
+  echo 'Removed Places dropdown is still present in the sidebar.'
   exit 1
 fi
-for row in 'area fa-layer-group' 'specific fa-crosshairs' 'asset fa-barcode' \
-  'location fa-map-location-dot' 'sequence fa-arrow-down-1-9' \
-  'softcopy-categories fa-folder-tree'; do
-  slug=${row%% *}
-  icon=${row#* }
+curl -fsS -L -b /tmp/pk-cookie -o /tmp/pk-landing.html http://127.0.0.1:8089/places
+grep -q 'href="http://127.0.0.1:8089/places/area"' /tmp/pk-landing.html
+grep -q 'aria-current="page"' /tmp/pk-landing.html
+for slug in area specific asset location sequence softcopy-categories; do
   curl -fsS -b /tmp/pk-cookie -o /tmp/pk-sidebar-places.html "http://127.0.0.1:8089/places/$slug"
-  grep -q 'id="placesSidebarGroup" open' /tmp/pk-sidebar-places.html
-  grep -q "fa-solid $icon" /tmp/pk-sidebar-places.html
+  grep -q 'href="http://127.0.0.1:8089/places"' /tmp/pk-sidebar-places.html
   grep -q 'aria-current="page"' /tmp/pk-sidebar-places.html
+  if grep -q 'placesSidebarGroup\|placesSidebarLinks\|side-submenu' /tmp/pk-sidebar-places.html; then
+    echo "Old Places dropdown is still present in $slug."
+    exit 1
+  fi
 done
-echo 'Places sidebar dropdown passed for all six distinct icons and active routes.'
+echo 'Single Places link, authorized landing page and six in-page tabs passed.'
 echo 'Authoritative pk_dts SQL import, login and 22 module routes passed.'
 source tests/workflow_smoke.sh
 source tests/places_smoke.sh
