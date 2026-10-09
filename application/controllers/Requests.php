@@ -52,7 +52,8 @@ class Requests extends MY_Controller
         $this->Request_model->types($tab);
         $this->require_permission('requests','add');$this->confirmed();
         try {
-            (new Request_service())->save($tab,$this->input->post(),$this->user);
+            (new Request_service())->save($tab,$this->input->post(),$this->user,
+                $_FILES['revision_attachment']??NULL);
             $this->notice('Request draft saved.');
         } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
         redirect('my-requests/'.$tab);
