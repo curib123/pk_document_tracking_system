@@ -60,7 +60,10 @@ foreach ($rows as $row) {
         <a class="tab-link <?= $current === $slug ? 'active' : '' ?>" href="<?= site_url(($task ? 'my-tasks/' : 'my-requests/') . $slug) ?>"><?= html_escape($label) ?></a>
     <?php endforeach; ?>
 </nav>
-<?php $this->load->view('components/datatable'); ?>
+<?php $this->load->view('components/datatable', compact(
+    'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+)); ?>
 <?php if (!$task): ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
