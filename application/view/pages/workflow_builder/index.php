@@ -49,10 +49,20 @@ data-bs-target="#wf-<?= (int)$r['id'] ?>">
 <div class="accordion-body">
 <?php foreach($steps as $index=>$step):
  $approver=$step['approver']??[]; ?>
-<div class="workflow-step">
-<strong><?= $index+1 ?>. <?= html_escape($step['name']??'Approval') ?></strong>
+<div class="workflow-step d-flex align-items-center justify-content-between gap-2">
+<div><strong><?= $index+1 ?>. <?= html_escape($step['name']??'Approval') ?></strong>
 <small class="text-secondary d-block">Assigned by <?= html_escape(ucwords(str_replace('_',' ',$approver['type']??'unknown'))) ?>
-<?php if(!empty($approver['label'])): ?> · <?= html_escape($approver['label']) ?><?php endif; ?></small>
+<?php if(!empty($approver['label'])): ?> · <?= html_escape($approver['label']) ?><?php endif; ?></small></div>
+<?php if ($draft): ?>
+<button type="button" class="btn-icon js-action" aria-label="Remove step" title="Remove Step"
+ data-bs-toggle="modal" data-bs-target="#actionModal"
+ data-url="<?= site_url('admin/workflows/step/remove') ?>"
+ data-id="<?= $versionId ?>" data-step-key="<?= html_escape($step['key']??'') ?>"
+ data-title="Remove Approval Step"
+ data-description="Remove this step from the draft. The remaining steps will be renumbered.">
+ <i class="fa-solid fa-trash-can"></i>
+</button>
+<?php endif; ?>
 </div>
 <?php endforeach; ?>
 <?php if(!$steps): ?><p class="text-muted small">No steps yet. Add at least one step to publish.</p><?php endif; ?>
@@ -113,16 +123,20 @@ id="wKey" name="workflow_key" required pattern="[a-z0-9_]{3,80}"></div>
 <option value="user">Specific User</option><option value="role">Role</option>
 <option value="requester_leader">Requester Leader</option>
 <option value="requester">Requester Account</option></select></div>
-<div><label class="form-label" for="sValue">Approver ID</label>
-<select class="form-select" name="approver_value" id="sValue">
-<option value="">Auto-resolve for requester / leader</option>
-<optgroup label="Users"><?php foreach($users as $u): ?>
+<div data-approver-option="user"><label class="form-label" for="sUser">Specific User</label>
+<select class="form-select" name="approver_user_id" id="sUser" data-searchable>
+<option value="">Select active user</option>
+<?php foreach($users as $u): ?>
 <option value="<?= (int)$u['id'] ?>"><?= html_escape($u['name']) ?></option>
-<?php endforeach; ?></optgroup>
-<optgroup label="Roles"><?php foreach($roles as $r): ?>
+<?php endforeach; ?></select></div>
+<div data-approver-option="role" hidden><label class="form-label" for="sRole">Approver Role</label>
+<select class="form-select" name="approver_role_id" id="sRole" disabled data-searchable>
+<option value="">Select active role</option>
+<?php foreach($roles as $r): ?>
 <option value="<?= (int)$r['id'] ?>"><?= html_escape($r['name']) ?></option>
-<?php endforeach; ?></optgroup></select>
-<small class="text-secondary">Choose a matching user or role. Requester/leader is resolved at submission.</small>
+<?php endforeach; ?></select></div>
+<div class="small text-secondary" id="approverAutoInfo" hidden>
+Requester and leader approvers are determined automatically when the request is submitted.
 </div></div><input type="hidden" name="confirmed" value="no">
 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
 <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
