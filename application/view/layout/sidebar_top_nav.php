@@ -15,25 +15,26 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
     }
 }
 ?>
+<a class="skip-link" href="#mainContent">Skip to main content</a>
 <div class="app-shell">
-    <aside class="app-sidebar" id="appSidebar">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Primary navigation">
         <a href="<?= site_url('dashboard') ?>" class="brand">
             <img src="<?= base_url('assets/images/peanut-kisses.jpg') ?>" alt="Peanut Kisses">
             <span><strong>PK Document Control</strong><small>Record Workspace</small></span>
         </a>
         <nav class="side-links" aria-label="Main navigation">
             <?php if ($visible('dashboard')): ?>
-                <a class="side-link<?= $active('dashboard') ?>" href="<?= site_url('dashboard') ?>"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
+                <a class="side-link<?= $active('dashboard') ?>" <?= $active('dashboard') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('dashboard') ?>"><i class="fa-solid fa-chart-pie"></i> Dashboard</a>
             <?php endif; ?>
             <?php if ($visible('hardcopy') || $visible('softcopy')): ?>
                 <div class="side-heading">System Documents</div>
-                <?php if ($visible('hardcopy')): ?><a class="side-link<?= $active('documents/hardcopy') ?>" href="<?= site_url('documents/hardcopy') ?>"><i class="fa-regular fa-folder"></i> Hardcopy Documents</a><?php endif; ?>
-                <?php if ($visible('softcopy')): ?><a class="side-link<?= $active('documents/softcopy') ?>" href="<?= site_url('documents/softcopy') ?>"><i class="fa-regular fa-file-lines"></i> Softcopy Documents</a><?php endif; ?>
+                <?php if ($visible('hardcopy')): ?><a class="side-link<?= $active('documents/hardcopy') ?>" <?= $active('documents/hardcopy') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('documents/hardcopy') ?>"><i class="fa-regular fa-folder"></i> Hardcopy Documents</a><?php endif; ?>
+                <?php if ($visible('softcopy')): ?><a class="side-link<?= $active('documents/softcopy') ?>" <?= $active('documents/softcopy') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('documents/softcopy') ?>"><i class="fa-regular fa-file-lines"></i> Softcopy Documents</a><?php endif; ?>
             <?php endif; ?>
             <?php if ($visible('requests') || $visible('tasks')): ?>
                 <div class="side-heading">Requests</div>
-                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests</a><?php endif; ?>
-                <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks</a><?php endif; ?>
+                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests</a><?php endif; ?>
+                <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks</a><?php endif; ?>
             <?php endif; ?>
             <?php if ($anyPlace): ?>
                 <a class="side-link<?= $active('places') ?>"
@@ -50,16 +51,17 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
                        <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> Assign Documents
                     </a>
                 <?php endif; ?>
-                <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
-                <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
-                <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>
+                <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" <?= $active('admin/users') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
+                <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" <?= $active('admin/roles') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
+                <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" <?= $active('admin/workflows') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>
             <?php endif; ?>
         </nav>
         <div class="sidebar-bottom"><span class="status-dot"></span> Document Control System</div>
     </aside>
-    <main class="app-main">
+    <div id="sidebarBackdrop" class="sidebar-backdrop" hidden aria-hidden="true"></div>
+    <main class="app-main" id="mainContent" tabindex="-1">
         <header class="topbar">
-            <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation"><i class="fa-solid fa-bars"></i></button>
+            <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="appSidebar" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
             <span class="topbar-label">Document Management Workspace</span>
             <div class="user-menu dropdown">
                 <button class="user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
