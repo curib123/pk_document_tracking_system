@@ -69,3 +69,13 @@ Do not serve `storage/` through Apache. Back up the audit folder with private st
 - Destination Area → Specific → Asset → Location selectors are populated from active predefined Places records. Selecting a child fills its parent fields; the Receiving User is a required active account.
 - Server-side validation rejects missing/inactive destinations, mismatched parent IDs, and transfers to the document's current location. The transfer is applied only after its configured workflow approves and the physical holder/recipient handoff is complete.
 - The original `pk_dts.sql` structure is unchanged. Automated tests in `tests/workflow_builder_smoke.sh`, `tests/workflow_smoke.sh`, and `tests/static_contract.php` cover seed-only workflow behavior, sequential approvers, and transfer form/server rules.
+
+## Document Folder Explorer and administrative assignment (Oct 9)
+
+- `Hardcopy Documents` shows an interactive folder tree from the **existing** `areas → specifics → assets → locations` relationships. Click a folder to navigate; breadcrumbs return to ancestors. The current folder filters SQL document rows, while All Documents shows everything.
+- `Softcopy Documents` navigates **parent category → nested subcategory folders** from the original `categories.parent_id` relationships. Selecting a folder filters that category's documents. Parent/category relationships and cycles are checked server-side.
+- **Administration → Assign Documents** uses the same folder browser with Hardcopy/Softcopy tabs. An Administrator selects a location or category folder, then assigns a document from that folder to an active account. The POST controller verifies the document belongs to the selected folder before changing any assignment.
+- Hardcopy custody stays in `hardcopy_documents.holder_id`; softcopy access assignments stay in `assignments`. Physical handoffs continue through the separate transfer approval and acceptance process.
+- Every ordinary DataTable data cell opens the existing **View modal** on click or Enter/Space. Row action buttons, links and dropdowns retain their original behavior. Folder selection remains active through search, filters, pagination and row-limit controls.
+- No new database tables, filesystem document folders, REST API or AJAX endpoints are introduced. This is a read-only virtual navigation layer for the original `pk_dts.sql` structure.
+- CI tests `tests/folder_browser_smoke.sh` validate real folder hierarchy, document filtering, denial of invalid/cross-domain folders, and folder-scoped administrative assignments. Browser UX and large-volume tests remain required in the local XAMPP setup.
