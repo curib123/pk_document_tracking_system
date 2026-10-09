@@ -104,4 +104,35 @@ post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/decide "id=$RID"
 test "$(db "SELECT status FROM requests WHERE id=$RID")" = approved
 test "$(db "SELECT COUNT(*) FROM transfers WHERE request_id=$RID AND recipient_status='pending'")" = 1
 
+TRANSFER_ID=$(db "SELECT id FROM transfers WHERE request_id=$RID")
+test -n "$TRANSFER_ID"
+
+# Holder dispatches; only the intended recipient can confirm the physical handoff.
+post_form my-tasks/hardcopy-transfer my-tasks/hardcopy-transfer/dispatch "id=$TRANSFER_ID"
+test "$(db "SELECT status FROM transfers WHERE id=$TRANSFER_ID")" = in_transit
+
+curl -fsS -c /tmp/pk-recipient-cookie -o /tmp/pk-recipient-login.html http://127.0.0.1:8089/login
+REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-recipient-login.html | head -1 | sed 's/.*value="//;s/"$//')
+curl -sS -L -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie \
+    -o /tmp/pk-recipient-home.html --data-urlencode "pk_csrf_token=$REC_TOKEN" \
+    --data-urlencode 'login=recipient_test' --data-urlencode 'password=TemporaryTestPassword2026!' \
+    http://127.0.0.1:8089/login
+grep -q 'Dashboard' /tmp/pk-recipient-home.html
+
+# Recipient cannot access an approved file until a grant or assignment exists.
+curl -fsS -b /tmp/pk-recipient-cookie -o /tmp/pk-transfer-task.html \
+    http://127.0.0.1:8089/my-tasks/hardcopy-transfer
+grep -q 'Accept Hardcopy' /tmp/pk-transfer-task.html
+REC_TOKEN=$(grep -o 'name="pk_csrf_token" value="[^"]*"' /tmp/pk-transfer-task.html | head -1 | sed 's/.*value="//;s/"$//')
+curl -fsS -b /tmp/pk-recipient-cookie -c /tmp/pk-recipient-cookie -o /dev/null \
+    --data-urlencode "pk_csrf_token=$REC_TOKEN" --data-urlencode 'confirmed=yes' \
+    --data-urlencode "id=$TRANSFER_ID" http://127.0.0.1:8089/my-tasks/hardcopy-transfer/accept
+test "$(db "SELECT status FROM transfers WHERE id=$TRANSFER_ID")" = accepted
+test "$(db "SELECT recipient_status FROM transfers WHERE id=$TRANSFER_ID")" = accepted
+test "$(db "SELECT holder_id FROM hardcopy_documents WHERE id=$HARD_ID")" = "$REC_ID"
+test "$(db "SELECT location_id FROM hardcopy_documents WHERE id=$HARD_ID")" = "$LOC_ID"
+test "$(db "SELECT status FROM requests WHERE id=$RID")" = completed
+test "$(db "SELECT COUNT(*) FROM workflow_history WHERE request_id=$RID AND action='transfer_accepted'")" = 1
+
+
 echo 'Schema-aware request effects passed: softcopy, hardcopy, assignment, access and transfer.'
