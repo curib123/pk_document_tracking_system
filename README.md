@@ -47,3 +47,16 @@ GitHub Actions validates PHP syntax, JS syntax, baseline schema and MariaDB inte
 Documents use `hardcopy_documents`, `softcopy_documents`, `files`, and `softcopy_revisions`, not an invented shared `documents` table. Places use `areas`, `specifics`, `assets`, `locations`, `categories` and `sequences`. **The `sequences` table is a read-only system counter keyed by `sequence_key`; it has no numeric ID.** Requests use `requests`, `workflow_versions`, `workflow_steps`, and `workflow_history`, with controlled effects recorded in `transfers`, `assignments`, `access_grants`, `disposals` and `status_history`.
 
 Read [database/SQL_SOURCE_OF_TRUTH.md](database/SQL_SOURCE_OF_TRUTH.md) before importing or modifying any schema. Functional tests run against disposable MariaDB, not the existing production database.
+
+## October 9 form, access and audit fixes
+
+- All editable records reopen the same upsert form with their saved values. Workflow approver steps can also be edited and re-ordered. Hardcopy Request keeps the same responsive Area/Specific/Asset/Location hierarchy and retention controls as Hardcopy Direct.
+- Access Grant requests accept **Softcopy or Hardcopy** through `access_grants.domain` and `access_grants.document_id`, with a selectable recipient and expiry.
+- Document Assignment requests accept both types. Existing `assignments.softcopy_id` stores softcopy access assignments; hardcopy assignment changes the source schema's `hardcopy_documents.holder_id`. Physical custody transfers remain a separate dispatch/acceptance operation.
+- Administrators get **Assign Documents** at `/admin/document-assignments`. The page shows both sources and provides editable assignment forms without inventing new columns/tables.
+- Disposal methods are `Shred`, `Scratch`, and `Other`. The Other option requires a description. The selected method is stored in original `disposals.disposal_action` and its details in `disposals.remarks`.
+- Softcopy revision **date received** is server-controlled when saved; **date released** is stamped on final approval. **Effective date** is optional, defaulting to approval date if omitted. The original source columns remain non-null.
+- General operation audit events are stored in **`storage/audit/YYYY-MM-DD.json`**, as valid per-day JSON arrays using file locks and atomic updates. Successful and failed form operations record an actor, route and timestamp; passwords, uploaded contents and raw request bodies are excluded. No new audit database table is added.
+- Existing `workflow_history` and `status_history` tables are preserved for operational workflow and document history because they are part of the authoritative `pk_dts.sql`.
+
+Do not serve `storage/` through Apache. Back up the audit folder with private storage and preserve its access controls. Automated database integration tests use a disposable `pk_dts_test` database; real Windows/XAMPP UI and production data must be verified before merging.
