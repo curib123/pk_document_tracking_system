@@ -54,7 +54,7 @@ jobs:
         run: |
           if ! bash tests/smoke.sh; then
             echo "Failed route response:"
-            head -c 2200 /tmp/pk-module.html || true
+            tail -c 1600 /tmp/pk-module.html || true
             echo
             exit 1
           fi
