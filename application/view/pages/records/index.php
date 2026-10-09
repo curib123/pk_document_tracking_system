@@ -124,3 +124,14 @@ foreach ($rows as $row) {
     </div></div>
 </div>
 <?php endif; ?>
+
+<?php if ($mode === 'documents' && $current === 'softcopy'): ?>
+<div class="modal fade" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
+        <div class="modal-header"><h2 class="modal-title fs-6" id="fileHistoryTitle">File Version History</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+        <div class="modal-body" id="fileHistoryList"></div>
+        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
+    </div></div>
+</div>
+<?php endif; ?>
