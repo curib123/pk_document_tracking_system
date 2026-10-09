@@ -26,4 +26,9 @@ test "$(db "SELECT COUNT(*) FROM categories WHERE name='Operating Procedures'")"
 post_form places/area places/area/deactivate "id=$AREA_ID"
 test "$(db "SELECT active FROM areas WHERE id=$AREA_ID")" = 0
 
+# The uploaded sequences table uses a string key, not an integer ID.
+db "INSERT INTO sequences(sequence_key,value) VALUES ('PK-ARCHIVE', 12)"
+curl -fsS -b /tmp/pk-cookie -o /tmp/pk-sequences-page.html http://127.0.0.1:8089/places/sequence
+grep -q 'PK-ARCHIVE' /tmp/pk-sequences-page.html
+grep -q 'read-only' /tmp/pk-sequences-page.html
 echo 'Original pk_dts Places CRUD passed on six-module relational schema.'
