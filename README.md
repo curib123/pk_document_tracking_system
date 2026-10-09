@@ -4,17 +4,17 @@ A server-rendered CodeIgniter 3 document-control workspace. Design: red and whit
 
 ## Before installing
 
-The original repository did not include a production database export. The `database/schema.sql` and `database/seed.sql` files are a **new baseline**, not a verified migration of an existing DTS installation. Import these into a **new/empty** database only. If you already have live records, back them up and map your actual tables before attempting a migration.
+The original repository did not include an existing database export. Its `database/schema.sql` and `database/seed.sql` form a **new baseline**, not a verified migration of the older DTS application. We identified the legacy source at [pk-dts-monorepo](https://github.com/curib123/pk-dts-monorepo), whose schema uses different column names and more specialized tables. **Never import this new baseline over a live legacy DTS database.** See `database/MIGRATION_NOTES.md`.
 
 ## Local installation (XAMPP)
 
 1. Install PHP 8.x with `mysqli`, `mbstring`, `fileinfo` and `zip`; enable Apache `mod_rewrite`.
 2. Run `composer install` at the repository root. CodeIgniter is installed into `vendor/`.
-3. Create an **empty** MySQL database named `pk_dts`, then execute `database/schema.sql` and `database/seed.sql` in that order.
+3. Create an **empty** MySQL database named `pk_dts`, then execute `database/schema.sql`, `database/migrations/20261009_document_workflows.sql`, and `database/seed.sql` **in that order**. The additive migration is required for attachments and request actions.
 4. Create the first admin in a terminal: `php tools/create_admin.php admin admin@example.com`. It prompts for the name and a 12+ character password; no default account is seeded.
 5. Configure a strong random `PK_ENCRYPTION_KEY` in the PHP/Apache process environment and review the connection in `application/config/database.php`.
 6. Point the Apache virtual host DocumentRoot to the project's `public/` folder, not the repository root. Browse to `/login`.
-7. Ensure `storage/sessions` and `storage/logs` are writable by Apache. The application creates them on first startup.
+7. Ensure `storage/sessions`, `storage/logs` and `storage/documents` are writable by Apache, but inaccessible over HTTP. Configure `upload_max_filesize` >= 15M and `post_max_size` >= 16M in PHP and restart Apache.
 
 The existing login imagery is in `public/assets/images/`. Bootstrap, jQuery, Chart.js and Font Awesome are loaded through CDN URLs, so offline intranet installations must vendor these assets locally and change the layout references.
 
@@ -30,7 +30,7 @@ The existing login imagery is in `public/assets/images/`. Bootstrap, jQuery, Cha
 
 ### Available modules
 
-Dashboard; hardcopy and softcopy document registers; own requests and assigned tasks for all five request types; six reference-data tabs; user management; role-permission matrix; workflow version and step editing. Document disposal and user/place deactivation preserve references. Requests are drafted, submitted to the active default workflow, and approved, rejected or returned by the configured approver.
+Dashboard; hardcopy and softcopy document registers; own requests and assigned tasks for all five request types; six reference-data tabs; user management; role-permission matrix; workflow versions, cloning and step editing. Approved requests can **create, revise and dispose documents; transfer hardcopies; assign a responsible user; or grant time-limited private file access**. Softcopy uploads are stored privately with version history. Document disposal and user/place deactivation preserve references.
 
 Each access is enforced by `MY_Controller::require_permission`, with matching action visibility in the views. CI sessions, CSRF form tokens, prepared parameterized queries, one-time confirmation forms and password hashing protect normal web actions. A workflow version that already has requests cannot have its steps changed.
 
@@ -42,9 +42,9 @@ Each access is enforced by `MY_Controller::require_permission`, with matching ac
 - `composer run test:lint` — syntax checks.
 - `bash tests/integration_smoke.sh` — **CI-only disposable MySQL test**, using a temporary `pk_dts_test` database and built-in HTTP server. Do not run on a database with real records.
 
-GitHub Actions executes both static checks and a MySQL-backed smoke test for login, server-enforced role permissions, all main page routes, creating reference data, creating and submitting a request draft, assigning its configured approver and recording approval.
+GitHub Actions executes PHP lint and static checks plus a disposable MySQL HTTP integration suite that exercises login, server-enforced role permissions, all 22 main routes, document file uploads and guarded downloads, create/revise/dispose/transfer/access-grant/assignment effects, and workflow cloning.
 
-**Integration status:** Automated smoke tests passed on a fresh schema; they do not prove full visual QA, file-handling capabilities, migration compatibility, concurrent workflow execution or production readiness. Verify end-to-end behavior on XAMPP and map real DTS data before deployment.
+**Integration status:** Automated database smoke tests passed against the new starter schema. They do not establish full UI/accessibility QA, large-file resilience, production migration compatibility, or concurrency behavior beyond guarded transaction paths. Verify manually in XAMPP before cutover. `php tools/audit_legacy_schema.php` can inspect a legacy MySQL schema read-only when supplied environment credentials; it does **not** migrate user data.
 
 ## Safe operational rules
 
