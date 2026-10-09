@@ -60,3 +60,12 @@ Read [database/SQL_SOURCE_OF_TRUTH.md](database/SQL_SOURCE_OF_TRUTH.md) before i
 - Existing `workflow_history` and `status_history` tables are preserved for operational workflow and document history because they are part of the authoritative `pk_dts.sql`.
 
 Do not serve `storage/` through Apache. Back up the audit folder with private storage and preserve its access controls. Automated database integration tests use a disposable `pk_dts_test` database; real Windows/XAMPP UI and production data must be verified before merging.
+
+## Seeded approval workflow and Hardcopy Transfer
+
+- **Workflow Builder** lists predefined request workflows from `database/seed_workflows.sql`. Workflow definitions and request-type keys are fixed; users cannot create arbitrary workflows from the UI or via the previous form controller.
+- To change approvers, choose **Edit Approval Steps** on an existing published workflow. This creates a draft version. Add, edit, remove or reorder specific-user, role, requester or requester-leader steps; then **Publish Version** to make this route the default for future submissions. Existing requests retain their snapshot and full approval history.
+- **Hardcopy Transfer** shows the chosen document's saved Area, Specific, Asset, Location, Location Code and Holder as read-only metadata. The source is read directly from the original `hardcopy_documents` / Places tables, not from an editable request payload.
+- Destination Area → Specific → Asset → Location selectors are populated from active predefined Places records. Selecting a child fills its parent fields; the Receiving User is a required active account.
+- Server-side validation rejects missing/inactive destinations, mismatched parent IDs, and transfers to the document's current location. The transfer is applied only after its configured workflow approves and the physical holder/recipient handoff is complete.
+- The original `pk_dts.sql` structure is unchanged. Automated tests in `tests/workflow_builder_smoke.sh`, `tests/workflow_smoke.sh`, and `tests/static_contract.php` cover seed-only workflow behavior, sequential approvers, and transfer form/server rules.
