@@ -76,3 +76,9 @@ source tests/workflow_builder_smoke.sh
 source tests/direct_softcopy_smoke.sh
 source tests/domain_audit_smoke.sh
 source tests/folder_browser_smoke.sh
+
+python3 tests/plan_integration.py
+
+if [ "${PK_BROWSER_TEST:-0}" = 1 ]; then
+  python3 tests/browser_regression.py
+fi

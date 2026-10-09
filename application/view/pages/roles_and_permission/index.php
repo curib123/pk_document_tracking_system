@@ -1,4 +1,5 @@
 <?php
+$canRole = function ($action) use ($permissions) { return isset($permissions['*']) || !empty($permissions['roles'][$action]); };
 $dt_columns=['name'=>'Role','active'=>'Status','permissions'=>'Actions'];
 $dt_rows=[];
 foreach($rows as $r){
@@ -9,15 +10,15 @@ foreach($rows as $r){
     'permission_ids'=>$perms],
   'display'=>['Role'=>$r['name'],'Status'=>$r['active']?'Active':'Inactive',
     'Permission Count'=>count($perms)],
-  'buttons'=>$r['name']==='Administrator'?[['type'=>'view']]:
+  'buttons'=>(!$canRole('edit') || strcasecmp($r['name'],'Administrator')===0)?[['type'=>'view']]:
     [['type'=>'view'],['type'=>'edit']]];
 }
 $dt_path='admin/roles';$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
-$dt_sort='name';$dt_dir='asc';$dt_sortable=[];
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);$dt_sortable=['name','active'];
 $dt_filters=['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']];
 $dt_filter_values=['status'=>$dt_filter];$dt_badges=['active'];
-$dt_create='Add Role';
+$dt_create=$canRole('add')?'Add Role':'';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Roles & Permissions</h1>
 <p>Module-action permissions from the original <code>permissions</code> table.</p></div></div>

@@ -35,62 +35,26 @@ if ($folder_value!=='') $folderQuery['folder']=$folder_value;
     <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
   </button>
  </div>
- <div class="table-responsive">
-  <table class="table table-hover align-middle">
-   <thead><tr><th scope="col">Document</th><th scope="col">Reference</th>
-    <th scope="col">Assigned To</th><th scope="col">Updated</th><th scope="col">Actions</th></tr></thead>
-   <tbody>
-    <?php if (!$assignment_rows): ?>
-    <tr><td colspan="5"><div class="empty-state">No document assignments in this folder.</div></td></tr>
-    <?php endif; ?>
-    <?php foreach($assignment_rows as $item):
-       $details=[
-        'Document Type'=>ucfirst($item['domain']),
-        'Document'=>$item['title'],
-        'Reference'=>$item['code']?:'—',
-        'Assigned To'=>$item['assignee'],
-        'Updated'=>$item['assigned_date']
-       ];
-       $record=[
-        'document_domain'=>$item['domain'],
-        'softcopy_id'=>$item['domain']==='softcopy'?$item['document_id']:'',
-        'hardcopy_id'=>$item['domain']==='hardcopy'?$item['document_id']:'',
-        'recipient_id'=>$item['recipient_id']
-       ];
-    ?>
-    <tr data-row-view="<?= html_escape(json_encode($details,JSON_HEX_TAG|JSON_HEX_AMP)) ?>"
-        data-row-title="<?= html_escape($item['title']) ?>">
-     <td class="table-cell-view" tabindex="0" role="button" aria-label="View <?= html_escape($item['title']) ?>">
-      <?= html_escape($item['title']) ?></td>
-     <td class="table-cell-view" tabindex="0" role="button" aria-label="View document reference">
-      <?= html_escape($item['code']?:'—') ?></td>
-     <td class="table-cell-view" tabindex="0" role="button" aria-label="View assigned user">
-      <?= html_escape($item['assignee']) ?></td>
-     <td class="table-cell-view" tabindex="0" role="button" aria-label="View assignment date">
-      <?= html_escape($item['assigned_date']) ?></td>
-     <td>
-      <div class="table-actions">
-       <button type="button" class="btn-icon js-view" aria-label="View assignment"
-         data-bs-toggle="modal" data-bs-target="#viewModal"
-         data-title="<?= html_escape($item['title']) ?>"
-         data-display="<?= html_escape(json_encode($details,JSON_HEX_TAG|JSON_HEX_AMP)) ?>">
-         <i class="fa-regular fa-eye" aria-hidden="true"></i>
-       </button>
-       <button type="button" class="btn-icon js-edit" aria-label="Change assignment"
-         data-bs-toggle="modal" data-bs-target="#assignmentModal"
-         data-target="#assignmentForm"
-         data-record="<?= html_escape(json_encode($record,JSON_HEX_TAG|JSON_HEX_AMP)) ?>"
-         data-title="Change Assignment">
-         <i class="fa-solid fa-pen" aria-hidden="true"></i>
-       </button>
-      </div>
-     </td>
-    </tr>
-    <?php endforeach; ?>
-   </tbody>
-  </table>
- </div>
 </div>
+<?php
+$dt_path='admin/document-assignments';$dt_extra_params=['domain'=>$domain,'folder'=>$folder_value,'layout'=>$table['layout']];
+$dt_columns=['title'=>'Document','code'=>'Reference','assignee'=>'Assigned To','assigned_date'=>'Updated'];
+$dt_rows=[];
+foreach ($assignment_rows as $item) {
+    $details=['Document Type'=>ucfirst($domain),'Document'=>$item['title'],'Reference'=>$item['code']?:'—',
+        'Assigned To'=>$item['assignee'],'Updated'=>$item['assigned_date']];
+    $dt_rows[]=['id'=>$item['document_id'],'cells'=>$item,'display'=>$details,
+        'record'=>['document_domain'=>$domain,'softcopy_id'=>$domain==='softcopy'?$item['document_id']:'',
+            'hardcopy_id'=>$domain==='hardcopy'?$item['document_id']:'','recipient_id'=>$item['recipient_id']],
+        'buttons'=>[['type'=>'view'],['type'=>'edit','modal'=>'#assignmentModal','form'=>'#assignmentForm']]];
+}
+$dt_q=$table['q'];$dt_filter='';$dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);$dt_sortable=array_keys($dt_columns);
+$dt_filters=['owner'=>[''=>'All Assigned Users']+array_column($users_list,'name','id')];
+$dt_filter_values=['owner'=>$table['owner']];$dt_badges=[];$dt_create='';
+$this->load->view('reusable_components/reusable_datatable',compact('dt_path','dt_extra_params','dt_columns','dt_rows',
+    'dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir','dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create'));
+?>
 
 <div class="modal fade" id="assignmentModal" tabindex="-1"
      aria-labelledby="assignmentModalTitle" aria-hidden="true">
@@ -136,6 +100,7 @@ if ($folder_value!=='') $folderQuery['folder']=$folder_value;
       </select>
      </div>
      <div class="col-12">
+      <p class="form-text mb-2">Up to 500 matching choices. Use the page search or select a more specific folder to find other documents.</p>
       <p class="form-text mb-0">
        <?= $domain==='hardcopy'
          ? 'Hardcopy assignment updates the document holder. Physical transfers use the separate transfer workflow.'

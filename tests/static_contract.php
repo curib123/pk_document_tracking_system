@@ -5,9 +5,6 @@ $files=['application/bootstrap.php','application/core/MY_Controller.php',
  'application/controllers/Places.php','application/controllers/Documents.php',
  'application/controllers/Requests.php','application/controllers/Administration.php',
  'application/models/Place_model.php','application/models/Document_model.php',
-  'application/services/places/place_service.php',
-  'application/view/pages/request/user_own_all_request/index.php',
-  'application/view/pages/request/approving_assign_request/index.php',
  'application/models/Request_model.php','application/models/Administration_model.php',
  'application/view/reusable_components/reusable_datatable.php',
  'database/pk_dts.sql','database/seed.sql'];
@@ -231,7 +228,8 @@ if (strpos($docModel,'options_in_folder')===FALSE ||
 }
 if (strpos($docView,'reusable_components/folder_browser')===FALSE ||
     strpos($assignmentView,'reusable_components/folder_browser')===FALSE ||
-    strpos($assignmentView,'data-row-view')===FALSE ||
+    strpos($assignmentView,'reusable_components/reusable_datatable')===FALSE ||
+    strpos($tableView,'data-row-view')===FALSE ||
     strpos($tableView,'class="table-cell-view"')===FALSE ||
     strpos($ui,'showTableCellDetails')===FALSE) {
     $fail[]='Shared folder navigator or cell-click view missing.';

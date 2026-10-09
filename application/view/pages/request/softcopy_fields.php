@@ -21,7 +21,7 @@ $softcopyDirect = !empty($softcopyDirect);
     <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable>
         <option value="">Choose a document</option>
         <?php foreach ($softcopy_options as $item): ?>
-            <option value="<?= (int)$item['id'] ?>">
+            <option value="<?= (int)$item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>">
                 <?= html_escape($item['document_number'].' · '.$item['title']) ?>
             </option>
         <?php endforeach; ?>

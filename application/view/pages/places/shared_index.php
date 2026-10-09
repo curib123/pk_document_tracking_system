@@ -29,7 +29,7 @@ foreach ($rows as $row) {
     $display=[];
     foreach ($dt_columns as $field=>$label) $display[$label]=$cells[$field];
     $record=[];
-    foreach (array_merge(['id'],$cfg['fields'],['active']) as $field) {
+    foreach (array_merge(['id','version'],$cfg['fields'],['active']) as $field) {
         if (array_key_exists($field,$row)) $record[$field]=$row[$field];
     }
     $buttons=[['type'=>'view']];
@@ -46,11 +46,17 @@ $dt_path='places/'.$cfg['slug'];
 $dt_q=$table['q'];$dt_filter=$table['status'];$dt_page=$table['page'];
 $dt_limit=$table['limit'];$dt_total=$total;
 $dt_filters=$cfg['active']?['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']]:[];
-$dt_filter_values=['status'=>$dt_filter];
+$parentSources=['specific'=>'areas','asset'=>'specifics','location'=>'areas','softcopy-categories'=>'categories'];
+if (isset($parentSources[$cfg['slug']])) {
+    $dt_filters['parent']=[''=>'All Parent Folders'];
+    foreach ($options[$parentSources[$cfg['slug']]] as $option) $dt_filters['parent'][$option['id']]=$option['name'];
+}
+$dt_filter_values=['status'=>$dt_filter,'parent'=>$table['parent']?:''];
 $dt_badges=['active'];
 $dt_create=$can('add')?'Add '.$cfg['label']:'';
-$dt_sort=$cfg['key'];$dt_dir='asc';
-$dt_sortable=[];
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
+$dt_sortable=array_values(array_intersect(array_keys($dt_columns),
+    ['name','code','asset_number','folder_name','sequence_key','value','active']));
 ?>
 <div class="page-heading"><div><span class="eyebrow">Master Data</span>
 <h1><?= html_escape($title) ?></h1>
@@ -79,7 +85,7 @@ $dt_sortable=[];
   <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
   <div class="modal-body"><div class="row g-3">
-   <input type="hidden" name="id" value="">
+   <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
    <?php if ($cfg['slug']==='location'): ?>
        <?php $this->load->view('pages/places/location/modal_action/upsert', ['options'=>$options]); ?>
    <?php else: ?>

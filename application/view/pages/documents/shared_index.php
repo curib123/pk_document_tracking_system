@@ -16,8 +16,9 @@ foreach ($rows as $r) {
     $val=$r[$field]??'';
     $cells[$field]=$val;$display[$label]=$val;
  }
+ $display=$document_details[$r['id']]??$display;
  $rec=[];
- foreach (array_merge(['id'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
+ foreach (array_merge(['id','version'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
  if ($cfg['domain']==='hardcopy') {
      $rec['holder_name']=$user['name'];
      if (!$is_administrator) $rec['holder_id']=$user['id'];
@@ -32,11 +33,10 @@ foreach ($rows as $r) {
      ];
  }
  $buttons=[['type'=>'view']];
- $canEdit=$can && ($cfg['domain']!=='hardcopy' ||
-     $is_administrator || (int)$r['holder_id']===(int)$user['id']);
+ $canEdit=$can && !empty($r['can_write']) && $r['status']==='active';
  if ($canEdit) $buttons[]=['type'=>'edit'];
  if ($cfg['domain']==='softcopy') {
-     if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
+     if ($canEdit && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
          $buttons[]=['type'=>'upload'];
      }
      if (!empty($latest_files[$r['id']]) && !empty($file_access[$r['id']])) {
@@ -52,7 +52,7 @@ foreach ($rows as $r) {
          $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
      }
  }
- if ($can && $r['status']==='active') $buttons[]=['type'=>'action',
+ if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct']))) $buttons[]=['type'=>'action',
      'url'=>'documents/'.$cfg['domain'].'/dispose','label'=>'Dispose',
      'disposal'=>TRUE,
      'description'=>'Choose a disposal reason and confirm this action.',
@@ -60,11 +60,14 @@ foreach ($rows as $r) {
  $dt_rows[]=['id'=>$r['id'],'cells'=>$cells,'record'=>$rec,'display'=>$display,'buttons'=>$buttons];
 }
 $dt_path='documents/'.$cfg['domain'];
-$dt_extra_params=['folder'=>$folder_value];$dt_q=$table['q'];$dt_filter=$table['status'];
+$dt_extra_params=['folder'=>$folder_value,'layout'=>$table['layout']];$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
-$dt_sort='updated_at';$dt_dir='desc';$dt_sortable=[];
-$dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived']];
-$dt_filter_values=['status'=>$dt_filter];
+$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
+$dt_sortable=['title','document_number','sequence_number','status','updated_at'];
+$dt_date_filters=TRUE;
+$dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived','cancelled'=>'Cancelled']];
+$dt_filters['owner']=[''=>'All Owners']+array_column($owner_options,'name','id');
+$dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'from'=>$table['from'],'to'=>$table['to']];
 $dt_badges=['status'];
 $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
 ?>
@@ -79,11 +82,11 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
 <?php $this->load->view('reusable_components/folder_browser',[
     'folder_browser'=>$folder_browser,'folder_base'=>$folder_base,
-    'folder_params'=>$folder_params,'domain'=>$cfg['domain']
+    'folder_params'=>$folder_params,'folder_page'=>$folder_page,'domain'=>$cfg['domain']
 ]); ?>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
-'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows',
+'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows',
 'dt_extra_params'
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
@@ -95,7 +98,7 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
  <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Document</h2>
  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
  <div class="modal-body"><div class="row g-3">
-   <input type="hidden" name="id" value="">
+   <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
    <?php if ($cfg['domain']==='softcopy'): ?>
        <?php $this->load->view('pages/request/softcopy_fields',[
            'softcopy_options'=>$softcopy_options,

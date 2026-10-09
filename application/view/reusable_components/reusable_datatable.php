@@ -9,6 +9,7 @@ $dt_sort = $dt_sort ?? '';
 $dt_dir = $dt_dir ?? 'asc';
 $dt_sortable = $dt_sortable ?? [];
 $dt_extra_params = $dt_extra_params ?? [];
+$dt_layout=($dt_extra_params['layout']??'table')==='grid'?'grid':'table';
 $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
     $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir,
     $dt_extra_params
@@ -48,17 +49,41 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                 <?php endforeach; ?>
             </select>
         <?php endforeach; ?>
+        <?php if (!empty($dt_date_filters)): ?>
+        <?php foreach (['from'=>'Created from','to'=>'Created to'] as $field=>$label): ?>
+        <label class="table-date-filter small text-secondary"><?= $label ?>
+            <input class="form-control" type="date" form="tableFilter" name="<?= $field ?>"
+                   value="<?= html_escape($dt_filter_values[$field]??'') ?>">
+        </label>
+        <?php endforeach; ?>
+        <?php endif; ?>
         <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i> Apply</button>
         <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?>
             <a class="btn btn-light" href="<?= site_url($dt_path).($dt_extra_params?'?'.http_build_query($dt_extra_params):'') ?>">Clear</a>
         <?php endif; ?>
     </div>
-    <div class="table-responsive">
+    <?php if ($dt_layout==='grid'): ?>
+    <div class="document-card-grid p-3" data-record-layout="grid">
+      <?php if (!$dt_rows): ?><p class="empty-state mb-0" role="status"><strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'No matching records' : 'No records yet' ?></strong>
+        <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'Try another search or clear the filters above.' : 'Records will appear here when they are added.' ?></span></p><?php endif; ?>
+      <?php foreach ($dt_rows as $dt_row): ?>
+      <article class="document-record-card" data-record-id="<?= (int)$dt_row['id'] ?>">
+        <h3 class="fs-6 fw-bold mb-3"><?= html_escape($dt_row['cells']['title']??$dt_row['cells']['name']??'Document') ?></h3>
+        <dl class="detail-grid mb-3">
+        <?php foreach ($dt_columns as $key=>$label): if ($key==='title') continue; ?>
+         <dt><?= html_escape($label) ?></dt><dd><?= html_escape($dt_row['cells'][$key]??'—') ?></dd>
+        <?php endforeach; ?>
+        </dl>
+        <div class="table-actions"><?php $this->load->view('reusable_components/record_actions',['dt_row'=>$dt_row]); ?></div>
+      </article>
+      <?php endforeach; ?>
+    </div>
+    <?php else: ?>
+    <div class="table-responsive" data-record-layout="table">
         <table class="table table-hover align-middle">
             <thead><tr>
                 <?php foreach ($dt_columns as $key => $label): ?>
-                    <th scope="col" <?= in_array($key, $dt_sortable, TRUE) && $dt_sort === $key
-                        ? 'aria-sort="'.($dt_dir === 'desc' ? 'descending' : 'ascending').'"' : '' ?>>
+                    <th scope="col" <?= $dt_sort===$key ? 'aria-sort="'.($dt_dir==='asc'?'ascending':'descending').'"' : '' ?>>
                         <?php if (in_array($key, $dt_sortable, TRUE)): ?>
                             <?php $nextDir = ($dt_sort === $key && $dt_dir === 'asc') ? 'desc' : 'asc'; ?>
                             <a class="table-sort<?= $dt_sort === $key ? ' is-sorted' : '' ?>"
@@ -76,27 +101,22 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             </tr></thead>
             <tbody>
                 <?php if (!$dt_rows): ?>
-                    <tr><td colspan="<?= count($dt_columns) + 1 ?>">
-                        <div class="empty-state" role="status">
-                            <i class="fa-regular fa-folder-open d-block fs-4 mb-2" aria-hidden="true"></i>
-                            <strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))
-                                ? 'No matching records' : 'No records yet' ?></strong>
-                            <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))
-                                ? 'Try another search or clear the filters above.'
-                                : 'Records will appear here when they are added.' ?></span>
-                        </div>
-                    </td></tr>
+                    <tr><td colspan="<?= count($dt_columns) + 1 ?>"><div class="empty-state" role="status">
+                        <i class="fa-regular fa-folder-open d-block fs-4 mb-2" aria-hidden="true"></i>
+                        <strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'No matching records' : 'No records yet' ?></strong>
+                        <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'Try another search or clear the filters above.' : 'Records will appear here when they are added.' ?></span>
+                    </div></td></tr>
                 <?php endif; ?>
                 <?php foreach ($dt_rows as $dt_row): ?>
                     <?php $rowCanView=!empty($dt_row['display']);
                           $rowTitle=(string)($dt_row['cells']['title'] ??
                               $dt_row['cells']['name'] ?? $dt_row['cells']['reference'] ?? 'View Details'); ?>
-                    <tr <?= $rowCanView ?
+                    <tr data-record-id="<?= (int)$dt_row['id'] ?>" <?= $rowCanView ?
                         'data-row-view="'.html_escape(json_encode($dt_row['display'],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)).'"'.
                         ' data-row-title="'.html_escape($rowTitle).'"' : '' ?>>
                         <?php foreach ($dt_columns as $key => $label): ?>
                             <td <?= $rowCanView ? 'class="table-cell-view"'.($key === array_key_first($dt_columns)
-                                ? ' tabindex="0" role="button" aria-label="View '.html_escape($rowTitle).' details"' : '') : '' ?>>
+                              ? ' tabindex="0" role="button" aria-label="View '.html_escape($rowTitle).' details"' : '') : '' ?>>
                                 <?php $value = $dt_row['cells'][$key] ?? ''; ?>
                                 <?php if (in_array($key, $dt_badges ?? [], TRUE)): ?>
                                     <span class="badge-status status-<?= html_escape(preg_replace('/[^a-z0-9-]+/', '-', strtolower((string) $value))) ?>"><?= html_escape((string) $value === '0' ? 'Inactive' : ((string) $value === '1' ? 'Active' : ucwords(str_replace('_', ' ', (string) $value)))) ?></span>
@@ -105,52 +125,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                         <?php endforeach; ?>
                         <td>
                             <div class="table-actions">
-                            <?php foreach ($dt_row['buttons'] ?? [] as $button): ?>
-                                <?php if ($button['type'] === 'view'): ?>
-                                    <button type="button" class="btn-icon js-view" title="View" aria-label="View record" data-bs-toggle="modal" data-bs-target="#viewModal"
-                                        data-display="<?= html_escape(json_encode($dt_row['display'])) ?>" data-title="<?= html_escape($button['label'] ?? 'View Details') ?>"><i class="fa-regular fa-eye"></i></button>
-                                <?php elseif ($button['type'] === 'workflow'): ?>
-                                    <a class="btn btn-outline-primary btn-sm js-workflow-jump"
-                                       href="#wf-<?= (int) $dt_row['id'] ?>"
-                                       data-bs-toggle="collapse"
-                                       data-bs-target="#wf-<?= (int) $dt_row['id'] ?>"
-                                       data-workflow-target="wf-<?= (int) $dt_row['id'] ?>"
-                                       aria-controls="wf-<?= (int) $dt_row['id'] ?>"
-                                       aria-expanded="false">
-                                       <i class="fa-solid fa-route me-1" aria-hidden="true"></i> Step Actions
-                                    </a>
-                                <?php elseif ($button['type'] === 'edit'): ?>
-                                    <button type="button" class="btn-icon js-edit" title="Edit" aria-label="Edit record" data-bs-toggle="modal" data-bs-target="#editModal" data-target="#editForm"
-                                        data-record="<?= html_escape(json_encode($dt_row['record'])) ?>" data-title="Edit Record"><i class="fa-solid fa-pen"></i></button>
-                                <?php elseif ($button['type'] === 'grants'): ?>
-                                    <button type="button" class="btn-icon" title="Manage Access" aria-label="Manage Access"
-                                        data-bs-toggle="modal"
-                                        data-bs-target="#grantModal-<?= (int) $dt_row['id'] ?>">
-                                        <i class="fa-solid fa-user-shield"></i></button>
-                                <?php elseif ($button['type'] === 'history'): ?>
-                                    <button type="button" class="btn-icon js-file-history" title="File History" aria-label="File History"
-                                        data-bs-toggle="modal" data-bs-target="#fileHistoryModal"
-                                        data-files="<?= html_escape(json_encode($button['files'])) ?>">
-                                        <i class="fa-solid fa-clock-rotate-left"></i></button>
-                                <?php elseif ($button['type'] === 'upload'): ?>
-                                    <button type="button" class="btn-icon js-upload" title="Upload File" aria-label="Upload File"
-                                        data-bs-toggle="modal" data-bs-target="#uploadModal"
-                                        data-document-id="<?= (int) $dt_row['id'] ?>"
-                                        data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                                <?php elseif ($button['type'] === 'review'): ?>
-                                    <a class="btn-icon" title="Review Controlled File" aria-label="Review Controlled File"
-                                       target="_blank" rel="noopener"
-                                       href="<?= site_url($button['url']) ?>"><i class="fa-solid fa-file-circle-check"></i></a>
-                                <?php elseif ($button['type'] === 'download'): ?>
-                                    <a class="btn-icon" title="Download File" aria-label="Download File" href="<?= site_url($button['url']) ?>"><i class="fa-solid fa-download"></i></a>
-                                <?php elseif ($button['type'] === 'action'): ?>
-                                    <button type="button" class="btn-icon js-action" title="<?= html_escape($button['label']) ?>" aria-label="<?= html_escape($button['label']) ?>"
-                                        data-bs-toggle="modal" data-bs-target="#actionModal" data-url="<?= site_url($button['url']) ?>"
-                                        data-id="<?= (int) $dt_row['id'] ?>" data-decision="<?= html_escape($button['decision'] ?? '') ?>"
-                                        data-disposal="<?= !empty($button['disposal'])?'yes':'no' ?>"
-                                        data-title="<?= html_escape($button['label']) ?>" data-description="<?= html_escape($button['description'] ?? '') ?>"><i class="<?= html_escape($button['icon'] ?? 'fa-solid fa-check') ?>"></i></button>
-                                <?php endif; ?>
-                            <?php endforeach; ?>
+                            <?php $this->load->view('reusable_components/record_actions',['dt_row'=>$dt_row]); ?>
                             </div>
                         </td>
                     </tr>
@@ -158,6 +133,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             </tbody>
         </table>
     </div>
+    <?php endif; ?>
     <div class="table-footer">
         <small>Showing <?= html_escape($dt_label) ?> of <?= (int) $dt_total ?> records</small>
         <div class="d-flex align-items-center gap-2 flex-wrap">
@@ -166,16 +142,12 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                 <?php foreach ([10,25,50,100] as $n): ?><option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
             </select>
             <?php if ($dt_page > 1): ?>
-                 <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
-             <?php else: ?>
-                 <span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Previous page unavailable"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></span>
-             <?php endif; ?>
+             <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
+             <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Previous page unavailable"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></span><?php endif; ?>
              <span class="small text-secondary" aria-live="polite">Page <?= $dt_page ?> of <?= $dt_pages ?></span>
              <?php if ($dt_page < $dt_pages): ?>
-                 <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page + 1)) ?>" aria-label="Next page"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
-             <?php else: ?>
-                 <span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Next page unavailable"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span>
-             <?php endif; ?>
+             <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page + 1)) ?>" aria-label="Next page"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
+             <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Next page unavailable"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span><?php endif; ?>
         </div>
     </div>
 </div>

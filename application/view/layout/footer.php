@@ -37,9 +37,9 @@
 </div>
 
 <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><div class="modal-content">
         <div class="modal-header"><h2 class="modal-title fs-6" id="viewModalTitle">Details</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-        <div class="modal-body"><dl class="detail-grid mb-0" id="viewDetails"></dl></div>
+        <div class="modal-body"><div id="viewDetails" aria-live="polite"></div></div>
         <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
     </div></div>
 </div>
@@ -49,9 +49,7 @@
         <form action="<?= site_url('change-password') ?>" method="post" data-confirm="Change your account password?">
             <div class="modal-header"><h2 class="modal-title fs-6" id="passwordModalTitle">Change Password</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
             <div class="modal-body">
-                <label class="form-label" for="currentPassword">Current Password</label><input class="form-control mb-3" id="currentPassword" type="password" name="current_password" required autocomplete="current-password">
-                <label class="form-label" for="newPassword">New Password</label><input class="form-control" id="newPassword" type="password" name="new_password" required minlength="12" autocomplete="new-password">
-                <div class="form-text">Use at least 12 characters.</div>
+                <?php $this->load->view('pages/authentication/password_fields', ['password_prefix'=>'account']); ?>
             </div>
             <input type="hidden" name="confirmed" value="no"><input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
             <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button><button class="btn btn-primary" type="submit">Update Password</button></div>
@@ -62,5 +60,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
+<script src="<?= base_url('assets/js/auth.js') ?>"></script>
+<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 </body>
 </html>

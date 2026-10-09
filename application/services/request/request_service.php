@@ -3,9 +3,64 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class Request_service
 {
     private $ci;
-    public function __construct() { $this->ci =& get_instance(); $this->ci->load->model('Request_model'); }
+    private $stagedPaths=[];
+    public function __construct()
+    {
+        $this->ci =& get_instance();
+        $this->ci->load->model('Request_model');
+        $this->ci->load->model('Document_model');
+        $this->ci->load->model('Permission_model');
+        $this->ci->load->model('Identity_model');
+        require_once APPPATH.'services/request/request_policy.php';
+    }
+
+    private function authorize($type,$softcopyId,$hardcopyId,array $payload,array $user): void
+    {
+        if (!$this->ci->Permission_model->allowed($user,Request_policy::module($type),'request'))
+            throw new DomainException('Your role cannot request this document action.');
+        if (in_array($type,['softcopy_create','hardcopy_create'],TRUE)) return;
+        $catalog=in_array($type,['access','assignment'],TRUE);
+        $domain=$catalog?($payload['document_domain']??'softcopy'):
+            (str_starts_with($type,'softcopy_')?'softcopy':'hardcopy');
+        if (!in_array($domain,['softcopy','hardcopy'],TRUE)) throw new DomainException('Choose a document domain.');
+        $document=$this->ci->Document_model->visible($domain,$domain==='softcopy'?$softcopyId:$hardcopyId,$user,$catalog);
+        if (!$document || $document['status']!=='active')
+            throw new DomainException('Selected document is unavailable in your authorized scope.');
+    }
 
     public function save($tab,$post,$user,$attachment=NULL)
+    {
+        $type=(string)($post['type']??'');
+        if (!in_array($type,$this->ci->Request_model->types($tab),TRUE))
+            throw new DomainException('Request type does not match this tab.');
+        $id=(int)($post['id']??0);
+        if (!$this->ci->Permission_model->allowed($user,'requests',$id?'edit':'add'))
+            throw new DomainException('Request editing permission is required.');
+        $this->stagedPaths=[];
+        $this->ci->db->trans_begin();
+        try {
+            if ($id) {
+                $request=$this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE',[$id])->row_array();
+                Request_policy::editable($request,(int)$user['id'],$type,$post);
+            }
+            // Validate ownership and action permissions before accepting upload bytes.
+            $this->authorize($type,(int)($post['softcopy_id']??0),(int)($post['hardcopy_id']??0),$post,$user);
+            $result=$this->save_draft($tab,$post,$user,$attachment);
+            if ($this->ci->db->trans_status()===FALSE) throw new DomainException('Draft could not be saved.');
+            $this->ci->db->trans_commit();
+            $this->stagedPaths=[];
+            return $result;
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            foreach ($this->stagedPaths as $path) if (is_file($path)) @unlink($path);
+            $this->stagedPaths=[];
+            if ($e instanceof DomainException) throw $e;
+            log_message('error','Request draft transaction failed.');
+            throw new DomainException('Request could not be saved. Refresh and try again.');
+        }
+    }
+
+    private function save_draft($tab,$post,$user,$attachment=NULL)
     {
         $allowed=$this->ci->Request_model->types($tab);
         $type=trim((string)($post['type']??$allowed[0]));
@@ -48,6 +103,12 @@ class Request_service
         $softcopyId=(int)($post['softcopy_id']??0);
         $hardcopyId=(int)($post['hardcopy_id']??0);
         $domain=$payload['document_domain'];
+        // Unrelated posted IDs must never attach a request to another document.
+        if (str_starts_with($type,'softcopy_')) {$hardcopyId=0;if ($type==='softcopy_create') $softcopyId=0;}
+        elseif (in_array($type,['hardcopy_create','hardcopy_update','transfer','disposal'],TRUE)) {
+            $softcopyId=0;if ($type==='hardcopy_create') $hardcopyId=0;
+        } elseif ($domain==='softcopy') $hardcopyId=0;
+        else $softcopyId=0;
         if (in_array($type,['assignment','access'],TRUE)) {
             if (!in_array($domain,['softcopy','hardcopy'],TRUE))
                 throw new DomainException('Choose Softcopy or Hardcopy.');
@@ -65,9 +126,16 @@ class Request_service
             !$hardcopyId) throw new DomainException('Select a hardcopy document.');
         if (in_array($type,['assignment','access','transfer'],TRUE) && !$payload['recipient_id'])
             throw new DomainException('Select a recipient or assigned user.');
-        if ($type==='access' && ($payload['expires_at']==='' ||
-            strtotime($payload['expires_at'])===FALSE))
-            throw new DomainException('Select an access expiry date.');
+        if (in_array($type,['assignment','access','transfer'],TRUE) &&
+            !$this->ci->Identity_model->active_user($payload['recipient_id']))
+            throw new DomainException('Select an active recipient with an active role.');
+        if ($type==='access') {
+            $expiry=$payload['expires_at'];
+            if (!preg_match('/^\d{4}-\d{2}-\d{2}$/',$expiry) ||
+                !($parsed=DateTimeImmutable::createFromFormat('!Y-m-d',$expiry)) ||
+                $parsed->format('Y-m-d')!==$expiry || $expiry<=date('Y-m-d'))
+                throw new DomainException('Choose a valid access expiry date after today.');
+        }
         if ($type==='disposal') {
             require_once APPPATH.'services/documents/disposal_service.php';
             $payload['disposal_description']=(new Disposal_service())->reason($payload);
@@ -89,6 +157,9 @@ class Request_service
                 $fileId=$type==='softcopy_create'
                     ? $files->stage_creation((int)$user['id'],$attachment)
                     : $files->stage_revision($softcopyId,(int)$user['id'],$attachment);
+                $staged=$this->ci->db->select('storage_name')->get_where('files',['id'=>$fileId])->row_array();
+                if ($staged && preg_match('/^[a-f0-9]{64}$/',$staged['storage_name']))
+                    $this->stagedPaths[]=PK_ROOT.'/storage/documents/'.$staged['storage_name'];
             }
             if ($id) {
                 $existing=$this->ci->Request_model->request($id);
@@ -121,7 +192,9 @@ class Request_service
                 !in_array($existing['status'],['draft','returned'],TRUE)) {
                 throw new DomainException('Only your drafts and returned requests are editable.');
             }
-            $this->ci->db->where('id',$id)->update('requests',$data);
+            $data['version']=(int)$existing['version']+1;
+            $this->ci->db->where('id',$id)->where_in('status',['draft','returned'])
+                ->where('version',(int)$existing['version'])->update('requests',$data);
             if ($this->ci->db->error()['code']) throw new DomainException('Could not update draft.');
             return $id;
         }
@@ -145,6 +218,9 @@ class Request_service
             'id'=>$destination,'active'=>1
         ])->row_array();
         if (!$location) throw new DomainException('Destination is unavailable.');
+        if ($this->ci->db->from('hardcopy_documents')->where('location_id',$destination)
+            ->where('id !=',(int)$hardcopyId)->count_all_results()>0)
+            throw new DomainException('The destination is already occupied by another hardcopy.');
         if ((int)($document['location_id']??0)===$destination)
             throw new DomainException('Destination must differ from the original location.');
         foreach (['area','specific','asset'] as $level) {
@@ -192,6 +268,14 @@ class Request_service
                 !in_array($r['status'],['draft','returned'],TRUE) ||
                 !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE))
                 throw new DomainException('Request cannot be submitted.');
+            if (!$this->ci->Permission_model->allowed($user,'requests','submit'))
+                throw new DomainException('Request submission permission is required.');
+            $currentPayload=json_decode($r['payload'],TRUE)?:[];
+            $this->authorize($r['type'],(int)$r['softcopy_id'],(int)$r['hardcopy_id'],$currentPayload,$user);
+            if ($r['type']==='transfer') $this->validate_transfer_destination((int)$r['hardcopy_id'],$currentPayload);
+            if (in_array($r['type'],['assignment','access','transfer'],TRUE) &&
+                !$this->ci->Identity_model->active_user((int)($currentPayload['recipient_id']??0)))
+                throw new DomainException('The recipient is no longer active.');
             if (in_array($r['type'],['softcopy_create','softcopy_revise'],TRUE)) {
                 $payload=json_decode($r['payload'],TRUE)?:[];
                 $creation=$r['type']==='softcopy_create';
@@ -217,7 +301,8 @@ class Request_service
             if (!$workflow) throw new DomainException('A published default workflow is required.');
             $graph=json_decode($workflow['graph'],TRUE);
             $steps=$graph['steps']??[];
-            if (!$steps) throw new DomainException('Workflow has no approval steps.');
+            require_once APPPATH.'services/workflow/workflow_graph.php';
+            Workflow_graph::validate(is_array($graph)?$graph:[],TRUE);
             // Resubmissions do not overwrite old step rows: workflow_history
             // holds foreign keys to those decisions. Only unfinished old steps
             // become superseded, preserving the exact past approval sequence.
@@ -247,9 +332,7 @@ class Request_service
                         throw new DomainException('Approver role needs an active user.');
                     }
                 } else {
-                    $resolved=$this->ci->db->get_where('users',[
-                        'id'=>$assigned,'active'=>1
-                    ])->row_array();
+                    $resolved=$this->ci->Identity_model->active_user((int)$assigned);
                     if (!$resolved) throw new DomainException('An approver account or leader is no longer active.');
                     $name=trim($resolved['first_name'].' '.$resolved['last_name']);
                     $position=$resolved['position_title'];
@@ -266,7 +349,7 @@ class Request_service
             $this->ci->db->where('id',$id)->update('requests',[
               'workflow_version_id'=>$workflow['id'],'snapshot'=>$workflow['graph'],
               'current_node'=>$steps[0]['key'],'status'=>'submitted',
-              'submitted_at'=>date('Y-m-d H:i:s')
+              'submitted_at'=>date('Y-m-d H:i:s'),'completed_at'=>NULL,'version'=>(int)$r['version']+1
             ]);
             $this->history($id,NULL,'submitted',$user,NULL);
             if ($this->ci->db->trans_status()===FALSE) throw new DomainException('Workflow submission failed.');
@@ -447,6 +530,9 @@ class Request_service
         if (!$r || $r['requested_by']!=$user['id'] ||
             !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE) ||
             $r['status']!=='draft') throw new DomainException('Only your draft can be cancelled.');
-        $this->ci->db->where('id',$id)->update('requests',['status'=>'cancelled']);
+        $this->ci->db->where('id',$id)->where('requested_by',(int)$user['id'])
+            ->where('status','draft')->where('version',(int)$r['version'])
+            ->update('requests',['status'=>'cancelled','version'=>(int)$r['version']+1]);
+        if ($this->ci->db->affected_rows()!==1) throw new DomainException('Request changed before cancellation. Refresh and try again.');
     }
 }

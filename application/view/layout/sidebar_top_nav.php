@@ -14,10 +14,17 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
         break;
     }
 }
+$navModule='Overview';
+foreach (['documents/'=>'System Documents','places'=>'Master Data','my-requests/'=>'Request Center',
+    'my-tasks/'=>'Request Center','admin/'=>'Administration'] as $prefix=>$label) {
+    if (strpos($path,$prefix)===0) {$navModule=$label;break;}
+}
+$navParts=explode(' · ',$title);$navPage=end($navParts);
 ?>
 <a class="skip-link" href="#mainContent">Skip to main content</a>
 <div class="app-shell">
-    <aside class="app-sidebar" id="appSidebar" aria-label="Primary navigation">
+    <aside class="app-sidebar" id="appSidebar" aria-label="Main navigation panel">
+        <button class="sidebar-close d-lg-none" id="sidebarClose" type="button">Close navigation</button>
         <a href="<?= site_url('dashboard') ?>" class="brand">
             <img src="<?= base_url('assets/images/peanut-kisses.jpg') ?>" alt="Peanut Kisses">
             <span><strong>PK Document Control</strong><small>Record Workspace</small></span>
@@ -47,6 +54,7 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
                 <div class="side-heading">Administration</div>
                 <?php if (strcasecmp((string)$user['role'],'Administrator')===0): ?>
                     <a class="side-link<?= $active('admin/document-assignments') ?>"
+                       <?= $active('admin/document-assignments') === ' active' ? 'aria-current="page"' : '' ?>
                        href="<?= site_url('admin/document-assignments') ?>">
                        <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> Assign Documents
                     </a>
@@ -58,11 +66,11 @@ foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'
         </nav>
         <div class="sidebar-bottom"><span class="status-dot"></span> Document Control System</div>
     </aside>
-    <div id="sidebarBackdrop" class="sidebar-backdrop" hidden aria-hidden="true"></div>
+    <button type="button" class="sidebar-backdrop" id="sidebarBackdrop" aria-label="Close navigation" hidden></button>
     <main class="app-main" id="mainContent" tabindex="-1">
         <header class="topbar">
             <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="appSidebar" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
-            <span class="topbar-label">Document Management Workspace</span>
+            <div class="topbar-context" aria-label="Current page"><span><?= html_escape($navModule) ?></span><strong><?= html_escape($navPage) ?></strong></div>
             <div class="user-menu dropdown">
                 <button class="user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="user-avatar"><?= html_escape(strtoupper(mb_substr($user['name'], 0, 1))) ?></span>

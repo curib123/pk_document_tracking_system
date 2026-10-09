@@ -144,6 +144,38 @@
         });
     }
 
+    function renderRecordDetails(container,data) {
+        container.replaceChildren();
+        var sections=Array.isArray(data.sections)?data.sections:[{fields:data}];
+        sections.forEach(function(section) {
+            var block=document.createElement('section');block.className='document-detail-section';
+            if (section.title) {
+                var heading=document.createElement('h3');heading.className='h6';heading.textContent=section.title;block.append(heading);
+            }
+            var entries=Object.entries(section.fields||{});
+            if (!entries.length) {
+                var empty=document.createElement('p');empty.className='small text-secondary';
+                empty.textContent=section.empty||'No details are available.';block.append(empty);
+            } else {
+                var list=document.createElement('dl');list.className='detail-grid mb-0';
+                entries.forEach(function(pair) {
+                    var term=document.createElement('dt'),value=document.createElement('dd');
+                    term.textContent=pair[0];value.textContent=pair[1]==null||pair[1]===''?'—':String(pair[1]);
+                    list.append(term,value);
+                });block.append(list);
+            }
+            (section.links||[]).forEach(function(item) {
+                try {
+                    var url=new URL(item.url,window.location.origin);
+                    if (url.origin!==window.location.origin || !['http:','https:'].includes(url.protocol)) return;
+                    var link=document.createElement('a');link.className='btn btn-sm btn-outline-primary mt-2 me-2';
+                    link.href=url.href;link.textContent=item.label;block.append(link);
+                } catch (error) { /* A malformed link never becomes an executable URL. */ }
+            });
+            container.append(block);
+        });
+    }
+
     // Each data cell opens the exact same reusable View modal as the eye
     // action; action buttons and links remain independent and never trigger it.
     function showTableCellDetails(row) {
@@ -155,14 +187,7 @@
         var details=document.getElementById('viewDetails');
         var heading=document.getElementById('viewModalTitle');
         if (!modal || !details) return;
-        details.replaceChildren();
-        Object.keys(data).forEach(function(key) {
-            var term=document.createElement('dt');
-            var value=document.createElement('dd');
-            term.textContent=key;
-            value.textContent=data[key] == null || data[key]===''?'—':String(data[key]);
-            details.append(term,value);
-        });
+        renderRecordDetails(details,data);
         if (heading) heading.textContent=row.getAttribute('data-row-title')||'View Details';
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
     }
@@ -179,41 +204,39 @@
         showTableCellDetails(cell.closest('tr[data-row-view]'));
     });
 
-    var sidebar = document.getElementById('appSidebar');
-    var toggle = document.getElementById('sidebarToggle');
-    var sidebarBackdrop = document.getElementById('sidebarBackdrop');
-    var mobileNavigation = window.matchMedia('(max-width: 991px)');
-
-    function setSidebarOpen(open, restoreFocus) {
+    var sidebar=document.getElementById('appSidebar');
+    var toggle=document.getElementById('sidebarToggle');
+    var sidebarBackdrop=document.getElementById('sidebarBackdrop');
+    var mobileNavigation=window.matchMedia('(max-width: 991.98px)');
+    function setSidebar(open,returnFocus) {
         if (!sidebar || !toggle) return;
-        var isOpen = !!open && mobileNavigation.matches;
-        if (!isOpen && restoreFocus && sidebar.contains(document.activeElement)) toggle.focus();
-        sidebar.classList.toggle('is-open', isOpen);
-        if (sidebarBackdrop) sidebarBackdrop.hidden = !isOpen;
-        toggle.setAttribute('aria-expanded', String(isOpen));
-        document.body.classList.toggle('sidebar-open', isOpen);
-        sidebar.inert = mobileNavigation.matches && !isOpen;
-        if (mobileNavigation.matches && !isOpen) sidebar.setAttribute('aria-hidden', 'true');
+        open=!!open && mobileNavigation.matches;
+        sidebar.classList.toggle('is-open',open);
+        sidebar.inert=mobileNavigation.matches && !open;
+        if (mobileNavigation.matches) sidebar.setAttribute('aria-hidden',open?'false':'true');
         else sidebar.removeAttribute('aria-hidden');
+        toggle.setAttribute('aria-expanded',String(open));
+        if (sidebarBackdrop) sidebarBackdrop.hidden=!open;
+        document.body.classList.toggle('sidebar-open',open);
+        if (open) sidebar.querySelector('button,a')?.focus();
+        else if (returnFocus) toggle.focus();
     }
-
-    if (toggle && sidebar) {
-        toggle.addEventListener('click', function () {
-            setSidebarOpen(!sidebar.classList.contains('is-open'));
-        });
-        if (sidebarBackdrop) sidebarBackdrop.addEventListener('click', function () {
-            setSidebarOpen(false, true);
-        });
-        document.addEventListener('keydown', function (event) {
-            if (event.key === 'Escape' && sidebar.classList.contains('is-open')) {
-                setSidebarOpen(false, true);
-            }
-        });
-        mobileNavigation.addEventListener('change', function () {
-            setSidebarOpen(false);
-        });
-        setSidebarOpen(false);
-    }
+    toggle?.addEventListener('click',function(){setSidebar(!sidebar?.classList.contains('is-open'),true);});
+    sidebarBackdrop?.addEventListener('click',function(){setSidebar(false,true);});
+    document.getElementById('sidebarClose')?.addEventListener('click',function(){setSidebar(false,true);});
+    sidebar?.addEventListener('click',function(event){if (event.target.closest('a')) setSidebar(false,false);});
+    mobileNavigation.addEventListener('change',function(){setSidebar(false,false);});
+    document.addEventListener('keydown',function(event) {
+        if (!sidebar?.classList.contains('is-open') || document.querySelector('.modal.show')) return;
+        if (event.key==='Escape') {event.preventDefault();setSidebar(false,true);}
+        if (event.key==='Tab') {
+            var focusable=Array.from(sidebar.querySelectorAll('button,a[href]')).filter(function(node){return node.offsetParent!==null;});
+            var first=focusable[0],last=focusable[focusable.length-1];
+            if (event.shiftKey && document.activeElement===first) {event.preventDefault();last?.focus();}
+            else if (!event.shiftKey && document.activeElement===last) {event.preventDefault();first?.focus();}
+        }
+    });
+    setSidebar(false,false);
 
     function parse(button, key) {
         try { return JSON.parse(button.getAttribute('data-' + key) || '{}'); }
@@ -239,7 +262,6 @@
                 : (target.id === 'assignmentForm' ? 'assignmentModalTitle' : 'editTitle'));
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
             target.dataset.confirmed = '';
-            if (target.dataset.requestType) refreshRequestForm();
             updateRequestActionFields();
             if (target.id === 'stepForm') updateStepApprover();
             if (target.hasAttribute('data-location-upsert')) updateLocationHierarchy();
@@ -249,11 +271,8 @@
             updateHardcopyRequestAction();
             if (target.id==='assignmentForm') updateDocumentDomain();
             updateHardcopyRetention();
+            updateHardcopyTransfer();
             syncSearchableControls(target);
-            if (target.id === 'stepForm') {
-                target.setAttribute('data-confirm', record.step_key
-                    ? 'Save changes to this approval step?' : 'Add this approval step?');
-            }
         }
 
         var view = event.target.closest('.js-view');
@@ -262,17 +281,7 @@
             var details = document.getElementById('viewDetails');
             var title = document.getElementById('viewModalTitle');
             if (title) title.textContent = view.getAttribute('data-title') || 'Details';
-            if (details) {
-                details.replaceChildren();
-                Object.keys(data).forEach(function (key) {
-                    var dt = document.createElement('dt');
-                    var dd = document.createElement('dd');
-                    dt.textContent = key;
-                    dd.textContent = data[key] == null || data[key] === '' ? '—' : String(data[key]);
-                    details.appendChild(dt);
-                    details.appendChild(dd);
-                });
-            }
+            if (details) renderRecordDetails(details,data);
         }
 
         var fileHistory = event.target.closest('.js-file-history');
@@ -303,6 +312,7 @@
 
         var upload = event.target.closest('.js-upload');
         if (upload) {
+            document.querySelector('#uploadModal form')?.reset();
             document.getElementById('uploadDocumentId').value = upload.getAttribute('data-document-id') || '';
             document.getElementById('uploadDocumentName').textContent = upload.getAttribute('data-document-name') || '';
         }
@@ -335,42 +345,21 @@
         }
     });
 
-    // Sections shown in the modal depend on the request's operation.
-    function refreshRequestForm() {
-        var form = document.querySelector('#editForm[data-request-type]');
-        if (!form) return;
-        var operation = form.querySelector('[name="operation"]').value;
-        var sections = {
-            document: operation !== 'create',
-            proposal: operation === 'create' || operation === 'revise',
-            location: operation === 'transfer',
-            user: operation === 'grant' || operation === 'assign',
-            expiry: operation === 'grant'
-        };
-        Object.keys(sections).forEach(function (key) {
-            var section = form.querySelector('[data-request-section="' + key + '"]');
-            if (!section) return;
-            section.hidden = !sections[key];
-            section.querySelectorAll('input,select,textarea').forEach(function (field) {
-                field.disabled = !sections[key];
-                field.required = sections[key] && (
-                    (key === 'proposal' && ['proposed_code', 'proposed_title', 'proposed_version'].includes(field.name)) ||
-                    (key === 'document' && field.name === 'document_id') ||
-                    (key === 'location' && field.name === 'target_place_id') ||
-                    (key === 'user' && field.name === 'target_user_id')
-                );
-            });
-        });
-    }
-    document.addEventListener('change', function (event) {
-        if (event.target.matches('#requestOperation')) refreshRequestForm();
-    });
-    refreshRequestForm();
-
     // One request modal is reused across all request types; hide irrelevant fields.
     function updateRequestActionFields() {
         var select = document.getElementById('reqType');
         if (!select) return;
+        var allowed;
+        try { allowed=JSON.parse(select.form.dataset.allowedRequestTypes||'null'); } catch (error) { allowed=[]; }
+        var editing=!!select.form.querySelector('[name="id"]')?.value;
+        var current=select.value;
+        Array.from(select.options).forEach(function(option) {
+            var permitted=(!Array.isArray(allowed)||allowed.includes(option.value)) && (!editing||option.value===current);
+            option.disabled=option.hidden=!permitted;
+        });
+        if (select.selectedOptions[0]?.disabled || !select.value) {
+            select.value=Array.from(select.options).find(function(option){return !option.disabled;})?.value||'';
+        }
         var operation = select.value;
         var required = {
             softcopy_id: ['softcopy_revise','softcopy_cancel','assignment','access'],
@@ -411,6 +400,28 @@
             }
         });
     }
+    // Selecting a different softcopy starts from that record, never a previous
+    // document's proposed title, revision attachment or effective date.
+    document.addEventListener('change',function(event) {
+        if (event.target?.id!=='reqSoftcopy') return;
+        var source=event.target, form=source.form;
+        var record={};
+        try {record=JSON.parse(source.selectedOptions[0]?.dataset.softcopyRecord||'{}');} catch (error) {}
+        ['title','document_number','series_number','category_id'].forEach(function(name) {
+            var field=form.querySelector('[name="'+name+'"]');
+            if (field) field.value=record[name]??'';
+        });
+        ['new_revision_level','effective_date','revision_attachment'].forEach(function(name) {
+            var field=form.querySelector('[name="'+name+'"]');
+            if (field) field.value='';
+        });
+        var subject=form.querySelector('[name="subject"]');
+        if (subject && (!subject.value || subject.value===subject.dataset.autoSubject)) {
+            subject.value=source.value?'Document action: '+(record.title||'Selected softcopy'):'';
+            subject.dataset.autoSubject=subject.value;
+        }
+    });
+
     function updateDocumentDomain() {
         document.querySelectorAll('form').forEach(function(form) {
             var select=form.querySelector('[name="document_domain"]');
@@ -454,22 +465,52 @@
     updateRequestActionFields();
 
     function updateStepApprover() {
-        var type = document.getElementById('sType');
+        var type=document.getElementById('stepApproverType');
         if (!type) return;
-        var selected = type.value;
-        document.querySelectorAll('[data-approver-option]').forEach(function (section) {
-            var visible = section.getAttribute('data-approver-option') === selected;
-            section.hidden = !visible;
-            section.querySelectorAll('select').forEach(function (field) {
-                field.disabled = !visible;
-                field.required = visible;
+        [['stepUserField','user'],['stepRoleField','role']].forEach(function(pair) {
+            var section=document.getElementById(pair[0]);
+            if (!section) return;
+            section.hidden=type.value!==pair[1];
+            section.querySelectorAll('select').forEach(function(field) {
+                field.disabled=section.hidden;
+                field.required=!section.hidden;
             });
         });
-        var info = document.getElementById('approverAutoInfo');
-        if (info) info.hidden = selected === 'user' || selected === 'role';
     }
-    document.addEventListener('change', function (event) {
-        if (event.target && event.target.id === 'sType') updateStepApprover();
+    var workflowParent=null;
+    document.addEventListener('change',function(event) {
+        if (event.target?.id==='stepApproverType') updateStepApprover();
+        if (event.target?.hasAttribute('data-workflow-version')) {
+            var modal=event.target.closest('.workflow-steps-modal');
+            modal?.querySelectorAll('[data-workflow-version-panel]').forEach(function(panel) {
+                panel.hidden=panel.dataset.workflowVersionPanel!==event.target.value;
+            });
+        }
+    });
+    document.addEventListener('click',function(event) {
+        var button=event.target.closest('.js-workflow-step');
+        if (!button) return;
+        var form=document.getElementById('stepForm');
+        var modal=document.getElementById('stepModal');
+        if (!form || !modal) return;
+        form.reset();form.dataset.confirmed='';
+        var record=parse(button,'step-record');
+        form.querySelectorAll('[name]').forEach(function(field) {
+            if (Object.hasOwn(record,field.name)) field.value=record[field.name]??'';
+        });
+        document.getElementById('stepTitle').textContent=record.step_key?'Edit Draft Step':'Create New Step';
+        updateStepApprover();
+        workflowParent=button.closest('.workflow-steps-modal');
+        function showStep() {window.bootstrap.Modal.getOrCreateInstance(modal).show();}
+        if (workflowParent) {
+            workflowParent.addEventListener('hidden.bs.modal',showStep,{once:true});
+            window.bootstrap.Modal.getOrCreateInstance(workflowParent).hide();
+        } else showStep();
+    });
+    document.getElementById('stepModal')?.addEventListener('hidden.bs.modal',function() {
+        if (workflowParent && !pendingForm && document.getElementById('stepForm')?.dataset.confirmed!=='yes') {
+            window.bootstrap.Modal.getOrCreateInstance(workflowParent).show();
+        }
     });
     updateStepApprover();
 
@@ -605,7 +646,7 @@
         details.querySelectorAll('input, select, textarea').forEach(function (field) {
             if (field.name==='holder_id' && field.type==='hidden') return;
             if (!field.hasAttribute('data-original-required')) {
-                field.setAttribute('data-original-required', field.required ? 'yes' : 'no');
+                field.setAttribute('data-original-required',field.required?'yes':'no');
             }
             field.disabled=!showDetails;
             field.required=showDetails && field.getAttribute('data-original-required')==='yes';
@@ -701,8 +742,18 @@
         try {doc=JSON.parse(source.options[source.selectedIndex]?.dataset.transferDoc||'{}');}
         catch(e) {doc={};}
         form.querySelectorAll('[data-transfer-origin]').forEach(function(input) {
-            input.value=doc[input.dataset.transferOrigin]||'Not assigned';
+            input.value=source.value?(doc[input.dataset.transferOrigin]||'Not assigned'):'';
         });
+        if (changed==='source') {
+            [area,specific,asset,location].forEach(function(field){field.value='';});
+            var recipient=form.querySelector('[name="recipient_id"]');
+            if (recipient) recipient.value='';
+            var subject=form.querySelector('[name="subject"]');
+            if (subject && (!subject.value || subject.value===subject.dataset.autoSubject)) {
+                subject.value=source.value?'Transfer: '+(doc.title||'Selected hardcopy'):'';
+                subject.dataset.autoSubject=subject.value;
+            }
+        }
         if (changed==='location' && location.value) {
             var chosen=location.options[location.selectedIndex];
             area.value=chosen.dataset.areaId==='0'?'':(chosen.dataset.areaId||'');
@@ -947,15 +998,6 @@
         input.setAttribute('aria-invalid', 'true');
         input.focus();
     }, true);
-
-    document.addEventListener('click', function (event) {
-        var jump = event.target.closest('.js-workflow-jump');
-        if (!jump) return;
-        var target = document.getElementById(jump.getAttribute('data-workflow-target'));
-        if (target) requestAnimationFrame(function () {
-            target.scrollIntoView({behavior: 'smooth', block: 'start'});
-        });
-    });
 
     var pendingForm = null;
     var pendingParent = null;

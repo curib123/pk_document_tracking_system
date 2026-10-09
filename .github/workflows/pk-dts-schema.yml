@@ -1,33 +1,51 @@
 name: PK DTS Schema CI
 on:
   push:
-    branches: ['feat/pk-dts-sql-master-rebuild']
+    branches: [master, 'feat/pk-dts-sql-master-rebuild']
   pull_request:
     branches: [master]
+permissions:
+  contents: read
+concurrency:
+  group: pk-dts-qa-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 jobs:
-  login-layout:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.2'
-      - name: Validate full-cover centered login layout
-        run: php tests/login_layout.php
   lint:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.4']
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Archive tracked source for reproducible verification
+        if: matrix.php == '8.2'
+        run: git archive --format=tar HEAD > "$RUNNER_TEMP/pk-dts-source.tar"
+      - name: Retain exact source without credentials or runtime files
+        if: matrix.php == '8.2'
+        uses: actions/upload-artifact@v4
+        with:
+          name: pk-dts-source
+          path: ${{ runner.temp }}/pk-dts-source.tar
+          retention-days: 3
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: ${{ matrix.php }}
           extensions: mysqli,mbstring,fileinfo,zip
-      - run: php tests/lint.php
-      - run: php tests/static_contract.php
-      - run: php tests/ux_ui_contract.php
-      - run: node --check public/assets/js/app.js
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: PHP syntax, policies, views, schema, JavaScript and Python syntax
+        run: bash tests/run_unit.sh
   database:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       mariadb:
         image: mariadb:10.11
@@ -40,21 +58,45 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
+    env:
+      PK_BROWSER_TEST: '1'
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Resolve runtime paths on the allocated runner
+        shell: bash
+        run: |
+          echo "PK_BROWSER_ASSETS=$RUNNER_TEMP/pk-browser-assets" >> "$GITHUB_ENV"
+          echo "PK_BROWSER_RESULTS=$RUNNER_TEMP/pk-browser-results" >> "$GITHUB_ENV"
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.2'
           extensions: mysqli,mbstring,fileinfo,zip
-      - run: composer install --no-interaction --prefer-dist --no-progress
-      - name: Make failing smoke route visible in logs
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+      - name: Install native application dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Install pinned Chromium test runtime
         run: |
-          sed -i 's@  curl -fsS -b /tmp/pk-cookie -o /tmp/pk-module.html@  echo "Checking route: $route"; curl --fail-with-body -sS -b /tmp/pk-cookie -o /tmp/pk-module.html@' tests/smoke.sh
-      - name: Check database-backed page routes
+          python -m pip install playwright==1.57.0
+          python -m playwright install --with-deps chromium
+      - name: Prepare the existing pinned UI dependencies
+        run: bash tests/fetch_browser_assets.sh
+      - name: Disposable database, native HTTP and offline browser regression tests
+        shell: bash
         run: |
-          if ! bash tests/smoke.sh; then
-            echo "Failed route response:"
-            tail -c 1600 /tmp/pk-module.html || true
-            echo
-            exit 1
-          fi
+          set -o pipefail
+          bash tests/smoke.sh | tee "$RUNNER_TEMP/pk-dts-regression.log"
+      - name: Retain regression results and responsive screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pk-dts-regression-evidence
+          path: |
+            ${{ runner.temp }}/pk-browser-results/
+            ${{ runner.temp }}/pk-dts-regression.log
+            /tmp/pk-plan-integration-results.json
+          if-no-files-found: warn
+          retention-days: 7
