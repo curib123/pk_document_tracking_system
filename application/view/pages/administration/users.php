@@ -43,7 +43,10 @@ foreach (array_slice($filtered, ($dt_page - 1) * $dt_limit, $dt_limit) as $r) {
 $dt_create = $may('create') ? 'Add User' : '';
 ?>
 <div class="page-heading"><div><span class="eyebrow">Administration</span><h1>User Management</h1><p>Manage staff accounts, roles and reporting lines.</p></div></div>
-<?php $this->load->view('components/datatable'); ?>
+<?php $this->load->view('components/datatable', compact(
+    'dt_total', 'dt_limit', 'dt_page', 'dt_path', 'dt_q', 'dt_filter',
+    'dt_columns', 'dt_badges', 'dt_filters', 'dt_rows', 'dt_create'
+)); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
         <form action="<?= site_url('admin/users/save') ?>" method="post" id="editForm" data-confirm="Save this user account?">
