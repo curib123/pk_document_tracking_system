@@ -20,12 +20,15 @@
             if (!target) return;
             target.reset();
             var record = parse(edit, 'record');
+            target.querySelectorAll('input[name="permissions[]"]').forEach(function (field) {
+                field.checked = (record.permission_ids || []).map(Number).includes(Number(field.value));
+            });
             target.querySelectorAll('[name]').forEach(function (field) {
                 if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
                 if (field.type === 'checkbox') field.checked = !!Number(record[field.name]);
                 else if (field.type !== 'hidden' || field.name === 'id') field.value = record[field.name] == null ? '' : record[field.name];
             });
-            var heading = document.getElementById('editTitle');
+            var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle' : 'editTitle');
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';
             target.dataset.confirmed = '';
         }
@@ -67,6 +70,23 @@
     });
 
     var pendingForm = null;
+    var pendingParent = null;
+    function showConfirmation() {
+        pendingParent = form.closest('.modal.show');
+        if (pendingParent) {
+            pendingParent.addEventListener('hidden.bs.modal', showConfirmation, {once: true});
+            window.bootstrap.Modal.getOrCreateInstance(pendingParent).hide();
+        } else {
+            showConfirmation();
+        }
+    }
+    var confirmation = document.getElementById('confirmModal');
+    if (confirmation) confirmation.addEventListener('hidden.bs.modal', function () {
+        if (pendingForm && pendingParent) {
+            window.bootstrap.Modal.getOrCreateInstance(pendingParent).show();
+        }
+        pendingParent = null;
+    });
     document.addEventListener('submit', function (event) {
         var form = event.target;
         if (!form.matches('form[data-confirm]') || form.dataset.confirmed === 'yes') return;
