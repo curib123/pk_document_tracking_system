@@ -67,6 +67,16 @@ class Folder_model extends CI_Model
     public function browse($domain,$folder='')
     {
         $tree=$this->tree($domain);
+        // Old Asset-folder bookmarks now open their parent Specific folder.
+        // Assets remain in the stored record; they are no longer navigation nodes.
+        if ($domain==='hardcopy' && preg_match('/^asset:([1-9][0-9]*)$/',$folder,$parts)) {
+            $asset=$this->db->select('specific_id')->get_where('assets',[
+                'id'=>(int)$parts[1],'active'=>1
+            ])->row_array();
+            $specificId=(int)($asset['specific_id']??0);
+            if (!$specificId || !isset($tree['nodes']['specific:'.$specificId])) show_404();
+            $folder='specific:'.$specificId;
+        }
         // Virtual, permission-scoped directory for records with any/missing
         // folder assignment. It does not add a new table or bypass document scope.
         if ($folder==='all') return [
