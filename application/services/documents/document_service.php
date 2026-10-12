@@ -186,10 +186,12 @@ class Document_service
         if ($area && !$db->get_where('areas',['id'=>$area,'active'=>1])->row_array()) {
             throw new DomainException('Choose an active area.');
         }
-        $data['area_id']=$area?:NULL;
-        $data['specific_id']=$specific?:NULL;
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_path($area,$specific,$location);
+        $data['area_id']=$area;
+        $data['specific_id']=$specific;
         $data['asset_id']=$asset?:NULL;
-        $data['location_id']=$location?:NULL;
+        $data['location_id']=$location;
     }
 
     public function dispose($domain,$id,$actorId,$reason='',$action='other')
