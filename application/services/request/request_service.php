@@ -218,6 +218,9 @@ class Request_service
             'id'=>$destination,'active'=>1
         ])->row_array();
         if (!$location) throw new DomainException('Destination is unavailable.');
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_path(
+            $location['area_id']??0,$location['specific_id']??0,$destination);
         if ($this->ci->db->from('hardcopy_documents')->where('location_id',$destination)
             ->where('id !=',(int)$hardcopyId)->count_all_results()>0)
             throw new DomainException('The destination is already occupied by another hardcopy.');
