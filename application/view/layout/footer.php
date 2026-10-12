@@ -39,7 +39,7 @@
 <!-- One reusable details modal. Documents receive a richer, read-only SaaS layout;
      other views continue to use the existing generic details renderer. -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-xl">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header doc-modal-header">
                 <div class="doc-modal-heading">
