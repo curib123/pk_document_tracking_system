@@ -54,6 +54,8 @@ $sharedTable=file_get_contents($root.'/application/view/reusable_components/reus
 $folderView=file_get_contents($root.'/application/view/reusable_components/document_folder_list.php');
 $folderModel=file_get_contents($root.'/application/models/Folder_model.php');
 assertFolder(strpos($documentView,'document-layout-switch')!==FALSE,'System Documents must have layout toggle');
+assertFolder(strpos($documentView, "http_build_query(['layout'=>\$activeLayout])")!==FALSE,
+    'Switching Hardcopy and Softcopy tabs must keep the selected layout');
 assertFolder(strpos($documentView, "\$activeLayout==='table'")!==FALSE &&
     strpos($documentView, "\$activeLayout==='folder'")!==FALSE,'Both table and folder links must render');
 assertFolder(strpos($sharedTable, "if (\$dt_layout==='folder')")!==FALSE &&
