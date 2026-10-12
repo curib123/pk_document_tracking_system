@@ -2,7 +2,6 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 $canEdit=isset($permissions['*']) || !empty($permissions['workflows']['edit']);
 $esc=static function($value){return html_escape((string)$value);};
-$csrf=static function() use($this) {};
 $dt_columns=['name'=>'Workflow','type'=>'Request Type','current'=>'Current Version','publication'=>'Publication','steps'=>'Steps'];
 $dt_rows=[];
 foreach ($rows as $workflow) {
