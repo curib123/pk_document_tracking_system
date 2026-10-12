@@ -67,6 +67,8 @@ CLI restore of database and private data:
 
 If import or file restoration fails, the service attempts to reapply the pre-restore recovery snapshot. Since SQL DDL cannot be rolled back as a normal transaction, **test on a cloned installation before production use**. Existing files not present in the snapshot are kept rather than deleted to avoid destructive orphan cleanup.
 
+If both restore and automatic recovery fail, the maintenance flag at storage/.restore-in-progress remains in place to block normal authenticated access. Recover using a trusted recovery ZIP from the server CLI, verify the database and private files, then clear the flag only after completing recovery. Never delete the maintenance flag just to force the site online before checking data integrity.
+
 ## Operational requirements
 
 - Merging code alone **does not install the 5 PM task**; someone must run the Windows PowerShell scheduler setup on the server.
