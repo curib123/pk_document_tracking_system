@@ -165,6 +165,11 @@
 
     function renderRecordDetails(container,data) {
         container.replaceChildren();
+        if (window.PKDocumentView && window.PKDocumentView.handles(data)) {
+            window.PKDocumentView.render(container,data);
+            return;
+        }
+        if (window.PKDocumentView) window.PKDocumentView.reset();
         if (typeof data === 'string') {
             try { data = JSON.parse(data); } catch (e) { data = {Details:data}; }
         }
