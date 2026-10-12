@@ -115,7 +115,8 @@ class Document_detail_model extends CI_Model
                 'empty'=>'No transfers available within your permissions.'];
             if ($can('audit','view')) $sections[]=['key'=>'audit','title'=>'Audit Trail','description'=>'Recorded document status activity · latest 25','fields'=>$auditByDoc[$id]??[],
                 'empty'=>'No document audit entries yet.'];
-            $reference=$domain==='softcopy'?$document['document_number']??'':$document['sequence_number']??'';
+            $reference=$domain==='softcopy'
+                ? ($document['document_number']??'') : ($document['sequence_number']??'');
             $output[$id]=[
                 'kind'=>'document',
                 'domain'=>$domain,
