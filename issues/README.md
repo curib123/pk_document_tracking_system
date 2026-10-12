@@ -29,6 +29,7 @@ The audit is based on repository source, CI results and database schema, **not o
 | [017](017-json-audit-array-read-rewrite-scaling.md) | Medium | Scalability risk | Daily JSON audit array is fully reread and rewritten each append |
 | [018](018-full-source-restore-requires-offline-step.md) | Medium | Intentional limitation | Browser restore does not restore running executable application files |
 | [019](019-full-backup-is-not-point-in-time-atomic.md) | Medium-high | Confirmed limitation | Database and file backup may represent different moments |
+| [020](020-root-brand-color-contrast-inconsistency.md) | Medium | Confirmed UI inconsistency | Root brand colors lack a consistent darkness scale and some text colors fail AA contrast |
 
 ## Recommended implementation order
 
