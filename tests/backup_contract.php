@@ -58,6 +58,9 @@ backup_assert(strpos($service,"sourceFiles()")!==FALSE &&
     'Backup must cover source files and restore private controlled documents.');
 backup_assert(strpos($service,"'recovery'")!==FALSE,
     'Restore must create a pre-restore recovery backup.');
+backup_assert(strpos($service,'$leaveMaintenance=TRUE;')!==FALSE &&
+    strpos($service,'if (!$leaveMaintenance) @unlink($maintenance);')!==FALSE,
+    'Failed rollback must leave maintenance mode enabled for safe intervention.');
 
 $testRoot=sys_get_temp_dir().'/pk-dts-backup-'.bin2hex(random_bytes(8));
 @mkdir($testRoot.'/public',0700,TRUE);
