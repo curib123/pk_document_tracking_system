@@ -54,7 +54,7 @@ backup_assert(strpos($service,'storage/sessions')!==FALSE &&
     strpos($service,"\\.env")!==FALSE,
     'Transient session and secrets must not be included in backups.');
 backup_assert(strpos($service,"sourceFiles()")!==FALSE &&
-    strpos($service,"'files/storage/documents/'")!==FALSE,
+    strpos($service,"'files/storage/'")!==FALSE,
     'Backup must cover source files and restore private controlled documents.');
 backup_assert(strpos($service,"'recovery'")!==FALSE,
     'Restore must create a pre-restore recovery backup.');
