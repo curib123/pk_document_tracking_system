@@ -5,18 +5,18 @@
  */
 :root {
   --ui-white: #ffffff;
-  --ui-brand-950: #711729;
-  --ui-brand-900: #8b1730;
-  --ui-brand-800: #a61f35;
-  --ui-brand-700: #b8273c;
-  --ui-brand-600: #c82b43;
-  --ui-brand-500: #d4263a;
-  --ui-brand-400: #e15063;
-  --ui-brand-300: #eaa1ae;
-  --ui-brand-200: #f2c5cf;
-  --ui-brand-150: #f5dce2;
-  --ui-brand-100: #fbe9ed;
-  --ui-brand-50: #fff2f4;
+  --ui-brand-950: #46131d;
+  --ui-brand-900: #641b26;
+  --ui-brand-800: #812333;
+  --ui-brand-700: #9e2d40;
+  --ui-brand-600: #b33549;
+  --ui-brand-500: #c13b4f;
+  --ui-brand-400: #d65b6d;
+  --ui-brand-300: #e5a0aa;
+  --ui-brand-200: #efc5cb;
+  --ui-brand-150: #f4dce0;
+  --ui-brand-100: #fae9ec;
+  --ui-brand-50: #fff3f5;
   --ui-navy: #0a0b21;
   --ui-ink-950: #162238;
   --ui-ink-900: #1c2e47;
@@ -72,9 +72,9 @@
   --radius: 14px;
   /* Bootstrap's own semantic controls use this brand palette. */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 212,38,58;
+  --bs-primary-rgb: 193,59,79;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 184,39,60;
+  --bs-danger-rgb: 158,45,64;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
