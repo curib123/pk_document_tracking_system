@@ -101,6 +101,12 @@ class Administration extends MY_Controller
         $this->confirmed();
         try { $callback();$this->notice('Changes saved.'); }
         catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
+        // Preserve the selected workflow after a form POST so an editor does
+        // not lose context when changing steps or publishing a new version.
+        if ($module==='workflows' && $redirect==='admin/workflows') {
+            $workflowId=(int)$this->input->post('workflow_id');
+            if ($workflowId>0) $redirect.='?workflow='.$workflowId;
+        }
         redirect($redirect);
     }
     public function save_user()
