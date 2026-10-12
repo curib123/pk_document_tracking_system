@@ -38,10 +38,14 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <?php if ($visible('hardcopy')): ?><a class="side-link<?= $active('documents/hardcopy') ?>" <?= $active('documents/hardcopy') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('documents/hardcopy') ?>"><i class="fa-regular fa-folder"></i> Hardcopy Documents</a><?php endif; ?>
                 <?php if ($visible('softcopy')): ?><a class="side-link<?= $active('documents/softcopy') ?>" <?= $active('documents/softcopy') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('documents/softcopy') ?>"><i class="fa-regular fa-file-lines"></i> Softcopy Documents</a><?php endif; ?>
             <?php endif; ?>
-            <?php if ($visible('requests') || $visible('tasks')): ?>
+            <?php if ($visible('requests') || $user): ?>
                 <div class="side-heading">Requests</div>
-                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <?php if (!empty($navigation_counts['requests_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['requests_total'] ?> returned requests"><?= (int)$navigation_counts['requests_total'] ?></span><?php endif; ?></a><?php endif; ?>
-                <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <?php if (!empty($navigation_counts['tasks_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['tasks_total'] ?> pending tasks"><?= (int)$navigation_counts['tasks_total'] ?></span><?php endif; ?></a><?php endif; ?>
+                <?php if ($visible('requests')): ?>
+                    <?php $requestBadge=(int)($navigation_counts['requests_total']??0); ?>
+                    <a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <span class="nav-count<?= $requestBadge===0?' is-zero':'' ?>" aria-label="<?= $requestBadge ?> draft or returned requests"><?= $requestBadge ?></span></a>
+                <?php endif; ?>
+                <?php $taskBadge=(int)($navigation_counts['tasks_total']??0); ?>
+                <a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <span class="nav-count<?= $taskBadge===0?' is-zero':'' ?>" aria-label="<?= $taskBadge ?> pending tasks"><?= $taskBadge ?></span></a>
             <?php endif; ?>
           
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
@@ -91,9 +95,3 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             </div>
         </header>
         <section class="page-content">
-            <?php if ($this->session->flashdata('notice')): ?>
-                <div class="alert alert-<?= html_escape($this->session->flashdata('notice_type') ?: 'success') ?> alert-dismissible fade show" role="alert">
-                    <?= html_escape($this->session->flashdata('notice')) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>

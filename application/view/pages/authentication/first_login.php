@@ -6,9 +6,7 @@
       <div class="modal-header"><h1 class="modal-title fs-5" id="accountSetupTitle">Change your temporary password</h1></div>
       <div class="modal-body">
         <p class="text-secondary">Set a permanent password before accessing documents, requests, or administration.</p>
-        <?php if ($this->session->flashdata('notice')): ?>
-          <div class="alert alert-danger" role="alert"><?= html_escape($this->session->flashdata('notice')) ?></div>
-        <?php endif; ?>
+
         <form method="post" action="<?= site_url('change-password') ?>" id="setupPasswordForm">
           <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
           <input type="hidden" name="confirmed" value="yes">
@@ -27,5 +25,6 @@
   </div>
 </div>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
+<?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>
 </html>

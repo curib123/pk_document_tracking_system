@@ -2,6 +2,32 @@
     </main>
 </div>
 
+<?php
+// Flash messages are presented as one accessible modal, never as a page-top banner.
+$flashNotice=$this->session->flashdata('notice');
+$flashKind=(string)($this->session->flashdata('notice_type')?:'success');
+if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind='info';
+?>
+<?php if ($flashNotice!==NULL && $flashNotice!==''): ?>
+<div class="modal fade app-alert-modal" id="appAlertModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-labelledby="appAlertTitle" aria-describedby="appAlertMessage" aria-hidden="true" data-app-alert>
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content app-alert-content app-alert-<?= html_escape($flashKind) ?>">
+            <div class="modal-header border-0">
+                <div class="app-alert-symbol" aria-hidden="true"><i class="fa-solid <?= $flashKind==='success'?'fa-circle-check':($flashKind==='danger'?'fa-circle-exclamation':($flashKind==='warning'?'fa-triangle-exclamation':'fa-circle-info')) ?>"></i></div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close notification"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <h2 class="h5 fw-bold mb-2" id="appAlertTitle"><?= $flashKind==='success'?'Operation successful':($flashKind==='danger'?'Action could not be completed':($flashKind==='warning'?'Attention required':'Notification')) ?></h2>
+                <p class="text-secondary mb-0" id="appAlertMessage"><?= html_escape((string)$flashNotice) ?></p>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+<?php endif; ?>
+
 <!-- Shared action confirmation: no operation runs until the user confirms. -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">

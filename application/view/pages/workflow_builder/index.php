@@ -46,9 +46,15 @@ $dt_badges=[];$dt_create='';
     <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
         <div><h2 class="h5 mb-1">Approval Workflow Builder</h2>
         <p class="text-secondary small mb-0">Nine predefined request types · create a draft, configure approvers, then publish a default version.</p></div>
-        <span class="badge text-bg-light border">Published requests retain their original version and approval history</span>
+        <span class="badge text-bg-light border"><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i> Published versions remain immutable</span>
     </div>
 </section>
+<div class="workflow-setup-guide" aria-label="Workflow setup steps">
+    <div><span class="workflow-guide-number">1</span><strong>Start draft</strong><small>Choose a predefined workflow and create an editable version.</small></div>
+    <div><span class="workflow-guide-number">2</span><strong>Build approval route</strong><small>Add reviewers, select approver types and arrange their order.</small></div>
+    <div><span class="workflow-guide-number">3</span><strong>Validate &amp; publish</strong><small>Publish the approved route for future submissions only.</small></div>
+</div>
+<p class="small text-secondary mb-3"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>Click <strong>Step Actions</strong> on any workflow to configure its steps. Each save returns to that workflow automatically.</p>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
  'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
  'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
@@ -57,9 +63,11 @@ $dt_badges=[];$dt_create='';
 <?php foreach ($rows as $workflow): ?>
 <?php
 $versions=$workflow['versions']??[];
-$hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TRUE;
+$hasDraft=FALSE;$selectedVersionId=0;
+foreach($versions as $v) if($v['status']==='draft') {$hasDraft=TRUE;$selectedVersionId=(int)$v['id'];}
+if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id'];
 ?>
-<div class="modal fade workflow-steps-modal" id="workflowStepsModal-<?= (int)$workflow['id'] ?>" tabindex="-1" aria-hidden="true"
+<div class="modal fade workflow-steps-modal" id="workflowStepsModal-<?= (int)$workflow['id'] ?>" data-workflow-id="<?= (int)$workflow['id'] ?>" tabindex="-1" aria-hidden="true"
      aria-labelledby="workflowTitle-<?= (int)$workflow['id'] ?>">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -74,7 +82,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
               <label class="form-label" for="workflowVersion-<?= (int)$workflow['id'] ?>">Workflow Version</label>
               <select class="form-select" id="workflowVersion-<?= (int)$workflow['id'] ?>" data-workflow-version>
                 <?php foreach($versions as $v): ?>
-                  <option value="<?= (int)$v['id'] ?>">Version <?= (int)$v['version_number'] ?> · <?= $esc(ucfirst($v['status'])) ?><?= $v['is_default']?' · Default':'' ?></option>
+                  <option value="<?= (int)$v['id'] ?>" <?= (int)$v['id']===$selectedVersionId?'selected':'' ?>>Version <?= (int)$v['version_number'] ?> · <?= $esc(ucfirst($v['status'])) ?><?= $v['is_default']?' · Default':'' ?></option>
                 <?php endforeach; ?>
               </select>
               <?php if (!$versions): ?><span class="small text-secondary">No version exists yet.</span><?php endif; ?>
@@ -82,6 +90,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
             <?php if($canEdit && !$hasDraft): ?>
             <form method="post" action="<?= site_url('admin/workflows/clone') ?>" data-confirm="Create a new editable workflow draft?">
               <input type="hidden" name="id" value="<?= (int)$workflow['id'] ?>">
+              <input type="hidden" name="workflow_id" value="<?= (int)$workflow['id'] ?>">
               <input type="hidden" name="confirmed" value="no">
               <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
               <button type="submit" class="btn btn-primary"><i class="fa-solid fa-code-branch me-1"></i><?= $versions?'Create Next Draft':'Start First Draft' ?></button>
@@ -94,7 +103,12 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
             $isDraft=$version['status']==='draft';
             $graphHash=hash('sha256',(string)$version['graph']);
           ?>
-          <div data-workflow-version-panel="<?= (int)$version['id'] ?>" <?= $version!==$versions[0]?'hidden':'' ?>>
+          <div data-workflow-version-panel="<?= (int)$version['id'] ?>" data-draft="<?= $isDraft?'yes':'no' ?>" <?= (int)$version['id']!==$selectedVersionId?'hidden':'' ?>>
+            <div class="workflow-stage-overview mb-3">
+                <div><small class="text-secondary">Setup stage</small><strong><?= $isDraft?($steps?'Ready for review':'Add your first approver'):'Published version' ?></strong></div>
+                <div><small class="text-secondary">Approval steps</small><strong><?= count($steps) ?> / 30</strong></div>
+                <div><small class="text-secondary">Next action</small><strong><?= $isDraft?'Configure, then publish':'Create a draft to revise' ?></strong></div>
+            </div>
             <div class="d-flex gap-2 flex-wrap align-items-center mb-3">
               <span class="badge <?= $isDraft?'text-bg-warning':'text-bg-success' ?>"><?= $esc(ucfirst($version['status'])) ?></span>
               <?php if($version['is_default']): ?><span class="badge text-bg-primary">Published default</span><?php endif; ?>
@@ -109,7 +123,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
                 $approver=$step['approver']??[];
                 $type=$approver['type']??'';
                 $record=['workflow_version_id'=>$version['id'],'step_key'=>$step['key']??'',
-                    'name'=>$step['name']??'','approver_type'=>$type,
+                    'name'=>$step['name']??'','approver_type'=>$type,'workflow_id'=>$workflow['id'],
                     'approver_user_id'=>$type==='user'?($approver['value']??''):'',
                     'approver_role_id'=>$type==='role'?($approver['value']??''):'',
                     'graph_hash'=>$graphHash];
@@ -128,6 +142,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
                     <?php foreach(['up'=>'fa-arrow-up','down'=>'fa-arrow-down'] as $direction=>$icon): ?>
                     <form method="post" action="<?= site_url('admin/workflows/step/move') ?>" data-confirm="Move this approval step?">
                       <input type="hidden" name="id" value="<?= (int)$version['id'] ?>">
+                      <input type="hidden" name="workflow_id" value="<?= (int)$workflow['id'] ?>">
                       <input type="hidden" name="step_key" value="<?= $esc($step['key']) ?>">
                       <input type="hidden" name="direction" value="<?= $direction ?>">
                       <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
@@ -138,6 +153,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
                     <?php endforeach; ?>
                     <form method="post" action="<?= site_url('admin/workflows/step/remove') ?>" data-confirm="Remove this approval step?">
                       <input type="hidden" name="id" value="<?= (int)$version['id'] ?>">
+                      <input type="hidden" name="workflow_id" value="<?= (int)$workflow['id'] ?>">
                       <input type="hidden" name="step_key" value="<?= $esc($step['key']) ?>">
                       <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
                       <input type="hidden" name="confirmed" value="no">
@@ -153,12 +169,13 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
             <?php if($isDraft && $canEdit): ?>
               <div class="d-flex flex-wrap gap-2 justify-content-between border-top pt-3">
                 <button type="button" class="btn btn-outline-primary js-workflow-step"
-                  data-step-record="<?= $esc(json_encode(['workflow_version_id'=>$version['id'],'graph_hash'=>$graphHash],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)) ?>">
+                  data-step-record="<?= $esc(json_encode(['workflow_version_id'=>$version['id'],'workflow_id'=>$workflow['id'],'graph_hash'=>$graphHash],JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)) ?>">
                   <i class="fa-solid fa-plus me-1"></i>Add Approval Step
                 </button>
                 <form method="post" action="<?= site_url('admin/workflows/publish') ?>"
                     data-confirm="Publish this approval version as the default for all future requests? Existing requests keep their original approval route.">
                   <input type="hidden" name="id" value="<?= (int)$version['id'] ?>">
+                      <input type="hidden" name="workflow_id" value="<?= (int)$workflow['id'] ?>">
                   <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
                   <input type="hidden" name="confirmed" value="no">
                   <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
@@ -187,6 +204,7 @@ $hasDraft=FALSE;foreach($versions as $v) if($v['status']==='draft') $hasDraft=TR
        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
      <div class="modal-body">
        <input type="hidden" name="workflow_version_id" value="">
+       <input type="hidden" name="workflow_id" value="">
        <input type="hidden" name="step_key" value="">
        <input type="hidden" name="graph_hash" value="">
        <div class="mb-3"><label for="stepName" class="form-label">Approval Step Name</label>

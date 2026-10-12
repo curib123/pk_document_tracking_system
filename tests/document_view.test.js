@@ -225,3 +225,52 @@ test('reset returns reusable modal to ordinary view state',() => {
   assert.equal(map.viewDocumentSummary.children.length,0);
   assert.equal(map.viewDocumentStatus.hidden,true);
 });
+
+
+test('every module can use the same SaaS view details layout with a plain record',() => {
+  const {window,modal,details,map}=setup();
+  window.PKDocumentView.render(details,{
+    'Role':'Records Officer','Status':'Active','Permission Count':5
+  });
+  assert.equal(modal.classList.contains('is-document-view'),true);
+  assert.equal(map.viewModalTitle.textContent,'Records Officer');
+  assert.equal(map.viewDocumentEyebrow.textContent,'RECORD DETAILS');
+  assert.equal(map.viewDocumentSummary.hidden,false);
+  assert.equal(details.querySelectorAll('[role="tab"]').length,0);
+  assert.equal(details.children.length,0,'Do not add meaningless empty activity to simple records');
+});
+
+test('request details use the exact same overview-plus-concerns view as system documents',() => {
+  const {window,details,map,modal}=setup();
+  window.PKDocumentView.render(details,{
+    kind:'document',domain:'softcopy',
+    header:{title:'Proposed SOP',reference:'SOFT-123',status:'submitted',record_version:1},
+    sections:[
+      {key:'overview',title:'Request & Ownership',fields:{'Request Reference':'REQ-15','Requested By':'Jane Smith'}},
+      {key:'revision',title:'Proposed Classification & Revision',fields:{'Proposed Title':'Proposed SOP','Series':'PK'}},
+      {key:'files',title:'Controlled File',fields:{'Attachment':'Pending approval'}},
+      {key:'approvals',title:'Approval Route',fields:{'Step 1':'Supervisor'}},
+      {key:'audit',title:'Decision History',fields:{}}
+    ]
+  });
+  assert.equal(modal.classList.contains('is-document-view'),true);
+  assert.equal(map.viewDocumentStatus.textContent,'Submitted');
+  assert.equal(map.viewDocumentSummary.children.filter(c=>c.classList.contains('doc-overview-group')).length,2);
+  const labels=details.querySelectorAll('[role="tab"]').map(x=>x.children[1].textContent);
+  assert.deepEqual(labels,['Controlled File','Approval Route','Decision History']);
+});
+
+test('nested generic sections retain metadata and put related concerns in tabs',() => {
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{
+    sections:[
+      {title:'Account Overview',fields:{'Name':'Alex','Status':'Active'}},
+      {title:'Access Grants',fields:{'Staff':'Read only'}},
+      {title:'History',fields:{'Changed':'Today'}}
+    ]
+  });
+  assert.equal(map.viewModalTitle.textContent,'Alex');
+  assert.equal(map.viewDocumentSummary.hidden,false);
+  assert.deepEqual(details.querySelectorAll('[role="tab"]').map(x=>x.children[1].textContent),
+    ['Access Grants','History']);
+});

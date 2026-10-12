@@ -4,7 +4,7 @@ class Request_model extends CI_Model
 {
     private $groups=[
       'softcopy'=>['softcopy_create','softcopy_revise','softcopy_cancel'],
-      'hardcopy'=>['hardcopy_create','hardcopy_update','disposal'],
+      'hardcopy'=>['hardcopy_create','hardcopy_update'],
       'hardcopy-transfer'=>['transfer'],
       'access-grant'=>['access'],
       'document-assign'=>['assignment']

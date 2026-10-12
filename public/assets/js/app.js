@@ -165,11 +165,10 @@
 
     function renderRecordDetails(container,data) {
         container.replaceChildren();
-        if (window.PKDocumentView && window.PKDocumentView.handles(data)) {
+        if (window.PKDocumentView) {
             window.PKDocumentView.render(container,data);
             return;
         }
-        if (window.PKDocumentView) window.PKDocumentView.reset();
         if (typeof data === 'string') {
             try { data = JSON.parse(data); } catch (e) { data = {Details:data}; }
         }
@@ -238,7 +237,7 @@
         var heading=document.getElementById('viewModalTitle');
         if (!modal || !details) return;
         renderRecordDetails(details,data);
-        if (heading && (!window.PKDocumentView || !window.PKDocumentView.handles(data)))
+        if (heading && !window.PKDocumentView)
             heading.textContent=row.getAttribute('data-row-title')||'View Details';
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
     }
@@ -331,7 +330,7 @@
             var data = parse(view, 'display');
             var details = document.getElementById('viewDetails');
             var title = document.getElementById('viewModalTitle');
-            if (title) title.textContent = view.getAttribute('data-title') || 'Details';
+            if (title && !window.PKDocumentView) title.textContent = view.getAttribute('data-title') || 'Details';
             if (details) renderRecordDetails(details,data);
         }
 
@@ -340,23 +339,37 @@
             var list = document.getElementById('fileHistoryList');
             if (list) {
                 list.replaceChildren();
-                parse(fileHistory, 'files').forEach(function (file) {
-                    var item = document.createElement('div');
-                    item.className = 'd-flex justify-content-between align-items-center gap-3 border-bottom py-3';
-                    var meta = document.createElement('div');
-                    var name = document.createElement('strong');
-                    var small = document.createElement('small');
-                    name.className = 'd-block';
-                    small.className = 'text-secondary d-block mt-1';
-                    name.textContent = file.name;
-                    small.textContent = file.detail;
-                    meta.append(name, small);
-                    var download = document.createElement('a');
-                    download.className = 'btn btn-outline-primary btn-sm';
-                    download.href = file.url;
-                    download.textContent = 'Download';
-                    item.append(meta, download);
-                    list.appendChild(item);
+                var files=parse(fileHistory,'files');
+                if (!Array.isArray(files)) files=[];
+                files.forEach(function (file) {
+                    var item=document.createElement('article');
+                    item.className='file-history-item';
+                    var emblem=document.createElement('span');
+                    emblem.className='file-history-item-icon';
+                    var ico=document.createElement('i');
+                    ico.className='fa-regular fa-file-lines';
+                    ico.setAttribute('aria-hidden','true');
+                    emblem.append(ico);
+                    var meta=document.createElement('div');
+                    meta.className='file-history-item-text';
+                    var name=document.createElement('strong');
+                    name.textContent=String(file.name||'Document revision');
+                    var small=document.createElement('small');
+                    small.textContent=String(file.detail||'');
+                    meta.append(name,small);
+                    item.append(emblem,meta);
+                    try {
+                        var target=new URL(String(file.url||''),window.location.origin);
+                        if (target.origin===window.location.origin &&
+                            ['http:','https:'].includes(target.protocol)) {
+                            var download=document.createElement('a');
+                            download.className='btn btn-outline-primary btn-sm';
+                            download.href=target.href;
+                            download.textContent='Download';
+                            item.append(download);
+                        }
+                    } catch (error) { /* Invalid download links are never rendered. */ }
+                    list.append(item);
                 });
             }
         }
@@ -1090,6 +1103,30 @@
         if (flag) flag.value = 'yes';
         form.requestSubmit();
     });
+
+    // A saved workflow returns to the same editor, refreshed with the latest
+    // draft hash and approvals. Alerts take precedence over automatically
+    // reopening the builder so modals never overlap.
+    function reopenWorkflow() {
+        var match=new URLSearchParams(window.location.search).get('workflow');
+        if (!match || !/^[0-9]+$/.test(match)) return;
+        var editor=document.getElementById('workflowStepsModal-'+match);
+        if (!editor) return;
+        var versions=editor.querySelector('[data-workflow-version]');
+        var draft=editor.querySelector('[data-workflow-version-panel][data-draft="yes"]');
+        if (versions && draft) {
+            versions.value=draft.dataset.workflowVersionPanel;
+            versions.dispatchEvent(new Event('change',{bubbles:true}));
+        }
+        window.bootstrap.Modal.getOrCreateInstance(editor).show();
+    }
+    var noticeModal=document.getElementById('appAlertModal');
+    if (noticeModal) {
+        noticeModal.addEventListener('hidden.bs.modal',reopenWorkflow,{once:true});
+        window.bootstrap.Modal.getOrCreateInstance(noticeModal).show();
+    } else {
+        reopenWorkflow();
+    }
 
     document.querySelectorAll('[data-auto-submit]').forEach(function (control) {
         control.addEventListener('change', function () {

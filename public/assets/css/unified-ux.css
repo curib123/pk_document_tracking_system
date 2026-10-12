@@ -1,0 +1,179 @@
+/* Unified modal, workflow and feedback refinements — CodeIgniter 3 / PHP 8.0.
+   Uses the same tokens as the document viewer, with scoped styles to avoid
+   changing unrelated tables, forms and navigational structure. */
+#viewModal.is-document-view .doc-modal-overview {
+  background: linear-gradient(180deg,#fbfcff 0%,#fff 100%);
+}
+#viewModal.is-document-view .doc-modal-field,
+#viewModal.is-document-view .doc-overview-item {
+  border-color: #e8edf3;
+  border-radius: 12px;
+}
+#viewModal.is-document-view .doc-modal-field:hover,
+#viewModal.is-document-view .doc-overview-item:hover {
+  border-color: #d8dee9;
+  background: #fff;
+}
+#viewModal.is-document-view .doc-modal-status.status-submitted,
+#viewModal.is-document-view .doc-modal-status.status-pending {
+  color:#925912; background:#fff7e6; border-color:#f6deb1;
+}
+#viewModal.is-document-view .doc-modal-status.status-approved,
+#viewModal.is-document-view .doc-modal-status.status-completed {
+  color:#126744; background:#eaf8ef; border-color:#c8ecd9;
+}
+#viewModal.is-document-view .doc-modal-status.status-returned {
+  color:#a75011; background:#fff3e8; border-color:#f4ddc9;
+}
+#viewModal.is-document-view .doc-modal-status.status-rejected,
+#viewModal.is-document-view .doc-modal-status.status-cancelled {
+  color:#b42337; background:#fff1f3; border-color:#f4d2d8;
+}
+#viewModal.is-document-view .doc-modal-status.status-draft,
+#viewModal.is-document-view .doc-modal-status.status-neutral {
+  color:#56657a; background:#f4f6fa; border-color:#e0e5ec;
+}
+#viewModal.is-document-view .doc-modal-header,
+#viewModal.is-document-view .doc-modal-footer {
+  background:#fff;
+}
+#viewModal.is-document-view .doc-modal-activity-description {
+  overflow-wrap:anywhere;
+  white-space:pre-line;
+}
+#viewModal.is-document-view .doc-modal-field-value,
+#viewModal.is-document-view .doc-overview-value {
+  user-select:text;
+  overflow-wrap:anywhere;
+}
+#viewModal.is-document-view .doc-modal-layout {min-height:0}
+#viewModal.is-document-view .doc-modal-body {max-height:75vh; overflow-y:auto}
+.nav-count.is-zero {background:#283348!important;color:#a6b3c7!important;border-color:#455268!important}
+.tab-count.is-zero {background:#eef1f5!important;color:#77859a!important}
+.app-alert-modal .modal-dialog {max-width:min(420px,calc(100vw - 30px))}
+.app-alert-modal .modal-content {
+  border:1px solid #e5eaf1;
+  border-radius:19px;
+  background:#fff;
+  box-shadow:0 28px 84px rgba(15,23,42,.22);
+  overflow:hidden;
+}
+.app-alert-modal .modal-header {padding:25px 26px 0;align-items:flex-start}
+.app-alert-modal .modal-body {padding:14px 26px 0}
+.app-alert-modal .modal-body h2 {color:#1b2c44;font-size:20px;letter-spacing:-.025em}
+.app-alert-modal .modal-body p {font-size:13px;line-height:1.7;white-space:pre-line;overflow-wrap:anywhere}
+.app-alert-modal .modal-footer {padding:24px 26px 26px;justify-content:flex-end}
+.app-alert-modal .modal-footer .btn {min-width:110px;border-radius:9px;padding:9px 18px;font-weight:750}
+.app-alert-modal .app-alert-symbol {
+  display:grid;place-items:center;
+  width:54px;height:54px;flex:0 0 54px;
+  font-size:24px;border-radius:16px;background:#edf9f1;color:#1d8057
+}
+.app-alert-modal .app-alert-danger .app-alert-symbol {background:#fff0f2;color:#bd2940}
+.app-alert-modal .app-alert-warning .app-alert-symbol {background:#fff5e4;color:#ac6c11}
+.app-alert-modal .app-alert-info .app-alert-symbol {background:#eff5ff;color:#3463ba}
+.workflow-setup-guide {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  border:1px solid #e3e9f1;border-radius:15px;background:#fff;
+  box-shadow:0 3px 14px rgba(13,30,55,.035);
+  overflow:hidden;margin:16px 0;
+}
+.workflow-setup-guide>div {padding:17px 19px;display:grid;column-gap:12px;
+  grid-template-columns:34px 1fr;align-items:start;border-right:1px solid #e9edf2}
+.workflow-setup-guide>div:last-child{border:0}
+.workflow-guide-number {grid-row:span 2;display:grid;place-items:center;
+  background:#fff0f3;color:#b4253d;width:32px;height:32px;
+  border-radius:10px;font-weight:800}
+.workflow-setup-guide strong {color:#283a53;font-size:13px;font-weight:800}
+.workflow-setup-guide small {margin-top:4px;color:#748399;font-size:11px;line-height:1.5}
+.workflow-steps-modal .modal-content,
+#stepModal .modal-content{border:1px solid #e6ebf2;border-radius:18px;overflow:hidden}
+.workflow-steps-modal .modal-header,
+#stepModal .modal-header{padding:22px 26px;border-bottom:1px solid #e9edf2}
+.workflow-steps-modal .modal-body,#stepModal .modal-body{padding:25px 26px}
+.workflow-steps-modal .modal-footer,#stepModal .modal-footer{padding:14px 26px;background:#fafbfe}
+.workflow-stage-overview {
+  display:grid;grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;padding:14px;background:#f7f9fc;border:1px solid #e6ecf3;border-radius:12px;
+}
+.workflow-stage-overview>div {min-width:0;display:flex;flex-direction:column;gap:4px}
+.workflow-stage-overview small{font-size:10px}
+.workflow-stage-overview strong{font-size:12px;color:#2b3c54;overflow-wrap:anywhere}
+.workflow-step-row{transition:border-color .12s ease,background .12s ease}
+.workflow-step-row:hover{border-color:#e9c7ce;background:#fffdfd}
+@media(max-width:760px){
+ .workflow-setup-guide{grid-template-columns:1fr}
+ .workflow-setup-guide>div{border-right:0;border-bottom:1px solid #e9edf2}
+ .workflow-stage-overview{grid-template-columns:1fr}
+ .workflow-steps-modal .modal-body,#stepModal .modal-body{padding:18px}
+ .workflow-steps-modal .modal-header,#stepModal .modal-header{padding:17px 18px}
+ .app-alert-modal .modal-body{padding:12px 20px 0}
+}
+@media(prefers-reduced-motion:reduce){.workflow-step-row{transition:none}}
+
+.app-auth-alert {
+  position:fixed;inset:0;margin:auto;width:min(420px,calc(100vw - 28px));
+  max-height:calc(100vh - 50px);overflow:auto;
+  padding:27px;border:1px solid #e5eaf1;border-radius:19px;background:#fff;
+  color:#1b2c44;box-shadow:0 28px 84px rgba(15,23,42,.25);
+  z-index:99999
+}
+.app-auth-alert::backdrop{background:rgba(13,23,39,.5);backdrop-filter:blur(3px)}
+.app-auth-alert-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:15px}
+.app-auth-alert-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:15px;
+  background:#fff0f2;color:#bd2940;font-size:23px}
+.app-auth-alert.app-alert-success .app-auth-alert-icon{background:#eaf8ef;color:#15875a}
+.app-auth-alert-close{width:34px;height:34px;cursor:pointer;border:0;border-radius:9px;
+  color:#66768b;font-size:23px;background:#f4f6fa}
+.app-auth-alert h2{font-size:20px;font-weight:800;letter-spacing:-.025em}
+.app-auth-alert p{font-size:13px;line-height:1.7;color:#66768b;white-space:pre-line;overflow-wrap:anywhere}
+.app-auth-alert-action{float:right;min-width:100px;margin-top:15px;border-radius:9px;font-weight:750}
+
+/* File-history viewer shares the document detail card language. */
+.file-history-saas .modal-content {
+  border:1px solid #e4e9f0;border-radius:19px;overflow:hidden;
+  background:#fff;box-shadow:0 28px 85px rgba(15,23,42,.22);
+}
+.file-history-saas .file-history-header {
+  padding:23px 27px;gap:14px;border-bottom:1px solid #e9edf3;
+}
+.file-history-saas .file-history-header-icon {
+  display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;
+  background:#fff0f3;color:#b92b41;border-radius:13px;font-size:19px;
+}
+.file-history-saas .file-history-eyebrow {
+  display:block;margin-bottom:5px;color:#ae2940;font-size:10px;
+  font-weight:800;letter-spacing:.11em;
+}
+.file-history-saas #fileHistoryTitle {font-size:19px;font-weight:800;color:#1a2940}
+.file-history-saas .file-history-body {padding:24px 27px;background:#fafbfd}
+.file-history-saas .file-history-list {display:flex;flex-direction:column;gap:11px}
+.file-history-saas .file-history-item {
+  display:flex;align-items:center;gap:13px;min-width:0;
+  padding:15px;border:1px solid #e7ecf2;border-radius:12px;background:#fff;
+}
+.file-history-saas .file-history-item-icon {
+  display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;
+  background:#fff1f3;color:#be2f44;border-radius:11px;font-size:16px;
+}
+.file-history-saas .file-history-item-text {min-width:0;flex:1}
+.file-history-saas .file-history-item-text strong {
+  display:block;color:#273850;font-size:13px;font-weight:750;overflow-wrap:anywhere;
+}
+.file-history-saas .file-history-item-text small {
+  display:block;margin-top:4px;color:#728095;font-size:11px;line-height:1.6;overflow-wrap:anywhere;
+}
+.file-history-saas .file-history-item .btn {
+  flex-shrink:0;font-weight:700;border-radius:8px;
+}
+.file-history-saas .file-history-footer {
+  padding:15px 27px;background:#fff;border-top:1px solid #e9edf3;gap:14px;
+}
+.file-history-saas .file-history-footer .btn {font-weight:750;border-radius:9px}
+@media(max-width:500px) {
+ .file-history-saas .file-history-header,
+ .file-history-saas .file-history-body,
+ .file-history-saas .file-history-footer {padding:17px}
+ .file-history-saas .file-history-item {flex-wrap:wrap}
+ .file-history-saas .file-history-item .btn {margin-left:auto}
+}
