@@ -40,8 +40,12 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             <?php endif; ?>
             <?php if ($visible('requests') || $user): ?>
                 <div class="side-heading">Requests</div>
-                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <?php $requestBadge=(int)($navigation_counts['requests_total']??0); ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['requests_total'] ?> requests needing action"><?= (int)$navigation_counts['requests_total'] ?></span></a><?php endif; ?>
-                <?php if ($user): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <?php $taskBadge=(int)($navigation_counts['tasks_total']??0); ?><span class="nav-count<?= $taskBadge===0?' is-zero':'' ?>" aria-label="<?= $taskBadge ?> pending tasks"><?= (int)$navigation_counts['tasks_total'] ?></span><?php endif; ?></a><?php endif; ?>
+                <?php if ($visible('requests')): ?>
+                    <?php $requestBadge=(int)($navigation_counts['requests_total']??0); ?>
+                    <a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <span class="nav-count<?= $requestBadge===0?' is-zero':'' ?>" aria-label="<?= $requestBadge ?> draft or returned requests"><?= $requestBadge ?></span></a>
+                <?php endif; ?>
+                <?php $taskBadge=(int)($navigation_counts['tasks_total']??0); ?>
+                <a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <span class="nav-count<?= $taskBadge===0?' is-zero':'' ?>" aria-label="<?= $taskBadge ?> pending tasks"><?= $taskBadge ?></span></a>
             <?php endif; ?>
           
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
