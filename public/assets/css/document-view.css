@@ -377,6 +377,10 @@
     font-weight: 750;
     padding: 9px 16px;
 }
+/* The application also supports a Bootstrap-free office-network fallback. */
+.offline-ui #viewModal.is-document-view .modal-dialog {
+    width: min(calc(100% - 32px), 1080px);
+}
 @media (max-width: 767.98px) {
     #viewModal.is-document-view .modal-dialog {
         max-width: none;
