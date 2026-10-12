@@ -34,6 +34,11 @@ $route['my-tasks/hardcopy-transfer/accept']['POST'] = 'Requests/accept_transfer'
 
 $route['admin/document-assignments']['GET'] = 'Administration/document_assignments';
 $route['admin/document-assignments/save']['POST'] = 'Administration/save_document_assignment';
+$route['admin/backups']['GET'] = 'Backups/index';
+$route['admin/backups/create']['POST'] = 'Backups/create';
+$route['admin/backups/import']['POST'] = 'Backups/import';
+$route['admin/backups/restore']['POST'] = 'Backups/restore';
+$route['admin/backups/download/(:any)']['GET'] = 'Backups/download/$1';
 $route['admin/users']['GET'] = 'Administration/users';
 $route['admin/users/save']['POST'] = 'Administration/save_user';
 $route['admin/users/deactivate']['POST'] = 'Administration/deactivate_user';
