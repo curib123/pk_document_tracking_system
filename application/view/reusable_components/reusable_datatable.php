@@ -15,13 +15,9 @@ $dt_layout=$requestedLayout==='grid'?'grid':
 // Hardcopy documents appear at a Location (or at a hierarchy dead end).
 // Softcopy categories can hold files directly, even alongside subfolders.
 // The All Documents virtual folder always lists the complete authorized set.
-$dt_folder_show_documents=$dt_layout!=='folder' ||
-    $dt_folder_browser['level']==='all' ||
-    ($dt_folder_browser['level']!=='root' && (
-        $dt_folder_domain==='softcopy' ||
-        $dt_folder_browser['level']==='location' ||
-        empty($dt_folder_browser['children'])
-    ));
+// The tree can display document rows nested at any depth (including root),
+// so global pagination remains available for the permission-scoped result set.
+$dt_folder_show_documents=TRUE;
 $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
     $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir,
     $dt_extra_params
