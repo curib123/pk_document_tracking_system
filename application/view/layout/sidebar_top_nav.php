@@ -66,6 +66,13 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" <?= $active('admin/users') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
                 <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" <?= $active('admin/roles') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
                 <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" <?= $active('admin/workflows') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>
+                <?php if (strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
+                    <a class="side-link<?= $active('admin/backups') ?>"
+                       <?= $active('admin/backups')===' active'?'aria-current="page"':'' ?>
+                       href="<?= site_url('admin/backups') ?>">
+                       <i class="fa-solid fa-box-archive" aria-hidden="true"></i> Backup &amp; Restore
+                    </a>
+                <?php endif; ?>
             <?php endif; ?>
         </nav>
         <div class="sidebar-bottom"><span class="status-dot"></span> Document Control System</div>
