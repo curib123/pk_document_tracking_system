@@ -22,3 +22,12 @@ The authoritative installation files retain the uploaded schema, **but not expor
 **Never import the schema or seed files over a populated or production `pk_dts` database.** The original uploaded dump contains a password hash for an existing account and login-attempt metadata. Keep the original backup private and rotate pre-existing administrator passwords as needed. Existing documents, files, workflow history and live user accounts need explicit preservation and read-only schema comparison, not a new installation.
 
 All new controllers and models must use the uploaded tables directly. `sequences` has a string primary key `sequence_key` and a `value` counter; its Places screen must never assume `id` or `active`. Do not invent replacement `places`, `documents`, `request_details`, or `document_files` tables.
+
+
+## 2026-10-13 controlled business-rule override
+
+The office's folder requirement permits **more than one Hardcopy document per Location**. The reviewed installation schema and source_schema_contract.json now describe a non-unique idx_hardcopy_documents_location index, replacing the original UNIQUE location_id index. The October 9 export remains historical context and is not the latest business-rule constraint.
+
+Existing databases are NOT migrated by a Git pull or PHP execution. Apply the **one-time** migration at database/migrations/20261013_allow_multiple_hardcopies_per_location.sql only after taking and verifying an encrypted backup and testing against a database clone. Consult docs/high-priority-fixes-20261013.md.
+
+Never replay the full installation SQL on live data.
