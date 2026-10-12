@@ -35,7 +35,7 @@ $sortRecent=($dt_sort==='updated_at' || $dt_sort==='updated') && strtolower($dt_
 $sortAZ=$dt_sort==='title' && strtolower($dt_dir)==='asc';
 $sortZA=$dt_sort==='title' && strtolower($dt_dir)==='desc';
 
-$renderDocument=static function(array $dt_row) use($dt_columns,$dt_folder_domain) {
+$renderDocument=function(array $dt_row) use($dt_columns,$dt_folder_domain) {
     $cells=$dt_row['cells'];
     $title=(string)($cells['title']??'Untitled document');
     $fileName=(string)($dt_row['file_name']??'');
