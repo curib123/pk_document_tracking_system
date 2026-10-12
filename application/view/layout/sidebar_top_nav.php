@@ -26,7 +26,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
 <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar" aria-label="Primary navigation">
         <a href="<?= site_url('dashboard') ?>" class="brand">
-            <img src="<?= base_url('assets/images/peanut-kisses.jpg') ?>" alt="Peanut Kisses">
+            <img src="<?= base_url('assets/images/peanut-kisses.png') ?>" alt="Peanut Kisses">
             <span><strong>PK Document Control</strong><small>Record Workspace</small></span>
         </a>
         <nav class="side-links" aria-label="Main navigation">

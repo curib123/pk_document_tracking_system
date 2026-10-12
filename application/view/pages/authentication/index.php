@@ -8,7 +8,7 @@
 
     <title>Sign In · PK Document Control</title>
 
-    <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.jpg') ?>">
+    <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
 
      <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
@@ -103,7 +103,7 @@
             <div class="login-card">
 
                 <img class="login-logo"
-                     src="<?= base_url('assets/images/peanut-kisses.jpg') ?>"
+                     src="<?= base_url('assets/images/peanut-kisses.png') ?>"
                      alt="Peanut Kisses logo">
 
                 <span class="eyebrow">Welcome back</span>
