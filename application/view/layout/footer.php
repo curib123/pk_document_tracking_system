@@ -9,7 +9,7 @@ $flashKind=(string)($this->session->flashdata('notice_type')?:'success');
 if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind='info';
 ?>
 <?php if ($flashNotice!==NULL && $flashNotice!==''): ?>
-<div class="modal fade app-alert-modal" id="appAlertModal" tabindex="-1" aria-labelledby="appAlertTitle" aria-describedby="appAlertMessage" aria-hidden="true" data-app-alert>
+<div class="modal fade app-alert-modal" id="appAlertModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-labelledby="appAlertTitle" aria-describedby="appAlertMessage" aria-hidden="true" data-app-alert>
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content app-alert-content app-alert-<?= html_escape($flashKind) ?>">
             <div class="modal-header border-0">
