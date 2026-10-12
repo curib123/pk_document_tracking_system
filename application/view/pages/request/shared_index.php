@@ -30,28 +30,65 @@ foreach ($rows as $row) {
      $routeText[]=$step['label'].' → '.$step['approver_label'].
          ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
  }
- $display=['sections'=>[
-   ['title'=>'Request Overview','fields'=>[
-     'Reference'=>$row['reference'],
-     'Action'=>ucwords(str_replace('_',' ',$row['type'])),
-     'Subject'=>$payload['subject']??'',
-     'Requester'=>$row['requester_name'],
-     'Status'=>ucfirst($row['status']),
-     'Created At'=>$row['created_at'],
-     'Remarks'=>$payload['remarks']??''
+ // The request viewer uses the same document renderer as System Documents,
+ // but presents only submitted proposal metadata and visible approval history.
+ // Never pretend an unapproved proposal is already the stored document.
+ $isDocumentRequest=in_array($tab,['softcopy','hardcopy'],TRUE);
+ $documentDomain=$tab==='softcopy'?'softcopy':($tab==='hardcopy'?'hardcopy':'record');
+ $detail=$row['detail_labels']??[];
+ $headerTitle=(string)($payload['title']??'');
+ if ($headerTitle==='') $headerTitle=(string)($row['source_title']??'');
+ if ($headerTitle==='') $headerTitle=(string)($payload['subject']??'');
+ if ($headerTitle==='') $headerTitle=$row['reference'];
+ $documentReference=(string)($payload['document_number']??($payload['sequence_number']??''));
+ if ($documentReference==='') $documentReference=(string)($row['source_reference']??'');
+ if ($documentReference==='') $documentReference=$row['reference'];
+ $requestOverview=[
+   'Request Reference'=>$row['reference'],
+   'Request Action'=>ucwords(str_replace('_',' ',$row['type'])),
+   'Subject / Reason'=>$payload['subject']??'',
+   'Requested By'=>$row['requester_name'],
+   'Submitted At'=>$row['submitted_at']??'',
+   'Created At'=>$row['created_at'],
+   'Last Updated'=>$row['updated_at'],
+   'Remarks'=>$payload['remarks']??'',
+   'Request Version'=>$row['version']
+ ];
+ $requestSections=[
+   ['key'=>'overview','title'=>'Request & Ownership','fields'=>$requestOverview],
+   ['key'=>$documentDomain==='hardcopy'?'storage':'revision',
+    'title'=>$documentDomain==='hardcopy'?'Proposed Storage & Custody':'Proposed Classification & Revision',
+    'fields'=>$detail,'empty'=>'No additional proposed metadata recorded.'],
+   ['key'=>'approvals','title'=>'Approval Route','fields'=>[
+      'Workflow Version'=>$row['workflow_version_id']?'Assigned at submission':'Awaiting submission',
+      'Steps'=>implode("\n",$routeText)?:'No steps assigned yet'
    ]],
-   ['title'=>'Proposed Document Details','fields'=>$row['detail_labels']??[],
-     'empty'=>'No additional document metadata for this request.'],
-   ['title'=>'Approval Route','fields'=>[
-     'Workflow Version'=>$row['workflow_version_id']?'Fixed at submission':'Awaiting submission',
-     'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-        ? 'Attached for approval' : 'Not attached',
-     'Steps'=>implode("\n",$routeText)?:'Not submitted yet'
-   ]],
-   ['title'=>'Workflow Decision History','fields'=>[
-     'Activity'=>implode("\n",$historyText)?:'No decisions yet'
+   ['key'=>'audit','title'=>'Decision History','fields'=>[
+      'History'=>implode("\n",$historyText)?:'No approval decisions yet'
    ]]
- ]];
+ ];
+ if ($documentDomain==='softcopy') {
+   array_splice($requestSections,2,0,[[
+     'key'=>'files','title'=>'Controlled File','fields'=>[
+       'Attachment'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
+          ? 'Attached to this request for review':'No attachment'
+     ]
+   ]]);
+ }
+ $display=[
+    'kind'=>$isDocumentRequest?'document':'record',
+    'domain'=>$documentDomain,
+    'header'=>[
+       'title'=>$headerTitle,
+       'reference'=>$documentReference,
+       'status'=>$row['status'],
+       'record_version'=>$row['version'],
+       'context_label'=>'Requested By',
+       'context_value'=>$row['requester_name'],
+       'updated_at'=>$row['updated_at']
+    ],
+    'sections'=>$requestSections
+ ];
  $record=[
  'id'=>$row['id'],'version'=>$row['version'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
  'remarks'=>$payload['remarks']??'','title'=>$payload['title']??'',
