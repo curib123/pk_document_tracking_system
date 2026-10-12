@@ -48,6 +48,8 @@
         if (skeleton) skeleton.hidden=true;
         if (page) page.removeAttribute('aria-busy');
         body.classList.remove('motion-login-loading');
+        var required=document.querySelector('[data-required-password]');
+        if (required) required.classList.remove('motion-auth-loading');
     }
 
     function begin() {
@@ -61,6 +63,9 @@
                 page.setAttribute('aria-busy','true');
             } else if (body.classList.contains('login-page')) {
                 body.classList.add('motion-login-loading');
+            } else {
+                var required=document.querySelector('[data-required-password]');
+                if (required) required.classList.add('motion-auth-loading');
             }
             // If navigation is prevented by the browser/network, restore the UI.
             recovery=window.setTimeout(reset,12000);
