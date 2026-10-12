@@ -61,5 +61,11 @@ jobs:
             sudo apt-get update -qq
             sudo apt-get install -y mariadb-client
           fi
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          extensions: mysqli,mbstring,fileinfo,zip
       - name: Verify clean schema, nine definitions, repeated seed and published version
         run: bash tests/smoke.sh
+      - name: Encrypted full backup and restore integration (disposable test database)
+        run: bash tests/backup_integration.sh
