@@ -5,6 +5,7 @@ define('APPPATH', dirname(__DIR__).'/application/');
 require_once APPPATH.'services/presentation/folder_tree.php';
 require_once APPPATH.'services/presentation/folder_visibility.php';
 require_once APPPATH.'services/backup/backup_service.php';
+require_once APPPATH.'services/transfer/transfer_destination_policy.php';
 
 function hp_check(bool $condition,string $message): void {
     if (!$condition) throw new RuntimeException($message);
@@ -88,8 +89,21 @@ hp_check(strpos($controller,'Folder_visibility::restrict')!==FALSE &&
 hp_check(strpos($baseController,"is_file(PK_ROOT.'/storage/.restore-in-progress')") <
     strpos($baseController, '$this->load->model(\'Identity_model\')'),
     'Maintenance guard must run before loading user identity.');
-hp_check(strpos($transfer,"foreach (['area_id','specific_id','asset_id'] as $field)")!==FALSE,
+hp_check(strpos($transfer,'Transfer_destination_policy::require_approved_parents')!==FALSE,
     'Approved destination must match current parents on acceptance.');
+Transfer_destination_policy::require_approved_parents(
+    ['area_id'=>1,'specific_id'=>2,'asset_id'=>NULL],
+    ['area_id'=>1,'specific_id'=>2,'asset_id'=>0]);
+foreach ([
+    ['area_id'=>3,'specific_id'=>2,'asset_id'=>NULL],
+    ['area_id'=>1,'specific_id'=>4,'asset_id'=>NULL],
+    ['area_id'=>1,'specific_id'=>2,'asset_id'=>8]
+] as $changed) {
+    hp_reject(static function() use($changed) {
+        Transfer_destination_policy::require_approved_parents(
+            ['area_id'=>1,'specific_id'=>2,'asset_id'=>NULL],$changed);
+    },'Changed parent must reject transfer acceptance.');
+}
 hp_check(strpos($request,'destination is already occupied')===FALSE &&
     strpos($document,'selected Location is already assigned')===FALSE,
     'Location occupancy must no longer block several documents.');
