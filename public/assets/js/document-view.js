@@ -88,7 +88,7 @@
         heading.append(label,node('h3','doc-overview-title','Document information'));
         heading.append(node('p','doc-overview-description',
             'Key record details, ownership and '+(data.domain==='hardcopy'
-                ? 'physical custody' : 'revision classification')+'.'));
+                ? 'physical custody' : (data.domain==='softcopy'?'revision classification':'record metadata'))+'.'));
         summary.append(heading);
 
         // Document name, reference, type and status are already displayed
@@ -119,22 +119,54 @@
         summary.hidden=false;
     }
 
+    // Every list/table action shares this same visual hierarchy. Requests for
+    // softcopy/hardcopy supply the document shape directly; ordinary records
+    // are adapted without altering their original, permission-scoped data.
+    function normalizeRecord(data) {
+        if (data && data.kind==='document' && Array.isArray(data.sections)) return data;
+        if (data && data.kind==='record' && Array.isArray(data.sections)) return data;
+        var sections = data && Array.isArray(data.sections) ? data.sections : null;
+        var fields = data && typeof data==='object' ? data : {'Details':data};
+        if (sections) {
+            var first=sections[0] || {};
+            var firstFields=first.fields && typeof first.fields==='object' ? first.fields : {};
+            return {
+                kind:'record',domain:'record',
+                header:{title:String(firstFields.Title||firstFields.Name||firstFields.Role||first.title||'Record details'),
+                    reference:String(firstFields.Reference||firstFields.Code||''),
+                    status:String(firstFields.Status||'')},
+                sections:[{key:'overview',title:'Record Overview',fields:firstFields}]
+                    .concat(sections.slice(1).map(function(section,index){
+                        return Object.assign({},section,{key:section.key||'detail_'+index});
+                    }))
+            };
+        }
+        var title=fields.Title||fields.Name||fields.Role||fields.Document||fields.Workflow||
+            fields.Reference||fields.Username||'Record details';
+        var status=fields.Status||'';
+        return {kind:'record',domain:'record',
+            header:{title:String(title),reference:String(fields.Reference||fields.Code||''),
+                status:String(status)},
+            sections:[{key:'overview',title:'Record Overview',fields:fields}]
+        };
+    }
+
     function prepareHeading(data) {
         modal.classList.add('is-document-view');
         var h=data.header || {};
-        var domain=data.domain==='hardcopy'?'hardcopy':'softcopy';
+        var domain=data.domain==='hardcopy'?'hardcopy':(data.domain==='softcopy'?'softcopy':'record');
         var title=document.getElementById('viewModalTitle');
         if (title) title.textContent=h.title || 'Untitled document';
 
         var kicker=document.getElementById('viewDocumentEyebrow');
         if (kicker) {
             kicker.hidden=false;
-            kicker.textContent=domain==='hardcopy'?'PHYSICAL DOCUMENT':'CONTROLLED DIGITAL DOCUMENT';
+            kicker.textContent=domain==='hardcopy'?'PHYSICAL DOCUMENT':(domain==='softcopy'?'CONTROLLED DIGITAL DOCUMENT':'RECORD DETAILS');
         }
         var kind=document.getElementById('viewDocumentIcon');
         if (kind) {
             kind.hidden=false;
-            kind.replaceChildren(icon(domain==='hardcopy'?'storage':'files'));
+            kind.replaceChildren(icon(domain==='hardcopy'?'storage':(domain==='softcopy'?'files':'overview')));
         }
         var reference=document.getElementById('viewDocumentRef');
         if (reference) {
@@ -147,7 +179,7 @@
             var key=String(h.status||'').toLowerCase();
             status.className='doc-modal-status status-'+(allowed.includes(key)?key:'neutral');
             status.textContent=key ? key.charAt(0).toUpperCase()+key.slice(1) : 'Unknown';
-            status.hidden=false;
+            status.hidden=!key;
         }
         var footnote=document.getElementById('viewDocumentFootnote');
         if (footnote) footnote.hidden=false;
@@ -250,6 +282,7 @@
     }
 
     function render(container,data) {
+        data=normalizeRecord(data);
         reset();
         prepareHeading(data);
         container.replaceChildren();
