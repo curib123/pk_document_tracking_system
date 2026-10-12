@@ -48,6 +48,16 @@ class Folder_model extends CI_Model
     public function browse($domain,$folder='')
     {
         $tree=$this->tree($domain);
+        // Virtual, permission-scoped directory for records with any/missing
+        // folder assignment. It does not add a new table or bypass document scope.
+        if ($folder==='all') return [
+            'folder'=>'all','level'=>'all','label'=>'All Documents',
+            'breadcrumbs'=>[
+                ['name'=>'Folders','folder'=>''],
+                ['name'=>'All Documents','folder'=>'all']
+            ],
+            'children'=>[],'filter'=>NULL,'tree'=>$tree
+        ];
         if ($folder!=='' && (!preg_match('/^(area|specific|asset|location|category):[1-9][0-9]*$/',$folder) ||
             !isset($tree['nodes'][$folder]))) show_404();
         $result=['folder'=>$folder,'level'=>'root','label'=>'All Documents',
