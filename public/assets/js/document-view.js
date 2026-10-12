@@ -175,7 +175,8 @@
         }
         var status=document.getElementById('viewDocumentStatus');
         if (status) {
-            var allowed=['active','disposed','archived','cancelled'];
+            var allowed=['active','disposed','archived','cancelled','submitted','pending',
+                'returned','approved','rejected','completed','draft'];
             var key=String(h.status||'').toLowerCase();
             status.className='doc-modal-status status-'+(allowed.includes(key)?key:'neutral');
             status.textContent=key ? key.charAt(0).toUpperCase()+key.slice(1) : 'Unknown';
