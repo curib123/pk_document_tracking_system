@@ -29,6 +29,16 @@ final class Backup_service
         $public=realpath($this->root.'/public');
         if (!$real || ($public && $this->inside($real,$public)))
             throw new DomainException('Backups must stay outside the public web directory.');
+        $rootReal=realpath($this->root);
+        if (!$rootReal) throw new DomainException('Application directory is unavailable.');
+        // An archive directory inside live data would be skipped by
+        // sourceFiles(), silently omitting stored documents or audit logs.
+        // Inside the application, ONLY storage/backups (and its descendants)
+        // may contain backup archives. External private volumes are allowed.
+        $safeInternal=$this->root.'/storage/backups';
+        if ($this->inside($rootReal,$real) ||
+            ($this->inside($real,$rootReal) && !$this->inside($real,$safeInternal)))
+            throw new DomainException('Backup destination overlaps live application or private data.');
         $this->directory=str_replace('\\','/',$real);
         if (!is_writable($this->directory)) throw new DomainException('Backup directory is not writable.');
     }
@@ -241,21 +251,23 @@ final class Backup_service
                     $this->copyDirectory($stage.'/storage',$this->root.'/storage');
             } catch (Throwable $failure) {
                 // Best-effort database rollback from the pre-restore snapshot.
+                $recoverStage=NULL;
                 try {
                     $recoverStage=$this->temporaryDirectory();
+                    $recoveryArchive=$this->resolve($recovery['name']);
                     $this->extractRestorable(
-                        $this->resolve($recovery['name']),
-                        $this->verify($this->resolve($recovery['name'])),$recoverStage);
+                        $recoveryArchive,$this->verify($recoveryArchive),$recoverStage);
                     $this->importSql($recoverStage.'/database.sql');
                     if (is_dir($recoverStage.'/storage'))
                         $this->copyDirectory($recoverStage.'/storage',$this->root.'/storage');
-                    $this->removeDirectory($recoverStage);
                 } catch (Throwable $rollback) {
-                    // Fail closed: block normal authenticated writes until an
-                    // administrator recovers through the CLI on the server.
+                    // Fail closed if automatic rollback cannot complete.
                     $leaveMaintenance=TRUE;
                     error_log('PK DTS RESTORE rollback needs intervention: '.$rollback->getMessage());
                     throw new DomainException('Restore failed and automatic recovery was incomplete. Use the recovery ZIP offline.');
+                } finally {
+                    // Decrypted staging must not survive a failed rollback.
+                    if ($recoverStage!==NULL) $this->removeDirectory($recoverStage);
                 }
                 throw new DomainException('Restore failed; the recovery backup was reapplied.');
             } finally { if (!$leaveMaintenance) @unlink($maintenance); }
@@ -425,10 +437,17 @@ final class Backup_service
     }
     private static function safeEntry($name): bool
     {
-        if (!is_string($name)||$name===''||strpos($name,"\0")!==FALSE ||
-            strpos($name,'\\')!==FALSE||$name[0]==='/'||preg_match('~(^|/)\.\.?(/|$)~',$name))
-            return FALSE;
-        return $name==='database.sql'||$name==='manifest.json'||$name==='manifest.sig'||
+        if (!is_string($name)||$name===''||$name[0]==='/' ||
+            strpos($name,'\\')!==FALSE ||
+            preg_match('/[<>:"|?*]/',$name) ||
+            preg_match('/[[:cntrl:]]/',$name)) return FALSE;
+        foreach (explode('/',$name) as $part) {
+            if ($part==='' || $part==='.' || $part==='..' ||
+                preg_match('/[. ]$/',$part) ||
+                preg_match('/^(CON|PRN|AUX|NUL|COM[1-9]|LPT[1-9])(?:\..*)?$/i',$part))
+                return FALSE;
+        }
+        return in_array($name,['database.sql','manifest.json','manifest.sig'],TRUE)||
             strpos($name,'files/')===0;
     }
     private function temporaryDirectory(): string

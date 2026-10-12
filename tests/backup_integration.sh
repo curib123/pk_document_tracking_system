@@ -38,4 +38,21 @@ test "$(cat storage/custom/ci-private.txt)" = "custom private data" || {
 recovery="$(find storage/backups -maxdepth 1 -name 'pk-dts-recovery-*.zip' -type f | head -n 1)"
 test -n "$recovery" || { echo "Restore recovery ZIP was not created"; exit 1; }
 php tools/backup.php verify "$(basename "$recovery")"
-echo "Full encrypted backup, verify, restore, recovery ZIP, DB and private files integration passed."
+echo "Injecting a failing database client to exercise failed rollback cleanup..."
+old_mysql="$PK_MYSQL"
+export PK_MYSQL=/bin/false
+if php tools/backup.php restore "$name" --confirm; then
+  echo "Expected failed restore to be rejected" >&2
+  exit 1
+fi
+export PK_MYSQL="$old_mysql"
+test -f storage/.restore-in-progress || {
+  echo "Failed rollback must leave maintenance mode enabled" >&2; exit 1;
+}
+if find storage/backups -maxdepth 1 -name '.stage-*' -type d | grep -q .; then
+  echo "Decrypted staging directories leaked after failed rollback" >&2; exit 1;
+fi
+# This test uses a disposable MariaDB installation. Never clear a live marker
+# before separately verifying database and private-file integrity.
+rm storage/.restore-in-progress
+echo "Full ZIP backup, recovery, forced rollback cleanup and maintenance fail-close passed."

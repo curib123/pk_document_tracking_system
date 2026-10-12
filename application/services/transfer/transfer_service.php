@@ -62,6 +62,11 @@ class Transfer_service
                 'id'=>(int)$destination['location_id'],'active'=>1
             ])->row_array();
             if (!$location) throw new DomainException('Destination location is no longer available.');
+            // Approved transfers bind to a specific physical hierarchy.
+            // If a Place was moved while the document was in transit, require
+            // a new approval instead of silently redirecting the handoff.
+            require_once APPPATH.'services/transfer/transfer_destination_policy.php';
+            Transfer_destination_policy::require_approved_parents($destination,$location);
 
             $this->ci->db->where('id',$transfer['hardcopy_id'])->update('hardcopy_documents',[
                 'area_id'=>$location['area_id'],'specific_id'=>$location['specific_id'],
