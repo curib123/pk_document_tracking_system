@@ -11,14 +11,14 @@ function assertFolder(bool $passed, string $message): void {
 $hardcopy=[
     ['key'=>'area:1','parent'=>'','name'=>'Production','kind'=>'area'],
     ['key'=>'specific:2','parent'=>'area:1','name'=>'Building A','kind'=>'specific'],
-    ['key'=>'asset:3','parent'=>'specific:2','name'=>'Cabinet B','kind'=>'asset'],
-    ['key'=>'location:4','parent'=>'asset:3','name'=>'Shelf 7','kind'=>'location']
+    ['key'=>'location:4','parent'=>'specific:2','name'=>'Shelf 7','kind'=>'location']
 ];
 $tree=Folder_tree::build($hardcopy);
 assertFolder($tree['roots']===['area:1'],'Area must be first root level');
 assertFolder($tree['nodes']['area:1']['children']===['specific:2'],'Area must open specific');
-assertFolder($tree['nodes']['specific:2']['children']===['asset:3'],'Specific must open asset');
-assertFolder($tree['nodes']['asset:3']['children']===['location:4'],'Asset must open location');
+assertFolder($tree['nodes']['specific:2']['children']===['location:4'],
+    'Specific must open Location without an Asset folder');
+assertFolder(!isset($tree['nodes']['asset:3']),'Assets must not appear as folder nodes');
 assertFolder($tree['nodes']['location:4']['children']===[],'Location is terminal folder');
 
 $softcopy=Folder_tree::build([
@@ -77,22 +77,22 @@ assertFolder(strpos($folderModel,"\$folder==='all'")!==FALSE,
 assertFolder(strpos($folderView,"\$browser['breadcrumbs']")!==FALSE,
     'Folder list must show parent navigation');
 
-// Multiple sibling Areas, Specifics, Assets and Locations must stay visible,
+// Multiple sibling Areas, Specifics and Locations must stay visible,
 // and each document belongs under its deepest real folder assignment.
 $multi=Folder_tree::build([
  ['key'=>'area:1','parent'=>'','name'=>'Area 01','kind'=>'area'],
  ['key'=>'area:2','parent'=>'','name'=>'Area 02','kind'=>'area'],
  ['key'=>'specific:10','parent'=>'area:1','name'=>'Specific 01','kind'=>'specific'],
  ['key'=>'specific:11','parent'=>'area:1','name'=>'Specific 02','kind'=>'specific'],
- ['key'=>'asset:100','parent'=>'specific:10','name'=>'Asset 001','kind'=>'asset'],
- ['key'=>'asset:101','parent'=>'specific:10','name'=>'Asset 002','kind'=>'asset'],
- ['key'=>'location:201','parent'=>'asset:100','name'=>'Location A','kind'=>'location'],
- ['key'=>'location:202','parent'=>'asset:100','name'=>'Location B','kind'=>'location'],
+ ['key'=>'location:201','parent'=>'specific:10','name'=>'Location A','kind'=>'location'],
+ ['key'=>'location:202','parent'=>'specific:10','name'=>'Location B','kind'=>'location'],
  ['key'=>'location:203','parent'=>'specific:11','name'=>'No Asset Location','kind'=>'location']
 ]);
 assertFolder($multi['roots']===['area:1','area:2'],'Multiple Areas must remain siblings');
-assertFolder(count($multi['nodes']['specific:10']['children'])===2,'One Specific must contain multiple Assets');
-assertFolder(count($multi['nodes']['asset:100']['children'])===2,'One Asset must contain multiple Locations');
+assertFolder(count($multi['nodes']['specific:10']['children'])===2,
+    'One Specific must contain multiple Location folders directly');
+assertFolder(!isset($multi['nodes']['asset:100']) && !isset($multi['nodes']['asset:101']),
+    'Asset information must not create a folder level');
 
 $rows=[
  ['id'=>1,'record_path'=>['area_id'=>1,'specific_id'=>10,'asset_id'=>100,'location_id'=>201]],
@@ -113,7 +113,7 @@ assertFolder(count($distribution['by_folder']['area:2'])===1,
   'Documents without deeper Places must remain in the deepest active folder');
 assertFolder(count($distribution['by_folder']['unfiled'])===1,
   'Unfiled documents must remain accessible');
-assertFolder($distribution['counts']['asset:100']===3 &&
+assertFolder($distribution['counts']['specific:10']===3 &&
   $distribution['counts']['area:1']===4 &&
   $distribution['counts']['area:2']===1,
   'Branch document counts must aggregate over nested location nodes');
@@ -144,4 +144,16 @@ assertFolder(strpos($viewCss,'.doc-tree-children')!==FALSE &&
   'Folder hierarchy and enhanced active view toggle require accessible CSS');
 assertFolder(strpos($documentView,'document-layout-choice-copy')!==FALSE,
   'Both layout choices must have a prominent label and subtitle');
+assertFolder(strpos($folderView,'HIERARCHICAL DOCUMENT LIBRARY')===FALSE &&
+    strpos($folderView,'Folder explorer')===FALSE &&
+    strpos($folderView,'Area → Specific → Asset → Location → Documents')===FALSE,
+    'Folder mode must not show the removed explorer heading or Asset folder path');
+assertFolder(strpos($folderView,'doc-folder-explorer-header')===FALSE,
+    'Folder mode should start directly with breadcrumbs and controls');
+$docTreeHelper=file_get_contents($root.'/application/services/presentation/document_folder_tree.php');
+assertFolder(strpos($docTreeHelper,"'asset'=>'asset_id'")===FALSE,
+    'A document with Asset metadata must still group directly under Specific or Location');
+assertFolder(strpos($folderModel,"if (\$kind==='asset')")!==FALSE &&
+    strpos($folderModel,'continue;')!==FALSE,
+    'Asset references must be available for parent lookup without rendering Asset folders');
 echo "System Documents exclusive folder/list mode and hierarchy contracts passed.\n";
