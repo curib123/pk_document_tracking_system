@@ -74,10 +74,9 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
     <main class="app-main" id="mainContent" tabindex="-1">
         <header class="topbar">
             <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="appSidebar" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
-            <div class="topbar-context" role="group" aria-label="Current page">
+            <div>
                 <span class="topbar-module"><?= html_escape($navModule) ?></span>
-                <span class="topbar-label"><?= html_escape($navPage) ?></span>
-            </div>
+                <span class="topbar-label"><?= html_escape($navPage) ?></span> </div>
             <div class="user-menu dropdown">
                 <button class="user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="user-avatar"><?= html_escape(strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
