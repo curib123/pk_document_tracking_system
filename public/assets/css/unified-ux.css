@@ -700,3 +700,108 @@
   .document-layout-choice,.doc-tree-folder-row,.doc-tree-caret {transition:none}
   .document-layout-choice.is-active {transform:none}
 }
+
+/* All record actions use one accessible icon + visible label button.
+ * Applies to shared tables, grid records, and nested folder documents. */
+.table-actions {
+  display: flex;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 5px;
+  max-width: 345px;
+  min-width: 0;
+  margin-left: auto;
+  white-space: normal;
+}
+.table-actions .btn-icon.record-action,
+.document-register-listing .table-actions .btn-icon.record-action,
+.doc-tree-actions .btn-icon.record-action,
+.doc-folder-file-actions .btn-icon.record-action {
+  display: inline-flex;
+  flex: 0 1 auto;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: auto;
+  height: auto;
+  min-height: 34px;
+  min-width: 0;
+  padding: 7px 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 9px;
+  background: var(--ui-white);
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  line-height: 1.35;
+  font-weight: 750;
+  text-align: center;
+  text-decoration: none;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background-color .12s ease,border-color .12s ease,color .12s ease;
+}
+.table-actions .record-action i {
+  flex: 0 0 auto;
+  font-size: 12px;
+  line-height: 1;
+}
+.table-actions .record-action span {
+  display: inline-block;
+  overflow-wrap: normal;
+}
+.table-actions .record-action-view:hover,
+.table-actions .record-action-edit:hover,
+.table-actions .record-action-manage:hover,
+.table-actions .record-action-history:hover {
+  background: var(--ui-brand-50);
+  border-color: var(--ui-brand-300);
+  color: var(--ui-brand-800);
+}
+.table-actions .record-action-upload:hover,
+.table-actions .record-action-review:hover,
+.table-actions .record-action-download:hover,
+.table-actions .record-action-primary:hover {
+  background: var(--ui-blue-100);
+  border-color: var(--ui-blue-300);
+  color: var(--ui-blue-700);
+}
+.table-actions .record-action-danger {
+  color: var(--ui-brand-800);
+  border-color: var(--ui-brand-200);
+  background: var(--ui-brand-50);
+}
+.table-actions .record-action-danger:hover {
+  color: var(--ui-white);
+  background: var(--ui-brand-800);
+  border-color: var(--ui-brand-800);
+}
+.table-actions .record-action:focus-visible {
+  outline: 2px solid var(--ui-brand-500);
+  outline-offset: 2px;
+}
+.document-register-listing .table .table-actions {max-width:310px}
+.doc-tree-actions.table-actions {
+  max-width: 390px;
+  width: auto;
+  gap: 5px;
+}
+.document-record-card .table-actions {
+  justify-content: flex-start;
+  max-width: none;
+}
+@media (max-width: 700px) {
+  .document-register-listing .table .table-actions {
+    max-width: 250px;
+  }
+  .table-actions .btn-icon.record-action,
+  .document-register-listing .table-actions .btn-icon.record-action,
+  .doc-tree-actions .btn-icon.record-action {
+    min-height: 32px;
+    padding: 6px 8px;
+    font-size: 10px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .table-actions .btn-icon.record-action {transition:none}
+}
