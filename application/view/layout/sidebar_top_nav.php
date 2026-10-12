@@ -40,7 +40,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             <?php endif; ?>
             <?php if ($visible('requests') || $visible('tasks')): ?>
                 <div class="side-heading">Requests</div>
-                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <?php if (!empty($navigation_counts['requests_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['requests_total'] ?> returned requests"><?= (int)$navigation_counts['requests_total'] ?></span><?php endif; ?></a><?php endif; ?>
+                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <?php if (!empty($navigation_counts['requests_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['requests_total'] ?> requests needing action"><?= (int)$navigation_counts['requests_total'] ?></span><?php endif; ?></a><?php endif; ?>
                 <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <?php if (!empty($navigation_counts['tasks_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['tasks_total'] ?> pending tasks"><?= (int)$navigation_counts['tasks_total'] ?></span><?php endif; ?></a><?php endif; ?>
             <?php endif; ?>
           
@@ -91,9 +91,3 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             </div>
         </header>
         <section class="page-content">
-            <?php if ($this->session->flashdata('notice')): ?>
-                <div class="alert alert-<?= html_escape($this->session->flashdata('notice_type') ?: 'success') ?> alert-dismissible fade show" role="alert">
-                    <?= html_escape($this->session->flashdata('notice')) ?>
-                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                </div>
-            <?php endif; ?>
