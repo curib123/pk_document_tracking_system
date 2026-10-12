@@ -297,7 +297,18 @@ class Request_service
                 if (!$owner) throw new DomainException('Requester is no longer active.');
                 (new Document_service())->validate_hardcopy_proposal($payload,$owner,(int)$r['hardcopy_id']);
             }
-            $workflow=$this->ci->Request_model->active_workflow($r['type']);
+            // A returned request stays pinned to its original, immutable
+            // workflow snapshot on resubmission. A newly published version
+            // affects only requests which have never been submitted.
+            if (!empty($r['workflow_version_id']) && !empty($r['snapshot'])) {
+                $workflow=$this->ci->db->get_where('workflow_versions',[
+                    'id'=>(int)$r['workflow_version_id'],'status'=>'published'
+                ])->row_array();
+                if (!$workflow) throw new DomainException('The original workflow version is unavailable.');
+                $workflow['graph']=$r['snapshot'];
+            } else {
+                $workflow=$this->ci->Request_model->active_workflow($r['type']);
+            }
             if (!$workflow) throw new DomainException('A published default workflow is required.');
             $graph=json_decode($workflow['graph'],TRUE);
             $steps=$graph['steps']??[];
