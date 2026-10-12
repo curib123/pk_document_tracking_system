@@ -62,9 +62,9 @@ planCheck(strpos($service,'Hardcopy_place_policy::require_location_path')!==FALS
 planCheck(strpos($service,'$data[\'asset_id\']=$asset?:NULL;')!==FALSE &&
     strpos($places,'$data[\'asset_id\']=$assetId?:NULL;')!==FALSE,
     'The optional Asset must be stored as SQL NULL when unassigned.');
-planCheck(strpos($service,'$db->count_all_results()>0')!==FALSE &&
-    strpos($service,'The selected Location is already assigned to a document.')!==FALSE,
-    'Hardcopy location occupancy queries must execute and reset the CI3 query builder.');
+planCheck(strpos($service,'The selected Location is already assigned to a document.')===FALSE &&
+    strpos($request,'The destination is already occupied by another hardcopy.')===FALSE,
+    'Hardcopy Locations now support multiple separate documents without an occupancy rule.');
 planCheck(strpos($tree,"'asset'=>['table'=>'assets'")!==FALSE &&
     strpos($tree,"\$parent='asset'")!==FALSE,
     'Document Repository must keep Asset as an optional folder level.');
