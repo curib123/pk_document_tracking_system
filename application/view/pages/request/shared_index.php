@@ -112,10 +112,7 @@ $dt_filters['type']=[''=>'All Actions']+$typeMap[$tab];
 $dt_badges=['status'];$dt_create=!$task && $canRequest('add') && $allowed_request_types?'New Request':'';
 $dt_path=($task?'my-tasks/':'my-requests/').$tab;
 ?>
-<div class="page-heading"><div><span class="eyebrow">Request Center</span>
-<h1><?= html_escape($task?'My Tasks':'My Requests') ?></h1>
-<p><?= $task?'Decisions assigned to your user or role':'Draft, submit and track document requests' ?></p>
-</div></div>
+
 <nav class="tab-bar" aria-label="Request category tabs">
 <?php foreach ($tabs as $slug=>$name): ?>
 <a class="tab-link <?= $tab===$slug?'active':'' ?>"

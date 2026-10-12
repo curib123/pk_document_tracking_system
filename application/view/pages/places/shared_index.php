@@ -58,10 +58,7 @@ $dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
 $dt_sortable=array_values(array_intersect(array_keys($dt_columns),
     ['name','code','asset_number','folder_name','sequence_key','value','active']));
 ?>
-<div class="page-heading"><div><span class="eyebrow">Master Data</span>
-<h1><?= html_escape($title) ?></h1>
-<p>Reference data stored in the original <code><?= html_escape($cfg['table']) ?></code> table.<?php if (!empty($cfg['read_only'])): ?> System counters are read-only.<?php endif; ?></p>
-</div></div>
+
 <nav class="tab-bar" aria-label="Place categories">
 <?php foreach ([
  'area'=>'Area','specific'=>'Specific','asset'=>'Asset','location'=>'Location',

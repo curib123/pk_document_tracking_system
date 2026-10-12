@@ -20,8 +20,7 @@ $dt_filters=['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']];
 $dt_filter_values=['status'=>$dt_filter];$dt_badges=['active'];
 $dt_create=$canRole('add')?'Add Role':'';
 ?>
-<div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Roles & Permissions</h1>
-<p>Module-action permissions from the original <code>permissions</code> table.</p></div></div>
+
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'

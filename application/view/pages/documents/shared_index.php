@@ -71,19 +71,12 @@ $dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'from'=>$table[
 $dt_badges=['status'];
 $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
 ?>
-<div class="page-heading"><div>
-<span class="eyebrow">System Documents</span><h1><?= html_escape($title) ?></h1>
-<p>Controlled <?= html_escape($cfg['domain']) ?> register based on the original database.</p>
-</div></div>
 <nav class="tab-bar" aria-label="Document types">
 <?php foreach (['hardcopy'=>'Hardcopy Documents','softcopy'=>'Softcopy Documents'] as $kind=>$label):
  if (isset($permissions['*']) || !empty($permissions[$kind]['view'])): ?>
 <a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>" <?= $cfg['domain']===$kind?'aria-current="page"':'' ?>>
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
-<?php $this->load->view('reusable_components/folder_browser',[
-    'folder_browser'=>$folder_browser,'folder_base'=>$folder_base,
-    'folder_params'=>$folder_params,'folder_page'=>$folder_page,'domain'=>$cfg['domain']
-]); ?>
+
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows',
