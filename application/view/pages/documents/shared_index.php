@@ -1,5 +1,7 @@
 <?php
 $permissions=$permissions??[];
+require_once APPPATH.'services/presentation/document_folder_tree.php';
+$documentTreeNodes=$folder_browser['tree']['nodes']??[];
 $can=isset($permissions['*']) || !empty($permissions[$cfg['domain']]['direct']);
 // Keep document registers scannable. All other metadata remains available in
 // the shared permission-scoped View Details modal, not duplicated in the table.
@@ -58,7 +60,14 @@ foreach ($rows as $r) {
      'disposal'=>TRUE,
      'description'=>'Choose a disposal reason and confirm this action.',
      'icon'=>'fa-solid fa-trash-can'];
- $dt_rows[]=['id'=>$r['id'],'cells'=>$cells,'record'=>$rec,'display'=>$display,'buttons'=>$buttons];
+ $path=['area_id'=>$r['area_id']??NULL,'specific_id'=>$r['specific_id']??NULL,
+    'asset_id'=>$r['asset_id']??NULL,'location_id'=>$r['location_id']??NULL,
+    'category_id'=>$r['category_id']??NULL];
+ $dt_rows[]=['id'=>$r['id'],'cells'=>$cells,'record'=>$rec,'display'=>$display,
+    'buttons'=>$buttons,'record_path'=>$path,
+    'folder_key'=>Document_folder_tree::folder_key($path,$documentTreeNodes,$cfg['domain']),
+    'file_name'=>$cfg['domain']==='softcopy' && !empty($latest_files[$r['id']])
+        ? (string)$latest_files[$r['id']]['original_name'] : ''];
 }
 $dt_path='documents/'.$cfg['domain'];
 $dt_extra_params=['folder'=>$folder_value,'layout'=>$table['layout']];$dt_q=$table['q'];$dt_filter=$table['status'];
@@ -93,18 +102,20 @@ $layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
         <strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Document Browser</strong>
         <small>Choose a layout to browse or manage your records.</small>
     </div>
-    <div class="document-layout-switch" role="group" aria-label="Document browser layout">
+    <nav class="document-layout-switch" aria-label="Choose document view">
         <a href="<?= html_escape($layoutLink('table')) ?>"
            class="document-layout-choice <?= $activeLayout==='table'?'is-active':'' ?>"
-           <?= $activeLayout==='table'?'aria-current="page"':'' ?>>
-            <i class="fa-solid fa-table-list" aria-hidden="true"></i> Table
+           aria-label="Switch to table view" <?= $activeLayout==='table'?'aria-current="page"':'' ?>>
+            <span class="document-layout-choice-icon"><i class="fa-solid fa-table-list" aria-hidden="true"></i></span>
+            <span class="document-layout-choice-copy"><strong>Table</strong><small>List view</small></span>
         </a>
         <a href="<?= html_escape($layoutLink('folder')) ?>"
            class="document-layout-choice <?= $activeLayout==='folder'?'is-active':'' ?>"
-           <?= $activeLayout==='folder'?'aria-current="page"':'' ?>>
-            <i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Folders
+           aria-label="Switch to folder tree view" <?= $activeLayout==='folder'?'aria-current="page"':'' ?>>
+            <span class="document-layout-choice-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
+            <span class="document-layout-choice-copy"><strong>Folder tree</strong><small>Explorer view</small></span>
         </a>
-    </div>
+    </nav>
 </div>
 <div class="document-register-listing" data-doc-domain="<?= html_escape($cfg['domain']) ?>" data-layout="<?= html_escape($activeLayout) ?>">
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
