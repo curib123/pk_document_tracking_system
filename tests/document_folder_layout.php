@@ -134,7 +134,7 @@ assertFolder(strpos($folderView,'data-folder-node')!==FALSE &&
   strpos($folderView,'$renderNode($child,$depth+1)')!==FALSE,
   'Folder mode must recursively render expandable nested folder rows');
 assertFolder(strpos($folderView,'$renderDocument($dt_row)')!==FALSE &&
-  strpos($folderView,"$tree['roots']")!==FALSE,
+  strpos($folderView,'$tree[\'roots\']')!==FALSE,
   'Nested folder rows must include document files from multiple root branches');
 assertFolder(strpos($treeScript,"details[data-folder-node]")!==FALSE &&
   strpos($footerHtml,'document-tree.js')!==FALSE,
