@@ -37,6 +37,7 @@
                     options:{
                         responsive:true,
                         maintainAspectRatio:false,
+                        indexAxis:pie?'x':'y',
                         animation:reducedMotion?false:{duration:320},
                         ...(pie?{cutout:'73%',layout:{padding:{top:5,bottom:8}}}
                             :{layout:{padding:{top:10,right:9,bottom:1,left:4}}}),
@@ -76,25 +77,24 @@
                         ...(pie?{}:{
                             scales:{
                                 x:{
-                                    grid:{display:false},
+                                    beginAtZero:true,
+                                    grid:{color:'#edf1f5'},
                                     border:{display:false},
                                     ticks:{
-                                        color:'#7e8ca0',
+                                        color:'#8c99aa',
+                                        precision:0,
                                         font:{family:fonts.family,size:10},
-                                        maxRotation:0,
-                                        autoSkip:true,
-                                        padding:9
+                                        padding:8
                                     }
                                 },
                                 y:{
-                                    beginAtZero:true,
-                                    border:{display:false,dash:[3,3]},
-                                    grid:{color:'#edf1f5'},
+                                    grid:{display:false},
+                                    border:{display:false},
                                     ticks:{
-                                        precision:0,
-                                        padding:9,
-                                        color:'#8c99aa',
-                                        font:{family:fonts.family,size:10}
+                                        color:'#6c7c93',
+                                        font:{family:fonts.family,size:10},
+                                        autoSkip:false,
+                                        padding:9
                                     }
                                 }
                             }
