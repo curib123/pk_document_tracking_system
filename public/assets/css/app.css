@@ -778,14 +778,12 @@ a {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-width: 0;
     padding: 48px 0;
     background: transparent;
 }
 
 .login-card {
     width: 100%;
-    max-width: 465px;
     padding: clamp(32px, 3.8vw, 48px);
     background: var(--ui-white);
     border: 1px solid color-mix(in srgb, var(--ui-white) 75%, transparent);
@@ -793,15 +791,6 @@ a {
     box-shadow: 0 24px 85px color-mix(in srgb, var(--ui-navy) 35%, transparent);
 }
 
-.login-logo {
-    display: block;
-    width: 58px;
-    height: 58px;
-    margin-bottom: 25px;
-    object-fit: cover;
-    border-radius: 13px;
-    background: var(--ui-white);
-}
 
 .login-card .eyebrow {
     display: block;
@@ -996,9 +985,7 @@ a {
         border-radius: 18px;
     }
 
-    .login-logo {
-        margin-bottom: 18px;
-    }
+    
 }
 
 /* =========================================================

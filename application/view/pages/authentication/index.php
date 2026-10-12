@@ -102,10 +102,9 @@
 
             <div class="login-card">
 
-                <img class="login-logo"
-                     src="<?= base_url('assets/images/peanut-kisses.png') ?>"
-                     alt="Peanut Kisses logo">
-
+                <div class="container"> 
+                      <img src="<?= base_url('assets/images/peanut-kisses.png') ?>" alt="Peanut Kisses logo">
+                </div>
                 <span class="eyebrow">Welcome back</span>
 
                 <h2 id="loginHeading">
