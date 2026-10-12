@@ -52,4 +52,10 @@ check(strpos($docHeader, 'document-view.css')!==FALSE, 'Document view styles mus
 check(strpos($docFooter, 'document-view.js')!==FALSE, 'Document view renderer must be loaded');
 check(strpos($docFooter, 'viewDocumentStatus')!==FALSE, 'Document modal status must be accessible');
 check(strpos($docViewJs, 'aria-controls')!==FALSE, 'Document tab navigation must identify its panels');
+check(strpos($docViewJs, 'renderOverview(overview,data)')!==FALSE, 'Document overview must render before tabs');
+check(strpos($docViewJs, 'sections.filter(isOverviewSection)')!==FALSE, 'Document overview must be excluded from tabs');
+$overviewPosition=strpos($docFooter, 'id="viewDocumentSummary"');
+$tabsPosition=strpos($docFooter, 'id="viewDetails"');
+check($overviewPosition!==FALSE && $tabsPosition!==FALSE &&
+    $overviewPosition<$tabsPosition, 'Document overview must appear above the separate-concern tabs');
 echo "Plan workflow/UX contract checks passed.\n";
