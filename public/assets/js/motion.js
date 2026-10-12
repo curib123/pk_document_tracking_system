@@ -77,6 +77,7 @@
             event.metaKey || event.shiftKey || event.altKey) return;
         var anchor=event.target.closest('a[href]');
         if (!anchor || anchor.hasAttribute('download') ||
+            (anchor.classList && anchor.classList.contains('record-action-download')) ||
             anchor.getAttribute('target') && anchor.getAttribute('target')!=='_self' ||
             anchor.hasAttribute('data-bs-toggle')) return;
         var href=anchor.getAttribute('href');
@@ -85,7 +86,8 @@
         try {
             var destination=new URL(anchor.href,window.location.href);
             if (destination.origin!==window.location.origin ||
-                !['http:','https:'].includes(destination.protocol)) return;
+                !['http:','https:'].includes(destination.protocol) ||
+                /\/files\/download\//.test(destination.pathname)) return;
             var here=new URL(window.location.href);
             if (destination.pathname===here.pathname &&
                 destination.search===here.search &&
