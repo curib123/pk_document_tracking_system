@@ -448,3 +448,186 @@
 @media (prefers-reduced-motion: reduce) {
     #viewModal.is-document-view .doc-modal-nav-item { transition: none; }
 }
+
+
+/* ================================================================
+   Document overview first, independent concern tabs second.
+   The complete overview scrolls as part of the modal rather than
+   consuming a fixed-height toolbar above the tab content.
+   ================================================================ */
+#viewModal.is-document-view .doc-modal-body {
+    overflow-y: auto;
+    min-height: 0;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-overview {
+    display: block;
+    padding: 24px 30px 28px;
+    border-bottom: 1px solid #e5ebf2;
+    background: linear-gradient(180deg, #fbfcff 0%, #ffffff 100%);
+}
+#viewModal.is-document-view .doc-overview-intro {
+    margin-bottom: 19px;
+}
+#viewModal.is-document-view .doc-overview-kicker {
+    color: #b3253a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .12em;
+}
+#viewModal.is-document-view .doc-overview-title {
+    margin: 6px 0 4px;
+    color: #192a43;
+    font-size: 17px;
+    line-height: 1.35;
+    font-weight: 800;
+    letter-spacing: -.03em;
+}
+#viewModal.is-document-view .doc-overview-description {
+    margin: 0;
+    color: #78869a;
+    font-size: 12px;
+    line-height: 1.6;
+}
+#viewModal.is-document-view .doc-overview-group + .doc-overview-group {
+    margin-top: 21px;
+}
+#viewModal.is-document-view .doc-overview-group-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0 0 11px;
+    color: #364862;
+    font-size: 12px;
+    line-height: 1.45;
+    font-weight: 800;
+}
+#viewModal.is-document-view .doc-overview-group-title i {
+    color: #bf2e42;
+    font-size: 13px;
+}
+#viewModal.is-document-view .doc-overview-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 9px;
+    margin: 0;
+}
+#viewModal.is-document-view .doc-overview-item {
+    min-width: 0;
+    margin: 0;
+    padding: 11px 13px;
+    border: 1px solid #e8edf3;
+    border-radius: 10px;
+    background: #fff;
+    box-shadow: 0 1px 2px rgba(25, 40, 67, .025);
+}
+#viewModal.is-document-view .doc-overview-label {
+    margin: 0 0 5px;
+    color: #78859a;
+    font-size: 10px;
+    line-height: 1.45;
+    font-weight: 650;
+}
+#viewModal.is-document-view .doc-overview-value {
+    margin: 0;
+    color: #20314a;
+    font-size: 12px;
+    line-height: 1.5;
+    font-weight: 700;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-layout {
+    display: block;
+    min-height: 0;
+}
+#viewModal.is-document-view .doc-modal-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    display: flex;
+    align-items: stretch;
+    flex-wrap: nowrap;
+    gap: 20px;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scrollbar-width: thin;
+    padding: 0 30px;
+    border: 0;
+    border-bottom: 1px solid #e8edf3;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-nav-item {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 54px;
+    display: inline-flex;
+    gap: 8px;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    padding: 14px 1px 11px;
+    white-space: nowrap;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    border-radius: 0;
+    color: #6c7a90;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 700;
+}
+#viewModal.is-document-view .doc-modal-nav-item:hover {
+    background: transparent;
+    color: #ae2337;
+}
+#viewModal.is-document-view .doc-modal-nav-item.is-active {
+    border: 0;
+    border-bottom: 3px solid #c3263b;
+    background: transparent;
+    color: #ad2135;
+}
+#viewModal.is-document-view .doc-modal-nav-item.is-active i { color: #bd263a; }
+#viewModal.is-document-view .doc-modal-main {
+    min-height: 225px;
+    padding: 26px 30px 32px;
+}
+#viewModal.is-document-view .doc-modal-section-heading {
+    margin-bottom: 20px;
+}
+@media (max-width: 991.98px) {
+    #viewModal.is-document-view .doc-overview-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+@media (max-width: 767.98px) {
+    #viewModal.is-document-view .doc-modal-overview {
+        padding: 19px 16px 22px;
+    }
+    #viewModal.is-document-view .doc-overview-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+    #viewModal.is-document-view .doc-modal-navigation {
+        gap: 18px;
+        padding: 0 16px;
+        background: #fff;
+    }
+    #viewModal.is-document-view .doc-modal-nav-item {
+        min-height: 48px;
+        padding: 13px 1px 10px;
+        border: 0;
+        border-bottom: 3px solid transparent;
+    }
+    #viewModal.is-document-view .doc-modal-nav-item.is-active {
+        border: 0;
+        border-bottom: 3px solid #c3263b;
+        background: transparent;
+    }
+    #viewModal.is-document-view .doc-modal-main {
+        padding: 21px 16px 26px;
+    }
+}
+@media (max-width: 400px) {
+    #viewModal.is-document-view .doc-overview-item { padding: 10px; }
+    #viewModal.is-document-view .doc-overview-label { font-size: 10px; }
+    #viewModal.is-document-view .doc-overview-value { font-size: 11px; }
+}
