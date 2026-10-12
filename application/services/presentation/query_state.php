@@ -37,7 +37,7 @@ class Query_state
             'limit'=>in_array($limit,[10,25,50,100],TRUE)?$limit:10,
             'sort'=>mb_substr($text('sort',$defaultSort),0,40),
             'dir'=>strtolower($text('dir',str_ends_with($defaultSort,'_at')?'desc':'asc'))==='desc'?'DESC':'ASC',
-            'layout'=>$text('layout')==='grid'?'grid':'table',
+            'layout'=>in_array($text('layout'),['table','grid','folder'],TRUE)?$text('layout'):'table',
             'owner'=>$number('owner'),'role'=>$number('role'),
             'parent'=>$number('parent'),
             'type'=>mb_substr($text('type'),0,50),
