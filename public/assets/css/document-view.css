@@ -1,0 +1,450 @@
+/* PK Document Control — document-only SaaS details modal.
+ * Scope every selector to the document variant so roles, requests, workflow,
+ * confirmation and edit modals keep their original presentation.
+ */
+#viewModal.is-document-view .modal-dialog {
+    max-width: min(1080px, calc(100vw - 32px));
+}
+#viewModal.is-document-view .modal-content {
+    border: 1px solid #e4e9f0;
+    border-radius: 20px;
+    background: #fff;
+    overflow: hidden;
+    box-shadow: 0 28px 90px rgba(15, 23, 42, .21);
+}
+#viewModal.is-document-view [hidden] { display: none !important; }
+#viewModal.is-document-view .doc-modal-header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding: 25px 30px 22px;
+    border-bottom: 1px solid #edf0f5;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-heading { min-width: 0; }
+#viewModal.is-document-view .doc-modal-eyebrow {
+    margin: 0 0 12px;
+    color: #b9283a;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: .13em;
+}
+#viewModal.is-document-view .doc-modal-title-line {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    min-width: 0;
+}
+#viewModal.is-document-view .doc-modal-kind-icon {
+    flex: 0 0 50px;
+    display: grid;
+    place-items: center;
+    width: 50px;
+    height: 50px;
+    border: 1px solid #f5dce0;
+    border-radius: 14px;
+    background: #fff2f4;
+    color: #c1273c;
+    font-size: 21px;
+}
+#viewModal.is-document-view .doc-modal-title-wrap { min-width: 0; }
+#viewModal.is-document-view #viewModalTitle {
+    margin: 0;
+    max-width: 760px;
+    font-size: clamp(18px, 2.1vw, 23px);
+    line-height: 1.25;
+    letter-spacing: -.035em;
+    font-weight: 750;
+    color: #172338;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-reference {
+    margin: 7px 0 0;
+    color: #66768b;
+    font-size: 12px;
+    font-weight: 500;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-top-actions {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    flex-shrink: 0;
+    padding-top: 2px;
+}
+#viewModal.is-document-view .doc-modal-top-actions .btn-close {
+    width: 28px;
+    height: 28px;
+    margin: 0;
+    border-radius: 8px;
+    background-size: 11px;
+    opacity: .8;
+}
+#viewModal.is-document-view .doc-modal-top-actions .btn-close:focus-visible {
+    outline: 3px solid #e4a1ad;
+    outline-offset: 3px;
+}
+#viewModal.is-document-view .doc-modal-status {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid #e4e9f0;
+    border-radius: 999px;
+    background: #f6f8fa;
+    color: #526276;
+    padding: 7px 12px;
+    font-size: 11px;
+    font-weight: 750;
+    white-space: nowrap;
+}
+#viewModal.is-document-view .doc-modal-status::before {
+    content: '';
+    flex: 0 0 7px;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: currentColor;
+}
+#viewModal.is-document-view .doc-modal-status.status-active {
+    border-color: #c8ecd9;
+    color: #13734e;
+    background: #eaf8ef;
+}
+#viewModal.is-document-view .doc-modal-status.status-disposed,
+#viewModal.is-document-view .doc-modal-status.status-cancelled {
+    border-color: #f4d2d8;
+    color: #b42337;
+    background: #fff1f3;
+}
+#viewModal.is-document-view .doc-modal-summary {
+    display: grid;
+    grid-template-columns: minmax(0,1fr) minmax(0,.55fr) minmax(0,1fr);
+    gap: 0;
+    padding: 15px 30px;
+    border-bottom: 1px solid #e9edf3;
+    background: #fafbfe;
+}
+#viewModal.is-document-view .doc-modal-summary-item {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    gap: 4px;
+    padding: 3px 20px;
+    border-left: 1px solid #e6eaf0;
+}
+#viewModal.is-document-view .doc-modal-summary-item:first-child {
+    padding-left: 0;
+    border-left: 0;
+}
+#viewModal.is-document-view .doc-modal-summary-label {
+    color: #758398;
+    font-weight: 650;
+    font-size: 10px;
+    letter-spacing: .025em;
+}
+#viewModal.is-document-view .doc-modal-summary-value {
+    color: #203048;
+    font-size: 12px;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-body {
+    padding: 0;
+    min-height: 230px;
+}
+#viewModal.is-document-view .doc-modal-layout {
+    display: grid;
+    grid-template-columns: 214px minmax(0, 1fr);
+    min-height: 335px;
+}
+#viewModal.is-document-view .doc-modal-navigation {
+    align-self: stretch;
+    padding: 22px 12px;
+    border-right: 1px solid #e8edf3;
+    background: #fafbfc;
+}
+#viewModal.is-document-view .doc-modal-nav-item {
+    display: flex;
+    align-items: center;
+    text-align: left;
+    gap: 11px;
+    width: 100%;
+    min-height: 43px;
+    margin-bottom: 5px;
+    padding: 10px 12px;
+    border: 1px solid transparent;
+    border-radius: 10px;
+    color: #56677d;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 650;
+    line-height: 1.4;
+    cursor: pointer;
+    transition: background .15s ease, color .15s ease, border-color .15s ease;
+}
+#viewModal.is-document-view .doc-modal-nav-item i {
+    flex: 0 0 18px;
+    text-align: center;
+    color: #8795a7;
+    font-size: 14px;
+}
+#viewModal.is-document-view .doc-modal-nav-item:hover {
+    color: #283851;
+    background: #f0f3f7;
+}
+#viewModal.is-document-view .doc-modal-nav-item.is-active {
+    color: #b32237;
+    background: #fff0f2;
+    border-color: #f9dfe4;
+}
+#viewModal.is-document-view .doc-modal-nav-item.is-active i { color: #c1283f; }
+#viewModal.is-document-view .doc-modal-nav-item:focus-visible {
+    outline: 3px solid #eab2bd;
+    outline-offset: 2px;
+}
+#viewModal.is-document-view .doc-modal-main {
+    min-width: 0;
+    padding: 27px 30px 32px;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-panel:focus { outline: none; }
+#viewModal.is-document-view .doc-modal-panel:focus-visible {
+    outline: 2px solid #e8a0ac;
+    outline-offset: 5px;
+    border-radius: 3px;
+}
+#viewModal.is-document-view .doc-modal-section-heading {
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid #edf0f4;
+}
+#viewModal.is-document-view .doc-modal-section-title {
+    margin: 0;
+    color: #1b2b42;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: -.02em;
+}
+#viewModal.is-document-view .doc-modal-section-subtitle {
+    margin: 6px 0 0;
+    color: #788699;
+    font-size: 12px;
+}
+#viewModal.is-document-view .doc-modal-field-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0,1fr));
+    gap: 12px;
+    margin: 0;
+}
+#viewModal.is-document-view .doc-modal-field {
+    min-width: 0;
+    margin: 0;
+    padding: 14px 16px;
+    border: 1px solid #e9edf2;
+    border-radius: 11px;
+    background: #fafbfc;
+}
+#viewModal.is-document-view .doc-modal-field-label {
+    margin: 0 0 8px;
+    color: #728096;
+    font-size: 11px;
+    font-weight: 650;
+}
+#viewModal.is-document-view .doc-modal-field-value {
+    margin: 0;
+    color: #1c2d45;
+    font-size: 13px;
+    font-weight: 650;
+    line-height: 1.55;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-activity,
+#viewModal.is-document-view .doc-modal-file-list {
+    display: flex;
+    flex-direction: column;
+    gap: 11px;
+}
+#viewModal.is-document-view .doc-modal-activity-item,
+#viewModal.is-document-view .doc-modal-file-item {
+    display: flex;
+    min-width: 0;
+    align-items: flex-start;
+    gap: 13px;
+    padding: 15px;
+    border: 1px solid #e8edf2;
+    border-radius: 12px;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-activity-marker,
+#viewModal.is-document-view .doc-modal-file-icon {
+    display: grid;
+    flex: 0 0 36px;
+    place-items: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: #f1f4f8;
+    color: #60728a;
+    font-size: 14px;
+}
+#viewModal.is-document-view .doc-modal-file-icon {
+    color: #bd2d40;
+    background: #fff1f3;
+}
+#viewModal.is-document-view .doc-modal-activity-content,
+#viewModal.is-document-view .doc-modal-file-content { min-width: 0; flex: 1; }
+#viewModal.is-document-view .doc-modal-activity-title,
+#viewModal.is-document-view .doc-modal-file-title {
+    display: block;
+    color: #23344b;
+    font-size: 12px;
+    font-weight: 750;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-activity-description,
+#viewModal.is-document-view .doc-modal-file-meta {
+    margin: 5px 0 0;
+    color: #66768b;
+    font-size: 12px;
+    line-height: 1.65;
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-download {
+    flex: 0 0 auto;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    min-height: 34px;
+    border-radius: 8px;
+    font-weight: 700;
+}
+#viewModal.is-document-view .doc-modal-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 36px 20px;
+    border: 1px dashed #dbe3eb;
+    border-radius: 14px;
+    background: #fafbfd;
+    text-align: center;
+}
+#viewModal.is-document-view .doc-modal-empty-icon {
+    display: grid;
+    place-items: center;
+    width: 42px;
+    height: 42px;
+    margin-bottom: 12px;
+    border-radius: 12px;
+    background: #edf1f6;
+    color: #8290a3;
+}
+#viewModal.is-document-view .doc-modal-empty-heading {
+    font-size: 13px;
+    color: #304259;
+}
+#viewModal.is-document-view .doc-modal-empty-message {
+    margin: 7px 0 0;
+    color: #79889a;
+    font-size: 12px;
+    line-height: 1.6;
+}
+#viewModal.is-document-view .doc-modal-footer {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    justify-content: space-between;
+    padding: 13px 25px;
+    border-top: 1px solid #edf0f4;
+    background: #fff;
+}
+#viewModal.is-document-view .doc-modal-footnote {
+    margin: 0;
+    color: #758498;
+    font-size: 11px;
+}
+#viewModal.is-document-view .doc-modal-footnote i { margin-right: 6px; }
+#viewModal.is-document-view .doc-modal-footer .btn {
+    min-width: 86px;
+    border: 1px solid #e8edf2;
+    border-radius: 9px;
+    background: #f5f7fa;
+    color: #34455d;
+    font-size: 12px;
+    font-weight: 750;
+    padding: 9px 16px;
+}
+/* The application also supports a Bootstrap-free office-network fallback. */
+.offline-ui #viewModal.is-document-view .modal-dialog {
+    width: min(calc(100% - 32px), 1080px);
+}
+.offline-ui #viewModal.is-document-view .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 56px);
+}
+.offline-ui #viewModal.is-document-view .doc-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
+@media (max-width: 767.98px) {
+    #viewModal.is-document-view .modal-dialog {
+        max-width: none;
+        width: calc(100% - 16px);
+        margin: 8px auto;
+        height: calc(100dvh - 16px);
+    }
+    #viewModal.is-document-view .modal-content { max-height: 100%; border-radius: 16px; }
+    #viewModal.is-document-view .doc-modal-header { padding: 20px 17px 16px; gap: 10px; }
+    #viewModal.is-document-view .doc-modal-eyebrow { margin-bottom: 10px; }
+    #viewModal.is-document-view .doc-modal-kind-icon { width: 42px; height: 42px; flex-basis: 42px; font-size: 18px; }
+    #viewModal.is-document-view .doc-modal-title-line { gap: 10px; }
+    #viewModal.is-document-view #viewModalTitle { font-size: 17px; }
+    #viewModal.is-document-view .doc-modal-top-actions { gap: 8px; flex-direction: column-reverse; align-items: flex-end; }
+    #viewModal.is-document-view .doc-modal-status { font-size: 10px; padding: 5px 9px; }
+    #viewModal.is-document-view .doc-modal-summary { grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; padding: 13px 17px; }
+    #viewModal.is-document-view .doc-modal-summary-item,
+    #viewModal.is-document-view .doc-modal-summary-item:first-child { padding: 0; border: 0; }
+    #viewModal.is-document-view .doc-modal-layout { display: block; min-height: 0; }
+    #viewModal.is-document-view .doc-modal-navigation {
+        display: flex;
+        align-items: stretch;
+        gap: 6px;
+        position: sticky;
+        top: 0;
+        z-index: 2;
+        overflow-x: auto;
+        overscroll-behavior-x: contain;
+        scrollbar-width: thin;
+        padding: 11px 12px;
+        border-right: 0;
+        border-bottom: 1px solid #e8edf3;
+        background: #fafbfc;
+    }
+    #viewModal.is-document-view .doc-modal-nav-item {
+        flex: 0 0 auto;
+        width: auto;
+        min-height: 43px;
+        margin: 0;
+        padding: 9px 11px;
+        white-space: nowrap;
+    }
+    #viewModal.is-document-view .doc-modal-main { padding: 20px 16px 26px; }
+    #viewModal.is-document-view .doc-modal-field-grid { gap: 10px; }
+    #viewModal.is-document-view .doc-modal-field { padding: 12px; }
+    #viewModal.is-document-view .doc-modal-footer { padding: 12px 17px; }
+}
+@media (max-width: 480px) {
+    #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: 1fr; }
+    #viewModal.is-document-view .doc-modal-file-item { flex-wrap: wrap; }
+    #viewModal.is-document-view .doc-modal-file-content { flex-basis: calc(100% - 50px); }
+    #viewModal.is-document-view .doc-modal-download { margin-left: auto; }
+    #viewModal.is-document-view .doc-modal-footnote { max-width: 65%; line-height: 1.5; }
+}
+@media (prefers-reduced-motion: reduce) {
+    #viewModal.is-document-view .doc-modal-nav-item { transition: none; }
+}

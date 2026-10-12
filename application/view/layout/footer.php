@@ -36,12 +36,37 @@
     </div></div>
 </div>
 
+<!-- One reusable details modal. Documents receive a richer, read-only SaaS layout;
+     other views continue to use the existing generic details renderer. -->
 <div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><div class="modal-content">
-        <div class="modal-header"><h2 class="modal-title fs-6" id="viewModalTitle">Details</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-        <div class="modal-body"><div id="viewDetails" aria-live="polite"></div></div>
-        <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
-    </div></div>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+        <div class="modal-content">
+            <div class="modal-header doc-modal-header">
+                <div class="doc-modal-heading">
+                    <div class="doc-modal-eyebrow" id="viewDocumentEyebrow" hidden>DOCUMENT RECORD</div>
+                    <div class="doc-modal-title-line">
+                        <span class="doc-modal-kind-icon" id="viewDocumentIcon" aria-hidden="true" hidden>
+                            <i class="fa-regular fa-file-lines"></i>
+                        </span>
+                        <div class="doc-modal-title-wrap">
+                            <h2 class="modal-title" id="viewModalTitle">Details</h2>
+                            <p class="doc-modal-reference" id="viewDocumentRef" hidden></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="doc-modal-top-actions">
+                    <span class="doc-modal-status" id="viewDocumentStatus" hidden></span>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+            </div>
+            <div id="viewDocumentSummary" class="doc-modal-summary" hidden></div>
+            <div class="modal-body doc-modal-body"><div id="viewDetails"></div></div>
+            <div class="modal-footer doc-modal-footer">
+                <p class="doc-modal-footnote" id="viewDocumentFootnote" hidden><i class="fa-solid fa-lock" aria-hidden="true"></i> Read-only details within your access permissions</p>
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalTitle" aria-hidden="true">
@@ -60,6 +85,7 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
+<script src="<?= base_url('assets/js/document-view.js') ?>"></script>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 </body>
