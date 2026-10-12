@@ -107,13 +107,13 @@ $layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
            class="document-layout-choice <?= $activeLayout==='table'?'is-active':'' ?>"
            aria-label="Switch to table view" <?= $activeLayout==='table'?'aria-current="page"':'' ?>>
             <span class="document-layout-choice-icon"><i class="fa-solid fa-table-list" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy"><strong>Table</strong><small>List view</small></span>
+            <span class="document-layout-choice-copy"><strong>Table</strong></span>
         </a>
         <a href="<?= html_escape($layoutLink('folder')) ?>"
            class="document-layout-choice <?= $activeLayout==='folder'?'is-active':'' ?>"
            aria-label="Switch to folder tree view" <?= $activeLayout==='folder'?'aria-current="page"':'' ?>>
             <span class="document-layout-choice-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy"><strong>Folder tree</strong><small>Explorer view</small></span>
+            <span class="document-layout-choice-copy"><strong>Folder tree</strong></span>
         </a>
     </nav>
 </div>
