@@ -11,7 +11,7 @@ function setup(options={}) {
     const windows={};
     const timers=new Map();
     let nextTimer=0;
-    const page=options.login?null:{
+    const page=(options.login||options.required)?null:{
         children:[],attrs:{},
         appendChild(el){this.children.push(el);},
         setAttribute(key,value){this.attrs[key]=value;},
@@ -113,7 +113,9 @@ test('login and required-password forms use independent shimmer surfaces',()=>{
     assert.equal(login.body.classList.contains('motion-login-loading'),false);
 
     const required=setup({required:true});
-    // setup() includes a non-login page; required mode hides it to exercise
-    // first-login's dedicated modal behavior in the final test below.
-    assert.ok(required.required);
+    required.listeners.submit({defaultPrevented:false,target:{method:'post'}});
+    required.flush();
+    assert.equal(required.required.classList.contains('motion-auth-loading'),true);
+    required.windows.pageshow();
+    assert.equal(required.required.classList.contains('motion-auth-loading'),false);
 });
