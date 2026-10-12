@@ -99,7 +99,7 @@ $displayName = $firstName !== '' ? $firstName : ($user['username'] ?? 'there');
  <?php else: ?>
  <div class="table-responsive dashboard-activity-scroll"><table class="table mb-0 dashboard-activity-table"><thead><tr><th scope="col">Document</th><th scope="col">Type</th><th scope="col">Action</th><th scope="col">Date</th></tr></thead>
  <tbody><?php foreach ($recent_activities as $activity): ?><tr>
-  <td class="dashboard-activity-title"><span class="dashboard-activity-file-icon" aria-hidden="true"><i class="fa-regular <?= $activity['domain']==='softcopy'?'fa-file-lines':'fa-folder-closed' ?>"></i></span><span><?= html_escape($activity['title']) ?></span></td>
+  <td class="dashboard-activity-title"><div class="dashboard-activity-label"><span class="dashboard-activity-file-icon" aria-hidden="true"><i class="fa-regular <?= $activity['domain']==='softcopy'?'fa-file-lines':'fa-folder-closed' ?>"></i></span><span><?= html_escape($activity['title']) ?></span></div></td>
   <td><span class="dashboard-type-chip dashboard-type-<?= html_escape($activity['domain']) ?>"><?= html_escape(ucfirst($activity['domain'])) ?></span></td>
   <td><span class="dashboard-action-name"><?= html_escape(ucwords(str_replace('_', ' ', $activity['action']))) ?></span></td>
   <td class="dashboard-activity-date"><?= html_escape($activity['created_at']) ?></td>
