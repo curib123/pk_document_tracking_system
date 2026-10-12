@@ -72,18 +72,45 @@ $dt_filters['owner']=[''=>'All Owners']+array_column($owner_options,'name','id')
 $dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'from'=>$table['from'],'to'=>$table['to']];
 $dt_badges=['status'];
 $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
+$dt_folder_browser=$folder_browser;
+$dt_folder_domain=$cfg['domain'];
+$activeLayout=($table['layout']??'table')==='folder'?'folder':'table';
+$layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
+    $params=array_merge($folder_params,[
+        'folder'=>$folder_value,'layout'=>$target,'page'=>1
+    ]);
+    return site_url('documents/'.$cfg['domain']).'?'.http_build_query($params);
+};
 ?>
 <nav class="tab-bar" aria-label="Document types">
 <?php foreach (['hardcopy'=>'Hardcopy Documents','softcopy'=>'Softcopy Documents'] as $kind=>$label):
  if (isset($permissions['*']) || !empty($permissions[$kind]['view'])): ?>
-<a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>" <?= $cfg['domain']===$kind?'aria-current="page"':'' ?>>
+<a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= html_escape(site_url('documents/'.$kind).'?'.http_build_query(['layout'=>$activeLayout])) ?>" <?= $cfg['domain']===$kind?'aria-current="page"':'' ?>>
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
 
-<div class="document-register-listing" data-doc-domain="<?= html_escape($cfg['domain']) ?>">
+<div class="document-layout-bar">
+    <div class="document-layout-description">
+        <strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Document Browser</strong>
+        <small>Choose a layout to browse or manage your records.</small>
+    </div>
+    <div class="document-layout-switch" role="group" aria-label="Document browser layout">
+        <a href="<?= html_escape($layoutLink('table')) ?>"
+           class="document-layout-choice <?= $activeLayout==='table'?'is-active':'' ?>"
+           <?= $activeLayout==='table'?'aria-current="page"':'' ?>>
+            <i class="fa-solid fa-table-list" aria-hidden="true"></i> Table
+        </a>
+        <a href="<?= html_escape($layoutLink('folder')) ?>"
+           class="document-layout-choice <?= $activeLayout==='folder'?'is-active':'' ?>"
+           <?= $activeLayout==='folder'?'aria-current="page"':'' ?>>
+            <i class="fa-solid fa-folder-tree" aria-hidden="true"></i> Folders
+        </a>
+    </div>
+</div>
+<div class="document-register-listing" data-doc-domain="<?= html_escape($cfg['domain']) ?>" data-layout="<?= html_escape($activeLayout) ?>">
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows',
-'dt_extra_params'
+'dt_extra_params','dt_folder_browser','dt_folder_domain'
 )); ?>
 </div>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
