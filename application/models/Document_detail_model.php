@@ -79,20 +79,20 @@ class Document_detail_model extends CI_Model
         $output=[];
         foreach ($rows as $document) {
             $id=(int)$document['id'];
-            $sections=[['title'=>'Document Identity','fields'=>[
+            $sections=[['key'=>'overview','title'=>'Overview','description'=>'Document information and ownership','fields'=>[
                 'Title'=>$document['title'],'Reference / Copy Number'=>$document[$domain==='softcopy'?'document_number':'sequence_number']??'',
                 'Document Type'=>ucfirst($domain),'Status'=>ucfirst($document['status']),
                 'Created By'=>$document['creator_name'],'Created'=>$document['created_at'],
                 'Modified'=>$document['updated_at'],'Record Version'=>$document['version']]]];
             if ($domain==='hardcopy') {
-                $sections[]=['title'=>'Storage and Custody','fields'=>[
+                $sections[]=['key'=>'storage','title'=>'Storage & Custody','description'=>'Physical storage hierarchy, holder and retention','fields'=>[
                     'Area'=>$document['area_name']??'','Specific'=>$document['specific_name']??'',
                     'Asset'=>$document['asset_name']??'','Location'=>$document['location_name']??'',
                     'Location Code'=>$document['location_code']??'','Current Holder'=>$document['holder_name']??'',
                     'Retention'=>$document['retention_enabled']?'Enabled':'Not enabled',
                     'Retention Start'=>$document['retention_start_date']??'','Retention End'=>$document['retention_end_date']??'']];
             } else {
-                $sections[]=['title'=>'Category and Revision','fields'=>[
+                $sections[]=['key'=>'revision','title'=>'Revision & Classification','description'=>'Classification, document series and revision details','fields'=>[
                     'Category / Folder'=>$document['category_name']??'','Series'=>$document['series_number']??'',
                     'Revision Number'=>$document['revision_number']??'','Revision Level'=>$document['new_revision_level']??'',
                     'Effective Date'=>$document['new_effective_date']??'','Pages'=>$document['page_number']??'',
@@ -103,19 +103,34 @@ class Document_detail_model extends CI_Model
                         number_format((int)$file['size']).' bytes · '.$file['mime_type'].' · '.$file['created_at'];
                     $links[]=['label'=>'Download '.$file['original_name'],'url'=>site_url('files/download/'.$file['id'])];
                 }
-                $sections[]=['title'=>'Controlled Files · Latest 25','fields'=>$fileFields,
+                $sections[]=['key'=>'files','title'=>'Controlled Files','description'=>'Approved files and available downloads · latest 25','fields'=>$fileFields,
                     'links'=>$links,'empty'=>'No approved files available within your file permissions.'];
             }
-            $sections[]=['title'=>'Related Requests · Latest 25','fields'=>$requestsByDoc[$id]??[],
+            $sections[]=['key'=>'requests','title'=>'Related Requests','description'=>'Document requests visible to your account · latest 25','fields'=>$requestsByDoc[$id]??[],
                 'empty'=>'No related requests available within your permissions.'];
-            $sections[]=['title'=>'Workflow and Approval History','fields'=>$approvalsByDoc[$id]??[],
+            $sections[]=['key'=>'approvals','title'=>'Approval History','description'=>'Workflow decisions for visible requests','fields'=>$approvalsByDoc[$id]??[],
                 'empty'=>'No approval history available for these requests.'];
             if ($domain==='hardcopy' && $can('transfer','view')) $sections[]=[
-                'title'=>'Transfer History · Latest 25','fields'=>$transfersByDoc[$id]??[],
+                'key'=>'transfers','title'=>'Transfer History','description'=>'Physical handoffs visible to your account · latest 25','fields'=>$transfersByDoc[$id]??[],
                 'empty'=>'No transfers available within your permissions.'];
-            if ($can('audit','view')) $sections[]=['title'=>'Document Audit · Latest 25','fields'=>$auditByDoc[$id]??[],
+            if ($can('audit','view')) $sections[]=['key'=>'audit','title'=>'Audit Trail','description'=>'Recorded document status activity · latest 25','fields'=>$auditByDoc[$id]??[],
                 'empty'=>'No document audit entries yet.'];
-            $output[$id]=['sections'=>$sections];
+            $reference=$domain==='softcopy'?$document['document_number']??'':$document['sequence_number']??'';
+            $output[$id]=[
+                'kind'=>'document',
+                'domain'=>$domain,
+                'header'=>[
+                    'title'=>(string)($document['title']??''),
+                    'reference'=>(string)$reference,
+                    'status'=>(string)($document['status']??''),
+                    'updated_at'=>(string)($document['updated_at']??''),
+                    'record_version'=>(int)($document['version']??0),
+                    'context_label'=>$domain==='hardcopy'?'Current holder':'Category',
+                    'context_value'=>(string)($domain==='hardcopy'
+                        ? ($document['holder_name']??'') : ($document['category_name']??''))
+                ],
+                'sections'=>$sections
+            ];
         }
         return $output;
     }
