@@ -37,7 +37,7 @@
 <div class="col-md-6">
  <label class="form-label" for="transfer-<?= $level ?>">Destination <?= $meta[0] ?><?= $level==='asset'?' (optional)':'' ?></label>
  <select class="form-select" id="transfer-<?= $level ?>" data-transfer-level="<?= $level ?>"
-   name="destination_<?= $level ?>_id" data-searchable <?= $level==='location'?'required':'' ?>>
+   name="destination_<?= $level ?>_id" data-searchable <?= $level==='asset'?'':'required' ?>>
   <option value=""><?= $level==='location'?'Choose a location':($level==='asset'?'No asset / not assigned':'All '.$meta[0]) ?></option>
   <?php foreach($transfer_options[$meta[1]] as $option): ?>
   <option value="<?= (int)$option['id'] ?>"
