@@ -5,7 +5,7 @@ $tabs=[
 ];
 $typeMap=[
  'softcopy'=>['softcopy_create'=>'Create','softcopy_revise'=>'Revise','softcopy_cancel'=>'Cancel'],
- 'hardcopy'=>['hardcopy_create'=>'Create','hardcopy_update'=>'Update','disposal'=>'Dispose'],
+ 'hardcopy'=>['hardcopy_create'=>'Create','hardcopy_update'=>'Update'],
  'hardcopy-transfer'=>['transfer'=>'Transfer'],
  'access-grant'=>['access'=>'Grant Access'],
  'document-assign'=>['assignment'=>'Assign']
@@ -166,7 +166,6 @@ data-confirm="Save request draft?">
     <select class="form-select" name="type" id="reqType" required>
        <option value="hardcopy_create">Create Hardcopy</option>
        <option value="hardcopy_update">Update Hardcopy</option>
-       <option value="disposal">Dispose Hardcopy</option>
     </select>
   </div>
   <div class="col-md-6">
@@ -182,9 +181,6 @@ data-confirm="Save request draft?">
           data-hardcopy="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"><?= html_escape($item['title']) ?></option>
       <?php endforeach; ?>
     </select>
-  </div>
-  <div class="col-12" data-hardcopy-disposal hidden>
-    <?php $this->load->view('pages/request/disposal_fields'); ?>
   </div>
   <div class="col-12" data-hardcopy-details>
     <div class="row g-3">
