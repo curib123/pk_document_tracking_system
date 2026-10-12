@@ -29,7 +29,7 @@ class Requests extends MY_Controller
            $tab,$this->user,$task,$state['q'],$state['status'],$state['page'],$state['limit'],$state);
         $actionModules=['softcopy_create'=>'softcopy','softcopy_revise'=>'softcopy',
             'softcopy_cancel'=>'softcopy','hardcopy_create'=>'hardcopy','hardcopy_update'=>'hardcopy',
-            'disposal'=>'disposal','transfer'=>'transfer','assignment'=>'assignment','access'=>'access'];
+            'transfer'=>'transfer','assignment'=>'assignment','access'=>'access'];
         $requestTypes=[];
         foreach ($this->Request_model->types($tab) as $type) {
             if ($this->can($actionModules[$type],'request')) $requestTypes[]=$type;
