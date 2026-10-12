@@ -63,25 +63,28 @@ $model->db=new FolderFakeDB([
 ]);
 $tree=$model->tree('hardcopy');
 folder_check($tree['roots']===['area:1','area:2'],'Top level must contain Areas only');
-folder_check(!isset($tree['nodes']['asset:100']) && !isset($tree['nodes']['asset:101']),
-    'Asset must not be a folder in Hardcopy mode');
+folder_check(isset($tree['nodes']['asset:100']) && isset($tree['nodes']['asset:101']),
+    'Asset folders must exist in Hardcopy mode');
 folder_check($tree['nodes']['area:1']['children']===['specific:10','specific:11'],
-    'Areas must contain Specific folders directly');
-folder_check($tree['nodes']['specific:10']['children']===
-    ['location:201','location:202','location:205'],
-    'Specific folders must contain Locations even when Location points to an Asset');
-folder_check($tree['nodes']['location:201']['parent']==='specific:10' &&
-    $tree['nodes']['location:202']['parent']==='specific:10' &&
-    $tree['nodes']['location:205']['parent']==='specific:10',
-    'An Asset-linked Location must resolve its Specific without creating Asset folders');
+    'Areas must contain Specific folders');
+folder_check($tree['nodes']['specific:10']['children']===['asset:100','asset:101'],
+    'Specifics must contain several Asset folders');
+folder_check($tree['nodes']['asset:100']['children']===['location:201','location:202'],
+    'Assets must contain multiple Locations, including one with no direct Specific reference');
+folder_check($tree['nodes']['asset:101']['children']===['location:205'],
+    'Location with Asset and no Area/Specific must follow its linked Asset');
+folder_check($tree['nodes']['location:201']['parent']==='asset:100' &&
+    $tree['nodes']['location:202']['parent']==='asset:100' &&
+    $tree['nodes']['location:205']['parent']==='asset:101',
+    'Asset-linked Locations must appear below their assigned Asset');
 folder_check($tree['nodes']['location:203']['parent']==='specific:11',
-    'Asset-less Locations must still display under their Specific');
+    'Locations with no Asset must still be accessible under their Specific');
 folder_check($tree['nodes']['location:204']['parent']==='area:2',
-    'Location with no Specific must stay accessible under its Area');
+    'Locations with no Asset/Specific must remain accessible under Area');
 
 $browse=$model->browse('hardcopy','asset:100');
-folder_check($browse['folder']==='specific:10' &&
-    $browse['breadcrumbs'][2]['folder']==='specific:10',
-    'Legacy Asset-folder bookmarks should open the corresponding Specific folder');
+folder_check($browse['folder']==='asset:100' &&
+    $browse['breadcrumbs'][3]['folder']==='asset:100',
+    'Asset links must browse the actual Asset folder and preserve breadcrumbs');
 
-echo "Hardcopy actual Folder_model Area > Specific > Location contracts passed.\n";
+echo "Hardcopy actual Folder_model Area > Specific > Asset > Location contracts passed.\n";
