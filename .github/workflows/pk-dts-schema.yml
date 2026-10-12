@@ -17,7 +17,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        php: ['8.2', '8.4']
+        php: ['8.0', '8.2', '8.4']
     steps:
       - uses: actions/checkout@v4
         with:
@@ -29,6 +29,10 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
+      - name: Composer dependency compatibility with PHP ${{ matrix.php }}
+        run: |
+          composer validate --no-check-publish
+          composer install --no-interaction --prefer-dist --no-progress
       - name: PHP and JavaScript syntax plus workflow plan contracts
         run: bash tests/run_unit.sh
 
