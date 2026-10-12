@@ -83,14 +83,6 @@
         if (!summary) return;
         summary.replaceChildren();
 
-        var heading=node('div','doc-overview-intro');
-        var label=node('div','doc-overview-kicker','DOCUMENT OVERVIEW');
-        heading.append(label,node('h3','doc-overview-title','Document information'));
-        heading.append(node('p','doc-overview-description',
-            'Key record details, ownership and '+(data.domain==='hardcopy'
-                ? 'physical custody' : (data.domain==='softcopy'?'revision classification':'record metadata'))+'.'));
-        summary.append(heading);
-
         // Document name, reference, type and status are already displayed
         // in the modal title bar; avoid repeating them as metadata tiles.
         var repeated={'Title':true,'Reference / Copy Number':true,

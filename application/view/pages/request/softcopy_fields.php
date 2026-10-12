@@ -63,10 +63,7 @@ $softcopyDirect = !empty($softcopyDirect);
     <input class="form-control" type="date" id="revisionEffective" name="effective_date">
     <small class="form-text">If blank, effective date defaults to approval day.</small>
 </div>
-<div class="col-12">
-    <p class="form-text mb-0">Date received and date released are recorded automatically:
-       received when saved, released when approved.</p>
-</div>
+
 <div class="col-12">
     <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and Revise · 15 MB maximum)</span></label>
     <input class="form-control" id="revisionFile" type="file" name="revision_attachment"

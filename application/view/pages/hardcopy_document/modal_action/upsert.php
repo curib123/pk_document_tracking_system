@@ -50,7 +50,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
         data-area-id="<?= (int)$asset['area_id'] ?>"><?= html_escape($asset['name']) ?></option>
     <?php endforeach; ?>
   </select>
-  <small class="form-text">An Asset is not required to save this document. Leave it empty if no Asset is assigned.</small>
+
 </div>
 <div class="col-md-6">
   <label class="form-label" for="hardcopyLocation">Location <span class="optional-label">(optional)</span></label>
@@ -64,7 +64,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
         data-asset-id="<?= (int)($location['asset_id']??0) ?>"><?= html_escape($location['name'].' · '.$location['code']) ?></option>
     <?php endforeach; ?>
   </select>
-  <small class="form-text">Only active, predefined locations are available.</small>
+
 </div>
 
 <div class="col-12 mt-3">
@@ -80,7 +80,6 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
         <?= (int)$holder['id']===$myHolderId?'selected':'' ?>><?= html_escape($holder['name']) ?></option>
     <?php endforeach; ?>
   </select>
-  <small class="form-text">Administrators may assign a different active holder.</small>
   <?php else: ?>
   <input class="form-control" id="hardcopyHolder" name="holder_name"
     value="<?= html_escape($myHolderName) ?>" readonly

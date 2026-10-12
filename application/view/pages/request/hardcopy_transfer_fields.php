@@ -1,9 +1,6 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
 <input type="hidden" name="type" value="transfer">
-<div class="col-12">
- <h3 class="fs-6 fw-bold">Hardcopy Transfer</h3>
- <p class="text-secondary small">Original document details are read-only. Select the receiving user and a predefined destination.</p>
-</div>
+
 <div class="col-12">
  <label class="form-label" for="transferSource">Hardcopy Document</label>
  <select class="form-select" id="transferSource" name="hardcopy_id" data-transfer-source data-searchable required>

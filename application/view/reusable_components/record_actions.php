@@ -1,7 +1,9 @@
 <?php
 // Single source of truth for row actions in table, grid and folder layouts.
 // Text labels are always visible; icons are decorative only.
-foreach ($dt_row['buttons']??[] as $button):
+?>
+<div class="record-actions-horizontal">
+<?php foreach ($dt_row['buttons']??[] as $button):
     $type=$button['type']??'';
     $label=$button['label']??[
         'view'=>'View','edit'=>'Edit','steps'=>'Step Actions',
@@ -86,3 +88,4 @@ foreach ($dt_row['buttons']??[] as $button):
     </button>
 <?php endif; ?>
 <?php endforeach; ?>
+</div>

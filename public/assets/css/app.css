@@ -257,6 +257,38 @@ a {
     color: var(--ui-brand-700);
 }
 
+/* Force all row actions into one horizontal line */
+.record-actions-horizontal {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 6px;
+    white-space: nowrap;
+    width: max-content;
+    max-width: none;
+}
+
+/* Keep button icons and labels side by side */
+.record-actions-horizontal .btn-icon.record-action {
+    display: inline-flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    flex: 0 0 auto !important;
+    width: auto !important;
+    white-space: nowrap !important;
+}
+
+/* Prevent individual icons and labels from shrinking */
+.record-actions-horizontal .record-action i,
+.record-actions-horizontal .record-action span {
+    flex-shrink: 0;
+    white-space: nowrap;
+}
 /* =========================================================
    WORKSPACE CARD
 ========================================================= */
