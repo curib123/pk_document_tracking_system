@@ -701,7 +701,7 @@ ALTER TABLE `files`
 --
 ALTER TABLE `hardcopy_documents`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `location_id` (`location_id`),
+  ADD KEY `idx_hardcopy_documents_location` (`location_id`),
   ADD KEY `area_id` (`area_id`),
   ADD KEY `specific_id` (`specific_id`),
   ADD KEY `asset_id` (`asset_id`),
