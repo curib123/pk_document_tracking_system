@@ -128,3 +128,52 @@
 .app-auth-alert h2{font-size:20px;font-weight:800;letter-spacing:-.025em}
 .app-auth-alert p{font-size:13px;line-height:1.7;color:#66768b;white-space:pre-line;overflow-wrap:anywhere}
 .app-auth-alert-action{float:right;min-width:100px;margin-top:15px;border-radius:9px;font-weight:750}
+
+/* File-history viewer shares the document detail card language. */
+.file-history-saas .modal-content {
+  border:1px solid #e4e9f0;border-radius:19px;overflow:hidden;
+  background:#fff;box-shadow:0 28px 85px rgba(15,23,42,.22);
+}
+.file-history-saas .file-history-header {
+  padding:23px 27px;gap:14px;border-bottom:1px solid #e9edf3;
+}
+.file-history-saas .file-history-header-icon {
+  display:grid;place-items:center;flex:0 0 46px;width:46px;height:46px;
+  background:#fff0f3;color:#b92b41;border-radius:13px;font-size:19px;
+}
+.file-history-saas .file-history-eyebrow {
+  display:block;margin-bottom:5px;color:#ae2940;font-size:10px;
+  font-weight:800;letter-spacing:.11em;
+}
+.file-history-saas #fileHistoryTitle {font-size:19px;font-weight:800;color:#1a2940}
+.file-history-saas .file-history-body {padding:24px 27px;background:#fafbfd}
+.file-history-saas .file-history-list {display:flex;flex-direction:column;gap:11px}
+.file-history-saas .file-history-item {
+  display:flex;align-items:center;gap:13px;min-width:0;
+  padding:15px;border:1px solid #e7ecf2;border-radius:12px;background:#fff;
+}
+.file-history-saas .file-history-item-icon {
+  display:grid;place-items:center;flex:0 0 37px;width:37px;height:37px;
+  background:#fff1f3;color:#be2f44;border-radius:11px;font-size:16px;
+}
+.file-history-saas .file-history-item-text {min-width:0;flex:1}
+.file-history-saas .file-history-item-text strong {
+  display:block;color:#273850;font-size:13px;font-weight:750;overflow-wrap:anywhere;
+}
+.file-history-saas .file-history-item-text small {
+  display:block;margin-top:4px;color:#728095;font-size:11px;line-height:1.6;overflow-wrap:anywhere;
+}
+.file-history-saas .file-history-item .btn {
+  flex-shrink:0;font-weight:700;border-radius:8px;
+}
+.file-history-saas .file-history-footer {
+  padding:15px 27px;background:#fff;border-top:1px solid #e9edf3;gap:14px;
+}
+.file-history-saas .file-history-footer .btn {font-weight:750;border-radius:9px}
+@media(max-width:500px) {
+ .file-history-saas .file-history-header,
+ .file-history-saas .file-history-body,
+ .file-history-saas .file-history-footer {padding:17px}
+ .file-history-saas .file-history-item {flex-wrap:wrap}
+ .file-history-saas .file-history-item .btn {margin-left:auto}
+}
