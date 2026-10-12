@@ -238,7 +238,8 @@
         var heading=document.getElementById('viewModalTitle');
         if (!modal || !details) return;
         renderRecordDetails(details,data);
-        if (heading) heading.textContent=row.getAttribute('data-row-title')||'View Details';
+        if (heading && (!window.PKDocumentView || !window.PKDocumentView.handles(data)))
+            heading.textContent=row.getAttribute('data-row-title')||'View Details';
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
     }
     document.addEventListener('click',function(event) {
