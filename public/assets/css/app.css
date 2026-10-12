@@ -77,7 +77,7 @@ a {
     width: 40px;
     height: 40px;
     border-radius: 12px;
-    object-fit: cover;
+    object-fit: fill;
     background: var(--ui-white);
 }
 
