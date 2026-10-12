@@ -1,6 +1,7 @@
 <?php
 declare(strict_types=1);
 define('BASEPATH', __DIR__);
+define('APPPATH', dirname(__DIR__).'/application/');
 
 // Minimal, read-only CI Model/Query Builder fakes for testing the actual
 // Folder_model::tree() relation projection without a running database.
