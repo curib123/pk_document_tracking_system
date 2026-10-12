@@ -113,7 +113,7 @@ const data = {
     context_value:'Office Records'
   },
   sections:[
-    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active'}},
+    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active','Created By':'Records Officer','Created':'2026-10-11'}},
     {key:'storage',title:'Storage & Custody',fields:{Area:'Plant',Location:'Rack 3'}},
     {key:'requests',title:'Related Requests',fields:{'REQ-1':'Returned for correction'}},
     {key:'approvals',title:'Approval History',fields:{'REQ-1':'Supervisor approved'}},
@@ -154,7 +154,7 @@ test('all identity and custody fields appear above the tabs, not inside a tab',(
   const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
   const labels=groups.flatMap((g)=>g.children[1].children.map((n)=>n.children[0].textContent));
-  assert.deepEqual(labels,['Area','Location']);
+  assert.deepEqual(labels,['Created By','Created','Area','Location']);
   assert.equal(overview.parentNode.children[1],details);
   assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
 });
