@@ -401,13 +401,16 @@
   background:#fbfcfe;
 }
 .dashboard-page .dashboard-activity-table .dashboard-activity-title {
-  display:flex;
-  gap:10px;
-  align-items:center;
   min-width:220px;
   color:#2b3d55;
   font-weight:750;
   overflow-wrap:anywhere;
+}
+.dashboard-page .dashboard-activity-label {
+  display:flex;
+  gap:10px;
+  align-items:center;
+  min-width:0;
 }
 .dashboard-page .dashboard-activity-file-icon {
   display:grid;
