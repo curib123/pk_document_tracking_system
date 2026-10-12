@@ -1,0 +1,111 @@
+/* CENTRAL COLOR PALETTE — THE SOLE SOURCE OF BRAND/STATUS/CSS COLORS.
+ * Edit these values to recolor every module without hunting through CSS.
+ * Existing CSS colors are all references to the semantic tokens below.
+ * Keep this stylesheet BEFORE app.css, dashboard.css and other modules.
+ */
+:root {
+  --ui-white: #ffffff;
+  --ui-brand-950: #711729;
+  --ui-brand-900: #8b1730;
+  --ui-brand-800: #a61f35;
+  --ui-brand-700: #b8273c;
+  --ui-brand-600: #c82b43;
+  --ui-brand-500: #d4263a;
+  --ui-brand-400: #e15063;
+  --ui-brand-300: #eaa1ae;
+  --ui-brand-200: #f2c5cf;
+  --ui-brand-150: #f5dce2;
+  --ui-brand-100: #fbe9ed;
+  --ui-brand-50: #fff2f4;
+  --ui-navy: #0a0b21;
+  --ui-ink-950: #162238;
+  --ui-ink-900: #1c2e47;
+  --ui-ink-800: #253852;
+  --ui-ink-700: #344963;
+  --ui-ink-600: #455b75;
+  --ui-ink-500: #596e86;
+  --ui-ink-400: #708299;
+  --ui-ink-300: #8b9aab;
+  --ui-ink-200: #a9b6c5;
+  --ui-line-strong: #dbe3ec;
+  --ui-line: #e5eaf1;
+  --ui-line-soft: #edf1f5;
+  --ui-surface-muted: #f2f5f9;
+  --ui-surface-soft: #fafbfd;
+  --ui-canvas: #f6f8fb;
+  --ui-blue-900: #2c496e;
+  --ui-blue-700: #4168a3;
+  --ui-blue-500: #547aa9;
+  --ui-blue-300: #a4bcda;
+  --ui-blue-100: #eaf2fc;
+  --ui-green-900: #0c6747;
+  --ui-green-700: #157e58;
+  --ui-green-500: #3b8a78;
+  --ui-green-300: #bce5d1;
+  --ui-green-100: #e9f8f0;
+  --ui-amber-900: #98651a;
+  --ui-amber-700: #b37d26;
+  --ui-amber-500: #d29541;
+  --ui-amber-300: #ebd29a;
+  --ui-amber-100: #fff3de;
+  --ui-purple-700: #7555aa;
+  --ui-purple-100: #f3eafa;
+  --ui-slate-950: #273148;
+  --ui-slate-800: #46536c;
+  --ui-slate-600: #738197;
+  --ui-slate-400: #9aa6b5;
+  --ui-slate-200: #d4dce6;
+  --ui-slate-100: #f4f6fa;
+  --ui-black: #000000;
+
+  /* Backward-compatible application aliases. */
+  --accent: var(--ui-brand-500);
+  --accent-dark: var(--ui-brand-800);
+  --accent-light: var(--ui-brand-50);
+  --navy: var(--ui-navy);
+  --navy-soft: var(--ui-brand-800);
+  --text: var(--ui-ink-900);
+  --muted: var(--ui-ink-500);
+  --border: var(--ui-line);
+  --surface: var(--ui-white);
+  --bg: var(--ui-canvas);
+  --radius: 14px;
+  /* Bootstrap's own semantic controls use this brand palette. */
+  --bs-primary: var(--ui-brand-500);
+  --bs-primary-rgb: 212,38,58;
+  --bs-danger: var(--ui-brand-700);
+  --bs-danger-rgb: 184,39,60;
+  --bs-body-color: var(--ui-ink-900);
+  --bs-link-color: var(--ui-brand-700);
+}
+
+/* Shared action colors, including Bootstrap buttons and status labels.
+ * Design accents are always taken from the same root palette above. */
+.btn-primary {
+  --bs-btn-bg: var(--ui-brand-500);
+  --bs-btn-border-color: var(--ui-brand-500);
+  --bs-btn-hover-bg: var(--ui-brand-800);
+  --bs-btn-hover-border-color: var(--ui-brand-800);
+  --bs-btn-active-bg: var(--ui-brand-900);
+  --bs-btn-active-border-color: var(--ui-brand-900);
+  --bs-btn-disabled-bg: var(--ui-brand-300);
+  --bs-btn-disabled-border-color: var(--ui-brand-300);
+}
+.btn-outline-primary {
+  --bs-btn-color: var(--ui-brand-700);
+  --bs-btn-border-color: var(--ui-brand-300);
+  --bs-btn-hover-bg: var(--ui-brand-700);
+  --bs-btn-hover-border-color: var(--ui-brand-700);
+}
+.btn-danger {
+  --bs-btn-bg: var(--ui-brand-800);
+  --bs-btn-border-color: var(--ui-brand-800);
+  --bs-btn-hover-bg: var(--ui-brand-900);
+  --bs-btn-hover-border-color: var(--ui-brand-900);
+}
+.btn-outline-danger {
+  --bs-btn-color: var(--ui-brand-800);
+  --bs-btn-border-color: var(--ui-brand-300);
+  --bs-btn-hover-bg: var(--ui-brand-800);
+  --bs-btn-hover-border-color: var(--ui-brand-800);
+}

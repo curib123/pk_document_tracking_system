@@ -12,8 +12,8 @@ final class Document_folder_tree
     {
         $levels=$domain==='softcopy'
             ? ['category'=>'category_id']
-            : ['location'=>'location_id','specific'=>'specific_id',
-               'area'=>'area_id'];
+            : ['location'=>'location_id','asset'=>'asset_id',
+               'specific'=>'specific_id','area'=>'area_id'];
         foreach ($levels as $kind=>$field) {
             $id=(int)($row[$field]??0);
             $key=$kind.':'.$id;

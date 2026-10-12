@@ -137,7 +137,7 @@ if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id']
                   <div class="d-flex gap-1 flex-wrap">
                     <button type="button" class="btn btn-sm btn-outline-primary js-workflow-step"
                       data-step-record="<?= $esc(json_encode($record,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)) ?>">
-                      Edit
+                      <i class="fa-solid fa-pen me-1" aria-hidden="true"></i> Edit
                     </button>
                     <?php foreach(['up'=>'fa-arrow-up','down'=>'fa-arrow-down'] as $direction=>$icon): ?>
                     <form method="post" action="<?= site_url('admin/workflows/step/move') ?>" data-confirm="Move this approval step?">
@@ -148,7 +148,7 @@ if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id']
                       <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
                       <input type="hidden" name="confirmed" value="no">
                       <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
-                      <button class="btn btn-sm btn-light" type="submit" aria-label="Move step <?= $direction ?>" <?= ($direction==='up' && $i===0)||($direction==='down' && $i===count($steps)-1)?'disabled':'' ?>><i class="fa-solid <?= $icon ?>"></i></button>
+                      <button class="btn btn-sm btn-light" type="submit" aria-label="Move step <?= $direction ?>" <?= ($direction==='up' && $i===0)||($direction==='down' && $i===count($steps)-1)?'disabled':'' ?>><i class="fa-solid <?= $icon ?> me-1" aria-hidden="true"></i> <?= $direction==='up'?'Move Up':'Move Down' ?></button>
                     </form>
                     <?php endforeach; ?>
                     <form method="post" action="<?= site_url('admin/workflows/step/remove') ?>" data-confirm="Remove this approval step?">
@@ -158,7 +158,7 @@ if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id']
                       <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
                       <input type="hidden" name="confirmed" value="no">
                       <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
-                      <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove step">Remove</button>
+                      <button class="btn btn-sm btn-outline-danger" type="submit" aria-label="Remove step"><i class="fa-solid fa-trash-can me-1" aria-hidden="true"></i> Remove</button>
                     </form>
                   </div>
                   <?php endif; ?>

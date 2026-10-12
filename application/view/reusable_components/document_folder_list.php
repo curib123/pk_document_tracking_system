@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Nested folder explorer — expands Area → Specific → Location → files
+ * Nested folder explorer — expands Area → Specific → Asset → Location → files
  * (or Category → Subcategory → files for Softcopy) IN THE SAME VIEW.
  * No additional queries or APIs: reuse the authorized paginated dt_rows.
  */
@@ -22,8 +22,8 @@ $folderUrl=static function($folder,$sort=NULL,$dir=NULL) use(
     ]);
     return site_url($dt_path).'?'.http_build_query($params);
 };
-$kinds=['area'=>'Area','specific'=>'Specific','location'=>'Location',
-    'category'=>'Category'];
+$kinds=['area'=>'Area','specific'=>'Specific','asset'=>'Asset',
+    'location'=>'Location','category'=>'Category'];
 $currentFolder=$browser['folder'];
 $selectedChain=[];
 $at=$currentFolder;
@@ -162,8 +162,16 @@ $renderNode=function($key,$depth=0) use(
         </div>
     </div>
     <div class="doc-tree-scroll">
-        <ul class="doc-tree-root" aria-label="<?= html_escape($dt_folder_domain==='hardcopy'?'Hardcopy location tree':'Softcopy category tree') ?>">
-            <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
+        <ul class="doc-tree-root" aria-label="Document Repository">
+            <li class="doc-tree-node doc-tree-repository">
+                <details data-folder-node open>
+                    <summary class="doc-tree-folder-row">
+                        <span class="doc-tree-caret" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
+                        <span class="doc-tree-folder-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></span>
+                        <span class="doc-tree-folder-text"><strong>Document Repository</strong></span>
+                    </summary>
+                    <ul class="doc-tree-children">
+                        <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
             <?php if (!empty($byFolder['unfiled'])): ?>
                 <li class="doc-tree-node doc-tree-unfiled">
                     <details data-folder-node open>
@@ -179,6 +187,9 @@ $renderNode=function($key,$depth=0) use(
                     </details>
                 </li>
             <?php endif; ?>
+                    </ul>
+                </details>
+            </li>
         </ul>
         <?php if (empty($tree['roots']) && empty($byFolder['unfiled'])): ?>
             <div class="doc-folder-empty" role="status">
