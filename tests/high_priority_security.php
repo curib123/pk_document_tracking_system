@@ -63,6 +63,7 @@ hp_check(strpos($backup->directory(),'/storage/backups')!==FALSE,
     'Default private backup directory must be allowed.');
 
 $reflection=new ReflectionMethod(Backup_service::class,'safeEntry');
+$reflection->setAccessible(TRUE); // Needed for private method invocation on PHP 8.0.
 foreach ([
     '../passwords','files//storage','files/storage/a.','files/storage/CON.txt',
     'files/storage/nul','files/storage/backup:stream','files/storage/a'.chr(92).'b',
