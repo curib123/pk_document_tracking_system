@@ -159,3 +159,6 @@ Workflow
    Existing requests remain on Version 1
 
 Key rule: Every submitted request should record the exact workflow_version_id it uses. This preserves the approval history and prevents publishing a new version from unexpectedly changing approval steps for requests already in progress.
+
+
+modern modal ux/ui fro view details modal both softcopy and hardcopy
