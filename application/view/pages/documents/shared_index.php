@@ -111,12 +111,24 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
 </form></div></div></div>
 
 <?php if ($cfg['domain']==='softcopy'): ?>
-<div class="modal fade" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
-    <div class="modal-header"><h2 class="modal-title fs-6" id="fileHistoryTitle">Document File History</h2>
-      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-    <div class="modal-body" id="fileHistoryList"></div>
-    <div class="modal-footer"><button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button></div>
+<div class="modal fade file-history-saas" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><div class="modal-content">
+    <div class="modal-header file-history-header">
+      <div class="d-flex align-items-center gap-3">
+        <span class="file-history-header-icon" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
+        <div><span class="file-history-eyebrow">CONTROLLED DIGITAL DOCUMENT</span>
+          <h2 class="modal-title h5 mb-0" id="fileHistoryTitle">Document File History</h2></div>
+      </div>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body file-history-body">
+      <p class="small text-secondary mb-3">Revision files available within your document permissions.</p>
+      <div id="fileHistoryList" class="file-history-list"></div>
+    </div>
+    <div class="modal-footer file-history-footer">
+      <span class="small text-secondary"><i class="fa-solid fa-lock me-1" aria-hidden="true"></i> Authorized files only</span>
+      <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
+    </div>
   </div></div>
 </div>
 <?php if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))): ?>
