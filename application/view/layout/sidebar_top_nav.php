@@ -23,7 +23,6 @@ foreach (['documents/'=>'System Documents','places'=>'Master Data','my-requests/
 $navParts=explode(' · ',$title);$navPage=end($navParts);
 
 ?>
-<a class="skip-link" href="#mainContent">Skip to main content</a>
 <div class="app-shell">
     <aside class="app-sidebar" id="appSidebar" aria-label="Primary navigation">
         <a href="<?= site_url('dashboard') ?>" class="brand">
@@ -72,7 +71,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
         <header class="topbar">
             <button class="icon-button d-lg-none" type="button" id="sidebarToggle" aria-label="Toggle navigation" aria-controls="appSidebar" aria-expanded="false"><i class="fa-solid fa-bars"></i></button>
             <div class="container d-block">
-                <span class="topbar-label"><strong><?= html_escape($navPage) ?></strong></span>
+            <span class="text-danger"><strong><?= html_escape($navModule) ?></strong></span> <br>
             <span class="topbar-label"><strong><?= html_escape($navPage) ?></strong></span>
             </div>
             <div class="user-menu dropdown">

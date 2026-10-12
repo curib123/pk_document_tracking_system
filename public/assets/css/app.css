@@ -66,6 +66,9 @@ a {
     background: var(--navy);
     color: #c5cddd;
     z-index: 1050;
+     overflow: auto;
+  scrollbar-width: none;      /* Firefox */
+  -ms-overflow-style: none;   /* Older Internet Explorer */
 }
 
 .app-main {
@@ -187,8 +190,8 @@ a {
 
 .topbar-label {
     color: #637084;
-    font-size: 13px;
-    font-weight: 500;
+    font-size: 10px;
+    font-weight: 300;
 }
 
 .user-trigger {

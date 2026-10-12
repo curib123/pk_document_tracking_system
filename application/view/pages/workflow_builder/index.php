@@ -27,8 +27,7 @@ $csrfName=$this->security->get_csrf_token_name();$csrfValue=$this->security->get
 $approverLabels=['user'=>'By Specific User','role'=>'By Role',
     'requester_leader'=>"By Requester's Leader",'requester'=>'By Requester Themselves'];
 ?>
-<div class="page-heading"><div><span class="eyebrow">Administration</span><h1>Workflow Builder</h1>
-<p>Predefined Approval Workflows · Edit a draft, then publish it for future requests.</p></div></div>
+
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir','dt_sortable',
 'dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows')); ?>
