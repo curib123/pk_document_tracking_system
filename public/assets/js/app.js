@@ -165,11 +165,10 @@
 
     function renderRecordDetails(container,data) {
         container.replaceChildren();
-        if (window.PKDocumentView && window.PKDocumentView.handles(data)) {
+        if (window.PKDocumentView) {
             window.PKDocumentView.render(container,data);
             return;
         }
-        if (window.PKDocumentView) window.PKDocumentView.reset();
         if (typeof data === 'string') {
             try { data = JSON.parse(data); } catch (e) { data = {Details:data}; }
         }
@@ -238,7 +237,7 @@
         var heading=document.getElementById('viewModalTitle');
         if (!modal || !details) return;
         renderRecordDetails(details,data);
-        if (heading && (!window.PKDocumentView || !window.PKDocumentView.handles(data)))
+        if (heading && !window.PKDocumentView)
             heading.textContent=row.getAttribute('data-row-title')||'View Details';
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
     }
@@ -331,7 +330,7 @@
             var data = parse(view, 'display');
             var details = document.getElementById('viewDetails');
             var title = document.getElementById('viewModalTitle');
-            if (title) title.textContent = view.getAttribute('data-title') || 'Details';
+            if (title && !window.PKDocumentView) title.textContent = view.getAttribute('data-title') || 'Details';
             if (details) renderRecordDetails(details,data);
         }
 
@@ -1090,6 +1089,30 @@
         if (flag) flag.value = 'yes';
         form.requestSubmit();
     });
+
+    // A saved workflow returns to the same editor, refreshed with the latest
+    // draft hash and approvals. Alerts take precedence over automatically
+    // reopening the builder so modals never overlap.
+    function reopenWorkflow() {
+        var match=new URLSearchParams(window.location.search).get('workflow');
+        if (!match || !/^[0-9]+$/.test(match)) return;
+        var editor=document.getElementById('workflowStepsModal-'+match);
+        if (!editor) return;
+        var versions=editor.querySelector('[data-workflow-version]');
+        var draft=editor.querySelector('[data-workflow-version-panel][data-draft="yes"]');
+        if (versions && draft) {
+            versions.value=draft.dataset.workflowVersionPanel;
+            versions.dispatchEvent(new Event('change',{bubbles:true}));
+        }
+        window.bootstrap.Modal.getOrCreateInstance(editor).show();
+    }
+    var noticeModal=document.getElementById('appAlertModal');
+    if (noticeModal) {
+        noticeModal.addEventListener('hidden.bs.modal',reopenWorkflow,{once:true});
+        window.bootstrap.Modal.getOrCreateInstance(noticeModal).show();
+    } else {
+        reopenWorkflow();
+    }
 
     document.querySelectorAll('[data-auto-submit]').forEach(function (control) {
         control.addEventListener('change', function () {
