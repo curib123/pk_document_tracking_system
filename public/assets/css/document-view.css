@@ -381,6 +381,16 @@
 .offline-ui #viewModal.is-document-view .modal-dialog {
     width: min(calc(100% - 32px), 1080px);
 }
+.offline-ui #viewModal.is-document-view .modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - 56px);
+}
+.offline-ui #viewModal.is-document-view .doc-modal-body {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
+}
 @media (max-width: 767.98px) {
     #viewModal.is-document-view .modal-dialog {
         max-width: none;
