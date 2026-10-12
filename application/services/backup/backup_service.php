@@ -224,6 +224,7 @@ final class Backup_service
     {
         $lock=$this->lock();
         $stage=NULL;$maintenance=$this->root.'/storage/.restore-in-progress';
+        $leaveMaintenance=FALSE;
         try {
             $archive=$this->resolve($name);
             $meta=$this->verify($archive);
@@ -250,11 +251,14 @@ final class Backup_service
                         $this->copyDirectory($recoverStage.'/storage',$this->root.'/storage');
                     $this->removeDirectory($recoverStage);
                 } catch (Throwable $rollback) {
+                    // Fail closed: block normal authenticated writes until an
+                    // administrator recovers through the CLI on the server.
+                    $leaveMaintenance=TRUE;
                     error_log('PK DTS RESTORE rollback needs intervention: '.$rollback->getMessage());
                     throw new DomainException('Restore failed and automatic recovery was incomplete. Use the recovery ZIP offline.');
                 }
                 throw new DomainException('Restore failed; the recovery backup was reapplied.');
-            } finally { @unlink($maintenance); }
+            } finally { if (!$leaveMaintenance) @unlink($maintenance); }
             return ['restored'=>$name,'recovery'=>$recovery['name']];
         } finally {
             if ($stage!==NULL) $this->removeDirectory($stage);
