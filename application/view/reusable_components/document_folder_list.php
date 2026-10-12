@@ -22,8 +22,8 @@ $folderUrl=static function($folder,$sort=NULL,$dir=NULL) use(
     ]);
     return site_url($dt_path).'?'.http_build_query($params);
 };
-$kinds=['area'=>'Area','specific'=>'Specific','location'=>'Location',
-    'category'=>'Category'];
+$kinds=['area'=>'Area','specific'=>'Specific','asset'=>'Asset',
+    'location'=>'Location','category'=>'Category'];
 $currentFolder=$browser['folder'];
 $selectedChain=[];
 $at=$currentFolder;
