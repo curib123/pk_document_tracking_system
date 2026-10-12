@@ -9,7 +9,9 @@ $dt_sort = $dt_sort ?? '';
 $dt_dir = $dt_dir ?? 'asc';
 $dt_sortable = $dt_sortable ?? [];
 $dt_extra_params = $dt_extra_params ?? [];
-$dt_layout=($dt_extra_params['layout']??'table')==='grid'?'grid':'table';
+$requestedLayout=$dt_extra_params['layout']??'table';
+$dt_layout=$requestedLayout==='grid'?'grid':
+    (($requestedLayout==='folder' && !empty($dt_folder_browser))?'folder':'table');
 $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
     $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir,
     $dt_extra_params
@@ -62,7 +64,12 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <a class="btn btn-light" href="<?= site_url($dt_path).($dt_extra_params?'?'.http_build_query($dt_extra_params):'') ?>">Clear</a>
         <?php endif; ?>
     </div>
-    <?php if ($dt_layout==='grid'): ?>
+    <?php if ($dt_layout==='folder'): ?>
+        <?php $this->load->view('reusable_components/document_folder_list',compact(
+            'dt_folder_browser','dt_folder_domain','dt_path','dt_extra_params','dt_q',
+            'dt_filter_values','dt_limit','dt_sort','dt_dir','dt_total','dt_columns','dt_rows'
+        )); ?>
+    <?php elseif ($dt_layout==='grid'): ?>
     <div class="document-card-grid p-3" data-record-layout="grid">
       <?php if (!$dt_rows): ?><p class="empty-state mb-0" role="status"><strong><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'No matching records' : 'No records yet' ?></strong>
         <span class="empty-hint"><?= $dt_q !== '' || count(array_filter($dt_filter_values, 'strlen')) ? 'Try another search or clear the filters above.' : 'Records will appear here when they are added.' ?></span></p><?php endif; ?>
@@ -135,12 +142,17 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     </div>
     <?php endif; ?>
     <div class="table-footer">
-        <small>Showing <?= html_escape($dt_label) ?> of <?= (int) $dt_total ?> records</small>
+        <?php if ($dt_layout==='folder' && $dt_folder_browser['level']==='root'): ?>
+            <small>Browse folders to find documents · <?= (int)$dt_total ?> accessible records</small>
+        <?php else: ?>
+            <small>Showing <?= html_escape($dt_label) ?> of <?= (int) $dt_total ?> records</small>
+        <?php endif; ?>
         <div class="d-flex align-items-center gap-2 flex-wrap">
             <label class="text-secondary small" for="rowLimit">Rows per page</label>
             <select class="form-select form-select-sm" id="rowLimit" name="limit" form="tableFilter" style="width:79px" data-auto-submit>
                 <?php foreach ([10,25,50,100] as $n): ?><option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
             </select>
+            <?php if (!($dt_layout==='folder' && $dt_folder_browser['level']==='root')): ?>
             <?php if ($dt_page > 1): ?>
              <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
              <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Previous page unavailable"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></span><?php endif; ?>
@@ -148,6 +160,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
              <?php if ($dt_page < $dt_pages): ?>
              <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page + 1)) ?>" aria-label="Next page"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></a>
              <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Next page unavailable"><i class="fa-solid fa-chevron-right" aria-hidden="true"></i></span><?php endif; ?>
+             <?php endif; /* No document pagination at folder root */ ?>
         </div>
     </div>
 </div>
