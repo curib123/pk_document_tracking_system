@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
 </head>
 
 <body class="login-page"
@@ -114,11 +115,7 @@
                     Enter your credentials to continue.
                 </p>
 
-                <?php if ($this->session->flashdata('notice')): ?>
-                    <div class="alert alert-danger login-error" role="alert">
-                        <?= html_escape($this->session->flashdata('notice')) ?>
-                    </div>
-                <?php endif; ?>
+
 
                 <form method="post" action="<?= site_url('login') ?>">
 
@@ -172,5 +169,6 @@
 
     </main>
 
+<?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>
 </html>
