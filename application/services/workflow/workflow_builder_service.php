@@ -162,12 +162,18 @@ class Workflow_builder_service
             if ($this->ci->db->get_where('workflow_versions',[
                 'workflow_id'=>(int)$workflowId,'status'=>'draft'])->row_array())
                 throw new DomainException('An editable draft already exists for this workflow.');
+            $workflow=$this->ci->db->get_where('workflows',['id'=>(int)$workflowId])->row_array();
+            if (!$workflow) throw new DomainException('Select a predefined workflow.');
             $version=$this->ci->db->from('workflow_versions')->where('workflow_id',(int)$workflowId)
                 ->order_by('version_number','DESC')->limit(1)->get()->row_array();
-            if (!$version) throw new DomainException('No workflow version is available to copy.');
+            // A newly seeded definition has no version yet: start with an
+            // empty editable draft, never an invalid published empty route.
             $this->ci->db->insert('workflow_versions',[
-                'workflow_id'=>(int)$workflowId,'version_number'=>(int)$version['version_number']+1,
-                'status'=>'draft','is_default'=>0,'graph'=>$version['graph'],'created_by'=>(int)$actorId]);
+                'workflow_id'=>(int)$workflowId,
+                'version_number'=>$version?(int)$version['version_number']+1:1,
+                'status'=>'draft','is_default'=>0,
+                'graph'=>$version?$version['graph']:'{"steps":[]}',
+                'created_by'=>(int)$actorId]);
         },$actorId);
     }
 }

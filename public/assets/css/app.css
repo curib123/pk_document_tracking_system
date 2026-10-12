@@ -1587,3 +1587,79 @@ a {
 @media (prefers-reduced-motion: reduce) {
     .app-sidebar, .side-link, .folder-tile { transition: none; }
 }
+
+/* Plan.md: actionable notification counts and versioned workflow editor. */
+.nav-count,
+.tab-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 22px;
+    height: 22px;
+    padding: 0 6px;
+    border-radius: 999px;
+    font-size: 11px;
+    line-height: 1;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+}
+.nav-count {
+    margin-left: auto;
+    color: #fff;
+    background: #bf2f42;
+    border: 1px solid #ffffff40;
+}
+.side-link.active .nav-count { background: #fff; color: #a81b31; }
+.tab-count { margin-left: 5px; background: #eef1f6; color: #314056; }
+.tab-link.active .tab-count { background: #fff0f2; color: #bd2437; }
+.document-detail-section {
+    padding: 18px 0;
+    border-bottom: 1px solid #e8ebf0;
+}
+.document-detail-section:first-child { padding-top: 0; }
+.document-detail-section:last-child { padding-bottom: 0; border-bottom: 0; }
+.document-detail-heading {
+    font-weight: 700;
+    margin-bottom: 14px;
+    color: var(--text);
+    letter-spacing: -0.01em;
+}
+.document-detail-section dd {
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+}
+.workflow-step-list {
+    list-style: none;
+    padding-left: 0;
+    counter-reset: approval-step;
+}
+.workflow-step-row {
+    counter-increment: approval-step;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding: 14px 16px;
+    background: #fff;
+    border: 1px solid var(--border);
+    border-radius: 12px;
+}
+.workflow-step-row::before {
+    content: counter(approval-step);
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--accent-light);
+    color: var(--accent);
+    font-weight: 700;
+}
+.workflow-step-row .d-flex form { display: inline-flex; }
+.workflow-steps-modal [data-workflow-version-panel][hidden] { display: none !important; }
+@media (max-width: 576px) {
+    .workflow-step-row { align-items: flex-start; }
+    .workflow-step-row > .d-flex { width: 100%; justify-content: flex-end; }
+}

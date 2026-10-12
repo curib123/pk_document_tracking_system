@@ -40,8 +40,8 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             <?php endif; ?>
             <?php if ($visible('requests') || $visible('tasks')): ?>
                 <div class="side-heading">Requests</div>
-                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests</a><?php endif; ?>
-                <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks</a><?php endif; ?>
+                <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests <?php if (!empty($navigation_counts['requests_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['requests_total'] ?> returned requests"><?= (int)$navigation_counts['requests_total'] ?></span><?php endif; ?></a><?php endif; ?>
+                <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <?php if (!empty($navigation_counts['tasks_total'])): ?><span class="nav-count" aria-label="<?= (int)$navigation_counts['tasks_total'] ?> pending tasks"><?= (int)$navigation_counts['tasks_total'] ?></span><?php endif; ?></a><?php endif; ?>
             <?php endif; ?>
           
             <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>

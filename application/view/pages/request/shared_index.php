@@ -30,17 +30,28 @@ foreach ($rows as $row) {
      $routeText[]=$step['label'].' → '.$step['approver_label'].
          ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
  }
- $display=[
- 'Approval Route'=>implode("\n",$routeText)?:'Not submitted yet',
- 'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-   ? 'Attached for approval' : 'Not attached',
- 'Reference'=>$row['reference'],'Action'=>ucwords(str_replace('_',' ',$row['type'])),
- 'Subject'=>$payload['subject']??'','Remarks'=>$payload['remarks']??'',
- 'Requester'=>$row['requester_name'],'Status'=>$row['status'],
- 'Workflow History'=>implode("\n",$historyText)?:'No decisions yet',
- 'Created At'=>$row['created_at']
- ];
- $display=array_merge($display,$row['detail_labels']??[]);
+ $display=['sections'=>[
+   ['title'=>'Request Overview','fields'=>[
+     'Reference'=>$row['reference'],
+     'Action'=>ucwords(str_replace('_',' ',$row['type'])),
+     'Subject'=>$payload['subject']??'',
+     'Requester'=>$row['requester_name'],
+     'Status'=>ucfirst($row['status']),
+     'Created At'=>$row['created_at'],
+     'Remarks'=>$payload['remarks']??''
+   ]],
+   ['title'=>'Proposed Document Details','fields'=>$row['detail_labels']??[],
+     'empty'=>'No additional document metadata for this request.'],
+   ['title'=>'Approval Route','fields'=>[
+     'Workflow Version'=>$row['workflow_version_id']?'Fixed at submission':'Awaiting submission',
+     'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
+        ? 'Attached for approval' : 'Not attached',
+     'Steps'=>implode("\n",$routeText)?:'Not submitted yet'
+   ]],
+   ['title'=>'Workflow Decision History','fields'=>[
+     'Activity'=>implode("\n",$historyText)?:'No decisions yet'
+   ]]
+ ]];
  $record=[
  'id'=>$row['id'],'version'=>$row['version'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
  'remarks'=>$payload['remarks']??'','title'=>$payload['title']??'',
@@ -116,7 +127,7 @@ $dt_path=($task?'my-tasks/':'my-requests/').$tab;
 <nav class="tab-bar" aria-label="Request category tabs">
 <?php foreach ($tabs as $slug=>$name): ?>
 <a class="tab-link <?= $tab===$slug?'active':'' ?>"
-href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>" <?= $tab===$slug?'aria-current="page"':'' ?>><?= html_escape($name) ?></a>
+href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>" <?= $tab===$slug?'aria-current="page"':'' ?>><?= html_escape($name) ?><?php $tabCount=(int)($navigation_counts[$task?'tasks':'requests'][$slug]??0); if ($tabCount>0): ?> <span class="tab-count" aria-label="<?= $tabCount ?> pending"><?= $tabCount ?></span><?php endif; ?></a>
 <?php endforeach; ?></nav>
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',

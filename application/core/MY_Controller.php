@@ -74,6 +74,8 @@ class MY_Controller extends CI_Controller
         $data['title'] = $title;
         $data['user'] = $this->user;
         $data['permissions'] = $this->Permission_model->for_user($this->user);
+        $this->load->model('Notification_model');
+        $data['navigation_counts'] = $this->Notification_model->for_user($this->user);
         $data['content_view'] = $view;
         $this->load->view('layout/header', $data);
         $this->load->view('layout/sidebar_top_nav', $data);

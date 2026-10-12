@@ -144,33 +144,78 @@
         });
     }
 
+    // Keep detail modals human-readable even when the server returns nested
+    // associative arrays or a previously serialized sections value.
+    function readableDetail(value, depth) {
+        if (value == null || value === '') return '—';
+        if (depth > 4) return 'More details available';
+        if (Array.isArray(value)) {
+            return value.length ? value.map(function (item) {
+                return readableDetail(item, depth + 1);
+            }).join('\n') : '—';
+        }
+        if (typeof value === 'object') {
+            return Object.entries(value).map(function (pair) {
+                return pair[0] + ': ' + readableDetail(pair[1], depth + 1);
+            }).join('\n') || '—';
+        }
+        if (typeof value === 'boolean') return value ? 'Yes' : 'No';
+        return String(value);
+    }
+
     function renderRecordDetails(container,data) {
         container.replaceChildren();
-        var sections=Array.isArray(data.sections)?data.sections:[{fields:data}];
+        if (typeof data === 'string') {
+            try { data = JSON.parse(data); } catch (e) { data = {Details:data}; }
+        }
+        if (!data || typeof data !== 'object') data={Details:data};
+        var sections=data.sections;
+        if (typeof sections === 'string') {
+            try { sections=JSON.parse(sections); } catch (e) { sections=null; }
+        }
+        if (!Array.isArray(sections)) sections=[{title:'Record Details',fields:data}];
         sections.forEach(function(section) {
-            var block=document.createElement('section');block.className='document-detail-section';
+            if (!section || typeof section !== 'object') section={fields:{Details:section}};
+            var block=document.createElement('section');
+            block.className='document-detail-section';
             if (section.title) {
-                var heading=document.createElement('h3');heading.className='h6';heading.textContent=section.title;block.append(heading);
+                var heading=document.createElement('h3');
+                heading.className='h6 document-detail-heading';
+                heading.textContent=readableDetail(section.title,0);
+                block.append(heading);
             }
-            var entries=Object.entries(section.fields||{});
+            var fields=section.fields || {};
+            if (Array.isArray(fields)) {
+                fields=Object.fromEntries(fields.map(function(v,i){return [String(i+1),v];}));
+            }
+            var entries=(fields && typeof fields==='object')?Object.entries(fields):[['Details',fields]];
             if (!entries.length) {
-                var empty=document.createElement('p');empty.className='small text-secondary';
-                empty.textContent=section.empty||'No details are available.';block.append(empty);
+                var empty=document.createElement('p');
+                empty.className='small text-secondary';
+                empty.textContent=section.empty||'No details are available.';
+                block.append(empty);
             } else {
-                var list=document.createElement('dl');list.className='detail-grid mb-0';
+                var list=document.createElement('dl');
+                list.className='detail-grid mb-0';
                 entries.forEach(function(pair) {
                     var term=document.createElement('dt'),value=document.createElement('dd');
-                    term.textContent=pair[0];value.textContent=pair[1]==null||pair[1]===''?'—':String(pair[1]);
+                    term.textContent=pair[0];
+                    value.textContent=readableDetail(pair[1],0);
                     list.append(term,value);
-                });block.append(list);
+                });
+                block.append(list);
             }
-            (section.links||[]).forEach(function(item) {
+            (Array.isArray(section.links)?section.links:[]).forEach(function(item) {
+                if (!item || !item.url) return;
                 try {
                     var url=new URL(item.url,window.location.origin);
                     if (url.origin!==window.location.origin || !['http:','https:'].includes(url.protocol)) return;
-                    var link=document.createElement('a');link.className='btn btn-sm btn-outline-primary mt-2 me-2';
-                    link.href=url.href;link.textContent=item.label;block.append(link);
-                } catch (error) { /* A malformed link never becomes an executable URL. */ }
+                    var link=document.createElement('a');
+                    link.className='btn btn-sm btn-outline-primary mt-2 me-2';
+                    link.href=url.href;
+                    link.textContent=readableDetail(item.label||'Open file',0);
+                    block.append(link);
+                } catch (error) { /* Reject malformed destinations. */ }
             });
             container.append(block);
         });
