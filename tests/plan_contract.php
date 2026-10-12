@@ -88,5 +88,15 @@ check(strpos($workflowView, 'workflow-setup-guide')!==FALSE, 'Workflow Builder m
 check(strpos($workflowView, 'data-draft=')!==FALSE, 'Workflow Builder must identify editable drafts');
 check(strpos($workflowView, 'name="workflow_id"')!==FALSE, 'Workflow actions must retain editor context');
 check(strpos($adminController, "redirect.='?workflow='")!==FALSE, 'Workflow editing must retain context on save');
+$retentionSource=file_get_contents($path.'/application/services/documents/retention_countdown.php');
+$requestDetails=file_get_contents($path.'/application/models/Request_model.php');
+check(strpos($detailsModel, "'Days until disposal'=>Retention_countdown::label")!==FALSE,
+  'Hardcopy document View Details must calculate remaining days to dispose');
+check(strpos($detailsModel, "'Retention Start'=>")===FALSE && strpos($detailsModel, "'Retention End'=>")===FALSE,
+  'Hardcopy document View Details must not show separate retention start/end fields');
+check(strpos($requestDetails, "'Days until disposal']=Retention_countdown::label")!==FALSE,
+  'Hardcopy request View Details must use the same countdown');
+check(strpos($retentionSource, "'No retention'")!==FALSE,
+  'Disabled or missing retention must be displayed as No retention');
 echo "Unified UI/UX and PHP 8.0 contract checks passed.\n";
 echo "Plan workflow/UX contract checks passed.\n";
