@@ -89,4 +89,27 @@ check(strpos($workflowView, 'data-draft=')!==FALSE, 'Workflow Builder must ident
 check(strpos($workflowView, 'name="workflow_id"')!==FALSE, 'Workflow actions must retain editor context');
 check(strpos($adminController, "redirect.='?workflow='")!==FALSE, 'Workflow editing must retain context on save');
 echo "Unified UI/UX and PHP 8.0 contract checks passed.\n";
+$register=file_get_contents($path.'/application/view/pages/documents/shared_index.php');
+$registerCss=file_get_contents($path.'/public/assets/css/unified-ux.css');
+check(strpos($register, "'title'=>'Document','sequence_number'=>'Copy Number','location_name'=>'Location'")!==FALSE,
+  'Hardcopy register must show document, copy number and location only as its primary columns');
+check(strpos($register, "'holder_name'=>'Holder','status'=>'Status'")!==FALSE,
+  'Hardcopy register must retain holder and status');
+check(strpos($register, "'title'=>'Document','document_number'=>'Document Number'")!==FALSE,
+  'Softcopy register must show title and document number first');
+check(strpos($register, "'category_name'=>'Category','status'=>'Status'")!==FALSE,
+  'Softcopy register must retain category and status');
+check(strpos($register, "'area_name'=>'Area'")===FALSE &&
+      strpos($register, "'asset_name'=>'Asset'")===FALSE &&
+      strpos($register, "'series_number'=>'Series'")===FALSE,
+  'Detailed physical hierarchy and series must not crowd the register columns');
+check(strpos($register, '$display=$document_details[$r[\'id\']]??$display;')!==FALSE,
+  'The full permission-scoped detail record must still power View Details');
+check(strpos($register, "'dt_extra_params'")!==FALSE && strpos($register, "'dt_rows'")!==FALSE,
+  'Document register must preserve shared table and action components');
+check(strpos($registerCss, '.document-register-listing[data-doc-domain="hardcopy"]')!==FALSE,
+  'Hardcopy register must have priority-based mobile columns');
+check(strpos($registerCss, '.document-register-listing[data-doc-domain="softcopy"]')!==FALSE,
+  'Softcopy register must have priority-based mobile columns');
+echo "Compact System Documents columns and full View Details contracts passed.\n";
 echo "Plan workflow/UX contract checks passed.\n";
