@@ -65,6 +65,7 @@ class Request_model extends CI_Model
     /** Resolve the selected request's proposal into human-readable labels in batches. */
     private function details($rows)
     {
+        require_once APPPATH.'services/documents/retention_countdown.php';
         $references=[
             'categories'=>['name',['category_id'=>'Proposed Category']],
             'areas'=>['name',['area_id'=>'Proposed Area','destination_area_id'=>'Destination Area']],
@@ -90,10 +91,13 @@ class Request_model extends CI_Model
             foreach (['title'=>'Proposed Title','document_number'=>'Proposed Document Number','series_number'=>'Series',
                 'sequence_number'=>'Copy / Sequence Number','new_revision_level'=>'Proposed Revision Level',
                 'effective_date'=>'Effective Date (optional)','date_received'=>'Received Date','date_released'=>'Released Date',
-                'page_number'=>'Pages','expires_at'=>'Access Expiry','retention_start_date'=>'Retention Start',
-                'retention_end_date'=>'Retention End','creation_reason'=>'Creation Reason',
+                'page_number'=>'Pages','expires_at'=>'Access Expiry','creation_reason'=>'Creation Reason',
                 'disposal_reason'=>'Disposal Reason','disposal_other'=>'Other Disposal Details'] as $key=>$label) {
                 if (isset($payload[$key]) && is_scalar($payload[$key]) && (string)$payload[$key]!=='') $details[$label]=$payload[$key];
+            }
+            if (in_array($row['type'],['hardcopy_create','hardcopy_update'],TRUE)) {
+                $details['Days until disposal']=Retention_countdown::label(
+                    $payload['retention_enabled']??0,$payload['retention_end_date']??NULL);
             }
             foreach ($references as $table=>[$unused,$fields]) foreach ($fields as $field=>$label) {
                 if (!empty($payload[$field])) $details[$label]=$lookups[$table][(int)$payload[$field]]??'Previously selected record is unavailable';
