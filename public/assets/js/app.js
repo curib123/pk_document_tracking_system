@@ -751,6 +751,14 @@
             var selected=chosen(select);
             if (selected && selected.disabled) select.value='';
         }
+        // Clearing an Asset must stay a real empty choice. If an existing
+        // Location is tied to that Asset, clear that Location too; otherwise
+        // a future save would silently restore the Asset through its parent.
+        if (changed==='asset' && !asset.value && location.value) {
+            var oldLocation=chosen(location);
+            if (oldLocation && oldLocation.dataset.assetId &&
+                oldLocation.dataset.assetId!=='0') location.value='';
+        }
         if (changed==='location' && location.value) {
             var loc=chosen(location);
             area.value=loc.dataset.areaId==='0'?'':(loc.dataset.areaId||'');
@@ -784,7 +792,7 @@
                 ? 'Location selected. Its predefined area, specific and asset have been populated.'
                 : asset.value ? 'Asset selected. Its area and specific are populated automatically.'
                 : specific.value ? 'Specific selected. The parent area is populated automatically.'
-                : 'Choose an area to filter the available specifics, assets and locations.';
+                : 'Area, Specific and Asset are optional. You can save without assigning an Asset.';
         }
     }
     document.addEventListener('change', function(event) {
@@ -817,6 +825,12 @@
                 subject.value=source.value?'Transfer: '+(doc.title||'Selected hardcopy'):'';
                 subject.dataset.autoSubject=subject.value;
             }
+        }
+        // Same optional Asset behavior for destination transfers.
+        if (changed==='asset' && !asset.value && location.value) {
+            var oldDestination=location.options[location.selectedIndex];
+            if (oldDestination && oldDestination.dataset.assetId &&
+                oldDestination.dataset.assetId!=='0') location.value='';
         }
         if (changed==='location' && location.value) {
             var chosen=location.options[location.selectedIndex];

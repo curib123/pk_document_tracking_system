@@ -368,3 +368,97 @@
   .doc-folder-file-actions {width:100%;max-width:none;justify-content:flex-end}
 }
 @media(prefers-reduced-motion:reduce){.document-layout-choice{transition:none}}
+
+
+/* Fixed-in-view top navigation, without taking content out of document flow.
+ * Sticky reserves its own height so the page, forms, tabs and modal triggers
+ * never slide underneath a position:fixed header. */
+.app-main > .topbar {
+  position: sticky;
+  top: 0;
+  z-index: 1030;
+  width: 100%;
+  min-height: 77px;
+  height: auto;
+  box-sizing: border-box;
+  padding-block: 11px;
+  background: #fff;
+  box-shadow: 0 2px 10px rgba(21, 34, 55, .045);
+}
+.app-main > .topbar .topbar-context {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3px;
+  min-width: 0;
+  max-width: 100%;
+  overflow: hidden;
+  padding: 0 14px;
+  line-height: 1.35;
+}
+.app-main > .topbar .topbar-module,
+.app-main > .topbar .topbar-label {
+  display: block;
+  max-width: 100%;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  overflow: hidden;
+}
+.app-main > .topbar .topbar-module {
+  color: #b52a40;
+  font-size: 12px;
+  font-weight: 800;
+}
+.app-main > .topbar .topbar-label {
+  color: #58677d;
+  font-size: 11px;
+  font-weight: 650;
+}
+.app-main > .topbar .user-menu,
+.app-main > .topbar .user-trigger,
+.app-main > .topbar #sidebarToggle {
+  flex: 0 0 auto;
+}
+.app-main > .topbar .user-trigger {
+  padding: 5px;
+  max-width: min(245px, 36vw);
+  min-height: 44px;
+}
+.app-main > .topbar .user-meta {
+  min-width: 0;
+  max-width: 150px;
+}
+.app-main > .topbar .user-meta strong,
+.app-main > .topbar .user-meta small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+@media (max-width: 575.98px) {
+  .app-main > .topbar {
+    min-height: 65px;
+    padding-inline: 10px;
+    padding-block: 7px;
+    gap: 6px;
+  }
+  .app-main > .topbar .topbar-context {
+    padding: 0 4px;
+    gap: 2px;
+  }
+  .app-main > .topbar .topbar-module {font-size: 11px}
+  .app-main > .topbar .topbar-label {
+    display: block; /* Keep current page visible on small devices. */
+    font-size: 10px;
+  }
+  .app-main > .topbar .user-avatar {
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  .app-main > .topbar .user-trigger {
+    max-width: 52px;
+    padding-inline: 2px;
+  }
+  .app-main > .topbar .user-trigger::after { margin-left: 2px; }
+}

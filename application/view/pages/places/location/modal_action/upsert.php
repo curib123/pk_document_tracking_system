@@ -40,16 +40,17 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     </select>
 </div>
 <div class="col-md-4">
-    <label class="form-label" for="location-asset">Asset Number</label>
+    <label class="form-label" for="location-asset">Asset Number <span class="optional-label">(optional — can be empty)</span></label>
     <select class="form-select" id="location-asset" name="asset_id"
             data-location-level="asset" data-searchable>
-        <option value="">No asset</option>
+        <option value="">No asset / not assigned</option>
         <?php foreach ($options['assets'] as $asset): ?>
             <option value="<?= (int)$asset['id'] ?>"
                     data-specific-id="<?= (int)$asset['specific_id'] ?>"
                     data-area-id="<?= (int)$asset['area_id'] ?>"><?= html_escape($asset['name']) ?></option>
         <?php endforeach; ?>
     </select>
+    <div class="form-text">A Location can be saved without an Asset Number.</div>
 </div>
 <div class="col-12">
     <p class="form-text mb-0" role="status" id="location-hierarchy-help">

@@ -11,6 +11,7 @@ done < <(git ls-files '*.js')
 echo "Running workflow and plan contract tests..."
 php tests/plan_contract.php
 php tests/retention_countdown.php
+php tests/topnav_optional_asset.php
 php tests/document_folder_layout.php
 node --test tests/document_view.test.js
 echo "Static and syntax checks passed."
