@@ -62,6 +62,14 @@ class Transfer_service
                 'id'=>(int)$destination['location_id'],'active'=>1
             ])->row_array();
             if (!$location) throw new DomainException('Destination location is no longer available.');
+            // Approved transfers bind to a specific physical hierarchy.
+            // If a Place was moved while the document was in transit, require
+            // a new approval instead of silently redirecting the handoff.
+            foreach (['area_id','specific_id','asset_id'] as $field) {
+                if ((int)($destination[$field]??0)!==(int)($location[$field]??0))
+                    throw new DomainException(
+                        'Destination hierarchy changed after approval. Create a new transfer.');
+            }
 
             $this->ci->db->where('id',$transfer['hardcopy_id'])->update('hardcopy_documents',[
                 'area_id'=>$location['area_id'],'specific_id'=>$location['specific_id'],
