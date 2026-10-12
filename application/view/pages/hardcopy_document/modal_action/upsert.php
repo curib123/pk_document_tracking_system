@@ -40,16 +40,17 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   </select>
 </div>
 <div class="col-md-6">
-  <label class="form-label" for="hardcopyAsset">Asset <span class="optional-label">(optional)</span></label>
+  <label class="form-label" for="hardcopyAsset">Asset <span class="optional-label">(optional — can be empty)</span></label>
   <select class="form-select" id="hardcopyAsset" name="asset_id"
     data-hardcopy-level="asset" data-searchable>
-    <option value="">No asset selected</option>
+    <option value="">No asset / not assigned</option>
     <?php foreach ($options['assets'] as $asset): ?>
       <option value="<?= (int)$asset['id'] ?>"
         data-specific-id="<?= (int)$asset['specific_id'] ?>"
         data-area-id="<?= (int)$asset['area_id'] ?>"><?= html_escape($asset['name']) ?></option>
     <?php endforeach; ?>
   </select>
+  <small class="form-text">An Asset is not required to save this document. Leave it empty if no Asset is assigned.</small>
 </div>
 <div class="col-md-6">
   <label class="form-label" for="hardcopyLocation">Location <span class="optional-label">(optional)</span></label>
