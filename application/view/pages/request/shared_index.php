@@ -30,17 +30,28 @@ foreach ($rows as $row) {
      $routeText[]=$step['label'].' → '.$step['approver_label'].
          ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
  }
- $display=[
- 'Approval Route'=>implode("\n",$routeText)?:'Not submitted yet',
- 'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-   ? 'Attached for approval' : 'Not attached',
- 'Reference'=>$row['reference'],'Action'=>ucwords(str_replace('_',' ',$row['type'])),
- 'Subject'=>$payload['subject']??'','Remarks'=>$payload['remarks']??'',
- 'Requester'=>$row['requester_name'],'Status'=>$row['status'],
- 'Workflow History'=>implode("\n",$historyText)?:'No decisions yet',
- 'Created At'=>$row['created_at']
- ];
- $display=array_merge($display,$row['detail_labels']??[]);
+ $display=['sections'=>[
+   ['title'=>'Request Overview','fields'=>[
+     'Reference'=>$row['reference'],
+     'Action'=>ucwords(str_replace('_',' ',$row['type'])),
+     'Subject'=>$payload['subject']??'',
+     'Requester'=>$row['requester_name'],
+     'Status'=>ucfirst($row['status']),
+     'Created At'=>$row['created_at'],
+     'Remarks'=>$payload['remarks']??''
+   ]],
+   ['title'=>'Proposed Document Details','fields'=>$row['detail_labels']??[],
+     'empty'=>'No additional document metadata for this request.'],
+   ['title'=>'Approval Route','fields'=>[
+     'Workflow Version'=>$row['workflow_version_id']?'Fixed at submission':'Awaiting submission',
+     'Controlled File'=>!empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
+        ? 'Attached for approval' : 'Not attached',
+     'Steps'=>implode("\n",$routeText)?:'Not submitted yet'
+   ]],
+   ['title'=>'Workflow Decision History','fields'=>[
+     'Activity'=>implode("\n",$historyText)?:'No decisions yet'
+   ]]
+ ]];
  $record=[
  'id'=>$row['id'],'version'=>$row['version'],'type'=>$row['type'],'subject'=>$payload['subject']??'',
  'remarks'=>$payload['remarks']??'','title'=>$payload['title']??'',
