@@ -44,15 +44,16 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <?php if ($visible('requests')): ?><a class="side-link<?= $active('my-requests/') ?>" <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-requests/softcopy') ?>"><i class="fa-solid fa-paper-plane"></i> My Requests</a><?php endif; ?>
                 <?php if ($visible('tasks')): ?><a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks</a><?php endif; ?>
             <?php endif; ?>
-            <?php if ($anyPlace): ?>
+          
+            <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
+                <div class="side-heading">Administration</div>
+                  <?php if ($anyPlace): ?>
                 <a class="side-link<?= $active('places') ?>"
                    href="<?= site_url('places') ?>"
                    <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>>
                     <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Places
                 </a>
             <?php endif; ?>
-            <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
-                <div class="side-heading">Administration</div>
                 <?php if (strcasecmp((string)$user['role'],'Administrator')===0): ?>
                     <a class="side-link<?= $active('admin/document-assignments') ?>"
                        href="<?= site_url('admin/document-assignments') ?>">

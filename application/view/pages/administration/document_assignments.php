@@ -4,10 +4,7 @@ $domain=$selected_domain;
 $folderQuery=['domain'=>$domain];
 if ($folder_value!=='') $folderQuery['folder']=$folder_value;
 ?>
-<div class="page-heading">
- <div><span class="eyebrow">Administration</span><h1>Assign Documents</h1>
- <p>Browse by physical location or category folder, then assign a document to a staff account.</p></div>
-</div>
+
 <nav class="tab-bar" aria-label="Assignment document type">
  <?php foreach (['hardcopy'=>'Hardcopy / Places','softcopy'=>'Softcopy / Categories'] as $key=>$label): ?>
  <a class="tab-link <?= $domain===$key?'active':'' ?>"
@@ -18,10 +15,7 @@ if ($folder_value!=='') $folderQuery['folder']=$folder_value;
  </a>
  <?php endforeach; ?>
 </nav>
-<?php $this->load->view('reusable_components/folder_browser',[
-    'folder_browser'=>$folder_browser,'folder_base'=>$folder_base,
-    'folder_params'=>$folder_params,'domain'=>$domain
-]); ?>
+
 
 <div class="workspace-card">
  <div class="workspace-card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
