@@ -159,10 +159,12 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <small>Showing <?= html_escape($dt_label) ?> of <?= (int) $dt_total ?> records</small>
         <?php endif; ?>
         <div class="d-flex align-items-center gap-2 flex-wrap">
+            <?php if ($dt_folder_show_documents): ?>
             <label class="text-secondary small" for="rowLimit">Rows per page</label>
             <select class="form-select form-select-sm" id="rowLimit" name="limit" form="tableFilter" style="width:79px" data-auto-submit>
                 <?php foreach ([10,25,50,100] as $n): ?><option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
             </select>
+            <?php endif; ?>
             <?php if (!($dt_layout==='folder' && !$dt_folder_show_documents)): ?>
             <?php if ($dt_page > 1): ?>
              <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
