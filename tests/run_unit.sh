@@ -17,6 +17,7 @@ php tests/hardcopy_folder_projection.php
 php tests/colors_actions_contract.php
 php tests/plan_implementation.php
 php tests/backup_contract.php
+php tests/high_priority_security.php
 php tests/dashboard_copy_contract.php
 node --test tests/document_view.test.js tests/dashboard_visual.test.js tests/motion_navigation.test.js
 echo "Static and syntax checks passed."
