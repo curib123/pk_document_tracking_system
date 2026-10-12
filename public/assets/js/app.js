@@ -339,23 +339,37 @@
             var list = document.getElementById('fileHistoryList');
             if (list) {
                 list.replaceChildren();
-                parse(fileHistory, 'files').forEach(function (file) {
-                    var item = document.createElement('div');
-                    item.className = 'd-flex justify-content-between align-items-center gap-3 border-bottom py-3';
-                    var meta = document.createElement('div');
-                    var name = document.createElement('strong');
-                    var small = document.createElement('small');
-                    name.className = 'd-block';
-                    small.className = 'text-secondary d-block mt-1';
-                    name.textContent = file.name;
-                    small.textContent = file.detail;
-                    meta.append(name, small);
-                    var download = document.createElement('a');
-                    download.className = 'btn btn-outline-primary btn-sm';
-                    download.href = file.url;
-                    download.textContent = 'Download';
-                    item.append(meta, download);
-                    list.appendChild(item);
+                var files=parse(fileHistory,'files');
+                if (!Array.isArray(files)) files=[];
+                files.forEach(function (file) {
+                    var item=document.createElement('article');
+                    item.className='file-history-item';
+                    var emblem=document.createElement('span');
+                    emblem.className='file-history-item-icon';
+                    var ico=document.createElement('i');
+                    ico.className='fa-regular fa-file-lines';
+                    ico.setAttribute('aria-hidden','true');
+                    emblem.append(ico);
+                    var meta=document.createElement('div');
+                    meta.className='file-history-item-text';
+                    var name=document.createElement('strong');
+                    name.textContent=String(file.name||'Document revision');
+                    var small=document.createElement('small');
+                    small.textContent=String(file.detail||'');
+                    meta.append(name,small);
+                    item.append(emblem,meta);
+                    try {
+                        var target=new URL(String(file.url||''),window.location.origin);
+                        if (target.origin===window.location.origin &&
+                            ['http:','https:'].includes(target.protocol)) {
+                            var download=document.createElement('a');
+                            download.className='btn btn-outline-primary btn-sm';
+                            download.href=target.href;
+                            download.textContent='Download';
+                            item.append(download);
+                        }
+                    } catch (error) { /* Invalid download links are never rendered. */ }
+                    list.append(item);
                 });
             }
         }
