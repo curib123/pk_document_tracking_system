@@ -25,9 +25,10 @@ class Folder_model extends CI_Model
                 'name'=>$row['name'],'meta'=>$row['folder_name'],'kind'=>'category'
             ];
         } else {
-            // Asset is a record attribute, not a visual folder level.
-            // Still read its parent Specific to support legacy Locations that
-            // reference an Asset but have an empty specific_id.
+            // True document repository hierarchy:
+            // Area > Specific > Asset > Location > Documents.
+            // Optional/missing Asset uses Specific or Area as fallback so that
+            // legacy and incomplete Places never disappear.
             $assetSpecifics=[];$specificAreas=[];
             foreach ($this->levels as $kind=>$definition) {
                 $fields='id,'.$definition['title'];
@@ -35,24 +36,29 @@ class Folder_model extends CI_Model
                 if ($kind==='location') $fields.=',area_id,specific_id,asset_id,code';
                 $rows=$this->db->select($fields)->get_where($definition['table'],['active'=>1])->result_array();
                 foreach ($rows as $row) {
-                    if ($kind==='specific') {
+                    if ($kind==='specific')
                         $specificAreas[(int)$row['id']]=(int)$row['area_id'];
-                    }
-                    if ($kind==='asset') {
+                    if ($kind==='asset')
                         $assetSpecifics[(int)$row['id']]=(int)$row['specific_id'];
-                        continue;
-                    }
+
                     $parent=$definition['parent'];
                     $parentId=$parent?(int)$row[$parent.'_id']:0;
                     if ($kind==='location') {
+                        $assetId=(int)($row['asset_id']??0);
                         $specificId=(int)($row['specific_id']??0);
-                        if (!$specificId && !empty($row['asset_id']))
-                            $specificId=$assetSpecifics[(int)$row['asset_id']]??0;
+                        if ($assetId && isset($assetSpecifics[$assetId]))
+                            $specificId=$assetSpecifics[$assetId];
                         $areaId=(int)($row['area_id']??0);
-                        if (!$areaId && $specificId)
-                            $areaId=$specificAreas[$specificId]??0;
-                        $parent=$specificId?'specific':($areaId?'area':NULL);
-                        $parentId=$specificId?:$areaId;
+                        if (!$areaId && $specificId) $areaId=$specificAreas[$specificId]??0;
+                        if ($assetId && isset($assetSpecifics[$assetId])) {
+                            $parent='asset';$parentId=$assetId;
+                        } elseif ($specificId && isset($specificAreas[$specificId])) {
+                            $parent='specific';$parentId=$specificId;
+                        } elseif ($areaId) {
+                            $parent='area';$parentId=$areaId;
+                        } else {
+                            $parent=NULL;$parentId=0;
+                        }
                     }
                     $nodes[]=['key'=>$kind.':'.$row['id'],
                         'parent'=>$parent?$parent.':'.$parentId:'',
@@ -67,16 +73,6 @@ class Folder_model extends CI_Model
     public function browse($domain,$folder='')
     {
         $tree=$this->tree($domain);
-        // Old Asset-folder bookmarks now open their parent Specific folder.
-        // Assets remain in the stored record; they are no longer navigation nodes.
-        if ($domain==='hardcopy' && preg_match('/^asset:([1-9][0-9]*)$/',$folder,$parts)) {
-            $asset=$this->db->select('specific_id')->get_where('assets',[
-                'id'=>(int)$parts[1],'active'=>1
-            ])->row_array();
-            $specificId=(int)($asset['specific_id']??0);
-            if (!$specificId || !isset($tree['nodes']['specific:'.$specificId])) show_404();
-            $folder='specific:'.$specificId;
-        }
         // Virtual, permission-scoped directory for records with any/missing
         // folder assignment. It does not add a new table or bypass document scope.
         if ($folder==='all') return [
