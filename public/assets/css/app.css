@@ -784,7 +784,7 @@ a {
 
 .login-card {
     width: 100%;
-    padding: clamp(32px, 3.8vw, 48px);
+    padding: 30px;
     background: var(--ui-white);
     border: 1px solid color-mix(in srgb, var(--ui-white) 75%, transparent);
     border-radius: 22px;
