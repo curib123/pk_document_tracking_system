@@ -110,3 +110,21 @@
  .app-alert-modal .modal-body{padding:12px 20px 0}
 }
 @media(prefers-reduced-motion:reduce){.workflow-step-row{transition:none}}
+
+.app-auth-alert {
+  position:fixed;inset:0;margin:auto;width:min(420px,calc(100vw - 28px));
+  max-height:calc(100vh - 50px);overflow:auto;
+  padding:27px;border:1px solid #e5eaf1;border-radius:19px;background:#fff;
+  color:#1b2c44;box-shadow:0 28px 84px rgba(15,23,42,.25);
+  z-index:99999
+}
+.app-auth-alert::backdrop{background:rgba(13,23,39,.5);backdrop-filter:blur(3px)}
+.app-auth-alert-head{display:flex;align-items:start;justify-content:space-between;margin-bottom:15px}
+.app-auth-alert-icon{display:grid;place-items:center;width:50px;height:50px;border-radius:15px;
+  background:#fff0f2;color:#bd2940;font-size:23px}
+.app-auth-alert.app-alert-success .app-auth-alert-icon{background:#eaf8ef;color:#15875a}
+.app-auth-alert-close{width:34px;height:34px;cursor:pointer;border:0;border-radius:9px;
+  color:#66768b;font-size:23px;background:#f4f6fa}
+.app-auth-alert h2{font-size:20px;font-weight:800;letter-spacing:-.025em}
+.app-auth-alert p{font-size:13px;line-height:1.7;color:#66768b;white-space:pre-line;overflow-wrap:anywhere}
+.app-auth-alert-action{float:right;min-width:100px;margin-top:15px;border-radius:9px;font-weight:750}
