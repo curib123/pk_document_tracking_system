@@ -9,7 +9,7 @@ class Notification_model extends CI_Model
 {
     private $tabs = [
         'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
-        'hardcopy' => ['hardcopy_create', 'hardcopy_update', 'disposal'],
+        'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'access-grant' => ['access'],
         'document-assign' => ['assignment']
@@ -38,7 +38,7 @@ class Notification_model extends CI_Model
         // Only returned drafts require action by their original requester.
         $owned = $this->db->select('type,COUNT(*) AS total', FALSE)
             ->from('requests')->where('requested_by', $userId)
-            ->where('status', 'returned')->group_by('type')->get()->result_array();
+            ->where_in('status', ['draft','returned'])->group_by('type')->get()->result_array();
         foreach ($owned as $row) {
             $tab = $this->tabForType($row['type']);
             if ($tab !== NULL) $requests[$tab] += (int)$row['total'];
