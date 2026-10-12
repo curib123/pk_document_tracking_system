@@ -9,6 +9,7 @@ class Document_detail_model extends CI_Model
         if (!$rows) return [];
         $this->load->model('Document_model');
         $this->load->model('Permission_model');
+        if ($domain==='hardcopy') require_once APPPATH.'services/documents/retention_countdown.php';
         $permissions=$this->Permission_model->for_user($viewer);
         $can=static function($module,$action) use($permissions) {
             return isset($permissions['*']) || !empty($permissions[$module][$action]);
@@ -89,8 +90,8 @@ class Document_detail_model extends CI_Model
                     'Area'=>$document['area_name']??'','Specific'=>$document['specific_name']??'',
                     'Asset'=>$document['asset_name']??'','Location'=>$document['location_name']??'',
                     'Location Code'=>$document['location_code']??'','Current Holder'=>$document['holder_name']??'',
-                    'Retention'=>$document['retention_enabled']?'Enabled':'Not enabled',
-                    'Retention Start'=>$document['retention_start_date']??'','Retention End'=>$document['retention_end_date']??'']];
+                    'Days until disposal'=>Retention_countdown::label(
+                        $document['retention_enabled']??0,$document['retention_end_date']??NULL)]];
             } else {
                 $sections[]=['key'=>'revision','title'=>'Revision & Classification','description'=>'Classification, document series and revision details','fields'=>[
                     'Category / Folder'=>$document['category_name']??'','Series'=>$document['series_number']??'',
