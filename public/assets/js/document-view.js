@@ -170,7 +170,7 @@
         }
         var reference=document.getElementById('viewDocumentRef');
         if (reference) {
-            reference.hidden=false;
+            reference.hidden=!h.reference && domain==='record';
             reference.textContent=(h.reference ? 'Reference  ·  '+h.reference : 'No reference assigned');
         }
         var status=document.getElementById('viewDocumentStatus');
@@ -293,7 +293,8 @@
 
         // Each tab is one separately scoped concern. Overview is NEVER a tab.
         if (!concerns.length) {
-            container.append(emptyState('No additional document activity is available.'));
+            // Small records use the same overview card design without a
+            // meaningless empty tab bar or fake activity section.
             return;
         }
         var layout=node('div','doc-modal-layout');
