@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Nested folder explorer — expands Area → Specific → Location → files
+ * Nested folder explorer — expands Area → Specific → Asset → Location → files
  * (or Category → Subcategory → files for Softcopy) IN THE SAME VIEW.
  * No additional queries or APIs: reuse the authorized paginated dt_rows.
  */
