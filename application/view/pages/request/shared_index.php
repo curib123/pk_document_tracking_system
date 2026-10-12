@@ -97,14 +97,24 @@ foreach ($rows as $row) {
  if (!$task && $canRequest('cancel') && $row['status']==='draft') $buttons[]=['type'=>'action',
     'url'=>'my-requests/'.$tab.'/cancel','label'=>'Cancel',
     'description'=>'Cancel this draft request.','icon'=>'fa-solid fa-xmark'];
- // Rows are already scoped to this user's exact active approval assignment.
- if ($task && $row['status']==='submitted')
- foreach (['approved'=>'Approve','rejected'=>'Reject','returned'=>'Return'] as $decision=>$label) {
-    $buttons[]=['type'=>'action','url'=>'my-tasks/'.$tab.'/decide',
-       'decision'=>$decision,'label'=>$label,
-       'description'=>'Record '.$label.' for this workflow step.',
-       'icon'=>$decision==='approved'?'fa-solid fa-check':'fa-solid fa-arrow-rotate-left'];
- }
+// Rows are already scoped to this user's exact active approval assignment.
+if ($task && $row['status'] === 'submitted')
+foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
+$buttons[] = [
+'type' => 'action',
+'url' => 'my-tasks/' . $tab . '/decide',
+'decision' => $decision,
+'label' => $label,
+'description' => 'Record ' . $label . ' for this workflow step.',
+'icon' => $decision === 'approved'
+? 'fa-solid fa-check'
+: ($decision === 'rejected'
+? 'fa-solid fa-circle-xmark'
+: 'fa-solid fa-arrow-rotate-left'),
+'show_text' => TRUE
+];
+}
+
  $dt_rows[]=['id'=>$row['id'],'cells'=>[
    'reference'=>$row['reference'],'type'=>ucwords(str_replace('_',' ',$row['type'])),
    'subject'=>$payload['subject']??'','requester'=>$row['requester_name'],
