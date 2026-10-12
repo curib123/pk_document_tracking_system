@@ -1,4 +1,10 @@
-<?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
+<?php
+defined('BASEPATH') OR exit('No direct script access allowed');
+$backupTime=static function($timestamp) {
+    return (new DateTimeImmutable('@'.(int)$timestamp))
+        ->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y · g:i A');
+};
+?>
 <div class="backup-workspace">
   <div class="backup-overview">
     <div class="backup-intro">
@@ -21,7 +27,7 @@
     <div class="backup-stat">
       <span class="backup-stat-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>
       <div><small>Last automatic backup</small>
-        <strong><?= $backup_last_auto?html_escape(date('M j, Y · g:i A',(int)$backup_last_auto['created_at'])):'Not recorded' ?></strong>
+        <strong><?= $backup_last_auto?html_escape($backupTime($backup_last_auto['created_at'])):'Not recorded' ?></strong>
       </div>
     </div>
     <div class="backup-stat">
@@ -96,7 +102,7 @@
             <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
             <?= html_escape($item['name']) ?></td>
             <td><span class="backup-kind"><?= html_escape($item['kind']) ?></span></td>
-            <td><?= html_escape(date('M j, Y · g:i A',(int)$item['created_at'])) ?></td>
+            <td><?= html_escape($backupTime($item['created_at'])) ?></td>
             <td><?= number_format($item['size']/1024/1024,2) ?> MB</td>
             <td><a class="btn btn-sm btn-outline-primary"
                 href="<?= site_url('admin/backups/download/'.rawurlencode($item['name'])) ?>">
