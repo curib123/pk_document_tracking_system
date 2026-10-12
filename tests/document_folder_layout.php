@@ -3,6 +3,7 @@ declare(strict_types=1);
 define('BASEPATH', __DIR__);
 require_once __DIR__.'/../application/services/presentation/folder_tree.php';
 require_once __DIR__.'/../application/services/presentation/query_state.php';
+require_once __DIR__.'/../application/services/presentation/document_folder_tree.php';
 
 function assertFolder(bool $passed, string $message): void {
     if (!$passed) throw new RuntimeException($message);
@@ -75,4 +76,72 @@ assertFolder(strpos($folderModel,"\$folder==='all'")!==FALSE,
     'All Documents must remain navigable for documents without assigned locations');
 assertFolder(strpos($folderView,"\$browser['breadcrumbs']")!==FALSE,
     'Folder list must show parent navigation');
+
+// Multiple sibling Areas, Specifics, Assets and Locations must stay visible,
+// and each document belongs under its deepest real folder assignment.
+$multi=Folder_tree::build([
+ ['key'=>'area:1','parent'=>'','name'=>'Area 01','kind'=>'area'],
+ ['key'=>'area:2','parent'=>'','name'=>'Area 02','kind'=>'area'],
+ ['key'=>'specific:10','parent'=>'area:1','name'=>'Specific 01','kind'=>'specific'],
+ ['key'=>'specific:11','parent'=>'area:1','name'=>'Specific 02','kind'=>'specific'],
+ ['key'=>'asset:100','parent'=>'specific:10','name'=>'Asset 001','kind'=>'asset'],
+ ['key'=>'asset:101','parent'=>'specific:10','name'=>'Asset 002','kind'=>'asset'],
+ ['key'=>'location:201','parent'=>'asset:100','name'=>'Location A','kind'=>'location'],
+ ['key'=>'location:202','parent'=>'asset:100','name'=>'Location B','kind'=>'location'],
+ ['key'=>'location:203','parent'=>'specific:11','name'=>'No Asset Location','kind'=>'location']
+]);
+assertFolder($multi['roots']===['area:1','area:2'],'Multiple Areas must remain siblings');
+assertFolder(count($multi['nodes']['specific:10']['children'])===2,'One Specific must contain multiple Assets');
+assertFolder(count($multi['nodes']['asset:100']['children'])===2,'One Asset must contain multiple Locations');
+
+$rows=[
+ ['id'=>1,'record_path'=>['area_id'=>1,'specific_id'=>10,'asset_id'=>100,'location_id'=>201]],
+ ['id'=>2,'record_path'=>['area_id'=>1,'specific_id'=>10,'asset_id'=>100,'location_id'=>201]],
+ ['id'=>3,'record_path'=>['area_id'=>1,'specific_id'=>10,'asset_id'=>100,'location_id'=>202]],
+ ['id'=>4,'record_path'=>['area_id'=>1,'specific_id'=>11,'asset_id'=>NULL,'location_id'=>203]],
+ ['id'=>5,'record_path'=>['area_id'=>2,'specific_id'=>0,'asset_id'=>NULL,'location_id'=>NULL]],
+ ['id'=>6,'record_path'=>['area_id'=>NULL,'specific_id'=>NULL,'asset_id'=>NULL,'location_id'=>NULL]]
+];
+$distribution=Document_folder_tree::distribute($rows,$multi,'hardcopy');
+assertFolder(count($distribution['by_folder']['location:201'])===2,
+  'Location A must contain multiple authorized document files');
+assertFolder(count($distribution['by_folder']['location:202'])===1,
+  'Location B must contain its own documents as a sibling');
+assertFolder(count($distribution['by_folder']['location:203'])===1,
+  'Locations without Assets must appear under their Specific');
+assertFolder(count($distribution['by_folder']['area:2'])===1,
+  'Documents without deeper Places must remain in the deepest active folder');
+assertFolder(count($distribution['by_folder']['unfiled'])===1,
+  'Unfiled documents must remain accessible');
+assertFolder($distribution['counts']['asset:100']===3 &&
+  $distribution['counts']['area:1']===4 &&
+  $distribution['counts']['area:2']===1,
+  'Branch document counts must aggregate over nested location nodes');
+$softDocs=Document_folder_tree::distribute([
+ ['record_path'=>['category_id'=>8],'id'=>4],
+ ['record_path'=>['category_id'=>9],'id'=>5],
+ ['record_path'=>['category_id'=>9],'id'=>6]
+],$softcopy,'softcopy');
+assertFolder(count($softDocs['by_folder']['category:9'])===2 &&
+  $softDocs['counts']['category:7']===3,
+  'Nested Softcopy category tree must show several documents in its subfolders');
+
+$treeScript=file_get_contents($root.'/public/assets/js/document-tree.js');
+$viewCss=file_get_contents($root.'/public/assets/css/unified-ux.css');
+$footerHtml=file_get_contents($root.'/application/view/layout/footer.php');
+assertFolder(strpos($folderView,'data-folder-node')!==FALSE &&
+  strpos($folderView,'<summary')!==FALSE &&
+  strpos($folderView,'$renderNode($child,$depth+1)')!==FALSE,
+  'Folder mode must recursively render expandable nested folder rows');
+assertFolder(strpos($folderView,'$renderDocument($dt_row)')!==FALSE &&
+  strpos($folderView,"$tree['roots']")!==FALSE,
+  'Nested folder rows must include document files from multiple root branches');
+assertFolder(strpos($treeScript,"details[data-folder-node]")!==FALSE &&
+  strpos($footerHtml,'document-tree.js')!==FALSE,
+  'Expand all / Collapse all must be available progressively');
+assertFolder(strpos($viewCss,'.doc-tree-children')!==FALSE &&
+  strpos($viewCss,'.document-layout-choice.is-active')!==FALSE,
+  'Folder hierarchy and enhanced active view toggle require accessible CSS');
+assertFolder(strpos($documentView,'document-layout-choice-copy')!==FALSE,
+  'Both layout choices must have a prominent label and subtitle');
 echo "System Documents exclusive folder/list mode and hierarchy contracts passed.\n";
