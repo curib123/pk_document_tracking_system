@@ -21,7 +21,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <div class="col-md-4">
     <label class="form-label" for="location-area">Area</label>
     <select class="form-select" id="location-area" name="area_id"
-            data-location-level="area" data-searchable>
+            data-location-level="area" data-searchable required>
         <option value="">No area</option>
         <?php foreach ($options['areas'] as $area): ?>
             <option value="<?= (int)$area['id'] ?>"><?= html_escape($area['name']) ?></option>
@@ -31,7 +31,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 <div class="col-md-4">
     <label class="form-label" for="location-specific">Specific</label>
     <select class="form-select" id="location-specific" name="specific_id"
-            data-location-level="specific" data-searchable>
+            data-location-level="specific" data-searchable required>
         <option value="">No specific</option>
         <?php foreach ($options['specifics'] as $specific): ?>
             <option value="<?= (int)$specific['id'] ?>"
@@ -54,7 +54,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 </div>
 <div class="col-12">
     <p class="form-text mb-0" role="status" id="location-hierarchy-help">
-        All parent selections are optional unless you select a child.
+        Select an Area and Specific. Asset Number is optional.
     </p>
 </div>
 <div class="col-md-6">
