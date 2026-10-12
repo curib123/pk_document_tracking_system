@@ -51,8 +51,9 @@ test('charts retain original typed data and labels with polished presentation',(
     assert.equal(bar.type,'bar');
     assert.deepEqual(Array.from(bar.data.labels),['Draft','Submitted','Completed']);
     assert.deepEqual(Array.from(bar.data.datasets[0].data),[2,3,5]);
-    assert.equal(bar.options.scales.y.beginAtZero,true);
-    assert.equal(bar.options.scales.y.ticks.precision,0);
+    assert.equal(bar.options.indexAxis,'y');
+    assert.equal(bar.options.scales.x.beginAtZero,true);
+    assert.equal(bar.options.scales.x.ticks.precision,0);
     assert.equal(bar.options.plugins.legend.display,false);
 });
 
