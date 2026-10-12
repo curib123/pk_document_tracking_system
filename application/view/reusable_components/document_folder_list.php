@@ -74,7 +74,7 @@ $sortZA=$dt_sort==='title' && strtolower($dt_dir)==='desc';
             </a>
         <?php endforeach; ?>
 
-        <?php if (!$isRoot): ?>
+        <?php if ($dt_folder_show_documents): ?>
             <?php if ($dt_rows): ?>
                 <div class="doc-folder-files-heading" role="presentation">
                     <strong><i class="fa-regular fa-file-lines me-2" aria-hidden="true"></i>Documents</strong>
