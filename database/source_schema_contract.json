@@ -845,7 +845,7 @@
     },
     {
       "table": "hardcopy_documents",
-      "body": "ADD PRIMARY KEY (`id`),\n  ADD UNIQUE KEY `location_id` (`location_id`),\n  ADD KEY `area_id` (`area_id`),\n  ADD KEY `specific_id` (`specific_id`),\n  ADD KEY `asset_id` (`asset_id`),\n  ADD KEY `holder_id` (`holder_id`),\n  ADD KEY `created_by` (`created_by`),\n  ADD KEY `hardcopy_status` (`status`,`title`)"
+      "body": "ADD PRIMARY KEY (`id`),\n  ADD KEY `idx_hardcopy_documents_location` (`location_id`),\n  ADD KEY `area_id` (`area_id`),\n  ADD KEY `specific_id` (`specific_id`),\n  ADD KEY `asset_id` (`asset_id`),\n  ADD KEY `holder_id` (`holder_id`),\n  ADD KEY `created_by` (`created_by`),\n  ADD KEY `hardcopy_status` (`status`,`title`)"
     },
     {
       "table": "locations",
