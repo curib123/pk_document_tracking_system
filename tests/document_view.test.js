@@ -86,7 +86,7 @@ function setup() {
   const body = new Element();
   body.className = 'doc-modal-body';
   map.viewModal.append(body);
-  body.append(map.viewDetails);
+  body.append(map.viewDocumentSummary,map.viewDetails);
   const document = {
     getElementById: (id) => map[id] || null,
     createElement: (tag) => new Element(tag)
@@ -113,9 +113,10 @@ const data = {
     context_value:'Office Records'
   },
   sections:[
-    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active'}},
+    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active','Created By':'Records Officer','Created':'2026-10-11'}},
     {key:'storage',title:'Storage & Custody',fields:{Area:'Plant',Location:'Rack 3'}},
     {key:'requests',title:'Related Requests',fields:{'REQ-1':'Returned for correction'}},
+    {key:'approvals',title:'Approval History',fields:{'REQ-1':'Supervisor approved'}},
     {key:'files',title:'Controlled Files',fields:{
       '1. report.pdf':'Verified file',
       '2. private.pdf':'Unavailable'
@@ -135,11 +136,49 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(map.viewModalTitle.textContent,data.header.title);
   assert.equal(map.viewDocumentStatus.textContent,'Active');
   assert.equal(map.viewDocumentSummary.children.length,3);
-  assert.equal(details.querySelectorAll('[role="tab"]').length,4);
-  assert.equal(details.querySelectorAll('[role="tabpanel"]').length,4);
+  assert.equal(map.viewDocumentSummary.hidden,false);
+  assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
+  const tabLabels=details.querySelectorAll('[role="tab"]').map((t)=>t.children[1].textContent);
+  assert.deepEqual(tabLabels,['Related Requests','Approval History','Controlled Files']);
+  assert.equal(details.querySelectorAll('[role="tab"]').length,3);
+  assert.equal(details.querySelectorAll('[role="tabpanel"]').length,3);
   assert.equal(details.querySelectorAll('[role="tabpanel"]').filter(x=>!x.hidden).length,1);
   // Input is text content, never parsed into an HTML element.
   assert.equal(details.querySelectorAll('script').length,0);
+});
+
+test('all identity and custody fields appear above the tabs, not inside a tab',() => {
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,data);
+  const overview=map.viewDocumentSummary;
+  const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
+  assert.equal(groups.length,2);
+  const labels=groups.flatMap((g)=>g.children[1].children.map((n)=>n.children[0].textContent));
+  assert.deepEqual(labels,['Created By','Created','Area','Location']);
+  assert.equal(overview.parentNode.children[1],details);
+  assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
+});
+
+test('softcopy revision and classification fields remain in the top overview',() => {
+  const {window,details,map}=setup();
+  const softcopy={
+    kind:'document',domain:'softcopy',
+    header:{title:'Release guide',reference:'SC-12',status:'active',record_version:3},
+    sections:[
+      {key:'overview',title:'Overview',fields:{'Title':'Release guide','Created By':'Records Officer','Record Version':3}},
+      {key:'revision',title:'Revision & Classification',fields:{'Category / Folder':'Policies','Series':'2026','Revision Level':'C','Pages':6}},
+      {key:'files',title:'Controlled Files',fields:{}},
+      {key:'approvals',title:'Approval History',fields:{}}
+    ]
+  };
+  window.PKDocumentView.render(details,softcopy);
+  const groups=map.viewDocumentSummary.children.filter((c)=>c.classList.contains('doc-overview-group'));
+  assert.equal(groups.length,2);
+  const labels=groups.flatMap((g)=>g.children[1].children.map((n)=>n.children[0].textContent));
+  assert.deepEqual(labels,['Created By','Record Version','Category / Folder','Series','Revision Level','Pages']);
+  assert.equal(details.querySelectorAll('[role="tab"]').length,2);
+  assert.equal(details.querySelectorAll('[role="tab"]')[0].children[1].textContent,'Controlled Files');
+  assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
 });
 
 test('tab clicks and arrow keys change only the selected panel',() => {
@@ -158,9 +197,9 @@ test('tab clicks and arrow keys change only the selected panel',() => {
     preventDefault:()=>{prevented=true;}
   });
   assert.equal(prevented,true);
-  assert.equal(tabs[3].getAttribute('aria-selected'),'true');
-  assert.equal(panels[3].hidden,false);
-  assert.equal(tabs[3].focused,true);
+  assert.equal(tabs[2].getAttribute('aria-selected'),'true');
+  assert.equal(panels[2].hidden,false);
+  assert.equal(tabs[2].focused,true);
 });
 
 test('download links only include same-origin file URLs',() => {

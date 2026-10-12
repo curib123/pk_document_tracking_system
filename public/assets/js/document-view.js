@@ -72,11 +72,51 @@
         if (status) status.className='doc-modal-status';
     }
 
-    function summaryItem(label, value) {
-        var item=node('div','doc-modal-summary-item');
-        item.append(node('span','doc-modal-summary-label',label));
-        item.append(node('strong','doc-modal-summary-value',valueText(value)));
-        return item;
+    // The document header owns the identity, classification, storage and
+    // custody overview. Tabs below it contain only independent concerns.
+    function isOverviewSection(section) {
+        return !!section && ['overview','storage','revision'].includes(section.key);
+    }
+
+    function renderOverview(sections,data) {
+        var summary=document.getElementById('viewDocumentSummary');
+        if (!summary) return;
+        summary.replaceChildren();
+
+        var heading=node('div','doc-overview-intro');
+        var label=node('div','doc-overview-kicker','DOCUMENT OVERVIEW');
+        heading.append(label,node('h3','doc-overview-title','Document information'));
+        heading.append(node('p','doc-overview-description',
+            'Key record details, ownership and '+(data.domain==='hardcopy'
+                ? 'physical custody' : 'revision classification')+'.'));
+        summary.append(heading);
+
+        // Document name, reference, type and status are already displayed
+        // in the modal title bar; avoid repeating them as metadata tiles.
+        var repeated={'Title':true,'Reference / Copy Number':true,
+            'Document Type':true,'Status':true};
+
+        sections.forEach(function(section) {
+            var entries=normalizedEntries(section.fields).filter(function(entry) {
+                return !(section.key==='overview' && repeated[entry[0]]);
+            });
+            if (!entries.length) return;
+            var group=node('section','doc-overview-group');
+            var groupTitle=node('h4','doc-overview-group-title');
+            groupTitle.append(icon(section.key),
+                node('span','',section.key==='overview'?'Record & Ownership':section.title||'Document details'));
+            group.append(groupTitle);
+            var grid=node('dl','doc-overview-grid');
+            entries.forEach(function(entry) {
+                var item=node('div','doc-overview-item');
+                item.append(node('dt','doc-overview-label',entry[0]),
+                    node('dd','doc-overview-value',valueText(entry[1])));
+                grid.append(item);
+            });
+            group.append(grid);
+            summary.append(group);
+        });
+        summary.hidden=false;
     }
 
     function prepareHeading(data) {
@@ -108,16 +148,6 @@
             status.className='doc-modal-status status-'+(allowed.includes(key)?key:'neutral');
             status.textContent=key ? key.charAt(0).toUpperCase()+key.slice(1) : 'Unknown';
             status.hidden=false;
-        }
-        var summary=document.getElementById('viewDocumentSummary');
-        if (summary) {
-            summary.replaceChildren();
-            summary.append(summaryItem('Last updated',h.updated_at || 'Not available'));
-            summary.append(summaryItem('Record version',
-                Number(h.record_version)>0?'v'+String(h.record_version):'Not available'));
-            summary.append(summaryItem(h.context_label||'Document',
-                h.context_value||'Not assigned'));
-            summary.hidden=false;
         }
         var footnote=document.getElementById('viewDocumentFootnote');
         if (footnote) footnote.hidden=false;
@@ -216,8 +246,6 @@
             tab.classList.toggle('is-active',active);
             panels[i].hidden=!active;
         });
-        var scroll=modal.querySelector('.doc-modal-body');
-        if (scroll) scroll.scrollTop=0;
         if (focusTab) tabs[index].focus();
     }
 
@@ -226,16 +254,21 @@
         prepareHeading(data);
         container.replaceChildren();
         var sections=Array.isArray(data.sections)?data.sections:[];
-        if (!sections.length) {
-            container.append(emptyState('No document details are available.'));
+        var overview=sections.filter(isOverviewSection);
+        var concerns=sections.filter(function(section) {return !isOverviewSection(section);});
+        renderOverview(overview,data);
+
+        // Each tab is one separately scoped concern. Overview is NEVER a tab.
+        if (!concerns.length) {
+            container.append(emptyState('No additional document activity is available.'));
             return;
         }
         var layout=node('div','doc-modal-layout');
         var sidebar=node('nav','doc-modal-navigation');
         sidebar.setAttribute('role','tablist');
-        sidebar.setAttribute('aria-label','Document sections');
+        sidebar.setAttribute('aria-label','Document detail concerns');
         var main=node('div','doc-modal-main');
-        sections.forEach(function(section,i) {
+        concerns.forEach(function(section,i) {
             var key=section.key || 'overview';
             var id='viewDocSection'+i;
             var tab=node('button','doc-modal-nav-item');

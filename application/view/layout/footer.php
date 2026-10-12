@@ -59,8 +59,11 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
-            <div id="viewDocumentSummary" class="doc-modal-summary" hidden></div>
-            <div class="modal-body doc-modal-body"><div id="viewDetails"></div></div>
+            <div class="modal-body doc-modal-body">
+                <!-- Document overview is always above the concern tabs and scrolls with them. -->
+                <div id="viewDocumentSummary" class="doc-modal-overview" hidden></div>
+                <div id="viewDetails"></div>
+            </div>
             <div class="modal-footer doc-modal-footer">
                 <p class="doc-modal-footnote" id="viewDocumentFootnote" hidden><i class="fa-solid fa-lock" aria-hidden="true"></i> Read-only details within your access permissions</p>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
