@@ -282,6 +282,14 @@
         selectTab(tab.closest('.doc-modal-layout'),next,true);
     });
 
+    // Clear permission-scoped record details once the modal closes, so a
+    // later generic View Details action never flashes the previous document.
+    modal.addEventListener('hidden.bs.modal',function() {
+        reset();
+        var details=document.getElementById('viewDetails');
+        if (details) details.replaceChildren();
+    });
+
     window.PKDocumentView = {
         handles: function(data) {
             return !!data && data.kind==='document' &&
