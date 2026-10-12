@@ -115,6 +115,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
 <script src="<?= base_url('assets/js/document-view.js') ?>"></script>
+<script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 </body>
