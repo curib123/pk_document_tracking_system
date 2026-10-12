@@ -152,14 +152,8 @@ class Document_service
             $area=(int)($data['area_id']??0);
             $specific=(int)($data['specific_id']??0);
             $asset=(int)($data['asset_id']??0);
-            // Original pk_dts hardcopy_documents.location_id is UNIQUE.
-            // Execute the occupancy check immediately; an unfinished query
-            // leaks into the following Area/Specific/Asset lookups in CI3.
-            $db->from('hardcopy_documents')->where('location_id',$location);
-            if ($documentId) $db->where('id !=',(int)$documentId);
-            if ($db->count_all_results()>0) {
-                throw new DomainException('The selected Location is already assigned to a document.');
-            }
+            // A Location may hold multiple hardcopy records. This requires
+            // the location index migration on existing MariaDB installations.
         }
         if ($asset) {
             $row=$db->select('b.id,b.specific_id,s.area_id')
