@@ -17,7 +17,7 @@ $app=file_get_contents($root.'/public/assets/js/app.js');
 $hardcopyService=file_get_contents($root.'/application/services/documents/document_service.php');
 $placeService=file_get_contents($root.'/application/services/places/place_service.php');
 
-expect_feature(strpos($nav,'class="topbar-context"')!==FALSE,
+expect_feature(strpos($nav,'<header class="topbar">')!==FALSE,
     'Current module and page must remain visible in top bar.');
 expect_feature(strpos($nav,'class="topbar-module"')!==FALSE &&
     strpos($nav,'class="topbar-label"')!==FALSE,
