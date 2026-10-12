@@ -155,9 +155,7 @@ class Document_service
             // Original pk_dts hardcopy_documents.location_id is UNIQUE.
             $db->from('hardcopy_documents')->where('location_id',$location);
             if ($documentId) $db->where('id !=',(int)$documentId);
-            if ($db->count_all_results()>0) {
-                throw new DomainException('This location is already assigned to another hardcopy document.');
-            }
+            
         }
         if ($asset) {
             $row=$db->select('b.id,b.specific_id,s.area_id')
