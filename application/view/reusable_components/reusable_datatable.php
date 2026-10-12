@@ -12,6 +12,16 @@ $dt_extra_params = $dt_extra_params ?? [];
 $requestedLayout=$dt_extra_params['layout']??'table';
 $dt_layout=$requestedLayout==='grid'?'grid':
     (($requestedLayout==='folder' && !empty($dt_folder_browser))?'folder':'table');
+// Hardcopy documents appear at a Location (or at a hierarchy dead end).
+// Softcopy categories can hold files directly, even alongside subfolders.
+// The All Documents virtual folder always lists the complete authorized set.
+$dt_folder_show_documents=$dt_layout!=='folder' ||
+    $dt_folder_browser['level']==='all' ||
+    ($dt_folder_browser['level']!=='root' && (
+        $dt_folder_domain==='softcopy' ||
+        $dt_folder_browser['level']==='location' ||
+        empty($dt_folder_browser['children'])
+    ));
 $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use (
     $dt_path, $dt_q, $dt_filter_values, $dt_limit, $dt_sort, $dt_dir,
     $dt_extra_params
@@ -67,7 +77,8 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     <?php if ($dt_layout==='folder'): ?>
         <?php $this->load->view('reusable_components/document_folder_list',compact(
             'dt_folder_browser','dt_folder_domain','dt_path','dt_extra_params','dt_q',
-            'dt_filter_values','dt_limit','dt_sort','dt_dir','dt_total','dt_columns','dt_rows'
+            'dt_filter_values','dt_limit','dt_sort','dt_dir','dt_total','dt_columns','dt_rows',
+            'dt_folder_show_documents'
         )); ?>
     <?php elseif ($dt_layout==='grid'): ?>
     <div class="document-card-grid p-3" data-record-layout="grid">
@@ -142,8 +153,8 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     </div>
     <?php endif; ?>
     <div class="table-footer">
-        <?php if ($dt_layout==='folder' && $dt_folder_browser['level']==='root'): ?>
-            <small>Browse folders to find documents · <?= (int)$dt_total ?> accessible records</small>
+        <?php if ($dt_layout==='folder' && !$dt_folder_show_documents): ?>
+            <small><?= (int)$dt_total ?> documents in this branch · open a folder to browse its records</small>
         <?php else: ?>
             <small>Showing <?= html_escape($dt_label) ?> of <?= (int) $dt_total ?> records</small>
         <?php endif; ?>
@@ -152,7 +163,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <select class="form-select form-select-sm" id="rowLimit" name="limit" form="tableFilter" style="width:79px" data-auto-submit>
                 <?php foreach ([10,25,50,100] as $n): ?><option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
             </select>
-            <?php if (!($dt_layout==='folder' && $dt_folder_browser['level']==='root')): ?>
+            <?php if (!($dt_layout==='folder' && !$dt_folder_show_documents)): ?>
             <?php if ($dt_page > 1): ?>
              <a class="btn btn-light btn-sm" href="<?= html_escape($dt_link($dt_page - 1)) ?>" aria-label="Previous page"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></a>
              <?php else: ?><span class="btn btn-light btn-sm disabled" aria-disabled="true" aria-label="Previous page unavailable"><i class="fa-solid fa-chevron-left" aria-hidden="true"></i></span><?php endif; ?>
