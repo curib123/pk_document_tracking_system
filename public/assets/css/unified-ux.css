@@ -177,3 +177,53 @@
  .file-history-saas .file-history-item {flex-wrap:wrap}
  .file-history-saas .file-history-item .btn {margin-left:auto}
 }
+
+
+/* Compact System Documents register only.
+ * Detailed metadata remains in the shared View Details modal. */
+.document-register-listing .table thead th,
+.document-register-listing .table tbody td {
+  padding: 12px 14px;
+}
+.document-register-listing .table tbody td:first-child {
+  min-width: 170px;
+  max-width: 340px;
+  color: #23344b;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.document-register-listing .table thead th:last-child,
+.document-register-listing .table tbody td:last-child {
+  width: 1%;
+  white-space: nowrap;
+}
+.document-register-listing .table-actions {
+  gap: 5px;
+}
+.document-register-listing .table-actions .btn-icon {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+}
+@media (max-width: 850px) {
+  .document-register-listing[data-doc-domain="hardcopy"] .table th:nth-child(4),
+  .document-register-listing[data-doc-domain="hardcopy"] .table td:nth-child(4) {
+    display: none;
+  }
+}
+@media (max-width: 640px) {
+  .document-register-listing[data-doc-domain="hardcopy"] .table th:nth-child(3),
+  .document-register-listing[data-doc-domain="hardcopy"] .table td:nth-child(3),
+  .document-register-listing[data-doc-domain="softcopy"] .table th:nth-child(3),
+  .document-register-listing[data-doc-domain="softcopy"] .table td:nth-child(3) {
+    display: none;
+  }
+  .document-register-listing .table thead th,
+  .document-register-listing .table tbody td {
+    padding: 10px 9px;
+    font-size: 12px;
+  }
+  .document-register-listing .table tbody td:first-child {
+    min-width: 130px;
+  }
+}

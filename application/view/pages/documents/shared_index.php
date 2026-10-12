@@ -1,14 +1,13 @@
 <?php
 $permissions=$permissions??[];
 $can=isset($permissions['*']) || !empty($permissions[$cfg['domain']]['direct']);
-$labels=['title'=>'Title','document_number'=>'Document Number','series_number'=>'Series',
-'category_name'=>'Category','area_name'=>'Area','specific_name'=>'Specific',
-'asset_name'=>'Asset','location_name'=>'Location','sequence_number'=>'Sequence',
-'holder_name'=>'Holder','status'=>'Status','version'=>'Version','updated_at'=>'Updated'];
-$fields=$cfg['domain']==='hardcopy'
-    ? ['title','area_name','specific_name','asset_name','location_name','sequence_number','holder_name','status','updated_at']
-    : ['document_number','title','category_name','series_number','status','updated_at'];
-$dt_columns=[]; foreach ($fields as $field) $dt_columns[$field]=$labels[$field]??$field;
+// Keep document registers scannable. All other metadata remains available in
+// the shared permission-scoped View Details modal, not duplicated in the table.
+$dt_columns=$cfg['domain']==='hardcopy'
+    ? ['title'=>'Document','sequence_number'=>'Copy Number','location_name'=>'Location',
+       'holder_name'=>'Holder','status'=>'Status']
+    : ['title'=>'Document','document_number'=>'Document Number',
+       'category_name'=>'Category','status'=>'Status'];
 $dt_rows=[];
 foreach ($rows as $r) {
  $cells=[];$display=[];
@@ -16,6 +15,8 @@ foreach ($rows as $r) {
     $val=$r[$field]??'';
     $cells[$field]=$val;$display[$label]=$val;
  }
+ // The modal is fed from the complete document record, never from the
+ // deliberately reduced set of visible table cells.
  $display=$document_details[$r['id']]??$display;
  $rec=[];
  foreach (array_merge(['id','version'],$cfg['fields']) as $field) $rec[$field]=$r[$field]??'';
@@ -63,7 +64,8 @@ $dt_path='documents/'.$cfg['domain'];
 $dt_extra_params=['folder'=>$folder_value,'layout'=>$table['layout']];$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
 $dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
-$dt_sortable=['title','document_number','sequence_number','status','updated_at'];
+$dt_sortable=$cfg['domain']==='hardcopy'
+    ? ['title','sequence_number','status'] : ['title','document_number','status'];
 $dt_date_filters=TRUE;
 $dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived','cancelled'=>'Cancelled']];
 $dt_filters['owner']=[''=>'All Owners']+array_column($owner_options,'name','id');
@@ -77,11 +79,13 @@ $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'
 <a class="tab-link <?= $cfg['domain']===$kind?'active':'' ?>" href="<?= site_url('documents/'.$kind) ?>" <?= $cfg['domain']===$kind?'aria-current="page"':'' ?>>
 <?= html_escape($label) ?></a><?php endif; endforeach; ?></nav>
 
+<div class="document-register-listing" data-doc-domain="<?= html_escape($cfg['domain']) ?>">
 <?php $this->load->view('reusable_components/reusable_datatable',compact(
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows',
 'dt_extra_params'
 )); ?>
+</div>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
