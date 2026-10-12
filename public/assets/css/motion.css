@@ -84,10 +84,12 @@
 .motion-skeleton-cards .motion-skeleton-block {min-width:0;height:114px}
 .motion-skeleton-rows {display:grid;gap:10px}
 .motion-skeleton-rows .motion-skeleton-block {height:58px;max-width:none}
-body.motion-login-loading .login-card {
+body.motion-login-loading .login-card,
+.auth-required-dialog.motion-auth-loading .modal-content {
     position: relative;
 }
-body.motion-login-loading .login-card::after {
+body.motion-login-loading .login-card::after,
+.auth-required-dialog.motion-auth-loading .modal-content::after {
     content:"";
     position: absolute;
     z-index: 10;
@@ -114,7 +116,8 @@ body.motion-login-loading .login-card::after {
         transition: none!important;
         transform: none!important;
     }
-    .motion-skeleton-block, body.motion-login-loading .login-card::after {
+    .motion-skeleton-block, body.motion-login-loading .login-card::after,
+    .auth-required-dialog.motion-auth-loading .modal-content::after {
         animation: none!important;
         background-image: none;
     }
