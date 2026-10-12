@@ -19,6 +19,11 @@ check(count(Workflow_graph::renumber([$valid['steps'][1],$valid['steps'][0]]))==
 $changed=Workflow_graph::renumber([$valid['steps'][1],$valid['steps'][0]]);
 check($changed[0]['key']==='step_1' && $changed[1]['key']==='step_2', 'Renumber must set sequential keys');
 Workflow_graph::validate(['steps'=>[]],FALSE);
+rejects(static function() use($valid) {
+    $invalid=['steps'=>[1=>$valid['steps'][0],2=>$valid['steps'][1]]];
+    Workflow_graph::validate($invalid,TRUE);
+},'Approval steps must be indexed as a list even on PHP 8.0');
+
 rejects(static function(){Workflow_graph::validate(['steps'=>[]],TRUE);},'An empty route cannot be published');
 rejects(static function()use($valid){$valid['steps'][0]['approver']['type']='unrecognized';Workflow_graph::validate($valid,TRUE);},'Invalid approver types must be refused');
 rejects(static function()use($valid){$valid['steps'][0]['approver']=['type'=>'role','value'=>0];Workflow_graph::validate($valid,TRUE);},'A role approver requires a role');
