@@ -179,7 +179,8 @@ test('download links only include same-origin file URLs',() => {
 test('reset returns reusable modal to ordinary view state',() => {
   const {window,details,map,modal}=setup();
   window.PKDocumentView.render(details,data);
-  window.PKDocumentView.reset();
+  modal.listeners['hidden.bs.modal']();
+  assert.equal(details.children.length,0);
   assert.equal(modal.classList.contains('is-document-view'),false);
   assert.equal(map.viewDocumentSummary.hidden,true);
   assert.equal(map.viewDocumentSummary.children.length,0);
