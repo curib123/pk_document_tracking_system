@@ -58,4 +58,35 @@ $overviewPosition=strpos($docFooter, 'id="viewDocumentSummary"');
 $tabsPosition=strpos($docFooter, 'id="viewDetails"');
 check($overviewPosition!==FALSE && $tabsPosition!==FALSE &&
     $overviewPosition<$tabsPosition, 'Document overview must appear above the separate-concern tabs');
+$sidebar=file_get_contents($path.'/application/view/layout/sidebar_top_nav.php');
+$requestView=file_get_contents($path.'/application/view/pages/request/shared_index.php');
+$requestModel=file_get_contents($path.'/application/models/Request_model.php');
+$notificationModel=file_get_contents($path.'/application/models/Notification_model.php');
+$workflowView=file_get_contents($path.'/application/view/pages/workflow_builder/index.php');
+$adminController=file_get_contents($path.'/application/controllers/Administration.php');
+$loginView=file_get_contents($path.'/application/view/pages/authentication/index.php');
+$authSetup=file_get_contents($path.'/application/view/pages/authentication/first_login.php');
+$alertPartial=file_get_contents($path.'/application/view/reusable_components/auth_alert.php');
+check(strpos($sidebar, "flashdata('notice')")===FALSE, 'No flash banner should be shown at page top');
+check(strpos($docFooter, 'id="appAlertModal"')!==FALSE, 'Flash messages must use an alert modal');
+check(strpos($alertPartial, '<dialog')!==FALSE, 'Authentication feedback must use a dialog');
+check(strpos($loginView, 'login-error')===FALSE, 'Login notifications must not be inline banners');
+check(strpos($authSetup, 'alert alert-danger')===FALSE, 'Password setup notices must not be inline banners');
+check(strpos($requestModel, "'hardcopy'=>['hardcopy_create','hardcopy_update']")!==FALSE,
+  'Disposal is not a My Requests/My Tasks type');
+check(strpos($notificationModel, "'hardcopy' => ['hardcopy_create', 'hardcopy_update']")!==FALSE,
+  'Disposal must not contribute to request/task badges');
+check(strpos($requestView, '<option value="disposal">')===FALSE,
+  'Hardcopy request modal must not allow disposal');
+check(strpos($requestView, "'kind'=>\$isDocumentRequest?'document':'record'")!==FALSE,
+  'Document requests must reuse the System Documents view presentation');
+check(strpos($requestView, "tabCount===0")!==FALSE, 'Every request/task tab shows its count');
+check(strpos($sidebar, "taskBadge")!==FALSE, 'My Tasks link must show its notification count');
+check(strpos($renderer, 'window.PKDocumentView.render(container,data)')!==FALSE,
+  'Every system View Details action must use the unified renderer');
+check(strpos($workflowView, 'workflow-setup-guide')!==FALSE, 'Workflow Builder must provide setup guidance');
+check(strpos($workflowView, 'data-draft=')!==FALSE, 'Workflow Builder must identify editable drafts');
+check(strpos($workflowView, 'name="workflow_id"')!==FALSE, 'Workflow actions must retain editor context');
+check(strpos($adminController, "redirect.='?workflow='")!==FALSE, 'Workflow editing must retain context on save');
+echo "Unified UI/UX and PHP 8.0 contract checks passed.\n";
 echo "Plan workflow/UX contract checks passed.\n";
