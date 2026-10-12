@@ -13,6 +13,7 @@ php tests/plan_contract.php
 php tests/retention_countdown.php
 php tests/topnav_optional_asset.php
 php tests/document_folder_layout.php
+php tests/hardcopy_folder_projection.php
 php tests/dashboard_copy_contract.php
 node --test tests/document_view.test.js tests/dashboard_visual.test.js
 echo "Static and syntax checks passed."

@@ -25,18 +25,37 @@ class Folder_model extends CI_Model
                 'name'=>$row['name'],'meta'=>$row['folder_name'],'kind'=>'category'
             ];
         } else {
+            // Asset is a record attribute, not a visual folder level.
+            // Still read its parent Specific to support legacy Locations that
+            // reference an Asset but have an empty specific_id.
+            $assetSpecifics=[];$specificAreas=[];
             foreach ($this->levels as $kind=>$definition) {
                 $fields='id,'.$definition['title'];
                 if ($definition['parent']) $fields.=','.$definition['parent'].'_id';
                 if ($kind==='location') $fields.=',area_id,specific_id,asset_id,code';
                 $rows=$this->db->select($fields)->get_where($definition['table'],['active'=>1])->result_array();
                 foreach ($rows as $row) {
+                    if ($kind==='specific') {
+                        $specificAreas[(int)$row['id']]=(int)$row['area_id'];
+                    }
+                    if ($kind==='asset') {
+                        $assetSpecifics[(int)$row['id']]=(int)$row['specific_id'];
+                        continue;
+                    }
                     $parent=$definition['parent'];
+                    $parentId=$parent?(int)$row[$parent.'_id']:0;
                     if ($kind==='location') {
-                        $parent=!empty($row['asset_id'])?'asset':(!empty($row['specific_id'])?'specific':(!empty($row['area_id'])?'area':NULL));
+                        $specificId=(int)($row['specific_id']??0);
+                        if (!$specificId && !empty($row['asset_id']))
+                            $specificId=$assetSpecifics[(int)$row['asset_id']]??0;
+                        $areaId=(int)($row['area_id']??0);
+                        if (!$areaId && $specificId)
+                            $areaId=$specificAreas[$specificId]??0;
+                        $parent=$specificId?'specific':($areaId?'area':NULL);
+                        $parentId=$specificId?:$areaId;
                     }
                     $nodes[]=['key'=>$kind.':'.$row['id'],
-                        'parent'=>$parent?$parent.':'.$row[$parent.'_id']:'',
+                        'parent'=>$parent?$parent.':'.$parentId:'',
                         'name'=>$row[$definition['title']],
                         'meta'=>$kind==='location'?$row['code']:ucfirst($kind),'kind'=>$kind];
                 }
@@ -48,6 +67,16 @@ class Folder_model extends CI_Model
     public function browse($domain,$folder='')
     {
         $tree=$this->tree($domain);
+        // Old Asset-folder bookmarks now open their parent Specific folder.
+        // Assets remain in the stored record; they are no longer navigation nodes.
+        if ($domain==='hardcopy' && preg_match('/^asset:([1-9][0-9]*)$/',$folder,$parts)) {
+            $asset=$this->db->select('specific_id')->get_where('assets',[
+                'id'=>(int)$parts[1],'active'=>1
+            ])->row_array();
+            $specificId=(int)($asset['specific_id']??0);
+            if (!$specificId || !isset($tree['nodes']['specific:'.$specificId])) show_404();
+            $folder='specific:'.$specificId;
+        }
         // Virtual, permission-scoped directory for records with any/missing
         // folder assignment. It does not add a new table or bypass document scope.
         if ($folder==='all') return [

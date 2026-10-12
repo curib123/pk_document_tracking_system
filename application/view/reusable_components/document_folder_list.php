@@ -2,7 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 
 /**
- * Nested folder explorer — expands Area → Specific → Asset → Location → files
+ * Nested folder explorer — expands Area → Specific → Location → files
  * (or Category → Subcategory → files for Softcopy) IN THE SAME VIEW.
  * No additional queries or APIs: reuse the authorized paginated dt_rows.
  */
@@ -22,8 +22,8 @@ $folderUrl=static function($folder,$sort=NULL,$dir=NULL) use(
     ]);
     return site_url($dt_path).'?'.http_build_query($params);
 };
-$kinds=['area'=>'Area','specific'=>'Specific','asset'=>'Asset',
-    'location'=>'Location','category'=>'Category'];
+$kinds=['area'=>'Area','specific'=>'Specific','location'=>'Location',
+    'category'=>'Category'];
 $currentFolder=$browser['folder'];
 $selectedChain=[];
 $at=$currentFolder;
@@ -129,18 +129,6 @@ $renderNode=function($key,$depth=0) use(
 <div class="doc-folder-explorer doc-folder-tree-mode"
      data-folder-domain="<?= html_escape($dt_folder_domain) ?>"
      data-folder-current="<?= html_escape($currentFolder) ?>">
-    <div class="doc-folder-explorer-header">
-        <div>
-            <div class="doc-folder-explorer-eyebrow"><i class="fa-solid fa-sitemap" aria-hidden="true"></i> HIERARCHICAL DOCUMENT LIBRARY</div>
-            <h2 class="doc-folder-explorer-title">Folder explorer</h2>
-            <p class="doc-folder-explorer-subtitle">
-                <?= $dt_folder_domain==='hardcopy'
-                    ? 'Area → Specific → Asset → Location → Documents'
-                    : 'Category → Subcategory → Documents' ?>
-            </p>
-        </div>
-        <span class="doc-folder-explorer-count"><?= (int)$dt_total ?> accessible documents<?= $dt_total>count($dt_rows)?' · paginated':'' ?></span>
-    </div>
     <div class="doc-tree-toolbar">
         <nav class="doc-folder-breadcrumb" aria-label="Current document folder">
             <?php foreach ($browser['breadcrumbs'] as $index=>$crumb): ?>
