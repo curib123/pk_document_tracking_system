@@ -234,14 +234,10 @@ final class Backup_service
                 throw new DomainException('Cannot activate restore maintenance mode.');
             try {
                 $this->importSql($stage.'/database.sql');
-                foreach (['documents','audit'] as $section) {
-                    $from=$stage.'/storage/'.$section;
-                    if (!is_dir($from)) continue;
-                    $to=$this->root.'/storage/'.$section;
-                    // New data is written atomically, and the original private
-                    // directory remains in the recovery snapshot if needed.
-                    $this->copyDirectory($from,$to);
-                }
+                // Recover every non-transient private data file from the ZIP,
+                // not only controlled documents and JSON audit history.
+                if (is_dir($stage.'/storage'))
+                    $this->copyDirectory($stage.'/storage',$this->root.'/storage');
             } catch (Throwable $failure) {
                 // Best-effort database rollback from the pre-restore snapshot.
                 try {
@@ -250,11 +246,8 @@ final class Backup_service
                         $this->resolve($recovery['name']),
                         $this->verify($this->resolve($recovery['name'])),$recoverStage);
                     $this->importSql($recoverStage.'/database.sql');
-                    foreach (['documents','audit'] as $section) {
-                        if (is_dir($recoverStage.'/storage/'.$section))
-                            $this->copyDirectory($recoverStage.'/storage/'.$section,
-                                $this->root.'/storage/'.$section);
-                    }
+                    if (is_dir($recoverStage.'/storage'))
+                        $this->copyDirectory($recoverStage.'/storage',$this->root.'/storage');
                     $this->removeDirectory($recoverStage);
                 } catch (Throwable $rollback) {
                     error_log('PK DTS RESTORE rollback needs intervention: '.$rollback->getMessage());
@@ -278,9 +271,8 @@ final class Backup_service
             $zip->setPassword($this->password());
             foreach ($manifest['files'] as $entry) {
                 $key=$entry['path'];
-                if ($key!=='database.sql' &&
-                    strpos($key,'files/storage/documents/')!==0 &&
-                    strpos($key,'files/storage/audit/')!==0) continue;
+                if ($key!=='database.sql' && strpos($key,'files/storage/')!==0) continue;
+                if (preg_match('~^files/storage/(?:backups|sessions|cache)/~',$key)) continue;
                 $target=$stage.'/'.($key==='database.sql'?$key:substr($key,6));
                 $dir=dirname($target);
                 if (!is_dir($dir) && !mkdir($dir,0700,TRUE))
