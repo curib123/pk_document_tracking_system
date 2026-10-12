@@ -48,7 +48,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <span class="nav-count<?= $taskBadge===0?' is-zero':'' ?>" aria-label="<?= $taskBadge ?> pending tasks"><?= $taskBadge ?></span></a>
             <?php endif; ?>
           
-            <?php if ($visible('users') || $visible('roles') || $visible('workflows')): ?>
+            <?php if ($visible('users') || $visible('roles') || $visible('workflows') || strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
                 <div class="side-heading">Administration</div>
                   <?php if ($anyPlace): ?>
                 <a class="side-link<?= $active('places') ?>"
