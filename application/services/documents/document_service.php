@@ -153,9 +153,13 @@ class Document_service
             $specific=(int)($data['specific_id']??0);
             $asset=(int)($data['asset_id']??0);
             // Original pk_dts hardcopy_documents.location_id is UNIQUE.
+            // Execute the occupancy check immediately; an unfinished query
+            // leaks into the following Area/Specific/Asset lookups in CI3.
             $db->from('hardcopy_documents')->where('location_id',$location);
             if ($documentId) $db->where('id !=',(int)$documentId);
-            
+            if ($db->count_all_results()>0) {
+                throw new DomainException('The selected Location is already assigned to a document.');
+            }
         }
         if ($asset) {
             $row=$db->select('b.id,b.specific_id,s.area_id')
@@ -186,10 +190,12 @@ class Document_service
         if ($area && !$db->get_where('areas',['id'=>$area,'active'=>1])->row_array()) {
             throw new DomainException('Choose an active area.');
         }
-        $data['area_id']=$area?:NULL;
-        $data['specific_id']=$specific?:NULL;
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_path($area,$specific,$location);
+        $data['area_id']=$area;
+        $data['specific_id']=$specific;
         $data['asset_id']=$asset?:NULL;
-        $data['location_id']=$location?:NULL;
+        $data['location_id']=$location;
     }
 
     public function dispose($domain,$id,$actorId,$reason='',$action='other')

@@ -627,7 +627,7 @@
         if (help) {
             help.textContent = asset.value ? 'Area and specific automatically match the selected asset.'
                 : specific.value ? 'Area automatically matches the selected specific.'
-                : 'Select an area to filter specifics and assets, or leave the hierarchy optional.';
+                : 'Select an Area and Specific. Asset Number is optional.';
         }
     }
 
@@ -792,7 +792,7 @@
                 ? 'Location selected. Its predefined area, specific and asset have been populated.'
                 : asset.value ? 'Asset selected. Its area and specific are populated automatically.'
                 : specific.value ? 'Specific selected. The parent area is populated automatically.'
-                : 'Area, Specific and Asset are optional. You can save without assigning an Asset.';
+                : 'Select Area, Specific and Location. Asset is optional.';
         }
     }
     document.addEventListener('change', function(event) {
@@ -863,7 +863,7 @@
         var hint=form.querySelector('#transferHelp');
         if (hint) hint.textContent=location.value?
             'Destination selected. Its parent Places were populated.' :
-            'Select a predefined destination different from the original location.';
+            'Select Area, Specific and a destination Location. Asset is optional.';
     }
     document.addEventListener('change',function(e) {
         if (e.target?.hasAttribute('data-transfer-source')) updateHardcopyTransfer('source');

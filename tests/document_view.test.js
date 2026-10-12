@@ -135,7 +135,7 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(modal.classList.contains('is-document-view'),true);
   assert.equal(map.viewModalTitle.textContent,data.header.title);
   assert.equal(map.viewDocumentStatus.textContent,'Active');
-  assert.equal(map.viewDocumentSummary.children.length,3);
+  assert.equal(map.viewDocumentSummary.children.length,2); // Record & Ownership and Storage & Custody.
   assert.equal(map.viewDocumentSummary.hidden,false);
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
   const tabLabels=details.querySelectorAll('[role="tab"]').map((t)=>t.children[1].textContent);

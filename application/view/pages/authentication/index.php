@@ -15,6 +15,7 @@
 
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
 </head>
 
@@ -169,6 +170,7 @@
 
     </main>
 
+<script src="<?= base_url('assets/js/motion.js') ?>"></script>
 <?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>
 </html>
