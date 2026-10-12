@@ -76,10 +76,11 @@ class Backups extends MY_Controller
                 throw new DomainException('Administrator password is incorrect.');
             $name=(string)$this->input->post('backup_name');
             $result=$service->restore($name);
-            $this->session->sess_destroy();
+            $this->load->library('Audit_file');
+            $this->audit_file->append((int)$this->user['id'],
+                'admin/backups/restore',$name,['recovery'=>$result['recovery']],'success');
             // Restored database can invalidate live accounts and sessions.
-            $this->session->set_flashdata('notice',
-                'Data restored successfully. Pre-restore snapshot: '.$result['recovery']);
+            $this->session->sess_destroy();
             redirect('login');
             exit;
         });
