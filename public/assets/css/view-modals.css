@@ -181,8 +181,15 @@
 #fileHistoryModal .file-history-item { padding: 17px; border-radius: 14px; align-items: flex-start; }
 #fileHistoryModal .file-history-item-text { padding-top: 2px; }
 #fileHistoryModal .file-history-item-text small { font-size: 12px; line-height: 1.7; }
+.offline-ui #viewModal.is-document-view,
+.offline-ui #fileHistoryModal { padding: 0; }
 .offline-ui #viewModal.is-document-view .modal-dialog,
-.offline-ui #fileHistoryModal .modal-dialog { width: calc(100% - 40px); }
+.offline-ui #fileHistoryModal .modal-dialog {
+    display: flex;
+    align-items: center;
+    width: calc(100% - 40px);
+    min-height: calc(100dvh - 40px);
+}
 @media (max-width: 767.98px) {
     #viewModal.is-document-view .modal-dialog,
     #fileHistoryModal .modal-dialog,
