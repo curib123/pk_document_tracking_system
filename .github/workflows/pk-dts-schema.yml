@@ -67,5 +67,13 @@ jobs:
           extensions: mysqli,mbstring,fileinfo,zip
       - name: Verify clean schema, nine definitions, repeated seed and published version
         run: bash tests/smoke.sh
+      - name: Workflow returns reverse one step and replay approval
+        env:
+          PK_TEST_DB: '1'
+          DB_DATABASE: pk_dts_test
+          DB_PASSWORD: rootpass
+        run: |
+          composer install --no-interaction --prefer-dist --no-progress
+          php tests/request_return.php
       - name: Encrypted full backup and restore integration (disposable test database)
         run: bash tests/backup_integration.sh
