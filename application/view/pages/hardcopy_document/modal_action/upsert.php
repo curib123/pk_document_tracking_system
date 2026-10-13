@@ -67,9 +67,6 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 
 </div>
 
-<div class="col-12 mt-3">
-  <h3 class="fs-6 fw-bold mb-0">Document custody</h3>
-</div>
 <div class="col-md-6">
   <label class="form-label" for="hardcopyHolder">Current Holder</label>
   <?php if ($isAdmin): ?>
@@ -85,7 +82,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
     value="<?= html_escape($myHolderName) ?>" readonly
     aria-describedby="hardcopyHolderHelp">
   <input type="hidden" name="holder_id" value="<?= $myHolderId ?>">
-  <small class="form-text" id="hardcopyHolderHelp">Automatically assigned to your signed-in account. Only an Administrator may change this.</small>
+ 
   <?php endif; ?>
 </div>
 <div class="col-md-6">
