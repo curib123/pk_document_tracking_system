@@ -271,7 +271,10 @@
             tab.classList.toggle('is-active',active);
             panels[i].hidden=!active;
         });
-        if (focusTab) tabs[index].focus();
+        if (focusTab) {
+            tabs[index].focus();
+            tabs[index].scrollIntoView({block:'nearest',inline:'nearest',behavior:'auto'});
+        }
     }
 
     function render(container,data) {
