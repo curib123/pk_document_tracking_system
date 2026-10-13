@@ -35,8 +35,8 @@ foreach ($rows as $row) {
  // The request viewer uses the same document renderer as System Documents,
  // but presents only submitted proposal metadata and visible approval history.
  // Never pretend an unapproved proposal is already the stored document.
- $isDocumentRequest=in_array($tab,['softcopy','hardcopy'],TRUE);
- $documentDomain=$tab==='softcopy'?'softcopy':($tab==='hardcopy'?'hardcopy':'record');
+ $isDocumentRequest=in_array($tab,['softcopy','hardcopy','hardcopy-disposal'],TRUE);
+ $documentDomain=$tab==='softcopy'?'softcopy':(in_array($tab,['hardcopy','hardcopy-disposal'],TRUE)?'hardcopy':'record');
  $detail=$row['detail_labels']??[];
  $headerTitle=(string)($payload['title']??'');
  if ($headerTitle==='') $headerTitle=(string)($row['source_title']??'');
@@ -68,6 +68,9 @@ foreach ($rows as $row) {
    ['key'=>'audit','title'=>'Decision History','fields'=>[
       'History'=>implode("\n",$historyText)?:'No approval decisions yet'
    ]]
+ ];
+ if ($row['type']==='disposal') $requestSections[1]=[
+    'key'=>'disposal','title'=>'Disposal Details','fields'=>$detail
  ];
  if ($documentDomain==='softcopy') {
    array_splice($requestSections,2,0,[[

@@ -77,6 +77,23 @@ class Document_detail_model extends CI_Model
                 $transfer['holder'].' → '.$transfer['recipient'].' · '.ucwords(str_replace('_',' ',$transfer['status'])).
                 ' · Accepted: '.($transfer['accepted_at']?:'Not accepted');
         }
+        $disposalsByDoc=[];
+        $disposedIds=array_map('intval',array_column(array_filter($rows,
+            static function($row){return $row['status']==='disposed';}),'id'));
+        if ($disposedIds) {
+            require_once APPPATH.'services/presentation/disposal_details.php';
+            $slots=implode(',',array_fill(0,count($disposedIds),'?'));
+            $disposals=$this->db->query("SELECT recent.* FROM (
+                SELECT p.document_id,p.disposal_action,p.remarks,p.previous_status,p.disposed_at,
+                    CONCAT_WS(' ',actor.first_name,actor.last_name) AS disposed_by_name,
+                    ROW_NUMBER() OVER (PARTITION BY p.document_id ORDER BY p.id DESC) AS disposal_rank
+                FROM disposals p JOIN $table d ON d.id=p.document_id
+                LEFT JOIN users actor ON actor.id=p.disposed_by
+                WHERE p.domain=? AND d.id IN ($slots) AND ($scope)
+                ) recent WHERE disposal_rank=1",array_merge([$domain],$disposedIds))->result_array();
+            foreach ($disposals as $disposal)
+                $disposalsByDoc[$disposal['document_id']]=Disposal_details::recorded($disposal);
+        }
         $output=[];
         foreach ($rows as $document) {
             $id=(int)$document['id'];
@@ -107,6 +124,9 @@ class Document_detail_model extends CI_Model
                 $sections[]=['key'=>'files','title'=>'Controlled Files','description'=>'Approved files and available downloads · latest 25','fields'=>$fileFields,
                     'links'=>$links,'empty'=>'No approved files available within your file permissions.'];
             }
+            if ($document['status']==='disposed') $sections[]=[
+                'key'=>'disposal','title'=>'Disposal Details','fields'=>$disposalsByDoc[$id]??[]
+            ];
             $sections[]=['key'=>'requests','title'=>'Related Requests','description'=>'Document requests visible to your account · latest 25','fields'=>$requestsByDoc[$id]??[],
                 'empty'=>'No related requests available within your permissions.'];
             $sections[]=['key'=>'approvals','title'=>'Approval History','description'=>'Workflow decisions for visible requests','fields'=>$approvalsByDoc[$id]??[],

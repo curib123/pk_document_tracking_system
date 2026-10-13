@@ -67,6 +67,7 @@ class Request_model extends CI_Model
     private function details($rows)
     {
         require_once APPPATH.'services/documents/retention_countdown.php';
+        require_once APPPATH.'services/presentation/disposal_details.php';
         $references=[
             'categories'=>['name',['category_id'=>'Proposed Category']],
             'areas'=>['name',['area_id'=>'Proposed Area','destination_area_id'=>'Destination Area']],
@@ -85,6 +86,20 @@ class Request_model extends CI_Model
             if ($ids) $lookups[$table]=array_column($this->db->select('id,'.$label.' AS label',FALSE)
                 ->from($table)->where_in('id',array_unique($ids))->get()->result_array(),'label','id');
         }
+        $disposalIds=[];$disposals=[];
+        foreach ($rows as $row) if ($row['type']==='disposal') $disposalIds[]=(int)$row['id'];
+        if ($disposalIds) {
+            $slots=implode(',',array_fill(0,count($disposalIds),'?'));
+            $records=$this->db->query("SELECT recent.* FROM (
+                SELECT p.request_id,p.document_id,p.disposal_action,p.remarks,p.previous_status,p.disposed_at,
+                    CONCAT_WS(' ',actor.first_name,actor.last_name) AS disposed_by_name,
+                    ROW_NUMBER() OVER (PARTITION BY p.request_id ORDER BY p.id DESC) AS disposal_rank
+                FROM disposals p JOIN requests r ON r.id=p.request_id AND r.hardcopy_id=p.document_id
+                LEFT JOIN users actor ON actor.id=p.disposed_by
+                WHERE p.domain='hardcopy' AND r.type='disposal' AND p.request_id IN ($slots)
+                ) recent WHERE disposal_rank=1",$disposalIds)->result_array();
+            foreach ($records as $record) $disposals[$record['request_id']]=$record;
+        }
         foreach ($rows as &$row) {
             $payload=$payloads[$row['id']];$details=[];
             if (!empty($row['source_title'])) $details['Selected Document']=$row['source_title'];
@@ -94,7 +109,8 @@ class Request_model extends CI_Model
                 'effective_date'=>'Effective Date (optional)','date_received'=>'Received Date','date_released'=>'Released Date',
                 'page_number'=>'Pages','expires_at'=>'Access Expiry','creation_reason'=>'Creation Reason',
                 'disposal_reason'=>'Disposal Reason','disposal_other'=>'Other Disposal Details'] as $key=>$label) {
-                if (isset($payload[$key]) && is_scalar($payload[$key]) && (string)$payload[$key]!=='') $details[$label]=$payload[$key];
+                if (isset($payload[$key]) && is_scalar($payload[$key]) && (string)$payload[$key]!=='')
+                    $details[$label]=$key==='disposal_reason'?Disposal_details::reason($payload[$key]):$payload[$key];
             }
             if (in_array($row['type'],['hardcopy_create','hardcopy_update'],TRUE)) {
                 $details['Days until disposal']=Retention_countdown::label(
@@ -103,6 +119,8 @@ class Request_model extends CI_Model
             foreach ($references as $table=>[$unused,$fields]) foreach ($fields as $field=>$label) {
                 if (!empty($payload[$field])) $details[$label]=$lookups[$table][(int)$payload[$field]]??'Previously selected record is unavailable';
             }
+            if ($row['type']==='disposal' && isset($disposals[$row['id']]))
+                $details=array_merge($details,Disposal_details::recorded($disposals[$row['id']]));
             $row['detail_labels']=$details;
         }
         unset($row);

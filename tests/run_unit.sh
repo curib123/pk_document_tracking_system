@@ -13,6 +13,7 @@ php tests/plan_contract.php
 php tests/login_transition_handoff.php
 php tests/logout_handoff.php
 php tests/request_disposal.php
+php tests/disposal_view_details.php
 php tests/audit_listing.php
 php tests/retention_countdown.php
 php tests/topnav_optional_asset.php
