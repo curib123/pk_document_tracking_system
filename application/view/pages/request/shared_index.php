@@ -28,7 +28,9 @@ foreach ($rows as $row) {
       (!empty($h['comments'])?' — '.$h['comments']:'');
  }
  $routeText=[];
+ $routeSteps=[];
  foreach ($approval_routes[$row['id']]??[] as $step) {
+     $routeSteps[]=['label'=>$step['label'],'approver_label'=>$step['approver_label'],'status'=>$step['status']];
      $routeText[]=$step['label'].' → '.$step['approver_label'].
          ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
  }
@@ -64,7 +66,7 @@ foreach ($rows as $row) {
    ['key'=>'approvals','title'=>'Approval Route','fields'=>[
       'Workflow Version'=>$row['workflow_version_id']?'Assigned at submission':'Awaiting submission',
       'Steps'=>implode("\n",$routeText)?:'No steps assigned yet'
-   ]],
+   ],'steps'=>$routeSteps],
    ['key'=>'audit','title'=>'Decision History','fields'=>[
       'History'=>implode("\n",$historyText)?:'No approval decisions yet'
    ]]

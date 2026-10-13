@@ -247,10 +247,38 @@
         return list;
     }
 
+    function makeWorkflowSteps(steps) {
+        var list=node('ol','doc-workflow-steps');
+        list.setAttribute('aria-label','Steps');
+        steps.forEach(function(step,index) {
+            var rawStatus=String(step.status||'pending').toLowerCase();
+            var status=['active','pending','approved','returned','rejected','superseded','cancelled']
+                .includes(rawStatus)?rawStatus:'neutral';
+            var statusText=String(step.status||'pending').replace(/_/g,' ')
+                .replace(/\b\w/g,function(letter){return letter.toUpperCase();});
+            var tile=node('li','doc-workflow-step');
+            tile.setAttribute('data-step-status',status);
+            if (status==='active') tile.setAttribute('aria-current','step');
+            var heading=node('div','doc-workflow-step-heading');
+            var number=node('span','doc-workflow-step-number',index+1);
+            number.setAttribute('aria-hidden','true');
+            heading.append(number,node('span','doc-workflow-step-status',statusText));
+            tile.append(heading,node('h4','doc-workflow-step-name',valueText(step.label)),
+                node('p','doc-workflow-step-approver',valueText(step.approver_label)));
+            list.append(tile);
+        });
+        return list;
+    }
+
     function renderSection(panel,section) {
         panel.append(sectionTitle(section));
         var entries=normalizedEntries(section.fields);
-        if (!entries.length) {
+        if (section.key==='approvals' && Array.isArray(section.steps) && section.steps.length) {
+            panel.classList.add('has-workflow-steps');
+            var metadata=entries.filter(function(entry){return entry[0]!=='Steps';});
+            if (metadata.length) panel.append(makeGrid(metadata));
+            panel.append(node('h4','doc-workflow-label','Steps'),makeWorkflowSteps(section.steps));
+        } else if (!entries.length) {
             panel.append(emptyState(section.empty));
         } else if (section.key==='files') {
             panel.append(makeFiles(section,entries));

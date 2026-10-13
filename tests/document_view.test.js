@@ -53,6 +53,7 @@ class Element {
     if (selector === '[role="tab"]') return this.attributes.role === 'tab';
     if (selector === '[role="tabpanel"]') return this.attributes.role === 'tabpanel';
     if (selector === '.doc-modal-body') return this.classList.contains('doc-modal-body');
+    if (/^\.[a-z0-9_-]+$/i.test(selector)) return this.classList.contains(selector.slice(1));
     return false;
   }
   closest(selector) {
@@ -276,4 +277,49 @@ test('nested generic sections retain metadata and put related concerns in tabs',
   assert.equal(map.viewDocumentSummary.hidden,false);
   assert.deepEqual(details.querySelectorAll('[role="tab"]').map(x=>x.children[1].textContent),
     ['Access Grants','History']);
+});
+
+test('each approval step renders separately with its ordered label, approver and status',() => {
+  const {window,details}=setup();
+  window.PKDocumentView.render(details,{
+    kind:'record',domain:'record',header:{title:'Approval request',status:'submitted'},
+    sections:[{key:'approvals',title:'Approval Route',fields:{
+      'Workflow Version':'Assigned at submission','Steps':'Legacy combined text'
+    },steps:[
+      {label:'Noted By',approver_label:'Staff1 Staff1',status:'active'},
+      {label:'Plant Manager Approval',approver_label:'Plant Manager',status:'pending'},
+      {label:'Document Officer Approval',approver_label:'Document Control Officer',status:'pending'}
+    ]}]
+  });
+  const tiles=details.querySelectorAll('.doc-workflow-step');
+  assert.equal(tiles.length,3,'Every approval step needs its own tile.');
+  assert.deepEqual(tiles.map(tile=>tile.querySelector('.doc-workflow-step-name').textContent),
+    ['Noted By','Plant Manager Approval','Document Officer Approval']);
+  assert.deepEqual(tiles.map(tile=>tile.querySelector('.doc-workflow-step-approver').textContent),
+    ['Staff1 Staff1','Plant Manager','Document Control Officer']);
+  assert.deepEqual(tiles.map(tile=>tile.getAttribute('data-step-status')),['active','pending','pending']);
+  assert.deepEqual(tiles.map(tile=>tile.querySelector('.doc-workflow-step-status').textContent),
+    ['Active','Pending','Pending'],'Status must remain readable alongside its color.');
+  assert.equal(details.querySelectorAll('.doc-modal-activity-description').length,0,
+    'The old combined Steps paragraph must not duplicate the tiles.');
+});
+
+test('workflow step names remain text and unknown statuses use a neutral color',() => {
+  const {window,details}=setup();
+  window.PKDocumentView.render(details,{
+    kind:'record',domain:'record',header:{title:'Approval request'},
+    sections:[{key:'approvals',title:'Approval Route',fields:{},steps:[
+      {label:'<script>alert(1)</script>',approver_label:'<img src=x onerror=alert(1)>',status:'unexpected" onclick="bad'},
+      {label:'Earlier review',approver_label:'Officer',status:'approved'},
+      {label:'Returned review',approver_label:'Manager',status:'returned'},
+      {label:'Rejected review',approver_label:'Manager',status:'rejected'},
+      {label:'Earlier submission',approver_label:'Officer',status:'superseded'}
+    ]}]
+  });
+  const tiles=details.querySelectorAll('.doc-workflow-step');
+  assert.equal(tiles.length,5);
+  assert.equal(tiles[0].querySelector('.doc-workflow-step-name').textContent,'<script>alert(1)</script>');
+  assert.equal(tiles[0].querySelector('.doc-workflow-step-approver').textContent,'<img src=x onerror=alert(1)>');
+  assert.deepEqual(tiles.map(tile=>tile.getAttribute('data-step-status')),
+    ['neutral','approved','returned','rejected','superseded']);
 });
