@@ -4,6 +4,14 @@ class Auth extends MY_Controller
 {
     public function index()
     {
+        // Read-only identity check for expiry/history recovery; no protected data.
+        if ($this->input->get('session_status', TRUE)==='1') {
+            return $this->auth_response([
+                'authenticated'=>$this->user!==NULL,
+                'csrf'=>['name'=>$this->security->get_csrf_token_name(),
+                    'value'=>$this->security->get_csrf_hash()]
+            ]);
+        }
         if ($this->user) return redirect(!empty($this->user['require_password_change']) ? 'change-password' : 'dashboard');
         $this->load->view('pages/authentication/index');
     }
@@ -48,8 +56,19 @@ class Auth extends MY_Controller
     public function logout()
     {
         $this->confirmed();
+        $this->output->set_header('Cache-Control: no-store, private');
         $this->session->sess_destroy();
+        if (session_status()===PHP_SESSION_ACTIVE) show_error('Sign out could not be completed.',500);
+        $_SESSION=[];
+        if ($this->input->is_ajax_request())
+            return $this->auth_response(['logged_out'=>TRUE,'login_url'=>site_url('login')]);
         redirect('login');
+    }
+
+    private function auth_response(array $data)
+    {
+        return $this->output->set_header('Cache-Control: no-store, private')
+            ->set_content_type('application/json')->set_output(json_encode($data));
     }
 
     public function setup()
