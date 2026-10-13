@@ -208,6 +208,10 @@ foreach (['approved','rejected'] as $outcome) {
     foreach (array_slice($history,3) as $event)
         returnCheck($event['user_name']!=='' && $event['created_at']!==NULL && $event['comments']!=='',
             'Every decision must retain its actor, time and comment.');
+    $routes=$returnContext->Request_model->approval_routes([42])[42];
+    $events=$returnContext->Request_model->histories([42])[42];
+    returnCheck(array_map('intval',array_column($routes,'step_id'))===[101,107,112,118] && count($events)===17,
+        'The request viewer must receive stable step IDs and every recorded decision.');
     returnCheck($request['status']===($outcome==='approved'?'completed':'rejected') &&
         $connection->count_all('disposals')===($outcome==='approved'?1:0),'Only final approval may apply the operation.');
 }

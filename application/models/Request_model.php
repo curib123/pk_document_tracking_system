@@ -142,7 +142,7 @@ class Request_model extends CI_Model
     public function approval_routes($ids)
     {
         if (!$ids) return [];
-        $rows=$this->db->select('s.request_id,s.node_key,s.label,s.assignment,
+        $rows=$this->db->select('s.id AS step_id,s.request_id,s.node_key,s.label,s.assignment,
                 s.assigned_name,s.status,s.decision,s.acting_name,s.acted_at')
             ->from('workflow_steps s')
             ->where_in('s.request_id',$ids)

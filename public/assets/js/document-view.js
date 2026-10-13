@@ -247,6 +247,32 @@
         return list;
     }
 
+    function makeStepHistory(history) {
+        var group=node('div','doc-workflow-history');
+        group.append(node('h5','doc-workflow-history-title','Decision History'));
+        var list=node('ol','doc-workflow-decisions');
+        history.forEach(function(event) {
+            var action=String(event.action||'').toLowerCase();
+            var status=['approved','returned','rejected'].includes(action)?action:'neutral';
+            var item=node('li','doc-workflow-decision');
+            item.setAttribute('data-decision-status',status);
+            item.append(node('strong','doc-workflow-decision-action',action.replace(/_/g,' ')
+                .replace(/\b\w/g,function(letter){return letter.toUpperCase();})));
+            var actor=valueText(event.user_name);
+            if (event.position_title) actor+=' · '+event.position_title;
+            item.append(node('p','doc-workflow-decision-actor',actor));
+            if (event.created_at) {
+                var timestamp=node('time','doc-workflow-decision-time',event.created_at);
+                timestamp.setAttribute('datetime',String(event.created_at).replace(' ','T'));
+                item.append(timestamp);
+            }
+            if (event.comments) item.append(node('p','doc-workflow-decision-comment',event.comments));
+            list.append(item);
+        });
+        group.append(list);
+        return group;
+    }
+
     function makeWorkflowSteps(steps) {
         var list=node('ol','doc-workflow-steps');
         list.setAttribute('aria-label','Steps');
@@ -265,6 +291,8 @@
             heading.append(number,node('span','doc-workflow-step-status',statusText));
             tile.append(heading,node('h4','doc-workflow-step-name',valueText(step.label)),
                 node('p','doc-workflow-step-approver',valueText(step.approver_label)));
+            if (Array.isArray(step.history) && step.history.length)
+                tile.append(makeStepHistory(step.history));
             list.append(tile);
         });
         return list;

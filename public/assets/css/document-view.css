@@ -653,6 +653,7 @@
 #viewModal.is-document-view .doc-workflow-steps {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
+    align-items: start;
     gap: 14px;
     padding: 0;
     margin: 0;
@@ -743,6 +744,60 @@
     font-size: 12px;
     line-height: 1.6;
     overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-workflow-history {
+    margin-top: 18px;
+    padding-top: 14px;
+    border-top: 1px solid var(--step-line);
+}
+#viewModal.is-document-view .doc-workflow-history-title {
+    margin: 0 0 12px;
+    color: var(--ui-ink-600);
+    font-size: 11px;
+    font-weight: 700;
+}
+#viewModal.is-document-view .doc-workflow-decisions {
+    display: grid;
+    gap: 12px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+#viewModal.is-document-view .doc-workflow-decision {
+    --decision-color: var(--ui-ink-500);
+    min-width: 0;
+    padding-left: 10px;
+    border-left: 3px solid var(--decision-color);
+    overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="approved"] {
+    --decision-color: var(--ui-green-900);
+}
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="returned"] {
+    --decision-color: var(--ui-amber-900);
+}
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="rejected"] {
+    --decision-color: var(--ui-brand-800);
+}
+#viewModal.is-document-view .doc-workflow-decision-action {
+    color: var(--decision-color);
+    font-size: 11px;
+    font-weight: 700;
+}
+#viewModal.is-document-view .doc-workflow-decision-actor,
+#viewModal.is-document-view .doc-workflow-decision-time {
+    display: block;
+    margin: 3px 0 0;
+    color: var(--ui-ink-600);
+    font-size: 10px;
+    line-height: 1.6;
+}
+#viewModal.is-document-view .doc-workflow-decision-comment {
+    margin: 6px 0 0;
+    color: var(--ui-ink-900);
+    font-size: 11px;
+    line-height: 1.6;
+    white-space: pre-wrap;
 }
 @media (max-width: 991.98px) {
     #viewModal.is-document-view .doc-workflow-steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }

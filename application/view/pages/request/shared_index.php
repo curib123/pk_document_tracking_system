@@ -22,6 +22,14 @@ $dt_rows=[];
 foreach ($rows as $row) {
  $payload=json_decode($row['payload'],TRUE)?:[];
  $entries=$history[$row['id']]??[];
+ $historyByStep=[];
+ foreach ($entries as $event) if (!empty($event['step_id'])) {
+     $historyByStep[(int)$event['step_id']][]=[
+         'action'=>$event['action'],'user_name'=>$event['user_name'],
+         'position_title'=>$event['position_title']??'',
+         'comments'=>$event['comments']??'','created_at'=>$event['created_at']
+     ];
+ }
  $historyText=[];
  foreach ($entries as $h) {
     $historyText[]=ucfirst($h['action']).' — '.$h['user_name'].' — '.$h['created_at'].
@@ -30,7 +38,10 @@ foreach ($rows as $row) {
  $routeText=[];
  $routeSteps=[];
  foreach ($approval_routes[$row['id']]??[] as $step) {
-     $routeSteps[]=['label'=>$step['label'],'approver_label'=>$step['approver_label'],'status'=>$step['status']];
+     $tile=['label'=>$step['label'],'approver_label'=>$step['approver_label'],'status'=>$step['status']];
+     if (!empty($historyByStep[(int)($step['step_id']??0)]))
+         $tile['history']=$historyByStep[(int)$step['step_id']];
+     $routeSteps[]=$tile;
      $routeText[]=$step['label'].' → '.$step['approver_label'].
          ' ['.ucwords(str_replace('_',' ',$step['status'])).']';
  }

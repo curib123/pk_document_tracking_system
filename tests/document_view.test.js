@@ -323,3 +323,40 @@ test('workflow step names remain text and unknown statuses use a neutral color',
   assert.deepEqual(tiles.map(tile=>tile.getAttribute('data-step-status')),
     ['neutral','approved','returned','rejected','superseded']);
 });
+
+test('approval tiles retain every repeated decision, actor, timestamp and comment safely',() => {
+  const {window,details}=setup();
+  const history=[
+    {action:'returned',user_name:'Manager',position_title:'Plant Manager',created_at:'2026-10-13 10:00:00',comments:'First return'},
+    {action:'returned',user_name:'Manager',position_title:'Plant Manager',created_at:'2026-10-13 11:00:00',comments:'Second return\nCheck the document'},
+    {action:'approved',user_name:'<img src=x onerror=alert(1)>',position_title:'Plant Manager',created_at:'2026-10-13 12:00:00',comments:'<script>alert(1)</script>'},
+    {action:'unexpected" onclick="bad',user_name:'Manager',position_title:'Plant Manager',created_at:'2026-10-13 13:00:00',comments:''}
+  ];
+  window.PKDocumentView.render(details,{
+    kind:'record',domain:'record',header:{title:'Approval request'},
+    sections:[{key:'approvals',title:'Approval Route',fields:{},steps:[
+      {label:'Plant Manager Approval',approver_label:'Plant Manager',status:'active',history},
+      {label:'Final Approval',approver_label:'Document Officer',status:'returned',history:[
+        {action:'returned',user_name:'Officer',created_at:'2026-10-13 09:00:00',comments:'Final approver returned'}
+      ]},
+      {label:'Unreviewed step',approver_label:'Staff',status:'pending'}
+    ]}]
+  });
+  const tiles=details.querySelectorAll('.doc-workflow-step');
+  const events=tiles[0].querySelectorAll('.doc-workflow-decision');
+  assert.equal(events.length,4,'Earlier returns must stay visible after another decision.');
+  assert.deepEqual(events.map(event=>event.getAttribute('data-decision-status')),
+    ['returned','returned','approved','neutral']);
+  assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-action').textContent),
+    ['Returned','Returned','Approved','Unexpected" Onclick="Bad']);
+  assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-time').textContent),history.map(event=>event.created_at));
+  assert.equal(events[0].querySelector('.doc-workflow-decision-time').getAttribute('datetime'),'2026-10-13T10:00:00');
+  assert.equal(events[0].querySelector('.doc-workflow-decision-actor').textContent,'Manager · Plant Manager');
+  assert.equal(events[1].querySelector('.doc-workflow-decision-comment').textContent,'Second return\nCheck the document');
+  assert.equal(events[2].querySelector('.doc-workflow-decision-actor').textContent,'<img src=x onerror=alert(1)> · Plant Manager');
+  assert.equal(events[2].querySelector('.doc-workflow-decision-comment').textContent,'<script>alert(1)</script>');
+  assert.equal(events[3].querySelector('.doc-workflow-decision-comment'),null);
+  assert.equal(tiles[1].querySelectorAll('.doc-workflow-decision').length,1,'Decisions must stay under their own step.');
+  assert.equal(tiles[2].querySelectorAll('.doc-workflow-decision').length,0);
+  assert.equal(tiles[0].getAttribute('data-step-status'),'active','Current task status stays separate from saved decisions.');
+});
