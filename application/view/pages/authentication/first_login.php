@@ -1,5 +1,5 @@
 <?php defined('BASEPATH') OR exit('No direct script access allowed'); ?>
-<div class="modal d-block auth-required-dialog" id="requiredPasswordModal" tabindex="-1"
+<div class="modal d-block auth-required-dialog" data-bs-backdrop="static" data-bs-keyboard="false" id="requiredPasswordModal" tabindex="-1"
      role="dialog" aria-modal="true" aria-labelledby="accountSetupTitle" data-required-password>
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content">
