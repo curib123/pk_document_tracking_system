@@ -525,6 +525,33 @@ class Request_service
                        'completed_at'=>$status==='completed'?date('Y-m-d H:i:s'):NULL
                     ]);
                 }
+            } elseif ($decision==='returned') {
+                $graph=json_decode($r['snapshot']??'',TRUE)?:[];
+                $keys=array_column($graph['steps']??[],'key');
+                $index=array_search($step['node_key'],$keys,TRUE);
+                if ($index===FALSE) throw new DomainException('Current step is not in the submitted workflow.');
+                if ($index===0) {
+                    $this->ci->db->where('id',$id)->update('requests',[
+                        'status'=>'returned','current_node'=>NULL,'completed_at'=>date('Y-m-d H:i:s')
+                    ]);
+                } else {
+                    // Step IDs preserve the submitted order. The immediately
+                    // preceding row must belong to this run and match the
+                    // immutable route; never skip to an older approved step.
+                    $previous=$this->ci->db->from('workflow_steps')->where('request_id',$id)
+                        ->where('id <',(int)$step['id'])->order_by('id','DESC')->limit(1)->get()->row_array();
+                    if (!$previous || $previous['node_key']!==$keys[$index-1] || $previous['status']!=='approved')
+                        throw new DomainException('Previous workflow step is unavailable.');
+                    // Decisions stay in workflow_history while these same
+                    // assignments are reopened for another approval pass.
+                    $reset=['decision'=>NULL,'comments'=>NULL,'acting_user_id'=>NULL,
+                        'acting_name'=>NULL,'acting_position'=>NULL,'acted_at'=>NULL];
+                    $this->ci->db->where('id',$step['id'])->update('workflow_steps',['status'=>'pending']+$reset);
+                    $this->ci->db->where('id',$previous['id'])->update('workflow_steps',['status'=>'active']+$reset);
+                    $this->ci->db->where('id',$id)->update('requests',[
+                        'status'=>'submitted','current_node'=>$previous['node_key'],'completed_at'=>NULL
+                    ]);
+                }
             } else {
                 $this->ci->db->where('id',$id)->update('requests',[
                     'status'=>$decision,'current_node'=>NULL,'completed_at'=>date('Y-m-d H:i:s')
