@@ -57,10 +57,10 @@ $dt_create=$canUser('add')?'Add User':'';
 <?php foreach($users as $u): ?><option value="<?= (int)$u['id'] ?>"><?= html_escape($u['name']) ?></option>
 <?php endforeach; ?></select></div>
 <fieldset class="col-12"><legend class="form-label">Assigned roles</legend>
-<div class="d-flex flex-wrap gap-3">
-<?php foreach($roles as $r): ?><label class="form-check mb-0">
-<input class="form-check-input" type="checkbox" name="role_ids[]" value="<?= (int)$r['id'] ?>">
-<span class="form-check-label"><?= html_escape($r['name']) ?></span></label><?php endforeach; ?>
+<div class="role-pill-list">
+<?php foreach($roles as $r): ?><label class="role-pill">
+<input class="role-pill-input" type="checkbox" name="role_ids[]" value="<?= (int)$r['id'] ?>">
+<span class="role-pill-label"><i class="fa-solid fa-check" aria-hidden="true"></i><?= html_escape($r['name']) ?></span></label><?php endforeach; ?>
 </div></fieldset>
 <div class="col-12"><div class="alert alert-light border mb-0">
 A secure temporary password is generated automatically for new accounts and shown once after saving.
