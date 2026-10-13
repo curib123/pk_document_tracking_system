@@ -57,6 +57,8 @@ $doc=['id'=>20,'title'=>'Disposed register','sequence_number'=>'HC-020','documen
 foreach(['hardcopy','softcopy']as$domain){$document->db->calls=[];$result=$document->for_page($domain,[$doc],['id'=>7,'role_id'=>5],[]);
  $sections=array_column($result[20]['sections'],NULL,'key');disposal_view_check(isset($sections['disposal']),'Disposed document modal must retain its disposal record');
  disposal_view_check($sections['disposal']['fields']['Disposed By']==='Document Officer'&&$sections['disposal']['fields']['Disposal Reason']==='Scratch','Document modal must show recorded actor and readable reason');
+ $concerns=array_values(array_filter($result[20]['sections'],static function($section){return !in_array($section['key'],['overview','storage','revision'],TRUE);}));
+ disposal_view_check($concerns[0]['key']==='disposal','Disposed documents must open their disposal details before other concerns');
  $queries=array_values(array_filter($document->db->calls,static function($call){return $call[0]==='query'&&strpos($call[1][0],'FROM disposals')!==FALSE;}));
  disposal_view_check(count($queries)===1&&$queries[0][1][1]===[$domain,20],'Document disposal lookup must be batched and bound to its domain and page');
  disposal_view_check(strpos($queries[0][1][0],'d.created_by=7')!==FALSE,'Recorded disposal details must respect document access scope');

@@ -124,9 +124,9 @@ class Document_detail_model extends CI_Model
                 $sections[]=['key'=>'files','title'=>'Controlled Files','description'=>'Approved files and available downloads · latest 25','fields'=>$fileFields,
                     'links'=>$links,'empty'=>'No approved files available within your file permissions.'];
             }
-            if ($document['status']==='disposed') $sections[]=[
+            if ($document['status']==='disposed') array_splice($sections,2,0,[[
                 'key'=>'disposal','title'=>'Disposal Details','fields'=>$disposalsByDoc[$id]??[]
-            ];
+            ]]);
             $sections[]=['key'=>'requests','title'=>'Related Requests','description'=>'Document requests visible to your account · latest 25','fields'=>$requestsByDoc[$id]??[],
                 'empty'=>'No related requests available within your permissions.'];
             $sections[]=['key'=>'approvals','title'=>'Approval History','description'=>'Workflow decisions for visible requests','fields'=>$approvalsByDoc[$id]??[],
