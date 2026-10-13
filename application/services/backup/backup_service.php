@@ -1,5 +1,5 @@
 <?php
-defined('BASEPATH') OR exit('No direct script access allowed');
+defined('BASEPATH') OR defined('PK_ROOT') OR exit('No direct script access allowed');
 
 /**
  * Offline-friendly, encrypted, signed disaster-recovery snapshots.
@@ -70,8 +70,41 @@ final class Backup_service
         if (!in_array($kind,['manual','auto','recovery'],TRUE))
             throw new DomainException('Invalid backup type.');
         $lock=$this->lock();
-        try { return $this->createLocked($kind); }
+        try {
+            $result=$this->createLocked($kind);
+            // Never prune before a replacement snapshot has completed.
+            try {
+                $result['retention']=$this->retentionService()->cleanup();
+                if ($result['retention']['failed'])
+                    error_log('PK DTS retention cleanup is incomplete; retry tools/backup.php retention.');
+            } catch (Throwable $error) {
+                $result['retention']=NULL;
+                error_log('PK DTS retention cleanup failed: '.$error->getMessage());
+            }
+            return $result;
+        }
         finally { $this->unlock($lock); }
+    }
+    public function apply_retention(?DateTimeImmutable $now=NULL): array
+    {
+        $lock=$this->lock();
+        try {
+            if (file_exists($this->root.'/storage/.restore-in-progress'))
+                throw new DomainException('Retention is paused during restore maintenance.');
+            return $this->retentionService()->cleanup($now);
+        } finally {$this->unlock($lock);}
+    }
+    public function apply_retention_daily(?DateTimeImmutable $now=NULL): ?array
+    {
+        if (file_exists($this->root.'/storage/.restore-in-progress')) return NULL;
+        $lock=$this->lock();
+        try {return $this->retentionService()->cleanup_daily($now);}
+        finally {$this->unlock($lock);}
+    }
+    private function retentionService(): Retention_service
+    {
+        require_once __DIR__.'/retention_service.php';
+        return new Retention_service($this->root,$this->directory);
     }
     private function createLocked($kind): array
     {

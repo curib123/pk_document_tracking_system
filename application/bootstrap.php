@@ -13,3 +13,13 @@ foreach (['storage','storage/logs','storage/sessions','storage/documents'] as $p
     $directory = PK_ROOT . '/' . $part;
     if (!is_dir($directory)) mkdir($directory, 0700, TRUE);
 }
+// The first request each day also enforces retention when no OS task is running.
+// A failed cleanup must not prevent users from accessing the application.
+try {
+    require_once __DIR__.'/services/backup/backup_service.php';
+    $retention=(new Backup_service(PK_ROOT))->apply_retention_daily();
+    if ($retention!==NULL && $retention['failed'])
+        error_log('PK DTS daily retention is incomplete; retry tools/backup.php retention.');
+} catch (Throwable $error) {
+    error_log('PK DTS daily retention failed: '.$error->getMessage());
+}

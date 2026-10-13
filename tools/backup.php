@@ -5,6 +5,7 @@
  * php tools/backup.php auto
  * php tools/backup.php manual
  * php tools/backup.php list
+ * php tools/backup.php retention
  * php tools/backup.php verify pk-dts-auto-YYYYMMDD-HHMMSS-xxxxxxxxxx.zip
  * php tools/backup.php restore pk-dts-auto-YYYYMMDD-HHMMSS-xxxxxxxxxx.zip
  *
@@ -22,6 +23,17 @@ try {
     if ($command==='auto' || $command==='manual') {
         $result=$service->backup($command);
         echo "Created encrypted signed backup: ".$result['name']."\n";
+        if ($result['retention']===NULL || $result['retention']['failed'])
+            fwrite(STDERR,"Retention cleanup was incomplete; retry php tools/backup.php retention.\n");
+    } elseif ($command==='retention') {
+        $result=$service->apply_retention();
+        echo "Three-month retention cutoff: ".$result['cutoff']."\n";
+        foreach ($result['deleted'] as $kind=>$count)
+            echo "Deleted ".$kind.": ".$count."\n";
+        if ($result['failed']) {
+            fwrite(STDERR,"Retention cleanup was incomplete for ".count($result['failed'])." paths; check permissions and locks, then retry.\n");
+            exit(1);
+        }
     } elseif ($command==='list') {
         foreach ($service->list_backups() as $item)
             echo $item['name']."\t".$item['size']." bytes\n";
@@ -38,7 +50,7 @@ try {
         echo "Restored data: ".$result['restored']."\n".
              "Pre-restore recovery snapshot: ".$result['recovery']."\n";
     } else {
-        fwrite(STDERR,"Usage: php tools/backup.php auto|manual|list|verify <archive>|restore <archive> --confirm\n");
+        fwrite(STDERR,"Usage: php tools/backup.php auto|manual|list|retention|verify <archive>|restore <archive> --confirm\n");
         exit(2);
     }
     exit(0);

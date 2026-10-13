@@ -50,6 +50,20 @@ Use Administrator → Backup & Restore → Backup now, or on the server:
 
 The ZIP can be downloaded through the authenticated administrator interface only.
 
+## Three-month backup and log retention
+
+The first application request each day automatically deletes managed backups and daily logs older than **three calendar months in Asia/Manila**. Each successful automatic or manual backup also runs cleanup after the new ZIP is complete. The existing daily 5 PM backup task therefore applies this policy even when nobody opens the site; no new scheduled task is required.
+
+All generated Automatic, Manual, imported and Recovery ZIPs are covered in the configured private backup directory. Cleanup also covers daily `storage/audit/YYYY-MM-DD.json` audit files and `storage/logs/log-YYYY-MM-DD.log` application logs. It uses dates in these filenames rather than file modification times. Controlled documents, sessions, arbitrary files, subdirectories, temporary backup stages and redirected log paths are preserved. External Apache/MySQL logs and a scheduler's redirected output file are managed separately by the host.
+
+The cutoff keeps the same local time three months earlier, clamping to the last day of that month when necessary: May 31 at 5 PM becomes February 28 at 5 PM (February 29 in a leap year). ZIPs exactly at the cutoff are kept, and daily logs keep the entire cutoff day. For example, a run on October 13 at 5 PM removes ZIPs created before July 13 at 5 PM and log files dated before July 13.
+
+Cleanup shares the backup/restore and audit writer locks, pauses during restore maintenance, and reports deletion failures without interrupting normal application access. To run cleanup explicitly on the server without requiring database or encryption credentials:
+
+        php tools/backup.php retention
+
+This command prints the cutoff and deleted file counts. An incomplete pass exits with status 1 so an operator can correct permissions or retry after a lock is released. Keep any permanent or off-site copies outside the system-managed backup directory.
+
 ## Restore
 
 **Use a maintenance window**. Database import can replace users, permissions, workflows and document records.
@@ -74,7 +88,7 @@ If both restore and automatic recovery fail, the maintenance flag at storage/.re
 - Merging code alone **does not install the 5 PM task**; someone must run the Windows PowerShell scheduler setup on the server.
 - Keep protected backups off-site or on a separate encrypted drive. One disk failure can destroy both production and local backups.
 - Protect and retain your backup encryption password and signing key. Changing these means older backups cannot be restored without their original secrets.
-- The system does not automatically delete archives. Monitor free disk space, set a tested off-site retention policy, and regularly practice recovery.
+- Local managed backups and daily audit/application logs are automatically kept for three calendar months. Monitor free disk space, maintain separate off-site copies, and regularly practice recovery.
 - Daily dump uses MariaDB single-transaction mode for transactional tables, but file uploads during backup can produce a mixed point-in-time snapshot. Avoid active document edits or transfers during the backup window.
 - Large ZIP uploads require sufficient PHP upload_max_filesize and post_max_size; use CLI or a secured local transfer for archives exceeding browser limits.
 
