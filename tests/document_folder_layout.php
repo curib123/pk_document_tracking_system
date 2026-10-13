@@ -160,4 +160,44 @@ assertFolder(strpos($folderModel,"if (\$kind==='asset')")!==FALSE &&
     'Assets and their Locations must appear as navigable folders');
 assertFolder(strpos($folderView,'Document Repository')!==FALSE,
     'The tree must have a Document Repository root node');
+// Render the real folder view: document counts must never open every branch
+// at the repository root. A deep link should open only its ancestor chain.
+define('APPPATH', $root.'/application/');
+function site_url($path='') { return '/'.$path; }
+function html_escape($value) { return htmlspecialchars((string)$value, ENT_QUOTES, 'UTF-8'); }
+class FolderViewHarness {
+    public $load;
+    public function __construct() { $this->load=$this; }
+    public function view($name,$data=[]) { echo '<button>View</button>'; }
+    public function render(array $data): string {
+        extract($data);
+        ob_start();
+        include APPPATH.'view/reusable_components/document_folder_list.php';
+        return ob_get_clean();
+    }
+}
+$viewRows=[];
+foreach ($rows as $row) $viewRows[]=$row+[
+    'cells'=>['title'=>'Test Document','status'=>'active'], 'display'=>[], 'buttons'=>[]
+];
+$viewData=[
+    'dt_folder_browser'=>['tree'=>$multi,'folder'=>'','breadcrumbs'=>[]],
+    'dt_folder_domain'=>'hardcopy','dt_rows'=>$viewRows,
+    'dt_columns'=>['title'=>'Document','status'=>'Status'],
+    'dt_path'=>'documents/hardcopy','dt_extra_params'=>[],
+    'dt_q'=>'','dt_filter_values'=>[],'dt_limit'=>25,'dt_sort'=>'title','dt_dir'=>'asc'
+];
+$harness=new FolderViewHarness();
+$opened=static function(string $html): array {
+    preg_match_all('/data-folder-key="([^"]+)">\s*<details data-folder-node open>/', $html, $matches);
+    return $matches[1];
+};
+assertFolder($opened($harness->render($viewData))===[],
+    'Repository root must show the first folder level without opening all populated descendants');
+$viewData['dt_folder_browser']['folder']='location:201';
+assertFolder($opened($harness->render($viewData))===['area:1','specific:10','asset:100','location:201'],
+    'A selected Location must open only its Area > Specific > Asset > Location chain');
+$viewData['dt_folder_browser']['folder']='all';
+assertFolder($opened($harness->render($viewData))===[],
+    'All Documents must preserve the hierarchy instead of auto-expanding populated branches');
 echo "System Documents exclusive folder/list mode and hierarchy contracts passed.\n";

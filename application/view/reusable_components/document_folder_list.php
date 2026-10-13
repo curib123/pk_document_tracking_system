@@ -88,7 +88,9 @@ $renderNode=function($key,$depth=0) use(
     $children=$node['children']??[];
     $count=(int)($counts[$key]??0);
     $isCurrent=$key===$currentFolder;
-    $open=$count>0 || isset($selectedChain[$key]);
+    // Start at the first level. Counts alone must not expose every Location
+    // and file; a deep link opens only the selected folder's ancestor chain.
+    $open=isset($selectedChain[$key]);
     $label=$kinds[$node['kind']]??'Folder';
     ?>
     <li class="doc-tree-node" data-folder-key="<?= html_escape($key) ?>">
@@ -151,7 +153,7 @@ $renderNode=function($key,$depth=0) use(
            <?= $currentFolder==='all'?'aria-current="page"':'' ?>>
             <i class="fa-solid fa-layer-group" aria-hidden="true"></i> All documents
         </a>
-        <span>Open a folder arrow to explore multiple branches. Only authorized documents on this page are listed.</span>
+        <span>Open each folder to follow the hierarchy to its documents.</span>
         <div class="doc-folder-sort" aria-label="Document ordering">
             <a class="<?= $sortRecent?'is-active':'' ?>"
                href="<?= html_escape($folderUrl($currentFolder,'updated_at','desc')) ?>">Recent</a>
@@ -174,7 +176,7 @@ $renderNode=function($key,$depth=0) use(
                         <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
             <?php if (!empty($byFolder['unfiled'])): ?>
                 <li class="doc-tree-node doc-tree-unfiled">
-                    <details data-folder-node open>
+                    <details data-folder-node>
                         <summary class="doc-tree-folder-row">
                             <span class="doc-tree-caret" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                             <span class="doc-tree-folder-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></span>
