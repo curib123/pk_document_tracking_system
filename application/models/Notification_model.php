@@ -11,6 +11,7 @@ class Notification_model extends CI_Model
         'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
+        'hardcopy-disposal' => ['disposal'],
         'access-grant' => ['access'],
         'document-assign' => ['assignment']
     ];

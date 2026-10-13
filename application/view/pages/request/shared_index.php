@@ -1,12 +1,14 @@
 <?php
 $tabs=[
  'softcopy'=>'Softcopy Requests','hardcopy'=>'Hardcopy Requests','hardcopy-transfer'=>'Hardcopy Transfer',
+ 'hardcopy-disposal'=>'Hardcopy Disposal',
  'access-grant'=>'Document Access Grants','document-assign'=>'Document Assignments'
 ];
 $typeMap=[
  'softcopy'=>['softcopy_create'=>'Create','softcopy_revise'=>'Revise','softcopy_cancel'=>'Cancel'],
  'hardcopy'=>['hardcopy_create'=>'Create','hardcopy_update'=>'Update'],
  'hardcopy-transfer'=>['transfer'=>'Transfer'],
+ 'hardcopy-disposal'=>['disposal'=>'Dispose'],
  'access-grant'=>['access'=>'Grant Access'],
  'document-assign'=>['assignment'=>'Assign']
 ];
@@ -231,6 +233,32 @@ data-confirm="Save request draft?">
     <?php $this->load->view('pages/request/hardcopy_transfer_fields',[
         'transfer_sources'=>$transfer_sources,'transfer_options'=>$transfer_options
     ]); ?>
+<?php elseif ($tab==='hardcopy-disposal'): ?>
+  <div class="col-md-6">
+    <label class="form-label" for="reqType">Request Action</label>
+    <select class="form-select" name="type" id="reqType" required>
+      <option value="disposal">Dispose Hardcopy</option>
+    </select>
+  </div>
+  <div class="col-md-6">
+    <label class="form-label" for="reqSubject">Subject / Reason</label>
+    <input class="form-control" id="reqSubject" name="subject" maxlength="255" required>
+  </div>
+  <div class="col-12">
+    <label class="form-label" for="reqHardcopy">Hardcopy Document</label>
+    <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required>
+      <option value="">Choose an active document</option>
+      <?php foreach ($hardcopy_options as $item): ?>
+      <option value="<?= (int)$item['id'] ?>"><?= html_escape(($item['sequence_number']??'').' · '.$item['title']) ?></option>
+      <?php endforeach; ?>
+    </select>
+  </div>
+  <?php $this->load->view('pages/request/disposal_fields',['disposal_field_prefix'=>'requestDisposal']); ?>
+  <div class="col-12">
+    <label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
+    <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea>
+    <p class="form-text mb-0">The document is disposed only after the approval workflow is completed.</p>
+  </div>
 <?php else: ?>
 
 <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>

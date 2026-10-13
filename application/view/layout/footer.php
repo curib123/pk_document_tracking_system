@@ -48,7 +48,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
                 <label for="actionRemark" class="form-label">Remark <span class="optional-label">(optional)</span></label>
                 <textarea class="form-control" id="actionRemark" name="remark" rows="3"></textarea>
                 <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
-                    <?php $this->load->view('pages/request/disposal_fields'); ?>
+                    <?php $this->load->view('pages/request/disposal_fields',['disposal_field_prefix'=>'directDisposal']); ?>
                 </div>
             </div>
             <input type="hidden" name="id" value="">

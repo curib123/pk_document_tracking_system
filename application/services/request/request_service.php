@@ -455,21 +455,24 @@ class Request_service
             return ['transfer_id'=>$this->ci->db->insert_id()];
         }
         if ($type==='disposal') {
-            $doc=$this->ci->db->get_where('hardcopy_documents',['id'=>$hard])->row_array();
-            if (!$doc || $doc['status']==='disposed') throw new DomainException('Hardcopy already disposed or missing.');
+            $doc=$this->ci->db->query('SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE',[$hard])->row_array();
+            if (!$doc || $doc['status']!=='active') throw new DomainException('Active hardcopy is no longer available for disposal.');
+            require_once APPPATH.'services/documents/disposal_service.php';
+            $description=(new Disposal_service())->reason($payload);
             $this->ci->db->insert('disposals',[
                 'request_id'=>$id,'domain'=>'hardcopy','document_id'=>$hard,
                 'previous_status'=>$doc['status'],'previous_state'=>json_encode($doc),
                 'disposal_action'=>$payload['disposal_reason'],
-                'remarks'=>$payload['disposal_description'],'disposed_by'=>$actor
+                'remarks'=>$description,'disposed_by'=>$actor
             ]);
             $this->ci->db->where('id',$hard)->update('hardcopy_documents',[
-                'previous_status'=>$doc['status'],'status'=>'disposed','location_id'=>NULL
+                'previous_status'=>$doc['status'],'status'=>'disposed','location_id'=>NULL,
+                'version'=>(int)$doc['version']+1
             ]);
             $this->ci->db->insert('status_history',[
                 'domain'=>'hardcopy','document_id'=>$hard,'previous_status'=>$doc['status'],
                 'new_status'=>'disposed','action'=>'disposed','user_id'=>$actor,
-                'remarks'=>$payload['disposal_description']
+                'remarks'=>$description
             ]);
             $this->ci->db->where('domain','hardcopy')->where('document_id',$hard)
                 ->where('revoked_at IS NULL',NULL,FALSE)->update('access_grants',[

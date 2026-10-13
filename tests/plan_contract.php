@@ -72,12 +72,13 @@ check(strpos($docFooter, 'id="appAlertModal"')!==FALSE, 'Flash messages must use
 check(strpos($alertPartial, '<dialog')!==FALSE, 'Authentication feedback must use a dialog');
 check(strpos($loginView, 'login-error')===FALSE, 'Login notifications must not be inline banners');
 check(strpos($authSetup, 'alert alert-danger')===FALSE, 'Password setup notices must not be inline banners');
-check(strpos($requestModel, "'hardcopy'=>['hardcopy_create','hardcopy_update']")!==FALSE,
-  'Disposal is not a My Requests/My Tasks type');
-check(strpos($notificationModel, "'hardcopy' => ['hardcopy_create', 'hardcopy_update']")!==FALSE,
-  'Disposal must not contribute to request/task badges');
-check(strpos($requestView, '<option value="disposal">')===FALSE,
-  'Hardcopy request modal must not allow disposal');
+check(strpos($requestModel, "'hardcopy-disposal'=>['disposal']")!==FALSE,
+  'Disposal must have a My Requests/My Tasks tab');
+check(strpos($notificationModel, "'hardcopy-disposal' => ['disposal']")!==FALSE,
+  'Disposal must contribute to its request/task badges');
+check(strpos($requestView, '<option value="disposal">')!==FALSE &&
+    strpos($requestView, "pages/request/disposal_fields")!==FALSE,
+  'Disposal request modal must offer the existing disposal reasons');
 check(strpos($requestView, "'kind'=>\$isDocumentRequest?'document':'record'")!==FALSE,
   'Document requests must reuse the System Documents view presentation');
 check(strpos($requestView, "tabCount===0")!==FALSE, 'Every request/task tab shows its count');
