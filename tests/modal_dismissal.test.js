@@ -59,7 +59,7 @@ function createOfflineModal() {
             if(selector==='#editor') return modal;
             return null;
         },
-        querySelectorAll(){return backdrop?[backdrop]:[];},
+        querySelectorAll(selector){return selector==='.fallback-backdrop' && backdrop?[backdrop]:[];},
         createElement(){return {className:'',remove(){backdrop=null;}};},
         addEventListener(type,fn){listeners[type]=fn;}
     };
