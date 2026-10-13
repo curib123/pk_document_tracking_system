@@ -4,14 +4,23 @@ $dt_columns=['name'=>'Role','active'=>'Status','permissions'=>'Actions'];
 $dt_rows=[];
 foreach($rows as $r){
  $perms=$grants[$r['id']]??[];
+ $reserved=strcasecmp($r['name'],'Administrator')===0;
+ $unused=empty($r['user_count']) && empty($r['workflow_count']) && empty($r['request_count']);
+ $buttons=[['type'=>'view']];
+ if (!$reserved && $canRole('edit')) $buttons[]=['type'=>'edit'];
+ if (!$reserved && $unused && $r['active'] && $canRole('edit')) $buttons[]=[
+   'type'=>'action','label'=>'Deactivate','icon'=>'fa-solid fa-ban','url'=>'admin/roles/deactivate',
+   'description'=>'Deactivate the unused role "'.$r['name'].'"?'];
+ if (!$reserved && $unused && $canRole('delete')) $buttons[]=[
+   'type'=>'action','label'=>'Remove','icon'=>'fa-solid fa-trash-can','url'=>'admin/roles/remove',
+   'description'=>'Permanently remove the unused role "'.$r['name'].'" and its permission assignments?'];
  $dt_rows[]=['id'=>$r['id'],'cells'=>['name'=>$r['name'],
    'active'=>$r['active']?'active':'0','permissions'=>count($perms)],
   'record'=>['id'=>$r['id'],'name'=>$r['name'],'active'=>$r['active'],
     'permission_ids'=>$perms],
   'display'=>['Role'=>$r['name'],'Status'=>$r['active']?'Active':'Inactive',
     'Permission Count'=>count($perms)],
-  'buttons'=>(!$canRole('edit') || strcasecmp($r['name'],'Administrator')===0)?[['type'=>'view']]:
-    [['type'=>'view'],['type'=>'edit']]];
+  'buttons'=>$buttons];
 }
 $dt_path='admin/roles';$dt_q=$table['q'];$dt_filter=$table['status'];
 $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;

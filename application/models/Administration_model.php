@@ -42,10 +42,15 @@ class Administration_model extends CI_Model
     }
     public function roles($q,$status,$page,$limit,$state=[])
     {
-        return $this->count_and_page('roles r','r.*',[],
+        $result=$this->count_and_page('roles r','r.*',[],
             in_array($status,['0','1'],TRUE)?['r.active'=>(int)$status]:[],
             $q,['r.name'],$page,$limit,($state['sort']??'')==='active'?'r.active':'r.name',
             ($state['dir']??'ASC')==='DESC'?'DESC':'ASC');
+        require_once APPPATH.'services/administration/role_usage.php';
+        $usage=Role_usage::for_roles($this->db,array_column($result[0],'id'));
+        foreach ($result[0] as &$row) $row=array_merge($row,$usage[(int)$row['id']]);
+        unset($row);
+        return $result;
     }
     public function workflows($q,$status,$page,$limit,$state=[])
     {
