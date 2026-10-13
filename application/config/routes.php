@@ -33,6 +33,7 @@ $route['my-tasks/hardcopy-transfer/dispatch']['POST'] = 'Requests/dispatch_trans
 $route['my-tasks/hardcopy-transfer/accept']['POST'] = 'Requests/accept_transfer';
 
 $route['admin/document-assignments']['GET'] = 'Administration/document_assignments';
+$route['admin/audit']['GET'] = 'Audit/index';
 $route['admin/document-assignments/save']['POST'] = 'Administration/save_document_assignment';
 $route['admin/backups']['GET'] = 'Backups/index';
 $route['admin/backups/create']['POST'] = 'Backups/create';

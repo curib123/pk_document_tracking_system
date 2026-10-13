@@ -62,12 +62,13 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                     </a>
                 <?php endif; ?>
           
-            <?php if ($visible('users') || $visible('roles') || $visible('workflows') || strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
+            <?php if ($visible('users') || $visible('roles') || $visible('workflows') || $visible('audit') || strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
                 <div class="side-heading">Administration</div>
                 
                 <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" <?= $active('admin/users') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
                 <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" <?= $active('admin/roles') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
                 <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" <?= $active('admin/workflows') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>
+                <?php if ($visible('audit')): ?><a class="side-link<?= $active('admin/audit') ?>" <?= $active('admin/audit') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/audit') ?>"><i class="fa-solid fa-clock-rotate-left"></i> Audit Trail</a><?php endif; ?>
                 <?php if (strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
                     <a class="side-link<?= $active('admin/backups') ?>"
                        <?= $active('admin/backups')===' active'?'aria-current="page"':'' ?>
