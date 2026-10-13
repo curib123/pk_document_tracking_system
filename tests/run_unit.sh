@@ -10,6 +10,7 @@ while IFS= read -r file; do
 done < <(git ls-files '*.js')
 echo "Running workflow and plan contract tests..."
 php tests/plan_contract.php
+php tests/login_transition_handoff.php
 php tests/request_disposal.php
 php tests/audit_listing.php
 php tests/retention_countdown.php
