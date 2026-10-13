@@ -714,6 +714,31 @@
   margin-left: auto;
   white-space: normal;
 }
+/* The inner wrapper must wrap too: each row can expose a different number
+ * of permitted actions. Keep every button within its own table cell. */
+.record-actions-horizontal {
+  display:flex;
+  flex-wrap:wrap;
+  justify-content:inherit;
+  align-items:center;
+  gap:5px;
+  min-width:0;
+  max-width:100%;
+}
+.document-register-listing .table {
+  width:100%;
+  table-layout:auto;
+}
+.document-register-listing .table thead th.table-actions-column,
+.document-register-listing .table tbody td.table-actions-cell {
+  width:32%;
+  min-width:160px;
+  white-space:normal;
+}
+.document-register-listing .table .table-actions {
+  width:100%;
+  max-width:none;
+}
 .table-actions .btn-icon.record-action,
 .document-register-listing .table-actions .btn-icon.record-action,
 .doc-tree-actions .btn-icon.record-action,
@@ -780,7 +805,6 @@
   outline: 2px solid var(--ui-brand-500);
   outline-offset: 2px;
 }
-.document-register-listing .table .table-actions {max-width:310px}
 .doc-tree-actions.table-actions {
   max-width: 390px;
   width: auto;
@@ -791,9 +815,6 @@
   max-width: none;
 }
 @media (max-width: 700px) {
-  .document-register-listing .table .table-actions {
-    max-width: 250px;
-  }
   .table-actions .btn-icon.record-action,
   .document-register-listing .table-actions .btn-icon.record-action,
   .doc-tree-actions .btn-icon.record-action {

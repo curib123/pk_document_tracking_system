@@ -257,17 +257,17 @@ a {
     color: var(--ui-brand-700);
 }
 
-/* Force all row actions into one horizontal line */
+/* Keep each action intact while wrapping the collection within its column. */
 .record-actions-horizontal {
-    display: flex !important;
-    flex-direction: row !important;
-    flex-wrap: nowrap !important;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    white-space: nowrap;
-    width: max-content;
-    max-width: none;
+    white-space: normal;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* Keep button icons and labels side by side */
