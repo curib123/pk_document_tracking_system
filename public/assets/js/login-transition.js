@@ -12,6 +12,7 @@
         ended = true;
         timers.forEach(id => window.clearTimeout(id));
         animations.forEach(animation => animation.cancel());
+        if (gated) root.setAttribute('data-login-presented', '');
         root.removeAttribute('data-login-transition');
         root.removeAttribute('data-login-stage');
         if (app && gated) {
@@ -74,7 +75,8 @@
             aperture.setAttribute('cy', height / 2);
             root.setAttribute('data-login-stage', 'enter');
             const easeOut = 'cubic-bezier(.16, 1, .3, 1)';
-            animate(app, [{opacity: 0, filter: 'blur(0px)'}, {opacity: .45, filter: 'blur(5px)'}],
+            animate(app, [{opacity: 0, filter: 'blur(0px) brightness(1)'},
+                {opacity: .45, filter: 'blur(5px) brightness(.96)'}],
                 {duration: 350, easing: easeOut});
             animate(glow, [{opacity: .15, transform: 'scale(.8)'},
                 {opacity: .65, transform: 'scale(1.06)', offset: .8},
@@ -91,8 +93,8 @@
                 {opacity: .8, offset: .45}, {opacity: 0, transform: 'scale(' + zoom + ')'}], reveal);
             animate(glow, [{opacity: .4, transform: 'scale(1)'},
                 {opacity: 0, transform: 'scale(2.2)'}], reveal);
-            animate(app, [{opacity: .45, filter: 'blur(5px)', transform: 'translateY(8px)'},
-                {opacity: 1, filter: 'blur(0px)', transform: 'translateY(0)'}], reveal);
+            animate(app, [{opacity: .45, filter: 'blur(5px) brightness(.96)', transform: 'translateY(8px)'},
+                {opacity: 1, filter: 'blur(0px) brightness(1)', transform: 'translateY(0)'}], reveal);
             animate(veil, [{opacity: 1}, {opacity: 1, offset: .65}, {opacity: 0}], reveal);
             await animate(aperture, [{transform: 'scale(0)'},
                 {transform: 'scale(' + (Math.hypot(width, height) / 2 + 24) + ')'}], reveal).finished;

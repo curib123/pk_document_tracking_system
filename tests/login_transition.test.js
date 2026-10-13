@@ -62,6 +62,7 @@ test('logo enters at 65 percent and the final reveal waits for layout fonts',asy
     assert.equal(reveal.options.duration,520);
     reveal.finish();await x.flush();
     assert.equal(x.splash.removed,true);assert.equal(x.root.hasAttribute('data-login-transition'),false);
+    assert.equal(x.root.hasAttribute('data-login-presented'),true,'Existing entry motion must not restart after reveal');
     assert.equal(x.app.inert,false);assert.equal(x.app.getAttribute('aria-busy'),null);
 });
 test('reduced motion uses a brief fade without zoom, blur or an aperture animation',async()=>{
@@ -90,4 +91,10 @@ test('a native login page crossfade completes before logo entrance begins',async
     const x=setup();const entry=deferred();x.events.pagereveal?.({viewTransition:{finished:entry.promise}});
     await x.ready();assert.equal(x.animations.length,0);
     entry.resolve();await x.flush();assert.ok(x.animations.some(a=>a.element===x.logo));
+});
+
+test('cleanup preserves pre-existing interaction and busy state',async()=>{
+    const x=setup();x.app.inert=true;x.app.setAttribute('aria-busy','false');await x.ready();
+    x.events.resize();await x.flush();
+    assert.equal(x.app.inert,true);assert.equal(x.app.getAttribute('aria-busy'),'false');
 });
