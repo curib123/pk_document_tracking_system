@@ -19,6 +19,9 @@ if (!in_array($authKind,['success','danger','warning','info'],TRUE)) $authKind='
 (function(){
     var alert=document.getElementById('authAlertDialog');
     if (!alert) return;
+    // A native <dialog> normally closes with Escape. Keep notification
+    // content open until the user selects its visible Close or Got it action.
+    alert.addEventListener('cancel',function(event){event.preventDefault();});
     alert.querySelectorAll('[data-close-alert]').forEach(function(button){
         button.addEventListener('click',function(){if(alert.open) alert.close();});
     });
