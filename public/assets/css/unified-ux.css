@@ -963,6 +963,16 @@
   background: var(--ui-brand-800);
   border-color: var(--ui-brand-800);
 }
+/* Solid hover/focus fills for every permitted System Documents table action. */
+.document-register-listing [data-record-layout="table"] .table-actions .record-action {
+  --record-hover-fill:var(--ui-brand-800);
+}
+.document-register-listing [data-record-layout="table"] .table-actions :is(
+  .record-action-upload,.record-action-review,.record-action-download,.record-action-primary
+) {--record-hover-fill:var(--ui-blue-700)}
+.document-register-listing [data-record-layout="table"] .table-actions .record-action:is(:hover,:focus-visible) {
+  background:var(--record-hover-fill);border-color:var(--record-hover-fill);color:var(--ui-white);
+}
 .table-actions .record-action:focus-visible {
   outline: 2px solid var(--ui-brand-500);
   outline-offset: 2px;
