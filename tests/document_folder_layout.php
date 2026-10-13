@@ -158,8 +158,8 @@ assertFolder(strpos($docTreeHelper,"'asset'=>'asset_id'")!==FALSE,
 assertFolder(strpos($folderModel,"if (\$kind==='asset')")!==FALSE &&
     strpos($folderModel,"\$parent='asset'")!==FALSE,
     'Assets and their Locations must appear as navigable folders');
-assertFolder(strpos($folderView,'Document Repository')!==FALSE,
-    'The tree must have a Document Repository root node');
+assertFolder(strpos($folderView,'Document Repository')===FALSE,
+    'Folder mode must start directly at the real folders');
 // Render the real folder view: document counts must never open every branch
 // at the repository root. A deep link should open only its ancestor chain.
 define('APPPATH', $root.'/application/');

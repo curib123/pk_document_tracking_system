@@ -167,16 +167,8 @@ $renderNode=function($key,$depth=0) use(
         </div>
     </div>
     <div class="doc-tree-scroll">
-        <ul class="doc-tree-root" aria-label="Document Repository">
-            <li class="doc-tree-node doc-tree-repository">
-                <details data-folder-node open>
-                    <summary class="doc-tree-folder-row">
-                        <span class="doc-tree-caret" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
-                        <span class="doc-tree-folder-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></span>
-                        <span class="doc-tree-folder-text"><strong>Document Repository</strong></span>
-                    </summary>
-                    <ul class="doc-tree-children">
-                        <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
+        <ul class="doc-tree-root" aria-label="Document folders">
+            <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
             <?php if (!empty($byFolder['unfiled'])): ?>
                 <li class="doc-tree-node doc-tree-unfiled">
                     <details data-folder-node>
@@ -192,9 +184,6 @@ $renderNode=function($key,$depth=0) use(
                     </details>
                 </li>
             <?php endif; ?>
-                    </ul>
-                </details>
-            </li>
         </ul>
         <?php if (empty($tree['roots']) && empty($byFolder['unfiled'])): ?>
             <div class="doc-folder-empty" role="status">
