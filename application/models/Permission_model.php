@@ -2,34 +2,42 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 class Permission_model extends CI_Model
 {
-    private $role_cache=[];
+    private $permissions_cache=NULL;
     public function allowed($user, $module, $action = 'view')
     {
         if (!$user) return FALSE;
-        if (strtolower($user['role']) === 'administrator') return TRUE;
         // Admin sidebar alias: these actions have their own module in pk_dts.sql.
         $module = ['softcopy-categories' => 'categories','area'=>'areas','specific'=>'specifics',
             'asset'=>'assets','location'=>'locations','sequence'=>'sequences',
             'tasks'=>'requests'][$module] ?? $module;
         if ($module === 'requests' && $action === 'approve') $action = 'manage';
-        $permissions=$this->role_permissions((int)$user['role_id']);
-        return !empty($permissions[$module][$action]);
+        $permissions=$this->system_permissions();
+        return isset($permissions['*']) || !empty($permissions[$module][$action]);
     }
-    private function role_permissions($roleId)
+    private function system_permissions()
     {
-        if (isset($this->role_cache[$roleId])) return $this->role_cache[$roleId];
-        $rows=$this->db->select('p.module_key,p.action_key')->from('role_permissions rp')
-            ->join('permissions p','p.id=rp.permission_id')->where('rp.role_id',$roleId)->get()->result_array();
+        if ($this->permissions_cache!==NULL) return $this->permissions_cache;
+        // An action is allowed when ANY active system role grants it. Left
+        // joins retain the Administrator's built-in grant even without rows
+        // in role_permissions. The same request-local result powers the UI.
+        $rows=$this->db->select('r.name AS role_name,p.module_key,p.action_key')->from('roles r')
+            ->join('role_permissions rp','rp.role_id=r.id','left')
+            ->join('permissions p','p.id=rp.permission_id','left')->where('r.active',1)->get()->result_array();
         $result=[];
-        foreach ($rows as $permission) $result[$permission['module_key']][$permission['action_key']]=TRUE;
-        return $this->role_cache[$roleId]=$result;
+        foreach ($rows as $permission) {
+            if (strcasecmp(trim((string)$permission['role_name']),'Administrator')===0)
+                $result['*']['*']=TRUE;
+            if (!empty($permission['module_key']) && !empty($permission['action_key']))
+                $result[$permission['module_key']][$permission['action_key']]=TRUE;
+        }
+        return $this->permissions_cache=$result;
     }
 
     public function for_user($user)
     {
         if (!$user) return [];
-        if (strtolower($user['role']) === 'administrator') return ['*'=>['*'=>TRUE]];
-        $result=$this->role_permissions((int)$user['role_id']);
+        $result=$this->system_permissions();
+        if (isset($result['*'])) return $result;
         $result['tasks']['view'] = !empty($result['requests']['view']) ||
             !empty($result['requests']['manage']) ||
             !empty($result['transfer']['view']);
