@@ -33,7 +33,7 @@ $dt_create=$canUser('add')?'Add User':'';
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" action="<?= site_url('admin/users/save') ?>" data-user-role-form data-confirm="Save user account?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">User</h2>
