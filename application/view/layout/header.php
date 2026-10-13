@@ -21,7 +21,7 @@
     <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
     <style>html[data-login-transition]:not([data-login-stage]) .app-shell{visibility:hidden}</style>
-    <noscript><style>html[data-login-transition]{overflow:auto}html[data-login-transition] .app-shell{visibility:visible}#loginTransition{display:none}</style></noscript>
+    <noscript><style>html[data-login-transition]{overflow:auto}html[data-login-transition] .app-shell{visibility:visible!important}#loginTransition{display:none}</style></noscript>
     <script src="<?= base_url('assets/js/login-transition.js') ?>"></script>
     <?php endif; ?>
 </head>
