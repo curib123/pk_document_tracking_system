@@ -377,8 +377,8 @@
                     meta.append(name,small);
                     item.append(emblem,meta);
                     try {
-                        var target=new URL(String(file.url||''),window.location.origin);
-                        if (target.origin===window.location.origin &&
+                        var target=file.url?new URL(String(file.url),window.location.origin):null;
+                        if (target && target.origin===window.location.origin &&
                             ['http:','https:'].includes(target.protocol)) {
                             var download=document.createElement('a');
                             download.className='btn btn-outline-primary btn-sm';

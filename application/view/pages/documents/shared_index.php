@@ -42,17 +42,19 @@ foreach ($rows as $r) {
      if ($canEdit && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
          $buttons[]=['type'=>'upload'];
      }
-     if (!empty($latest_files[$r['id']]) && !empty($file_access[$r['id']])) {
+     if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
          $historyEntries=[];
          foreach ($file_histories[$r['id']]??[] as $item) {
              $historyEntries[]=[
                  'name'=>$item['original_name'],
-                 'detail'=>$item['first_name'].' '.$item['last_name'].' — '.$item['created_at'],
-                 'url'=>site_url('files/download/'.$item['id'])
+                 'detail'=>$item['first_name'].' '.$item['last_name'].' — '.$item['created_at'].
+                     ' · '.(!empty($item['is_current'])?'Current':'Superseded'),
+                 'url'=>!empty($item['is_current'])?site_url('files/download/'.$item['id']):''
              ];
          }
          $buttons[]=['type'=>'history','files'=>$historyEntries];
-         $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
+         if (!empty($latest_files[$r['id']]))
+             $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
      }
  }
  if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct']))) $buttons[]=['type'=>'action',

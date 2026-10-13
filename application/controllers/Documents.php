@@ -67,7 +67,10 @@ class Documents extends MY_Controller
             $filesByDocument=$this->File_model->histories_for_documents(array_column($rows,'id'),$this->user);
             foreach ($filesByDocument as $documentId=>$history) {
                 $accessible[$documentId]=TRUE;
-                $latest[$documentId]=$history[0];
+                foreach ($history as $file) if (!empty($file['is_current'])) {
+                    $latest[$documentId]=$file;
+                    break;
+                }
             }
         }
         $this->load->model('Document_detail_model');

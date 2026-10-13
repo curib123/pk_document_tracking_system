@@ -118,11 +118,13 @@ class Document_detail_model extends CI_Model
                 $fileFields=[];$links=[];
                 foreach ($fileHistories[$id]??[] as $index=>$file) {
                     $fileFields[($index+1).'. '.$file['original_name']]=
-                        number_format((int)$file['size']).' bytes · '.$file['mime_type'].' · '.$file['created_at'];
-                    $links[]=['label'=>'Download '.$file['original_name'],'url'=>site_url('files/download/'.$file['id'])];
+                        number_format((int)$file['size']).' bytes · '.$file['mime_type'].' · '.$file['created_at'].
+                        ' · '.(!empty($file['is_current'])?'Current':'Superseded');
+                    $links[]=['label'=>'Download '.$file['original_name'],
+                        'url'=>!empty($file['is_current'])?site_url('files/download/'.$file['id']):''];
                 }
-                $sections[]=['key'=>'files','title'=>'Controlled Files','description'=>'Approved files and available downloads · latest 25','fields'=>$fileFields,
-                    'links'=>$links,'empty'=>'No approved files available within your file permissions.'];
+                $sections[]=['key'=>'files','title'=>'Controlled Files','description'=>'Current approved file and revision history · latest 25','fields'=>$fileFields,
+                    'links'=>$links,'empty'=>'No controlled file history available within your file permissions.'];
             }
             if ($document['status']==='disposed') array_splice($sections,2,0,[[
                 'key'=>'disposal','title'=>'Disposal Details','fields'=>$disposalsByDoc[$id]??[]

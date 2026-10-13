@@ -11,6 +11,7 @@ done < <(git ls-files '*.js')
 echo "Running workflow and plan contract tests..."
 php tests/user_role_permissions.php
 php tests/approval_step_tiles.php
+php tests/controlled_file_history.php
 php tests/plan_contract.php
 php tests/login_transition_handoff.php
 php tests/logout_handoff.php

@@ -219,6 +219,20 @@ test('download links only include same-origin file URLs',() => {
   assert.equal(all[0].href,'https://dts.test/files/download/12');
 });
 
+test('superseded controlled files retain their history without a Download action',() => {
+  const {window,details}=setup();
+  window.PKDocumentView.render(details,{
+    kind:'document',domain:'softcopy',header:{title:'Revised policy'},
+    sections:[{key:'files',title:'Controlled Files',fields:{
+      '1. previous.txt':'Earlier revision · Superseded','2. revised.txt':'Approved revision · Current'
+    },links:[{url:'',label:'Download previous.txt'},{url:'/files/download/710',label:'Download revised.txt'}]}]
+  });
+  assert.equal(details.querySelectorAll('.doc-modal-file-item').length,2,'Old metadata must remain visible.');
+  const links=details.querySelectorAll('.doc-modal-download');
+  assert.equal(links.length,1,'Only the current controlled file should offer download.');
+  assert.equal(links[0].href,'https://dts.test/files/download/710');
+});
+
 test('reset returns reusable modal to ordinary view state',() => {
   const {window,details,map,modal}=setup();
   window.PKDocumentView.render(details,data);
