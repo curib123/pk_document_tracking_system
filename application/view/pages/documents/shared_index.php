@@ -126,7 +126,7 @@ $layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
 'dt_extra_params','dt_folder_browser','dt_folder_domain'
 )); ?>
 </div>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
  action="<?= $cfg['domain']==='softcopy' ? site_url('documents/softcopy/direct') : site_url('documents/hardcopy/save') ?>"
@@ -155,7 +155,7 @@ $layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
 </form></div></div></div>
 
 <?php if ($cfg['domain']==='softcopy'): ?>
-<div class="modal fade file-history-saas" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
+<div class="modal fade file-history-saas" data-bs-backdrop="static" data-bs-keyboard="false" id="fileHistoryModal" tabindex="-1" aria-labelledby="fileHistoryTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg"><div class="modal-content">
     <div class="modal-header file-history-header">
       <div class="d-flex align-items-center gap-3">
@@ -176,7 +176,7 @@ $layoutLink=static function($target) use($cfg,$folder_params,$folder_value) {
   </div></div>
 </div>
 <?php if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))): ?>
-<div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="uploadModal" tabindex="-1" aria-labelledby="uploadTitle" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
   <form method="post" enctype="multipart/form-data" action="<?= site_url('files/upload') ?>"
         data-confirm="Upload and record this controlled revision?">
