@@ -336,8 +336,8 @@
 .doc-folder-meta-label {color:var(--ui-ink-300);font-weight:600}
 .doc-folder-file-status {flex-shrink:0;font-size:11px}
 .doc-folder-file-actions {
-  flex:0 0 auto;display:flex;flex-wrap:wrap;justify-content:flex-end;
-  max-width:315px;
+  flex:0 1 auto;display:flex;flex-wrap:nowrap;justify-content:flex-start;
+  max-width:100%;min-width:0;overflow-x:auto;
 }
 .doc-folder-file-actions .btn-icon {width:34px;height:34px;flex-basis:34px}
 .doc-folder-empty {
@@ -650,7 +650,7 @@
 .doc-tree-file-meta {display:flex;flex-wrap:wrap;gap:2px 12px;margin-top:4px;color:var(--ui-ink-400);font-size:10px}
 .doc-tree-file-meta>span {max-width:100%;overflow-wrap:anywhere}
 .doc-tree-file-status {flex-shrink:0}
-.doc-tree-actions {flex:0 0 auto;flex-wrap:wrap;max-width:300px}
+.doc-tree-actions {flex:0 1 auto;flex-wrap:nowrap;max-width:100%;min-width:0}
 .doc-tree-actions .btn-icon {width:32px;height:32px;flex-basis:32px}
 .doc-tree-view-folder {
   padding:8px 10px 9px;
@@ -706,37 +706,38 @@
 .table-actions {
   display: flex;
   justify-content: flex-end;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   align-items: center;
   gap: 5px;
-  max-width: 345px;
+  max-width: 100%;
   min-width: 0;
   margin-left: auto;
-  white-space: normal;
+  white-space: nowrap;
 }
-/* The inner wrapper must wrap too: each row can expose a different number
- * of permitted actions. Keep every button within its own table cell. */
+/* Intrinsic row width reserves space for every permitted action. */
 .record-actions-horizontal {
   display:flex;
-  flex-wrap:wrap;
+  flex-wrap:nowrap;
   justify-content:inherit;
   align-items:center;
   gap:5px;
-  min-width:0;
-  max-width:100%;
+  width:max-content;
+  min-width:100%;
+  max-width:none;
 }
-.document-register-listing .table {
+.table-responsive .table {
   width:100%;
   table-layout:auto;
 }
-.document-register-listing .table thead th.table-actions-column,
-.document-register-listing .table tbody td.table-actions-cell {
-  width:32%;
+.table thead th.table-actions-column,
+.table tbody td.table-actions-cell {
+  width:1%;
   min-width:160px;
-  white-space:normal;
+  white-space:nowrap;
 }
-.document-register-listing .table .table-actions {
-  width:100%;
+.table-actions-cell .table-actions {
+  width:max-content;
+  min-width:100%;
   max-width:none;
 }
 .table-actions .btn-icon.record-action,
@@ -806,13 +807,16 @@
   outline-offset: 2px;
 }
 .doc-tree-actions.table-actions {
-  max-width: 390px;
+  max-width: 100%;
   width: auto;
   gap: 5px;
+  overflow-x:auto;
+  justify-content:flex-start;
 }
 .document-record-card .table-actions {
   justify-content: flex-start;
-  max-width: none;
+  max-width: 100%;
+  overflow-x:auto;
 }
 @media (max-width: 700px) {
   .table-actions .btn-icon.record-action,

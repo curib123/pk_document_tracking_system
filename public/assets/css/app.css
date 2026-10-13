@@ -257,17 +257,17 @@ a {
     color: var(--ui-brand-700);
 }
 
-/* Keep each action intact while wrapping the collection within its column. */
+/* Keep every record's actions together on one horizontal line. */
 .record-actions-horizontal {
     display: flex;
     flex-direction: row;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: flex-start;
     gap: 6px;
-    white-space: normal;
-    width: 100%;
-    max-width: 100%;
+    white-space: nowrap;
+    width: max-content;
+    min-width: 100%;
 }
 
 /* Keep button icons and labels side by side */
@@ -429,8 +429,8 @@ a {
     align-items: center;
     justify-content: flex-end;
 
-    /* Automatically wrap additional action buttons */
-    flex-wrap: wrap;
+    /* The table allocates the full row width; narrow cards scroll locally. */
+    flex-wrap: nowrap;
 
     /* Consistent spacing between buttons */
     gap: 6px;
@@ -517,7 +517,7 @@ a {
 .table .table-actions-column,
 .table .table-actions-cell {
     width: 1%;
-    white-space: normal;
+    white-space: nowrap;
 }
 
 .table .table-actions-column {
