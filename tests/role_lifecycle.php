@@ -27,7 +27,7 @@ class RoleDB {
  function insert($table,$data){if($table==='role_permissions')$this->grants[$data['role_id']][]=$data['permission_id'];return TRUE;}
 }
 class RoleIdentity {public $actor=['id'=>10,'role_id'=>1,'role'=>'Administrator'];function active_user($id){return $this->actor;}}
-class RolePermissions {public $allowed=TRUE;function allowed($actor,$module,$action){return $this->allowed;}}
+class RolePermissions {public $allowed=TRUE,$permissions=['*'=>['*'=>TRUE]];function allowed($actor,$module,$action){return $this->allowed;}function for_user($actor){return $this->permissions;}}
 class RoleLoad {function model($name){}}
 $ci=(object)['db'=>new RoleDB(),'Identity_model'=>new RoleIdentity(),'Permission_model'=>new RolePermissions(),'load'=>new RoleLoad()];
 function &get_instance(){global $ci;return $ci;}
@@ -45,7 +45,8 @@ $service=role_reset();$ci->db->steps=[['request_id'=>4,'assignment'=>json_encode
 $service=role_reset();$ci->db->workflows=[['id'=>3,'status'=>'published','is_default'=>0,'graph'=>$graph]];$ci->db->requests=[['id'=>4,'status'=>'completed','snapshot'=>$graph]];$service->remove_role(2,10);role_check(!isset($ci->db->roles[2]),'Historical snapshots must remain intact without blocking unused roles');
 $service=role_reset();$ci->db->workflows=[['id'=>3,'status'=>'draft','is_default'=>0,'graph'=>json_encode(['steps'=>[['approver'=>['type'=>'user','value'=>2]]]])]];$service->remove_role(2,10);role_check(!isset($ci->db->roles[2]),'User IDs must not be mistaken for role IDs');
 $service=role_reset();$ci->Permission_model->allowed=FALSE;foreach(['remove_role','deactivate_role']as$method)role_reject(static function()use($service,$method){$service->$method(2,10);},'Role changes need the corresponding management permission');
-$service=role_reset();$ci->Identity_model->actor=['id'=>10,'role_id'=>1,'role'=>'Manager'];$ci->db->grants[1]=[7];$ci->db->grants[2]=[8];role_reject(static function()use($service){$service->remove_role(2,10);},'Delegated managers cannot remove stronger roles');
+$service=role_reset();$ci->Identity_model->actor=['id'=>10,'role_id'=>1,'role'=>'Manager'];$ci->db->grants[1]=[7];$ci->db->grants[2]=[8];$service->remove_role(2,10);role_check(!isset($ci->db->roles[2]),'An Administrator grant from the combined roles must allow role management');
+$service=role_reset();$ci->Identity_model->actor=['id'=>10,'role_id'=>1,'role'=>'Manager'];$ci->Permission_model->permissions=['roles'=>['delete'=>TRUE]];$ci->db->grants[2]=[8];role_reject(static function()use($service){$service->remove_role(2,10);},'Delegation must reject privileges absent from every active role');
 $service=role_reset();$ci->db->valid=FALSE;role_reject(static function()use($service){$service->remove_role(2,10);},'Database failure must roll back');role_check(isset($ci->db->roles[2],$ci->db->grants[2])&&$ci->db->commits===0,'Failed removal must preserve role and permissions');
 class RoleViewCaptured extends RuntimeException {}
 class RoleViewHarness {

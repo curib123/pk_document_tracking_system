@@ -5,11 +5,7 @@ class Backups extends MY_Controller
 {
     private function administrator(): void
     {
-        $this->authenticate();
-        if (strcasecmp((string)($this->user['role']??''),'Administrator')!==0) {
-            show_error('Administrator access is required.',403);
-            exit;
-        }
+        $this->require_permission('backups','view');
     }
     private function service(): Backup_service
     {
@@ -69,11 +65,11 @@ class Backups extends MY_Controller
             if ((string)$this->input->post('confirm_phrase')!=='RESTORE')
                 throw new DomainException('Type RESTORE to confirm data replacement.');
             $password=(string)$this->input->post('admin_password');
-            if ($password==='') throw new DomainException('Administrator password is required.');
+            if ($password==='') throw new DomainException('Your password is required.');
             $current=$this->db->select('password_hash')->get_where('users',[
                 'id'=>(int)$this->user['id'],'active'=>1])->row_array();
             if (!$current || !password_verify($password,(string)$current['password_hash']))
-                throw new DomainException('Administrator password is incorrect.');
+                throw new DomainException('Your password is incorrect.');
             $name=(string)$this->input->post('backup_name');
             $result=$service->restore($name);
             $this->load->library('Audit_file');

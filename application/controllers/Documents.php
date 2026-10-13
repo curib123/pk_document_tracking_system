@@ -19,7 +19,7 @@ class Documents extends MY_Controller
         $folder=trim((string)$this->input->get('folder',TRUE));
         if (strlen($folder)>100) show_404();
         $tree=$this->Folder_model->tree($domain);
-        $restricted=strcasecmp((string)$this->user['role'],'Administrator')!==0;
+        $restricted=!$this->can('*','*');
         $paths=[];
         if ($domain==='hardcopy' || $restricted) {
             $scope=$this->Document_model->scope($domain,$this->user,'d');
@@ -85,7 +85,7 @@ class Documents extends MY_Controller
                 'layout'=>$state['layout']
             ],
             'folder_value'=>$browser['folder'],'folder_page'=>$state['page'],
-            'is_administrator'=>strcasecmp((string)$this->user['role'],'Administrator')===0
+            'is_administrator'=>$this->can('*','*')
         ]);
     }
     public function direct_softcopy()

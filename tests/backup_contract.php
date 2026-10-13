@@ -28,8 +28,8 @@ $service=file_get_contents($root.'/application/services/backup/backup_service.ph
 foreach (['admin/backups','admin/backups/create','admin/backups/import',
           'admin/backups/restore','admin/backups/download'] as $route)
     backup_assert(strpos($routes,$route)!==FALSE,'Missing administrator backup route.');
-backup_assert(strpos($controller,"strcasecmp((string)(\$this->user['role']??''),'Administrator')")!==FALSE,
-    'Backup endpoints must authorize Administrator only.');
+backup_assert(strpos($controller,"\$this->require_permission('backups','view')")!==FALSE,
+    'Backup endpoints must use the shared role permission policy.');
 backup_assert(strpos($controller,'$this->confirmed()')!==FALSE,
     'Backup writes must require CSRF-enabled POST confirmation.');
 backup_assert(strpos($controller,'password_verify(')!==FALSE &&

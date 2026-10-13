@@ -52,7 +52,8 @@ class Document_service
     public function validate_hardcopy_proposal(&$payload,$owner,$documentId=0)
     {
         $ownerId=(int)$owner['id'];
-        $admin=strcasecmp((string)($owner['role']??''),'Administrator')===0;
+        $this->ci->load->model('Permission_model');
+        $admin=$this->ci->Permission_model->allowed($owner,'*','*');
         $title=trim((string)($payload['title']??''));
         if ($title==='' || mb_strlen($title)>255)
             throw new DomainException('Hardcopy title is required (maximum 255 characters).');

@@ -23,10 +23,18 @@ class Administration_service
     private function ensure_delegation($actor, $role, $permissions = NULL)
     {
         require_once APPPATH.'services/administration/account_policy.php';
+        $effective=$this->ci->Permission_model->for_user($actor);
+        if (isset($effective['*'])) return;
+        $owned=[];
+        $catalog=$this->ci->db->select('id,module_key,action_key')->from('permissions')->get()->result_array();
+        foreach ($catalog as $permission) {
+            if (!empty($effective[$permission['module_key']][$permission['action_key']]))
+                $owned[]=(int)$permission['id'];
+        }
         if (!Account_policy::can_delegate($actor['role'], $role['name'],
-            $this->permission_ids($actor['role_id']),
+            $owned,
             $permissions ?? $this->permission_ids($role['id']))) {
-            throw new DomainException('You cannot manage or delegate privileges beyond your own role.');
+            throw new DomainException('You cannot delegate actions that no active role allows.');
         }
     }
 

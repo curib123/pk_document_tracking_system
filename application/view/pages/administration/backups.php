@@ -86,7 +86,7 @@ $backupTime=static function($timestamp) {
   <section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
     <div class="workspace-card-header backup-register-header">
       <div><h2 id="backupArchiveTitle">Available backups</h2>
-        <p>Only administrators can access archive files and restore controls.</p></div>
+        <p>Access is granted when any active role allows the action.</p></div>
     </div>
     <?php if (!$backup_items): ?>
       <div class="empty-state" role="status"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>
@@ -139,7 +139,7 @@ $backupTime=static function($timestamp) {
           </select>
         </div>
         <div class="col-md-6">
-          <label for="restoreAdminPassword" class="form-label">Administrator password</label>
+          <label for="restoreAdminPassword" class="form-label">Your password</label>
           <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
             autocomplete="current-password" required>
         </div>

@@ -69,7 +69,7 @@ class Requests extends MY_Controller
                'locations'=>$this->Document_model->hardcopy_locations(),
                'users'=>$this->Document_model->active_users()
              ],
-             'is_administrator'=>strcasecmp((string)$this->user['role'],'Administrator')===0
+             'is_administrator'=>$this->can('*','*')
            ]);
     }
     public function mine($tab) { $this->listing($tab,FALSE); }

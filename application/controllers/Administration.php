@@ -30,9 +30,7 @@ class Administration extends MY_Controller
     /** Administrative direct assignment. Approval requests remain in My Requests. */
     public function document_assignments()
     {
-        $this->authenticate();
-        if (strcasecmp((string)$this->user['role'],'Administrator')!==0)
-            show_error('Administrator access is required.',403);
+        $this->require_permission('assignment','direct');
         $this->load->model('Document_model');
         $this->load->model('Folder_model');
         $domain=(string)($this->input->get('domain',TRUE)?:'hardcopy');
@@ -57,9 +55,7 @@ class Administration extends MY_Controller
     }
     public function save_document_assignment()
     {
-        $this->authenticate();
-        if (strcasecmp((string)$this->user['role'],'Administrator')!==0)
-            show_error('Administrator access is required.',403);
+        $this->require_permission('assignment','direct');
         $this->confirmed();
         $domain=(string)$this->input->post('document_domain',TRUE);
         $payload=['document_domain'=>$domain];

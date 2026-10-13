@@ -175,7 +175,7 @@ class Request_service
             }
         }
         if (in_array($type,['hardcopy_create','hardcopy_update'],TRUE)) {
-            $payload['holder_id']=strcasecmp((string)$user['role'],'Administrator')===0
+            $payload['holder_id']=$this->ci->Permission_model->allowed($user,'*','*')
                 ? ($payload['holder_id']?:$user['id'])
                 : (int)$user['id'];
             if ($payload['title']==='') throw new DomainException('Hardcopy title is required.');
