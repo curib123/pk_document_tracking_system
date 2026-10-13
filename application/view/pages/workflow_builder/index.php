@@ -67,7 +67,7 @@ $hasDraft=FALSE;$selectedVersionId=0;
 foreach($versions as $v) if($v['status']==='draft') {$hasDraft=TRUE;$selectedVersionId=(int)$v['id'];}
 if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id'];
 ?>
-<div class="modal fade workflow-steps-modal" id="workflowStepsModal-<?= (int)$workflow['id'] ?>" data-workflow-id="<?= (int)$workflow['id'] ?>" tabindex="-1" aria-hidden="true"
+<div class="modal fade workflow-steps-modal" data-bs-backdrop="static" data-bs-keyboard="false" id="workflowStepsModal-<?= (int)$workflow['id'] ?>" data-workflow-id="<?= (int)$workflow['id'] ?>" tabindex="-1" aria-hidden="true"
      aria-labelledby="workflowTitle-<?= (int)$workflow['id'] ?>">
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
@@ -197,7 +197,7 @@ if (!$selectedVersionId && $versions) $selectedVersionId=(int)$versions[0]['id']
 <?php endforeach; ?>
 
 <?php if($canEdit): ?>
-<div class="modal fade" id="stepModal" tabindex="-1" aria-labelledby="stepTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="stepModal" tabindex="-1" aria-labelledby="stepTitle" aria-hidden="true">
  <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
    <form id="stepForm" action="<?= site_url('admin/workflows/step/save') ?>" method="post" data-confirm="Save this approval step?">
      <div class="modal-header"><h2 id="stepTitle" class="modal-title h6">Approval Step</h2>
