@@ -7,6 +7,13 @@ class MY_Controller extends CI_Controller
     public function __construct()
     {
         parent::__construct();
+        // Do not read/write database-backed identities while a restore
+        // replaces tables. Applies to login, logout, and every controller.
+        // The already-running restore request does not re-enter this constructor.
+        if (is_file(PK_ROOT.'/storage/.restore-in-progress')) {
+            show_error('System restore is underway. Please try again after maintenance.',503);
+            exit;
+        }
         $this->load->model('Identity_model');
         $this->load->model('Permission_model');
         $id = (int) $this->session->userdata('user_id');
@@ -20,6 +27,13 @@ class MY_Controller extends CI_Controller
 
     protected function authenticate()
     {
+        // Block ordinary authenticated requests during a database restore.
+        // The restoring administrator's Backups controller remains accessible.
+        if (is_file(PK_ROOT.'/storage/.restore-in-progress') &&
+            strtolower((string)$this->router->fetch_class())!=='backups') {
+            show_error('System restore is underway. Please try again after maintenance.',503);
+            exit;
+        }
         if (!$this->user) { redirect('login'); exit; }
         require_once APPPATH.'services/authentication/authentication_service.php';
         if (!empty($this->user['require_password_change']) &&

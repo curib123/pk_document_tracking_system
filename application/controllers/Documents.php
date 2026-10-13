@@ -19,6 +19,26 @@ class Documents extends MY_Controller
         $folder=trim((string)$this->input->get('folder',TRUE));
         if (strlen($folder)>100) show_404();
         $browser=$this->Folder_model->browse($domain,$folder);
+        if (strcasecmp((string)$this->user['role'],'Administrator')!==0) {
+            require_once APPPATH.'services/presentation/folder_visibility.php';
+            $scope=$this->Document_model->scope($domain,$this->user,'d');
+            $fields=$domain==='hardcopy'
+                ? 'd.area_id,d.specific_id,d.asset_id,d.location_id'
+                : 'd.category_id';
+            $paths=$this->db->distinct()->select($fields)
+                ->from($c['table'].' d')->where($scope,NULL,FALSE)
+                ->get()->result_array();
+            $allowed=Folder_visibility::allowed_nodes($browser['tree'],$paths,$domain);
+            if ($folder!=='' && $folder!=='all' && !isset($allowed[$folder])) {
+                show_error('This folder is outside your document access.',403);
+                return;
+            }
+            $browser['tree']=Folder_visibility::restrict($browser['tree'],$paths,$domain);
+            $browser['children']=array_values(array_filter($browser['children'],
+                static function($node) use($allowed){
+                    return isset($allowed[$node['folder']]);
+                }));
+        }
         list($rows,$total,$state['page'])=$this->Document_model->listing(
             $domain,$state['q'],$state['status'],$state['page'],$state['limit'],$browser,$this->user,$state);
         $options=[];

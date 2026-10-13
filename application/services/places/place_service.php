@@ -120,8 +120,10 @@ class Place_service
             'id'=>$areaId,'active'=>1
         ])->row_array()) throw new DomainException('Choose an active area.');
 
-        $data['area_id']=$areaId?:NULL;
-        $data['specific_id']=$specificId?:NULL;
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_parents($areaId,$specificId);
+        $data['area_id']=$areaId;
+        $data['specific_id']=$specificId;
         $data['asset_id']=$assetId?:NULL;
     }
 

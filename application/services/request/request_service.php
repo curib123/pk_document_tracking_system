@@ -218,9 +218,11 @@ class Request_service
             'id'=>$destination,'active'=>1
         ])->row_array();
         if (!$location) throw new DomainException('Destination is unavailable.');
-        if ($this->ci->db->from('hardcopy_documents')->where('location_id',$destination)
-            ->where('id !=',(int)$hardcopyId)->count_all_results()>0)
-            throw new DomainException('The destination is already occupied by another hardcopy.');
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_path(
+            $location['area_id']??0,$location['specific_id']??0,$destination);
+        // Several physical documents may share the same destination
+        // Location. Custody and workflow records remain per document.
         if ((int)($document['location_id']??0)===$destination)
             throw new DomainException('Destination must differ from the original location.');
         foreach (['area','specific','asset'] as $level) {

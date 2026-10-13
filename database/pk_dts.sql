@@ -6159,6 +6159,10 @@ ALTER TABLE `files`
 --
 ALTER TABLE `hardcopy_documents`
   ADD PRIMARY KEY (`id`),
+<<<<<<< HEAD
+=======
+  ADD KEY `idx_hardcopy_documents_location` (`location_id`),
+>>>>>>> 8d5703a015feb52a586046c8ca55196e522b4109
   ADD KEY `area_id` (`area_id`),
   ADD KEY `specific_id` (`specific_id`),
   ADD KEY `asset_id` (`asset_id`),

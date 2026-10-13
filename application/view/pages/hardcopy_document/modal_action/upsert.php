@@ -19,9 +19,9 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 </div>
 
 <div class="col-md-6">
-  <label class="form-label" for="hardcopyArea">Area <span class="optional-label">(optional)</span></label>
+  <label class="form-label" for="hardcopyArea">Area</label>
   <select class="form-select" id="hardcopyArea" name="area_id"
-    data-hardcopy-level="area" data-searchable>
+    data-hardcopy-level="area" data-searchable required>
     <option value="">No area selected</option>
     <?php foreach ($options['areas'] as $area): ?>
       <option value="<?= (int)$area['id'] ?>"><?= html_escape($area['name']) ?></option>
@@ -29,9 +29,9 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   </select>
 </div>
 <div class="col-md-6">
-  <label class="form-label" for="hardcopySpecific">Specific <span class="optional-label">(optional)</span></label>
+  <label class="form-label" for="hardcopySpecific">Specific</label>
   <select class="form-select" id="hardcopySpecific" name="specific_id"
-    data-hardcopy-level="specific" data-searchable>
+    data-hardcopy-level="specific" data-searchable required>
     <option value="">No specific selected</option>
     <?php foreach ($options['specifics'] as $specific): ?>
       <option value="<?= (int)$specific['id'] ?>"
@@ -53,9 +53,9 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 
 </div>
 <div class="col-md-6">
-  <label class="form-label" for="hardcopyLocation">Location <span class="optional-label">(optional)</span></label>
+  <label class="form-label" for="hardcopyLocation">Location</label>
   <select class="form-select" id="hardcopyLocation" name="location_id"
-    data-hardcopy-level="location" data-searchable>
+    data-hardcopy-level="location" data-searchable required>
     <option value="">No location selected</option>
     <?php foreach ($options['locations'] as $location): ?>
       <option value="<?= (int)$location['id'] ?>"

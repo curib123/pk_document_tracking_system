@@ -25,6 +25,7 @@
   </div>
 </div>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
+<script src="<?= base_url('assets/js/motion.js') ?>"></script>
 <?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>
 </html>

@@ -152,10 +152,8 @@ class Document_service
             $area=(int)($data['area_id']??0);
             $specific=(int)($data['specific_id']??0);
             $asset=(int)($data['asset_id']??0);
-            // Original pk_dts hardcopy_documents.location_id is UNIQUE.
-            $db->from('hardcopy_documents')->where('location_id',$location);
-            if ($documentId) $db->where('id !=',(int)$documentId);
-            
+            // A Location may hold multiple hardcopy records. This requires
+            // the location index migration on existing MariaDB installations.
         }
         if ($asset) {
             $row=$db->select('b.id,b.specific_id,s.area_id')
@@ -186,10 +184,12 @@ class Document_service
         if ($area && !$db->get_where('areas',['id'=>$area,'active'=>1])->row_array()) {
             throw new DomainException('Choose an active area.');
         }
-        $data['area_id']=$area?:NULL;
-        $data['specific_id']=$specific?:NULL;
+        require_once APPPATH.'services/places/hardcopy_place_policy.php';
+        Hardcopy_place_policy::require_location_path($area,$specific,$location);
+        $data['area_id']=$area;
+        $data['specific_id']=$specific;
         $data['asset_id']=$asset?:NULL;
-        $data['location_id']=$location?:NULL;
+        $data['location_id']=$location;
     }
 
     public function dispose($domain,$id,$actorId,$reason='',$action='other')
