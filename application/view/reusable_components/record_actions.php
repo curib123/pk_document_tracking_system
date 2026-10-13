@@ -76,7 +76,6 @@
     ?>
     <button type="button" class="btn-icon record-action record-action-<?= $intent ?> js-action"
         title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
-        data-bs-toggle="modal" data-bs-target="#actionModal"
         data-url="<?= site_url($button['url']) ?>"
         data-id="<?= (int)$dt_row['id'] ?>"
         data-decision="<?= html_escape($button['decision']??'') ?>"

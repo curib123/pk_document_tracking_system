@@ -71,8 +71,10 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
             </div>
             <div class="modal-body">
                 <p id="actionDescription"></p>
+                <div id="actionRemarkFields">
                 <label for="actionRemark" class="form-label">Remark <span class="optional-label">(optional)</span></label>
                 <textarea class="form-control" id="actionRemark" name="remark" rows="3"></textarea>
+                </div>
                 <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                     <?php $this->load->view('pages/request/disposal_fields',['disposal_field_prefix'=>'directDisposal']); ?>
                 </div>
@@ -140,6 +142,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
+<script src="<?= base_url('assets/js/row-actions.js') ?>"></script>
 <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 <script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
 <script src="<?= base_url('assets/js/document-view.js') ?>"></script>

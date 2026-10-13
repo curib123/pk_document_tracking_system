@@ -361,13 +361,11 @@ data-confirm="Save request draft?">
  $isRecipient=(int)$handoff['recipient_id']===(int)$user['id']; ?>
  <?php if ($isHolder && $handoff['status']==='for_transfer'): ?>
  <button class="btn btn-outline-primary btn-sm js-action" type="button"
-   data-bs-toggle="modal" data-bs-target="#actionModal"
    data-url="<?= site_url('my-tasks/hardcopy-transfer/dispatch') ?>"
    data-id="<?= (int)$handoff['id'] ?>" data-title="Dispatch Hardcopy"
    data-description="Confirm physical release of this document to the intended recipient.">Dispatch</button>
  <?php elseif ($isRecipient && $handoff['status']==='in_transit'): ?>
  <button class="btn btn-primary btn-sm js-action" type="button"
-   data-bs-toggle="modal" data-bs-target="#actionModal"
    data-url="<?= site_url('my-tasks/hardcopy-transfer/accept') ?>"
    data-id="<?= (int)$handoff['id'] ?>" data-title="Accept Hardcopy"
    data-description="Confirm physical receipt of the document and update its custodian and location.">Accept</button>

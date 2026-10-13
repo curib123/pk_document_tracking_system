@@ -399,32 +399,6 @@
             document.getElementById('uploadDocumentName').textContent = upload.getAttribute('data-document-name') || '';
         }
 
-        var action = event.target.closest('.js-action');
-        if (action) {
-            var form = document.getElementById('actionForm');
-            if (!form) return;
-            form.reset();
-            form.dataset.confirmed = '';
-            form.action = action.getAttribute('data-url');
-            form.querySelector('[name="id"]').value = action.getAttribute('data-id') || '';
-            form.querySelector('[name="decision"]').value = action.getAttribute('data-decision') || '';
-            var stepKey = form.querySelector('[name="step_key"]');
-            if (stepKey) stepKey.value = action.getAttribute('data-step-key') || '';
-            var title = action.getAttribute('data-title') || 'Confirm Action';
-            document.getElementById('actionTitle').textContent = title;
-            document.getElementById('actionDescription').textContent =
-                action.getAttribute('data-description') || 'This action will be saved to the system.';
-            form.setAttribute('data-confirm', title + '?');
-            var disposal=form.querySelector('#actionDisposalFields');
-            if (disposal) {
-                disposal.hidden=action.getAttribute('data-disposal')!=='yes';
-                disposal.querySelectorAll('select,input').forEach(function(field) {
-                    field.disabled=disposal.hidden;
-                    field.required=!disposal.hidden && field.hasAttribute('data-disposal-reason');
-                });
-                updateDisposalReason();
-            }
-        }
     });
 
     // One request modal is reused across all request types; hide irrelevant fields.
