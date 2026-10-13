@@ -1,5 +1,5 @@
 /* Logout uses the existing bitmap unchanged and the shared brand palette. */
-@view-transition { navigation: auto; }
+/* Native navigation is opted in only for a verified logout handoff. */
 ::view-transition-group(root) { animation: none; }
 ::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
 html[data-logout-return]::view-transition-old(root) { animation: logout-bridge 160ms ease-out both; }

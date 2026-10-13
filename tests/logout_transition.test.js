@@ -8,13 +8,14 @@ function setup({incoming=false,reduced=false,marker=null}={}){
   remove(){this.removed=true;},focus(){this.focused=true;},prepend(e){this.children.unshift(e);},replaceChildren(...els){this.children=els;this.replaced=true;},
   matches(selector){return selector==='form[data-logo-logout]'&&this===form;},querySelector(selector){return nodes[selector]||null;},querySelectorAll(){return [];},
   animate(frames,options){const task=deferred(),a={element:this,frames,options,finished:task.promise,finish:task.resolve,cancel:task.resolve};animations.push(a);return a;},decode(){return Promise.resolve();}};}
- const root=element(),body=element(),app=element(),overlay=element('logoutTransition'),veil=element('logoutTransitionVeil'),logo=element('logoutTransitionLogo'),glow=element('logoutTransitionGlow'),form=element(),button=element(),csrf=element(),confirmed=element(),page=element(),shell=element(),card=element(),login=element();
+ const root=element(),body=element(),head=element(),app=element(),overlay=element('logoutTransition'),veil=element('logoutTransitionVeil'),logo=element('logoutTransitionLogo'),glow=element('logoutTransitionGlow'),form=element(),button=element(),csrf=element(),confirmed=element(),page=element(),shell=element(),card=element(),login=element();
+ head.append=function(e){this.children.push(e);};
  overlay.dataset={loginUrl:'http://localhost/login',statusUrl:'http://localhost/login?session_status=1',expiration:'1800'};
  form.method='post';form.action='http://localhost/logout';form.dataset.confirmed='yes';confirmed.value='yes';csrf.name='pk_csrf_token';
  form.querySelectorAll=()=>[button];
  const nodes={'#logoutTransitionLogo':logo,'#logoutTransitionVeil':veil,'#logoutTransitionGlow':glow,'[name="confirmed"]':confirmed,'[name="pk_csrf_token"]':csrf};
  if(incoming)root.attrs['data-logout-destination']='';
- const document={documentElement:root,body,readyState:incoming?'loading':'complete',hidden:false,fonts:{ready:Promise.resolve()},activeElement:body,
+ const document={documentElement:root,body,head,readyState:incoming?'loading':'complete',hidden:false,fonts:{ready:Promise.resolve()},activeElement:body,
   getElementById(id){return id==='logoutTransition'?overlay:null;},querySelector(s){return {'.app-shell':app,'.page-content':page,'.login-shell':shell,'.login-card':card,'#login':login}[s]||null;},
   querySelectorAll(s){return s.includes('data-logo-logout')?[form]:s.includes('side-link')?[element(),element()]:s.includes('logout-shape')?[element(),element(),element(),element()]:[card];},
   createElement(){return element();},addEventListener(name,fn){docEvents[name]=fn;}};
@@ -28,7 +29,7 @@ function setup({incoming=false,reduced=false,marker=null}={}){
  const tick=ms=>{for(const [id,t]of[...timers])if(t.ms===ms){timers.delete(id);t.fn();}};
  const submit=(prevented=false)=>{const event={target:form,defaultPrevented:prevented,preventDefault(){this.defaultPrevented=true;}};docEvents.submit?.(event);return event;};
  const respond=(call,data,ok=true)=>call.resolve({ok,json:async()=>data});
- return {root,body,app,overlay,form,button,csrf,confirmed,shell,card,login,events,docEvents,timers,calls,animations,navigations,storage,flush,tick,submit,respond,ready:async()=>{docEvents.DOMContentLoaded?.();await flush();}};
+ return {root,body,head,app,overlay,form,button,csrf,confirmed,shell,card,login,events,docEvents,timers,calls,animations,navigations,storage,flush,tick,submit,respond,ready:async()=>{docEvents.DOMContentLoaded?.();await flush();}};
 }
 test('confirmed logout sends the POST immediately and prevents duplicate requests',async()=>{
  const x=setup(),event=x.submit();assert.equal(event.defaultPrevented,true);assert.equal(x.calls.length,1);
@@ -38,6 +39,7 @@ test('confirmed logout sends the POST immediately and prevents duplicate request
  x.tick(350);await x.flush();assert.equal(x.body.replaced,true,'Protected DOM must be discarded after the dissolve');
  assert.equal(x.navigations.length,0);x.tick(560);await x.flush();assert.equal(x.navigations[0],'http://localhost/login');
  assert.ok(x.storage.has('pk:logout-transition'));
+ assert.equal(x.head.children.length,1,'Native navigation effects are enabled only for a verified logout handoff');
 });
 test('canceled confirmation remains untouched',()=>{const x=setup();x.submit(true);assert.equal(x.calls.length,0);assert.equal(x.animations.length,0);});
 test('failed logout restores an authenticated dashboard and refreshes the CSRF field',async()=>{
@@ -46,6 +48,7 @@ test('failed logout restores an authenticated dashboard and refreshes the CSRF f
  assert.equal(x.body.inert,false);assert.equal(x.body.replaced,undefined);assert.equal(x.navigations.length,0);
  assert.equal(x.csrf.value,'fresh');assert.equal(x.form.dataset.confirmed,'');assert.equal(x.confirmed.value,'no');
  assert.equal(x.storage.size,0);
+ assert.equal(x.head.children.length,0,'A failed logout cannot enable effects on ordinary protected navigation');
 });
 test('a lost logout response is reconciled against the actual server identity',async()=>{
  const x=setup();x.submit();x.calls[0].reject(new Error('connection lost'));await x.flush();

@@ -127,6 +127,11 @@
             window.sessionStorage.removeItem(key);
             if (verified) window.sessionStorage.setItem(key, JSON.stringify({at: Date.now()}));
         } catch (_) { /* Storage is optional; the server still owns authentication. */ }
+        if (verified) {
+            const bridge = document.createElement('style');
+            bridge.textContent = '@view-transition { navigation: auto; }';
+            document.head.append(bridge);
+        }
         // Discard protected DOM, including read-only document modals outside the shell.
         document.body.replaceChildren(overlay);
         window.location.replace(loginURL.href);
