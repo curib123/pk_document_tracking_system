@@ -16,24 +16,24 @@ html[data-logout-return] .logout-transition {
     overflow: hidden;
     isolation: isolate;
 }
-.logout-transition-veil { position: absolute; inset: 0; background: var(--ui-navy); opacity: 0; }
+.logout-transition-veil { position: absolute; inset: 0; background: var(--ui-white); opacity: 0; }
 .logout-transition-glow {
     position: absolute;
     width: clamp(270px, 38vw, 430px);
     aspect-ratio: 1;
-    border-radius: 50%;
-    background: radial-gradient(ellipse, var(--ui-brand-500), transparent 67%);
+    border-radius: 90%;
+    background: radial-gradient(ellipse, var(--ui-brand-500), transparent 67%); 
     filter: blur(20px);
     opacity: 0;
     will-change: opacity, transform;
 }
 .logout-transition-logo {
     position: relative;
-    width: clamp(190px, 25vw, 290px);
+    width: clamp(190px, 25vw, 300px); 
     height: auto;
-    object-fit: contain;
+    object-fit: fill;
     opacity: 0;
-    transform: scale(.82);
+    transform: scale(1);
     will-change: opacity, transform;
 }
 .logout-shape {
