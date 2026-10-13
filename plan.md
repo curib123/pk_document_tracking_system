@@ -5,4 +5,4 @@ issuess in folder layout why its show all the folder like location show in main 
 redesign the the role and permission upsert and assignin gpermission make itr pills instead of checkbox outline for unselected then fill for selected.
 
 
-
+alert modal notification must have loading animation to wait if loading results after an user action do make nice and cute
