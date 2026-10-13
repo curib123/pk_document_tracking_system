@@ -7,8 +7,6 @@ class Dashboard extends MY_Controller
         $this->require_permission('dashboard', 'view');
         require_once APPPATH . 'services/dashboard/dashboard_service.php';
         $data = (new Dashboard_service())->summary($this->user);
-        $data['login_transition']=$this->session->flashdata('login_transition')===TRUE;
-        $this->session->unset_userdata('login_transition');
         $this->render('Dashboard', 'pages/dashboard/index', $data);
     }
 }

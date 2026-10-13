@@ -39,9 +39,6 @@ class Auth extends MY_Controller
             'user_id' => (int) $user['id'],
             'session_version' => (int) $user['session_version']
         ]);
-        // Presentation only: the existing successful redirect stays unchanged.
-        if (empty($user['require_password_change']))
-            $this->session->set_flashdata('login_transition', TRUE);
         redirect(!empty($user['require_password_change']) ? 'change-password' : 'dashboard');
     }
 
