@@ -8,7 +8,7 @@ if (!in_array($authKind,['success','danger','warning','info'],TRUE)) $authKind='
 <dialog class="app-auth-alert app-alert-<?= html_escape($authKind) ?>" id="authAlertDialog"
         role="alertdialog" aria-modal="true" aria-labelledby="authAlertTitle" aria-describedby="authAlertMessage">
     <div class="app-auth-alert-head">
-        <span class="app-auth-alert-icon" aria-hidden="true"><i class="fa-solid <?= $authKind==='success'?'fa-circle-check':'fa-circle-exclamation' ?>"></i></span>
+        <span class="app-auth-alert-icon" aria-hidden="true"><?php $this->load->view('reusable_components/alert_icon',['alert_kind'=>$authKind]); ?></span>
         <button class="app-auth-alert-close" type="button" aria-label="Close notification" data-close-alert>&times;</button>
     </div>
     <h2 id="authAlertTitle"><?= $authKind==='success'?'Operation successful':($authKind==='danger'?'Unable to continue':'Notification') ?></h2>

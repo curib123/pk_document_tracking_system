@@ -158,8 +158,8 @@ assertFolder(strpos($docTreeHelper,"'asset'=>'asset_id'")!==FALSE,
 assertFolder(strpos($folderModel,"if (\$kind==='asset')")!==FALSE &&
     strpos($folderModel,"\$parent='asset'")!==FALSE,
     'Assets and their Locations must appear as navigable folders');
-assertFolder(strpos($folderView,'Document Repository')!==FALSE,
-    'The tree must have a Document Repository root node');
+assertFolder(strpos($folderView,'Document Repository')===FALSE,
+    'Folder mode must start directly at the real folders');
 // Render the real folder view: document counts must never open every branch
 // at the repository root. A deep link should open only its ancestor chain.
 define('APPPATH', $root.'/application/');
@@ -200,4 +200,15 @@ assertFolder($opened($harness->render($viewData))===['area:1','specific:10','ass
 $viewData['dt_folder_browser']['folder']='all';
 assertFolder($opened($harness->render($viewData))===[],
     'All Documents must preserve the hierarchy instead of auto-expanding populated branches');
+$viewData['dt_q']='Test Document';
+assertFolder($opened($harness->render($viewData))===['area:1','specific:10','asset:100','location:201','location:202','specific:11','location:203','area:2'],
+    'Searching must open every branch containing matching documents');
+assertFolder(preg_match('/class="doc-tree-node doc-tree-unfiled">\s*<details data-folder-node open>/', $harness->render($viewData))===1,
+    'Search must reveal matching unfiled documents automatically');
+$viewData['dt_rows']=[$viewRows[0]];
+assertFolder(strpos($harness->render($viewData),'data-folder-key="area:2"')===FALSE,
+    'Search results must hide unrelated branches');
+$viewData['dt_rows']=[];$viewData['dt_q']='missing-record';
+assertFolder(strpos($harness->render($viewData),'No folders or documents available')!==FALSE,
+    'Search with no matches must show the existing empty state');
 echo "System Documents exclusive folder/list mode and hierarchy contracts passed.\n";

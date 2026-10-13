@@ -134,6 +134,16 @@ class Administration extends MY_Controller
             (new Administration_service())->save_role($this->input->post(),$this->user['id']);
         },'admin/roles');
     }
+    public function deactivate_role() {
+        $this->mutate('roles','edit',function(){
+            (new Administration_service())->deactivate_role((int)$this->input->post('id'),$this->user['id']);
+        },'admin/roles');
+    }
+    public function remove_role() {
+        $this->mutate('roles','delete',function(){
+            (new Administration_service())->remove_role((int)$this->input->post('id'),$this->user['id']);
+        },'admin/roles');
+    }
     public function save_workflow_step() {
         $this->mutate('workflows','edit',function(){
             (new Administration_service())->save_workflow_step($this->input->post());

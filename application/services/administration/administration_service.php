@@ -141,6 +141,54 @@ class Administration_service
         }
     }
 
+    private function require_unused_role($role)
+    {
+        require_once APPPATH.'services/administration/role_usage.php';
+        $usage=Role_usage::for_roles($this->ci->db,[(int)$role['id']])[(int)$role['id']];
+        if ($usage['user_count'])
+            throw new DomainException('This role is assigned to users. Reassign them before deactivating or removing it.');
+        if ($usage['workflow_count'])
+            throw new DomainException('This role is used by a workflow. Update its approval steps before deactivating or removing it.');
+        if ($usage['request_count'])
+            throw new DomainException('This role is used by an unfinished request and cannot be deactivated or removed.');
+    }
+
+    private function change_unused_role($id,$actorId,$remove)
+    {
+        $actor=$this->account_actor($actorId);
+        if (!$this->ci->Permission_model->allowed($actor,'roles',$remove?'delete':'edit'))
+            throw new DomainException('Role management permission is required.');
+        $this->ci->db->trans_begin();
+        try {
+            // Same lock order as account creation/reassignment protects against new user references.
+            $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
+            $role=$this->ci->db->get_where('roles',['id'=>(int)$id])->row_array();
+            if (!$role) throw new DomainException('Role not found.');
+            if (strcasecmp($role['name'],'Administrator')===0)
+                throw new DomainException('Administrator privileges are fixed.');
+            $this->ensure_delegation($actor,$role);
+            $this->require_unused_role($role);
+            if ($remove) {
+                $this->ci->db->where('role_id',(int)$id)->delete('role_permissions');
+                $this->ci->db->where('id',(int)$id)->delete('roles');
+            } elseif ($role['active']) {
+                $this->ci->db->where('id',(int)$id)->update('roles',[
+                    'active'=>0,'version'=>(int)$role['version']+1
+                ]);
+            }
+            if ($this->ci->db->trans_status()===FALSE)
+                throw new DomainException('Could not update the role. Refresh and try again.');
+            $this->ci->db->trans_commit();
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Could not update the role.');
+        }
+    }
+
+    public function deactivate_role($id,$actorId) { $this->change_unused_role($id,$actorId,FALSE); }
+    public function remove_role($id,$actorId) { $this->change_unused_role($id,$actorId,TRUE); }
+
     public function save_role($post, $actorId)
     {
         $actor = $this->account_actor($actorId);
@@ -163,6 +211,7 @@ class Administration_service
                 if (strcasecmp($old['name'],'Administrator') === 0)
                     throw new DomainException('Administrator privileges are fixed.');
                 $this->ensure_delegation($actor,$old);
+                if ($old['active'] && empty($post['active'])) $this->require_unused_role($old);
                 $this->ci->db->where('id',$id)->update('roles',[
                     'name'=>$name,'active'=>!empty($post['active'])?1:0,'version'=>(int)$old['version']+1
                 ]);

@@ -45,6 +45,10 @@ class Documents extends MY_Controller
             $browser=$this->Folder_model->browse($domain,$folder,
                 Folder_visibility::restrict($browser['tree'],$paths,$domain));
         }
+        if ($state['layout']==='folder' && $state['q']!=='') {
+            require_once APPPATH.'services/presentation/folder_search.php';
+            $browser['search']=Folder_search::for_browser($browser,$state['q'],$domain);
+        }
         list($rows,$total,$state['page'])=$this->Document_model->listing(
             $domain,$state['q'],$state['status'],$state['page'],$state['limit'],$browser,$this->user,$state);
         $options=[];

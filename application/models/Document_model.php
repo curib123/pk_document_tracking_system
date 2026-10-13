@@ -54,7 +54,9 @@ class Document_model extends CI_Model
         $this->db->from($c['table'].' d')->where($scope,NULL,FALSE);
         if ($browser!==NULL) {
             $this->load->model('Folder_model');
-            $this->Folder_model->scope_documents($domain,$browser,'d');
+            if ($domain==='softcopy' && isset($browser['search']['scope_categories']))
+                $this->db->where_in('d.category_id',$browser['search']['scope_categories']);
+            else $this->Folder_model->scope_documents($domain,$browser,'d');
         }
         if ($status!=='' && in_array($status,['active','disposed','archived','cancelled'],TRUE))
             $this->db->where('d.status',$status);
@@ -67,6 +69,13 @@ class Document_model extends CI_Model
             $this->db->group_start()->like('d.title',$search);
             if ($domain==='softcopy') $this->db->or_like('d.document_number',$search);
             else $this->db->or_like('d.sequence_number',$search);
+            if ($domain==='hardcopy' && !empty($browser['search']['paths'])) {
+                $this->db->or_group_start();
+                $this->Folder_model->scope_documents($domain,['document_paths'=>$browser['search']['paths']],'d');
+                $this->db->group_end();
+            } elseif ($domain==='softcopy' && !empty($browser['search']['categories'])) {
+                $this->db->or_where_in('d.category_id',$browser['search']['categories']);
+            }
             $this->db->group_end();
         }
     }

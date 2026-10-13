@@ -16,6 +16,7 @@
         requests: 'fa-clipboard-list',
         approvals: 'fa-list-check',
         transfers: 'fa-arrow-right-arrow-left',
+        disposal: 'fa-box-archive',
         audit: 'fa-clock-rotate-left'
     };
     var HISTORY = {requests:true, approvals:true, transfers:true, audit:true};
