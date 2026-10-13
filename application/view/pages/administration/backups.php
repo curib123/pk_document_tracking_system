@@ -86,7 +86,7 @@ $backupTime=static function($timestamp) {
   <section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
     <div class="workspace-card-header backup-register-header">
       <div><h2 id="backupArchiveTitle">Available backups</h2>
-        <p>Access is granted when any active role allows the action.</p></div>
+        <p>Access is granted when any active role assigned to you allows the action.</p></div>
     </div>
     <?php if (!$backup_items): ?>
       <div class="empty-state" role="status"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>

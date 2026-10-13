@@ -46,6 +46,7 @@ class GrantDatabase
     public function from($table) {$this->table=$table;return $this;}
     public function join($table,$on,$type='inner') {return $this;}
     public function where($column,$value=NULL,$escape=TRUE) {$this->filters[$column]=$value;return $this;}
+    public function where_in($column,$values) {$this->filters[$column]=$values;return $this;}
     public function get_where($table,$where): GrantResult
     {
         return new GrantResult([]);
@@ -57,7 +58,7 @@ class GrantDatabase
         $rows=$this->table==='workflow_steps ws'?[]:($this->table==='permissions'?$this->catalog:$this->rows);
         foreach ($this->filters as $column=>$value) {
             if (in_array($column,['rp.role_id','r.id'],TRUE))
-                $rows=array_filter($rows,static function($row) use($value) {return $row['role_id']==$value;});
+                $rows=array_filter($rows,static function($row) use($value) {return in_array($row['role_id'],(array)$value);});
             if ($column==='r.active')
                 $rows=array_filter($rows,static function($row) use($value) {return $row['active']==$value;});
         }
@@ -95,31 +96,36 @@ function grantModel(array $rows): Permission_model
     $model->db=$connection;return $model;
 }
 $plant=['id'=>30,'role_id'=>5,'role'=>'plant_manager'];
+$plantMultiple=$plant+['role_ids'=>[5,7]];
+$plantAdmin=$plant+['role_ids'=>[5,1]];
 $staff=['id'=>40,'role_id'=>7,'role'=>'Staff'];
 $denied=['role_id'=>5,'role_name'=>'plant_manager','active'=>1,'module_key'=>NULL,'action_key'=>NULL];
 $allowed=['role_id'=>7,'role_name'=>'Staff','active'=>1,'module_key'=>'hardcopy','action_key'=>'direct'];
 
 $model=grantModel([$denied,$allowed]);
-grantCheck($model->allowed($plant,'hardcopy','direct'),
-    'A grant from another role must allow the action despite the user role having no grant.');
+grantCheck(!$model->allowed($plant,'hardcopy','direct'),
+    'A role assigned to somebody else must not grant this user access.');
+grantCheck($model->allowed($plantMultiple,'hardcopy','direct'),
+    'A grant from a secondary assigned role must allow the action despite the primary role having no grant.');
 grantCheck($model->allowed($staff,'hardcopy','direct'),
-    'The combined permission result must apply to every signed-in user.');
+    'A primary assigned role must retain its own grants.');
 grantCheck(!$model->allowed($plant,'hardcopy','delete') && !$model->allowed($plant,'softcopy','direct'),
     'A grant for another action or module must not allow the requested action.');
-$menu=$model->for_user($plant);
+$menu=$model->for_user($plantMultiple);
 grantCheck(!empty($menu['hardcopy']['direct']),'UI permissions must include grants from other roles.');
 grantCheck(!$model->allowed(NULL,'hardcopy','direct') && $model->for_user(NULL)===[],
     'Global role grants must never authorize an unauthenticated visitor.');
 
 $admin=['role_id'=>1,'role_name'=>'Administrator','active'=>1,'module_key'=>NULL,'action_key'=>NULL];
 $model=grantModel([$denied,$admin]);
-grantCheck($model->allowed($plant,'users','edit') && $model->allowed($plant,'backups','view'),
+grantCheck(!$model->allowed($plant,'users','edit'),'An unassigned Administrator role must not grant access.');
+grantCheck($model->allowed($plantAdmin,'users','edit') && $model->allowed($plantAdmin,'backups','view'),
     'plant_manager denied plus Administrator allowed must resolve to allowed.');
-grantCheck(isset($model->for_user($plant)['*']),
+grantCheck(isset($model->for_user($plantAdmin)['*']),
     'The Administrator role must provide the same effective permissions to navigation and backend checks.');
 
 $model=grantModel([$denied,array_merge($allowed,['active'=>0]),array_merge($admin,['active'=>0])]);
-grantCheck(!$model->allowed($plant,'hardcopy','direct') && !$model->allowed($plant,'users','edit'),
+grantCheck(!$model->allowed($plantMultiple,'hardcopy','direct') && !$model->allowed($plantAdmin,'users','edit'),
     'Inactive roles must not grant access, including an inactive Administrator role.');
 $model=grantModel([$denied]);
 grantCheck(!$model->allowed($plant,'hardcopy','direct'),
@@ -128,12 +134,12 @@ grantCheck(!$model->allowed($plant,'hardcopy','direct'),
 $model=grantModel([$denied,
     array_merge($allowed,['module_key'=>'requests','action_key'=>'manage']),
     array_merge($allowed,['module_key'=>'areas','action_key'=>'view'])]);
-grantCheck($model->allowed($plant,'requests','approve') && $model->allowed($plant,'tasks','approve') &&
-    $model->allowed($plant,'area','view'),'Existing module and action aliases must use the combined grants.');
-grantCheck(!empty($model->for_user($plant)['tasks']['view']),
+grantCheck($model->allowed($plantMultiple,'requests','approve') && $model->allowed($plantMultiple,'tasks','approve') &&
+    $model->allowed($plantMultiple,'area','view'),'Existing module and action aliases must use the assigned-role grants.');
+grantCheck(!empty($model->for_user($plantMultiple)['tasks']['view']),
     'Task navigation must use the combined request-management grant.');
 
-echo "Global role allow-union, Administrator access, inactive roles, aliases and anonymous denial passed.\n";
+echo "Assigned-role allow-union, unassigned-role denial, Administrator access, inactive roles and aliases passed.\n";
 if (isset($grantConnection)) $grantConnection->close();
 
 // Exercise the actual backup guard; an individual role-name check must not
@@ -153,7 +159,7 @@ class MY_Controller
     }
 }
 require_once APPPATH.'controllers/Backups.php';
-$backup=new Backups();$backup->user=$plant;
+$backup=new Backups();$backup->user=$plantAdmin;
 $backup->Permission_model=new Permission_model();
 $backup->Permission_model->db=new GrantDatabase([$denied,$admin]);
 $guard=(new ReflectionClass(Backups::class))->getMethod('administrator');$guard->setAccessible(TRUE);
@@ -174,11 +180,11 @@ $grantContext->db->catalog=[['id'=>11,'module_key'=>'roles','action_key'=>'edit'
     ['id'=>12,'module_key'=>'files','action_key'=>'delete']];
 $administration=new Administration_service();
 $delegate=(new ReflectionClass(Administration_service::class))->getMethod('ensure_delegation');$delegate->setAccessible(TRUE);
-$delegate->invoke($administration,$plant,['id'=>7,'name'=>'Staff'],[11]);
+$delegate->invoke($administration,$plantMultiple,['id'=>7,'name'=>'Staff'],[11]);
 $deniedDelegation=FALSE;
-try {$delegate->invoke($administration,$plant,['id'=>7,'name'=>'Staff'],[12]);}
+try {$delegate->invoke($administration,$plantMultiple,['id'=>7,'name'=>'Staff'],[12]);}
 catch (DomainException $e) {$deniedDelegation=TRUE;}
 grantCheck($deniedDelegation,'An action granted by no active role must remain unavailable for delegation.');
 $grantContext->Permission_model=new Permission_model();$grantContext->Permission_model->db=new GrantDatabase([$denied,$admin]);
-$delegate->invoke($administration,$plant,['id'=>1,'name'=>'Administrator'],[12]);
+$delegate->invoke($administration,$plantAdmin,['id'=>1,'name'=>'Administrator'],[12]);
 echo "Backup guard and delegation follow the same combined role grants.\n";

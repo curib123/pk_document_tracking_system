@@ -9,7 +9,7 @@ while IFS= read -r file; do
   node --check "$file"
 done < <(git ls-files '*.js')
 echo "Running workflow and plan contract tests..."
-php tests/global_role_permissions.php
+php tests/user_role_permissions.php
 php tests/approval_step_tiles.php
 php tests/plan_contract.php
 php tests/login_transition_handoff.php

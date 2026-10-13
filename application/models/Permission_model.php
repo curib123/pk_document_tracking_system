@@ -1,8 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Permission_model extends CI_Model
 {
-    private $permissions_cache=NULL;
+    private $permissions_cache=[];
     public function allowed($user, $module, $action = 'view')
     {
         if (!$user) return FALSE;
@@ -11,18 +12,21 @@ class Permission_model extends CI_Model
             'asset'=>'assets','location'=>'locations','sequence'=>'sequences',
             'tasks'=>'requests'][$module] ?? $module;
         if ($module === 'requests' && $action === 'approve') $action = 'manage';
-        $permissions=$this->system_permissions();
+        $permissions=$this->user_permissions($user);
         return isset($permissions['*']) || !empty($permissions[$module][$action]);
     }
-    private function system_permissions()
+    private function user_permissions($user)
     {
-        if ($this->permissions_cache!==NULL) return $this->permissions_cache;
-        // An action is allowed when ANY active system role grants it. Left
-        // joins retain the Administrator's built-in grant even without rows
-        // in role_permissions. The same request-local result powers the UI.
+        $roleIds=User_roles::ids($user);
+        if (!$roleIds) return [];
+        $key=implode(',',$roleIds);
+        if (isset($this->permissions_cache[$key])) return $this->permissions_cache[$key];
+        // Allow when any ACTIVE role assigned to this identity grants the
+        // action. An Administrator assigned to somebody else grants nothing.
         $rows=$this->db->select('r.name AS role_name,p.module_key,p.action_key')->from('roles r')
             ->join('role_permissions rp','rp.role_id=r.id','left')
-            ->join('permissions p','p.id=rp.permission_id','left')->where('r.active',1)->get()->result_array();
+            ->join('permissions p','p.id=rp.permission_id','left')->where('r.active',1)
+            ->where_in('r.id',$roleIds)->get()->result_array();
         $result=[];
         foreach ($rows as $permission) {
             if (strcasecmp(trim((string)$permission['role_name']),'Administrator')===0)
@@ -30,13 +34,13 @@ class Permission_model extends CI_Model
             if (!empty($permission['module_key']) && !empty($permission['action_key']))
                 $result[$permission['module_key']][$permission['action_key']]=TRUE;
         }
-        return $this->permissions_cache=$result;
+        return $this->permissions_cache[$key]=$result;
     }
 
     public function for_user($user)
     {
         if (!$user) return [];
-        $result=$this->system_permissions();
+        $result=$this->user_permissions($user);
         if (isset($result['*'])) return $result;
         $result['tasks']['view'] = !empty($result['requests']['view']) ||
             !empty($result['requests']['manage']) ||

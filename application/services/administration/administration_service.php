@@ -34,7 +34,7 @@ class Administration_service
         if (!Account_policy::can_delegate($actor['role'], $role['name'],
             $owned,
             $permissions ?? $this->permission_ids($role['id']))) {
-            throw new DomainException('You cannot delegate actions that no active role allows.');
+            throw new DomainException('You cannot delegate actions that none of your assigned roles allows.');
         }
     }
 
