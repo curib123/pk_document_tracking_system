@@ -75,8 +75,7 @@ class Softcopy_direct_service
             if ($this->ci->db->trans_status()===FALSE) {
                 throw new DomainException('Direct approval failed: database transaction was not saved.');
             }
-            $this->ci->db->trans_commit();
-            return $result;
+            if ($this->ci->db->trans_commit()===FALSE) throw new DomainException('Direct approval could not be committed.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             // A staged file was stored before the DB transaction started.
@@ -94,5 +93,9 @@ class Softcopy_direct_service
             log_message('error', 'Softcopy direct approval failed: '.$e->getMessage());
             throw new DomainException('Unable to approve this softcopy action directly.');
         }
+        if ($type==='softcopy_revise') {
+            (new File_service())->cleanup_superseded($docId);
+        }
+        return $result;
     }
 }

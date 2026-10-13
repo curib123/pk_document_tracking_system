@@ -10,6 +10,52 @@ class File_service
         $this->ci =& get_instance();
     }
 
+    /** A replacement must be usable before the current controlled file is retired. */
+    public function require_stored_file(array $file): void
+    {
+        $path=$this->controlled_path((string)($file['storage_name']??''));
+        if (!$path || !is_readable($path) || (int)filesize($path)!==(int)$file['size'] ||
+            !hash_equals((string)$file['fingerprint'],(string)hash_file('sha256',$path)))
+            throw new DomainException('The controlled revision attachment is unavailable or changed. Upload it again before approval.');
+    }
+
+    private function controlled_path(string $storage): ?string
+    {
+        if (!preg_match('/^[a-f0-9]{64}$/',$storage)) return NULL;
+        $directory=realpath(PK_ROOT.'/storage/documents');
+        if (!$directory) return NULL;
+        $candidate=$directory.DIRECTORY_SEPARATOR.$storage;
+        if (is_link($candidate)) return NULL;
+        $path=realpath($candidate);
+        return $path && is_file($path) && dirname($path)===$directory?$path:NULL;
+    }
+
+    /** Remove superseded bytes only after all database transactions have committed. */
+    public function cleanup_superseded(int $documentId): int
+    {
+        $db=$this->ci->db;
+        if ($documentId<1 || $db->trans_active()) return 0;
+        $removed=0;
+        try {
+            $files=$db->get_where('files',['domain'=>'softcopy','document_id'=>$documentId,'status'=>'superseded'])->result_array();
+            foreach ($files as $file) {
+                // Imported records may share a storage name. Never remove bytes
+                // still used by an approved file or another pending attachment.
+                if ($db->where('storage_name',$file['storage_name'])->where_in('status',['approved','pending'])
+                    ->count_all_results('files')>0) continue;
+                $path=$this->controlled_path((string)$file['storage_name']);
+                if (!$path) continue;
+                if (@unlink($path)) $removed++;
+                else log_message('error','Superseded controlled file cleanup failed for file '.(int)$file['id'].'.');
+            }
+        } catch (Throwable $error) {
+            // A committed approval cannot be rolled back after filesystem I/O.
+            // Superseded rows remain unavailable for download and eligible for retry.
+            log_message('error','Superseded controlled file cleanup failed for document '.$documentId.'.');
+        }
+        return $removed;
+    }
+
     // Controlled files are private while awaiting approval.
     // A new document has no document ID until the final approval is applied.
     public function stage_creation($actorId,$upload)

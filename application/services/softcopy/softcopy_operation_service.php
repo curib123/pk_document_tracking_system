@@ -122,6 +122,8 @@ class Softcopy_operation_service
                 'uploaded_by'=>(int)$ownerId,'purpose'=>'revision','status'=>'pending'
             ])->row_array();
             if (!$file) throw new DomainException('A pending controlled revision attachment is required.');
+            require_once APPPATH.'services/files/file_service.php';
+            (new File_service())->require_stored_file($file);
             $max=$db->select_max('revision_number')
                 ->get_where('softcopy_revisions',['document_id'=>$softcopyId])->row_array();
             $previous=$doc['current_revision_id']?
@@ -160,6 +162,11 @@ class Softcopy_operation_service
                 'status'=>'approved','approved_by'=>$actorId,
                 'approved_at'=>date('Y-m-d H:i:s')
             ]);
+            // Preserve historical rows/revision links, but only this approved
+            // replacement remains controlled. Physical cleanup runs after commit.
+            $db->where('domain','softcopy')->where('document_id',(int)$softcopyId)
+                ->where('status','approved')->where('id !=',$fileId)
+                ->set('version','version + 1',FALSE)->update('files',['status'=>'superseded']);
             if ($requestId===NULL) {
                 $this->audit($softcopyId,'active','active','direct_revise',$actorId,$reason);
             }

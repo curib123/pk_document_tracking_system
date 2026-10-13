@@ -41,6 +41,7 @@ class File_model extends CI_Model
         return $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')
             ->from('files f')
             ->join('softcopy_documents s', 's.id = f.document_id AND f.domain = "softcopy"')
+            ->join('softcopy_revisions current', 'current.id=s.current_revision_id AND current.file_id=f.id')
             ->where('f.id', (int) $id)
             ->where('f.status', 'approved')
             ->limit(1)->get()->row_array();
@@ -70,13 +71,15 @@ class File_model extends CI_Model
         $scope=$this->file_scope($user);
         $sql=$this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
                 f.status,u.first_name,u.last_name,
-                ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY f.id DESC) AS history_rank',FALSE)
+                (f.status="approved" AND current.file_id=f.id) AS is_current,
+                ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY (current.file_id=f.id) DESC,f.id DESC) AS history_rank',FALSE)
             ->from('files f')->join('softcopy_documents d','d.id=f.document_id')
+            ->join('softcopy_revisions current','current.id=d.current_revision_id','left')
             ->join('users u','u.id=f.uploaded_by')
-            ->where('f.domain','softcopy')->where('f.status','approved')->where('d.status','active')
+            ->where('f.domain','softcopy')->where_in('f.status',['approved','superseded'])->where('d.status','active')
             ->where_in('f.document_id',array_map('intval',$ids))
             ->where($scope,NULL,FALSE)->get_compiled_select();
-        $rows=$this->db->query('SELECT * FROM ('.$sql.') file_history WHERE history_rank<=25 ORDER BY id DESC')->result_array();
+        $rows=$this->db->query('SELECT * FROM ('.$sql.') file_history WHERE history_rank<=25 ORDER BY is_current DESC,id DESC')->result_array();
         $result=[];
         foreach ($rows as $file) $result[$file['document_id']][]=$file;
         return $result;

@@ -484,6 +484,7 @@ class Request_service
     {
         if (!in_array($decision,['approved','rejected','returned'],TRUE))
             throw new DomainException('Invalid decision.');
+        $cleanupDocumentId=0;
         $this->ci->db->trans_begin();
         try {
             $locked=$this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE',[$id])->result_array();
@@ -528,6 +529,7 @@ class Request_service
                     $this->ci->db->where('id',$id)->update('requests',['current_node'=>$next['node_key']]);
                 } else {
                     $result=$this->applyApproved($r,(int)$user['id']);
+                    if ($r['type']==='softcopy_revise') $cleanupDocumentId=(int)$r['softcopy_id'];
                     $status=$r['type']==='transfer'?'approved':'completed';
                     $this->ci->db->where('id',$id)->update('requests',[
                        'status'=>$status,'result'=>json_encode($result),
@@ -564,12 +566,16 @@ class Request_service
                 ]);
             }
             if ($this->ci->db->trans_status()===FALSE) throw new DomainException('Approval decision failed.');
-            $this->ci->db->trans_commit();
+            if ($this->ci->db->trans_commit()===FALSE) throw new DomainException('Approval decision could not be committed.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException) throw $e;
             log_message('error','Workflow decision error '.$e->getMessage());
             throw new DomainException('Could not save decision.');
+        }
+        if ($cleanupDocumentId) {
+            require_once APPPATH.'services/files/file_service.php';
+            (new File_service())->cleanup_superseded($cleanupDocumentId);
         }
     }
 
