@@ -59,8 +59,8 @@ class Auth extends MY_Controller
     {
         $this->confirmed();
         $this->output->set_header('Cache-Control: no-store, private');
-        $this->session->sess_destroy();
-        if (session_status()===PHP_SESSION_ACTIVE) show_error('Sign out could not be completed.',500);
+        // CI's sess_destroy() discards the result of this same native operation.
+        if (!session_destroy()) show_error('Sign out could not be completed.',500);
         $_SESSION=[];
         if ($this->input->is_ajax_request())
             return $this->auth_response(['logged_out'=>TRUE,'login_url'=>site_url('login')]);

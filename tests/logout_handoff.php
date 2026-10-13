@@ -22,7 +22,7 @@ class LogoutInput {
 class LogoutSession {
     public $destroyed=FALSE,$fail=FALSE;
     public $flash=[];
-    public function sess_destroy(){if(!$this->fail){session_destroy();$this->destroyed=TRUE;}}
+    public function sess_destroy(){session_destroy();}
     public function flashdata($key){return $this->flash[$key]??NULL;}
     public function unset_userdata($key){unset($this->flash[$key]);}
 }
@@ -38,10 +38,16 @@ class LogoutSecurity {
     public function get_csrf_hash(){return 'fresh-token';}
 }
 require APPPATH.'controllers/Auth.php';
+session_set_save_handler(static function(){return TRUE;},static function(){return TRUE;},
+    static function(){return '';},static function(){return TRUE;},
+    static function(){global $logout_session;$logout_session->destroyed=!$logout_session->fail;return !$logout_session->fail;},
+    static function(){return 0;});
+set_error_handler(static function($level,$message){return strpos($message,'Session object destruction failed')!==FALSE;});
 function logout_check($condition,$message){if(!$condition)throw new RuntimeException($message);}
 function logout_fixture(){
     $auth=new Auth();$auth->input=new LogoutInput();$auth->session=new LogoutSession();
     $auth->output=new LogoutOutput();$auth->security=new LogoutSecurity();$auth->user=['id'=>7];
+    global $logout_session;$logout_session=$auth->session;
     session_start();$_SESSION=['user_id'=>7];return $auth;
 }
 $enhanced=logout_fixture();
@@ -58,7 +64,7 @@ catch(LogoutRedirect $e){logout_check($e->getMessage()==='login','Native logout 
 $failed=logout_fixture();$failed->session->fail=TRUE;
 try{$failed->logout();throw new RuntimeException('Failed invalidation must not claim success');}
 catch(RuntimeException $e){logout_check($e->getCode()===500,'Failed invalidation must report an error');}
-session_destroy();
+$failed->session->fail=FALSE;if(session_status()===PHP_SESSION_ACTIVE)session_destroy();
 $unconfirmed=logout_fixture();$unconfirmed->input->confirmed='no';
 try{$unconfirmed->logout();}catch(RuntimeException $e){logout_check($e->getCode()===400,'Confirmation remains mandatory');}
 logout_check(!$unconfirmed->session->destroyed,'Unconfirmed requests cannot invalidate sessions');session_destroy();
