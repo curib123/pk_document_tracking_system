@@ -28,6 +28,29 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 </div>
 <?php endif; ?>
 
+<div class="modal fade app-alert-modal" id="taskNotificationModal" tabindex="-1" role="alertdialog"
+     aria-modal="true" aria-labelledby="taskNotificationTitle" aria-describedby="taskNotificationMessage" aria-hidden="true"
+     data-pending-url="<?= html_escape(site_url('notifications/tasks')) ?>"
+     data-claim-url="<?= html_escape(site_url('notifications/tasks/claim')) ?>"
+     data-csrf-name="<?= html_escape($this->security->get_csrf_token_name()) ?>"
+     data-csrf-value="<?= html_escape($this->security->get_csrf_hash()) ?>"
+     data-csrf-cookie="<?= html_escape(config_item('cookie_prefix').config_item('csrf_cookie_name')) ?>">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-alert-content app-alert-info">
+            <div class="modal-header border-0">
+                <div class="app-alert-symbol" aria-hidden="true"><?php $this->load->view('reusable_components/alert_icon',['alert_kind'=>'info']); ?></div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close notification"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <h2 class="h5 fw-bold mb-2" id="taskNotificationTitle">Approval needed</h2>
+                <p class="text-secondary" id="taskNotificationMessage">New tasks are waiting for your approval.</p>
+                <ol class="task-notification-list" id="taskNotificationList"></ol>
+            </div>
+            <div class="modal-footer border-0"><button class="btn btn-primary" type="button" data-bs-dismiss="modal">Got it</button></div>
+        </div>
+    </div>
+</div>
+
 <!-- Waiting feedback is a live status; native forms and returned results stay authoritative. -->
 <div class="action-feedback" id="appActionFeedback" hidden role="status" aria-live="polite" aria-atomic="true">
     <div class="action-feedback-card">
@@ -143,6 +166,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
 <script src="<?= base_url('assets/js/row-actions.js') ?>"></script>
+<script src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
 <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 <script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
 <script src="<?= base_url('assets/js/document-view.js') ?>"></script>
