@@ -386,6 +386,10 @@ a {
    TABLES
 ========================================================= */
 
+/* =========================================================
+   TABLES
+========================================================= */
+
 .table {
     margin: 0;
     font-size: 13px;
@@ -415,12 +419,86 @@ a {
     background: var(--ui-surface-soft);
 }
 
+/* =========================================================
+   TABLE ACTIONS
+   Automatically adjusts spacing when more buttons appear.
+========================================================= */
+
 .table-actions {
     display: flex;
-    gap: 6px;
-    white-space: nowrap;
+    align-items: center;
     justify-content: flex-end;
+
+    /* Automatically wrap additional action buttons */
+    flex-wrap: wrap;
+
+    /* Consistent spacing between buttons */
+    gap: 6px;
+
+    /* Keep buttons inside their container */
+    min-width: 0;
+    max-width: 100%;
 }
+
+/* Prevent action buttons from shrinking or overlapping */
+.table-actions > .btn,
+.table-actions > button,
+.table-actions > a,
+.table-actions > form {
+    flex: 0 0 auto;
+}
+
+/* Keep forms from adding unwanted vertical spacing */
+.table-actions form {
+    display: inline-flex;
+    align-items: center;
+    margin: 0;
+}
+
+/* Consistent button sizing */
+.table-actions .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+    white-space: nowrap;
+    margin: 0;
+}
+
+/* Keep icon-only actions compact */
+.table-actions .btn:has(> i:only-child) {
+    min-width: 32px;
+    min-height: 32px;
+    padding: 6px 8px;
+}
+
+/* =========================================================
+   ACTION COLUMN
+========================================================= */
+
+.table thead th:last-child {
+    text-align: right;
+    min-width: 130px;
+}
+
+.table tbody td:last-child {
+    min-width: 130px;
+}
+
+/* =========================================================
+   GRID / CARD ACTIONS
+========================================================= */
+
+.document-record-card .table-actions {
+    justify-content: flex-start;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--ui-line-soft);
+}
+
+/* =========================================================
+   TABLE FOOTER
+========================================================= */
 
 .table-footer {
     display: flex;
@@ -434,6 +512,59 @@ a {
 
 .table-footer small {
     color: var(--ui-ink-300);
+}
+
+.table .table-actions-column,
+.table .table-actions-cell {
+    width: 1%;
+    white-space: normal;
+}
+
+.table .table-actions-column {
+    min-width: 130px;
+}
+
+.table .table-actions-cell {
+    min-width: 130px;
+}
+
+/* =========================================================
+   RESPONSIVE ADJUSTMENTS
+========================================================= */
+
+@media (max-width: 768px) {
+    .table thead th,
+    .table td {
+        padding: 12px;
+    }
+
+    .table-actions {
+        gap: 5px;
+    }
+
+    .table thead th:last-child,
+    .table tbody td:last-child {
+        min-width: 110px;
+    }
+
+    .table-footer {
+        padding: 14px;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 480px) {
+    .table-actions {
+        gap: 6px;
+    }
+
+    .table-actions .btn {
+        font-size: 12px;
+    }
+
+    .table-footer {
+        gap: 10px;
+    }
 }
 
 /* =========================================================

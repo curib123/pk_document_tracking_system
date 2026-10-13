@@ -1,11 +1,8 @@
-folder layout must first see all area folders then inside of its folder is its specific folder then inside specific folder is the asset folder then inside asset folder is location folder then inside location is its documents the the hierarchy
+issues in  softcopy system documens table too many actions button and it cause overflow in active status make sure the datatable is adjust if there free space on it.
+
+issuess in folder layout why its show all the folder like location show in main make sure it follow hierarchy first .
+
+redesign the the role and permission upsert and assignin gpermission make itr pills instead of checkbox outline for unselected then fill for selected.
 
 
-asset is optional but other is places is not is it  optional because sometime in the office asset number is dont show or got destroy
-
-more enhance user interface without adding new text throut the system components,pages and all.
-
-add skeleton shimmers loading
-
-have better transitions and animations
 

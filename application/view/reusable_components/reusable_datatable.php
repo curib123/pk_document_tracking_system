@@ -88,7 +88,14 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
          <dt><?= html_escape($label) ?></dt><dd><?= html_escape($dt_row['cells'][$key]??'—') ?></dd>
         <?php endforeach; ?>
         </dl>
-        <div class="table-actions"><?php $this->load->view('reusable_components/record_actions',['dt_row'=>$dt_row]); ?></div>
+       <td class="table-actions-cell">
+    <div class="table-actions">
+        <?php $this->load->view(
+            'reusable_components/record_actions',
+            ['dt_row' => $dt_row]
+        ); ?>
+    </div>
+</td>
       </article>
       <?php endforeach; ?>
     </div>
@@ -111,7 +118,9 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                         <?php else: ?><?= html_escape($label) ?><?php endif; ?>
                     </th>
                 <?php endforeach; ?>
-                <th scope="col" class="text-end">Actions</th>
+               <th scope="col" class="text-end table-actions-column">
+    Actions
+</th>
             </tr></thead>
             <tbody>
                 <?php if (!$dt_rows): ?>
