@@ -74,4 +74,62 @@ class Notification_model extends CI_Model
         return ['requests' => $requests, 'tasks' => $tasks,
             'requests_total' => array_sum($requests), 'tasks_total' => array_sum($tasks)];
     }
+
+    /** Unseen approval occurrences, always scoped to the server-loaded identity. */
+    public function pending_approvals(array $user): array
+    {
+        if (!$this->db->table_exists('task_notification_receipts')) return [];
+        $userId=(int)$user['id'];
+        $roles=implode(',',User_roles::ids($user)?:[0]);
+        $rows=$this->db->select('r.id AS request_id,r.reference,r.type,s.id AS step_id,s.label,s.version')
+            ->from('workflow_steps s')->join('requests r','r.id=s.request_id AND r.current_node=s.node_key')
+            ->join('task_notification_receipts seen','seen.step_id=s.id AND seen.activation=s.version AND seen.user_id='.$userId,'left')
+            ->where('s.status','active')->where('r.status','submitted')->where('seen.step_id IS NULL',NULL,FALSE)
+            ->group_start()->where('s.assigned_user_id',$userId)->or_group_start()
+                ->where("JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.type')) = 'role'",NULL,FALSE)
+                ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) IN ($roles)",NULL,FALSE)
+            ->group_end()->group_end()->order_by('s.id')->limit(100)->get()->result_array();
+        $out=[];
+        foreach ($rows as $row) {
+            $tab=$this->tabForType($row['type']);
+            if ($tab===NULL) continue;
+            $row['key']=$row['step_id'].':'.$row['version'];
+            $row['tab']=$tab;
+            $out[]=$row;
+        }
+        return $out;
+    }
+
+    /** Atomic claims prevent another tab/device from showing the same occurrence. */
+    public function claim_approvals(array $user,array $keys): array
+    {
+        $selected=array_fill_keys(array_filter(array_slice($keys,0,100),static function($key) {
+            return is_string($key) && preg_match('/^[1-9][0-9]*:[1-9][0-9]*$/',$key);
+        }),TRUE);
+        if (!$selected) return [];
+        $pending=$this->pending_approvals($user);$shown=[];
+        $roles=implode(',',User_roles::ids($user)?:[0]);
+        $this->db->trans_begin();
+        try {
+            foreach ($pending as $task) {
+                if (!isset($selected[$task['key']])) continue;
+                // Recheck eligibility at insertion, so a task decided since the
+                // last poll is not claimed. The unique key arbitrates duplicates.
+                $this->db->query("INSERT IGNORE INTO task_notification_receipts (user_id,step_id,activation)
+                    SELECT ?,s.id,s.version FROM workflow_steps s JOIN requests r ON r.id=s.request_id
+                    WHERE s.id=? AND s.version=? AND s.status='active' AND r.status='submitted'
+                        AND r.current_node=s.node_key AND (s.assigned_user_id=? OR
+                        (JSON_UNQUOTE(JSON_EXTRACT(s.assignment,'$.type'))='role' AND
+                        CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment,'$.value')) AS UNSIGNED) IN ($roles)))",
+                    [(int)$user['id'],(int)$task['step_id'],(int)$task['version'],(int)$user['id']]);
+                if ($this->db->affected_rows()>0) $shown[]=$task;
+            }
+            if ($this->db->trans_status()===FALSE) throw new DomainException('Task notifications could not be saved.');
+            $this->db->trans_commit();
+            return $shown;
+        } catch (Throwable $error) {
+            $this->db->trans_rollback();
+            throw $error;
+        }
+    }
 }

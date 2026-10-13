@@ -522,7 +522,9 @@ class Request_service
                     if (!$next || $next['node_key']!==$keys[$index+1] ||
                         !in_array($next['status'],['pending','returned'],TRUE))
                         throw new DomainException('Next workflow step is unavailable.');
-                    $this->ci->db->where('id',$next['id'])->update('workflow_steps',['status'=>'active']);
+                    $this->ci->db->where('id',$next['id'])->update('workflow_steps',[
+                        'status'=>'active','version'=>(int)$next['version']+1
+                    ]);
                     $this->ci->db->where('id',$id)->update('requests',['current_node'=>$next['node_key']]);
                 } else {
                     $result=$this->applyApproved($r,(int)$user['id']);
@@ -549,7 +551,9 @@ class Request_service
                     // Preserve the returned status and all decision details.
                     // Reactivation changes only task status; each subsequent
                     // decision appends another immutable history entry.
-                    $this->ci->db->where('id',$previous['id'])->update('workflow_steps',['status'=>'active']);
+                    $this->ci->db->where('id',$previous['id'])->update('workflow_steps',[
+                        'status'=>'active','version'=>(int)$previous['version']+1
+                    ]);
                     $this->ci->db->where('id',$id)->update('requests',[
                         'status'=>'submitted','current_node'=>$previous['node_key'],'completed_at'=>NULL
                     ]);
