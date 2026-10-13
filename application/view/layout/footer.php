@@ -9,7 +9,7 @@ $flashKind=(string)($this->session->flashdata('notice_type')?:'success');
 if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind='info';
 ?>
 <?php if ($flashNotice!==NULL && $flashNotice!==''): ?>
-<div class="modal fade app-alert-modal" id="appAlertModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-labelledby="appAlertTitle" aria-describedby="appAlertMessage" aria-hidden="true" data-app-alert>
+<div class="modal fade app-alert-modal" data-bs-backdrop="static" data-bs-keyboard="false" id="appAlertModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-labelledby="appAlertTitle" aria-describedby="appAlertMessage" aria-hidden="true" data-app-alert>
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content app-alert-content app-alert-<?= html_escape($flashKind) ?>">
             <div class="modal-header border-0">
@@ -28,7 +28,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 </div>
 <?php endif; ?>
 
-<div class="modal fade app-alert-modal" id="taskNotificationModal" tabindex="-1" role="alertdialog"
+<div class="modal fade app-alert-modal" data-bs-backdrop="static" data-bs-keyboard="false" id="taskNotificationModal" tabindex="-1" role="alertdialog"
      aria-modal="true" aria-labelledby="taskNotificationTitle" aria-describedby="taskNotificationMessage" aria-hidden="true"
      data-pending-url="<?= html_escape(site_url('notifications/tasks')) ?>"
      data-claim-url="<?= html_escape(site_url('notifications/tasks/claim')) ?>"
@@ -66,7 +66,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 </div>
 
 <!-- Shared action confirmation: no operation runs until the user confirms. -->
-<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-describedby="confirmMessage" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
         <div class="modal-content">
             <div class="modal-header">
@@ -82,7 +82,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
     </div>
 </div>
 
-<div class="modal fade" id="actionModal" tabindex="-1" aria-labelledby="actionTitle" aria-describedby="actionDescription" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="actionModal" tabindex="-1" aria-labelledby="actionTitle" aria-describedby="actionDescription" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
         <form id="actionForm" method="post" data-confirm="Confirm this action?">
             <div class="modal-header">
@@ -115,7 +115,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 
 <!-- One reusable details modal. Documents receive a richer, read-only SaaS layout;
      other views continue to use the existing generic details renderer. -->
-<div class="modal fade" id="viewModal" tabindex="-1" aria-labelledby="viewModalTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="viewModal" tabindex="-1" aria-labelledby="viewModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
         <div class="modal-content">
             <div class="modal-header doc-modal-header">
@@ -149,7 +149,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
     </div>
 </div>
 
-<div class="modal fade" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="passwordModal" tabindex="-1" aria-labelledby="passwordModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered"><div class="modal-content">
         <form action="<?= site_url('change-password') ?>" method="post" data-confirm="Change your account password?">
             <div class="modal-header"><h2 class="modal-title fs-6" id="passwordModalTitle">Change Password</h2><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>

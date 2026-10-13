@@ -34,7 +34,7 @@ $dt_create=$canRole('add')?'Add Role':'';
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
-<div class="modal fade role-permissions-modal" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade role-permissions-modal" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content">
 <form id="editForm" method="post" action="<?= site_url('admin/roles/save') ?>" data-confirm="Save role access permissions?">
 <div class="modal-header"><div class="role-permissions-heading"><span class="role-permissions-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>

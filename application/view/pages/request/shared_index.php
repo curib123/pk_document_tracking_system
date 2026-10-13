@@ -199,7 +199,7 @@ href="<?= site_url(($task?'my-tasks/':'my-requests/').$slug) ?>" <?= $tab===$slu
 'dt_sortable','dt_filters','dt_filter_values','dt_date_filters','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
 <?php if (!$task): ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
 <form id="editForm" method="post" enctype="multipart/form-data"
 action="<?= site_url('my-requests/'.$tab.'/save') ?>"

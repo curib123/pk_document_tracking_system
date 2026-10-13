@@ -50,7 +50,7 @@ $this->load->view('reusable_components/reusable_datatable',compact('dt_path','dt
     'dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir','dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create'));
 ?>
 
-<div class="modal fade" id="assignmentModal" tabindex="-1"
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="assignmentModal" tabindex="-1"
      aria-labelledby="assignmentModalTitle" aria-hidden="true">
  <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
   <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"

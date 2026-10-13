@@ -106,9 +106,8 @@
                 var parentModal = dismiss.closest('.modal');
                 if (parentModal) window.bootstrap.Modal.getOrCreateInstance(parentModal).hide();
             }
-            if (event.target.classList.contains('modal') && event.target.classList.contains('show')) {
-                window.bootstrap.Modal.getOrCreateInstance(event.target).hide();
-            }
+            // A click on the backdrop must not dismiss an open modal:
+            // only Close/Cancel ([data-bs-dismiss]) may discard form input.
             if (!event.target.closest('.dropdown')) {
                 document.querySelectorAll('.offline-ui .dropdown-menu.show').forEach(function (menu) {
                     menu.classList.remove('show');
@@ -121,8 +120,9 @@
         document.addEventListener('keydown', function (event) {
             if (event.key === 'Escape') {
                 if (fallbackOpenModal) {
+                    // Escape may close dropdowns, but must never close a modal.
+                    // Its draft form values stay available for explicit Cancel.
                     event.preventDefault();
-                    window.bootstrap.Modal.getOrCreateInstance(fallbackOpenModal).hide();
                 }
                 document.querySelectorAll('.offline-ui .dropdown-menu.show').forEach(function (menu) {
                     menu.classList.remove('show');

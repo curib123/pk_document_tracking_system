@@ -75,7 +75,7 @@ $dt_sortable=array_values(array_intersect(array_keys($dt_columns),
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_filters','dt_filter_values',
 'dt_badges','dt_rows','dt_columns','dt_create','dt_sort','dt_dir','dt_sortable'
 )); ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
  <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
  <form id="editForm" method="post" action="<?= site_url('places/'.$cfg['slug'].'/save') ?>"
        data-confirm="Save these changes?" <?= $cfg['slug']==='location' ? 'data-location-upsert' : '' ?>>
