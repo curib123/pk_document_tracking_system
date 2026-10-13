@@ -31,5 +31,5 @@ php tests/backup_contract.php
 php tests/backup_retention.php
 php tests/high_priority_security.php
 php tests/dashboard_copy_contract.php
-node --test tests/document_view.test.js tests/dashboard_visual.test.js tests/motion_navigation.test.js tests/action_feedback.test.js tests/login_transition.test.js tests/logout_transition.test.js tests/row_actions.test.js tests/task_notifications.test.js
+node --test tests/document_view.test.js tests/dashboard_visual.test.js tests/motion_navigation.test.js tests/action_feedback.test.js tests/login_transition.test.js tests/logout_transition.test.js tests/row_actions.test.js tests/task_notifications.test.js tests/modal_dismissal.test.js
 echo "Static and syntax checks passed."
