@@ -26,6 +26,15 @@ $kinds=['area'=>'Area','specific'=>'Specific','asset'=>'Asset',
     'location'=>'Location','category'=>'Category'];
 $currentFolder=$browser['folder'];
 $selectedFolders=$browser['selected_folders']??[$currentFolder];
+$searching=trim($dt_q)!=='';
+$searchFolders=[];
+if ($searching) {
+    require_once APPPATH.'services/presentation/folder_search.php';
+    $searchFolders=($browser['search']??Folder_search::for_browser($browser,$dt_q,$dt_folder_domain))['visible'];
+}
+$visibleRoots=array_values(array_filter($tree['roots']??[],static function($key) use($searching,$searchFolders,$counts) {
+    return !$searching || isset($searchFolders[$key]) || !empty($counts[$key]);
+}));
 $selectedChain=[];
 foreach ($selectedFolders as $at) {
     $seen=[];
@@ -83,17 +92,17 @@ $renderDocument=function(array $dt_row) use($dt_columns,$dt_folder_domain) {
 $renderNode=NULL;
 $renderNode=function($key,$depth=0) use(
     &$renderNode,$nodes,$counts,$byFolder,$renderDocument,$currentFolder,
-    $selectedChain,$selectedFolders,$folderUrl,$kinds,$dt_folder_domain
+    $selectedChain,$selectedFolders,$folderUrl,$kinds,$dt_folder_domain,$searching,$searchFolders
 ) {
     if ($depth>=32 || !isset($nodes[$key])) return;
     $node=$nodes[$key];
     $items=$byFolder[$key]??[];
     $children=$node['children']??[];
     $count=(int)($counts[$key]??0);
+    if ($searching && !$count && !isset($searchFolders[$key])) return;
     $isCurrent=in_array($key,$selectedFolders,TRUE);
-    // Start at the first level. Counts alone must not expose every Location
-    // and file; a deep link opens only the selected folder's ancestor chain.
-    $open=isset($selectedChain[$key]);
+    // Normal browsing opens selected ancestors; searches reveal all matching paths.
+    $open=$searching || isset($selectedChain[$key]);
     $label=$kinds[$node['kind']]??'Folder';
     ?>
     <li class="doc-tree-node" data-folder-key="<?= html_escape($key) ?>">
@@ -168,10 +177,10 @@ $renderNode=function($key,$depth=0) use(
     </div>
     <div class="doc-tree-scroll">
         <ul class="doc-tree-root" aria-label="Document folders">
-            <?php foreach ($tree['roots']??[] as $key): $renderNode($key); endforeach; ?>
+            <?php foreach ($visibleRoots as $key): $renderNode($key); endforeach; ?>
             <?php if (!empty($byFolder['unfiled'])): ?>
                 <li class="doc-tree-node doc-tree-unfiled">
-                    <details data-folder-node>
+                    <details data-folder-node <?= $searching?'open':'' ?>>
                         <summary class="doc-tree-folder-row">
                             <span class="doc-tree-caret" aria-hidden="true"><i class="fa-solid fa-chevron-right"></i></span>
                             <span class="doc-tree-folder-icon" aria-hidden="true"><i class="fa-solid fa-folder-open"></i></span>
@@ -185,7 +194,7 @@ $renderNode=function($key,$depth=0) use(
                 </li>
             <?php endif; ?>
         </ul>
-        <?php if (empty($tree['roots']) && empty($byFolder['unfiled'])): ?>
+        <?php if (empty($visibleRoots) && empty($byFolder['unfiled'])): ?>
             <div class="doc-folder-empty" role="status">
                 <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
                 <strong>No folders or documents available</strong>
