@@ -28,6 +28,20 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 </div>
 <?php endif; ?>
 
+<!-- Waiting feedback is a live status; native forms and returned results stay authoritative. -->
+<div class="action-feedback" id="appActionFeedback" hidden role="status" aria-live="polite" aria-atomic="true">
+    <div class="action-feedback-card">
+        <div class="action-feedback-animation" aria-hidden="true">
+            <span class="action-feedback-halo"></span>
+            <span class="action-feedback-paper"><span class="action-feedback-face"><span class="action-feedback-smile"></span></span></span>
+            <span class="action-feedback-dots"><span></span><span></span><span></span></span>
+        </div>
+        <h2 id="actionFeedbackTitle">Working on it</h2>
+        <p id="actionFeedbackMessage">Please wait while we prepare the result of your action.</p>
+        <button class="btn btn-light btn-sm" type="button" id="actionFeedbackDismiss" hidden>Dismiss notice</button>
+    </div>
+</div>
+
 <!-- Shared action confirmation: no operation runs until the user confirms. -->
 <div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-sm">
@@ -114,6 +128,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
+<script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
 <script src="<?= base_url('assets/js/document-view.js') ?>"></script>
 <script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
