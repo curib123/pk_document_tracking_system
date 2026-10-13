@@ -97,6 +97,7 @@
   box-shadow:0 0 0 7px color-mix(in srgb,var(--alert-soft) 55%,transparent),
     inset 0 1px 0 var(--ui-white);
 }
+.app-alert-modal .app-alert-symbol svg,.app-auth-alert-icon svg {width:30px;height:30px}
 .app-alert-modal .modal-header .btn-close,.app-auth-alert-close {
   position:absolute;top:12px;right:12px;
   display:grid;place-items:center;box-sizing:border-box;
@@ -111,7 +112,7 @@
 }
 .app-alert-modal .modal-header .btn-close:focus-visible,.app-auth-alert-close:focus-visible,
 .app-alert-modal .modal-footer .btn:focus-visible,.app-auth-alert-action:focus-visible {
-  outline:3px solid var(--ui-brand-300);outline-offset:3px;box-shadow:none;
+  outline:2px solid var(--ui-brand-500);outline-offset:3px;box-shadow:none;
 }
 .app-alert-modal .modal-body {padding:0 28px;text-align:center;min-height:0}
 .app-alert-modal .modal-body h2,.app-auth-alert h2 {

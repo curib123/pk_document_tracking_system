@@ -13,7 +13,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content app-alert-content app-alert-<?= html_escape($flashKind) ?>">
             <div class="modal-header border-0">
-                <div class="app-alert-symbol" aria-hidden="true"><i class="fa-solid <?= $flashKind==='success'?'fa-circle-check':($flashKind==='danger'?'fa-circle-exclamation':($flashKind==='warning'?'fa-triangle-exclamation':'fa-circle-info')) ?>"></i></div>
+                <div class="app-alert-symbol" aria-hidden="true"><?php $this->load->view('reusable_components/alert_icon',['alert_kind'=>$flashKind]); ?></div>
                 <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close notification"></button>
             </div>
             <div class="modal-body pt-0">
