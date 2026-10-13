@@ -1,6 +1,6 @@
 
 <!doctype html>
-<html lang="en">
+<html lang="en" data-logout-destination>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -18,10 +18,13 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
+    <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 </head>
 
 <body class="login-page"
       style="background-image: url('<?= base_url('assets/images/building.jpg') ?>')">
+    <?php $this->load->view('reusable_components/logout_transition'); ?>
 
     <main class="login-shell">
 

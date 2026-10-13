@@ -95,7 +95,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                     <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#passwordModal"><i class="fa-solid fa-lock me-2"></i> Change Password</button></li>
                     <li><hr class="dropdown-divider"></li>
-                    <li><form action="<?= site_url('logout') ?>" method="post" data-confirm="Sign out of your account?">
+                    <li><form action="<?= site_url('logout') ?>" method="post" data-confirm="Sign out of your account?" data-logo-logout>
                         <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
                         <input type="hidden" name="confirmed" value="no">
                         <button class="dropdown-item text-danger" type="submit"><i class="fa-solid fa-right-from-bracket me-2"></i> Sign Out</button>

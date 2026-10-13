@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
     <?php if (!empty($login_transition)): ?>
     <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
@@ -26,4 +27,5 @@
     <?php endif; ?>
 </head>
 <body>
+<?php $this->load->view('reusable_components/logout_transition'); ?>
 <?php if (!empty($login_transition)) $this->load->view('reusable_components/login_transition'); ?>
