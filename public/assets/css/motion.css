@@ -70,7 +70,6 @@
 .motion-skeleton[hidden] {display:none!important}
 .motion-skeleton-block {
     display: block;
-    border: 1px solid var(--ui-skeleton-edge);
     border-radius: 12px;
     background-color: var(--ui-skeleton-base);
     background-image: linear-gradient(100deg,
