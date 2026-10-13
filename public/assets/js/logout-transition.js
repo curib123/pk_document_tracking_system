@@ -65,10 +65,13 @@
                 await Promise.all([entry, logo.decode(), document.fonts ? document.fonts.ready : Promise.resolve()]);
                 await new Promise(resolve => window.requestAnimationFrame(() => window.requestAnimationFrame(resolve)));
                 if (finished || disposed) return;
+                const card = document.querySelector('.login-card');
+                // Position the form while the opaque logo still covers the screen.
+                if (window.innerWidth < 992 && card) card.scrollIntoView({block: 'center', behavior: 'auto'});
                 root.setAttribute('data-logout-stage', 'return');
                 if (!reduced) {
                     play(shell, [{opacity: 0, transform: 'scale(.985)'}, {opacity: 1, transform: 'scale(1)'}], {duration: 400, easing: ease});
-                    play(document.querySelector('.login-card'), [{opacity: 0, transform: 'translateY(8px)'},
+                    play(card, [{opacity: 0, transform: 'translateY(8px)'},
                         {opacity: 1, transform: 'translateY(0)'}], {duration: 260, delay: 130, easing: ease});
                     play(logo, [{opacity: 1, transform: 'scale(1)'}, {opacity: 0, transform: 'scale(1.12)'}], {duration: 330, easing: ease});
                     const offsets = [[-72,-32],[68,-28],[-58,38],[62,34]];
