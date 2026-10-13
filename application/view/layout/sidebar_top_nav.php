@@ -90,7 +90,7 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
             <div class="user-menu dropdown">
                 <button class="user-trigger dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
                     <span class="user-avatar"><?= html_escape(strtoupper(mb_substr($user['name'], 0, 1))) ?></span>
-                    <span class="user-meta"><strong><?= html_escape($user['name']) ?></strong><small><?= html_escape(ucwords(str_replace('_', ' ', $user['role']))) ?></small></span>
+                    <span class="user-meta"><strong><?= html_escape($user['name']) ?></strong><small><?= html_escape(ucwords(str_replace('_', ' ', $user['roles_label']??$user['role']))) ?></small></span>
                 </button>
                 <ul class="dropdown-menu dropdown-menu-end shadow-sm">
                     <li><button class="dropdown-item" type="button" data-bs-toggle="modal" data-bs-target="#passwordModal"><i class="fa-solid fa-lock me-2"></i> Change Password</button></li>

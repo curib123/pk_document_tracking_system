@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 
 /**
  * Actionable navigation counts, scoped to the signed-in user.
@@ -34,7 +35,7 @@ class Notification_model extends CI_Model
         $requests = $this->emptyCounts();
         $tasks = $this->emptyCounts();
         $userId = (int)$user['id'];
-        $roleId = (int)$user['role_id'];
+        $roleIds = implode(',',User_roles::ids($user)?:[0]);
 
         // Only returned drafts require action by their original requester.
         $owned = $this->db->select('type,COUNT(*) AS total', FALSE)
@@ -55,7 +56,7 @@ class Notification_model extends CI_Model
             ->group_start()->where('s.assigned_user_id', $userId)
             ->or_group_start()
                 ->where("JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.type')) = 'role'", NULL, FALSE)
-                ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) = ".$roleId, NULL, FALSE)
+                ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) IN (".$roleIds.")", NULL, FALSE)
             ->group_end()->group_end()
             ->group_by('r.type')->get()->result_array();
         foreach ($assigned as $row) {

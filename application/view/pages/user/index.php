@@ -7,15 +7,16 @@ foreach($rows as $r){
  $name=$r['first_name'].' '.$r['last_name'];
  $dt_rows[]=['id'=>$r['id'],'cells'=>[
  'name'=>$name,'username'=>$r['username'],'position'=>$r['position_title'],
- 'role'=>$r['role_name'],'leader'=>$r['leader_name'],'active'=>$r['active']?'active':'0'],
+ 'role'=>$r['roles_label']??$r['role_name'],'leader'=>$r['leader_name'],'active'=>$r['active']?'active':'0'],
  'display'=>['Name'=>$name,'Username'=>$r['username'],'Position'=>$r['position_title'],
- 'Role'=>$r['role_name'],'Leader'=>$r['leader_name'],'Status'=>$r['active']?'Active':'Inactive'],
+ 'Roles'=>$r['roles_label']??$r['role_name'],'Leader'=>$r['leader_name'],'Status'=>$r['active']?'Active':'Inactive'],
  'record'=>['id'=>$r['id'],'username'=>$r['username'],'first_name'=>$r['first_name'],
  'middle_name'=>$r['middle_name'],'last_name'=>$r['last_name'],
  'position_title'=>$r['position_title'],'role_id'=>$r['role_id'],
+ 'role_ids'=>$r['role_ids']??[(int)$r['role_id']],
  'leader_id'=>$r['leader_id'],'active'=>$r['active'],'version'=>$r['version']],
- 'buttons'=>$canUser('edit') && (isset($permissions['*']) || strcasecmp($r['role_name'],'Administrator')!==0) ? [['type'=>'view'],['type'=>'edit']] : [['type'=>'view']]];
- if ($canUser('delete') && (isset($permissions['*']) || strcasecmp($r['role_name'],'Administrator')!==0) && $r['active'] && $r['id']!=$user['id']) $dt_rows[count($dt_rows)-1]['buttons'][]=
+ 'buttons'=>$canUser('edit') && (isset($permissions['*']) || !($r['has_administrator']??(strcasecmp($r['role_name'],'Administrator')===0))) ? [['type'=>'view'],['type'=>'edit']] : [['type'=>'view']]];
+ if ($canUser('delete') && (isset($permissions['*']) || !($r['has_administrator']??(strcasecmp($r['role_name'],'Administrator')===0))) && $r['active'] && $r['id']!=$user['id']) $dt_rows[count($dt_rows)-1]['buttons'][]=
   ['type'=>'action','url'=>'admin/users/deactivate','label'=>'Deactivate',
   'description'=>'Disable this user while preserving related history.','icon'=>'fa-solid fa-user-slash'];
 }
@@ -34,7 +35,7 @@ $dt_create=$canUser('add')?'Add User':'';
 )); ?>
 <div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
-<form id="editForm" method="post" action="<?= site_url('admin/users/save') ?>" data-confirm="Save user account?">
+<form id="editForm" method="post" action="<?= site_url('admin/users/save') ?>" data-user-role-form data-confirm="Save user account?">
 <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">User</h2>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body"><div class="row g-3">
@@ -45,8 +46,8 @@ $dt_create=$canUser('add')?'Add User':'';
 <input class="form-control" id="u-<?= $field ?>" name="<?= $field ?>" maxlength="150"
 <?= $field==='middle_name'?'':'required' ?>></div>
 <?php endforeach; ?>
-<div class="col-md-6"><label class="form-label" for="u-role">Role</label>
-<select class="form-select" name="role_id" id="u-role" required>
+<div class="col-md-6"><label class="form-label" for="u-role">Primary role</label>
+<select class="form-select" name="role_id" id="u-role" data-user-primary-role required>
 <option value="">Select role</option>
 <?php foreach($roles as $r): ?><option value="<?= (int)$r['id'] ?>"><?= html_escape($r['name']) ?></option>
 <?php endforeach; ?></select></div>
@@ -55,6 +56,12 @@ $dt_create=$canUser('add')?'Add User':'';
 <option value="">No leader</option>
 <?php foreach($users as $u): ?><option value="<?= (int)$u['id'] ?>"><?= html_escape($u['name']) ?></option>
 <?php endforeach; ?></select></div>
+<fieldset class="col-12"><legend class="form-label">Assigned roles</legend>
+<div class="d-flex flex-wrap gap-3">
+<?php foreach($roles as $r): ?><label class="form-check mb-0">
+<input class="form-check-input" type="checkbox" name="role_ids[]" value="<?= (int)$r['id'] ?>">
+<span class="form-check-label"><?= html_escape($r['name']) ?></span></label><?php endforeach; ?>
+</div></fieldset>
 <div class="col-12"><div class="alert alert-light border mb-0">
 A secure temporary password is generated automatically for new accounts and shown once after saving.
 <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="reset_password" value="1">

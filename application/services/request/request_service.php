@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Request_service
 {
     private $ci;
@@ -293,9 +294,7 @@ class Request_service
             if (in_array($r['type'],['hardcopy_create','hardcopy_update'],TRUE)) {
                 require_once APPPATH.'services/documents/document_service.php';
                 $payload=json_decode($r['payload'],TRUE)?:[];
-                $owner=$this->ci->db->select('u.*,r.name AS role')->from('users u')
-                    ->join('roles r','r.id=u.role_id')
-                    ->where('u.id',$r['requested_by'])->get()->row_array();
+                $owner=$this->ci->Identity_model->active_user((int)$r['requested_by']);
                 if (!$owner) throw new DomainException('Requester is no longer active.');
                 (new Document_service())->validate_hardcopy_proposal($payload,$owner,(int)$r['hardcopy_id']);
             }
@@ -339,9 +338,7 @@ class Request_service
                 }
                 if ($type==='role') {
                     $role=$this->ci->db->get_where('roles',['id'=>$value,'active'=>1])->row_array();
-                    if (!$role || !$this->ci->db->get_where('users',[
-                        'role_id'=>$value,'active'=>1
-                    ])->row_array()) {
+                    if (!$role || !User_roles::has_member($this->ci->db,$value)) {
                         throw new DomainException('Approver role needs an active user.');
                     }
                 } else {
@@ -501,7 +498,7 @@ class Request_service
             $assignment=json_decode($step['assignment'],TRUE);
             $role=$assignment['type']??'';
             $authorized=(int)$step['assigned_user_id']===(int)$user['id'] ||
-               ($role==='role' && (int)($assignment['value']??0)===(int)$user['role_id']);
+               ($role==='role' && User_roles::matches($user,(int)($assignment['value']??0)));
             if (!$authorized) throw new DomainException('Only the assigned approver may decide.');
             $this->ci->db->where('id',$step['id'])->update('workflow_steps',[
                 'status'=>$decision,'decision'=>$decision,'comments'=>trim($comment),

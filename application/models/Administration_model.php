@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Administration_model extends CI_Model
 {
     private function count_and_page($table,$select,$joins,$filter,$q,$searchFields,$page,$limit,$sort,$direction='ASC')
@@ -7,7 +8,7 @@ class Administration_model extends CI_Model
         $apply=function() use($table,$joins,$filter,$q,$searchFields) {
             $this->db->from($table);
             foreach ($joins as $join) $this->db->join($join[0],$join[1],$join[2]??'inner');
-            foreach ($filter as $col=>$val) $this->db->where($col,$val);
+            foreach ($filter as $col=>$val) $this->db->where($col,$val,$val!==NULL);
             if ($q!=='') {
                 $this->db->group_start();
                 foreach ($searchFields as $i=>$field) {
@@ -29,8 +30,8 @@ class Administration_model extends CI_Model
         $sorts=['username'=>'u.username','name'=>'u.first_name','position'=>'u.position_title',
             'role'=>'r.name','active'=>'u.active'];
         $filter=in_array($status,['0','1'],TRUE)?['u.active'=>(int)$status]:[];
-        if (!empty($state['role'])) $filter['u.role_id']=(int)$state['role'];
-        return $this->count_and_page('users u',
+        if (!empty($state['role'])) $filter[User_roles::member_predicate($this->db,(int)$state['role'])]=NULL;
+        $result=$this->count_and_page('users u',
             'u.id,u.username,u.first_name,u.middle_name,u.last_name,u.position_title,u.role_id,
              u.leader_id,u.active,u.require_password_change,u.version,
              r.name AS role_name,
@@ -39,6 +40,22 @@ class Administration_model extends CI_Model
             $filter,$q,['u.username','u.first_name','u.last_name','u.position_title','r.name'],
             $page,$limit,$sorts[$state['sort']??'']??'u.username',
             ($state['dir']??'ASC')==='DESC'?'DESC':'ASC');
+        $assigned=[];
+        if ($result[0] && User_roles::available($this->db)) {
+            $rows=$this->db->select('ur.user_id,r.id,r.name')->from('user_roles ur')
+                ->join('roles r','r.id=ur.role_id')->where_in('ur.user_id',array_column($result[0],'id'))
+                ->order_by('r.id')->get()->result_array();
+            foreach ($rows as $row) $assigned[(int)$row['user_id']][(int)$row['id']]=$row['name'];
+        }
+        foreach ($result[0] as &$row) {
+            $roles=$assigned[(int)$row['id']]??[];
+            $roles[(int)$row['role_id']]=$row['role_name'];ksort($roles,SORT_NUMERIC);
+            $row['role_ids']=array_keys($roles);
+            $row['roles_label']=implode(' · ',array_values($roles));
+            $row['has_administrator']=count(array_filter($roles,static function($name){return strcasecmp($name,'Administrator')===0;}))>0;
+        }
+        unset($row);
+        return $result;
     }
     public function roles($q,$status,$page,$limit,$state=[])
     {

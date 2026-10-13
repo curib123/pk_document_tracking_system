@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 /** Current references only; completed request and retired workflow snapshots stay historical. */
 class Role_usage
 {
@@ -8,8 +9,14 @@ class Role_usage
         $usage=[];
         foreach ($roleIds as $id) $usage[(int)$id]=['user_count'=>0,'workflow_count'=>0,'request_count'=>0];
         if (!$usage) return [];
-        $users=$db->select('role_id,COUNT(*) AS user_count',FALSE)->from('users')
-            ->where_in('role_id',array_keys($usage))->group_by('role_id')->get()->result_array();
+        if (User_roles::available($db)) {
+            $users=$db->select('r.id AS role_id,COUNT(DISTINCT u.id) AS user_count',FALSE)->from('roles r')
+                ->join('users u',User_roles::member_predicate($db,'r.id'),'inner',FALSE)
+                ->where_in('r.id',array_keys($usage))->group_by('r.id')->get()->result_array();
+        } else {
+            $users=$db->select('role_id,COUNT(*) AS user_count',FALSE)->from('users')
+                ->where_in('role_id',array_keys($usage))->group_by('role_id')->get()->result_array();
+        }
         foreach ($users as $row) $usage[(int)$row['role_id']]['user_count']=(int)$row['user_count'];
         $workflows=$db->select('id,graph')->from('workflow_versions')
             ->where("(status='draft' OR is_default=1)",NULL,FALSE)->get()->result_array();

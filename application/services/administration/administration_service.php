@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Administration_service
 {
     private $ci;
@@ -61,27 +62,34 @@ class Administration_service
                 throw new DomainException('Enter a valid '.str_replace('_',' ',$field).'.');
         }
         $temporary = NULL;
+        $roleIds=array_values(array_unique(array_map('intval',array_merge([$data['role_id']],(array)($post['role_ids']??[])))));
+        sort($roleIds,SORT_NUMERIC);
         $this->ci->db->trans_begin();
         try {
             // Serialize role/user changes, including last-administrator checks.
             $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
-            $role = $this->ci->db->get_where('roles',['id'=>$data['role_id'],'active'=>1])->row_array();
-            if (!$role) throw new DomainException('Choose an active role.');
-            $this->ensure_delegation($actor, $role);
+            $selectedRoles=$this->ci->db->from('roles')->where_in('id',$roleIds)->where('active',1)->get()->result_array();
+            if (count($selectedRoles)!==count($roleIds)) throw new DomainException('Choose active roles.');
+            if (count($roleIds)>1 && !User_roles::available($this->ci->db))
+                throw new DomainException('Role assignments are not available until the database migration is applied.');
+            foreach ($selectedRoles as $role) $this->ensure_delegation($actor,$role);
             $old = $id ? $this->ci->db->query('SELECT * FROM users WHERE id=? FOR UPDATE',[$id])->row_array() : NULL;
             if ($id && !$old) throw new DomainException('User not found.');
             if ($old) {
-                $oldRole = $this->ci->db->get_where('roles',['id'=>$old['role_id']])->row_array();
-                $this->ensure_delegation($actor, $oldRole);
-                if ($id === (int)$actorId && (!$data['active'] || (int)$old['role_id'] !== $data['role_id']))
+                $oldRoles=User_roles::assigned($this->ci->db,$id,(int)$old['role_id'],FALSE);
+                foreach ($oldRoles as $oldRole) $this->ensure_delegation($actor,$oldRole);
+                $oldIds=array_map('intval',array_column($oldRoles,'id'));sort($oldIds,SORT_NUMERIC);
+                if ($id === (int)$actorId && (!$data['active'] || (int)$old['role_id'] !== $data['role_id'] || $oldIds!==$roleIds))
                     throw new DomainException('You cannot disable your own account or change your own role.');
                 if (isset($post['version']) && (int)$post['version'] !== (int)$old['version'])
                     throw new DomainException('This account changed. Reload it before saving.');
-                if (strcasecmp($oldRole['name'],'Administrator') === 0 && $old['active'] &&
-                    (!$data['active'] || $data['role_id'] !== (int)$old['role_id'])) {
-                    $others = $this->ci->db->from('users')->where('role_id',$old['role_id'])
-                        ->where('active',1)->where('id !=',$id)->count_all_results();
-                    if (!$others) throw new DomainException('Cannot remove the last administrator.');
+                foreach ($oldRoles as $oldRole) {
+                    if (strcasecmp($oldRole['name'],'Administrator')===0 && $oldRole['active'] && $old['active'] &&
+                        (!$data['active'] || !in_array((int)$oldRole['id'],$roleIds,TRUE))) {
+                        $others=$this->ci->db->from('users u')->where('u.active',1)->where('u.id !=',$id)
+                            ->where(User_roles::member_predicate($this->ci->db,(int)$oldRole['id']),NULL,FALSE)->count_all_results();
+                        if (!$others) throw new DomainException('Cannot remove the last administrator.');
+                    }
                 }
             }
             $seen = $id ? [$id=>TRUE] : [];
@@ -108,6 +116,10 @@ class Administration_service
                 $this->ci->db->insert('users',$data);
                 $id = (int)$this->ci->db->insert_id();
             }
+            if (User_roles::available($this->ci->db)) {
+                $this->ci->db->where('user_id',$id)->delete('user_roles');
+                foreach ($roleIds as $roleId) $this->ci->db->insert('user_roles',['user_id'=>$id,'role_id'=>$roleId]);
+            }
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Could not save user. Check the unique username and relationships.');
             $this->ci->db->trans_commit();
@@ -131,12 +143,14 @@ class Administration_service
             $this->ci->db->query('SELECT id FROM roles ORDER BY id FOR UPDATE');
             $user = $this->ci->db->query('SELECT * FROM users WHERE id=? FOR UPDATE',[(int)$id])->row_array();
             if (!$user) throw new DomainException('User not found.');
-            $role = $this->ci->db->get_where('roles',['id'=>$user['role_id']])->row_array();
-            $this->ensure_delegation($actor,$role);
-            if (strcasecmp($role['name'],'Administrator') === 0 && $user['active']) {
-                $others = $this->ci->db->from('users')->where('role_id',$user['role_id'])
-                    ->where('active',1)->where('id !=',(int)$id)->count_all_results();
-                if (!$others) throw new DomainException('Last administrator cannot be deactivated.');
+            $roles=User_roles::assigned($this->ci->db,(int)$id,(int)$user['role_id'],FALSE);
+            foreach ($roles as $role) {
+                $this->ensure_delegation($actor,$role);
+                if (strcasecmp($role['name'],'Administrator')===0 && $role['active'] && $user['active']) {
+                    $others=$this->ci->db->from('users u')->where('u.active',1)->where('u.id !=',(int)$id)
+                        ->where(User_roles::member_predicate($this->ci->db,(int)$role['id']),NULL,FALSE)->count_all_results();
+                    if (!$others) throw new DomainException('Last administrator cannot be deactivated.');
+                }
             }
             $this->ci->db->where('id',(int)$id)->set('active',0)
                 ->set('session_version','session_version+1',FALSE)->set('version','version+1',FALSE)->update('users');
@@ -231,7 +245,8 @@ class Administration_service
             foreach ($ids as $permission) $this->ci->db->insert('role_permissions',[
                 'role_id'=>$id,'permission_id'=>$permission
             ]);
-            $this->ci->db->where('role_id',$id)->set('session_version','session_version+1',FALSE)->update('users');
+            $this->ci->db->where(User_roles::member_predicate($this->ci->db,$id,'users'),NULL,FALSE)
+                ->set('session_version','session_version+1',FALSE)->update('users');
             if ($this->ci->db->trans_status() === FALSE) throw new DomainException('Role update failed. Check duplicate names.');
             $this->ci->db->trans_commit();
         } catch (Throwable $e) {

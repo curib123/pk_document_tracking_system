@@ -76,5 +76,6 @@ jobs:
           composer install --no-interaction --prefer-dist --no-progress
           php tests/request_return.php
           php tests/user_role_permissions.php --database
+          php tests/user_role_assignments.php
       - name: Encrypted full backup and restore integration (disposable test database)
         run: bash tests/backup_integration.sh

@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Request_model extends CI_Model
 {
     private $groups=[
@@ -26,7 +27,8 @@ class Request_model extends CI_Model
               'ws.request_id=r.id AND ws.status="active"');
             $this->db->group_start()->where('ws.assigned_user_id',$user['id'])
                 ->or_group_start()->where("JSON_UNQUOTE(JSON_EXTRACT(ws.assignment, '$.type')) = 'role'",NULL,FALSE)
-                    ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(ws.assignment, '$.value')) AS UNSIGNED) = ".(int)$user['role_id'],NULL,FALSE)
+                    ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(ws.assignment, '$.value')) AS UNSIGNED) IN (".
+                        implode(',',User_roles::ids($user)?:[0]).")",NULL,FALSE)
                 ->group_end()->group_end();
         } else $this->db->where('r.requested_by',$user['id']);
         if ($status!=='') $this->db->where('r.status',$status);

@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 require_once APPPATH.'services/workflow/workflow_graph.php';
 
 /** Mutate draft routes only; serialize publication against edits and cloning. */
@@ -71,7 +72,7 @@ class Workflow_builder_service
             $label=$user['name'];
         } elseif ($type==='role') {
             $role=$this->ci->db->get_where('roles',['id'=>$value,'active'=>1])->row_array();
-            if (!$role || !$this->ci->db->get_where('users',['role_id'=>$value,'active'=>1])->row_array())
+            if (!$role || !User_roles::has_member($this->ci->db,$value))
                 throw new DomainException('The approver role must contain an active user.');
             $label=$role['name'];
         }

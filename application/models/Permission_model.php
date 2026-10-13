@@ -50,7 +50,8 @@ class Permission_model extends CI_Model
                 ->where('r.status','submitted')->where('ws.status','active')->group_start()
                 ->where('ws.assigned_user_id',(int)$user['id'])
                 ->or_group_start()->where("JSON_UNQUOTE(JSON_EXTRACT(ws.assignment,'$.type'))='role'",NULL,FALSE)
-                    ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(ws.assignment,'$.value')) AS UNSIGNED)=".(int)$user['role_id'],NULL,FALSE)
+                    ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(ws.assignment,'$.value')) AS UNSIGNED) IN (".
+                        implode(',',User_roles::ids($user)?:[0]).")",NULL,FALSE)
                 ->group_end()->group_end()->limit(1)->get()->num_rows()>0;
         }
         return $result;

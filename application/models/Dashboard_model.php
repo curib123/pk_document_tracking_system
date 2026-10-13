@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 class Dashboard_model extends CI_Model
 {
     public function counts($user)
@@ -37,12 +38,14 @@ class Dashboard_model extends CI_Model
             foreach ($rows as $row) $activities[]=$row+['domain'=>$domain];
         }
         usort($activities,static function($a,$b) {return strcmp($b['created_at'],$a['created_at']);});
+        $roleIds=User_roles::ids($user)?:[0];
+        $rolePlaceholders=implode(',',array_fill(0,count($roleIds),'?'));
         $tasks=$this->db->query("SELECT COUNT(DISTINCT r.id) AS total FROM requests r
             JOIN workflow_steps s ON s.request_id=r.id AND s.status='active'
             WHERE r.status='submitted' AND (s.assigned_user_id=? OR
               (JSON_UNQUOTE(JSON_EXTRACT(s.assignment,'$.type'))='role' AND
-               CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment,'$.value')) AS UNSIGNED)=?))",
-            [(int)$user['id'],(int)$user['role_id']])->row_array();
+               CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment,'$.value')) AS UNSIGNED) IN ($rolePlaceholders)))",
+            array_merge([(int)$user['id']],$roleIds))->row_array();
         $transfers=0;
         if (isset($permissions['*']) || !empty($permissions['transfer']['view'])) {
             list($unused,$transfers)=$this->Transfer_model->pending($user,1,1);

@@ -293,6 +293,23 @@
         catch (error) { return {}; }
     }
 
+    function syncUserRoles(form,selected) {
+        if (!form || !form.hasAttribute('data-user-role-form')) return;
+        var primary=Number(form.querySelector('[name="role_id"]').value);
+        form.querySelectorAll('input[name="role_ids[]"]').forEach(function(field) {
+            if (selected) field.checked=selected.map(Number).includes(Number(field.value));
+            field.disabled=primary>0 && Number(field.value)===primary;
+            if (field.disabled) field.checked=true;
+        });
+    }
+    document.addEventListener('change',function(event) {
+        if (event.target.matches('[data-user-primary-role]')) syncUserRoles(event.target.form);
+    });
+    document.addEventListener('reset',function(event) {
+        if (event.target.hasAttribute('data-user-role-form'))
+            setTimeout(function(){syncUserRoles(event.target);},0);
+    });
+
     document.addEventListener('click', function (event) {
         var edit = event.target.closest('.js-edit');
         if (edit) {
@@ -308,6 +325,7 @@
                 if (field.type === 'checkbox') field.checked = !!Number(record[field.name]);
                 else field.value = record[field.name] == null ? '' : record[field.name];
             });
+            syncUserRoles(target,record.role_ids||[record.role_id]);
             var heading = document.getElementById(target.id === 'stepForm' ? 'stepTitle'
                 : (target.id === 'assignmentForm' ? 'assignmentModalTitle' : 'editTitle'));
             if (heading) heading.textContent = edit.getAttribute('data-title') || 'Edit Record';

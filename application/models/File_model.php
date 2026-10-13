@@ -1,5 +1,6 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH.'services/security/user_roles.php';
 
 class File_model extends CI_Model
 {
@@ -17,7 +18,7 @@ class File_model extends CI_Model
                 $a=json_decode($step['assignment'],TRUE)?:[];
                 if ((int)($step['assigned_user_id']??0)===(int)$viewer['id'] ||
                    (($a['type']??'')==='role' &&
-                    (int)($a['value']??0)===(int)$viewer['role_id'])) {
+                    User_roles::matches($viewer,(int)($a['value']??0)))) {
                     $allowed=TRUE; break;
                 }
             }
