@@ -18,6 +18,7 @@ php tests/retention_countdown.php
 php tests/topnav_optional_asset.php
 php tests/document_folder_layout.php
 php tests/hardcopy_folder_projection.php
+php tests/hardcopy_contextual_folders.php
 php tests/colors_actions_contract.php
 php tests/plan_implementation.php
 php tests/backup_contract.php

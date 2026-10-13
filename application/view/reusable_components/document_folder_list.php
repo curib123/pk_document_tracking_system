@@ -25,11 +25,14 @@ $folderUrl=static function($folder,$sort=NULL,$dir=NULL) use(
 $kinds=['area'=>'Area','specific'=>'Specific','asset'=>'Asset',
     'location'=>'Location','category'=>'Category'];
 $currentFolder=$browser['folder'];
+$selectedFolders=$browser['selected_folders']??[$currentFolder];
 $selectedChain=[];
-$at=$currentFolder;
-while ($at!=='' && $at!=='all' && isset($nodes[$at]) && count($selectedChain)<32) {
-    $selectedChain[$at]=TRUE;
-    $at=(string)$nodes[$at]['parent'];
+foreach ($selectedFolders as $at) {
+    $seen=[];
+    while ($at!=='' && $at!=='all' && isset($nodes[$at]) && !isset($seen[$at]) && count($seen)<32) {
+        $seen[$at]=TRUE;$selectedChain[$at]=TRUE;
+        $at=(string)$nodes[$at]['parent'];
+    }
 }
 $sortRecent=($dt_sort==='updated_at' || $dt_sort==='updated') && strtolower($dt_dir)==='desc';
 $sortAZ=$dt_sort==='title' && strtolower($dt_dir)==='asc';
@@ -80,14 +83,14 @@ $renderDocument=function(array $dt_row) use($dt_columns,$dt_folder_domain) {
 $renderNode=NULL;
 $renderNode=function($key,$depth=0) use(
     &$renderNode,$nodes,$counts,$byFolder,$renderDocument,$currentFolder,
-    $selectedChain,$folderUrl,$kinds,$dt_folder_domain
+    $selectedChain,$selectedFolders,$folderUrl,$kinds,$dt_folder_domain
 ) {
     if ($depth>=32 || !isset($nodes[$key])) return;
     $node=$nodes[$key];
     $items=$byFolder[$key]??[];
     $children=$node['children']??[];
     $count=(int)($counts[$key]??0);
-    $isCurrent=$key===$currentFolder;
+    $isCurrent=in_array($key,$selectedFolders,TRUE);
     // Start at the first level. Counts alone must not expose every Location
     // and file; a deep link opens only the selected folder's ancestor chain.
     $open=isset($selectedChain[$key]);
