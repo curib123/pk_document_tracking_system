@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en"<?= !empty($login_transition) ? ' data-login-transition' : '' ?>>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -17,5 +17,13 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">
+    <?php if (!empty($login_transition)): ?>
+    <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
+    <style>html[data-login-transition]:not([data-login-stage]) .app-shell{visibility:hidden}</style>
+    <noscript><style>html[data-login-transition]{overflow:auto}html[data-login-transition] .app-shell{visibility:visible}#loginTransition{display:none}</style></noscript>
+    <script src="<?= base_url('assets/js/login-transition.js') ?>"></script>
+    <?php endif; ?>
 </head>
 <body>
+<?php if (!empty($login_transition)) $this->load->view('reusable_components/login_transition'); ?>

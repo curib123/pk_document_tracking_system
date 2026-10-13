@@ -17,6 +17,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
 </head>
 
 <body class="login-page"
