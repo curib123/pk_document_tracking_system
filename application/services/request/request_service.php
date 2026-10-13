@@ -500,6 +500,12 @@ class Request_service
             $authorized=(int)$step['assigned_user_id']===(int)$user['id'] ||
                ($role==='role' && User_roles::matches($user,(int)($assignment['value']??0)));
             if (!$authorized) throw new DomainException('Only the assigned approver may decide.');
+            if ($decision!=='rejected') {
+                $graph=json_decode($r['snapshot']??'',TRUE)?:[];
+                $keys=array_column($graph['steps']??[],'key');
+                $index=array_search($step['node_key'],$keys,TRUE);
+                if ($index===FALSE) throw new DomainException('Current step is not in the submitted workflow.');
+            }
             $this->ci->db->where('id',$step['id'])->update('workflow_steps',[
                 'status'=>$decision,'decision'=>$decision,'comments'=>trim($comment),
                 'acting_user_id'=>$user['id'],'acting_name'=>$user['name'],
@@ -508,9 +514,14 @@ class Request_service
             ]);
             $this->history($id,$step['id'],$decision,$user,trim($comment));
             if ($decision==='approved') {
-                $next=$this->ci->db->from('workflow_steps')->where('request_id',$id)
-                    ->where('status','pending')->order_by('id')->limit(1)->get()->row_array();
-                if ($next) {
+                if ($index<count($keys)-1) {
+                    // A returned step must be revisited in this submission,
+                    // before any later pending step can receive the request.
+                    $next=$this->ci->db->from('workflow_steps')->where('request_id',$id)
+                        ->where('id >',(int)$step['id'])->order_by('id')->limit(1)->get()->row_array();
+                    if (!$next || $next['node_key']!==$keys[$index+1] ||
+                        !in_array($next['status'],['pending','returned'],TRUE))
+                        throw new DomainException('Next workflow step is unavailable.');
                     $this->ci->db->where('id',$next['id'])->update('workflow_steps',['status'=>'active']);
                     $this->ci->db->where('id',$id)->update('requests',['current_node'=>$next['node_key']]);
                 } else {
@@ -523,13 +534,9 @@ class Request_service
                     ]);
                 }
             } elseif ($decision==='returned') {
-                $graph=json_decode($r['snapshot']??'',TRUE)?:[];
-                $keys=array_column($graph['steps']??[],'key');
-                $index=array_search($step['node_key'],$keys,TRUE);
-                if ($index===FALSE) throw new DomainException('Current step is not in the submitted workflow.');
                 if ($index===0) {
                     $this->ci->db->where('id',$id)->update('requests',[
-                        'status'=>'returned','current_node'=>NULL,'completed_at'=>date('Y-m-d H:i:s')
+                        'status'=>'returned','current_node'=>NULL,'completed_at'=>NULL
                     ]);
                 } else {
                     // Step IDs preserve the submitted order. The immediately
@@ -539,12 +546,10 @@ class Request_service
                         ->where('id <',(int)$step['id'])->order_by('id','DESC')->limit(1)->get()->row_array();
                     if (!$previous || $previous['node_key']!==$keys[$index-1] || $previous['status']!=='approved')
                         throw new DomainException('Previous workflow step is unavailable.');
-                    // Decisions stay in workflow_history while these same
-                    // assignments are reopened for another approval pass.
-                    $reset=['decision'=>NULL,'comments'=>NULL,'acting_user_id'=>NULL,
-                        'acting_name'=>NULL,'acting_position'=>NULL,'acted_at'=>NULL];
-                    $this->ci->db->where('id',$step['id'])->update('workflow_steps',['status'=>'pending']+$reset);
-                    $this->ci->db->where('id',$previous['id'])->update('workflow_steps',['status'=>'active']+$reset);
+                    // Preserve the returned status and all decision details.
+                    // Reactivation changes only task status; each subsequent
+                    // decision appends another immutable history entry.
+                    $this->ci->db->where('id',$previous['id'])->update('workflow_steps',['status'=>'active']);
                     $this->ci->db->where('id',$id)->update('requests',[
                         'status'=>'submitted','current_node'=>$previous['node_key'],'completed_at'=>NULL
                     ]);

@@ -109,11 +109,15 @@ $service->decide('hardcopy-disposal',42,returnActor(30),'returned','  Check depa
 [$request,$steps,$history]=returnState($connection);
 returnCheck($request['status']==='submitted' && $request['current_node']==='step_2' &&
     $request['completed_at']===NULL,'An intermediate return must reverse one step, not return to the requester.');
-returnCheck($steps[107]['status']==='active' && $steps[112]['status']==='pending' &&
+returnCheck($steps[107]['status']==='active' && $steps[112]['status']==='returned' &&
     $steps[118]['status']==='pending','The previous approver must be the only active step.');
 returnCheck($steps[101]===$beforeSteps[101],'Earlier approved steps must remain unchanged.');
-foreach ([107,112] as $stepId) foreach (['decision','comments','acting_user_id','acting_name','acting_position','acted_at'] as $field)
-    returnCheck($steps[$stepId][$field]===NULL,'Reopened steps must clear stale '.$field.'.');
+foreach (['decision','comments','acting_user_id','acting_name','acting_position','acted_at'] as $field)
+    returnCheck($steps[107][$field]===$beforeSteps[107][$field],'Reactivating an approver must retain their last '.$field.'.');
+returnCheck($steps[112]['decision']==='returned' && $steps[112]['comments']==='Check department approval' &&
+    (int)$steps[112]['acting_user_id']===30 && $steps[112]['acted_at']!==NULL,
+    'The returning step must retain its decision, approver, comment and timestamp.');
+$firstReturn=$steps[112];
 returnCheck($request['snapshot']===$beforeRequest['snapshot'] &&
     $request['workflow_version_id']===$beforeRequest['workflow_version_id'] &&
     $request['payload']===$beforeRequest['payload'],'Returning must preserve the submitted route and proposal.');
@@ -140,6 +144,8 @@ $service->decide('hardcopy-disposal',42,returnActor(70,7),'approved','Department
 [$request,$steps]=returnState($connection);
 returnCheck($request['current_node']==='step_3' && $steps[112]['status']==='active',
     'Approval after a return must revisit the step that returned it.');
+foreach (['decision','comments','acting_user_id','acting_name','acting_position','acted_at'] as $field)
+    returnCheck($steps[112][$field]===$firstReturn[$field],'Revisiting a returned step must retain its last decision details.');
 $unchanged=returnState($connection);
 returnReject(static function() use($service) {
     $service->decide('hardcopy-disposal',42,returnActor(70,7),'returned','Stale action');
@@ -170,13 +176,41 @@ foreach ([1,2,3,4] as $oldId) returnCheck($steps[$oldId]['status']==='approved',
     'Returning must never reopen steps from an earlier submission.');
 $service->decide('hardcopy-disposal',42,returnActor(20),'returned','Requester must correct');
 [$request,$steps]=returnState($connection);
-returnCheck($request['status']==='returned' && $request['current_node']===NULL,
+returnCheck($request['status']==='returned' && $request['current_node']===NULL && $request['completed_at']===NULL,
     'Only a return at the first workflow step may reach the requester.');
 Request_policy::editable($request,8,'disposal',['version'=>$request['version']]);
 returnCheck(!array_filter($steps,static function($step) {return $step['status']==='active';}),
     'Returning to the requester must leave no active approval task.');
 returnCheck($notifications->for_user(returnActor(8))['requests_total']===1,
     'A first-step return must show an actionable requester badge.');
+
+// Every return/approval cycle remains immutable, including returns by the
+// final approver and further returns by earlier approvers.
+foreach (['approved','rejected'] as $outcome) {
+    returnFixture($connection);
+    for ($cycle=1;$cycle<=4;$cycle++) {
+        $service->decide('hardcopy-disposal',42,returnActor(30),'returned','Return '.$cycle);
+        $service->decide('hardcopy-disposal',42,returnActor(70,7),'approved','Recheck '.$cycle);
+    }
+    $service->decide('hardcopy-disposal',42,returnActor(30),'approved','Ready for final review');
+    $service->decide('hardcopy-disposal',42,returnActor(40),'returned','Final approver returned');
+    $service->decide('hardcopy-disposal',42,returnActor(30),'returned','Earlier approver returned again');
+    $service->decide('hardcopy-disposal',42,returnActor(70,7),'approved','Department rechecked again');
+    $service->decide('hardcopy-disposal',42,returnActor(30),'approved','Records rechecked again');
+    $service->decide('hardcopy-disposal',42,returnActor(40),$outcome,'Final decision');
+    [$request,$steps,$history]=returnState($connection);
+    returnCheck(count($history)===17,'Every repeated decision must remain recorded through the final decision.');
+    $recordEvents=array_values(array_filter($history,static function($event){return (int)$event['step_id']===112;}));
+    returnCheck(array_column($recordEvents,'action')===['returned','returned','returned','returned','approved','returned','approved'],
+        'Repeated returns and approvals at the same step must retain their original order.');
+    returnCheck(array_column(array_slice($recordEvents,0,4),'comments')===['Return 1','Return 2','Return 3','Return 4'],
+        'Each return comment must remain intact after later approvals.');
+    foreach (array_slice($history,3) as $event)
+        returnCheck($event['user_name']!=='' && $event['created_at']!==NULL && $event['comments']!=='',
+            'Every decision must retain its actor, time and comment.');
+    returnCheck($request['status']===($outcome==='approved'?'completed':'rejected') &&
+        $connection->count_all('disposals')===($outcome==='approved'?1:0),'Only final approval may apply the operation.');
+}
 
 // An invalid previous step must fail atomically, rather than skipping it or
 // falling back to the requester.
@@ -192,6 +226,30 @@ foreach (['unapproved','missing','wrong_node','missing_snapshot'] as $invalid) {
     },'An invalid previous step or snapshot must prevent the return: '.$invalid);
     returnCheck(returnState($connection)===$unchanged,'A failed return must roll back decision and history writes.');
 }
+
+// Approval must follow the next snapshot step, never complete early because
+// that step is missing or pick a pending/returned row from an older run.
+foreach (['approved','missing','wrong_node','missing_snapshot'] as $invalid) {
+    returnFixture($connection,3,TRUE);
+    if ($invalid==='approved') $connection->where('id',118)->update('workflow_steps',['status'=>'approved']);
+    if ($invalid==='missing') $connection->where('id',118)->delete('workflow_steps');
+    if ($invalid==='wrong_node') $connection->where('id',118)->update('workflow_steps',['node_key'=>'step_2']);
+    if ($invalid==='missing_snapshot') $connection->where('id',42)->update('requests',['snapshot'=>NULL]);
+    $unchanged=returnState($connection);
+    returnReject(static function() use($service) {
+        $service->decide('hardcopy-disposal',42,returnActor(30),'approved','Invalid next step');
+    },'An invalid next step or snapshot must prevent approval: '.$invalid);
+    returnCheck(returnState($connection)===$unchanged && $connection->count_all('disposals')===0,
+        'A failed approval must roll back decision/history writes and never apply the operation.');
+}
+returnFixture($connection,3,TRUE);
+$connection->where('id',1)->update('workflow_steps',['status'=>'returned']);
+$connection->where('id',2)->update('workflow_steps',['status'=>'pending']);
+$service->decide('hardcopy-disposal',42,returnActor(30),'approved','Continue current run');
+[$request,$steps]=returnState($connection);
+returnCheck($request['current_node']==='step_4' && $steps[118]['status']==='active' &&
+    $steps[1]['status']==='returned' && $steps[2]['status']==='pending',
+    'Approval must continue its own submission and preserve every older return record.');
 
 // The shared return behavior must apply to every request domain.
 foreach (['softcopy_create'=>'softcopy','softcopy_revise'=>'softcopy','softcopy_cancel'=>'softcopy',
