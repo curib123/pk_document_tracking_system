@@ -47,22 +47,24 @@ $navParts=explode(' · ',$title);$navPage=end($navParts);
                 <?php $taskBadge=(int)($navigation_counts['tasks_total']??0); ?>
                 <a class="side-link<?= $active('my-tasks/') ?>" <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('my-tasks/softcopy') ?>"><i class="fa-solid fa-list-check"></i> My Tasks <span class="nav-count<?= $taskBadge===0?' is-zero':'' ?>" aria-label="<?= $taskBadge ?> pending tasks"><?= $taskBadge ?></span></a>
             <?php endif; ?>
-          
-            <?php if ($visible('users') || $visible('roles') || $visible('workflows') || strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
-                <div class="side-heading">Administration</div>
-                  <?php if ($anyPlace): ?>
+
+              <?php if ($anyPlace): ?>
                 <a class="side-link<?= $active('places') ?>"
                    href="<?= site_url('places') ?>"
                    <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>>
-                    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Places
+                    <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i> Setup Places
                 </a>
             <?php endif; ?>
                 <?php if (strcasecmp((string)$user['role'],'Administrator')===0): ?>
                     <a class="side-link<?= $active('admin/document-assignments') ?>"
                        href="<?= site_url('admin/document-assignments') ?>">
-                       <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i> Assign Documents
+                       <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>Direct Document Assigments 
                     </a>
                 <?php endif; ?>
+          
+            <?php if ($visible('users') || $visible('roles') || $visible('workflows') || strcasecmp((string)($user['role']??''),'Administrator')===0): ?>
+                <div class="side-heading">Administration</div>
+                
                 <?php if ($visible('users')): ?><a class="side-link<?= $active('admin/users') ?>" <?= $active('admin/users') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/users') ?>"><i class="fa-solid fa-users"></i> User Management</a><?php endif; ?>
                 <?php if ($visible('roles')): ?><a class="side-link<?= $active('admin/roles') ?>" <?= $active('admin/roles') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/roles') ?>"><i class="fa-solid fa-shield-halved"></i> Roles & Permissions</a><?php endif; ?>
                 <?php if ($visible('workflows')): ?><a class="side-link<?= $active('admin/workflows') ?>" <?= $active('admin/workflows') === ' active' ? 'aria-current="page"' : '' ?> href="<?= site_url('admin/workflows') ?>"><i class="fa-solid fa-diagram-project"></i> Workflow Builder</a><?php endif; ?>

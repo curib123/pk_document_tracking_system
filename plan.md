@@ -6,3 +6,7 @@ redesign the the role and permission upsert and assignin gpermission make itr pi
 
 
 alert modal notification must have loading animation to wait if loading results after an user action do make nice and cute
+
+issues in system documents softcopy and hardcopy action button overfloe to active when theres many action button and fix its not affected by roles and permission 
+
+auto delete backup and logs in 3 months retention
