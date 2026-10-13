@@ -13,7 +13,9 @@ class Auth extends MY_Controller
             ]);
         }
         if ($this->user) return redirect(!empty($this->user['require_password_change']) ? 'change-password' : 'dashboard');
-        $this->load->view('pages/authentication/index');
+        $expired=$this->session->flashdata('auth_expired')===TRUE;
+        $this->session->unset_userdata('auth_expired');
+        $this->load->view('pages/authentication/index',['logout_expired'=>$expired]);
     }
 
     public function login()

@@ -21,8 +21,12 @@ class LogoutInput {
 }
 class LogoutSession {
     public $destroyed=FALSE,$fail=FALSE;
+    public $flash=[];
     public function sess_destroy(){if(!$this->fail){session_destroy();$this->destroyed=TRUE;}}
+    public function flashdata($key){return $this->flash[$key]??NULL;}
+    public function unset_userdata($key){unset($this->flash[$key]);}
 }
+class LogoutLoad {public $data;public function view($name,$data=[]){$this->data=$data;}}
 class LogoutOutput {
     public $headers=[],$type,$body;
     public function set_header($value){$this->headers[]=$value;return $this;}
@@ -64,4 +68,7 @@ logout_check($state['authenticated']===TRUE && $state['csrf']['value']==='fresh-
 logout_check(!$probe->session->destroyed,'Status probes must not invalidate active sessions');
 $probe->user=NULL;$probe->index();
 logout_check(json_decode($probe->output->body,TRUE)['authenticated']===FALSE,'Expired identity must be reported without a redirect loop');
+$probe->input->status=NULL;$probe->load=new LogoutLoad();$probe->session->flash['auth_expired']=TRUE;
+$probe->index();logout_check(($probe->load->data['logout_expired']??FALSE)===TRUE,'Native expired-session redirects must reveal login smoothly');
+$probe->index();logout_check($probe->load->data['logout_expired']===FALSE,'Expired-session presentation must be consumed once');
 session_destroy();echo "Logout invalidation, native routing, failures, confirmation and session-status checks passed.\n";

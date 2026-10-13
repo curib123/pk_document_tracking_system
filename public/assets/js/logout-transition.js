@@ -33,6 +33,7 @@
             handoff = JSON.parse(window.sessionStorage.getItem(key));
             window.sessionStorage.removeItem(key);
         } catch (_) { /* Storage may be disabled; ordinary login remains usable. */ }
+        if (root.hasAttribute('data-auth-expired')) handoff = {at: Date.now()};
         if (!handoff || typeof handoff.at !== 'number' || !Number.isFinite(handoff.at) ||
             Date.now() - handoff.at > 10000 || Date.now() < handoff.at) return;
         root.setAttribute('data-logout-return', '');
@@ -191,7 +192,7 @@
             else {
                 play(surface, [{filter: 'blur(0px) brightness(1)', opacity: 1},
                     {filter: 'blur(3px) brightness(.9)', opacity: .1}], {duration: 350, easing: ease});
-                document.querySelectorAll('.dashboard-hero, .dashboard-metric-card, .dashboard-panel, .page-content > .workspace-card')
+                document.querySelectorAll('.dashboard-welcome, .dashboard-stat-card, .dashboard-chart-card, .dashboard-activity-card, .page-content > .workspace-card')
                     .forEach((card, index) => play(card, [{opacity: 1, transform: 'translateY(0)'},
                         {opacity: 0, transform: 'translateY(-8px)'}], {duration: 280, delay: Math.min(index * 14, 70), easing: ease}));
                 document.querySelectorAll('.side-link').forEach((link, index) => play(link,
@@ -229,7 +230,7 @@
             if (disposed) return;
             refreshCSRF(state);
             if (state.authenticated === false) {
-                if (root.hasAttribute('data-auth-history-gate')) document.body.replaceChildren(overlay);
+                if (root.hasAttribute('data-auth-history-gate')) { revoked = true; navigate(false); return; }
                 document.body.inert = priorInert;
                 begin(null, true);
             } else if (state.authenticated === true) {

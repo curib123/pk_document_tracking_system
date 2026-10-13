@@ -1,6 +1,6 @@
 
 <!doctype html>
-<html lang="en" data-logout-destination>
+<html lang="en" data-logout-destination<?= !empty($logout_expired) ? ' data-auth-expired' : '' ?>>
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">

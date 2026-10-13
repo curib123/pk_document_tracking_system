@@ -80,4 +80,5 @@ test('expired history never uncovers cached protected DOM during its transition'
  x.respond(x.calls[0],{authenticated:false});await x.flush();
  assert.equal(x.body.replaced,true,'Discard expired history before removing its visibility gate');
  assert.equal(x.body.inert,true);
+ assert.equal(x.navigations[0],'http://localhost/login');assert.equal(x.storage.size,0,'History must not replay the logo handoff');
 });

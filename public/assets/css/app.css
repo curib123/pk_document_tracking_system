@@ -922,6 +922,8 @@ a {
     box-shadow: 0 24px 85px color-mix(in srgb, var(--ui-navy) 35%, transparent);
 }
 
+.login-card img { max-width: 100%; height: auto; }
+
 
 .login-card .eyebrow {
     display: block;
