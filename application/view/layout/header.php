@@ -12,6 +12,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/document-view.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/roles-permission.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">

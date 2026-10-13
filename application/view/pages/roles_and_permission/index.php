@@ -25,31 +25,35 @@ $dt_create=$canRole('add')?'Add Role':'';
 'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_sort','dt_dir',
 'dt_sortable','dt_filters','dt_filter_values','dt_badges','dt_create','dt_columns','dt_rows'
 )); ?>
-<div class="modal fade" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
+<div class="modal fade role-permissions-modal" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
 <div class="modal-dialog modal-dialog-centered modal-xl"><div class="modal-content">
 <form id="editForm" method="post" action="<?= site_url('admin/roles/save') ?>" data-confirm="Save role access permissions?">
-<div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Role</h2>
+<div class="modal-header"><div class="role-permissions-heading"><span class="role-permissions-icon" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
+<div><p class="role-permissions-eyebrow">ACCESS MANAGEMENT</p><h2 class="modal-title fs-6" id="editTitle">Role</h2></div></div>
 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
 <div class="modal-body">
 <input type="hidden" name="id" value="">
-<div class="row g-3 mb-3"><div class="col-md-8">
+<div class="role-basics row g-3"><div class="col-md-8">
 <label class="form-label" for="roleName">Role Name</label>
 <input class="form-control" id="roleName" name="name" required maxlength="120"></div>
-<div class="col-md-4 d-flex align-items-end"><label class="form-check">
-<input class="form-check-input" type="checkbox" name="active" value="1" checked> Active</label></div>
-</div><h3 class="fs-6 fw-semibold">Module Permissions</h3>
-<div class="row g-3">
+<div class="col-md-4 role-status-field"><span class="form-label">Status</span><label class="permission-pill role-status-toggle">
+<input class="permission-pill-control" type="checkbox" name="active" value="1" checked>
+<span class="permission-pill-surface"><span class="permission-pill-mark" aria-hidden="true"></span><span>Active role</span></span></label></div>
+</div><div class="permission-section-heading"><h3 class="fs-6 fw-semibold mb-1">Module Permissions</h3>
+<p class="mb-0">Select the actions this role can use.</p></div>
+<div class="row g-3 permission-groups">
 <?php $groups=[];foreach($permission_rows as $p) $groups[$p['module_key']]['label']=$p['module_label'];
 foreach($permission_rows as $p) $groups[$p['module_key']]['items'][]=$p;
 foreach($groups as $key=>$group): ?>
-<div class="col-md-4"><div class="border rounded-3 p-3 h-100">
-<strong class="d-block mb-2"><?= html_escape($group['label']) ?></strong>
+<div class="col-md-6 col-xl-4"><fieldset class="permission-group">
+<legend><?= html_escape($group['label']) ?></legend><div class="permission-pills">
 <?php foreach($group['items'] as $permission): ?>
-<label class="permission-item d-block mb-1"><input class="form-check-input me-1"
+<label class="permission-pill"><input class="permission-pill-control"
  name="permissions[]" type="checkbox" value="<?= (int)$permission['id'] ?>">
-<?= html_escape($permission['action_label']) ?></label>
+<span class="permission-pill-surface"><span class="permission-pill-mark" aria-hidden="true"></span>
+<span><?= html_escape($permission['action_label']) ?></span></span></label>
 <?php endforeach; ?>
-</div></div><?php endforeach; ?></div></div>
+</div></fieldset></div><?php endforeach; ?></div></div>
 <input type="hidden" name="confirmed" value="no">
 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
 <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
