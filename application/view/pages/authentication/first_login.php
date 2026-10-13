@@ -14,7 +14,7 @@
         </form>
       </div>
       <div class="modal-footer justify-content-between">
-        <form method="post" action="<?= site_url('logout') ?>">
+        <form method="post" action="<?= site_url('logout') ?>" data-logo-logout>
           <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
           <input type="hidden" name="confirmed" value="yes">
           <button class="btn btn-light" type="submit">Sign out</button>
@@ -25,6 +25,7 @@
   </div>
 </div>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
+<script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 <script src="<?= base_url('assets/js/motion.js') ?>"></script>
 <?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>

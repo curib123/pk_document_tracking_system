@@ -4,8 +4,18 @@ class Auth extends MY_Controller
 {
     public function index()
     {
+        // Read-only identity check for expiry/history recovery; no protected data.
+        if ($this->input->get('session_status', TRUE)==='1') {
+            return $this->auth_response([
+                'authenticated'=>$this->user!==NULL,
+                'csrf'=>['name'=>$this->security->get_csrf_token_name(),
+                    'value'=>$this->security->get_csrf_hash()]
+            ]);
+        }
         if ($this->user) return redirect(!empty($this->user['require_password_change']) ? 'change-password' : 'dashboard');
-        $this->load->view('pages/authentication/index');
+        $expired=$this->session->flashdata('auth_expired')===TRUE;
+        $this->session->unset_userdata('auth_expired');
+        $this->load->view('pages/authentication/index',['logout_expired'=>$expired]);
     }
 
     public function login()
@@ -39,14 +49,28 @@ class Auth extends MY_Controller
             'user_id' => (int) $user['id'],
             'session_version' => (int) $user['session_version']
         ]);
+        // Presentation only: the existing successful redirect stays unchanged.
+        if (empty($user['require_password_change']))
+            $this->session->set_flashdata('login_transition', TRUE);
         redirect(!empty($user['require_password_change']) ? 'change-password' : 'dashboard');
     }
 
     public function logout()
     {
         $this->confirmed();
-        $this->session->sess_destroy();
+        $this->output->set_header('Cache-Control: no-store, private');
+        // CI's sess_destroy() discards the result of this same native operation.
+        if (!session_destroy()) show_error('Sign out could not be completed.',500);
+        $_SESSION=[];
+        if ($this->input->is_ajax_request())
+            return $this->auth_response(['logged_out'=>TRUE,'login_url'=>site_url('login')]);
         redirect('login');
+    }
+
+    private function auth_response(array $data)
+    {
+        return $this->output->set_header('Cache-Control: no-store, private')
+            ->set_content_type('application/json')->set_output(json_encode($data));
     }
 
     public function setup()

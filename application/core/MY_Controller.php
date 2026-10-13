@@ -34,7 +34,10 @@ class MY_Controller extends CI_Controller
             show_error('System restore is underway. Please try again after maintenance.',503);
             exit;
         }
-        if (!$this->user) { redirect('login'); exit; }
+        if (!$this->user) {
+            $this->session->set_flashdata('auth_expired',TRUE);
+            redirect('login'); exit;
+        }
         require_once APPPATH.'services/authentication/authentication_service.php';
         if (!empty($this->user['require_password_change']) &&
             !Authentication_service::is_setup_action(

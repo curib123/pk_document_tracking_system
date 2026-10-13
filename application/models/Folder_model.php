@@ -70,9 +70,9 @@ class Folder_model extends CI_Model
         return $this->trees[$domain]=Folder_tree::build($nodes);
     }
 
-    public function browse($domain,$folder='')
+    public function browse($domain,$folder='',array $tree=NULL)
     {
-        $tree=$this->tree($domain);
+        $tree=$tree??$this->tree($domain);
         // Virtual, permission-scoped directory for records with any/missing
         // folder assignment. It does not add a new table or bypass document scope.
         if ($folder==='all') return [
@@ -83,7 +83,7 @@ class Folder_model extends CI_Model
             ],
             'children'=>[],'filter'=>NULL,'tree'=>$tree
         ];
-        if ($folder!=='' && (!preg_match('/^(area|specific|asset|location|category):[1-9][0-9]*$/',$folder) ||
+        if ($folder!=='' && (!preg_match('/^(?:(area|specific|asset|location|category):[1-9][0-9]*|location:[1-9][0-9]*:(area|specific|asset):[1-9][0-9]*)$/',$folder) ||
             !isset($tree['nodes'][$folder]))) show_404();
         $result=['folder'=>$folder,'level'=>'root','label'=>'All Documents',
             'breadcrumbs'=>[['name'=>'All Documents','folder'=>'']],
@@ -95,12 +95,31 @@ class Folder_model extends CI_Model
             $result['filter']=[$node['kind'].'_id'=>(int)explode(':',$folder)[1]];
             $children=$node['children'];
             $chain=[]; $at=$folder;
+            if (!empty($node['contextual_alias'])) {
+                $result['selected_folders']=array_keys(array_filter($tree['nodes'],
+                    static function($candidate) use($folder) {
+                        return strpos($candidate['key'],$folder.':')===0;
+                    }));
+                $at=count($result['selected_folders'])===1?$result['selected_folders'][0]:$folder;
+                if ($at===$folder) $chain=[['name'=>$node['name'],'folder'=>$folder]];
+                if ($at===$folder) $at='';
+            }
             while ($at!=='') {
                 $ancestor=$tree['nodes'][$at];
                 array_unshift($chain,['name'=>$ancestor['name'],'folder'=>$at]);
                 $at=$ancestor['parent'];
             }
             $result['breadcrumbs']=array_merge($result['breadcrumbs'],$chain);
+            if (isset($tree['document_paths']) && empty($node['contextual_alias'])) {
+                $result['document_paths']=[];
+                foreach ($tree['document_paths'] as $path) {
+                    $at=$path['folder'];$seen=[];
+                    while (isset($tree['nodes'][$at]) && !isset($seen[$at]) && count($seen)<32) {
+                        if ($at===$folder) {$result['document_paths'][]=$path['fields'];break;}
+                        $seen[$at]=TRUE;$at=(string)$tree['nodes'][$at]['parent'];
+                    }
+                }
+            }
         }
         foreach ($children as $key) {
             $node=$tree['nodes'][$key];
@@ -111,6 +130,17 @@ class Folder_model extends CI_Model
 
     public function scope_documents($domain,$browser,$alias='d')
     {
+        if ($domain==='hardcopy' && array_key_exists('document_paths',$browser)) {
+            if (!$browser['document_paths']) {$this->db->where('1 = 0');return;}
+            $this->db->group_start();
+            foreach ($browser['document_paths'] as $index=>$path) {
+                if ($index===0) $this->db->group_start();else $this->db->or_group_start();
+                foreach (['area_id','specific_id','asset_id','location_id'] as $column)
+                    $this->db->where($alias.'.'.$column,$path[$column]);
+                $this->db->group_end();
+            }
+            $this->db->group_end();return;
+        }
         if (!empty($browser['filter'])) {
             foreach ($browser['filter'] as $column=>$value) $this->db->where($alias.'.'.$column,(int)$value);
         }

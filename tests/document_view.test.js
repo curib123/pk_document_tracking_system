@@ -76,6 +76,7 @@ class Element {
   }
   querySelector(selector) { return this.querySelectorAll(selector)[0] || null; }
   focus() { this.focused = true; }
+  scrollIntoView(options) { this.scrolledIntoView = options; }
 }
 
 function setup() {
@@ -200,6 +201,8 @@ test('tab clicks and arrow keys change only the selected panel',() => {
   assert.equal(tabs[2].getAttribute('aria-selected'),'true');
   assert.equal(panels[2].hidden,false);
   assert.equal(tabs[2].focused,true);
+  assert.equal(tabs[2].scrolledIntoView?.inline,'nearest');
+  assert.equal(tabs[2].scrolledIntoView?.block,'nearest');
 });
 
 test('download links only include same-origin file URLs',() => {

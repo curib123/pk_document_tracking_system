@@ -14,6 +14,8 @@ final class Folder_visibility
         $nodes=$tree['nodes']??[];
         foreach ($paths as $path) {
             $node=Document_folder_tree::folder_key($path,$nodes,$domain);
+            $alias='location:'.(int)($path['location_id']??0);
+            if ($domain==='hardcopy' && !empty($nodes[$alias]['contextual_alias'])) $allowed[$alias]=TRUE;
             $seen=[];
             while ($node!=='' && isset($nodes[$node]) && !isset($seen[$node]) &&
                    count($seen)<32) {

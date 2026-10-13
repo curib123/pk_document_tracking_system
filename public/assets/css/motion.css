@@ -7,6 +7,8 @@
     --ui-motion-normal: 240ms;
     --ui-motion-slow: 420ms;
     --ui-ease-smooth: cubic-bezier(.22, 1, .36, 1);
+    --ui-skeleton-base: var(--ui-slate-200);
+    --ui-skeleton-edge: var(--ui-ink-200);
 }
 
 .page-content {position: relative}
@@ -19,8 +21,8 @@
     to {opacity: 1; transform: translateY(0) scale(1)}
 }
 @keyframes ui-shimmer {
-    0% {background-position: 180% 0}
-    100% {background-position: -180% 0}
+    0% {background-position: 110% 0}
+    100% {background-position: -10% 0}
 }
 @keyframes ui-pulse-in {
     from {opacity: .55}
@@ -69,13 +71,15 @@
 .motion-skeleton-block {
     display: block;
     border-radius: 12px;
-    background-color: var(--ui-surface-muted);
+    background-color: var(--ui-skeleton-base);
     background-image: linear-gradient(100deg,
-        var(--ui-surface-muted) 18%,
-        var(--ui-white) 40%,
-        var(--ui-surface-muted) 63%);
-    background-size: 200% 100%;
-    animation: ui-shimmer 1.2s ease-in-out infinite;
+        var(--ui-skeleton-base) 20%,
+        var(--ui-slate-100) 38%,
+        var(--ui-white) 48%,
+        var(--ui-slate-100) 58%,
+        var(--ui-skeleton-base) 76%);
+    background-size: 240% 100%;
+    animation: ui-shimmer 1.65s linear infinite;
 }
 .motion-skeleton-line {height: 18px; margin-bottom: 14px; max-width: 300px}
 .motion-skeleton-line.short {width: 32%;height: 13px;margin-bottom: 23px}
@@ -95,11 +99,13 @@ body.motion-login-loading .login-card::after,
     z-index: 10;
     inset: 0;
     border-radius: 16px;
-    background-color: var(--ui-surface-muted);
+    box-shadow: inset 0 0 0 1px var(--ui-skeleton-edge);
+    background-color: var(--ui-skeleton-base);
     background-image: linear-gradient(100deg,
-      var(--ui-surface-muted) 20%,var(--ui-white) 45%,var(--ui-surface-muted) 68%);
-    background-size: 200% 100%;
-    animation: ui-shimmer 1.2s ease-in-out infinite;
+      var(--ui-skeleton-base) 20%,var(--ui-slate-100) 38%,
+      var(--ui-white) 48%,var(--ui-slate-100) 58%,var(--ui-skeleton-base) 76%);
+    background-size: 240% 100%;
+    animation: ui-shimmer 1.65s linear infinite;
 }
 @media(max-width:900px){
     .motion-skeleton-cards {grid-template-columns:repeat(2,minmax(0,1fr))}

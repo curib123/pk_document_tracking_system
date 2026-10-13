@@ -10,6 +10,10 @@ final class Document_folder_tree
 {
     public static function folder_key(array $row, array $nodes, string $domain): string
     {
+        if ($domain==='hardcopy' && !empty($nodes['location:'.(int)($row['location_id']??0)]['contextual_alias'])) {
+            require_once __DIR__.'/hardcopy_folder_tree.php';
+            return Hardcopy_folder_tree::folder_key($row,$nodes);
+        }
         $levels=$domain==='softcopy'
             ? ['category'=>'category_id']
             : ['location'=>'location_id','asset'=>'asset_id',
