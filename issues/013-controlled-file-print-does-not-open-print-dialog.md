@@ -2,7 +2,13 @@
 
 **Severity:** Low–Medium (user-experience accuracy)  
 **Type:** Confirmed feature limitation  
-**Status:** Proposed fix only; NOT applied
+**Status:** Implemented; browser verified on 2026-10-14
+
+## Resolution
+
+`Files::print_file()` now renders an authorized HTML viewer with a Print button. PDF uses a protected same-origin frame with its native toolbar; images and escaped text print through the browser. The byte endpoint repeats the file permission check. Office files explain how to download and print in their native application. Print is also available inside the record and file-history viewers. See [document controls and validation](../docs/document-controls-20261014.md).
+
+The original findings below describe the behavior before this fix.
 
 ## Evidence
 - The Print action in application/view/reusable_components/record_actions.php links to files/print/:id in a new tab.
