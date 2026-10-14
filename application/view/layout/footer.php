@@ -173,6 +173,7 @@ if (!in_array($flashKind,['success','danger','warning','info'],TRUE)) $flashKind
 <script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
+<script src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
 <script src="<?= base_url('assets/js/motion.js') ?>"></script>
 </body>
 </html>
