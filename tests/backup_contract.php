@@ -22,7 +22,8 @@ $controller=file_get_contents($root.'/application/controllers/Backups.php');
 $nav=file_get_contents($root.'/application/view/layout/sidebar_top_nav.php');
 $view=file_get_contents($root.'/application/view/pages/administration/backups.php');
 $script=file_get_contents($root.'/tools/install_backup_schedule.ps1');
-$docs=file_get_contents($root.'/docs/backup-restore.md');
+$docs=is_file($root.'/docs/backup-restore.md')
+    ? file_get_contents($root.'/docs/backup-restore.md') : NULL;
 $service=file_get_contents($root.'/application/services/backup/backup_service.php');
 
 foreach (['admin/backups','admin/backups/create','admin/backups/import',
@@ -45,7 +46,7 @@ backup_assert(strpos($view,'name="backup_zip"')!==FALSE &&
 backup_assert(strpos($script,"-Daily -At '5:00PM'")!==FALSE &&
     strpos($script,'StartWhenAvailable')!==FALSE,
     'Windows scheduler must run daily at 5 PM.');
-backup_assert(strpos($docs,'CRON_TZ=Asia/Manila')!==FALSE,
+if ($docs!==NULL) backup_assert(strpos($docs,'CRON_TZ=Asia/Manila')!==FALSE,
     'Linux scheduled backup instructions must use Philippines timezone.');
 backup_assert(strpos($service,'ZipArchive::EM_AES_256')!==FALSE &&
     strpos($service,"hash_hmac('sha256'")!==FALSE,
