@@ -17,8 +17,8 @@ class Authentication_service
 
     public static function validate_new_password($current, $password, $confirmation)
     {
-        if (strlen($password) < 12 || strlen($password) > 72 || trim($password) === '') {
-            throw new DomainException('Use a password between 12 and 72 bytes.');
+        if (strlen($password) < 9 || strlen($password) > 72 || trim($password) === '') {
+            throw new DomainException('Use a password longer than 8 characters (maximum 72 bytes).');
         }
         if (!hash_equals($password, $confirmation)) {
             throw new DomainException('The new password and confirmation do not match.');
