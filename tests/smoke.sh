@@ -11,6 +11,8 @@ echo "Loading schema and static roles into disposable database..."
 db < tests/fixtures/pk_dts.sql
 db < tests/fixtures/seed.sql
 db -e "INSERT INTO users (id,username,first_name,last_name,position_title,role_id,password_hash,active) VALUES (1,'ci-admin','CI','Administrator','QA',1,'unusable-ci-fixture',1);"
+db < database/migrations/20261013_user_role_assignments.sql
+db < database/migrations/20261013_task_notification_receipts.sql
 echo "Seeding nine workflow definitions twice (must remain idempotent)..."
 db < tests/fixtures/seed_workflows.sql >/dev/null
 db < tests/fixtures/seed_workflows.sql >/dev/null
