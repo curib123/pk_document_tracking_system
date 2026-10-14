@@ -22,7 +22,7 @@ class Places extends MY_Controller
             'softcopy-categories' => 'categories'
         ] as $slug => $module) {
             if ($this->can($module, 'view')) {
-                redirect('places/' . $slug);
+                redirect("places/{$slug}");
                 return;
             }
         }
@@ -73,7 +73,7 @@ class Places extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('places/' . $slug);
+         redirect("places/{$slug}");
     }
     public function deactivate($slug)
     {
@@ -86,6 +86,6 @@ class Places extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('places/' . $slug);
+        redirect("places/{$slug}");
     }
 }
