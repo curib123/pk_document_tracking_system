@@ -7,8 +7,7 @@
     var image = document.getElementById('printImage');
     function ready() {
         button.disabled = false;
-        status.textContent = frame ? 'Use Print or the PDF viewer’s printer icon.' : 'Preview ready. Choose Print to select your printer.';
-    }
+        }
     button.addEventListener('click', function () {
         if (!frame) { window.print(); return; }
         try { frame.contentWindow.focus(); frame.contentWindow.print(); }
