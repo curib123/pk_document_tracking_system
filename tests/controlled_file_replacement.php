@@ -212,5 +212,33 @@ file_put_contents($outside,'Outside document storage');$ownedBlobs[]=$outside;
 $connection->where('id',700)->update('files',['storage_name'=>'../'.basename($outside)]);
 replacementReachFinal($service);$service->decide('softcopy',42,replacementActor(40),'approved','Malformed old path');
 replacementCheck(is_file($outside),'Old storage paths must never delete a file outside controlled document storage.');
+// Reconciliation catches legacy terminal records and retries idempotently.
+replacementFixture($connection);
+$connection->where('id',9)->update('softcopy_documents',['status'=>'disposed']);
+replacementCheck($files->reconcile_retired()===4 && is_file($paths[720]),
+    'Daily reconciliation must remove files on legacy disposed documents.');
+replacementCheck($files->reconcile_retired()===0,'Repeated reconciliation must be harmless.');
+replacementFixture($connection);
+$connection->where('id',42)->update('requests',['status'=>'rejected']);
+replacementCheck($files->reconcile_retired()===1 && is_file($paths[700]) && is_file($paths[711]),
+    'Legacy rejection cleanup must preserve active files and other pending requests.');
+foreach (['reject','dispose','cancel_draft'] as $action) {
+    replacementFixture($connection);
+    if ($action==='cancel_draft') $connection->where('id',42)->update('requests',['status'=>'draft']);
+    $replacementContext->db=new class($connection) {
+        private $db;public function __construct($db){$this->db=$db;}
+        public function __call($name,$args){return $this->db->$name(...$args);}
+        public function trans_commit(){return FALSE;}
+    };
+    replacementReject(static function() use($action,$service) {
+        if ($action==='reject') $service->decide('softcopy',42,replacementActor(20),'rejected','Commit failure');
+        elseif ($action==='dispose') (new Document_service())->dispose('softcopy',9,20,'Commit failure','other');
+        else $service->cancel('softcopy',42,replacementActor(20));
+    },'Failed commit must refuse retirement: '.$action);
+    $replacementContext->db=$connection;
+    replacementOriginalIntact($connection);
+    replacementCheck(is_file($paths[710]) && $connection->get_where('files',['id'=>710])->row_array()['status']==='pending',
+        'Rejected, disposed or cancelled bytes must survive failed commits.');
+}
 $connection->close();
 echo "Final approval, returns/rejections, file replacement, rollback, protected downloads and retained history passed.\n";

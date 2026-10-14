@@ -56,6 +56,7 @@ class File_service
     /** A rejected proposal never retires the active document's current file. */
     public function retire_request_attachment(array $request, int $actorId = 0, string $reason = ''): int
     {
+        if (!in_array($request['status'], ['rejected', 'cancelled'], TRUE)) return 0;
         if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) return 0;
         $payload = json_decode($request['payload'] ?? '{}', TRUE) ?: [];
         $creation = $request['type'] === 'softcopy_create';
@@ -114,23 +115,15 @@ class File_service
     {
         if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return;
         $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
-        $marker = PK_ROOT . '/storage/.controlled-file-cleanup';
+        $databaseKey = $this->ci->db->hostname . ':' . $this->ci->db->database;
+        $marker = PK_ROOT . '/storage/.controlled-file-cleanup-' . substr(hash('sha256', $databaseKey), 0, 16);
         if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return;
         $lock = fopen($marker, 'c+');
         if (!$lock) return;
         try {
             if (!flock($lock, LOCK_EX | LOCK_NB)) return;
             if (trim((string) stream_get_contents($lock)) === $day) return;
-            $db = $this->ci->db;
-            $documents = $db->query('SELECT DISTINCT f.document_id FROM files f
-                LEFT JOIN softcopy_documents d ON d.id=f.document_id
-                WHERE f.domain="softcopy" AND f.document_id IS NOT NULL
-                AND (d.id IS NULL OR d.status IN ("disposed","cancelled"))')->result_array();
-            foreach ($documents as $document) $this->retire_document((int) $document['document_id']);
-            $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise'])
-                ->where_in('status', ['rejected', 'cancelled'])->get('requests')->result_array();
-            foreach ($requests as $request) $this->retire_request_attachment($request);
-            $this->cleanup_retired();
+            $this->reconcile_retired();
             rewind($lock);
             ftruncate($lock, 0);
             fwrite($lock, $day);
@@ -140,6 +133,21 @@ class File_service
             flock($lock, LOCK_UN);
             fclose($lock);
         }
+    }
+
+    public function reconcile_retired(): int
+    {
+        $db = $this->ci->db;
+        if ($db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return 0;
+        $documents = $db->query('SELECT DISTINCT f.document_id FROM files f
+            LEFT JOIN softcopy_documents d ON d.id=f.document_id
+            WHERE f.domain="softcopy" AND f.document_id IS NOT NULL
+            AND (d.id IS NULL OR d.status IN ("disposed","cancelled"))')->result_array();
+        foreach ($documents as $document) $this->retire_document((int) $document['document_id']);
+        $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise'])
+            ->where_in('status', ['rejected', 'cancelled'])->get('requests')->result_array();
+        foreach ($requests as $request) $this->retire_request_attachment($request);
+        return $this->cleanup_retired();
     }
 
     // Controlled files are private while awaiting approval.
