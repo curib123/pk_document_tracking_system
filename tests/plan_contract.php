@@ -34,7 +34,8 @@ $view=file_get_contents($path.'/application/view/pages/workflow_builder/index.ph
 $renderer=file_get_contents($path.'/public/assets/js/app.js');
 $requests=file_get_contents($path.'/application/services/request/request_service.php');
 $badge=file_get_contents($path.'/application/models/Notification_model.php');
-$seed=file_get_contents($path.'/database/seed_workflows.sql');
+$seed=is_file($path.'/database/seed_workflows.sql')
+    ? file_get_contents($path.'/database/seed_workflows.sql') : NULL;
 check(strpos($view, 'data-workflow-version-panel')!==FALSE, 'Version panels must render');
 check(strpos($view, 'admin/workflows/publish')!==FALSE, 'Published route action must exist');
 check(strpos($view, 'stepApproverType')!==FALSE, 'Approver chooser must exist');
