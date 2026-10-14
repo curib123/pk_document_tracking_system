@@ -118,7 +118,7 @@ class Notification_model extends CI_Model
                 'key'=>$row['step_id'].':'.$row['version'],
                 'reference'=>$row['reference'],
                 'label'=>$row['label'],
-                'url'=>site_url('my-tasks/'.$tab).'?'.http_build_query(['q'=>$row['reference']])
+                'url'=>'my-tasks/'.$tab.'?'.http_build_query(['q'=>$row['reference']])
             ];
         }
         return ['items'=>$items,'total'=>$total,'page'=>$page,
