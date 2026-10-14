@@ -112,7 +112,11 @@ class Files extends MY_Controller
         header('Content-Type: ' . $file['mime_type']);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store');
-        header("Content-Security-Policy: sandbox allow-same-origin allow-modals; frame-ancestors 'self'");
+        // Native PDF viewers use a browser plugin, which CSP sandbox disables.
+        // Text and image responses keep the sandbox; PDFs remain MIME-scoped.
+        header('Content-Security-Policy: ' . ($file['mime_type'] === 'application/pdf'
+            ? "frame-ancestors 'self'"
+            : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
             str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
