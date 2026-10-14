@@ -1,4 +1,67 @@
 /* Shared read-only viewers. Content, actions and permission scopes stay intact. */
+#viewModal.is-document-view .doc-modal-body {
+    padding: 0;
+    background: var(--ui-canvas);
+}
+
+#viewModal.is-document-view .doc-modal-layout {
+    display: block;
+    min-width: 0;
+}
+
+#viewModal.is-document-view .doc-modal-navigation {
+    border: 0;
+    border-block: 1px solid var(--ui-line);
+}
+
+#viewModal.is-document-view .doc-modal-file-item,
+#fileHistoryModal .file-history-item {
+    flex-wrap: wrap;
+}
+
+#viewModal.is-document-view .doc-modal-file-content,
+#fileHistoryModal .file-history-item-text {
+    flex: 1 1 200px;
+    min-width: 0;
+}
+
+#viewModal.is-document-view .doc-overview-value {
+    white-space: pre-line;
+    overflow-wrap: anywhere;
+}
+
+.table-date-hint {
+    align-self: center;
+    font-size: 11px;
+}
+
+.workflow-steps-modal .modal-content {
+    border-radius: 22px;
+}
+
+.workflow-steps-modal .modal-body {
+    background: var(--ui-canvas);
+}
+
+@media (max-width: 575.98px) {
+    #viewModal.is-document-view .doc-modal-file-content,
+    #fileHistoryModal .file-history-item-text {
+        flex-basis: calc(100% - 52px);
+    }
+    #viewModal.is-document-view .doc-modal-file-item .btn,
+    #fileHistoryModal .file-history-item .btn {
+        flex: 1 1 auto;
+    }
+    .table-date-hint { flex-basis: 100%; }
+}
+
+@media (max-width: 359.98px) {
+    #viewModal.is-document-view .doc-overview-grid {
+        grid-template-columns: minmax(0, 1fr) !important;
+    }
+    #viewModal.is-document-view .doc-modal-status { padding: 6px 8px; font-size: 10px; }
+}
+
 #viewModal.is-document-view .modal-dialog,
 #fileHistoryModal .modal-dialog {
     width: calc(100% - 40px);
@@ -64,7 +127,7 @@
     border-radius: 15px;
 }
 
-#viewModal.is-document-view #viewModal.is-document-viewTitle {
+#viewModal.is-document-view #viewModalTitle {
     font-size: clamp(18px, 2vw, 23px);
     font-weight: 750;
     line-height: 1.4;
@@ -166,6 +229,11 @@
 }
 
 #viewModal.is-document-view .doc-modal-navigation {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+    display: flex;
+    overflow-x: auto;
     gap: 8px;
     padding: 12px 26px;
     scroll-padding-inline: 26px;
@@ -174,6 +242,9 @@
 }
 
 #viewModal.is-document-view .doc-modal-nav-item {
+    flex: 0 0 auto;
+    width: auto;
+    margin: 0;
     min-height: 44px;
     padding: 10px 14px;
     border: 1px solid var(--ui-line);
@@ -378,7 +449,7 @@
         flex-basis: 42px;
     }
 
-    #viewModal.is-document-view #viewModal.is-document-viewTitle {
+    #viewModal.is-document-view #viewModalTitle {
         font-size: 17px;
     }
 

@@ -258,6 +258,29 @@ test('every module can use the same SaaS view details layout with a plain record
   assert.equal(details.children.length,0,'Do not add meaningless empty activity to simple records');
 });
 
+test('record viewers describe boolean values and reset scroll for the next record',() => {
+  const {window,modal,details,map}=setup();
+  modal.querySelector('.doc-modal-body').scrollTop=480;
+  window.PKDocumentView.render(details,{'Name':'Location','Enabled':true,'Archived':false});
+  const values=map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map((n)=>n.textContent);
+  assert.deepEqual(values,['Location','Yes','No']);
+  assert.equal(modal.querySelector('.doc-modal-body').scrollTop,0);
+});
+
+test('file viewers expose permitted print actions and reject external print links',() => {
+  const {window,details}=setup();
+  window.PKDocumentView.render(details,{kind:'document',domain:'softcopy',sections:[
+    {key:'files',fields:{'1. current.txt':'Current','2. old.txt':'Superseded'},links:[
+      {url:'/files/download/1',print_url:'/files/print/1'},
+      {url:'',print_url:'https://outside.test/print/2'}
+    ]}
+  ]});
+  const links=details.querySelectorAll('.doc-modal-download');
+  assert.equal(links.length,2);
+  assert.equal(links[1].textContent,'Print');
+  assert.equal(links[1].href,'https://dts.test/files/print/1');
+});
+
 test('request details use the exact same overview-plus-concerns view as system documents',() => {
   const {window,details,map,modal}=setup();
   window.PKDocumentView.render(details,{

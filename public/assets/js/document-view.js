@@ -36,6 +36,7 @@
 
     function valueText(value) {
         if (value == null || value === '') return 'Not specified';
+        if (typeof value === 'boolean') return value ? 'Yes' : 'No';
         if (typeof value === 'object') {
             if (Array.isArray(value)) return value.map(valueText).join('\n');
             return Object.entries(value).map(function (entry) {
@@ -355,6 +356,8 @@
         reset();
         prepareHeading(data);
         container.replaceChildren();
+        var body = modal.querySelector('.doc-modal-body');
+        if (body) body.scrollTop = 0;
         var sections = Array.isArray(data.sections) ? data.sections : [];
         var overview = sections.filter(isOverviewSection);
         var concerns = sections.filter(function (section) { return !isOverviewSection(section); });

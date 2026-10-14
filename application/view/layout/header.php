@@ -13,7 +13,6 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/document-view.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/roles-permission.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/action-feedback.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/dashboard.css') ?>">
@@ -21,6 +20,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/plan-enhancements.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css') ?>">
     <?php if (!empty($login_transition)): ?>
         <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
         <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">

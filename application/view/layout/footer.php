@@ -139,8 +139,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     </div>
 </div>
 
-<!-- One reusable details modal. Documents receive a richer, read-only SaaS layout;
-     other views continue to use the existing generic details renderer. -->
+<!-- One shared read-only viewer for documents, requests and administration records. -->
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="viewModal" tabindex="-1"
     aria-labelledby="viewModalTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">

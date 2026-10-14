@@ -2,10 +2,10 @@
 .modal-backdrop.show, .fallback-backdrop.show {
     background:var(--ui-ink-950);
     opacity:.55;
-    backdrop-filter:blur(30px);
-    -webkit-backdrop-filter:blur(7px);
+    backdrop-filter:blur(4px);
+    -webkit-backdrop-filter:blur(4px);
 }
-.modal.show {backdrop-filter:blur(20px)}
+.modal.show {backdrop-filter:blur(4px)}
 .modal-dialog .modal-content {
     border:1px solid var(--ui-line)!important;
     border-radius:19px;
