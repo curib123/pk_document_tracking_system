@@ -11,7 +11,7 @@
 }
 
 html[data-logout-return]::view-transition-old(root) {
-    animation: logout-bridge 160ms ease-out both;
+    animation: logout-bridge 160ms ease both;
 }
 
 @keyframes logout-bridge {
@@ -96,7 +96,7 @@ html[data-logout-return] .logout-transition-glow {
 
 html[data-logout-return] .login-shell {
     visibility: hidden;
-    animation: logout-unlock 1ms 6s forwards;
+    animation: logout-unlock 3ms 6s forwards;
 }
 
 html[data-logout-stage="return"] .login-shell {
@@ -108,7 +108,7 @@ html[data-logout-return] .logout-transition {
 }
 
 html[data-logout-return] {
-    animation: logout-scroll 1ms 6s forwards;
+    animation: logout-scroll 4ms 6s forwards;
 }
 
 html[data-auth-history-gate] body> :not(#logoutTransition) {
