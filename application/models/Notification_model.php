@@ -75,6 +75,56 @@ class Notification_model extends CI_Model
             'requests_total' => array_sum($requests), 'tasks_total' => array_sum($tasks)];
     }
 
+    /**
+     * Unread approval notifications, paginated entirely in the database.
+     * A notification stays unread until the user explicitly opens it.
+     */
+    private function unreadQuery(array $user): void
+    {
+        $uid=(int)$user['id'];
+        $roles=implode(',',User_roles::ids($user)?:[0]);
+        $this->db->from('workflow_steps s')
+            ->join('requests r','r.id=s.request_id AND r.current_node=s.node_key')
+            ->join('task_notification_receipts seen',
+                'seen.step_id=s.id AND seen.activation=s.version AND seen.user_id='.$uid,'left')
+            ->where('s.status','active')->where('r.status','submitted')
+            ->where('seen.step_id IS NULL',NULL,FALSE)
+            ->group_start()->where('s.assigned_user_id',$uid)
+            ->or_group_start()
+                ->where("JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.type')) = 'role'",NULL,FALSE)
+                ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) IN ($roles)",NULL,FALSE)
+            ->group_end()->group_end();
+    }
+
+    public function unread_page(array $user,int $page=1,int $limit=10): array
+    {
+        $page=max(1,min(100000,$page));
+        $limit=in_array($limit,[5,10,20,50],TRUE)?$limit:10;
+        if (!$this->db->table_exists('task_notification_receipts'))
+            return ['items'=>[],'total'=>0,'page'=>1,'limit'=>$limit,'pages'=>1];
+        $this->unreadQuery($user);
+        $total=(int)$this->db->count_all_results();
+        $pages=max(1,(int)ceil($total/$limit));
+        $page=min($page,$pages);
+        $this->unreadQuery($user);
+        $rows=$this->db->select('r.id AS request_id,r.reference,r.type,s.id AS step_id,s.label,s.version')
+            ->order_by('s.id','DESC')->limit($limit,($page-1)*$limit)
+            ->get()->result_array();
+        $items=[];
+        foreach ($rows as $row) {
+            $tab=$this->tabForType($row['type']);
+            if ($tab===NULL) continue;
+            $items[]=[
+                'key'=>$row['step_id'].':'.$row['version'],
+                'reference'=>$row['reference'],
+                'label'=>$row['label'],
+                'url'=>site_url('my-tasks/'.$tab).'?'.http_build_query(['q'=>$row['reference']])
+            ];
+        }
+        return ['items'=>$items,'total'=>$total,'page'=>$page,
+            'limit'=>$limit,'pages'=>$pages];
+    }
+
     /** Unseen approval occurrences, always scoped to the server-loaded identity. */
     public function pending_approvals(array $user): array
     {
