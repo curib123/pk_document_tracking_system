@@ -3,7 +3,9 @@
     'use strict';
     function dateRange(form) {
         if (!form) return;
-        var mode = form.querySelector('[data-date-period]');
+        var mode = Array.from(document.querySelectorAll('[data-date-period]')).find(function (select) {
+            return select.form === form;
+        });
         if (!mode) return;
         var custom = mode.value === 'custom';
         document.querySelectorAll('[data-date-custom]').forEach(function (label) {
