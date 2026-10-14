@@ -49,6 +49,7 @@ class Administration extends MY_Controller
                 $this->Document_model->options_in_folder('softcopy',$browser,$table['q']):[],
             'hardcopy_options'=>$domain==='hardcopy'?
                 $this->Document_model->options_in_folder('hardcopy',$browser,$table['q']):[],
+            'location_options'=>$domain==='hardcopy'?$this->Document_model->hardcopy_locations():[],
             'users_list'=>$this->Administration_model->user_options(),
             'assignment_rows'=>$assignmentRows
         ]);
@@ -87,6 +88,45 @@ class Administration extends MY_Controller
         if ($folder!=='') $query['folder']=$folder;
         redirect('admin/document-assignments?'.http_build_query($query));
     }
+    /** Direct assignment of every active Hardcopy currently stored at one location. */
+    public function assign_location()
+    {
+        $this->require_permission('assignment','direct');
+        $this->confirmed();
+        $locationId=(int)$this->input->post('location_id');
+        $recipientId=(int)$this->input->post('recipient_id');
+        try {
+            $this->load->model('Document_model');
+            $location=$this->db->get_where('locations',['id'=>$locationId,'active'=>1])->row_array();
+            $recipient=$this->db->get_where('users',['id'=>$recipientId,'active'=>1])->row_array();
+            if (!$location || !$recipient)
+                throw new DomainException('Choose an active Location and assigned user.');
+            require_once APPPATH.'services/documents/document_access_service.php';
+            $this->db->trans_begin();
+            // Lock the complete location set, not only the visible page.
+            $rows=$this->db->query(
+                'SELECT id FROM hardcopy_documents WHERE location_id=? AND status=? ORDER BY id FOR UPDATE',
+                [$locationId,'active'])->result_array();
+            if (!$rows) throw new DomainException('No active Hardcopy documents in this Location.');
+            if (count($rows)>2000)
+                throw new DomainException('More than 2000 documents at this Location. Divide into smaller assignments.');
+            $service=new Document_access_service();
+            foreach ($rows as $row) {
+                $service->apply('assignment',['document_domain'=>'hardcopy'],
+                    0,(int)$row['id'],$recipientId,(int)$this->user['id'],NULL);
+            }
+            if ($this->db->trans_status()===FALSE)
+                throw new DomainException('Location assignment transaction failed.');
+            $this->db->trans_commit();
+            $this->notice(count($rows).' Hardcopy documents assigned successfully.');
+        } catch (Throwable $e) {
+            $this->db->trans_rollback();
+            $this->notice($e instanceof DomainException?$e->getMessage():
+                'Location assignment failed. No changes were saved.','danger');
+        }
+        redirect('admin/document-assignments?domain=hardcopy&folder=location:'.$locationId);
+    }
+
     public function users(){$this->listing('users');}
     public function roles(){$this->listing('roles');}
     public function workflows(){$this->listing('workflows');}
