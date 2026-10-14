@@ -15,7 +15,7 @@ The first authenticated request each Manila day reconciles legacy disposed/cance
 - `php tests/controlled_file_print.php`
 - `php tests/controlled_file_replacement.php` uses real transactions and connection-local temporary tables; test blobs belong to the runner.
 - `php tests/date_range.php`
-- `node --test tests/document_view.test.js tests/date_controls.test.js tests/row_actions.test.js tests/action_feedback.test.js`
+- `node --test tests/document_view.test.js tests/controlled_print.test.js tests/date_controls.test.js tests/row_actions.test.js tests/action_feedback.test.js`
 - `python tests/browser_document_workflows.py` requires Playwright, PHP/MySQL and Microsoft Edge. It creates its own `pk_dts_browser_<random>_test` database, runs the actual application on port 8096, then removes its database, blobs and cleanup marker. `PK_MYSQL` can override the MySQL client path.
 
 Browser coverage includes actual register filtering, invalid custom dates, viewers at 1440/390/320 pixels, text/image print invocation, a two-page native PDF preview, Office fallback, denied file access, and rejection/disposal through the ordinary confirmation forms. It checks database results, stored bytes and retired URL access. Physical printer output is outside this automated check.

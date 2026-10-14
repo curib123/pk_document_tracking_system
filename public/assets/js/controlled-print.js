@@ -19,5 +19,14 @@
         resource.addEventListener('load', ready);
         resource.addEventListener('error', function () { status.textContent = 'Preview unavailable. Download the file to print.'; });
         if (image && image.complete && image.naturalWidth > 0) ready();
+        if (frame) {
+            try {
+                var loadedDocument = frame.contentDocument;
+                if (!loadedDocument || (loadedDocument.readyState === 'complete' && loadedDocument.URL !== 'about:blank')) ready();
+            } catch (error) {
+                // Browser-owned PDF viewers can prevent document inspection.
+                ready();
+            }
+        }
     } else ready();
 })();
