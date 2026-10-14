@@ -53,8 +53,13 @@ foreach ($rows as $r) {
              ];
          }
          $buttons[]=['type'=>'history','files'=>$historyEntries];
-         if (!empty($latest_files[$r['id']]))
-             $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
+         if (!empty($latest_files[$r['id']])) {
+             $latest=$latest_files[$r['id']];
+             if (in_array((string)($latest['mime_type']??''),
+                 ['application/pdf','image/jpeg','image/png','text/plain'],TRUE))
+                 $buttons[]=['type'=>'print','url'=>'files/print/'.$latest['id']];
+             $buttons[]=['type'=>'download','url'=>'files/download/'.$latest['id']];
+         }
      }
  }
  if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct']))) $buttons[]=['type'=>'action',
