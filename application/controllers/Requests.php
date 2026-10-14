@@ -119,7 +119,7 @@ class Requests extends MY_Controller
         try {
             (new Request_service())->save(
                 $tab,
-                $this->input->post(),
+                $this->input,
                 $this->user,
                 $_FILES['revision_attachment'] ?? NULL
             );
@@ -127,7 +127,7 @@ class Requests extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('my-requests/' . $tab);
+        redirect("my-requests/{ $tab}");
     }
     public function submit($tab)
     {
@@ -140,7 +140,7 @@ class Requests extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('my-requests/' . $tab);
+        redirect("my-requests/{ $tab}");
     }
     public function decide($tab)
     {
@@ -160,7 +160,7 @@ class Requests extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('my-tasks/' . $tab);
+        redirect("my-requests/{ $tab}");
     }
     public function dispatch_transfer()
     {
@@ -199,6 +199,6 @@ class Requests extends MY_Controller
         } catch (DomainException $e) {
             $this->notice($e->getMessage(), 'danger');
         }
-        redirect('my-requests/' . $tab);
+       redirect("my-requests/{ $tab}");
     }
 }
