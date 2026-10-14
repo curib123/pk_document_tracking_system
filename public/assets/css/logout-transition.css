@@ -49,7 +49,7 @@ html[data-logout-return] .logout-transition {
 
 .logout-transition-glow {
     position: absolute;
-    width: clamp(270px, 38vw, 430px);
+    width: clamp(470px, 78vw, 730px);
     aspect-ratio: 1;
     border-radius: 90%;
     background: radial-gradient(ellipse, var(--ui-brand-500), transparent 67%);
@@ -60,7 +60,7 @@ html[data-logout-return] .logout-transition {
 
 .logout-transition-logo {
     position: relative;
-    width: clamp(190px, 25vw, 300px);
+    width: clamp(190px, 45vw, 400px);
     height: auto;
     object-fit: fill;
     opacity: 0;
