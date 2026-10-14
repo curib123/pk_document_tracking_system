@@ -24,6 +24,8 @@ manifest = None
 server = None
 created = False
 temp_directory = tempfile.TemporaryDirectory(prefix='pk-dts-browser-')
+APP_ROOT = Path(temp_directory.name) / 'site'
+env['PK_BROWSER_ROOT'] = str(APP_ROOT)
 log = None
 
 def sql(statement, use_database=True):
@@ -32,6 +34,9 @@ def sql(statement, use_database=True):
     return result.stdout.decode()
 
 try:
+    for directory in ['application', 'public', 'vendor']:
+        shutil.copytree(ROOT / directory, APP_ROOT / directory)
+    (APP_ROOT / 'storage/documents').mkdir(parents=True)
     sql('CREATE DATABASE `' + database + '` CHARACTER SET utf8mb4;', False)
     created = True
     sql((ROOT / 'tests/fixtures/pk_dts.sql').read_text(encoding='utf-8'))
@@ -50,8 +55,8 @@ try:
         log = open(Path(temp) / 'server.log', 'w+', encoding='utf-8')
         with socket.socket() as port_check:
             port_check.bind(('127.0.0.1', 8096))
-        server = subprocess.Popen([PHP, '-S', '127.0.0.1:8096', '-t', str(ROOT / 'public'), str(router)],
-                                  cwd=ROOT, env=env, stdout=log, stderr=log)
+        server = subprocess.Popen([PHP, '-S', '127.0.0.1:8096', '-t', str(APP_ROOT / 'public'), str(router)],
+                                  cwd=APP_ROOT, env=env, stdout=log, stderr=log)
         base = 'http://127.0.0.1:8096/'
         for _ in range(40):
             if server.poll() is not None:
@@ -79,6 +84,27 @@ try:
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
 
+            app_manifest = context.request.get(base + 'manifest.php').json()
+            assert app_manifest['id'] == '/pk-document-control' and app_manifest['scope'] == '/'
+            assert app_manifest['start_url'] == '/dashboard'
+            page.evaluate('() => navigator.serviceWorker.ready')
+            page.wait_for_function('navigator.serviceWorker.controller !== null')
+            devtools = context.new_cdp_session(page)
+            assert not devtools.send('Page.getAppManifest')['errors']
+            assert not devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
+            assert page.evaluate('() => caches.keys()') == []
+            page.evaluate('''() => {
+                window.installCalls=0;
+                const event=new Event('beforeinstallprompt', {cancelable:true});
+                event.prompt=async()=>{window.installCalls++;return {outcome:'accepted'};};
+                window.dispatchEvent(event);
+            }''')
+            expect(page.locator('#pwaInstallButton')).to_be_visible()
+            page.locator('#pwaInstallButton').click()
+            expect(page.locator('#pwaInstallButton')).to_be_hidden()
+            assert page.evaluate('window.installCalls') == 1
+            print('Browser PWA manifest/installability, simulated install button and live service worker passed.')
+
             for route in ['documents/hardcopy', 'documents/softcopy', 'my-requests/softcopy', 'my-tasks/softcopy']:
                 page.goto(base + route)
                 if page.locator('.modal.show').count():
@@ -87,7 +113,12 @@ try:
                 expect(period.locator('option')).to_have_count(6)
                 for preset in ['day', 'week', 'month', 'year']:
                     period.select_option(preset)
-                    page.wait_for_url('**period=' + preset + '**')
+                    try:
+                        page.wait_for_url('**period=' + preset + '**')
+                    except Exception:
+                        print('Filter diagnostic:', route, preset, errors,
+                              page.locator('#tableFilter').evaluate('(e)=>({valid:e.checkValidity(),method:e.method})'), flush=True)
+                        raise
                     page.wait_for_load_state('load')
                     expect(period).to_have_value(preset)
                     expect(page.locator('[data-date-custom]').first).to_be_hidden()
@@ -183,8 +214,8 @@ try:
             page.locator('#actionForm [name="remark"]').fill('Browser rejection proof')
             page.locator('#actionForm button[type="submit"]').click()
             page.wait_for_load_state('networkidle')
-            assert not (ROOT / 'storage/documents' / manifest['request']['storage_name']).exists()
-            assert (ROOT / 'storage/documents' / manifest['txt']['storage_name']).exists()
+            assert not (APP_ROOT / 'storage/documents' / manifest['request']['storage_name']).exists()
+            assert (APP_ROOT / 'storage/documents' / manifest['txt']['storage_name']).exists()
             assert 'rejected' in sql('SELECT status FROM requests WHERE id=' + str(manifest['request']['id']))
             page.goto(base + 'documents/softcopy')
             if page.locator('.modal.show').count(): page.locator('.modal.show [data-bs-dismiss="modal"]').first.click()
@@ -193,7 +224,7 @@ try:
             page.locator('#actionForm [name="disposal_other"]').fill('Browser disposal proof')
             page.locator('#actionForm button[type="submit"]').click()
             page.wait_for_load_state('networkidle')
-            assert not (ROOT / 'storage/documents' / manifest['png']['storage_name']).exists()
+            assert not (APP_ROOT / 'storage/documents' / manifest['png']['storage_name']).exists()
             assert 'disposed' in sql('SELECT status FROM softcopy_documents WHERE id=' + str(manifest['png']['document_id']))
             for endpoint in ['files/print/', 'files/print-content/', 'files/download/']:
                 assert context.request.get(base + endpoint + str(manifest['png']['file_id'])).status == 403
@@ -207,12 +238,5 @@ finally:
         server.wait(timeout=10)
     if log and not log.closed: log.close()
     temp_directory.cleanup()
-    if manifest:
-        directory = (ROOT / 'storage/documents').resolve()
-        for storage in manifest['blobs']:
-            target = (directory / storage).resolve()
-            if target.parent == directory and len(storage) == 64:
-                target.unlink(missing_ok=True)
-        (ROOT / 'storage' / manifest['cleanup_marker']).unlink(missing_ok=True)
     if created and database.startswith('pk_dts_browser_') and database.endswith('_test'):
         sql('DROP DATABASE `' + database + '`;', False)

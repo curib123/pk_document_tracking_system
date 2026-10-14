@@ -3,7 +3,7 @@
 declare(strict_types=1);
 if (PHP_SAPI !== 'cli' || getenv('PK_TEST_DB') !== '1' ||
     !preg_match('/^pk_dts_browser_[a-f0-9]+_test$/', (string) getenv('DB_DATABASE'))) exit(1);
-define('PK_ROOT', dirname(__DIR__));
+define('PK_ROOT', getenv('PK_BROWSER_ROOT') ?: dirname(__DIR__));
 mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $db = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?: 'root', getenv('DB_PASSWORD') ?: '', getenv('DB_DATABASE'));
 $db->set_charset('utf8mb4');
