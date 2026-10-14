@@ -69,7 +69,7 @@ class Backups extends MY_Controller
             if ($result['failed']) {
                 throw new DomainException('Cleanup was partially completed. Review protected server logs.');
             }
-            return 'Retention cleanup finished. ' . $deleted . ' expired archived items deleted.';
+            return "Retention cleanup finished. {$deleted} expired archived items deleted.";
         });
     }
 
@@ -78,7 +78,7 @@ class Backups extends MY_Controller
         $upload = $_FILES['backup_zip'] ?? [];
         $this->execute(static function ($service) use ($upload) {
             $name = $service->receiveUpload($upload);
-            return 'Verified backup imported: ' . $name;
+            return "Verified backup imported: { $name }"; ;
         });
     }
     public function restore()
