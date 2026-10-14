@@ -63,6 +63,12 @@
         href="<?= site_url($button['url']) ?>">
         <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
     </a>
+<?php elseif ($type==='print'): ?>
+    <a class="btn-icon record-action record-action-print"
+        href="<?= site_url($button['url']) ?>" target="_blank" rel="noopener"
+        title="Print controlled file" aria-label="Print controlled file">
+        <i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span>
+    </a>
 <?php elseif ($type==='download'): ?>
     <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
         aria-label="<?= html_escape($label) ?>" href="<?= site_url($button['url']) ?>">
