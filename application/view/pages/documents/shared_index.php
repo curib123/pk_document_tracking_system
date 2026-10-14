@@ -66,20 +66,14 @@ foreach ($rows as $r) {
                     'name' => $item['original_name'],
                     'detail' => $item['first_name'] . ' ' . $item['last_name'] . ' — ' . $item['created_at'] .
                         ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded'),
-                    'url' => !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : ''
+                    'url' => !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
+                    'print_url' => !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
                 ];
             }
             $buttons[] = ['type' => 'history', 'files' => $historyEntries];
             if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
-                if (
-                    in_array(
-                        (string) ($latest['mime_type'] ?? ''),
-                        ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'],
-                        TRUE
-                    )
-                )
-                    $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
+                $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
                 $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
             }
         }

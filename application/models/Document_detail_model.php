@@ -168,7 +168,8 @@ class Document_detail_model extends CI_Model
                         ' · ' . (!empty($file['is_current']) ? 'Current' : 'Superseded');
                     $links[] = [
                         'label' => 'Download ' . $file['original_name'],
-                        'url' => !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : ''
+                        'url' => !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : '',
+                        'print_url' => !empty($file['is_current']) ? site_url('files/print/' . $file['id']) : ''
                     ];
                 }
                 $sections[] = [

@@ -22,6 +22,7 @@ $route['documents/(:any)/dispose']['POST'] = 'Documents/dispose/$1';
 $route['files/upload']['POST'] = 'Files/upload';
 $route['files/download/(:num)']['GET'] = 'Files/download/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
+$route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';
 $route['files/review/(:num)']['GET'] = 'Files/review/$1';
 $route['places']['GET'] = 'Places/home';
 $route['places/(:any)']['GET'] = 'Places/index/$1';

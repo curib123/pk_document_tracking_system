@@ -62,7 +62,7 @@ class Files extends MY_Controller
         exit;
     }
 
-    /** Browser print preview of a permitted controlled PDF/image/text revision. */
+    /** Accessible print viewer; every file response repeats the access check. */
     public function print_file($id)
     {
         $this->authenticate();
@@ -71,9 +71,33 @@ class Files extends MY_Controller
             show_error('Controlled file printing is not permitted.', 403);
             return;
         }
-        $inline = ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'];
-        if (!in_array((string) $file['mime_type'], $inline, TRUE)) {
-            show_error('This file type must be downloaded and printed in its native application.', 415);
+        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+            show_404();
+            return;
+        }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path) || is_link($path)) {
+            show_404();
+            return;
+        }
+        header('Cache-Control: private, no-store');
+        header("Content-Security-Policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'");
+        $this->load->view('pages/files/print', [
+            'file' => $file,
+            'text' => $file['mime_type'] === 'text/plain' ? file_get_contents($path) : NULL
+        ]);
+    }
+
+    public function print_content($id)
+    {
+        $this->authenticate();
+        $file = $this->File_model->approved_file((int) $id);
+        if (!$file || !$this->File_model->allowed($this->user, $file)) {
+            show_error('Controlled file printing is not permitted.', 403);
+            return;
+        }
+        if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
+            show_error('Download this file to print it in its native application.', 415);
             return;
         }
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
@@ -81,14 +105,14 @@ class Files extends MY_Controller
             return;
         }
         $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path)) {
+        if (!is_file($path) || is_link($path)) {
             show_404();
             return;
         }
         header('Content-Type: ' . $file['mime_type']);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store');
-        header('Content-Security-Policy: sandbox');
+        header("Content-Security-Policy: sandbox allow-same-origin allow-modals; frame-ancestors 'self'");
         header('Content-Disposition: inline; filename="' .
             str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));

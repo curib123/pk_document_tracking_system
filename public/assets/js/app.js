@@ -386,6 +386,17 @@
                             download.textContent = 'Download';
                             item.append(download);
                         }
+                        var printTarget = file.print_url ? new URL(String(file.print_url), window.location.origin) : null;
+                        if (printTarget && printTarget.origin === window.location.origin &&
+                            ['http:', 'https:'].includes(printTarget.protocol)) {
+                            var print = document.createElement('a');
+                            print.className = 'btn btn-outline-primary btn-sm';
+                            print.href = printTarget.href;
+                            print.target = '_blank';
+                            print.rel = 'noopener';
+                            print.textContent = 'Print';
+                            item.append(print);
+                        }
                     } catch (error) { /* Invalid download links are never rendered. */ }
                     list.append(item);
                 });

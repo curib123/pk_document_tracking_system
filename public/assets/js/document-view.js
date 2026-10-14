@@ -249,6 +249,15 @@
                 anchor.append(icon('files'));
                 row.append(anchor);
             }
+            var printDestination = link.print_url ? safeLink(link.print_url) : null;
+            if (printDestination) {
+                var print = node('a', 'btn btn-sm btn-outline-primary doc-modal-download', 'Print');
+                print.href = printDestination;
+                print.target = '_blank';
+                print.rel = 'noopener';
+                print.setAttribute('aria-label', 'Print ' + entry[0].replace(/^\d+\.\s*/, ''));
+                row.append(print);
+            }
             list.append(row);
         });
         return list;
