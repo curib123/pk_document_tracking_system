@@ -6,8 +6,8 @@ if (!preg_match('/^[a-zA-Z0-9._-]{3,80}$/',$username)) exit("Invalid username\n"
 echo "First name: ";$first=trim(fgets(STDIN));
 echo "Last name: ";$last=trim(fgets(STDIN));
 echo "Position: ";$position=trim(fgets(STDIN))?:'Administrator';
-echo "Password (min 12 characters, input visible): ";$password=rtrim(fgets(STDIN),"\r\n");
-if (!$first || !$last || strlen($password)<12) exit("Name and 12+ character password required\n");
+echo "Password (longer than 8 characters, input visible): ";$password=rtrim(fgets(STDIN),"\r\n");
+if (!$first || !$last || strlen($password)<9) exit("Name and 9+ character password required\n");
 $db=new mysqli(getenv('DB_HOST')?:'127.0.0.1',getenv('DB_USERNAME')?:'root',
   getenv('DB_PASSWORD')?:'',getenv('DB_DATABASE')?:'pk_dts',(int)(getenv('DB_PORT')?:3306));
 $role=$db->query("SELECT id FROM roles WHERE name='Administrator' AND active=1 LIMIT 1")->fetch_assoc();
