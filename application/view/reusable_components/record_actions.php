@@ -8,7 +8,8 @@
     $label=$button['label']??[
         'view'=>'View','edit'=>'Edit','steps'=>'Step Actions',
         'grants'=>'Manage Access','history'=>'File History',
-        'upload'=>'Upload','review'=>'Review File','download'=>'Download'
+        'upload'=>'Upload','review'=>'Review File','download'=>'Download',
+        'print'=>'Print'
     ][$type]??'Action';
 ?>
 <?php if ($type==='view'): ?>
