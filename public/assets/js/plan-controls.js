@@ -47,7 +47,7 @@
         while((current=walker.nextNode()))textNodes.push(current);
         textNodes.forEach(visit);
     }
-    var host=document.querySelector('.app-shell');
+    var host=document.body;
     if(!host)return;
     visit(host);
     if(!window.MutationObserver)return;
