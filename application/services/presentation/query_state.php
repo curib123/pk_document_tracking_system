@@ -18,9 +18,12 @@ class Query_state
                 throw new DomainException('Invalid selection.');
             return (int) $value;
         };
+        $period = $text('period');
+        if (!in_array($period, ['', 'all', 'day', 'week', 'month', 'year', 'custom'], TRUE))
+            throw new DomainException('Invalid date range.');
         $dates = [];
         foreach (['from', 'to'] as $key) {
-            $value = $text($key);
+            $value = in_array($period, ['', 'custom'], TRUE) ? $text($key) : '';
             if ($value !== '') {
                 $parsed = DateTimeImmutable::createFromFormat('!Y-m-d', $value);
                 if (!$parsed || $parsed->format('Y-m-d') !== $value || (int) substr($value, 0, 4) < 1000) {
@@ -32,10 +35,7 @@ class Query_state
         if ($dates['from'] !== '' && $dates['to'] !== '' && $dates['from'] > $dates['to']) {
             throw new DomainException('Start date must be on or before the end date.');
         }
-        $period = $text('period');
-        if (!in_array($period, ['', 'all', 'day', 'week', 'month', 'year', 'custom'], TRUE))
-            throw new DomainException('Invalid date range.');
-        if (($period === '' || $period === 'all') && ($dates['from'] !== '' || $dates['to'] !== ''))
+        if ($period === '' && ($dates['from'] !== '' || $dates['to'] !== ''))
             $period = 'custom';
         if (in_array($period, ['day', 'week', 'month', 'year'], TRUE)) {
             $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));

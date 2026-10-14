@@ -11,12 +11,34 @@
             if (!field || field.form !== form) return;
             label.hidden = !custom;
             field.disabled = !custom;
+            field.required = custom;
         });
+        var fields = Array.from(document.querySelectorAll('[data-date-custom] input')).filter(function (field) { return field.form === form; });
+        var from = fields.find(function (field) { return field.name === 'from'; });
+        var to = fields.find(function (field) { return field.name === 'to'; });
+        if (from && to) {
+            from.max = to.value || '';
+            to.min = from.value || '';
+        }
     }
     document.querySelectorAll('[data-date-period]').forEach(function (select) {
         var form = select.form || document.getElementById('tableFilter');
         dateRange(form);
-        select.addEventListener('change', function () { dateRange(form); });
+        select.addEventListener('change', function () {
+            dateRange(form);
+            if (select.value === 'custom') {
+                document.querySelectorAll('[data-date-custom] input').forEach(function (field) {
+                    if (field.form === form && field.name === 'from') field.focus();
+                });
+                return;
+            }
+            var page = form.querySelector('[name="page"]');
+            if (page) page.value = '1';
+            form.requestSubmit();
+        });
+        document.querySelectorAll('[data-date-custom] input').forEach(function (field) {
+            if (field.form === form) field.addEventListener('input', function () { dateRange(form); });
+        });
     });
     var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\b/g;
     var selectors = 'td, .doc-modal-body, .doc-modal-reference, .doc-overview-value, ' +

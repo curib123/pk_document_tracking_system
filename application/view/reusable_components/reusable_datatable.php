@@ -60,7 +60,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
         <?php endforeach; ?>
         <?php if (!empty($dt_date_filters)): ?>
             <?php $datePeriod = $dt_filter_values['period'] ?? 'all'; ?>
-            <label class="table-date-filter small text-secondary" for="tablePeriod">Date range
+            <label class="table-date-filter small text-secondary" for="tablePeriod">Created date
                 <select form="tableFilter" id="tablePeriod" class="form-select" name="period" data-date-period>
                     <?php foreach ([
                         'all' => 'All time',
@@ -75,12 +75,13 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                     <?php endforeach; ?>
                 </select>
             </label>
-            <?php foreach (['from' => 'Created from', 'to' => 'Created to'] as $field => $label): ?>
+            <?php foreach (['from' => 'Start date', 'to' => 'End date'] as $field => $label): ?>
                 <label class="table-date-filter small text-secondary" data-date-custom <?= $datePeriod !== 'custom' ? 'hidden' : '' ?>><?= $label ?>
                     <input class="form-control" type="date" form="tableFilter" name="<?= $field ?>"
                         <?= $datePeriod !== 'custom' ? 'disabled' : '' ?> value="<?= html_escape($dt_filter_values[$field] ?? '') ?>">
                 </label>
             <?php endforeach; ?>
+            <span class="table-date-hint small text-secondary">Calendar periods · Manila time</span>
         <?php endif; ?>
         <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i>
             Apply</button>
