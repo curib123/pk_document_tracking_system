@@ -63,7 +63,7 @@ foreach (['area','specific','asset'] as $slug)
     newPlanCheck(strpos($files['places'],"['area','specific','asset']")!==FALSE,
         'Area, Specific and Asset must have no View Details button.');
 newPlanCheck(strpos($files['request_form'],'value="<?= html_escape($user[\'name\']) ?>" readonly')!==FALSE
-    &&strpos($files['request_service'],"$payload['recipient_id']=(int)$user['id']")!==FALSE,
+    &&strpos($files['request_service'],'$payload[\'recipient_id\']=(int)$user[\'id\']')!==FALSE,
     'Assignment/access request recipient must be the signed-in user, enforced server-side.');
 newPlanCheck(strpos($files['assignment'],'public function assign_location()')!==FALSE &&
     strpos($files['assignment_view'],'name="location_id"')!==FALSE,
@@ -75,7 +75,7 @@ newPlanCheck(strpos($files['notice'],'public function inbox()')!==FALSE &&
     'Unread-only bell notifications must use server-side listing and acknowledgement.');
 newPlanCheck(strpos($files['file_controller'],'public function print_file(')!==FALSE &&
     strpos($files['file_controller'],'$this->File_model->allowed(')!==FALSE &&
-    strpos($files['action'],"$type==='print'")!==FALSE,
+    strpos($files['action'],"\$type==='print'")!==FALSE,
     'Printable controlled files require the same file permissions as download.');
 newPlanCheck(strpos($files['document_view'],"'type'=>'print'")!==FALSE,
     'Document records must show a Print action for printable controlled files.');
