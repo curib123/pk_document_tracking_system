@@ -1,21 +1,52 @@
 /* Successful-login presentation. The original logo and central color tokens stay intact. */
-@view-transition { navigation: auto; }
-::view-transition-group(root) { animation: none; }
-::view-transition-old(root), ::view-transition-new(root) { animation: none; mix-blend-mode: normal; }
+@view-transition {
+    navigation: auto;
+}
+
+::view-transition-group(root) {
+    animation: none;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
+}
+
 html[data-login-transition]::view-transition-old(root) {
     animation: login-page-leave 180ms ease-out both;
 }
-@keyframes login-page-leave { to { opacity: 0; } }
 
-.login-transition { display: none; }
-html[data-login-transition] { overflow: hidden; animation: login-scroll-unlock 1ms 6s forwards; }
+@keyframes login-page-leave {
+    to {
+        opacity: 0;
+    }
+}
+
+.login-transition {
+    display: none;
+}
+
+html[data-login-transition] {
+    overflow: hidden;
+    animation: login-scroll-unlock 1ms 6s forwards;
+}
+
 html[data-login-transition] .app-shell {
     visibility: hidden;
     animation: login-unlock 1ms 6s forwards;
 }
-html[data-login-stage] .app-shell { visibility: visible; will-change: opacity, transform; }
-html[data-login-transition] .page-content > :first-child,
-html[data-login-presented] .page-content > :first-child { animation: none; }
+
+html[data-login-stage] .app-shell {
+    visibility: visible;
+    will-change: opacity, transform;
+}
+
+html[data-login-transition] .page-content> :first-child,
+html[data-login-presented] .page-content> :first-child {
+    animation: none;
+}
+
 html[data-login-transition] .login-transition {
     position: fixed;
     inset: 0;
@@ -26,8 +57,18 @@ html[data-login-transition] .login-transition {
     isolation: isolate;
     animation: login-dismiss 1ms 6s forwards;
 }
-.login-transition-veil { position: absolute; inset: 0; width: 100%; height: 100%; }
-.login-transition-mask-field { fill: var(--ui-white); }
+
+.login-transition-veil {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.login-transition-mask-field {
+    fill: var(--ui-white);
+}
+
 .login-transition-aperture {
     fill: var(--ui-black);
     transform-box: fill-box;
@@ -35,7 +76,12 @@ html[data-login-transition] .login-transition {
     transform: scale(0);
     will-change: transform;
 }
-.login-transition-canvas { fill: var(--ui-canvas); opacity: .97; }
+
+.login-transition-canvas {
+    fill: var(--ui-canvas);
+    opacity: .97;
+}
+
 .login-transition-glow {
     position: absolute;
     width: clamp(260px, 38vw, 430px);
@@ -46,6 +92,7 @@ html[data-login-transition] .login-transition {
     filter: blur(16px);
     will-change: transform, opacity;
 }
+
 .login-transition-logo {
     position: relative;
     width: clamp(190px, 25vw, 290px);
@@ -55,11 +102,37 @@ html[data-login-transition] .login-transition {
     transform: scale(.65);
     will-change: transform, opacity;
 }
-@keyframes login-unlock { to { visibility: visible; } }
-@keyframes login-dismiss { to { visibility: hidden; pointer-events: none; } }
-@keyframes login-scroll-unlock { to { overflow: visible; } }
+
+@keyframes login-unlock {
+    to {
+        visibility: visible;
+    }
+}
+
+@keyframes login-dismiss {
+    to {
+        visibility: hidden;
+        pointer-events: none;
+    }
+}
+
+@keyframes login-scroll-unlock {
+    to {
+        overflow: visible;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
-    html[data-login-transition]::view-transition-old(root) { animation-duration: 80ms; }
-    .login-transition-glow { display: none; }
-    .login-transition-logo { opacity: 1; transform: none; }
+    html[data-login-transition]::view-transition-old(root) {
+        animation-duration: 80ms;
+    }
+
+    .login-transition-glow {
+        display: none;
+    }
+
+    .login-transition-logo {
+        opacity: 1;
+        transform: none;
+    }
 }

@@ -8,11 +8,11 @@ class Requests extends MY_Controller
         $this->load->model('Request_model');
         $this->load->model('Document_model');
         $this->load->model('Transfer_model');
-        require_once APPPATH.'services/transfer/transfer_service.php';
+        require_once APPPATH . 'services/transfer/transfer_service.php';
         $this->load->model('Place_model');
-        require_once APPPATH.'services/request/request_service.php';
+        require_once APPPATH . 'services/request/request_service.php';
     }
-    private function listing($tab,$task)
+    private function listing($tab, $task)
     {
         $this->Request_model->types($tab);
         // Physical handoff tasks are visible to authorized recipients
@@ -22,114 +22,168 @@ class Requests extends MY_Controller
             // Assignment, not broad module-management access, controls who can act.
             $this->authenticate();
         } else {
-            $this->require_permission('requests','view');
+            $this->require_permission('requests', 'view');
         }
-        $state=$this->table_state('updated_at');
-        list($rows,$total,$state['page'])=$this->Request_model->listing(
-           $tab,$this->user,$task,$state['q'],$state['status'],$state['page'],$state['limit'],$state);
-        $actionModules=['softcopy_create'=>'softcopy','softcopy_revise'=>'softcopy',
-            'softcopy_cancel'=>'softcopy','hardcopy_create'=>'hardcopy','hardcopy_update'=>'hardcopy',
-            'transfer'=>'transfer','disposal'=>'disposal','assignment'=>'assignment','access'=>'access'];
-        $requestTypes=[];
+        $state = $this->table_state('updated_at');
+        list($rows, $total, $state['page']) = $this->Request_model->listing(
+            $tab,
+            $this->user,
+            $task,
+            $state['q'],
+            $state['status'],
+            $state['page'],
+            $state['limit'],
+            $state
+        );
+        $actionModules = [
+            'softcopy_create' => 'softcopy',
+            'softcopy_revise' => 'softcopy',
+            'softcopy_cancel' => 'softcopy',
+            'hardcopy_create' => 'hardcopy',
+            'hardcopy_update' => 'hardcopy',
+            'transfer' => 'transfer',
+            'disposal' => 'disposal',
+            'assignment' => 'assignment',
+            'access' => 'access'
+        ];
+        $requestTypes = [];
         foreach ($this->Request_model->types($tab) as $type) {
-            if ($this->can($actionModules[$type],'request')) $requestTypes[]=$type;
+            if ($this->can($actionModules[$type], 'request'))
+                $requestTypes[] = $type;
         }
-        $history=$this->Request_model->histories(array_column($rows,'id'));
-        $approvalRoutes=$this->Request_model->approval_routes(array_column($rows,'id'));
-        $handoffs=[];$handoffPage=1;$handoffTotal=0;
-        if ($task && $tab==='hardcopy-transfer' && $this->can('transfer','view')) {
-            list($handoffs,$handoffTotal,$handoffPage)=$this->Transfer_model->pending(
-                $this->user,max(1,(int)$this->input->get('handoff_page')),10
+        $history = $this->Request_model->histories(array_column($rows, 'id'));
+        $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
+        $handoffs = [];
+        $handoffPage = 1;
+        $handoffTotal = 0;
+        if ($task && $tab === 'hardcopy-transfer' && $this->can('transfer', 'view')) {
+            list($handoffs, $handoffTotal, $handoffPage) = $this->Transfer_model->pending(
+                $this->user,
+                max(1, (int) $this->input->get('handoff_page')),
+                10
             );
         }
-        $this->render(($task?'My Tasks':'My Requests').' · '.ucwords(str_replace('-',' ',$tab)),
-           $task?'pages/request/approving_assign_request/index':'pages/request/user_own_all_request/index',[
-             'tab'=>$tab,'task'=>$task,'allowed_request_types'=>$requestTypes,'rows'=>$rows,'total'=>$total,'table'=>$state,
-             'history'=>$history,'approval_routes'=>$approvalRoutes,
-             'handoffs'=>$handoffs,'handoff_total'=>$handoffTotal,
-             'handoff_page'=>$handoffPage,
-             'users'=>$task?[]:$this->Document_model->active_users(),
-             'softcopy_options'=>$task?[]:$this->Document_model->options('softcopy',$this->user,in_array($tab,['access-grant','document-assign'],TRUE)),
-             'hardcopy_options'=>$task?[]:$this->Document_model->options('hardcopy',$this->user,in_array($tab,['access-grant','document-assign'],TRUE)),
-             'transfer_sources'=>!$task && $tab==='hardcopy-transfer' ?
-                 $this->Document_model->transfer_sources($this->user) : [],
-             'transfer_options'=>!$task && $tab==='hardcopy-transfer' ? [
-                'areas'=>$this->Place_model->options('areas'),
-                'specifics'=>$this->Place_model->options('specifics'),
-                'assets'=>$this->Place_model->options('assets'),
-                'locations'=>$this->Document_model->hardcopy_locations(),
-                'users'=>$this->Document_model->active_users()
-             ] : [],
-             'category_options'=>$this->Place_model->options('categories'),
-             'location_options'=>$this->Place_model->options('locations'),
-             'hardcopy_form_options'=>[
-               'areas'=>$this->Place_model->options('areas'),
-               'specifics'=>$this->Place_model->options('specifics'),
-               'assets'=>$this->Place_model->options('assets'),
-               'locations'=>$this->Document_model->hardcopy_locations(),
-               'users'=>$this->Document_model->active_users()
-             ],
-             'is_administrator'=>$this->can('*','*')
-           ]);
+        $this->render(
+            ($task ? 'My Tasks' : 'My Requests') . ' · ' . ucwords(str_replace('-', ' ', $tab)),
+            $task ? 'pages/request/approving_assign_request/index' : 'pages/request/user_own_all_request/index',
+            [
+                'tab' => $tab,
+                'task' => $task,
+                'allowed_request_types' => $requestTypes,
+                'rows' => $rows,
+                'total' => $total,
+                'table' => $state,
+                'history' => $history,
+                'approval_routes' => $approvalRoutes,
+                'handoffs' => $handoffs,
+                'handoff_total' => $handoffTotal,
+                'handoff_page' => $handoffPage,
+                'users' => $task ? [] : $this->Document_model->active_users(),
+                'softcopy_options' => $task ? [] : $this->Document_model->options('softcopy', $this->user, in_array($tab, ['access-grant', 'document-assign'], TRUE)),
+                'hardcopy_options' => $task ? [] : $this->Document_model->options('hardcopy', $this->user, in_array($tab, ['access-grant', 'document-assign'], TRUE)),
+                'transfer_sources' => !$task && $tab === 'hardcopy-transfer' ?
+                    $this->Document_model->transfer_sources($this->user) : [],
+                'transfer_options' => !$task && $tab === 'hardcopy-transfer' ? [
+                    'areas' => $this->Place_model->options('areas'),
+                    'specifics' => $this->Place_model->options('specifics'),
+                    'assets' => $this->Place_model->options('assets'),
+                    'locations' => $this->Document_model->hardcopy_locations(),
+                    'users' => $this->Document_model->active_users()
+                ] : [],
+                'category_options' => $this->Place_model->options('categories'),
+                'location_options' => $this->Place_model->options('locations'),
+                'hardcopy_form_options' => [
+                    'areas' => $this->Place_model->options('areas'),
+                    'specifics' => $this->Place_model->options('specifics'),
+                    'assets' => $this->Place_model->options('assets'),
+                    'locations' => $this->Document_model->hardcopy_locations(),
+                    'users' => $this->Document_model->active_users()
+                ],
+                'is_administrator' => $this->can('*', '*')
+            ]
+        );
     }
-    public function mine($tab) { $this->listing($tab,FALSE); }
-    public function tasks($tab) { $this->listing($tab,TRUE); }
+    public function mine($tab)
+    {
+        $this->listing($tab, FALSE);
+    }
+    public function tasks($tab)
+    {
+        $this->listing($tab, TRUE);
+    }
     public function save($tab)
     {
         $this->Request_model->types($tab);
-        $this->require_permission('requests',(int)$this->input->post('id')?'edit':'add');
+        $this->require_permission('requests', (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {
-            (new Request_service())->save($tab,$this->input->post(),$this->user,
-                $_FILES['revision_attachment']??NULL);
+            (new Request_service())->save(
+                $tab,
+                $this->input->post(),
+                $this->user,
+                $_FILES['revision_attachment'] ?? NULL
+            );
             $this->notice('Request draft saved.');
-        } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
-        redirect('my-requests/'.$tab);
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('my-requests/' . $tab);
     }
     public function submit($tab)
     {
         $this->Request_model->types($tab);
-        $this->require_permission('requests','submit');$this->confirmed();
+        $this->require_permission('requests', 'submit');
+        $this->confirmed();
         try {
-            (new Request_service())->submit($tab,(int)$this->input->post('id'),$this->user);
+            (new Request_service())->submit($tab, (int) $this->input->post('id'), $this->user);
             $this->notice('Request submitted for approval.');
-        } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
-        redirect('my-requests/'.$tab);
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('my-requests/' . $tab);
     }
     public function decide($tab)
     {
         $this->Request_model->types($tab);
         // The service verifies the locked request's active approver step.
-        $this->authenticate();$this->confirmed();
+        $this->authenticate();
+        $this->confirmed();
         try {
-            (new Request_service())->decide($tab,(int)$this->input->post('id'),
-                $this->user,(string)$this->input->post('decision'),(string)$this->input->post('remark'));
+            (new Request_service())->decide(
+                $tab,
+                (int) $this->input->post('id'),
+                $this->user,
+                (string) $this->input->post('decision'),
+                (string) $this->input->post('remark')
+            );
             $this->notice('Approval decision recorded.');
-        } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
-        redirect('my-tasks/'.$tab);
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('my-tasks/' . $tab);
     }
     public function dispatch_transfer()
     {
-        $this->require_permission('transfer','view');
+        $this->require_permission('transfer', 'view');
         $this->confirmed();
         try {
-            (new Transfer_service())->dispatch((int)$this->input->post('id'),$this->user);
+            (new Transfer_service())->dispatch((int) $this->input->post('id'), $this->user);
             $this->notice('Hardcopy dispatched. Awaiting recipient acceptance.');
         } catch (DomainException $e) {
-            $this->notice($e->getMessage(),'danger');
+            $this->notice($e->getMessage(), 'danger');
         }
         redirect('my-tasks/hardcopy-transfer');
     }
 
     public function accept_transfer()
     {
-        $this->require_permission('transfer','view');
+        $this->require_permission('transfer', 'view');
         $this->confirmed();
         try {
-            (new Transfer_service())->accept((int)$this->input->post('id'),$this->user);
+            (new Transfer_service())->accept((int) $this->input->post('id'), $this->user);
             $this->notice('Hardcopy received. Physical handoff is complete.');
         } catch (DomainException $e) {
-            $this->notice($e->getMessage(),'danger');
+            $this->notice($e->getMessage(), 'danger');
         }
         redirect('my-tasks/hardcopy-transfer');
     }
@@ -137,11 +191,14 @@ class Requests extends MY_Controller
     public function cancel($tab)
     {
         $this->Request_model->types($tab);
-        $this->require_permission('requests','cancel');$this->confirmed();
+        $this->require_permission('requests', 'cancel');
+        $this->confirmed();
         try {
-            (new Request_service())->cancel($tab,(int)$this->input->post('id'),$this->user);
+            (new Request_service())->cancel($tab, (int) $this->input->post('id'), $this->user);
             $this->notice('Draft cancelled.');
-        } catch (DomainException $e) { $this->notice($e->getMessage(),'danger'); }
-        redirect('my-requests/'.$tab);
+        } catch (DomainException $e) {
+            $this->notice($e->getMessage(), 'danger');
+        }
+        redirect('my-requests/' . $tab);
     }
 }

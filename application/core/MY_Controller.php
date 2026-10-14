@@ -10,18 +10,21 @@ class MY_Controller extends CI_Controller
         // Do not read/write database-backed identities while a restore
         // replaces tables. Applies to login, logout, and every controller.
         // The already-running restore request does not re-enter this constructor.
-        if (is_file(PK_ROOT.'/storage/.restore-in-progress')) {
-            show_error('System restore is underway. Please try again after maintenance.',503);
+        if (is_file(PK_ROOT . '/storage/.restore-in-progress')) {
+            show_error('System restore is underway. Please try again after maintenance.', 503);
             exit;
         }
         $this->load->model('Identity_model');
         $this->load->model('Permission_model');
         $id = (int) $this->session->userdata('user_id');
-        if ($id) $this->user = $this->Identity_model->active_user($id);
-        if ($id && (!$this->user ||
-            (int)$this->session->userdata('session_version') !== (int)$this->user['session_version'])) {
+        if ($id)
+            $this->user = $this->Identity_model->active_user($id);
+        if (
+            $id && (!$this->user ||
+                (int) $this->session->userdata('session_version') !== (int) $this->user['session_version'])
+        ) {
             $this->session->sess_destroy();
-            $this->user=NULL;
+            $this->user = NULL;
         }
     }
 
@@ -29,19 +32,26 @@ class MY_Controller extends CI_Controller
     {
         // Block ordinary authenticated requests during a database restore.
         // The restoring administrator's Backups controller remains accessible.
-        if (is_file(PK_ROOT.'/storage/.restore-in-progress') &&
-            strtolower((string)$this->router->fetch_class())!=='backups') {
-            show_error('System restore is underway. Please try again after maintenance.',503);
+        if (
+            is_file(PK_ROOT . '/storage/.restore-in-progress') &&
+            strtolower((string) $this->router->fetch_class()) !== 'backups'
+        ) {
+            show_error('System restore is underway. Please try again after maintenance.', 503);
             exit;
         }
         if (!$this->user) {
-            $this->session->set_flashdata('auth_expired',TRUE);
-            redirect('login'); exit;
+            $this->session->set_flashdata('auth_expired', TRUE);
+            redirect('login');
+            exit;
         }
-        require_once APPPATH.'services/authentication/authentication_service.php';
-        if (!empty($this->user['require_password_change']) &&
+        require_once APPPATH . 'services/authentication/authentication_service.php';
+        if (
+            !empty($this->user['require_password_change']) &&
             !Authentication_service::is_setup_action(
-                $this->router->fetch_class(), $this->router->fetch_method())) {
+                $this->router->fetch_class(),
+                $this->router->fetch_method()
+            )
+        ) {
             // The setup page has no dashboard/role dependency and no protected data.
             redirect('change-password');
             exit;
@@ -64,20 +74,28 @@ class MY_Controller extends CI_Controller
 
     protected function confirmed()
     {
-        if ($this->input->method(TRUE) !== 'POST') show_error('Method not allowed.', 405);
-        if ($this->input->post('confirmed') !== 'yes') show_error('Confirmation required.', 400);
+        if ($this->input->method(TRUE) !== 'POST')
+            show_error('Method not allowed.', 405);
+        if ($this->input->post('confirmed') !== 'yes')
+            show_error('Confirmation required.', 400);
     }
 
     protected function notice($message, $type = 'success')
     {
         // Daily JSON audit is filesystem-only; never insert operational audit
         // events into an additional SQL table.
-        if ($this->user && $this->input->method(TRUE)==='POST') {
+        if ($this->user && $this->input->method(TRUE) === 'POST') {
             $this->load->library('Audit_file');
-            if (!$this->audit_file->append((int)$this->user['id'],
-                trim(uri_string(),'/'),NULL,[],
-                $type==='success'?'success':'failed')) {
-                log_message('error','Unable to write JSON audit file for successful action.');
+            if (
+                !$this->audit_file->append(
+                    (int) $this->user['id'],
+                    trim(uri_string(), '/'),
+                    NULL,
+                    [],
+                    $type === 'success' ? 'success' : 'failed'
+                )
+            ) {
+                log_message('error', 'Unable to write JSON audit file for successful action.');
             }
         }
         $this->session->set_flashdata('notice', $message);
@@ -102,11 +120,11 @@ class MY_Controller extends CI_Controller
 
     protected function table_state($defaultSort = 'created_at')
     {
-        require_once APPPATH.'services/presentation/query_state.php';
+        require_once APPPATH . 'services/presentation/query_state.php';
         try {
-            return Query_state::parse($this->input->get(NULL,TRUE)?:[], $defaultSort);
+            return Query_state::parse($this->input->get(NULL, TRUE) ?: [], $defaultSort);
         } catch (DomainException $e) {
-            show_error($e->getMessage(),400);
+            show_error($e->getMessage(), 400);
             exit;
         }
     }

@@ -11,90 +11,185 @@
     --ui-skeleton-edge: var(--ui-ink-200);
 }
 
-.page-content {position: relative}
+.page-content {
+    position: relative
+}
+
 @keyframes ui-page-enter {
-    from {opacity: .72; transform: translateY(6px)}
-    to {opacity: 1; transform: translateY(0)}
+    from {
+        opacity: .72;
+        transform: translateY(6px)
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0)
+    }
 }
+
 @keyframes ui-modal-enter {
-    from {opacity: .94; transform: translateY(10px) scale(.992)}
-    to {opacity: 1; transform: translateY(0) scale(1)}
+    from {
+        opacity: .94;
+        transform: translateY(10px) scale(.992)
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1)
+    }
 }
+
 @keyframes ui-shimmer {
-    0% {background-position: 110% 0}
-    100% {background-position: -10% 0}
+    0% {
+        background-position: 110% 0
+    }
+
+    100% {
+        background-position: -10% 0
+    }
 }
+
 @keyframes ui-pulse-in {
-    from {opacity: .55}
-    to {opacity: 1}
+    from {
+        opacity: .55
+    }
+
+    to {
+        opacity: 1
+    }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-    .page-content > :first-child {animation: ui-page-enter var(--ui-motion-slow) var(--ui-ease-smooth) both}
+    .page-content> :first-child {
+        animation: ui-page-enter var(--ui-motion-slow) var(--ui-ease-smooth) both
+    }
+
     .modal.show .modal-content {
         animation: ui-modal-enter var(--ui-motion-normal) var(--ui-ease-smooth) both;
     }
-    .workspace-card, .stat-card, .document-record-card,
-    .folder-tile, .doc-tree-folder-row,
-    .btn, .record-action, .tab-link, .side-link,
-    .form-control, .form-select, .searchable-input {
+
+    .workspace-card,
+    .stat-card,
+    .document-record-card,
+    .folder-tile,
+    .doc-tree-folder-row,
+    .btn,
+    .record-action,
+    .tab-link,
+    .side-link,
+    .form-control,
+    .form-select,
+    .searchable-input {
         transition-property: background-color, border-color, box-shadow, color, transform;
         transition-duration: var(--ui-motion-normal);
         transition-timing-function: var(--ui-ease-smooth);
     }
-    .workspace-card:hover, .document-record-card:hover {
+
+    .workspace-card:hover,
+    .document-record-card:hover {
         border-color: var(--ui-line-strong);
         box-shadow: 0 9px 24px color-mix(in srgb, var(--ui-ink-950) 7%, transparent);
     }
-    .folder-tile:hover, .doc-tree-folder-row:hover {transform: translateX(2px)}
-    .btn:active:not(:disabled), .record-action:active:not(:disabled) {transform: scale(.98)}
-    .form-control:focus, .form-select:focus, .searchable-input:focus {
+
+    .folder-tile:hover,
+    .doc-tree-folder-row:hover {
+        transform: translateX(2px)
+    }
+
+    .btn:active:not(:disabled),
+    .record-action:active:not(:disabled) {
+        transform: scale(.98)
+    }
+
+    .form-control:focus,
+    .form-select:focus,
+    .searchable-input:focus {
         border-color: var(--ui-brand-300);
         box-shadow: 0 0 0 3px color-mix(in srgb, var(--ui-brand-300) 27%, transparent);
     }
-    .doc-tree-node > details[open] > .doc-tree-children {
+
+    .doc-tree-node>details[open]>.doc-tree-children {
         animation: ui-pulse-in var(--ui-motion-normal) ease-out both;
     }
 }
+
 .motion-skeleton {
     position: absolute;
     inset: 0;
     z-index: 35;
-    min-height: min(700px,100%);
-    padding: clamp(16px,3vw,32px);
+    min-height: min(700px, 100%);
+    padding: clamp(16px, 3vw, 32px);
     background: var(--ui-canvas);
     border-radius: 12px;
     pointer-events: all;
     overflow: hidden;
 }
-.motion-skeleton[hidden] {display:none!important}
+
+.motion-skeleton[hidden] {
+    display: none !important
+}
+
 .motion-skeleton-block {
     display: block;
     border-radius: 12px;
     background-color: var(--ui-skeleton-base);
     background-image: linear-gradient(100deg,
-        var(--ui-skeleton-base) 20%,
-        var(--ui-slate-100) 38%,
-        var(--ui-white) 48%,
-        var(--ui-slate-100) 58%,
-        var(--ui-skeleton-base) 76%);
+            var(--ui-skeleton-base) 20%,
+            var(--ui-slate-100) 38%,
+            var(--ui-white) 48%,
+            var(--ui-slate-100) 58%,
+            var(--ui-skeleton-base) 76%);
     background-size: 240% 100%;
     animation: ui-shimmer 1.65s linear infinite;
 }
-.motion-skeleton-line {height: 18px; margin-bottom: 14px; max-width: 300px}
-.motion-skeleton-line.short {width: 32%;height: 13px;margin-bottom: 23px}
-.motion-skeleton-banner {height: clamp(95px,13vw,150px);margin-bottom: 20px}
-.motion-skeleton-cards {display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:15px;margin-bottom:20px}
-.motion-skeleton-cards .motion-skeleton-block {min-width:0;height:114px}
-.motion-skeleton-rows {display:grid;gap:10px}
-.motion-skeleton-rows .motion-skeleton-block {height:58px;max-width:none}
+
+.motion-skeleton-line {
+    height: 18px;
+    margin-bottom: 14px;
+    max-width: 300px
+}
+
+.motion-skeleton-line.short {
+    width: 32%;
+    height: 13px;
+    margin-bottom: 23px
+}
+
+.motion-skeleton-banner {
+    height: clamp(95px, 13vw, 150px);
+    margin-bottom: 20px
+}
+
+.motion-skeleton-cards {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 15px;
+    margin-bottom: 20px
+}
+
+.motion-skeleton-cards .motion-skeleton-block {
+    min-width: 0;
+    height: 114px
+}
+
+.motion-skeleton-rows {
+    display: grid;
+    gap: 10px
+}
+
+.motion-skeleton-rows .motion-skeleton-block {
+    height: 58px;
+    max-width: none
+}
+
 body.motion-login-loading .login-card,
 .auth-required-dialog.motion-auth-loading .modal-content {
     position: relative;
 }
+
 body.motion-login-loading .login-card::after,
 .auth-required-dialog.motion-auth-loading .modal-content::after {
-    content:"";
+    content: "";
     position: absolute;
     z-index: 10;
     inset: 0;
@@ -102,29 +197,50 @@ body.motion-login-loading .login-card::after,
     box-shadow: inset 0 0 0 1px var(--ui-skeleton-edge);
     background-color: var(--ui-skeleton-base);
     background-image: linear-gradient(100deg,
-      var(--ui-skeleton-base) 20%,var(--ui-slate-100) 38%,
-      var(--ui-white) 48%,var(--ui-slate-100) 58%,var(--ui-skeleton-base) 76%);
+            var(--ui-skeleton-base) 20%, var(--ui-slate-100) 38%,
+            var(--ui-white) 48%, var(--ui-slate-100) 58%, var(--ui-skeleton-base) 76%);
     background-size: 240% 100%;
     animation: ui-shimmer 1.65s linear infinite;
 }
-@media(max-width:900px){
-    .motion-skeleton-cards {grid-template-columns:repeat(2,minmax(0,1fr))}
-    .motion-skeleton-cards .motion-skeleton-block {height:95px}
+
+@media(max-width:900px) {
+    .motion-skeleton-cards {
+        grid-template-columns: repeat(2, minmax(0, 1fr))
+    }
+
+    .motion-skeleton-cards .motion-skeleton-block {
+        height: 95px
+    }
 }
+
 @media (prefers-reduced-motion: reduce) {
-    .page-content > :first-child, .modal.show .modal-content,
-    .doc-tree-node > details[open] > .doc-tree-children {
-        animation: none!important;
+
+    .page-content> :first-child,
+    .modal.show .modal-content,
+    .doc-tree-node>details[open]>.doc-tree-children {
+        animation: none !important;
     }
-    .workspace-card, .stat-card, .document-record-card,
-    .folder-tile, .doc-tree-folder-row, .btn, .record-action,
-    .tab-link, .side-link, .form-control, .form-select, .searchable-input {
-        transition: none!important;
-        transform: none!important;
+
+    .workspace-card,
+    .stat-card,
+    .document-record-card,
+    .folder-tile,
+    .doc-tree-folder-row,
+    .btn,
+    .record-action,
+    .tab-link,
+    .side-link,
+    .form-control,
+    .form-select,
+    .searchable-input {
+        transition: none !important;
+        transform: none !important;
     }
-    .motion-skeleton-block, body.motion-login-loading .login-card::after,
+
+    .motion-skeleton-block,
+    body.motion-login-loading .login-card::after,
     .auth-required-dialog.motion-auth-loading .modal-content::after {
-        animation: none!important;
+        animation: none !important;
         background-image: none;
     }
 }

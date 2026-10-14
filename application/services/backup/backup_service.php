@@ -148,6 +148,7 @@ final class Backup_service
             if (!$zip->close()) throw new DomainException('Could not finish backup ZIP.');
             $zip=NULL;
             @chmod($tempArchive,0600);
+            $this->verify($tempArchive);
             if (!rename($tempArchive,$this->directory.'/'.$name))
                 throw new DomainException('Cannot publish the completed archive.');
             return ['name'=>$name,'size'=>(int)filesize($this->directory.'/'.$name),

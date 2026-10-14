@@ -72,9 +72,9 @@
   --radius: 14px;
   /* Bootstrap's own semantic controls use this brand palette. */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 193,59,79;
+  --bs-primary-rgb: 193, 59, 79;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 158,45,64;
+  --bs-danger-rgb: 158, 45, 64;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
@@ -91,18 +91,21 @@
   --bs-btn-disabled-bg: var(--ui-brand-300);
   --bs-btn-disabled-border-color: var(--ui-brand-300);
 }
+
 .btn-outline-primary {
   --bs-btn-color: var(--ui-brand-700);
   --bs-btn-border-color: var(--ui-brand-300);
   --bs-btn-hover-bg: var(--ui-brand-700);
   --bs-btn-hover-border-color: var(--ui-brand-700);
 }
+
 .btn-danger {
   --bs-btn-bg: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-800);
   --bs-btn-hover-bg: var(--ui-brand-900);
   --bs-btn-hover-border-color: var(--ui-brand-900);
 }
+
 .btn-outline-danger {
   --bs-btn-color: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-300);

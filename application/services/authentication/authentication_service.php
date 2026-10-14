@@ -11,8 +11,8 @@ class Authentication_service
 
     public static function is_setup_action($controller, $method)
     {
-        return strtolower((string)$controller) === 'auth' &&
-            in_array(strtolower((string)$method), ['setup','change_password','logout'], TRUE);
+        return strtolower((string) $controller) === 'auth' &&
+            in_array(strtolower((string) $method), ['setup', 'change_password', 'logout'], TRUE);
     }
 
     public static function validate_new_password($current, $password, $confirmation)

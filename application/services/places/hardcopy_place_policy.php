@@ -8,21 +8,21 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  */
 final class Hardcopy_place_policy
 {
-    public static function require_location_path($area,$specific,$location): void
+    public static function require_location_path($area, $specific, $location): void
     {
-        if ((int)$area <= 0)
+        if ((int) $area <= 0)
             throw new DomainException('Select an Area.');
-        if ((int)$specific <= 0)
+        if ((int) $specific <= 0)
             throw new DomainException('Select a Specific.');
-        if ((int)$location <= 0)
+        if ((int) $location <= 0)
             throw new DomainException('Select a Location.');
     }
 
-    public static function require_location_parents($area,$specific): void
+    public static function require_location_parents($area, $specific): void
     {
-        if ((int)$area <= 0)
+        if ((int) $area <= 0)
             throw new DomainException('Select an Area.');
-        if ((int)$specific <= 0)
+        if ((int) $specific <= 0)
             throw new DomainException('Select a Specific.');
     }
 }

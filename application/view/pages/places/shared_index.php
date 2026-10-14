@@ -1,125 +1,197 @@
 <?php
 // Shared Places screen: each master-branch module keeps its own index.php.
 $permissions = $permissions ?? [];
-$can = function ($action) use ($permissions,$cfg) {
-    if (!empty($cfg['read_only']) && $action !== 'view') return FALSE;
+$can = function ($action) use ($permissions, $cfg) {
+    if (!empty($cfg['read_only']) && $action !== 'view')
+        return FALSE;
     return isset($permissions['*']) || !empty($permissions[$cfg['table']][$action]);
 };
 $dt_columns = [];
-$labels = ['name'=>'Name','asset_number'=>'Asset Number','sequence_key'=>'Sequence',
-    'value'=>'Current Value','code'=>'Location Code','description'=>'Description','folder_name'=>'Folder',
-    'area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset','parent_name'=>'Parent'];
+$labels = [
+    'name' => 'Name',
+    'asset_number' => 'Asset Number',
+    'sequence_key' => 'Sequence',
+    'value' => 'Current Value',
+    'code' => 'Location Code',
+    'description' => 'Description',
+    'folder_name' => 'Folder',
+    'area_name' => 'Area',
+    'specific_name' => 'Specific',
+    'asset_name' => 'Asset',
+    'parent_name' => 'Parent'
+];
 foreach ($cfg['fields'] as $field) {
-    if (str_ends_with($field,'_id')) {
-        $key = str_replace('_id','_name',$field);
-        if ($field === 'parent_id') $key='parent_name';
-        if (isset($labels[$key])) $dt_columns[$key]=$labels[$key];
+    if (str_ends_with($field, '_id')) {
+        $key = str_replace('_id', '_name', $field);
+        if ($field === 'parent_id')
+            $key = 'parent_name';
+        if (isset($labels[$key]))
+            $dt_columns[$key] = $labels[$key];
     } else {
-        $dt_columns[$field]=$labels[$field] ?? ucwords(str_replace('_',' ',$field));
+        $dt_columns[$field] = $labels[$field] ?? ucwords(str_replace('_', ' ', $field));
     }
 }
-if ($cfg['active']) $dt_columns['active']='Status';
-$dt_rows=[];
+if ($cfg['active'])
+    $dt_columns['active'] = 'Status';
+$dt_rows = [];
 foreach ($rows as $row) {
-    $cells=[];
-    foreach ($dt_columns as $field=>$label) {
-        $value=$row[$field] ?? '';
-        $cells[$field]=$field==='active' ? ($value?'active':'0') : $value;
+    $cells = [];
+    foreach ($dt_columns as $field => $label) {
+        $value = $row[$field] ?? '';
+        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0') : $value;
     }
-    $display=[];
-    foreach ($dt_columns as $field=>$label) $display[$label]=$cells[$field];
-    $record=[];
-    foreach (array_merge(['id','version'],$cfg['fields'],['active']) as $field) {
-        if (array_key_exists($field,$row)) $record[$field]=$row[$field];
+    $display = [];
+    foreach ($dt_columns as $field => $label)
+        $display[$label] = $cells[$field];
+    $record = [];
+    foreach (array_merge(['id', 'version'], $cfg['fields'], ['active']) as $field) {
+        if (array_key_exists($field, $row))
+            $record[$field] = $row[$field];
     }
     // Area, Specific and Asset are simple reference records: use Edit, not View Details.
-    $buttons=in_array($cfg['slug'],['area','specific','asset'],TRUE)
-        ? [] : [['type'=>'view']];
-    if ($can('edit')) $buttons[]=['type'=>'edit'];
+    $buttons = in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE)
+        ? [] : [['type' => 'view']];
+    if ($can('edit'))
+        $buttons[] = ['type' => 'edit'];
     if ($cfg['active'] && $can('delete') && !empty($row['active'])) {
-        $buttons[]=['type'=>'action','url'=>'places/'.$cfg['slug'].'/deactivate',
-            'label'=>'Deactivate','description'=>'Deactivate this reference item without deleting historical links.',
-            'icon'=>'fa-solid fa-ban'];
+        $buttons[] = [
+            'type' => 'action',
+            'url' => 'places/' . $cfg['slug'] . '/deactivate',
+            'label' => 'Deactivate',
+            'description' => 'Deactivate this reference item without deleting historical links.',
+            'icon' => 'fa-solid fa-ban'
+        ];
     }
-    $dt_rows[]=['id'=>$row['id'] ?? 0,'cells'=>$cells,'record'=>$record,
-        'display'=>in_array($cfg['slug'],['area','specific','asset'],TRUE)?[]:$display,
-        'buttons'=>$buttons];
+    $dt_rows[] = [
+        'id' => $row['id'] ?? 0,
+        'cells' => $cells,
+        'record' => $record,
+        'display' => in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE) ? [] : $display,
+        'buttons' => $buttons
+    ];
 }
-$dt_path='places/'.$cfg['slug'];
-$dt_q=$table['q'];$dt_filter=$table['status'];$dt_page=$table['page'];
-$dt_limit=$table['limit'];$dt_total=$total;
-$dt_filters=$cfg['active']?['status'=>[''=>'All Statuses','1'=>'Active','0'=>'Inactive']]:[];
-$parentSources=['specific'=>'areas','asset'=>'specifics','location'=>'areas','softcopy-categories'=>'categories'];
+$dt_path = 'places/' . $cfg['slug'];
+$dt_q = $table['q'];
+$dt_filter = $table['status'];
+$dt_page = $table['page'];
+$dt_limit = $table['limit'];
+$dt_total = $total;
+$dt_filters = $cfg['active'] ? ['status' => ['' => 'All Statuses', '1' => 'Active', '0' => 'Inactive']] : [];
+$parentSources = ['specific' => 'areas', 'asset' => 'specifics', 'location' => 'areas', 'softcopy-categories' => 'categories'];
 if (isset($parentSources[$cfg['slug']])) {
-    $dt_filters['parent']=[''=>'All Parent Folders'];
-    foreach ($options[$parentSources[$cfg['slug']]] as $option) $dt_filters['parent'][$option['id']]=$option['name'];
+    $dt_filters['parent'] = ['' => 'All Parent Folders'];
+    foreach ($options[$parentSources[$cfg['slug']]] as $option)
+        $dt_filters['parent'][$option['id']] = $option['name'];
 }
-$dt_filter_values=['status'=>$dt_filter,'parent'=>$table['parent']?:''];
-$dt_badges=['active'];
-$dt_create=$can('add')?'Add '.$cfg['label']:'';
-$dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
-$dt_sortable=array_values(array_intersect(array_keys($dt_columns),
-    ['name','code','asset_number','folder_name','sequence_key','value','active']));
+$dt_filter_values = ['status' => $dt_filter, 'parent' => $table['parent'] ?: ''];
+$dt_badges = ['active'];
+$dt_create = $can('add') ? 'Add ' . $cfg['label'] : '';
+$dt_sort = $table['sort'];
+$dt_dir = strtolower($table['dir']);
+$dt_sortable = array_values(array_intersect(
+    array_keys($dt_columns),
+    ['name', 'code', 'asset_number', 'folder_name', 'sequence_key', 'value', 'active']
+));
 ?>
 
 <nav class="tab-bar" aria-label="Place categories">
-<?php foreach ([
- 'area'=>'Area','specific'=>'Specific','asset'=>'Asset','location'=>'Location',
- 'sequence'=>'Sequence','softcopy-categories'=>'Softcopy Categories'
-] as $slug=>$label):
- $perm=['area'=>'areas','specific'=>'specifics','asset'=>'assets','location'=>'locations',
-    'sequence'=>'sequences','softcopy-categories'=>'categories'][$slug];
- if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
-<a href="<?= site_url('places/'.$slug) ?>" class="tab-link <?= $cfg['slug']===$slug?'active':'' ?>">
-<?= html_escape($label) ?></a>
-<?php endif; endforeach; ?>
+    <?php foreach ([
+        'area' => 'Area',
+        'specific' => 'Specific',
+        'asset' => 'Asset',
+        'location' => 'Location',
+        'sequence' => 'Sequence',
+        'softcopy-categories' => 'Softcopy Categories'
+    ] as $slug => $label):
+        $perm = [
+            'area' => 'areas',
+            'specific' => 'specifics',
+            'asset' => 'assets',
+            'location' => 'locations',
+            'sequence' => 'sequences',
+            'softcopy-categories' => 'categories'
+        ][$slug];
+        if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
+            <a href="<?= site_url('places/' . $slug) ?>" class="tab-link <?= $cfg['slug'] === $slug ? 'active' : '' ?>">
+                <?= html_escape($label) ?></a>
+        <?php endif; endforeach; ?>
 </nav>
-<?php $this->load->view('reusable_components/reusable_datatable',compact(
-'dt_path','dt_q','dt_filter','dt_page','dt_limit','dt_total','dt_filters','dt_filter_values',
-'dt_badges','dt_rows','dt_columns','dt_create','dt_sort','dt_dir','dt_sortable'
+<?php $this->load->view('reusable_components/reusable_datatable', compact(
+    'dt_path',
+    'dt_q',
+    'dt_filter',
+    'dt_page',
+    'dt_limit',
+    'dt_total',
+    'dt_filters',
+    'dt_filter_values',
+    'dt_badges',
+    'dt_rows',
+    'dt_columns',
+    'dt_create',
+    'dt_sort',
+    'dt_dir',
+    'dt_sortable'
 )); ?>
-<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1" aria-labelledby="editTitle" aria-hidden="true">
- <div class="modal-dialog modal-dialog-centered modal-lg"><div class="modal-content">
- <form id="editForm" method="post" action="<?= site_url('places/'.$cfg['slug'].'/save') ?>"
-       data-confirm="Save these changes?" <?= $cfg['slug']==='location' ? 'data-location-upsert' : '' ?>>
-  <div class="modal-header"><h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
-    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
-  <div class="modal-body"><div class="row g-3">
-   <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
-   <?php if ($cfg['slug']==='location'): ?>
-       <?php $this->load->view('pages/places/location/modal_action/upsert', ['options'=>$options]); ?>
-   <?php else: ?>
-   <?php foreach ($cfg['fields'] as $field):
-    $references=['area_id'=>'areas','specific_id'=>'specifics','asset_id'=>'assets','parent_id'=>'categories'];
-    if (isset($references[$field])):
-      $optName=$references[$field]; ?>
-    <div class="col-md-6">
-     <label class="form-label" for="f-<?= html_escape($field) ?>"><?= html_escape(ucwords(str_replace('_',' ',$field))) ?></label>
-     <select class="form-select" id="f-<?= html_escape($field) ?>" name="<?= html_escape($field) ?>" data-searchable>
-      <option value="">Select <?= html_escape(str_replace('_id','',$field)) ?></option>
-      <?php foreach ($options[$optName] as $option): ?>
-       <option value="<?= (int)$option['id'] ?>"><?= html_escape($option['name']) ?></option>
-      <?php endforeach; ?>
-     </select>
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
+    aria-labelledby="editTitle" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content">
+            <form id="editForm" method="post" action="<?= site_url('places/' . $cfg['slug'] . '/save') ?>"
+                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?>>
+                <div class="modal-header">
+                    <h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row g-3">
+                        <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
+                        <?php if ($cfg['slug'] === 'location'): ?>
+                            <?php $this->load->view('pages/places/location/modal_action/upsert', ['options' => $options]); ?>
+                        <?php else: ?>
+                            <?php foreach ($cfg['fields'] as $field):
+                                $references = ['area_id' => 'areas', 'specific_id' => 'specifics', 'asset_id' => 'assets', 'parent_id' => 'categories'];
+                                if (isset($references[$field])):
+                                    $optName = $references[$field]; ?>
+                                    <div class="col-md-6">
+                                        <label class="form-label"
+                                            for="f-<?= html_escape($field) ?>"><?= html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
+                                        <select class="form-select" id="f-<?= html_escape($field) ?>"
+                                            name="<?= html_escape($field) ?>" data-searchable>
+                                            <option value="">Select <?= html_escape(str_replace('_id', '', $field)) ?></option>
+                                            <?php foreach ($options[$optName] as $option): ?>
+                                                <option value="<?= (int) $option['id'] ?>"><?= html_escape($option['name']) ?></option>
+                                            <?php endforeach; ?>
+                                        </select>
+                                    </div>
+                                <?php else: ?>
+                                    <div class="col-md-6">
+                                        <label class="form-label"
+                                            for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?></label>
+                                        <?php if ($field === 'description'): ?>
+                                            <textarea class="form-control" id="f-<?= html_escape($field) ?>"
+                                                name="<?= html_escape($field) ?>" rows="2"></textarea>
+                                        <?php else: ?>
+                                            <input class="form-control" id="f-<?= html_escape($field) ?>"
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code' ? 'required' : '' ?>                 <?= $field === 'value' ? 'type="number" min="0"' : 'maxlength="150"' ?>>
+                                        <?php endif; ?>
+                                    </div>
+                                <?php endif; endforeach; ?>
+                        <?php endif; ?>
+                        <?php if ($cfg['active']): ?>
+                            <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox"
+                                        name="active" value="1" checked> Active</label></div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                <input type="hidden" name="confirmed" value="no">
+                <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                    value="<?= $this->security->get_csrf_hash() ?>">
+                <div class="modal-footer"><button class="btn btn-light" type="button"
+                        data-bs-dismiss="modal">Cancel</button>
+                    <button class="btn btn-primary" type="submit">Save Record</button>
+                </div>
+            </form>
+        </div>
     </div>
-    <?php else: ?>
-     <div class="col-md-6">
-     <label class="form-label" for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_',' ',$field))) ?></label>
-     <?php if ($field==='description'): ?>
-     <textarea class="form-control" id="f-<?= html_escape($field) ?>" name="<?= html_escape($field) ?>" rows="2"></textarea>
-     <?php else: ?>
-     <input class="form-control" id="f-<?= html_escape($field) ?>" name="<?= html_escape($field) ?>"
-      <?= $field===$cfg['key'] || $field==='folder_name' || $field==='code'?'required':'' ?>
-      <?= $field==='value'?'type="number" min="0"':'maxlength="150"' ?>>
-     <?php endif; ?></div>
-    <?php endif; endforeach; ?>
-   <?php endif; ?>
-   <?php if ($cfg['active']): ?>
-    <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="active" value="1" checked> Active</label></div>
-   <?php endif; ?>
-  </div></div>
-  <input type="hidden" name="confirmed" value="no">
-  <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
-  <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-    <button class="btn btn-primary" type="submit">Save Record</button></div>
- </form></div></div></div>
+</div>

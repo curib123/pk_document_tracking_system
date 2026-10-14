@@ -9,13 +9,24 @@ if ($test && !preg_match('/^[a-zA-Z0-9_]+_test$/', $name)) {
     throw new RuntimeException('Test database name must end in _test.');
 }
 $db['default'] = [
- 'dsn' => '', 'hostname' => getenv('DB_HOST') ?: '127.0.0.1',
- 'username' => getenv('DB_USERNAME') ?: 'root',
- 'password' => getenv('DB_PASSWORD') ?: '',
- 'database' => $name, 'dbdriver' => 'mysqli', 'dbprefix' => '',
- 'pconnect' => FALSE, 'db_debug' => FALSE, 'cache_on' => FALSE,
- 'cachedir' => '', 'char_set' => 'utf8mb4', 'dbcollat' => 'utf8mb4_general_ci',
- 'swap_pre' => '', 'encrypt' => FALSE, 'compress' => FALSE,
- 'stricton' => TRUE, 'failover' => [], 'save_queries' => FALSE,
- 'port' => (int) (getenv('DB_PORT') ?: 3306)
+    'dsn' => '',
+    'hostname' => getenv('DB_HOST') ?: '127.0.0.1',
+    'username' => getenv('DB_USERNAME') ?: 'root',
+    'password' => getenv('DB_PASSWORD') ?: '',
+    'database' => $name,
+    'dbdriver' => 'mysqli',
+    'dbprefix' => '',
+    'pconnect' => FALSE,
+    'db_debug' => FALSE,
+    'cache_on' => FALSE,
+    'cachedir' => '',
+    'char_set' => 'utf8mb4',
+    'dbcollat' => 'utf8mb4_general_ci',
+    'swap_pre' => '',
+    'encrypt' => FALSE,
+    'compress' => FALSE,
+    'stricton' => TRUE,
+    'failover' => [],
+    'save_queries' => FALSE,
+    'port' => (int) (getenv('DB_PORT') ?: 3306)
 ];

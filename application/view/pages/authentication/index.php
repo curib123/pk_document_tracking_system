@@ -1,6 +1,6 @@
-
 <!doctype html>
 <html lang="en" data-logout-destination<?= !empty($logout_expired) ? ' data-auth-expired' : '' ?>>
+
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,7 +10,7 @@
 
     <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
 
-     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
 
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
@@ -22,8 +22,7 @@
     <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 </head>
 
-<body class="login-page"
-      style="background-image: url('<?= base_url('assets/images/building.jpg') ?>')">
+<body class="login-page" style="background-image: url('<?= base_url('assets/images/building.jpg') ?>')">
     <?php $this->load->view('reusable_components/logout_transition'); ?>
 
     <main class="login-shell">
@@ -38,7 +37,7 @@
                 </span>
 
                 <h1 id="loginWelcomeHeading" class="login-welcome">
-                   Secure access for your document control center.
+                    Secure access for your document control center.
                 </h1>
 
                 <p>
@@ -48,56 +47,56 @@
                     in a clean panel experience.
                 </p>
 
-                     <div class="container-fluid px-0 mt-3">
-    <div class="row g-3">
+                <div class="container-fluid px-0 mt-3">
+                    <div class="row g-3">
 
-        <div class="col-4">
-            <div class="h-100  text-white
+                        <div class="col-4">
+                            <div class="h-100  text-white
                         border border-light rounded-2 p-2
                         d-flex align-items-center gap-2">
 
-                <i class="fa-solid fa-folder-open text-light fs-6"></i>
+                                <i class="fa-solid fa-folder-open text-light fs-6"></i>
 
-                <div>
-                    <h6 class="small fw-bold mb-1">Track records</h6>
-                    <p class="mb-0" style="font-size: 10px;">Manage documents</p>
-                </div>
+                                <div>
+                                    <h6 class="small fw-bold mb-1">Track records</h6>
+                                    <p class="mb-0" style="font-size: 10px;">Manage documents</p>
+                                </div>
 
-            </div>
-        </div>
+                            </div>
+                        </div>
 
-        <div class="col-4">
-            <div class="h-100 text-white
+                        <div class="col-4">
+                            <div class="h-100 text-white
                         border border-light rounded-2 p-2
                         d-flex align-items-center gap-2">
 
-                <i class="fa-solid fa-magnifying-glass-location text-light fs-6"></i>
+                                <i class="fa-solid fa-magnifying-glass-location text-light fs-6"></i>
 
-                <div>
-                    <h6 class="small fw-bold mb-1">Locate faster</h6>
-                    <p class="mb-0" style="font-size: 10px;">Find files easily</p>
-                </div>
+                                <div>
+                                    <h6 class="small fw-bold mb-1">Locate faster</h6>
+                                    <p class="mb-0" style="font-size: 10px;">Find files easily</p>
+                                </div>
 
-            </div>
-        </div>
+                            </div>
+                        </div>
 
-        <div class="col-4">
-            <div class="h-100  text-white
+                        <div class="col-4">
+                            <div class="h-100  text-white
                         border border-light rounded-2 p-2
                         d-flex align-items-center gap-2">
 
-                <i class="fa-solid fa-shield-halved text-light fs-6"></i>
+                                <i class="fa-solid fa-shield-halved text-light fs-6"></i>
 
-                <div>
-                    <h6 class="small fw-bold mb-1">Work securely</h6>
-                    <p class="mb-0" style="font-size: 10px;">Secure access</p>
+                                <div>
+                                    <h6 class="small fw-bold mb-1">Work securely</h6>
+                                    <p class="mb-0" style="font-size: 10px;">Secure access</p>
+                                </div>
+
+                            </div>
+                        </div>
+
+                    </div>
                 </div>
-
-            </div>
-        </div>
-
-    </div>
-</div>
 
             </div>
         </section>
@@ -107,8 +106,8 @@
 
             <div class="login-card">
 
-                <div class="container"> 
-                      <img src="<?= base_url('assets/images/peanut-kisses.png') ?>" alt="Peanut Kisses logo">
+                <div class="container">
+                    <img src="<?= base_url('assets/images/peanut-kisses.png') ?>" alt="Peanut Kisses logo">
                 </div>
                 <span class="eyebrow">Welcome back</span>
 
@@ -125,23 +124,16 @@
                 <form method="post" action="<?= site_url('login') ?>">
 
                     <!-- CSRF Protection -->
-                    <input type="hidden"
-                           name="<?= $this->security->get_csrf_token_name() ?>"
-                           value="<?= $this->security->get_csrf_hash() ?>">
+                    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                        value="<?= $this->security->get_csrf_hash() ?>">
 
                     <div class="mb-3">
                         <label class="form-label" for="login">
                             Username
                         </label>
 
-                        <input class="form-control login-input"
-                               id="login"
-                               name="login"
-                               type="text"
-                               placeholder="Enter your username"
-                               autocomplete="username"
-                               required
-                               autofocus>
+                        <input class="form-control login-input" id="login" name="login" type="text"
+                            placeholder="Enter your username" autocomplete="username" required autofocus>
                     </div>
 
                     <div class="mb-3">
@@ -149,17 +141,11 @@
                             Password
                         </label>
 
-                        <input class="form-control login-input"
-                               id="password"
-                               name="password"
-                               type="password"
-                               placeholder="Enter your password"
-                               autocomplete="current-password"
-                               required>
+                        <input class="form-control login-input" id="password" name="password" type="password"
+                            placeholder="Enter your password" autocomplete="current-password" required>
                     </div>
 
-                    <button class="btn btn-primary login-submit w-100"
-                            type="submit">
+                    <button class="btn btn-primary login-submit w-100" type="submit">
                         Sign In
                     </button>
 
@@ -174,7 +160,8 @@
 
     </main>
 
-<script src="<?= base_url('assets/js/motion.js') ?>"></script>
-<?php $this->load->view('reusable_components/auth_alert'); ?>
+    <script src="<?= base_url('assets/js/motion.js') ?>"></script>
+    <?php $this->load->view('reusable_components/auth_alert'); ?>
 </body>
+
 </html>
