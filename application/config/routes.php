@@ -43,6 +43,7 @@ $route['admin/document-assignments/save']['POST'] = 'Administration/save_documen
 $route['admin/document-assignments/location']['POST'] = 'Administration/assign_location';
 $route['admin/backups']['GET'] = 'Backups/index';
 $route['admin/backups/create']['POST'] = 'Backups/create';
+$route['admin/backups/cleanup']['POST'] = 'Backups/cleanup';
 $route['admin/backups/import']['POST'] = 'Backups/import';
 $route['admin/backups/restore']['POST'] = 'Backups/restore';
 $route['admin/backups/download/(:any)']['GET'] = 'Backups/download/$1';
