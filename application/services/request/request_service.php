@@ -277,6 +277,21 @@ class Request_service
             if (!$this->ci->Permission_model->allowed($user,'requests','submit'))
                 throw new DomainException('Request submission permission is required.');
             $currentPayload=json_decode($r['payload'],TRUE)?:[];
+            
+            if (in_array($r['type'], ['access','assignment'], TRUE)) {
+    $currentPayload['recipient_id'] = (int)$r['requested_by'];
+    $encoded = json_encode($currentPayload, JSON_UNESCAPED_UNICODE);
+    if ($encoded === FALSE) {
+        throw new DomainException('Request data could not be saved.');
+    }
+    if (!$this->ci->db->where('id',(int)$r['id'])
+        ->update('requests',['payload'=>$encoded])) {
+        throw new DomainException('Could not normalize the request recipient.');
+    }
+    $r['payload'] = $encoded;
+}
+
+
             $this->authorize($r['type'],(int)$r['softcopy_id'],(int)$r['hardcopy_id'],$currentPayload,$user);
             if ($r['type']==='transfer') $this->validate_transfer_destination((int)$r['hardcopy_id'],$currentPayload);
             if (in_array($r['type'],['assignment','access','transfer'],TRUE) &&

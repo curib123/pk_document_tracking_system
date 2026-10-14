@@ -7,6 +7,10 @@ class Backups extends MY_Controller
     {
         $this->require_permission('backups','view');
     }
+    private function authorizeWrite(): void
+{
+    $this->require_permission('backups','edit');
+}
     private function service(): Backup_service
     {
         require_once APPPATH.'services/backup/backup_service.php';
@@ -30,7 +34,10 @@ class Backups extends MY_Controller
     private function execute($task): void
     {
         $this->administrator();
+        $this->authorizeWrite();
         $this->confirmed(); // CSRF is enforced by CI3 configuration.
+       
+    
         if (function_exists('set_time_limit')) @set_time_limit(0);
         try {
             $message=$task($this->service());
