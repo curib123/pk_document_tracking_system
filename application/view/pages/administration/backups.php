@@ -18,25 +18,15 @@ $backupTime = static function ($timestamp) {
       <i class="fa-regular fa-clock" aria-hidden="true"></i>
       <div><strong>5:00 PM daily</strong><small>Asia/Manila · Server schedule required</small></div>
     </div>
-  </div>
-  <div class="backup-stats">
-    <div class="backup-stat">
-      <span class="backup-stat-icon" aria-hidden="true"><i class="fa-solid fa-box-archive"></i></span>
-      <div><small>Stored archives</small><strong><?= count($backup_items) ?></strong></div>
-    </div>
-    <div class="backup-stat">
+     <div class="backup-time">
       <span class="backup-stat-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>
       <div><small>Last automatic backup</small>
         <strong><?= $backup_last_auto ? html_escape($backupTime($backup_last_auto['created_at'])) : 'Not recorded' ?></strong>
       </div>
     </div>
-    <div class="backup-stat">
-      <span class="backup-stat-icon" aria-hidden="true"><i class="fa-solid fa-lock"></i></span>
-      <div><small>Backup protection</small>
-        <strong><?= count(array_filter($backup_config)) === count($backup_config) ? 'Configured' : 'Setup required' ?></strong>
-      </div>
-    </div>
   </div>
+  </div>
+  <br>
   <?php if (count(array_filter($backup_config)) !== count($backup_config)): ?>
     <div class="backup-setup-note" role="status">
       <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
@@ -86,6 +76,7 @@ $backupTime = static function ($timestamp) {
       </form>
     </section>
   </div>
+    <br>
   <section class="workspace-card backup-task-card" aria-labelledby="backupCleanupTitle">
     <div class="backup-task-head">
       <span class="backup-task-icon" aria-hidden="true"><i class="fa-solid fa-broom"></i></span>
@@ -105,6 +96,7 @@ $backupTime = static function ($timestamp) {
       </button>
     </form>
   </section>
+   <br>
   <section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
     <div class="workspace-card-header backup-register-header">
       <div>
