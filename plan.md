@@ -18,3 +18,6 @@ better UI and ux in all view modal make it have nice user interface but easy to 
 remove view modal and its view sction button in  the area,specific and asset
 
 date range dropdown day,week,month,year and custum range in all neccesary table like in hardcopy and softcopy table and in request tables
+
+
+password must above 8 chracter not 12
