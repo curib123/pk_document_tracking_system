@@ -277,6 +277,39 @@ $navPage = end($navParts);
                 </span>
             </div>
 
+            <div class="topbar-notifications" id="notificationBellPanel"
+                 data-notification-list="<?= html_escape(site_url('notifications/inbox')) ?>"
+                 data-notification-read="<?= html_escape(site_url('notifications/inbox/read')) ?>"
+                 data-notification-csrf="<?= html_escape($this->security->get_csrf_token_name()) ?>">
+                <button class="icon-button notification-bell-button" id="notificationBellButton"
+                        type="button" aria-label="Unread notifications" aria-expanded="false"
+                        aria-controls="notificationBellMenu">
+                    <i class="fa-regular fa-bell" aria-hidden="true"></i>
+                    <span class="notification-bell-count" id="notificationBellCount" hidden></span>
+                </button>
+                <section class="notification-inbox" id="notificationBellMenu" hidden
+                         aria-labelledby="notificationInboxTitle">
+                    <div class="notification-inbox-header">
+                        <h2 id="notificationInboxTitle">Notifications</h2>
+                        <button class="btn-close" type="button" data-notification-close aria-label="Close notifications"></button>
+                    </div>
+                    <ol class="notification-inbox-items" id="notificationInboxItems" aria-live="polite"></ol>
+                    <div class="notification-inbox-footer">
+                        <div class="notification-inbox-nav">
+                            <button class="btn btn-light btn-sm" type="button" data-notification-previous>Previous</button>
+                            <span id="notificationInboxPage">1 / 1</span>
+                            <button class="btn btn-light btn-sm" type="button" data-notification-next>Next</button>
+                        </div>
+                        <label class="notification-inbox-limit">Rows
+                            <select class="form-select form-select-sm" id="notificationInboxLimit">
+                                <?php foreach ([5,10,20,50] as $perPage): ?>
+                                <option value="<?= $perPage ?>" <?= $perPage===10?'selected':'' ?>><?= $perPage ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </label>
+                    </div>
+                </section>
+            </div>
             <div class="user-menu dropdown">
 
                 <button
