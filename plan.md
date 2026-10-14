@@ -1,4 +1,3 @@
-fix issue for tommorrow work
 
 blur modal outside
 
@@ -10,8 +9,6 @@ Recipient / Assigned User must be current user in access grant request also in a
 
 add print controlled file
 
-fix request from requester my request when superceded happen
-
 time throughout the system must be 12 hours
 
 in workflow builder make it possible theres 2 or more approver in each steps.
@@ -20,5 +17,7 @@ notification icon in top nav beside user avatar and its notification panel when 
 
 better UI and ux in all view modal make it have nice user interface but easy to use and user friendly
 
-only show location dropdown select in selecting places because other is predefined by location so when location select first it will show readonly other places like area specific and the optional asset . so when places uses in a modal only show location dropdown first after selecting location it will show readonly predefined places.
+remove view modal and its view sction button in  the area,specific and asset
+
+issue in the requester account there request did not show when superceded or return request happen .
 

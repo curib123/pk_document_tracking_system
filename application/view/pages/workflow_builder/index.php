@@ -42,13 +42,7 @@ $dt_filters=[
 $dt_filter_values=['status'=>$dt_filter,'publication'=>$table['publication']];
 $dt_badges=[];$dt_create='';
 ?>
-<section class="mb-3">
-    <div class="d-flex flex-wrap justify-content-between align-items-center gap-3">
-        <div><h2 class="h5 mb-1">Approval Workflow Builder</h2>
-        <p class="text-secondary small mb-0">Nine predefined request types · create a draft, configure approvers, then publish a default version.</p></div>
-        <span class="badge text-bg-light border"><i class="fa-solid fa-shield-halved me-1" aria-hidden="true"></i> Published versions remain immutable</span>
-    </div>
-</section>
+
 <div class="workflow-setup-guide" aria-label="Workflow setup steps">
     <div><span class="workflow-guide-number">1</span><strong>Start draft</strong><small>Choose a predefined workflow and create an editable version.</small></div>
     <div><span class="workflow-guide-number">2</span><strong>Build approval route</strong><small>Add reviewers, select approver types and arrange their order.</small></div>
