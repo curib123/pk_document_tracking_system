@@ -30,8 +30,25 @@ class Query_state
         if ($dates['from']!=='' && $dates['to']!=='' && $dates['from']>$dates['to']) {
             throw new DomainException('Start date must be on or before the end date.');
         }
+        $period=$text('period');
+        if (!in_array($period,['','all','day','week','month','year','custom'],TRUE))
+            throw new DomainException('Invalid date range.');
+        if (($period==='' || $period==='all') && ($dates['from']!=='' || $dates['to']!==''))
+            $period='custom';
+        if (in_array($period,['day','week','month','year'],TRUE)) {
+            $today=new DateTimeImmutable('today',new DateTimeZone('Asia/Manila'));
+            $dates['to']=$today->format('Y-m-d');
+            $start=$period==='day'?$today:
+                ($period==='week'?$today->modify('monday this week'):
+                ($period==='month'?$today->modify('first day of this month'):
+                    $today->setDate((int)$today->format('Y'),1,1)));
+            $dates['from']=$start->format('Y-m-d');
+        } elseif ($period!=='custom') {
+            $dates=['from'=>'','to'=>''];
+            $period='all';
+        }
         $limit=(int)$text('limit');
-        return $dates+[
+        return $dates+['period'=>$period,
             'q'=>mb_substr($text('q'),0,100), 'status'=>mb_substr($text('status'),0,40),
             'page'=>max(1,min(1000000,(int)$text('page'))),
             'limit'=>in_array($limit,[10,25,50,100],TRUE)?$limit:10,
