@@ -84,7 +84,8 @@ class Documents extends MY_Controller
             'folder_params'=>[
                 'q'=>$state['q'],'status'=>$state['status'],'limit'=>$state['limit'],
                 'sort'=>$state['sort'],'dir'=>strtolower($state['dir']),
-                'from'=>$state['from'],'to'=>$state['to'],'owner'=>$state['owner'],
+                'from'=>$state['from'],'to'=>$state['to'],'period'=>$state['period'],
+                'owner'=>$state['owner'],
                 'layout'=>$state['layout']
             ],
             'folder_value'=>$browser['folder'],'folder_page'=>$state['page'],

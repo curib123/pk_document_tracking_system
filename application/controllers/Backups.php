@@ -51,6 +51,18 @@ class Backups extends MY_Controller
             return 'Encrypted backup created: '.$item['name'];
         });
     }
+    public function cleanup()
+    {
+        $this->execute(static function($service) {
+            $result=$service->apply_retention();
+            $deleted=array_sum($result['deleted']);
+            if ($result['failed']) {
+                throw new DomainException('Cleanup was partially completed. Review protected server logs.');
+            }
+            return 'Retention cleanup finished. '.$deleted.' expired archived items deleted.';
+        });
+    }
+
     public function import()
     {
         $upload=$_FILES['backup_zip']??[];

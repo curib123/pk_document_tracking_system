@@ -111,6 +111,9 @@ class Request_service
         } elseif ($domain==='softcopy') $hardcopyId=0;
         else $softcopyId=0;
         if (in_array($type,['assignment','access'],TRUE)) {
+            // The requester is the recipient for both self-service request types.
+            // Ignore forged, stale or manually edited recipient_id values.
+            $payload['recipient_id']=(int)$user['id'];
             if (!in_array($domain,['softcopy','hardcopy'],TRUE))
                 throw new DomainException('Choose Softcopy or Hardcopy.');
             if (($domain==='softcopy' && !$softcopyId) ||

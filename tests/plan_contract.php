@@ -34,14 +34,16 @@ $view=file_get_contents($path.'/application/view/pages/workflow_builder/index.ph
 $renderer=file_get_contents($path.'/public/assets/js/app.js');
 $requests=file_get_contents($path.'/application/services/request/request_service.php');
 $badge=file_get_contents($path.'/application/models/Notification_model.php');
-$seed=file_get_contents($path.'/database/seed_workflows.sql');
+$seed=is_file($path.'/database/seed_workflows.sql')
+    ? file_get_contents($path.'/database/seed_workflows.sql') : NULL;
 check(strpos($view, 'data-workflow-version-panel')!==FALSE, 'Version panels must render');
 check(strpos($view, 'admin/workflows/publish')!==FALSE, 'Published route action must exist');
 check(strpos($view, 'stepApproverType')!==FALSE, 'Approver chooser must exist');
 check(strpos($renderer, 'readableDetail')!==FALSE, 'Nested details must use safe formatter');
 check(strpos($requests, "if (!empty(\$r['workflow_version_id']) && !empty(\$r['snapshot']))")!==FALSE, 'Returned requests must retain their snapshot');
 check(strpos($badge, "COUNT(DISTINCT r.id)")!==FALSE, 'Task counts must avoid duplicates');
-check(strpos($seed, 'NOT EXISTS')!==FALSE, 'Seeding must not overwrite live workflows');
+if ($seed!==NULL) check(strpos($seed, 'NOT EXISTS')!==FALSE,
+    'Seeding must not overwrite live workflows'); // Legacy seed no longer bundled.
 $detailsModel=file_get_contents($path.'/application/models/Document_detail_model.php');
 $docHeader=file_get_contents($path.'/application/view/layout/header.php');
 $docFooter=file_get_contents($path.'/application/view/layout/footer.php');

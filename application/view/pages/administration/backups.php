@@ -83,6 +83,23 @@ $backupTime=static function($timestamp) {
       </form>
     </section>
   </div>
+  <section class="workspace-card backup-task-card" aria-labelledby="backupCleanupTitle">
+    <div class="backup-task-head">
+      <span class="backup-task-icon" aria-hidden="true"><i class="fa-solid fa-broom"></i></span>
+      <div><h2 id="backupCleanupTitle">Backup cleanup</h2>
+        <p>Automatic cleanup runs after successful backups. Run it manually to remove expired ZIPs, audit and log archives older than three months.</p>
+      </div>
+    </div>
+    <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
+        data-confirm="Clean up backup ZIPs and daily log archives older than three months?">
+      <input type="hidden" name="confirmed" value="no">
+      <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+             value="<?= $this->security->get_csrf_hash() ?>">
+      <button class="btn btn-outline-danger backup-full-button" type="submit">
+        <i class="fa-solid fa-broom" aria-hidden="true"></i> Clean up now
+      </button>
+    </form>
+  </section>
   <section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
     <div class="workspace-card-header backup-register-header">
       <div><h2 id="backupArchiveTitle">Available backups</h2>

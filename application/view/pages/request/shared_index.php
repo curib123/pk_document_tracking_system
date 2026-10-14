@@ -181,7 +181,8 @@ $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
 $dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
 $dt_sortable=['reference','type','requester','status','updated'];
 $dt_date_filters=TRUE;
-$dt_filter_values=['status'=>$dt_filter,'type'=>$table['type'],'from'=>$table['from'],'to'=>$table['to']];
+$dt_filter_values=['status'=>$dt_filter,'type'=>$table['type'],'period'=>$table['period']??'all',
+    'from'=>$table['from'],'to'=>$table['to']];
 $dt_filters=['status'=>[''=>'All Statuses','draft'=>'Draft','submitted'=>'Submitted',
  'completed'=>'Completed','approved'=>'Approved','rejected'=>'Rejected','returned'=>'Returned','cancelled'=>'Cancelled']];
 $dt_filters['type']=[''=>'All Actions']+$typeMap[$tab];
@@ -314,11 +315,18 @@ data-confirm="Save request draft?">
 <option value="">No category</option><?php foreach ($category_options as $opt): ?>
 <option value="<?= (int)$opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
 <?php endforeach; ?></select></div>
+<?php if (in_array($tab,['access-grant','document-assign'],TRUE)): ?>
+<div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
+<input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly>
+<input type="hidden" name="recipient_id" value="<?= (int)$user['id'] ?>">
+</div>
+<?php else: ?>
 <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
 <select class="form-select" name="recipient_id" id="reqUser" data-searchable>
 <option value="">Not selected</option><?php foreach ($users as $opt): ?>
 <option value="<?= (int)$opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
 <?php endforeach; ?></select></div>
+<?php endif; ?>
 <div class="col-md-6"><label class="form-label" for="reqExpires">Access Expires At</label>
 <input class="form-control" name="expires_at" type="date" id="reqExpires"></div>
 <div class="col-md-6"><label class="form-label" for="reqDest">Destination Location</label>

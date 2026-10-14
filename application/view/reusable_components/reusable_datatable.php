@@ -58,10 +58,21 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             </select>
         <?php endforeach; ?>
         <?php if (!empty($dt_date_filters)): ?>
+        <?php $datePeriod=$dt_filter_values['period']??'all'; ?>
+        <label class="table-date-filter small text-secondary" for="tablePeriod">Date range
+            <select form="tableFilter" id="tablePeriod" class="form-select" name="period" data-date-period>
+                <?php foreach (['all'=>'All time','day'=>'Today','week'=>'This week','month'=>'This month',
+                    'year'=>'This year','custom'=>'Custom range'] as $value=>$label): ?>
+                <option value="<?= $value ?>" <?= $datePeriod===$value?'selected':'' ?>><?= html_escape($label) ?></option>
+                <?php endforeach; ?>
+            </select>
+        </label>
         <?php foreach (['from'=>'Created from','to'=>'Created to'] as $field=>$label): ?>
-        <label class="table-date-filter small text-secondary"><?= $label ?>
+        <label class="table-date-filter small text-secondary" data-date-custom
+            <?= $datePeriod!=='custom'?'hidden':'' ?>><?= $label ?>
             <input class="form-control" type="date" form="tableFilter" name="<?= $field ?>"
-                   value="<?= html_escape($dt_filter_values[$field]??'') ?>">
+                <?= $datePeriod!=='custom'?'disabled':'' ?>
+                value="<?= html_escape($dt_filter_values[$field]??'') ?>">
         </label>
         <?php endforeach; ?>
         <?php endif; ?>

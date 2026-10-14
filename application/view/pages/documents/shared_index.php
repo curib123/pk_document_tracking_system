@@ -53,8 +53,13 @@ foreach ($rows as $r) {
              ];
          }
          $buttons[]=['type'=>'history','files'=>$historyEntries];
-         if (!empty($latest_files[$r['id']]))
-             $buttons[]=['type'=>'download','url'=>'files/download/'.$latest_files[$r['id']]['id']];
+         if (!empty($latest_files[$r['id']])) {
+             $latest=$latest_files[$r['id']];
+             if (in_array((string)($latest['mime_type']??''),
+                 ['application/pdf','image/jpeg','image/png','text/plain'],TRUE))
+                 $buttons[]=['type'=>'print','url'=>'files/print/'.$latest['id']];
+             $buttons[]=['type'=>'download','url'=>'files/download/'.$latest['id']];
+         }
      }
  }
  if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct']))) $buttons[]=['type'=>'action',
@@ -80,7 +85,8 @@ $dt_sortable=$cfg['domain']==='hardcopy'
 $dt_date_filters=TRUE;
 $dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived','cancelled'=>'Cancelled']];
 $dt_filters['owner']=[''=>'All Owners']+array_column($owner_options,'name','id');
-$dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'from'=>$table['from'],'to'=>$table['to']];
+$dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'period'=>$table['period']??'all',
+    'from'=>$table['from'],'to'=>$table['to']];
 $dt_badges=['status'];
 $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
 $dt_folder_browser=$folder_browser;

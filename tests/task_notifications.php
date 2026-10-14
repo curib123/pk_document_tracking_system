@@ -44,6 +44,10 @@ foreach ([101=>42,201=>51,202=>52,203=>53] as $step=>$request) notificationInser
     'assigned_user_id'=>$step===101?20:NULL,'status'=>'active']);
 notificationInsert($connection,'workflow_steps',['id'=>102,'request_id'=>42,'node_key'=>'step_2','label'=>'Final review',
     'candidates'=>'[]','assignment'=>'{"type":"user","value":30}','assigned_user_id'=>30,'status'=>'pending']);
+$inbox=$model->unread_page($user,1,5);
+notificationCheck($inbox['total']===2 && count($inbox['items'])===2 &&
+    $inbox['page']===1 && $inbox['pages']===1,
+    'Unread notification inbox must be scoped to user and paginated by server.');
 $pending=$model->pending_approvals($user);
 notificationCheck(array_column($pending,'key')===['101:1','201:1'],
     'Only current active approvals assigned directly or through an assigned secondary role may notify.');
@@ -75,5 +79,31 @@ notificationCheck($model->claim_approvals($other,['102:3'])===[] && $model->pend
     'Completed, rejected, returned and stale tasks must never be announced as awaiting approval.');
 notificationCheck($connection->count_all('task_notification_receipts')===5,
     'Each shown occurrence must be saved once without erasing earlier shown records.');
+// Unread-only inbox must expose pages beyond the first batch and allow
+// explicit mark-read of a key not present on the first page.
+for ($i=0;$i<7;$i++) {
+    $requestId=1000+$i;$stepId=2000+$i;
+    notificationInsert($connection,'requests',[
+        'id'=>$requestId,'reference'=>'REQ-PAGE-'.$requestId,
+        'type'=>'hardcopy_create','requested_by'=>40,'payload'=>'{}',
+        'status'=>'submitted','current_node'=>'step_1','snapshot'=>$graph
+    ]);
+    notificationInsert($connection,'workflow_steps',[
+        'id'=>$stepId,'request_id'=>$requestId,'node_key'=>'step_1',
+        'label'=>'Page test '.$i,'candidates'=>'[]',
+        'assignment'=>'{"type":"user","value":20}',
+        'assigned_user_id'=>20,'status'=>'active'
+    ]);
+}
+$firstPage=$model->unread_page($user,1,5);
+$secondPage=$model->unread_page($user,2,5);
+notificationCheck($firstPage['total']===7 && $firstPage['pages']===2 &&
+    count($firstPage['items'])===5 && count($secondPage['items'])===2,
+    'Unread inbox must paginate all seven eligible notification occurrences.');
+$lateKey=$secondPage['items'][0]['key'];
+notificationCheck(count($model->claim_approvals($user,[$lateKey]))===1,
+    'A notification on the second server page must be markable as read.');
+notificationCheck($model->unread_page($user,1,5)['total']===6,
+    'Read notifications must disappear from all unread inbox pages.');
 $connection->close();
-echo "Assigned approval notifications, persistent once-only receipts, separate users, replay and stale task checks passed.\n";
+echo "Assigned approval notifications, unread pagination, explicit read receipts, role scoping and replay passed.\n";
