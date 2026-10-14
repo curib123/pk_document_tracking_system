@@ -32,7 +32,9 @@ foreach ($rows as $row) {
     foreach (array_merge(['id','version'],$cfg['fields'],['active']) as $field) {
         if (array_key_exists($field,$row)) $record[$field]=$row[$field];
     }
-    $buttons=[['type'=>'view']];
+    // Area, Specific and Asset are simple reference records: use Edit, not View Details.
+    $buttons=in_array($cfg['slug'],['area','specific','asset'],TRUE)
+        ? [] : [['type'=>'view']];
     if ($can('edit')) $buttons[]=['type'=>'edit'];
     if ($cfg['active'] && $can('delete') && !empty($row['active'])) {
         $buttons[]=['type'=>'action','url'=>'places/'.$cfg['slug'].'/deactivate',
@@ -40,7 +42,8 @@ foreach ($rows as $row) {
             'icon'=>'fa-solid fa-ban'];
     }
     $dt_rows[]=['id'=>$row['id'] ?? 0,'cells'=>$cells,'record'=>$record,
-        'display'=>$display,'buttons'=>$buttons];
+        'display'=>in_array($cfg['slug'],['area','specific','asset'],TRUE)?[]:$display,
+        'buttons'=>$buttons];
 }
 $dt_path='places/'.$cfg['slug'];
 $dt_q=$table['q'];$dt_filter=$table['status'];$dt_page=$table['page'];
