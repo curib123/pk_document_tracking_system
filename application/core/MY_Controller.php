@@ -56,6 +56,8 @@ class MY_Controller extends CI_Controller
             redirect('change-password');
             exit;
         }
+        require_once APPPATH . 'services/files/file_service.php';
+        (new File_service())->cleanup_daily();
     }
 
     protected function can($module, $action = 'view')

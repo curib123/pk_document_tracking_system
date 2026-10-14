@@ -104,6 +104,8 @@ class Softcopy_direct_service
         }
         if ($type === 'softcopy_revise') {
             (new File_service())->cleanup_superseded($docId);
+        } elseif ($type === 'softcopy_cancel') {
+            (new File_service())->cleanup_retired($docId);
         }
         return $result;
     }

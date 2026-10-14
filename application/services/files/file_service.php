@@ -38,12 +38,53 @@ class File_service
     /** Remove superseded bytes only after all database transactions have committed. */
     public function cleanup_superseded(int $documentId): int
     {
+        return $documentId > 0 ? $this->cleanup_retired($documentId, 0, ['superseded']) : 0;
+    }
+
+    /** Retire metadata inside the caller's transaction; never unlink here. */
+    public function retire_document(int $documentId): void
+    {
+        if ($documentId < 1) return;
         $db = $this->ci->db;
-        if ($documentId < 1 || $db->trans_active())
+        $document = $db->get_where('softcopy_documents', ['id' => $documentId])->row_array();
+        if ($document && !in_array($document['status'], ['disposed', 'cancelled'], TRUE)) return;
+        $db->where('domain', 'softcopy')->where('document_id', $documentId)
+            ->where_in('status', ['approved', 'pending', 'superseded'])
+            ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
+    }
+
+    /** A rejected proposal never retires the active document's current file. */
+    public function retire_request_attachment(array $request, int $actorId = 0, string $reason = ''): int
+    {
+        if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) return 0;
+        $payload = json_decode($request['payload'] ?? '{}', TRUE) ?: [];
+        $creation = $request['type'] === 'softcopy_create';
+        $id = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
+        if (!$id) return 0;
+        $data = ['status' => $request['status'] === 'rejected' ? 'rejected' : 'deleted'];
+        if ($request['status'] === 'rejected' && $actorId) {
+            $data += ['rejected_by' => $actorId, 'rejected_at' => date('Y-m-d H:i:s'), 'rejection_reason' => $reason];
+        }
+        $this->ci->db->where([
+            'id' => $id, 'domain' => 'softcopy', 'status' => 'pending',
+            'document_id' => $creation ? NULL : (int) $request['softcopy_id'],
+            'uploaded_by' => (int) $request['requested_by'], 'purpose' => $creation ? 'creation' : 'revision'
+        ])->set('version', 'version + 1', FALSE)->update('files', $data);
+        return $id;
+    }
+
+    /** Called after commit; historical rows and revision links remain available. */
+    public function cleanup_retired(int $documentId = 0, int $fileId = 0, array $statuses = ['superseded', 'deleted', 'rejected']): int
+    {
+        $db = $this->ci->db;
+        if ($db->trans_active())
             return 0;
         $removed = 0;
         try {
-            $files = $db->get_where('files', ['domain' => 'softcopy', 'document_id' => $documentId, 'status' => 'superseded'])->result_array();
+            $db->where('domain', 'softcopy')->where_in('status', $statuses);
+            if ($documentId > 0) $db->where('document_id', $documentId);
+            if ($fileId > 0) $db->where('id', $fileId);
+            $files = $db->get('files')->result_array();
             foreach ($files as $file) {
                 // Imported records may share a storage name. Never remove bytes
                 // still used by an approved file or another pending attachment.
@@ -58,14 +99,47 @@ class File_service
                 if (@unlink($path))
                     $removed++;
                 else
-                    log_message('error', 'Superseded controlled file cleanup failed for file ' . (int) $file['id'] . '.');
+                    log_message('error', 'Retired controlled file cleanup failed for file ' . (int) $file['id'] . '.');
             }
         } catch (Throwable $error) {
             // A committed approval cannot be rolled back after filesystem I/O.
             // Superseded rows remain unavailable for download and eligible for retry.
-            log_message('error', 'Superseded controlled file cleanup failed for document ' . $documentId . '.');
+            log_message('error', 'Retired controlled file cleanup failed for document ' . $documentId . '.');
         }
         return $removed;
+    }
+
+    /** Daily reconciliation also covers legacy terminal records and deleted documents. */
+    public function cleanup_daily(): void
+    {
+        if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return;
+        $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+        $marker = PK_ROOT . '/storage/.controlled-file-cleanup';
+        if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return;
+        $lock = fopen($marker, 'c+');
+        if (!$lock) return;
+        try {
+            if (!flock($lock, LOCK_EX | LOCK_NB)) return;
+            if (trim((string) stream_get_contents($lock)) === $day) return;
+            $db = $this->ci->db;
+            $documents = $db->query('SELECT DISTINCT f.document_id FROM files f
+                LEFT JOIN softcopy_documents d ON d.id=f.document_id
+                WHERE f.domain="softcopy" AND f.document_id IS NOT NULL
+                AND (d.id IS NULL OR d.status IN ("disposed","cancelled"))')->result_array();
+            foreach ($documents as $document) $this->retire_document((int) $document['document_id']);
+            $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise'])
+                ->where_in('status', ['rejected', 'cancelled'])->get('requests')->result_array();
+            foreach ($requests as $request) $this->retire_request_attachment($request);
+            $this->cleanup_retired();
+            rewind($lock);
+            ftruncate($lock, 0);
+            fwrite($lock, $day);
+        } catch (Throwable $error) {
+            log_message('error', 'Daily controlled file cleanup failed; it will be retried.');
+        } finally {
+            flock($lock, LOCK_UN);
+            fclose($lock);
+        }
     }
 
     // Controlled files are private while awaiting approval.

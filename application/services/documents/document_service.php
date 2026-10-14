@@ -258,12 +258,18 @@ class Document_service
             ]);
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Disposal could not be recorded.');
-            $this->ci->db->trans_commit();
+            if ($domain === 'softcopy') {
+                require_once APPPATH . 'services/files/file_service.php';
+                (new File_service())->retire_document((int) $id);
+            }
+            if ($this->ci->db->trans_status() === FALSE || $this->ci->db->trans_commit() === FALSE)
+                throw new DomainException('Disposal could not be committed.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException)
                 throw $e;
             throw new DomainException('Disposal could not be recorded. Refresh and try again.');
         }
+        if ($domain === 'softcopy') (new File_service())->cleanup_retired((int) $id);
     }
 }

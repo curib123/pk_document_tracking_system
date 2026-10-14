@@ -503,6 +503,7 @@ class Request_service
         if (!in_array($decision,['approved','rejected','returned'],TRUE))
             throw new DomainException('Invalid decision.');
         $cleanupDocumentId=0;
+        $cleanupFileId=0;
         $this->ci->db->trans_begin();
         try {
             $locked=$this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE',[$id])->result_array();
@@ -547,7 +548,7 @@ class Request_service
                     $this->ci->db->where('id',$id)->update('requests',['current_node'=>$next['node_key']]);
                 } else {
                     $result=$this->applyApproved($r,(int)$user['id']);
-                    if ($r['type']==='softcopy_revise') $cleanupDocumentId=(int)$r['softcopy_id'];
+                    if (in_array($r['type'],['softcopy_revise','softcopy_cancel'],TRUE)) $cleanupDocumentId=(int)$r['softcopy_id'];
                     $status=$r['type']==='transfer'?'approved':'completed';
                     $this->ci->db->where('id',$id)->update('requests',[
                        'status'=>$status,'result'=>json_encode($result),
@@ -582,6 +583,9 @@ class Request_service
                 $this->ci->db->where('id',$id)->update('requests',[
                     'status'=>$decision,'current_node'=>NULL,'completed_at'=>date('Y-m-d H:i:s')
                 ]);
+                require_once APPPATH.'services/files/file_service.php';
+                $r['status']='rejected';
+                $cleanupFileId=(new File_service())->retire_request_attachment($r,(int)$user['id'],trim($comment));
             }
             if ($this->ci->db->trans_status()===FALSE) throw new DomainException('Approval decision failed.');
             if ($this->ci->db->trans_commit()===FALSE) throw new DomainException('Approval decision could not be committed.');
@@ -593,19 +597,32 @@ class Request_service
         }
         if ($cleanupDocumentId) {
             require_once APPPATH.'services/files/file_service.php';
-            (new File_service())->cleanup_superseded($cleanupDocumentId);
+            (new File_service())->cleanup_retired($cleanupDocumentId);
         }
+        if ($cleanupFileId) (new File_service())->cleanup_retired(0,$cleanupFileId);
     }
 
     public function cancel($tab,$id,$user)
     {
-        $r=$this->ci->Request_model->request($id);
-        if (!$r || $r['requested_by']!=$user['id'] ||
-            !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE) ||
-            $r['status']!=='draft') throw new DomainException('Only your draft can be cancelled.');
-        $this->ci->db->where('id',$id)->where('requested_by',(int)$user['id'])
-            ->where('status','draft')->where('version',(int)$r['version'])
-            ->update('requests',['status'=>'cancelled','version'=>(int)$r['version']+1]);
-        if ($this->ci->db->affected_rows()!==1) throw new DomainException('Request changed before cancellation. Refresh and try again.');
+        $this->ci->db->trans_begin();
+        try {
+            $r=$this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE',[(int)$id])->row_array();
+            if (!$r || $r['requested_by']!=$user['id'] ||
+                !in_array($r['type'],$this->ci->Request_model->types($tab),TRUE) ||
+                $r['status']!=='draft') throw new DomainException('Only your draft can be cancelled.');
+            $this->ci->db->where('id',$id)->update('requests',[
+                'status'=>'cancelled','version'=>(int)$r['version']+1
+            ]);
+            require_once APPPATH.'services/files/file_service.php';
+            $r['status']='cancelled';
+            $fileId=(new File_service())->retire_request_attachment($r);
+            if ($this->ci->db->trans_status()===FALSE || $this->ci->db->trans_commit()===FALSE)
+                throw new DomainException('Request cancellation could not be committed.');
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException) throw $e;
+            throw new DomainException('Request could not be cancelled. Refresh and try again.');
+        }
+        if ($fileId) (new File_service())->cleanup_retired(0,$fileId);
     }
 }

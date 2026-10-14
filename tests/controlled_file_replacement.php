@@ -14,7 +14,7 @@ function replacementReject(callable $action,string $message):void {
     try {$action();}catch(DomainException $error){return;}throw new RuntimeException($message);
 }
 function replacementInsert($db,$table,$data):void {replacementCheck($db->insert($table,$data)!==FALSE,'Fixture failed: '.$table);}
-foreach (['users','categories','softcopy_documents','softcopy_revisions','files','requests','workflow_steps','workflow_history','status_history'] as $table) {
+foreach (['users','categories','softcopy_documents','softcopy_revisions','files','requests','workflow_steps','workflow_history','status_history','disposals'] as $table) {
     replacementCheck($connection->query('CREATE TEMPORARY TABLE replacement_test_'.$table.' LIKE '.$table)!==FALSE &&
         $connection->query('ALTER TABLE replacement_test_'.$table.' RENAME TO '.$table)!==FALSE,'Cannot isolate '.$table);
 }
@@ -38,7 +38,7 @@ function replacementFixture($db):array {
     global $paths,$ownedBlobs;
     foreach ($ownedBlobs as $path) if (is_file($path)) unlink($path);
     $ownedBlobs=[];$paths=[];
-    foreach (['workflow_history','workflow_steps','requests','status_history','softcopy_revisions','softcopy_documents','files','users','categories'] as $table)
+    foreach (['disposals','workflow_history','workflow_steps','requests','status_history','softcopy_revisions','softcopy_documents','files','users','categories'] as $table)
         replacementCheck($db->query('DELETE FROM '.$table)!==FALSE,'Cannot reset '.$table);
     foreach ([20,30,40] as $id) replacementInsert($db,'users',['id'=>$id,'username'=>'replacement-'.$id,
         'first_name'=>'Reviewer','last_name'=>(string)$id,'position_title'=>'Reviewer','role_id'=>1,'password_hash'=>'unused']);
@@ -105,6 +105,52 @@ $service->decide('softcopy',42,replacementActor(20),'approved','First approved')
 $service->decide('softcopy',42,replacementActor(30),'returned','Recheck');replacementOriginalIntact($connection);
 $service->decide('softcopy',42,replacementActor(20),'approved','Rechecked');
 $service->decide('softcopy',42,replacementActor(30),'rejected','Rejected');replacementOriginalIntact($connection);
+replacementCheck(!is_file($paths[710]) && is_file($paths[711]),
+    'Rejecting a revision must delete only its proposed attachment, preserving the current file and other pending files.');
+
+replacementFixture($connection);
+$connection->where('id',710)->update('files',['purpose'=>'creation','document_id'=>NULL]);
+$connection->where('id',42)->update('requests',['type'=>'softcopy_create','softcopy_id'=>NULL,
+    'payload'=>json_encode(['controlled_file_id'=>710])]);
+$service->decide('softcopy',42,replacementActor(20),'rejected','Rejected creation');
+replacementCheck(!is_file($paths[710]) && is_file($paths[700]),'Rejected creation must remove its unattached file only.');
+
+replacementFixture($connection);
+$connection->where('id',42)->update('requests',['status'=>'draft']);
+$service->cancel('softcopy',42,replacementActor(20));
+replacementCheck(!is_file($paths[710]) && is_file($paths[700]),'Cancelling a draft must delete its attachment only.');
+
+require_once APPPATH.'services/documents/document_service.php';
+replacementFixture($connection);
+(new Document_service())->dispose('softcopy',9,20,'No longer required','other');
+replacementCheck(!is_file($paths[699]) && !is_file($paths[700]) && !is_file($paths[710]) &&
+    !is_file($paths[711]) && is_file($paths[720]),'Disposal must delete all connected files after commit, preserving other documents.');
+replacementCheck($connection->count_all('softcopy_revisions')===2 && $connection->count_all('disposals')===1,
+    'Deleting file bytes must retain revision and disposal history.');
+
+replacementFixture($connection);
+$connection->trans_begin();
+$operation->apply('softcopy_cancel',['remarks'=>'Remove'],9,20,20,NULL);
+replacementCheck(is_file($paths[700]) && $files->cleanup_retired()===0,'No file may be deleted before commit.');
+$connection->trans_rollback();replacementOriginalIntact($connection);
+
+// Cancellation removes controlled bytes on both direct and final approval paths.
+replacementFixture($connection);
+require_once APPPATH.'services/softcopy/softcopy_direct_service.php';
+(new Softcopy_direct_service())->execute(['type'=>'softcopy_cancel','softcopy_id'=>9,'subject'=>'Remove document'],20);
+replacementCheck(!is_file($paths[700]) && !is_file($paths[710]) && is_file($paths[720]),
+    'Direct cancellation must remove connected bytes after commit.');
+replacementFixture($connection);
+$connection->where('id',42)->update('requests',['type'=>'softcopy_cancel','payload'=>json_encode(['remarks'=>'Remove document'])]);
+replacementReachFinal($service);$service->decide('softcopy',42,replacementActor(40),'approved','Cancel approved');
+replacementCheck(!is_file($paths[700]) && is_file($paths[720]),'Final cancellation approval must delete controlled bytes.');
+
+// Removed documents become cleanup candidates; active documents cannot be retired.
+replacementFixture($connection);
+$files->retire_document(9);replacementOriginalIntact($connection);
+$connection->where('id',9)->delete('softcopy_documents');
+$files->retire_document(9);$files->cleanup_retired(9);
+replacementCheck(!is_file($paths[700]) && is_file($paths[720]),'Removed document files must be deleted without touching unrelated storage.');
 
 // Only final approval retires/deletes old bytes. Pending and unrelated files survive.
 replacementFixture($connection);replacementReachFinal($service);replacementOriginalIntact($connection);

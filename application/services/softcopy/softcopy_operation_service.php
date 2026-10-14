@@ -217,6 +217,8 @@ class Softcopy_operation_service
             'previous_status' => $doc['status'],
             'status' => 'cancelled'
         ]);
+        require_once APPPATH . 'services/files/file_service.php';
+        (new File_service())->retire_document((int) $softcopyId);
         $this->audit(
             $softcopyId,
             $doc['status'],
