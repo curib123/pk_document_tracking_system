@@ -70,7 +70,8 @@ try:
             raise RuntimeError('The isolated PHP test server did not become ready.')
         with sync_playwright() as p:
             browser = p.chromium.launch(channel='msedge', headless=True)
-            context = browser.new_context(viewport={'width': 1440, 'height': 1000})
+            context = p.chromium.launch_persistent_context(str(Path(temp) / 'browser-profile'),
+                channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000})
             # Also validate the app's existing offline modal implementation.
             context.route('https://**', lambda route: route.abort())
             page = context.new_page()
@@ -91,7 +92,8 @@ try:
             page.wait_for_function('navigator.serviceWorker.controller !== null')
             devtools = context.new_cdp_session(page)
             assert not devtools.send('Page.getAppManifest')['errors']
-            assert not devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
+            installability = devtools.send('Page.getInstallabilityErrors')['installabilityErrors']
+            assert not installability, installability
             assert page.evaluate('() => caches.keys()') == []
             page.evaluate('''() => {
                 window.installCalls=0;
@@ -103,7 +105,18 @@ try:
             page.locator('#pwaInstallButton').click()
             expect(page.locator('#pwaInstallButton')).to_be_hidden()
             assert page.evaluate('window.installCalls') == 1
+            probe = APP_ROOT / 'public/pwa-update-probe.php'
+            for release in ['release-one', 'release-two']:
+                probe.write_text('<?php header("Cache-Control: public, max-age=31536000"); echo "' + release + '";', encoding='utf-8')
+                actual = page.evaluate('() => fetch("pwa-update-probe.php").then(response=>response.text())')
+                assert actual == release, 'Installed worker must receive updated server logic despite long HTTP cache headers.'
+            probe.unlink()
+            assert context.request.get(base + 'manifest.php').json()['id'] == app_manifest['id']
             print('Browser PWA manifest/installability, simulated install button and live service worker passed.')
+            if os.environ.get('PK_BROWSER_PWA_ONLY') == '1':
+                browser.close()
+                context.close()
+                raise SystemExit(0)
 
             for route in ['documents/hardcopy', 'documents/softcopy', 'my-requests/softcopy', 'my-tasks/softcopy']:
                 page.goto(base + route)
@@ -231,6 +244,7 @@ try:
             assert not errors, errors
             print('Browser rejection/disposal, database status and attachment deletion passed; current file survived; retired URLs blocked; no page errors.')
             browser.close()
+            context.close()
         log.close()
 finally:
     if server:

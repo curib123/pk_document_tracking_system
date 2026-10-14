@@ -7,6 +7,7 @@
     <meta name="theme-color" content="#cb2035">
     <title><?= html_escape($title) ?> · PK Document Control</title>
     <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
+    <?php $this->load->view('reusable_components/pwa_head'); ?>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
@@ -21,6 +22,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/plan-enhancements.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/pwa.css') ?>">
     <?php if (!empty($login_transition)): ?>
         <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
         <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">

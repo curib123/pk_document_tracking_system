@@ -277,6 +277,10 @@ $navPage = end($navParts);
                 </span>
             </div>
 
+            <button type="button" id="pwaInstallButton" class="pwa-install-button" hidden
+                aria-label="Install PK Document Control" title="Install PK Document Control">
+                <i class="fa-solid fa-download" aria-hidden="true"></i><span>Install App</span>
+            </button>
             <div class="topbar-notifications" id="notificationBellPanel"
                  data-notification-list="<?= html_escape(site_url('notifications/inbox')) ?>"
                  data-notification-read="<?= html_escape(site_url('notifications/inbox/read')) ?>"
