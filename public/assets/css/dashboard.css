@@ -6,6 +6,7 @@
   --dashboard-muted: var(--ui-ink-500);
   --dashboard-line: var(--ui-line);
   --dashboard-shadow: 0 4px 18px color-mix(in srgb, var(--ui-ink-950) 4%, transparent);
+
   width: 100%;
   min-width: 0;
   padding-bottom: clamp(10px, 2vw, 28px);
@@ -23,43 +24,86 @@
   overflow: hidden;
   border: 1px solid var(--ui-ink-800);
   border-radius: 20px;
+
   background:
-    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--ui-brand-500) 18%, transparent), transparent 55%),
-    linear-gradient(115deg, var(--ui-ink-950), var(--ui-ink-900));
+    radial-gradient(ellipse at 100% 0%,
+      color-mix(in srgb, var(--ui-brand-500) 18%, transparent),
+      transparent 55%),
+    linear-gradient(115deg,
+      var(--ui-ink-950),
+      var(--ui-ink-900));
+
   box-shadow: 0 10px 26px color-mix(in srgb, var(--ui-ink-950) 12%, transparent);
 }
 
+/* Left accent line */
 .dashboard-page .dashboard-welcome::before {
-  position: absolute;
   content: "";
+  position: absolute;
   inset: 0 auto 0 0;
+  z-index: 2;
   width: 4px;
-  background: linear-gradient(180deg, var(--ui-brand-400), var(--ui-brand-700));
+
+  background: linear-gradient(180deg,
+      var(--ui-brand-400),
+      var(--ui-brand-700));
+
   border-radius: 20px 0 0 20px;
+  pointer-events: none;
 }
 
+/* Full-width animated gradient shimmer wave */
 .dashboard-page .dashboard-welcome::after {
-  width: 350px;
-  height: 350px;
-  right: -175px;
-  top: -230px;
-  z-index: -1;
-  border: 1px solid color-mix(in srgb, var(--ui-white) 9%, transparent);
-  background: transparent;
+  content: "";
+  position: absolute;
+  z-index: 0;
+
+  top: -50%;
+  left: -100%;
+  width: 75%;
+  height: 200%;
+
+  background: linear-gradient(110deg,
+      transparent 0%,
+      color-mix(in srgb, var(--ui-brand-200) 22%, transparent) 45%,
+      color-mix(in srgb, var(--ui-white) 15%, transparent) 60%,
+      color-mix(in srgb, var(--ui-brand-100) 20%, transparent) 55%,
+      transparent 82%);
+
+  transform: translateX(-100%) skewX(-18deg);
+  animation: dashboard-gradient-wave 5s ease-in-out infinite;
+
+  pointer-events: none;
+  will-change: transform;
 }
 
+/* Wave travels continuously from left to right */
+@keyframes dashboard-gradient-wave {
+  0% {
+    transform: translateX(-100%) skewX(-18deg);
+  }
+
+  100% {
+    transform: translateX(280%) skewX(-18deg);
+  }
+}
+
+/* Decorative circle */
 .dashboard-page .dashboard-welcome-decoration {
   position: absolute;
-  z-index: -1;
+  z-index: 0;
   width: 200px;
   height: 200px;
   right: 7%;
   bottom: -158px;
+
   border-radius: 50%;
   border: 1px solid color-mix(in srgb, var(--ui-white) 7%, transparent);
+
   pointer-events: none;
 }
 
+/* Welcome content */
 .dashboard-page .dashboard-welcome-content {
   position: relative;
   z-index: 1;
@@ -68,24 +112,37 @@
   max-width: 760px;
 }
 
+/* Welcome label */
 .dashboard-page .dashboard-welcome-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+
   margin-bottom: 13px;
   padding: 6px 10px;
+
   border: 1px solid color-mix(in srgb, var(--ui-white) 14%, transparent);
+
   border-radius: 999px;
-  background: color-mix(in srgb, var(--ui-white) 6%, transparent);
+
+  background: color-mix(in srgb,
+      var(--ui-white) 6%,
+      transparent);
+
   font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: .8px;
+  letter-spacing: 0.8px;
   color: var(--ui-brand-100);
 }
 
 .dashboard-page .dashboard-welcome-kicker i {
-  font-size: 12px
+  font-size: 12px;
 }
 
+/* Main heading */
 .dashboard-page .dashboard-welcome h1 {
   margin: 0 0 11px;
+
   color: var(--ui-white);
   font-size: clamp(26px, 2.8vw, 36px);
   line-height: 1.22;
@@ -97,59 +154,112 @@
   color: var(--ui-brand-200);
 }
 
+/* Heading symbol */
 .dashboard-page .dashboard-welcome-symbol {
   display: inline-block;
   margin-left: 7px;
+
   color: var(--ui-amber-300);
-  font-size: .59em;
+  font-size: 0.59em;
 }
 
+/* Description */
 .dashboard-page .dashboard-welcome p {
   max-width: 600px;
   margin: 0;
+
   color: var(--ui-ink-200);
   font-size: 13px;
   line-height: 1.65;
 }
 
+/* Date container */
 .dashboard-page .dashboard-welcome-date {
   position: relative;
   z-index: 1;
+
+  display: flex;
+  align-items: center;
   gap: 12px;
+
   min-width: 0;
   padding: 13px 17px 13px 12px;
+
   border: 1px solid color-mix(in srgb, var(--ui-white) 14%, transparent);
+
   border-radius: 13px;
-  background: color-mix(in srgb, var(--ui-white) 5%, transparent);
+
+  background: color-mix(in srgb,
+      var(--ui-white) 5%,
+      transparent);
+
   white-space: nowrap;
 }
 
+/* Date icon */
 .dashboard-page .dashboard-date-icon {
   display: grid;
   place-items: center;
+
   width: 38px;
   height: 38px;
   flex: 0 0 38px;
+
   border-radius: 11px;
-  background: color-mix(in srgb, var(--ui-white) 9%, transparent);
+
+  background: color-mix(in srgb,
+      var(--ui-white) 9%,
+      transparent);
+
   color: var(--ui-brand-150);
 }
 
 .dashboard-page .dashboard-date-icon i {
-  font-size: 17px
+  font-size: 17px;
 }
 
+/* Date title */
 .dashboard-page .dashboard-welcome-date strong {
   font-size: 12px;
   font-weight: 800;
   color: var(--ui-white);
 }
 
+/* Date subtitle */
 .dashboard-page .dashboard-welcome-date small {
+  display: block;
   margin-top: 2px;
+
   font-size: 11px;
   font-weight: 600;
   color: var(--ui-ink-200);
+}
+
+/* Reduced-motion accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .dashboard-page .dashboard-welcome::after {
+    animation: none;
+    transform: none;
+  }
+}
+
+/* Responsive layout */
+@media (max-width: 640px) {
+  .dashboard-page .dashboard-welcome {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+
+    padding: 24px 20px;
+  }
+
+  .dashboard-page .dashboard-welcome-content {
+    width: 100%;
+  }
+
+  .dashboard-page .dashboard-welcome-date {
+    align-self: flex-start;
+  }
 }
 
 .dashboard-page .dashboard-metric-row {
