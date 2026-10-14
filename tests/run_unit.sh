@@ -27,6 +27,7 @@ php tests/hardcopy_folder_projection.php
 php tests/hardcopy_contextual_folders.php
 php tests/colors_actions_contract.php
 php tests/plan_implementation.php
+php tests/current_plan_contract.php
 php tests/backup_contract.php
 php tests/backup_retention.php
 php tests/high_priority_security.php
