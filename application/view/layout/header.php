@@ -19,6 +19,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/motion.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/plan-enhancements.css') ?>">
     <?php if (!empty($login_transition)): ?>
     <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">
