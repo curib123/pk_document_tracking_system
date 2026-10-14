@@ -23,7 +23,9 @@ $controller->load = new class {
     public $data;
     public function view($template, $data) { $this->template = $template; $this->data = $data; }
 };
-$path = PK_ROOT . '/storage/documents/' . bin2hex(random_bytes(32));
+$directory = PK_ROOT . '/storage/documents';
+if (!is_dir($directory)) mkdir($directory, 0700, TRUE);
+$path = $directory . '/' . bin2hex(random_bytes(32));
 file_put_contents($path, '<script>Untrusted text</script>');
 $completed = false;
 register_shutdown_function(static function () use ($path, &$completed) {

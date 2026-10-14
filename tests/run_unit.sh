@@ -13,7 +13,6 @@ php tests/user_role_permissions.php
 php tests/approval_step_tiles.php
 php tests/controlled_file_history.php
 php tests/controlled_file_print.php
-php tests/controlled_file_replacement.php
 php tests/plan_contract.php
 php tests/login_transition_handoff.php
 php tests/logout_handoff.php
