@@ -30,6 +30,44 @@ if ($folder_value!=='') $folderQuery['folder']=$folder_value;
   </button>
  </div>
 </div>
+<?php if ($domain==='hardcopy'): ?>
+<section class="workspace-card mb-3">
+  <div class="workspace-card-header">
+    <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
+  </div>
+  <form class="p-3" method="post" action="<?= site_url('admin/document-assignments/location') ?>"
+        data-confirm="Assign all active Hardcopy documents in this Location to the selected user?">
+    <div class="row g-3 align-items-end">
+      <div class="col-lg-5">
+        <label class="form-label" for="locationAssignmentPlace">Location</label>
+        <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required>
+          <option value="">Choose Location</option>
+          <?php foreach ($location_options as $place): ?>
+          <option value="<?= (int)$place['id'] ?>"><?= html_escape($place['name'].' · '.$place['code']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-lg-5">
+        <label class="form-label" for="locationAssignmentUser">Assigned User</label>
+        <select class="form-select" id="locationAssignmentUser" name="recipient_id" data-searchable required>
+          <option value="">Choose active user</option>
+          <?php foreach ($users_list as $person): ?>
+          <option value="<?= (int)$person['id'] ?>"><?= html_escape($person['name']) ?></option>
+          <?php endforeach; ?>
+        </select>
+      </div>
+      <div class="col-lg-2">
+        <button class="btn btn-primary w-100" type="submit">
+          <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign All
+        </button>
+      </div>
+    </div>
+    <input type="hidden" name="confirmed" value="no">
+    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+        value="<?= $this->security->get_csrf_hash() ?>">
+  </form>
+</section>
+<?php endif; ?>
 <?php
 $dt_path='admin/document-assignments';$dt_extra_params=['domain'=>$domain,'folder'=>$folder_value,'layout'=>$table['layout']];
 $dt_columns=['title'=>'Document','code'=>'Reference','assignee'=>'Assigned To','assigned_date'=>'Updated'];
