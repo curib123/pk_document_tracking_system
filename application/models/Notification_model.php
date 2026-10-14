@@ -126,7 +126,7 @@ class Notification_model extends CI_Model
     }
 
     /** Unseen approval occurrences, always scoped to the server-loaded identity. */
-    public function pending_approvals(array $user): array
+    public function pending_approvals(array $user,array $stepIds=[]): array
     {
         if (!$this->db->table_exists('task_notification_receipts')) return [];
         $userId=(int)$user['id'];
@@ -138,7 +138,9 @@ class Notification_model extends CI_Model
             ->group_start()->where('s.assigned_user_id',$userId)->or_group_start()
                 ->where("JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.type')) = 'role'",NULL,FALSE)
                 ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) IN ($roles)",NULL,FALSE)
-            ->group_end()->group_end()->order_by('s.id')->limit(100)->get()->result_array();
+            ->group_end()->group_end();
+        if ($stepIds) $this->db->where_in('s.id',array_values(array_unique(array_map('intval',$stepIds))));
+        $rows=$this->db->order_by('s.id')->limit(100)->get()->result_array();
         $out=[];
         foreach ($rows as $row) {
             $tab=$this->tabForType($row['type']);
@@ -157,7 +159,10 @@ class Notification_model extends CI_Model
             return is_string($key) && preg_match('/^[1-9][0-9]*:[1-9][0-9]*$/',$key);
         }),TRUE);
         if (!$selected) return [];
-        $pending=$this->pending_approvals($user);$shown=[];
+        $requestedIds=array_map(static function($key) {
+            return (int)explode(':',$key)[0];
+        },array_keys($selected));
+        $pending=$this->pending_approvals($user,$requestedIds);$shown=[];
         $roles=implode(',',User_roles::ids($user)?:[0]);
         $this->db->trans_begin();
         try {
