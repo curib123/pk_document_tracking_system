@@ -181,7 +181,8 @@ $dt_page=$table['page'];$dt_limit=$table['limit'];$dt_total=$total;
 $dt_sort=$table['sort'];$dt_dir=strtolower($table['dir']);
 $dt_sortable=['reference','type','requester','status','updated'];
 $dt_date_filters=TRUE;
-$dt_filter_values=['status'=>$dt_filter,'type'=>$table['type'],'from'=>$table['from'],'to'=>$table['to']];
+$dt_filter_values=['status'=>$dt_filter,'type'=>$table['type'],'period'=>$table['period'],
+    'from'=>$table['from'],'to'=>$table['to']];
 $dt_filters=['status'=>[''=>'All Statuses','draft'=>'Draft','submitted'=>'Submitted',
  'completed'=>'Completed','approved'=>'Approved','rejected'=>'Rejected','returned'=>'Returned','cancelled'=>'Cancelled']];
 $dt_filters['type']=[''=>'All Actions']+$typeMap[$tab];
