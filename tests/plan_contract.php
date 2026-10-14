@@ -42,7 +42,8 @@ check(strpos($view, 'stepApproverType')!==FALSE, 'Approver chooser must exist');
 check(strpos($renderer, 'readableDetail')!==FALSE, 'Nested details must use safe formatter');
 check(strpos($requests, "if (!empty(\$r['workflow_version_id']) && !empty(\$r['snapshot']))")!==FALSE, 'Returned requests must retain their snapshot');
 check(strpos($badge, "COUNT(DISTINCT r.id)")!==FALSE, 'Task counts must avoid duplicates');
-check(strpos($seed, 'NOT EXISTS')!==FALSE, 'Seeding must not overwrite live workflows');
+if ($seed!==NULL) check(strpos($seed, 'NOT EXISTS')!==FALSE,
+    'Seeding must not overwrite live workflows'); // Legacy seed no longer bundled.
 $detailsModel=file_get_contents($path.'/application/models/Document_detail_model.php');
 $docHeader=file_get_contents($path.'/application/view/layout/header.php');
 $docFooter=file_get_contents($path.'/application/view/layout/footer.php');
