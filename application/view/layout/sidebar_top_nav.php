@@ -280,7 +280,8 @@ $navPage = end($navParts);
             <div class="topbar-notifications" id="notificationBellPanel"
                  data-notification-list="<?= html_escape(site_url('notifications/inbox')) ?>"
                  data-notification-read="<?= html_escape(site_url('notifications/inbox/read')) ?>"
-                 data-notification-csrf="<?= html_escape($this->security->get_csrf_token_name()) ?>">
+                 data-notification-csrf="<?= html_escape($this->security->get_csrf_token_name()) ?>"
+                 data-notification-cookie="<?= html_escape(config_item('cookie_prefix').config_item('csrf_cookie_name')) ?>">
                 <button class="icon-button notification-bell-button" id="notificationBellButton"
                         type="button" aria-label="Unread notifications" aria-expanded="false"
                         aria-controls="notificationBellMenu">
