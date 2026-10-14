@@ -80,7 +80,8 @@ $dt_sortable=$cfg['domain']==='hardcopy'
 $dt_date_filters=TRUE;
 $dt_filters=['status'=>[''=>'All Statuses','active'=>'Active','disposed'=>'Disposed','archived'=>'Archived','cancelled'=>'Cancelled']];
 $dt_filters['owner']=[''=>'All Owners']+array_column($owner_options,'name','id');
-$dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'from'=>$table['from'],'to'=>$table['to']];
+$dt_filter_values=['status'=>$dt_filter,'owner'=>$table['owner'],'period'=>$table['period'],
+    'from'=>$table['from'],'to'=>$table['to']];
 $dt_badges=['status'];
 $dt_create=$can?($cfg['domain']==='softcopy'?'Softcopy Direct':'Add Document'):'';
 $dt_folder_browser=$folder_browser;
