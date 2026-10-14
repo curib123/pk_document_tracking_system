@@ -24,6 +24,11 @@ class Notifications extends MY_Controller
         $limit=(int)$this->input->get('limit',TRUE);
         $this->load->model('Notification_model');
         $data=$this->Notification_model->unread_page($this->user,$page,$limit);
+        foreach ($data['items'] as &$item) {
+            $parts=explode('?',$item['url'],2);
+            $item['url']=site_url($parts[0]).(isset($parts[1])?'?'.$parts[1]:'');
+        }
+        unset($item);
         return $this->output->set_header('Cache-Control: no-store, private')
             ->set_content_type('application/json')
             ->set_output(json_encode($data));
