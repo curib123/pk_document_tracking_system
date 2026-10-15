@@ -15,6 +15,16 @@
   position: relative;
 }
 
+/* A slow color drift stays behind navigation without moving its controls. */
+.app-sidebar {
+  animation: ui-sidebar-gradient 28s ease-in-out infinite;
+}
+
+@keyframes ui-sidebar-gradient {
+  0%, 100% { background-position: 0% 20%; }
+  50% { background-position: 100% 80%; }
+}
+
 @keyframes ui-page-enter {
   from {
     opacity: 0.72;
@@ -220,6 +230,10 @@ body.motion-login-loading .login-card::after,
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .app-sidebar {
+    animation: none;
+    background-position: 50% 50%;
+  }
   .page-content > :first-child,
   .modal.show .modal-content,
   .doc-tree-node > details[open] > .doc-tree-children {
