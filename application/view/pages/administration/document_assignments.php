@@ -7,124 +7,129 @@ if ($folder_value !== '')
 ?>
 
 <section class="document-assignments-page" aria-label="Document assignments">
-<div class="assignments-heading">
-  <div>
-    <h2><?= html_escape(ucfirst($domain)) ?> Assignments</h2>
-    <p>Showing the current folder's document assignments and holders.</p>
+  <div class="assignments-heading">
+
+    <nav class="tab-bar assignments-tabs" aria-label="Assignment document type">
+      <?php foreach (['hardcopy' => 'Hardcopy / Places', 'softcopy' => 'Softcopy / Categories'] as $key => $label): ?>
+        <a class="tab-link <?= $domain === $key ? 'active' : '' ?>"
+          href="<?= site_url('admin/document-assignments') . '?domain=' . $key ?>" <?= $domain === $key ? 'aria-current="page"' : '' ?>>
+          <i class="fa-solid <?= $key === 'hardcopy' ? 'fa-box-archive' : 'fa-folder-tree' ?> me-1"
+            aria-hidden="true"></i>
+          <?= html_escape($label) ?>
+        </a>
+      <?php endforeach; ?>
+    </nav>
+
+    <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
+      data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
+      <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
+    </button>
+
   </div>
-  <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
-    data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
-    <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
-  </button>
-</div>
-<nav class="tab-bar assignments-tabs" aria-label="Assignment document type">
-  <?php foreach (['hardcopy' => 'Hardcopy / Places', 'softcopy' => 'Softcopy / Categories'] as $key => $label): ?>
-    <a class="tab-link <?= $domain === $key ? 'active' : '' ?>"
-      href="<?= site_url('admin/document-assignments') . '?domain=' . $key ?>" <?= $domain === $key ? 'aria-current="page"' : '' ?>>
-      <i class="fa-solid <?= $key === 'hardcopy' ? 'fa-box-archive' : 'fa-folder-tree' ?> me-1" aria-hidden="true"></i>
-      <?= html_escape($label) ?>
-    </a>
-  <?php endforeach; ?>
-</nav>
 
 
-<?php if ($domain === 'hardcopy'): ?>
-  <section class="workspace-card assignments-location-card">
-    <form class="assignments-location-form" method="post" action="<?= site_url('admin/document-assignments/location') ?>"
-      data-confirm="Assign all active Hardcopy documents in this Location to the selected user?" autocomplete="off">
-      <div class="assignments-location-heading">
-        <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
-      </div>
-      <div class="assignments-location-fields row g-3 align-items-end">
-        <div class="col-lg-5">
-          <label class="form-label" for="locationAssignmentPlace">Location</label>
-          <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required autocomplete="off">
-            <option value="">Choose Location</option>
-            <?php foreach ($location_options as $place): ?>
-              <option value="<?= (int) $place['id'] ?>"><?= html_escape($place['name'] . ' · ' . $place['code']) ?></option>
-            <?php endforeach; ?>
-          </select>
+
+  <?php if ($domain === 'hardcopy'): ?>
+    <section class="workspace-card assignments-location-card">
+      <form class="assignments-location-form" method="post"
+        action="<?= site_url('admin/document-assignments/location') ?>"
+        data-confirm="Assign all active Hardcopy documents in this Location to the selected user?" autocomplete="off">
+        <div class="assignments-location-heading">
+          <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
         </div>
-        <div class="col-lg-5">
-          <label class="form-label" for="locationAssignmentUser">Assigned User</label>
-          <select class="form-select" id="locationAssignmentUser" name="recipient_id" data-searchable required autocomplete="off">
-            <option value="">Choose active user</option>
-            <?php foreach ($users_list as $person): ?>
-              <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
-            <?php endforeach; ?>
-          </select>
+        <div class="assignments-location-fields row g-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label" for="locationAssignmentPlace">Location</label>
+            <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required
+              autocomplete="off">
+              <option value="">Choose Location</option>
+              <?php foreach ($location_options as $place): ?>
+                <option value="<?= (int) $place['id'] ?>"><?= html_escape($place['name'] . ' · ' . $place['code']) ?>
+                </option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-lg-5">
+            <label class="form-label" for="locationAssignmentUser">Assigned User</label>
+            <select class="form-select" id="locationAssignmentUser" name="recipient_id" data-searchable required
+              autocomplete="off">
+              <option value="">Choose active user</option>
+              <?php foreach ($users_list as $person): ?>
+                <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-lg-2">
+            <button class="btn btn-primary w-100" type="submit">
+              <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign All
+            </button>
+          </div>
         </div>
-        <div class="col-lg-2">
-          <button class="btn btn-primary w-100" type="submit">
-            <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign All
-          </button>
-        </div>
-      </div>
-      <input type="hidden" name="confirmed" value="no">
-      <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-        value="<?= $this->security->get_csrf_hash() ?>">
-    </form>
-  </section>
-<?php endif; ?>
-<div class="assignments-register">
-<?php
-$dt_path = 'admin/document-assignments';
-$dt_extra_params = ['domain' => $domain, 'folder' => $folder_value, 'layout' => $table['layout']];
-$dt_columns = ['title' => 'Document', 'code' => 'Reference', 'assignee' => 'Assigned To', 'assigned_date' => 'Updated'];
-$dt_rows = [];
-foreach ($assignment_rows as $item) {
-  $details = [
-    'Document Type' => ucfirst($domain),
-    'Document' => $item['title'],
-    'Reference' => $item['code'] ?: '—',
-    'Assigned To' => $item['assignee'],
-    'Updated' => $item['assigned_date']
-  ];
-  $dt_rows[] = [
-    'id' => $item['document_id'],
-    'cells' => $item,
-    'display' => $details,
-    'record' => [
-      'document_domain' => $domain,
-      'softcopy_id' => $domain === 'softcopy' ? $item['document_id'] : '',
-      'hardcopy_id' => $domain === 'hardcopy' ? $item['document_id'] : '',
-      'recipient_id' => $item['recipient_id']
-    ],
-    'buttons' => [['type' => 'view'], ['type' => 'edit', 'modal' => '#assignmentModal', 'form' => '#assignmentForm']]
-  ];
-}
-$dt_q = $table['q'];
-$dt_filter = '';
-$dt_page = $table['page'];
-$dt_limit = $table['limit'];
-$dt_total = $total;
-$dt_sort = $table['sort'];
-$dt_dir = strtolower($table['dir']);
-$dt_sortable = array_keys($dt_columns);
-$dt_filters = ['owner' => ['' => 'All Assigned Users'] + array_column($users_list, 'name', 'id')];
-$dt_filter_values = ['owner' => $table['owner']];
-$dt_badges = [];
-$dt_create = '';
-$this->load->view('reusable_components/reusable_datatable', compact(
-  'dt_path',
-  'dt_extra_params',
-  'dt_columns',
-  'dt_rows',
-  'dt_q',
-  'dt_filter',
-  'dt_page',
-  'dt_limit',
-  'dt_total',
-  'dt_sort',
-  'dt_dir',
-  'dt_sortable',
-  'dt_filters',
-  'dt_filter_values',
-  'dt_badges',
-  'dt_create'
-));
-?>
-</div>
+        <input type="hidden" name="confirmed" value="no">
+        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+          value="<?= $this->security->get_csrf_hash() ?>">
+      </form>
+    </section>
+  <?php endif; ?>
+  <div class="assignments-register">
+    <?php
+    $dt_path = 'admin/document-assignments';
+    $dt_extra_params = ['domain' => $domain, 'folder' => $folder_value, 'layout' => $table['layout']];
+    $dt_columns = ['title' => 'Document', 'code' => 'Reference', 'assignee' => 'Assigned To', 'assigned_date' => 'Updated'];
+    $dt_rows = [];
+    foreach ($assignment_rows as $item) {
+      $details = [
+        'Document Type' => ucfirst($domain),
+        'Document' => $item['title'],
+        'Reference' => $item['code'] ?: '—',
+        'Assigned To' => $item['assignee'],
+        'Updated' => $item['assigned_date']
+      ];
+      $dt_rows[] = [
+        'id' => $item['document_id'],
+        'cells' => $item,
+        'display' => $details,
+        'record' => [
+          'document_domain' => $domain,
+          'softcopy_id' => $domain === 'softcopy' ? $item['document_id'] : '',
+          'hardcopy_id' => $domain === 'hardcopy' ? $item['document_id'] : '',
+          'recipient_id' => $item['recipient_id']
+        ],
+        'buttons' => [['type' => 'view'], ['type' => 'edit', 'modal' => '#assignmentModal', 'form' => '#assignmentForm']]
+      ];
+    }
+    $dt_q = $table['q'];
+    $dt_filter = '';
+    $dt_page = $table['page'];
+    $dt_limit = $table['limit'];
+    $dt_total = $total;
+    $dt_sort = $table['sort'];
+    $dt_dir = strtolower($table['dir']);
+    $dt_sortable = array_keys($dt_columns);
+    $dt_filters = ['owner' => ['' => 'All Assigned Users'] + array_column($users_list, 'name', 'id')];
+    $dt_filter_values = ['owner' => $table['owner']];
+    $dt_badges = [];
+    $dt_create = '';
+    $this->load->view('reusable_components/reusable_datatable', compact(
+      'dt_path',
+      'dt_extra_params',
+      'dt_columns',
+      'dt_rows',
+      'dt_q',
+      'dt_filter',
+      'dt_page',
+      'dt_limit',
+      'dt_total',
+      'dt_sort',
+      'dt_dir',
+      'dt_sortable',
+      'dt_filters',
+      'dt_filter_values',
+      'dt_badges',
+      'dt_create'
+    ));
+    ?>
+  </div>
 </section>
 
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="assignmentModal" tabindex="-1"
@@ -144,7 +149,8 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php if ($domain === 'hardcopy'): ?>
               <div class="col-md-6" data-document-domain="hardcopy">
                 <label class="form-label" for="assignmentHardcopy">Hardcopy Document</label>
-                <select class="form-select" id="assignmentHardcopy" name="hardcopy_id" data-searchable required autocomplete="off">
+                <select class="form-select" id="assignmentHardcopy" name="hardcopy_id" data-searchable required
+                  autocomplete="off">
                   <option value="">Choose hardcopy from this folder</option>
                   <?php foreach ($hardcopy_options as $doc): ?>
                     <option value="<?= (int) $doc['id'] ?>"><?= html_escape($doc['title']) ?></option>
@@ -154,10 +160,12 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php else: ?>
               <div class="col-md-6" data-document-domain="softcopy">
                 <label class="form-label" for="assignmentSoftcopy">Softcopy Document</label>
-                <select class="form-select" id="assignmentSoftcopy" name="softcopy_id" data-searchable required autocomplete="off">
+                <select class="form-select" id="assignmentSoftcopy" name="softcopy_id" data-searchable required
+                  autocomplete="off">
                   <option value="">Choose softcopy from this folder</option>
                   <?php foreach ($softcopy_options as $doc): ?>
-                    <option value="<?= (int) $doc['id'] ?>"><?= html_escape($doc['document_number'] . ' · ' . $doc['title']) ?>
+                    <option value="<?= (int) $doc['id'] ?>">
+                      <?= html_escape($doc['document_number'] . ' · ' . $doc['title']) ?>
                     </option>
                   <?php endforeach; ?>
                 </select>
@@ -165,7 +173,8 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php endif; ?>
             <div class="col-md-6">
               <label class="form-label" for="assignmentUser">Assigned User</label>
-              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required autocomplete="off">
+              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required
+                autocomplete="off">
                 <option value="">Choose an active user</option>
                 <?php foreach ($users_list as $person): ?>
                   <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
