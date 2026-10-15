@@ -34,25 +34,6 @@
     border-color:var(--ui-brand-300);
     box-shadow:0 0 0 3px color-mix(in srgb,var(--ui-brand-300) 23%,transparent);
 }
-#viewModal .modal-dialog {max-width:min(960px,95vw)}
-#viewModal .modal-content {border-radius:20px}
-#viewModal .modal-header {padding:22px 26px;background:linear-gradient(120deg,var(--ui-white),var(--ui-brand-50))}
-#viewModal .doc-modal-body {padding:20px 25px 25px;background:var(--ui-surface-soft)}
-#viewModal .doc-modal-overview {display:grid;gap:14px}
-#viewModal .doc-overview-group {
-    border:1px solid var(--ui-line);
-    border-radius:14px;
-    box-shadow:0 3px 12px color-mix(in srgb,var(--ui-ink-950) 4%,transparent);
-    background:var(--ui-white);
-}
-#viewModal .doc-overview-item {
-    border-radius:9px;
-    min-width:0;
-    overflow-wrap:anywhere;
-}
-#viewModal .doc-overview-label {color:var(--ui-ink-400);font-size:11px}
-#viewModal .doc-overview-value {color:var(--ui-ink-900);font-weight:680}
-#viewModal .doc-modal-footer {padding:14px 24px}
 .notification-bell-button {
     position:relative;
     display:inline-flex;align-items:center;justify-content:center;

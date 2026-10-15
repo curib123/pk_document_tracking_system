@@ -104,9 +104,10 @@
             group.append(groupTitle);
             var grid = node('dl', 'doc-overview-grid');
             entries.forEach(function (entry) {
-                var item = node('div', 'doc-overview-item');
+                var value = valueText(entry[1]);
+                var item = node('div', 'doc-overview-item' + (value.length > 160 || value.includes('\n') ? ' is-wide' : ''));
                 item.append(node('dt', 'doc-overview-label', entry[0]),
-                    node('dd', 'doc-overview-value', valueText(entry[1])));
+                    node('dd', 'doc-overview-value', value));
                 grid.append(item);
             });
             group.append(grid);
@@ -206,9 +207,10 @@
     function makeGrid(entries) {
         var list = node('dl', 'doc-modal-field-grid');
         entries.forEach(function (entry) {
-            var field = node('div', 'doc-modal-field');
+            var value = valueText(entry[1]);
+            var field = node('div', 'doc-modal-field' + (value.length > 160 || value.includes('\n') ? ' is-wide' : ''));
             field.append(node('dt', 'doc-modal-field-label', entry[0]));
-            field.append(node('dd', 'doc-modal-field-value', valueText(entry[1])));
+            field.append(node('dd', 'doc-modal-field-value', value));
             list.append(field);
         });
         return list;
