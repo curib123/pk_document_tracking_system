@@ -11,7 +11,7 @@ test('external date controls belong to the filter form and enable custom dates b
   const fields = ['from','to'].map((name)=>({name,form,value:'',disabled:true,listeners:{},
     addEventListener(event,fn){this.listeners[event]=fn;},focus(){this.focused=true;}}));
   const labels = fields.map((field)=>({hidden:true,querySelector:()=>field}));
-  const document = {body:null, getElementById:()=>form,
+  const document = {body:null, listeners:{}, addEventListener(event, fn){this.listeners[event]=fn;}, getElementById:()=>form,
     querySelectorAll: (selector)=>selector==='[data-date-period]'?[select]:
       selector==='[data-date-custom]'?labels:selector==='[data-date-custom] input'?fields:[]};
   vm.runInNewContext(fs.readFileSync('public/assets/js/plan-controls.js','utf8'), {document});
@@ -28,4 +28,10 @@ test('external date controls belong to the filter form and enable custom dates b
   assert.equal(labels[0].hidden,true);
   assert.equal(page.value,'1');
   assert.equal(form.submits,1);
+  select.value='custom';select.listeners.change();
+  assert.equal(fields[0].disabled,false);
+  select.value='all';document.listeners['pk:table-updated']();
+  assert.equal(fields[0].disabled,true);
+  assert.equal(labels[0].hidden,true);
+  assert.equal(form.submits,1, 'Synchronizing a live response must not submit another request.');
 });

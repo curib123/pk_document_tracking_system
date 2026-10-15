@@ -93,7 +93,7 @@ test('canceled form confirmations never produce a skeleton',()=>{
 
 test('auto-submit filters get loading shimmer; canceled clicks and downloads do not',()=>{
     const x=setup();
-    x.listeners.change({target:{form:{},matches(selector){return selector==='[data-auto-submit]';}}});
+    x.listeners.change({target:{form:{},closest(){return null;},matches(selector){return selector==='[data-auto-submit]';}}});
     assert.equal(x.timers.size,1);
     x.windows.pageshow();
     const anchor={...x.anchor,hasAttribute(name){return name==='download';}};
@@ -102,6 +102,8 @@ test('auto-submit filters get loading shimmer; canceled clicks and downloads do 
         defaultPrevented:false,target:{closest(){return anchor;}}
     });
     assert.equal(x.timers.size,0);
+    x.listeners.change({target:{form:{},closest(){return {};},matches(){return true;}}});
+    assert.equal(x.timers.size,0, 'Live filters use their inline loading state.');
 });
 
 test('login and required-password forms use independent shimmer surfaces',()=>{

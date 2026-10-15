@@ -42,6 +42,9 @@
             if (field.form === form) field.addEventListener('input', function () { dateRange(form); });
         });
     });
+    document.addEventListener('pk:table-updated', function () {
+        document.querySelectorAll('[data-date-period]').forEach(function (select) { dateRange(select.form); });
+    });
     var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\b/g;
     var selectors = 'td, .doc-modal-body, .doc-modal-reference, .doc-overview-value, ' +
         '.dashboard-activity-date, .file-history-item, .notification-inbox, ' +

@@ -14,6 +14,7 @@
         version++;
         if (controller) controller.abort();
         host.removeAttribute('aria-busy');
+        message('');
     }
     function formUrl() {
         var url = new URL(form.action, window.location.href);
@@ -29,11 +30,11 @@
             button.type = 'button';
             button.className = 'btn btn-light btn-sm';
             button.textContent = 'Retry';
-            button.addEventListener('click', function () { update(pendingUrl, false); });
+            button.addEventListener('click', function () { update(pendingUrl, 'replace'); });
             status.append(button);
         }
     }
-    async function update(url, popstate) {
+    async function update(url, historyMode) {
         cancel();
         var ticket = version;
         var request = new AbortController();
@@ -66,14 +67,14 @@
             // Keep the search input (including caret/IME), date controls and forms alive.
             Array.from(form.elements).forEach(function (field) {
                 var incoming = next.querySelector('[name="' + field.name + '"]');
-                if (incoming && field !== active) field.value = incoming.value;
+                if (incoming && (field !== active || historyMode === 'none')) field.value = incoming.value;
             });
             var clear = host.querySelector('[data-table-clear]');
             var nextClear = next.querySelector('[data-table-clear]');
             if (clear && nextClear) { clear.hidden = nextClear.hidden; clear.href = nextClear.href; }
             if (focusName) Array.from(form.elements).find(function (field) { return field.name === focusName; })?.focus();
-            if (!popstate) {
-                var historyMethod = new URL(window.location.href).pathname === url.pathname ? 'replaceState' : 'pushState';
+            if (historyMode !== 'none') {
+                var historyMethod = historyMode === 'replace' ? 'replaceState' : 'pushState';
                 window.history[historyMethod]({pkTable: true}, '', url.href);
             }
             // Layout switch links must carry the current search and filters.
@@ -105,7 +106,7 @@
         if (event.target !== form) return;
         event.preventDefault();
         form.querySelector('[name="page"]').value = '1';
-        update(formUrl(), false);
+        update(formUrl(), 'replace');
     });
     host.addEventListener('change', function (event) {
         if (event.target.matches('[data-auto-submit]')) form.requestSubmit();
@@ -119,8 +120,8 @@
         var url = new URL(link.href, window.location.href);
         if (url.origin !== window.location.origin || url.pathname !== new URL(form.action).pathname) return;
         event.preventDefault();
-        update(url, false);
+        update(url, 'push');
     });
-    window.addEventListener('popstate', function () { update(new URL(window.location.href), true); });
+    window.addEventListener('popstate', function () { update(new URL(window.location.href), 'none'); });
     window.addEventListener('pagehide', cancel);
 })();
