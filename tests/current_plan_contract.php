@@ -61,6 +61,7 @@ $files=[
     'footer'=>file_get_contents($root.'/application/view/layout/footer.php'),
     'routes'=>file_get_contents($root.'/application/config/routes.php'),
     'css'=>file_get_contents($root.'/public/assets/css/plan-enhancements.css'),
+    'viewer_css'=>file_get_contents($root.'/public/assets/css/document-view.css'),
     'js'=>file_get_contents($root.'/public/assets/js/plan-controls.js')
 ];
 foreach (['area','specific','asset'] as $slug)
@@ -90,7 +91,7 @@ newPlanCheck(currentCodePosition($files['table'],'data-date-period')!==FALSE &&
     currentCodePosition($files['table'],'data-date-custom')!==FALSE,
     'Table filters must provide presets and custom range controls.');
 newPlanCheck(currentCodePosition($files['css'],'backdrop-filter:blur(')!==FALSE &&
-    currentCodePosition($files['css'],'#viewModal .doc-overview-group')!==FALSE &&
+    currentCodePosition($files['viewer_css'],'.doc-overview-group')!==FALSE &&
     currentCodePosition($files['css'],'.notification-inbox')!==FALSE,
     'Modal backdrop blur, details layout and notification styling must exist.');
 newPlanCheck(currentCodePosition($files['header'],'plan-enhancements.css')!==FALSE &&
