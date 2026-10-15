@@ -50,8 +50,9 @@ expect_feature(strpos($location,'name="code" type="text"')!==FALSE &&
     'Location Name and Code must remain editable and validated.');
 expect_feature(strpos($transfer,"\$level==='asset'?'No asset / not assigned'")!==FALSE,
     'Transfer destination must accept an empty Asset choice.');
-expect_feature(strpos($hardcopyService,"'asset_id','location_id'")!==FALSE &&
-    strpos($hardcopyService,"?(int)\$payload[\$field]:NULL")!==FALSE,
+expect_feature(
+    preg_match('/foreach\\s*\\(\\s*\\[[^]]*[\\\'"]asset_id[\\\'"][^]]*\\]\\s+as\\s+\\$field\\s*\\)/', $hardcopyService) === 1 &&
+    preg_match('/\\$data\\[\\$field\\]\\s*=\\s*!empty\\(\\$payload\\[\\$field\\]\\)\\s*\\?\\s*\\(int\\)\\s*\\$payload\\[\\$field\\]\\s*:\\s*NULL\\s*;/', $hardcopyService) === 1,
     'Hardcopy service must normalize empty Asset to SQL NULL.');
 expect_feature(strpos($placeService,"\$data['asset_id']=\$assetId?:NULL;")!==FALSE,
     'Location service must normalize empty Asset to SQL NULL.');
