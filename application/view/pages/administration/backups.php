@@ -1,9 +1,9 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-$backupTime = static function ($timestamp) {
-  return (new DateTimeImmutable('@' . (int) $timestamp))
-    ->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y · g:i A');
-};
+$backupTime = static fn($timestamp) =>
+  (new DateTimeImmutable('@' . (int) $timestamp))
+    ->setTimezone(new DateTimeZone('Asia/Manila'))
+    ->format('M j, Y · g\:i A');
 ?>
 <div class="backup-workspace">
   <div class="backup-overview">
@@ -34,7 +34,7 @@ $backupTime = static function ($timestamp) {
           <i class="fa-solid fa-plus" aria-hidden="true"></i> Backup now
         </button>
       </form>
-      
+
       <form method="post" class="mt-1" action="<?= site_url('admin/backups/cleanup') ?>"
         data-confirm="Clean up backup ZIPs and daily log archives older than three months?">
         <input type="hidden" name="confirmed" value="no">
@@ -58,27 +58,27 @@ $backupTime = static function ($timestamp) {
   </div>
 <?php endif; ?>
 
-  <section class="workspace-card backup-task-card" aria-labelledby="backupImportTitle">
-    <div class="backup-task-head">
-      <span class="backup-task-icon" aria-hidden="true"><i class="fa-solid fa-file-arrow-up"></i></span>
-      <div>
-        <h2 id="backupImportTitle">Import backup ZIP</h2>
-        <p>Upload a previously generated, signed PK Document Control backup.</p>
-      </div>
+<section class="workspace-card backup-task-card" aria-labelledby="backupImportTitle">
+  <div class="backup-task-head">
+    <span class="backup-task-icon" aria-hidden="true"><i class="fa-solid fa-file-arrow-up"></i></span>
+    <div>
+      <h2 id="backupImportTitle">Import backup ZIP</h2>
+      <p>Upload a previously generated, signed PK Document Control backup.</p>
     </div>
-    <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
-      data-confirm="Verify and store this backup ZIP? Existing records will not change.">
-      <label class="form-label" for="backupZip">Backup ZIP</label>
-      <input class="form-control mb-3" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip"
-        required>
-      <input type="hidden" name="confirmed" value="no">
-      <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-        value="<?= $this->security->get_csrf_hash() ?>">
-      <button class="btn btn-light backup-full-button" type="submit">
-        <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import backup
-      </button>
-    </form>
-  </section>
+  </div>
+  <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
+    data-confirm="Verify and store this backup ZIP? Existing records will not change.">
+    <label class="form-label" for="backupZip">Backup ZIP</label>
+    <input class="form-control mb-3" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip"
+      required>
+    <input type="hidden" name="confirmed" value="no">
+    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+      value="<?= $this->security->get_csrf_hash() ?>">
+    <button class="btn btn-light backup-full-button" type="submit">
+      <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import backup
+    </button>
+  </form>
+</section>
 <br>
 <section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
   <div class="workspace-card-header backup-register-header">
