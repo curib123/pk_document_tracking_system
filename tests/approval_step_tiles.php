@@ -65,5 +65,11 @@ foreach ([FALSE,TRUE] as $task) {
         if ($event['user_name']!=='Manager' || $event['position_title']!=='Plant Manager' || empty($event['created_at']))
             throw new RuntimeException('Decision history must preserve approver, position and timestamp.');
     }
+    $historySection=array_column($view->display['sections'],NULL,'key')['audit'];
+    $timeline=$historySection['events']??[];
+    if (count($timeline)!==count($events) || array_column($timeline,'comments')!==array_column($events,'comments'))
+        throw new RuntimeException('Decision History must receive every event with its original remarks and timestamp.');
+    if ($timeline[1]['step_label']!=='Plant Manager Approval' || $timeline[3]['step_label']!=='Plant Manager Approval')
+        throw new RuntimeException('Repeated decisions must retain the approval-step name.');
 }
 echo "Request and task views preserve approval tiles and every step's recorded decisions.\n";

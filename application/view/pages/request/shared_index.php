@@ -31,6 +31,22 @@ $dt_rows = [];
 foreach ($rows as $row) {
   $payload = json_decode($row['payload'], TRUE) ?: [];
   $entries = $history[$row['id']] ?? [];
+  $stepLabels = [];
+  foreach ($approval_routes[$row['id']] ?? [] as $step)
+    if (!empty($step['step_id']))
+      $stepLabels[(int) $step['step_id']] = $step['label'];
+  $decisionEvents = [];
+  foreach ($entries as $event) {
+    $decisionEvents[] = [
+      'step_label' => $stepLabels[(int) ($event['step_id'] ?? 0)] ??
+        ucwords(str_replace('_', ' ', $event['action'])),
+      'action' => $event['action'],
+      'user_name' => $event['user_name'],
+      'position_title' => $event['position_title'] ?? '',
+      'comments' => $event['comments'] ?? '',
+      'created_at' => $event['created_at']
+    ];
+  }
   $historyByStep = [];
   foreach ($entries as $event)
     if (!empty($event['step_id'])) {
@@ -106,6 +122,7 @@ foreach ($rows as $row) {
     [
       'key' => 'audit',
       'title' => 'Decision History',
+      'events' => $decisionEvents,
       'fields' => [
         'History' => implode("\n", $historyText) ?: 'No approval decisions yet'
       ]
