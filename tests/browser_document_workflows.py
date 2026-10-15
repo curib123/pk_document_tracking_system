@@ -96,6 +96,14 @@ try:
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
 
+            if os.environ.get('PK_BROWSER_STEPPER_ONLY') == '1':
+                from browser_workflow_stepper_checks import run_checks
+                run_checks(page, base, sql, manifest)
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
+
             if os.environ.get('PK_BROWSER_REGISTERS_ONLY') == '1':
                 from browser_register_checks import run_checks
                 run_checks(page, context, base, APP_ROOT, manifest, sql, browser, env['PK_BROWSER_PASSWORD'])

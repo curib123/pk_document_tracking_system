@@ -386,7 +386,8 @@ test('approval tiles retain every repeated decision, actor, timestamp and commen
     ['returned','returned','approved','neutral']);
   assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-action').textContent),
     ['Returned','Returned','Approved','Unexpected" Onclick="Bad']);
-  assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-time').textContent),history.map(event=>event.created_at));
+  assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-time').textContent),
+    ['10:00:00 AM','11:00:00 AM','12:00:00 PM','1:00:00 PM']);
   assert.equal(events[0].querySelector('.doc-workflow-decision-time').getAttribute('datetime'),'2026-10-13T10:00:00');
   assert.equal(events[0].querySelector('.doc-workflow-decision-actor').textContent,'Manager · Plant Manager');
   assert.equal(events[1].querySelector('.doc-workflow-decision-comment').textContent,'Second return\nCheck the document');
@@ -396,4 +397,48 @@ test('approval tiles retain every repeated decision, actor, timestamp and commen
   assert.equal(tiles[1].querySelectorAll('.doc-workflow-decision').length,1,'Decisions must stay under their own step.');
   assert.equal(tiles[2].querySelectorAll('.doc-workflow-decision').length,0);
   assert.equal(tiles[0].getAttribute('data-step-status'),'active','Current task status stays separate from saved decisions.');
+});
+
+test('decision history uses dated vertical steps and sorts repeated reviews by timestamp',()=>{
+  const {window,details}=setup();
+  const events=[
+    {step_label:'Noted By',action:'approved',user_name:'Staff2 Staff2',position_title:'Staff2',created_at:'2026-10-15 14:17:12'},
+    {step_label:'Plant Manager Approval',action:'approved',user_name:'Plant Manager',position_title:'manager',created_at:'2026-10-15 14:18:32'},
+    {step_label:'Document Officer Approval',action:'returned',user_name:'Document Officer',position_title:'Document Controll Officer',created_at:'2026-10-15 14:18:54',comments:'fff'},
+    {step_label:'Plant Manager Approval',action:'approved',user_name:'Plant Manager',position_title:'manager',created_at:'2026-10-15 14:20:09'}
+  ];
+  const original=JSON.stringify(events);
+  window.PKDocumentView.render(details,{kind:'record',header:{title:'Request'},sections:[
+    {key:'audit',title:'Decision History',fields:{},events}
+  ]});
+  const select=details.querySelector('.doc-workflow-sort');
+  assert.ok(select,'Decision history needs a timestamp sort control.');
+  assert.deepEqual(select.children.map(option=>option.textContent),['Oldest first','Newest first']);
+  assert.equal(details.querySelector('.doc-workflow-date').textContent,'Oct 15, 2026');
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-time').map(item=>item.textContent),
+    ['2:17:12 PM','2:18:32 PM','2:18:54 PM','2:20:09 PM']);
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-step').map(item=>item.textContent),events.map(event=>event.step_label));
+  assert.equal(details.querySelector('.doc-workflow-decision-comment').textContent,'fff');
+  select.value='newest';select.listeners.change();
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-time').map(item=>item.textContent),
+    ['2:20:09 PM','2:18:54 PM','2:18:32 PM','2:17:12 PM']);
+  assert.equal(JSON.stringify(events),original,'Sorting must leave saved records untouched.');
+});
+
+test('approval sorting reorders decisions within each step and preserves the assigned route',()=>{
+  const {window,details}=setup();
+  window.PKDocumentView.render(details,{kind:'record',header:{title:'Request'},sections:[
+    {key:'approvals',title:'Approval Route',fields:{},steps:[
+      {label:'First review',approver_label:'Staff',status:'approved',history:[
+        {action:'approved',user_name:'Staff',created_at:'2026-10-14 10:00:00'},
+        {action:'approved',user_name:'Staff',created_at:'2026-10-15 11:00:00'}
+      ]},
+      {label:'Final review',approver_label:'Manager',status:'active'}
+    ]}
+  ]});
+  const select=details.querySelector('.doc-workflow-sort');
+  assert.ok(select);
+  select.value='newest';select.listeners.change();
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-step-name').map(item=>item.textContent),['First review','Final review']);
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-date').map(item=>item.textContent),['Oct 15, 2026','Oct 14, 2026']);
 });

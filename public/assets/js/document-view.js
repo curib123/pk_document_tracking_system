@@ -264,33 +264,80 @@
         return list;
     }
 
-    function makeStepHistory(history) {
-        var group = node('div', 'doc-workflow-history');
-        group.append(node('h5', 'doc-workflow-history-title', 'Decision History'));
-        var list = node('ol', 'doc-workflow-decisions');
-        history.forEach(function (event) {
+    function decisionTimestamp(value) {
+        var match = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(String(value || ''));
+        if (!match) return null;
+        var year = Number(match[1]), month = Number(match[2]), day = Number(match[3]);
+        var hour = Number(match[4]), minute = Number(match[5]), second = Number(match[6] || 0);
+        var date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
+        if (year < 1000 || date.getUTCFullYear() !== year || date.getUTCMonth() !== month - 1 ||
+            date.getUTCDate() !== day || hour > 23 || minute > 59 || second > 59) return null;
+        // SQL timestamps are already the displayed application wall time.
+        // UTC here keeps parsing/sorting independent of the browser's timezone.
+        return {
+            order: date.getTime(), day: match[1] + '-' + match[2] + '-' + match[3],
+            date: date.toLocaleDateString('en-US', {month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC'}),
+            time: (hour % 12 || 12) + ':' + match[5] + ':' + String(second).padStart(2, '0') + (hour >= 12 ? ' PM' : ' AM'),
+            iso: String(value).replace(' ', 'T')
+        };
+    }
+
+    function makeDecisionTimeline(history, order) {
+        var timeline = node('div', 'doc-workflow-timeline');
+        var sorted = history.filter(function (event) { return event && typeof event === 'object'; })
+            .map(function (event, index) { return {event: event, index: index, stamp: decisionTimestamp(event.created_at)}; });
+        var direction = order === 'newest' ? -1 : 1;
+        sorted.sort(function (left, right) {
+            if (!left.stamp || !right.stamp) return left.stamp ? -1 : (right.stamp ? 1 : left.index - right.index);
+            return ((left.stamp.order - right.stamp.order) || (left.index - right.index)) * direction;
+        });
+        var lastDay, list;
+        sorted.forEach(function (record) {
+            var event = record.event, stamp = record.stamp;
+            var day = stamp ? stamp.day : 'unknown';
+            if (day !== lastDay) {
+                var group = node('section', 'doc-workflow-day');
+                group.append(node('h4', 'doc-workflow-date', stamp ? stamp.date : 'Date not recorded'));
+                list = node('ol', 'doc-workflow-decisions');
+                group.append(list); timeline.append(group); lastDay = day;
+            }
             var action = String(event.action || '').toLowerCase();
-            var status = ['approved', 'returned', 'rejected'].includes(action) ? action : 'neutral';
+            var status = ['approved', 'returned', 'rejected', 'submitted', 'cancelled'].includes(action) ? action : 'neutral';
             var item = node('li', 'doc-workflow-decision');
             item.setAttribute('data-decision-status', status);
-            item.append(node('strong', 'doc-workflow-decision-action', action.replace(/_/g, ' ')
+            var marker = node('span', 'doc-workflow-decision-marker');
+            marker.setAttribute('aria-hidden', 'true');
+            marker.append(node('i', 'fa-solid ' + ({approved: 'fa-check', returned: 'fa-arrow-rotate-left',
+                rejected: 'fa-xmark', submitted: 'fa-paper-plane', cancelled: 'fa-ban'}[status] || 'fa-circle')));
+            var heading = node('div', 'doc-workflow-decision-heading');
+            if (event.step_label) heading.append(node('h4', 'doc-workflow-decision-step', event.step_label));
+            heading.append(node('strong', 'doc-workflow-decision-action', action.replace(/_/g, ' ')
                 .replace(/\b\w/g, function (letter) { return letter.toUpperCase(); })));
+            item.append(marker, heading);
+            var timestamp = node('time', 'doc-workflow-decision-time', stamp ? stamp.time : 'Time not recorded');
+            if (stamp) timestamp.setAttribute('datetime', stamp.iso);
+            item.append(timestamp);
             var actor = valueText(event.user_name);
             if (event.position_title) actor += ' · ' + event.position_title;
             item.append(node('p', 'doc-workflow-decision-actor', actor));
-            if (event.created_at) {
-                var timestamp = node('time', 'doc-workflow-decision-time', event.created_at);
-                timestamp.setAttribute('datetime', String(event.created_at).replace(' ', 'T'));
-                item.append(timestamp);
+            if (event.comments && String(event.comments).trim()) {
+                var remarks = node('div', 'doc-workflow-remarks');
+                remarks.append(node('strong', 'doc-workflow-remarks-label', 'Remarks'),
+                    node('p', 'doc-workflow-decision-comment', event.comments));
+                item.append(remarks);
             }
-            if (event.comments) item.append(node('p', 'doc-workflow-decision-comment', event.comments));
             list.append(item);
         });
-        group.append(list);
+        return timeline;
+    }
+
+    function makeStepHistory(history, order) {
+        var group = node('div', 'doc-workflow-history');
+        group.append(node('h5', 'doc-workflow-history-title', 'Decision History'), makeDecisionTimeline(history, order));
         return group;
     }
 
-    function makeWorkflowSteps(steps) {
+    function makeWorkflowSteps(steps, order) {
         var list = node('ol', 'doc-workflow-steps');
         list.setAttribute('aria-label', 'Steps');
         steps.forEach(function (step, index) {
@@ -305,25 +352,46 @@
             var heading = node('div', 'doc-workflow-step-heading');
             var number = node('span', 'doc-workflow-step-number', index + 1);
             number.setAttribute('aria-hidden', 'true');
-            heading.append(number, node('span', 'doc-workflow-step-status', statusText));
-            tile.append(heading, node('h4', 'doc-workflow-step-name', valueText(step.label)),
+            heading.append(number, node('h4', 'doc-workflow-step-name', valueText(step.label)),
+                node('span', 'doc-workflow-step-status', statusText));
+            tile.append(heading,
                 node('p', 'doc-workflow-step-approver', valueText(step.approver_label)));
             if (Array.isArray(step.history) && step.history.length)
-                tile.append(makeStepHistory(step.history));
+                tile.append(makeStepHistory(step.history, order));
             list.append(tile);
         });
         return list;
     }
 
     function renderSection(panel, section) {
-        panel.append(sectionTitle(section));
         var entries = normalizedEntries(section.fields);
-        if (section.key === 'approvals' && Array.isArray(section.steps) && section.steps.length) {
+        var hasSteps = section.key === 'approvals' && Array.isArray(section.steps) && section.steps.length;
+        if (hasSteps || Array.isArray(section.events)) {
             panel.classList.add('has-workflow-steps');
+            var toolbar = node('div', 'doc-workflow-toolbar');
+            toolbar.append(node('h3', 'doc-modal-section-title', 'Approval Workflow'));
+            var label = node('label', 'doc-workflow-sort-label', 'Sort by timestamp');
+            var sort = node('select', 'form-select form-select-sm doc-workflow-sort');
+            sort.setAttribute('aria-label', 'Sort decision history by timestamp');
+            [['oldest', 'Oldest first'], ['newest', 'Newest first']].forEach(function (option) {
+                var item = node('option', '', option[1]); item.value = option[0]; sort.append(item);
+            });
+            sort.value = 'oldest'; label.append(sort); toolbar.append(label); panel.append(toolbar);
             var metadata = entries.filter(function (entry) { return entry[0] !== 'Steps'; });
-            if (metadata.length) panel.append(makeGrid(metadata));
-            panel.append(node('h4', 'doc-workflow-label', 'Steps'), makeWorkflowSteps(section.steps));
-        } else if (!entries.length) {
+            if (hasSteps && metadata.length) panel.append(makeGrid(metadata));
+            var result = node('div', 'doc-workflow-results');
+            result.setAttribute('aria-live', 'polite');
+            function update() {
+                result.replaceChildren(hasSteps ? makeWorkflowSteps(section.steps, sort.value) :
+                    (section.events.length ? makeDecisionTimeline(section.events, sort.value) : emptyState('No approval decisions yet.')));
+            }
+            sort.disabled = hasSteps ? !section.steps.some(function (step) { return step.history && step.history.length; }) : !section.events.length;
+            sort.addEventListener('change', update);
+            update(); panel.append(result);
+            return;
+        }
+        panel.append(sectionTitle(section));
+        if (!entries.length) {
             panel.append(emptyState(section.empty));
         } else if (section.key === 'files') {
             panel.append(makeFiles(section, entries));

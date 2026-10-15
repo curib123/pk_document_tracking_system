@@ -796,218 +796,136 @@
     }
 }
 
-/* Each assigned approval step remains distinct, ordered and readable. */
+/* Vertical approval route and timestamp-sorted decision history. */
+#viewModal.is-document-view .doc-workflow-toolbar {
+    display: flex; align-items: center; justify-content: space-between;
+    flex-wrap: wrap; gap: 14px; margin-bottom: 20px;
+}
+#viewModal.is-document-view .doc-workflow-sort-label {
+    display: grid; gap: 6px; min-width: 175px; max-width: 100%;
+    color: var(--ui-ink-600); font-size: 11px; font-weight: 650;
+}
+#viewModal.is-document-view .doc-workflow-sort { width: 100%; min-width: 0; }
 #viewModal.is-document-view .has-workflow-steps .doc-modal-field-grid {
-    grid-template-columns: 1fr;
-    margin-bottom: 22px;
+    grid-template-columns: 1fr; margin-bottom: 22px;
 }
-
 #viewModal.is-document-view .has-workflow-steps .doc-modal-field {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: baseline;
-    gap: 8px 14px;
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px;
 }
-
-#viewModal.is-document-view .has-workflow-steps .doc-modal-field-value {
-    margin: 0;
-}
-
-#viewModal.is-document-view .doc-workflow-label {
-    margin: 0 0 12px;
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--ui-ink-600);
-}
-
+#viewModal.is-document-view .has-workflow-steps .doc-modal-field-value { margin: 0; }
 #viewModal.is-document-view .doc-workflow-steps {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    align-items: start;
-    gap: 14px;
-    padding: 0;
-    margin: 0;
-    list-style: none;
+    display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
+    padding: 0; margin: 0; list-style: none;
 }
-
 #viewModal.is-document-view .doc-workflow-step {
-    --step-color: var(--ui-ink-500);
-    --step-surface: var(--ui-surface-soft);
-    --step-line: var(--ui-line-strong);
-    min-width: 0;
-    min-height: 156px;
-    padding: 18px;
-    border: 1px solid var(--step-line);
-    border-radius: 14px;
-    background: var(--step-surface);
-    box-shadow: inset 0 3px 0 var(--step-color);
+    --step-color: var(--ui-ink-500); --step-surface: var(--ui-surface-soft); --step-line: var(--ui-line-strong);
+    position: relative; min-width: 0; margin-inline-start: 44px; padding: 16px;
+    border: 1px solid var(--step-line); border-radius: 13px; background: var(--ui-white);
 }
-
+#viewModal.is-document-view .doc-workflow-step::before {
+    content: ''; position: absolute; left: -31px; top: 44px; bottom: -33px;
+    width: 2px; background: var(--ui-line-strong);
+}
+#viewModal.is-document-view .doc-workflow-step:last-child::before { display: none; }
 #viewModal.is-document-view .doc-workflow-step[data-step-status="active"] {
-    --step-color: var(--ui-blue-900);
-    --step-surface: var(--ui-blue-100);
-    --step-line: var(--ui-blue-300);
+    --step-color: var(--ui-blue-900); --step-surface: var(--ui-blue-100); --step-line: var(--ui-blue-300);
 }
-
 #viewModal.is-document-view .doc-workflow-step[data-step-status="approved"] {
-    --step-color: var(--ui-green-900);
-    --step-surface: var(--ui-green-100);
-    --step-line: var(--ui-green-300);
+    --step-color: var(--ui-green-900); --step-surface: var(--ui-green-100); --step-line: var(--ui-green-300);
 }
-
 #viewModal.is-document-view .doc-workflow-step[data-step-status="returned"] {
-    --step-color: var(--ui-amber-900);
-    --step-surface: var(--ui-amber-100);
-    --step-line: var(--ui-amber-300);
+    --step-color: var(--ui-amber-900); --step-surface: var(--ui-amber-100); --step-line: var(--ui-amber-300);
 }
-
 #viewModal.is-document-view .doc-workflow-step[data-step-status="rejected"] {
-    --step-color: var(--ui-brand-800);
-    --step-surface: var(--ui-brand-50);
-    --step-line: var(--ui-brand-200);
+    --step-color: var(--ui-brand-800); --step-surface: var(--ui-brand-50); --step-line: var(--ui-brand-200);
 }
-
 #viewModal.is-document-view .doc-workflow-step[data-step-status="superseded"],
-#viewModal.is-document-view .doc-workflow-step[data-step-status="cancelled"] {
-    border-style: dashed;
-}
-
+#viewModal.is-document-view .doc-workflow-step[data-step-status="cancelled"] { border-style: dashed; }
 #viewModal.is-document-view .doc-workflow-step-heading {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
 }
-
 #viewModal.is-document-view .doc-workflow-step-number {
-    display: grid;
-    place-items: center;
-    flex: 0 0 28px;
-    width: 28px;
-    height: 28px;
-    border: 1px solid var(--step-line);
-    border-radius: 9px;
-    background: var(--ui-white);
-    color: var(--step-color);
-    font-size: 12px;
-    font-weight: 700;
+    position: absolute; left: -44px; top: 16px; display: grid; place-items: center;
+    width: 28px; height: 28px; border: 2px solid var(--step-line); border-radius: 50%;
+    background: var(--step-surface); color: var(--step-color); font-size: 12px; font-weight: 750;
 }
-
-#viewModal.is-document-view .doc-workflow-step-status {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    min-width: 0;
-    color: var(--step-color);
-    font-size: 11px;
-    font-weight: 700;
-    overflow-wrap: anywhere;
-}
-
-#viewModal.is-document-view .doc-workflow-step-status::before {
-    content: "";
-    flex: 0 0 6px;
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--step-color);
-}
-
 #viewModal.is-document-view .doc-workflow-step-name {
-    margin: 14px 0 7px;
-    color: var(--ui-ink-900);
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 700;
-    overflow-wrap: anywhere;
+    margin: 0; color: var(--ui-ink-900); font-size: 14px; line-height: 1.5;
+    font-weight: 700; overflow-wrap: anywhere;
 }
-
+#viewModal.is-document-view .doc-workflow-step-status {
+    display: inline-flex; padding: 4px 9px; border-radius: 20px; background: var(--step-surface);
+    color: var(--step-color); font-size: 11px; font-weight: 700; max-width: 100%; overflow-wrap: anywhere;
+}
 #viewModal.is-document-view .doc-workflow-step-approver {
-    margin: 0;
-    color: var(--ui-ink-600);
-    font-size: 12px;
-    line-height: 1.6;
-    overflow-wrap: anywhere;
+    margin: 7px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere;
 }
-
 #viewModal.is-document-view .doc-workflow-history {
-    margin-top: 18px;
-    padding-top: 14px;
-    border-top: 1px solid var(--step-line);
+    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--ui-line);
 }
-
 #viewModal.is-document-view .doc-workflow-history-title {
-    margin: 0 0 12px;
-    color: var(--ui-ink-600);
-    font-size: 11px;
-    font-weight: 700;
+    margin: 0 0 14px; color: var(--ui-ink-600); font-size: 11px; font-weight: 700;
 }
-
+#viewModal.is-document-view .doc-workflow-day + .doc-workflow-day { margin-top: 24px; }
+#viewModal.is-document-view .doc-workflow-date {
+    margin: 0 0 14px; color: var(--ui-ink-600); font-size: 12px; font-weight: 700;
+}
 #viewModal.is-document-view .doc-workflow-decisions {
-    display: grid;
-    gap: 12px;
-    margin: 0;
-    padding: 0;
-    list-style: none;
+    display: grid; gap: 16px; margin: 0; padding: 0 0 0 42px; list-style: none;
 }
-
 #viewModal.is-document-view .doc-workflow-decision {
-    --decision-color: var(--ui-ink-500);
-    min-width: 0;
-    padding-left: 10px;
-    border-left: 3px solid var(--decision-color);
-    overflow-wrap: anywhere;
+    --decision-color: var(--ui-ink-600); --decision-surface: var(--ui-surface-soft);
+    position: relative; min-width: 0; padding: 14px 16px; border: 1px solid var(--ui-line);
+    border-radius: 12px; background: var(--ui-white); overflow-wrap: anywhere;
 }
-
+#viewModal.is-document-view .doc-workflow-decision::before {
+    content: ''; position: absolute; left: -29px; top: 42px; bottom: -31px;
+    width: 2px; background: var(--ui-line-strong);
+}
+#viewModal.is-document-view .doc-workflow-decision:last-child::before { display: none; }
 #viewModal.is-document-view .doc-workflow-decision[data-decision-status="approved"] {
-    --decision-color: var(--ui-green-900);
+    --decision-color: var(--ui-green-900); --decision-surface: var(--ui-green-100);
 }
-
 #viewModal.is-document-view .doc-workflow-decision[data-decision-status="returned"] {
-    --decision-color: var(--ui-amber-900);
+    --decision-color: var(--ui-amber-900); --decision-surface: var(--ui-amber-100);
 }
-
 #viewModal.is-document-view .doc-workflow-decision[data-decision-status="rejected"] {
-    --decision-color: var(--ui-brand-800);
+    --decision-color: var(--ui-brand-800); --decision-surface: var(--ui-brand-50);
 }
-
+#viewModal.is-document-view .doc-workflow-decision-marker {
+    position: absolute; left: -42px; top: 14px; display: grid; place-items: center;
+    width: 28px; height: 28px; border: 1px solid var(--ui-line); border-radius: 50%;
+    background: var(--decision-surface); color: var(--decision-color); font-size: 11px;
+}
+#viewModal.is-document-view .doc-workflow-decision-heading {
+    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+}
+#viewModal.is-document-view .doc-workflow-decision-step {
+    margin: 0; color: var(--ui-ink-900); font-size: 13px; line-height: 1.5; font-weight: 700;
+}
 #viewModal.is-document-view .doc-workflow-decision-action {
-    color: var(--decision-color);
-    font-size: 11px;
-    font-weight: 700;
+    padding: 4px 9px; border-radius: 20px; background: var(--decision-surface);
+    color: var(--decision-color); font-size: 11px; font-weight: 700;
 }
-
 #viewModal.is-document-view .doc-workflow-decision-actor,
 #viewModal.is-document-view .doc-workflow-decision-time {
-    display: block;
-    margin: 3px 0 0;
-    color: var(--ui-ink-600);
-    font-size: 10px;
-    line-height: 1.6;
+    display: block; margin: 7px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6;
 }
-
+#viewModal.is-document-view .doc-workflow-decision-time { font-variant-numeric: tabular-nums; }
+#viewModal.is-document-view .doc-workflow-remarks {
+    margin-top: 12px; padding: 10px 12px; border-radius: 8px; background: var(--ui-surface-soft);
+}
+#viewModal.is-document-view .doc-workflow-remarks-label { color: var(--ui-ink-600); font-size: 10px; }
 #viewModal.is-document-view .doc-workflow-decision-comment {
-    margin: 6px 0 0;
-    color: var(--ui-ink-900);
-    font-size: 11px;
-    line-height: 1.6;
-    white-space: pre-wrap;
+    margin: 4px 0 0; color: var(--ui-ink-900); font-size: 12px; line-height: 1.6; white-space: pre-wrap;
 }
-
-@media (max-width: 991.98px) {
-    #viewModal.is-document-view .doc-workflow-steps {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-    }
-}
-
-@media (max-width: 767.98px) {
-    #viewModal.is-document-view .doc-workflow-steps {
-        grid-template-columns: 1fr;
-        gap: 12px;
-    }
-
-    #viewModal.is-document-view .doc-workflow-step {
-        min-height: 0;
-        padding: 16px;
-    }
+@media (max-width: 575.98px) {
+    #viewModal.is-document-view .doc-workflow-sort-label { width: 100%; }
+    #viewModal.is-document-view .doc-workflow-step { margin-inline-start: 36px; padding: 12px; }
+    #viewModal.is-document-view .doc-workflow-step-number { left: -36px; }
+    #viewModal.is-document-view .doc-workflow-step::before { left: -23px; }
+    #viewModal.is-document-view .doc-workflow-decisions { padding-left: 32px; }
+    #viewModal.is-document-view .doc-workflow-decision { padding: 12px; }
+    #viewModal.is-document-view .doc-workflow-decision-marker { left: -32px; width: 24px; height: 24px; }
+    #viewModal.is-document-view .doc-workflow-decision::before { left: -21px; top: 38px; }
 }
