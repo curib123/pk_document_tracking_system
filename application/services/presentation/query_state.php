@@ -49,12 +49,12 @@ class Query_state
             $dates = ['from' => '', 'to' => ''];
             $period = 'all';
         }
-        $limit = (int) $text('limit');
+        $limit = $number('limit');
         return $dates + [
             'period' => $period,
             'q' => mb_substr($text('q'), 0, 100),
             'status' => mb_substr($text('status'), 0, 40),
-            'page' => max(1, min(1000000, (int) $text('page'))),
+            'page' => max(1, min(1000000, $number('page'))),
             'limit' => in_array($limit, [10, 25, 50, 100], TRUE) ? $limit : 10,
             'sort' => mb_substr($text('sort', $defaultSort), 0, 40),
             'dir' => strtolower($text('dir', str_ends_with($defaultSort, '_at') ? 'desc' : 'asc')) === 'desc' ? 'DESC' : 'ASC',
