@@ -103,6 +103,6 @@ test('offline modal can still close with its explicit Cancel or Close button',()
 
 test('native login notification also resists accidental Escape dismissal',()=>{
     const source=fs.readFileSync('application/view/reusable_components/auth_alert.php','utf8');
-    assert.match(source,/addEventListener\('cancel',function\(event\)\{event\.preventDefault\(\);\}\)/);
+    assert.match(source,/addEventListener\\(\\s*'cancel'\\s*,\\s*function\\s*\\(event\\)\\s*\\{\\s*event\\.preventDefault\\(\\);\\s*\\}\\s*\\)/);
     assert.match(source,/data-close-alert/,'Visible explicit confirmation remains available.');
 });
