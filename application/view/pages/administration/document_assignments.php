@@ -6,7 +6,18 @@ if ($folder_value !== '')
   $folderQuery['folder'] = $folder_value;
 ?>
 
-<nav class="tab-bar" aria-label="Assignment document type">
+<section class="document-assignments-page" aria-label="Document assignments">
+<div class="assignments-heading">
+  <div>
+    <h2><?= html_escape(ucfirst($domain)) ?> Assignments</h2>
+    <p>Showing the current folder's document assignments and holders.</p>
+  </div>
+  <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
+    data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
+    <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
+  </button>
+</div>
+<nav class="tab-bar assignments-tabs" aria-label="Assignment document type">
   <?php foreach (['hardcopy' => 'Hardcopy / Places', 'softcopy' => 'Softcopy / Categories'] as $key => $label): ?>
     <a class="tab-link <?= $domain === $key ? 'active' : '' ?>"
       href="<?= site_url('admin/document-assignments') . '?domain=' . $key ?>" <?= $domain === $key ? 'aria-current="page"' : '' ?>>
@@ -17,25 +28,14 @@ if ($folder_value !== '')
 </nav>
 
 
-<div class="workspace-card">
-  <div class="workspace-card-header d-flex justify-content-between align-items-center gap-3 flex-wrap">
-    <div><strong><?= html_escape(ucfirst($domain)) ?> Assignments</strong>
-      <p class="text-secondary small mb-0">Showing the current folder's document assignments and holders.</p>
-    </div>
-    <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
-      data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
-      <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
-    </button>
-  </div>
-</div>
 <?php if ($domain === 'hardcopy'): ?>
-  <section class="workspace-card mb-3">
-    <div class="workspace-card-header">
-      <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
-    </div>
-    <form class="p-3" method="post" action="<?= site_url('admin/document-assignments/location') ?>"
+  <section class="workspace-card assignments-location-card">
+    <form class="assignments-location-form" method="post" action="<?= site_url('admin/document-assignments/location') ?>"
       data-confirm="Assign all active Hardcopy documents in this Location to the selected user?" autocomplete="off">
-      <div class="row g-3 align-items-end">
+      <div class="assignments-location-heading">
+        <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
+      </div>
+      <div class="assignments-location-fields row g-3 align-items-end">
         <div class="col-lg-5">
           <label class="form-label" for="locationAssignmentPlace">Location</label>
           <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required autocomplete="off">
@@ -66,6 +66,7 @@ if ($folder_value !== '')
     </form>
   </section>
 <?php endif; ?>
+<div class="assignments-register">
 <?php
 $dt_path = 'admin/document-assignments';
 $dt_extra_params = ['domain' => $domain, 'folder' => $folder_value, 'layout' => $table['layout']];
@@ -123,6 +124,8 @@ $this->load->view('reusable_components/reusable_datatable', compact(
   'dt_create'
 ));
 ?>
+</div>
+</section>
 
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="assignmentModal" tabindex="-1"
   aria-labelledby="assignmentModalTitle" aria-hidden="true">
@@ -135,7 +138,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="row g-3">
+          <div class="assignments-modal-grid row g-3">
             <input type="hidden" name="document_domain" value="<?= html_escape($domain) ?>">
             <input type="hidden" name="folder" value="<?= html_escape($folder_value) ?>">
             <?php if ($domain === 'hardcopy'): ?>
@@ -169,7 +172,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
                 <?php endforeach; ?>
               </select>
             </div>
-            <div class="col-12">
+            <div class="assignments-help col-12">
               <p class="form-text mb-2">Up to 500 matching choices. Use the page search or select a more specific folder
                 to find other documents.</p>
               <p class="form-text mb-0">
