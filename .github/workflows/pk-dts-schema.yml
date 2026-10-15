@@ -80,6 +80,12 @@ jobs:
           extensions: mysqli,mbstring,fileinfo,zip
       - name: Verify clean schema, nine definitions, repeated seed and published version
         run: bash tests/smoke.sh
+      - name: Verify fresh-install SQL snapshot and additive permission migrations
+        env:
+          DB_PASSWORD: rootpass
+        run: |
+          if command -v mariadb >/dev/null 2>&1; then DB_BIN="$(command -v mariadb)"; else DB_BIN="$(command -v mysql)"; fi
+          PK_MYSQL="$DB_BIN" python3 tests/schema_install.py
       - name: Workflow returns reverse one step and replay approval
         env:
           PK_TEST_DB: '1'
