@@ -32,7 +32,7 @@ test('live search provides loading, timeout, retry, and IME handling', () => {
     }
 });
 test('request View uses delegated handlers and shared modal', () => {
-    assert.match(request, /'type' => 'view'/);
+    assert.match(request, /['"]type['"]\s*=>\s*['"]view['"]/);
     assert.match(app, /event\.target\.closest\('\.js-view'\)/);
     assert.match(app, /openRecordDetails\(view\.getAttribute\('data-display'\)/);
     assert.match(table, /data-row-view/);
