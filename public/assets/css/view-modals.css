@@ -233,21 +233,64 @@
 }
 
 /* Workflow configuration keeps all version and step controls in their places. */
+.workflow-steps-modal .workflow-modal-eyebrow {
+  margin: 0 0 8px;
+  color: var(--ui-brand-800);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: .1em;
+  text-transform: uppercase;
+}
 .workflow-steps-modal .modal-header .modal-title {
+  margin: 0;
   font-size: 20px;
   font-weight: 650;
   color: var(--ui-ink-950);
 }
+.workflow-steps-modal .modal-header p:not(.workflow-modal-eyebrow) {
+  margin: 8px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.workflow-steps-modal .workflow-version-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: end;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 18px;
+}
+.workflow-steps-modal .workflow-version-picker { display: grid; flex: 1; min-width: 0; gap: 6px; }
+.workflow-steps-modal .workflow-version-picker .form-label { margin: 0; }
+.workflow-steps-modal .workflow-version-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 16px 0;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+}
+.workflow-steps-modal .workflow-version-meta .badge {
+  padding: 5px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 600;
+  background: var(--ui-brand-50);
+  color: var(--ui-brand-800);
+}
+.workflow-steps-modal [data-draft="yes"] .workflow-version-meta .badge:first-child { background: var(--ui-amber-100); color: var(--ui-amber-900); }
+.workflow-steps-modal [data-draft="no"] .workflow-version-meta .badge:first-child { background: var(--ui-green-100); color: var(--ui-green-900); }
 .workflow-steps-modal .modal-body {
   padding: 24px 30px 30px;
 }
 .workflow-steps-modal .workflow-stage-overview {
-  padding: 20px 0;
-  gap: 24px;
-  border: 0;
-  border-block: 1px solid var(--ui-line);
-  border-radius: 0;
-  background: transparent;
+  padding: 18px 20px;
+  gap: 18px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-surface-soft);
 }
 .workflow-steps-modal .workflow-stage-overview small {
   font-size: 11px;
@@ -257,42 +300,165 @@
   font-weight: 550;
   line-height: 1.6;
 }
+.workflow-steps-modal .workflow-step-list {
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 6px 0 12px;
+}
 .workflow-steps-modal .workflow-step-row {
   position: relative;
-  margin: 0 0 0 44px;
-  padding: 20px 0;
-  border: 0;
-  border-bottom: 1px solid var(--ui-line-soft);
-  border-radius: 0;
-  background: transparent;
+  min-width: 0;
+  margin: 0 0 0 48px;
+  padding: 18px 20px;
+  gap: 16px;
+  border: 1px solid var(--ui-line);
+  border-radius: 12px;
+  background: var(--ui-white);
+  animation: workflow-route-enter 460ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--workflow-step-index) * 100ms);
 }
 .workflow-steps-modal .workflow-step-row:hover {
-  border-color: var(--ui-line-soft);
-  background: transparent;
+  border-color: var(--ui-brand-200);
 }
 .workflow-steps-modal .workflow-step-row::before {
   position: absolute;
-  left: -44px;
+  left: -48px;
   top: 20px;
-  width: 28px;
-  height: 28px;
+  width: 32px;
+  height: 32px;
+  border: 1px solid var(--ui-brand-200);
+  background: var(--ui-brand-50);
+  color: var(--ui-brand-800);
   font-size: 12px;
+  box-shadow: 0 0 0 5px var(--ui-white);
+  animation: workflow-route-marker 600ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--workflow-step-index) * 100ms + 80ms);
 }
 .workflow-steps-modal .workflow-step-row::after {
   content: "";
   position: absolute;
-  left: -31px;
-  top: 48px;
-  bottom: -20px;
+  left: -33px;
+  top: 56px;
+  bottom: -35px;
   width: 2px;
-  background: var(--ui-line);
+  background: linear-gradient(var(--ui-brand-300), var(--ui-brand-100));
+  transform-origin: top center;
+  animation: workflow-route-connect 600ms ease-out both;
+  animation-delay: calc(var(--workflow-step-index) * 100ms + 180ms);
 }
 .workflow-steps-modal .workflow-step-row:last-child::after {
   display: none;
 }
 .workflow-steps-modal .workflow-step-row strong {
-  font-size: 13px;
+  font-size: 14px;
   font-weight: 600;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
+.workflow-steps-modal .workflow-step-content { min-width: 0; flex: 1 1 180px; }
+.workflow-steps-modal .workflow-step-stage {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--ui-ink-600);
+  font-size: 10px;
+}
+.workflow-steps-modal .workflow-step-assignee {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 6px 10px;
+  margin-top: 8px;
+  color: var(--ui-ink-700);
+  font-size: 12px;
+  line-height: 1.7;
+  overflow-wrap: anywhere;
+}
+.workflow-steps-modal .workflow-step-assignee-type {
+  padding: 2px 7px;
+  border-radius: 5px;
+  background: var(--ui-surface-muted);
+  color: var(--ui-ink-600);
+  font-size: 10px;
+}
+.workflow-steps-modal .workflow-step-row.is-final-step {
+  border-color: var(--ui-brand-200);
+  background: linear-gradient(110deg, var(--ui-white), var(--ui-brand-50));
+}
+.workflow-steps-modal .workflow-step-row.is-final-step::before {
+  border-color: var(--ui-brand-600);
+  background: var(--ui-brand-600);
+  color: var(--ui-white);
+}
+.workflow-steps-modal .is-final-step .workflow-step-stage { color: var(--ui-brand-800); }
+.workflow-steps-modal .workflow-step-actions { display: flex; flex-wrap: wrap; gap: 6px; margin-left: auto; }
+.workflow-steps-modal .workflow-step-actions form { display: flex; margin: 0; }
+.workflow-steps-modal .workflow-step-actions .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 36px;
+  padding: 7px 10px;
+  border: 1px solid var(--ui-line);
+  border-radius: 7px;
+  background: var(--ui-white);
+  color: var(--ui-ink-700);
+  font-size: 11px;
+  line-height: 1.5;
+  font-weight: 550;
+}
+.workflow-steps-modal .workflow-step-actions .btn-outline-primary,
+.workflow-steps-modal .workflow-step-actions .btn-outline-danger { border-color: var(--ui-brand-200); color: var(--ui-brand-800); }
+.workflow-steps-modal .workflow-step-actions .btn:hover { background: var(--ui-brand-50); }
+.workflow-steps-modal .workflow-step-actions .btn:disabled { opacity: .45; }
+.workflow-steps-modal .workflow-version-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+  padding-top: 18px;
+  border-top: 1px solid var(--ui-line);
+}
+.workflow-steps-modal .workflow-version-actions .btn {
+  min-height: 40px;
+  padding: 9px 14px;
+  border: 1px solid var(--ui-brand-600);
+  border-radius: 8px;
+  font-size: 12px;
+}
+.workflow-steps-modal .workflow-version-actions .btn-outline-primary { background: var(--ui-white); color: var(--ui-brand-800); }
+.workflow-steps-modal .workflow-version-actions .btn-primary { background: var(--ui-brand-600); color: var(--ui-white); }
+@keyframes workflow-route-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes workflow-route-connect {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes workflow-route-marker {
+  0% { transform: scale(.7); }
+  65% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+@media (max-width: 575.98px) {
+  .workflow-steps-modal .workflow-step-row { margin-left: 36px; padding: 16px; gap: 10px; }
+  .workflow-steps-modal .workflow-step-row::before { left: -36px; top: 18px; width: 26px; height: 26px; font-size: 11px; }
+  .workflow-steps-modal .workflow-step-row::after { left: -24px; top: 48px; bottom: -33px; }
+  .workflow-steps-modal .workflow-step-row > .workflow-step-actions {
+    width: 100%;
+    justify-content: flex-start;
+    padding-top: 12px;
+    border-top: 1px solid var(--ui-line);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .workflow-steps-modal .workflow-step-row,
+  .workflow-steps-modal .workflow-step-row::before,
+  .workflow-steps-modal .workflow-step-row::after { animation: none; }
 }
 
 /* Bootstrap-free office network fallback shares the same bounded viewport. */
@@ -407,8 +573,14 @@
     flex: 1 1 auto;
   }
   .workflow-steps-modal .workflow-stage-overview {
-    grid-template-columns: 1fr;
-    gap: 16px;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+    padding: 16px;
+  }
+  .workflow-steps-modal .workflow-stage-overview > div:last-child {
+    grid-column: 1 / -1;
+    padding-top: 12px;
+    border-top: 1px solid var(--ui-line);
   }
 }
 @media (prefers-reduced-motion: reduce) {

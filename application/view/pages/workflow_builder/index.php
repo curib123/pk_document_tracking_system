@@ -92,6 +92,7 @@ $dt_create = '';
       <div class="modal-content">
         <div class="modal-header">
           <div>
+            <p class="workflow-modal-eyebrow">Approval workflow</p>
             <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
             </h2>
             <p class="small text-secondary mb-0">Approval route for
@@ -100,8 +101,8 @@ $dt_create = '';
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-3">
-            <div class="flex-grow-1" style="max-width:360px">
+          <div class="workflow-version-toolbar d-flex justify-content-between align-items-end gap-3 flex-wrap mb-3">
+            <div class="workflow-version-picker flex-grow-1" style="max-width:360px">
               <label class="form-label" for="workflowVersion-<?= (int) $workflow['id'] ?>">Workflow Version</label>
               <select class="form-select" id="workflowVersion-<?= (int) $workflow['id'] ?>" data-workflow-version autocomplete="off">
                 <?php foreach ($versions as $v): ?>
@@ -142,7 +143,7 @@ $dt_create = '';
                     action</small><strong><?= $isDraft ? 'Configure, then publish' : 'Create a draft to revise' ?></strong>
                 </div>
               </div>
-              <div class="d-flex gap-2 flex-wrap align-items-center mb-3">
+              <div class="workflow-version-meta d-flex gap-2 flex-wrap align-items-center mb-3">
                 <span
                   class="badge <?= $isDraft ? 'text-bg-warning' : 'text-bg-success' ?>"><?= $esc(ucfirst($version['status'])) ?></span>
                 <?php if ($version['is_default']): ?><span class="badge text-bg-primary">Published
@@ -155,7 +156,7 @@ $dt_create = '';
                     class="empty-hint"><?= $isDraft ? 'Add an approval step before publishing.' : 'This version has no route.' ?></span>
                 </div>
               <?php else: ?>
-                <ol class="workflow-step-list mb-3">
+                <ol class="workflow-step-list mb-3" aria-label="Approval route">
                   <?php foreach ($steps as $i => $step):
                     $approver = $step['approver'] ?? [];
                     $type = $approver['type'] ?? '';
@@ -170,14 +171,18 @@ $dt_create = '';
                       'graph_hash' => $graphHash
                     ];
                     ?>
-                    <li class="workflow-step-row">
-                      <div class="flex-grow-1">
-                        <strong class="d-block"><?= $esc($step['name'] ?? 'Unnamed Step') ?></strong>
-                        <span class="small text-secondary"><?= $esc(ucwords(str_replace('_', ' ', $type))) ?> ·
-                          <?= $esc($approver['label'] ?? ($type === 'requester_leader' ? "Requester's leader" : 'Requester')) ?></span>
+                    <li class="workflow-step-row <?= $i === count($steps) - 1 ? 'is-final-step' : '' ?>"
+                      style="--workflow-step-index: <?= min($i, 8) ?>">
+                      <div class="workflow-step-content flex-grow-1">
+                        <span class="workflow-step-stage"><?= $i === count($steps) - 1 ? 'Final approval' : 'Approval step' ?></span>
+                        <strong class="workflow-step-name d-block"><?= $esc($step['name'] ?? 'Unnamed Step') ?></strong>
+                        <span class="workflow-step-assignee">
+                          <span class="workflow-step-assignee-type"><?= $esc(ucwords(str_replace('_', ' ', $type))) ?></span>
+                          <span><?= $esc($approver['label'] ?? ($type === 'requester_leader' ? "Requester's leader" : 'Requester')) ?></span>
+                        </span>
                       </div>
                       <?php if ($isDraft && $canEdit): ?>
-                        <div class="d-flex gap-1 flex-wrap">
+                        <div class="workflow-step-actions d-flex gap-1 flex-wrap">
                           <button type="button" class="btn btn-sm btn-outline-primary js-workflow-step"
                             data-step-record="<?= $esc(json_encode($record, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
                             <i class="fa-solid fa-pen me-1" aria-hidden="true"></i> Edit
@@ -218,7 +223,7 @@ $dt_create = '';
                 </ol>
               <?php endif; ?>
               <?php if ($isDraft && $canEdit): ?>
-                <div class="d-flex flex-wrap gap-2 justify-content-between border-top pt-3">
+                <div class="workflow-version-actions d-flex flex-wrap gap-2 justify-content-between border-top pt-3">
                   <button type="button" class="btn btn-outline-primary js-workflow-step"
                     data-step-record="<?= $esc(json_encode(['workflow_version_id' => $version['id'], 'workflow_id' => $workflow['id'], 'graph_hash' => $graphHash], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
                     <i class="fa-solid fa-plus me-1"></i>Add Approval Step
