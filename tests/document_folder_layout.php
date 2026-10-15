@@ -5,6 +5,9 @@ require_once __DIR__.'/../application/services/presentation/folder_tree.php';
 require_once __DIR__.'/../application/services/presentation/query_state.php';
 require_once __DIR__.'/../application/services/presentation/document_folder_tree.php';
 
+function folderCodePosition(string $source, string $part) {
+    return strpos(preg_replace('/\\s+/', '', $source),preg_replace('/\\s+/', '', $part));
+}
 function assertFolder(bool $passed, string $message): void {
     if (!$passed) throw new RuntimeException($message);
 }
@@ -54,27 +57,28 @@ $documentView=file_get_contents($root.'/application/view/pages/documents/shared_
 $sharedTable=file_get_contents($root.'/application/view/reusable_components/reusable_datatable.php');
 $folderView=file_get_contents($root.'/application/view/reusable_components/document_folder_list.php');
 $folderModel=file_get_contents($root.'/application/models/Folder_model.php');
-assertFolder(strpos($documentView,'document-layout-switch')!==FALSE,'System Documents must have layout toggle');
-assertFolder(strpos($documentView, "http_build_query(['layout'=>\$activeLayout])")!==FALSE,
-    'Switching Hardcopy and Softcopy tabs must keep the selected layout');
-assertFolder(strpos($documentView, "\$activeLayout==='table'")!==FALSE &&
-    strpos($documentView, "\$activeLayout==='folder'")!==FALSE,'Both table and folder links must render');
-assertFolder(strpos($sharedTable, "if (\$dt_layout==='folder')")!==FALSE &&
-    strpos($sharedTable,"elseif (\$dt_layout==='grid')")!==FALSE,
+assertFolder(folderCodePosition($documentView,'document-layout-switch')!==FALSE,'System Documents must have layout toggle');
+assertFolder(folderCodePosition($documentView, "'layout' => \$target")!==FALSE &&
+    folderCodePosition($documentView, "http_build_query(\$params)")!==FALSE,
+    'Changing document layout must preserve the selected filter and layout parameters');
+assertFolder(folderCodePosition($documentView, "\$activeLayout==='table'")!==FALSE &&
+    folderCodePosition($documentView, "\$activeLayout==='folder'")!==FALSE,'Both table and folder links must render');
+assertFolder(folderCodePosition($sharedTable, "if (\$dt_layout==='folder')")!==FALSE &&
+    folderCodePosition($sharedTable,"elseif (\$dt_layout==='grid')")!==FALSE,
     'Exactly one layout branch must be rendered, preserving other grid callers');
-assertFolder(strpos($folderView,"'layout'=>'folder'")!==FALSE,
+assertFolder(folderCodePosition($folderView,"'layout'=>'folder'")!==FALSE,
     'Folder navigation must stay in folder mode');
-assertFolder(strpos($folderView,"record_actions")!==FALSE &&
-    strpos($folderView,"\$dt_row['display']")!==FALSE,
+assertFolder(folderCodePosition($folderView,"record_actions")!==FALSE &&
+    folderCodePosition($folderView,"\$dt_row['display']")!==FALSE,
     'Folder rows must reuse same actions and permission-scoped document details');
-assertFolder(strpos($folderView,"\$dt_filter_values")!==FALSE &&
-    strpos($folderView,"\$dt_q")!==FALSE,
+assertFolder(folderCodePosition($folderView,"\$dt_filter_values")!==FALSE &&
+    folderCodePosition($folderView,"\$dt_q")!==FALSE,
     'Folder links must preserve current search and filters');
-assertFolder(strpos($folderView,"\$dt_columns")!==FALSE,
+assertFolder(folderCodePosition($folderView,"\$dt_columns")!==FALSE,
     'Folder list must include the same visible metadata columns as table mode');
-assertFolder(strpos($folderModel,"\$folder==='all'")!==FALSE,
+assertFolder(folderCodePosition($folderModel,"\$folder==='all'")!==FALSE,
     'All Documents must remain navigable for documents without assigned locations');
-assertFolder(strpos($folderView,"\$browser['breadcrumbs']")!==FALSE,
+assertFolder(folderCodePosition($folderView,"\$browser['breadcrumbs']")!==FALSE,
     'Folder list must show parent navigation');
 
 // Multiple sibling Areas, Specifics, Assets and Locations must stay visible,
@@ -132,33 +136,33 @@ assertFolder(count($softDocs['by_folder']['category:9'])===2 &&
 $treeScript=file_get_contents($root.'/public/assets/js/document-tree.js');
 $viewCss=file_get_contents($root.'/public/assets/css/unified-ux.css');
 $footerHtml=file_get_contents($root.'/application/view/layout/footer.php');
-assertFolder(strpos($folderView,'data-folder-node')!==FALSE &&
-  strpos($folderView,'<summary')!==FALSE &&
-  strpos($folderView,'$renderNode($child,$depth+1)')!==FALSE,
+assertFolder(folderCodePosition($folderView,'data-folder-node')!==FALSE &&
+  folderCodePosition($folderView,'<summary')!==FALSE &&
+  folderCodePosition($folderView,'$renderNode($child,$depth+1)')!==FALSE,
   'Folder mode must recursively render expandable nested folder rows');
-assertFolder(strpos($folderView,'$renderDocument($dt_row)')!==FALSE &&
-  strpos($folderView,'$tree[\'roots\']')!==FALSE,
+assertFolder(folderCodePosition($folderView,'$renderDocument($dt_row)')!==FALSE &&
+  folderCodePosition($folderView,'$tree[\'roots\']')!==FALSE,
   'Nested folder rows must include document files from multiple root branches');
-assertFolder(strpos($treeScript,"details[data-folder-node]")!==FALSE &&
-  strpos($footerHtml,'document-tree.js')!==FALSE,
+assertFolder(folderCodePosition($treeScript,"details[data-folder-node]")!==FALSE &&
+  folderCodePosition($footerHtml,'document-tree.js')!==FALSE,
   'Expand all / Collapse all must be available progressively');
-assertFolder(strpos($viewCss,'.doc-tree-children')!==FALSE &&
-  strpos($viewCss,'.document-layout-choice.is-active')!==FALSE,
+assertFolder(folderCodePosition($viewCss,'.doc-tree-children')!==FALSE &&
+  folderCodePosition($viewCss,'.document-layout-choice.is-active')!==FALSE,
   'Folder hierarchy and enhanced active view toggle require accessible CSS');
-assertFolder(strpos($documentView,'document-layout-choice-copy')!==FALSE,
+assertFolder(folderCodePosition($documentView,'document-layout-choice-copy')!==FALSE,
   'Both layout choices must have a prominent label and subtitle');
-assertFolder(strpos($folderView,'HIERARCHICAL DOCUMENT LIBRARY')===FALSE &&
-    strpos($folderView,'Folder explorer')===FALSE,
+assertFolder(folderCodePosition($folderView,'HIERARCHICAL DOCUMENT LIBRARY')===FALSE &&
+    folderCodePosition($folderView,'Folder explorer')===FALSE,
     'Folder mode must not repeat the removed decorative explorer headings');
-assertFolder(strpos($folderView,'doc-folder-explorer-header')===FALSE,
+assertFolder(folderCodePosition($folderView,'doc-folder-explorer-header')===FALSE,
     'Folder mode should start directly with breadcrumbs and controls');
 $docTreeHelper=file_get_contents($root.'/application/services/presentation/document_folder_tree.php');
-assertFolder(strpos($docTreeHelper,"'asset'=>'asset_id'")!==FALSE,
+assertFolder(folderCodePosition($docTreeHelper,"'asset'=>'asset_id'")!==FALSE,
     'Document entries must resolve Asset folders when no Location is assigned');
-assertFolder(strpos($folderModel,"if (\$kind==='asset')")!==FALSE &&
-    strpos($folderModel,"\$parent='asset'")!==FALSE,
+assertFolder(folderCodePosition($folderModel,"if (\$kind==='asset')")!==FALSE &&
+    folderCodePosition($folderModel,"\$parent='asset'")!==FALSE,
     'Assets and their Locations must appear as navigable folders');
-assertFolder(strpos($folderView,'Document Repository')===FALSE,
+assertFolder(folderCodePosition($folderView,'Document Repository')===FALSE,
     'Folder mode must start directly at the real folders');
 // Render the real folder view: document counts must never open every branch
 // at the repository root. A deep link should open only its ancestor chain.
@@ -206,9 +210,9 @@ assertFolder($opened($harness->render($viewData))===['area:1','specific:10','ass
 assertFolder(preg_match('/class="doc-tree-node doc-tree-unfiled">\s*<details data-folder-node open>/', $harness->render($viewData))===1,
     'Search must reveal matching unfiled documents automatically');
 $viewData['dt_rows']=[$viewRows[0]];
-assertFolder(strpos($harness->render($viewData),'data-folder-key="area:2"')===FALSE,
+assertFolder(folderCodePosition($harness->render($viewData),'data-folder-key="area:2"')===FALSE,
     'Search results must hide unrelated branches');
 $viewData['dt_rows']=[];$viewData['dt_q']='missing-record';
-assertFolder(strpos($harness->render($viewData),'No folders or documents available')!==FALSE,
+assertFolder(folderCodePosition($harness->render($viewData),'No folders or documents available')!==FALSE,
     'Search with no matches must show the existing empty state');
 echo "System Documents exclusive folder/list mode and hierarchy contracts passed.\n";
