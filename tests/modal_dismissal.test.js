@@ -21,7 +21,7 @@ test('every Bootstrap and mandatory modal declares static backdrop and no Escape
         for(const match of source.matchAll(pattern)) {
             if(!match[1].split(/\s+/).includes('modal')) continue;
             total++;
-            const attrs=source.slice(match.index,match.index+match[0].length+110);
+            const attrs=source.slice(match.index,source.indexOf('>',match.index)+1);
             assert.match(attrs,/data-bs-backdrop="static"/,
                 filename+': an outside click must keep this modal open');
             assert.match(attrs,/data-bs-keyboard="false"/,
