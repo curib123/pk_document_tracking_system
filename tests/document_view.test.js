@@ -83,7 +83,7 @@ class Element {
 function setup() {
   const ids = ['viewModal','viewDetails','viewModalTitle','viewDocumentEyebrow',
     'viewDocumentIcon','viewDocumentRef','viewDocumentStatus',
-    'viewDocumentSummary','viewDocumentFootnote'];
+    'viewDocumentSummary','viewDocumentCustody','viewDocumentFootnote'];
   const map = Object.fromEntries(ids.map((id) => [id,new Element()]));
   const body = new Element();
   body.className = 'doc-modal-body';
@@ -481,8 +481,14 @@ test('storage route follows the saved hierarchy, ends at Location and keeps cust
   assert.deepEqual(route.querySelectorAll('.doc-storage-route-value').map(el=>el.textContent),['Plant','Production','Machine 12','Shelf 4']);
   assert.equal(route.children[3].getAttribute('aria-current'),'location');
   assert.equal(route.children[3].classList.contains('is-destination'),true);
-  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),['Location Code','Current Holder','Days until disposal']);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),[]);
+  assert.equal(map.viewDocumentCustody.hidden,false);
+  assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-label').map(el=>el.textContent),['Current Holder','Days until disposal']);
+  assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-value').map(el=>el.textContent),['Records Officer','60 days']);
   assert.equal(JSON.stringify(fields),original);
+  window.PKDocumentView.render(details,{Name:'Another record'});
+  assert.equal(map.viewDocumentCustody.hidden,true);
+  assert.equal(map.viewDocumentCustody.children.length,0);
 });
 
 test('storage route skips only an empty Asset and renumbers the final Location',()=>{

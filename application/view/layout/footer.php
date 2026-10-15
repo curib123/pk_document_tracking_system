@@ -156,6 +156,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                             <p class="doc-modal-reference" id="viewDocumentRef" hidden></p>
                         </div>
                     </div>
+                    <dl class="doc-modal-custody" id="viewDocumentCustody" hidden></dl>
                 </div>
                 <div class="doc-modal-top-actions">
                     <span class="doc-modal-status" id="viewDocumentStatus" hidden></span>

@@ -12,6 +12,13 @@ def run_checks(page, base, sql):
         page.locator('tbody tr').filter(has_text='BROWSER-HC').locator('.js-view').click()
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
+        header = modal.locator('.modal-header')
+        expect(header.locator('.doc-modal-custody-label')).to_have_text(['Current Holder', 'Days until disposal'])
+        expect(header.locator('.doc-modal-custody-value')).to_have_text(['Browser Administrator', 'No retention'])
+        expect(modal.locator('.modal-body')).not_to_contain_text('Location Code')
+        expect(modal.locator('.modal-body')).not_to_contain_text('Current Holder')
+        expect(modal.locator('.modal-body')).not_to_contain_text('Days until disposal')
+        assert header.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
         return modal, modal.locator('.doc-storage-route')
 
     for with_asset in [False, True]:

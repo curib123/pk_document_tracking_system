@@ -64,11 +64,11 @@
     function reset() {
         modal.classList.remove('is-document-view');
         ['viewDocumentEyebrow', 'viewDocumentIcon', 'viewDocumentRef',
-            'viewDocumentStatus', 'viewDocumentSummary', 'viewDocumentFootnote'].forEach(function (id) {
+            'viewDocumentStatus', 'viewDocumentSummary', 'viewDocumentCustody', 'viewDocumentFootnote'].forEach(function (id) {
                 var el = document.getElementById(id);
                 if (!el) return;
                 el.hidden = true;
-                if (id === 'viewDocumentSummary') el.replaceChildren();
+                if (id === 'viewDocumentSummary' || id === 'viewDocumentCustody') el.replaceChildren();
             });
         var status = document.getElementById('viewDocumentStatus');
         if (status) status.className = 'doc-modal-status';
@@ -81,6 +81,7 @@
     }
 
     var STORAGE_LEVELS = ['Area', 'Specific', 'Asset', 'Location'];
+    var STORAGE_HEADER_FIELDS = ['Current Holder', 'Days until disposal'];
 
     function hasStorageValue(value) {
         return value != null && String(value).trim() !== '';
@@ -126,11 +127,12 @@
 
         sections.forEach(function (section) {
             var entries = normalizedEntries(section.fields).filter(function (entry) {
-                return !(section.key === 'overview' && repeated[entry[0]]);
+                return !(section.key === 'overview' && repeated[entry[0]]) &&
+                    !(section.key === 'storage' && (entry[0] === 'Location Code' || STORAGE_HEADER_FIELDS.includes(entry[0])));
             });
-            if (!entries.length) return;
-            var group = node('section', 'doc-overview-group');
             var route = section.key === 'storage' ? makeStorageRoute(section.fields) : null;
+            if (!entries.length && !route) return;
+            var group = node('section', 'doc-overview-group');
             if (route) {
                 group.append(route);
                 entries = entries.filter(function (entry) { return !STORAGE_LEVELS.includes(entry[0]); });
@@ -207,6 +209,19 @@
         if (reference) {
             reference.hidden = !h.reference && domain === 'record';
             reference.textContent = (h.reference ? 'Reference  ·  ' + h.reference : 'No reference assigned');
+        }
+        var custody = document.getElementById('viewDocumentCustody');
+        if (custody) {
+            var storage = (data.sections || []).find(function (section) { return section.key === 'storage'; });
+            var fields = storage && storage.fields || {};
+            STORAGE_HEADER_FIELDS.forEach(function (label) {
+                if (!Object.prototype.hasOwnProperty.call(fields, label)) return;
+                var item = node('div', 'doc-modal-custody-item');
+                item.append(node('dt', 'doc-modal-custody-label', label),
+                    node('dd', 'doc-modal-custody-value', valueText(fields[label])));
+                custody.append(item);
+            });
+            custody.hidden = !custody.children.length;
         }
         var status = document.getElementById('viewDocumentStatus');
         if (status) {
