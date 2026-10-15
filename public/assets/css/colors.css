@@ -40,6 +40,11 @@
   --ui-surface-soft: #fdfafb;
   --ui-canvas: #faf6f7;
 
+  /* Shared background for the greeting header and animated sidebar. */
+  --ui-welcome-gradient:
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--ui-brand-500) 18%, transparent), transparent 55%),
+    linear-gradient(115deg, var(--ui-ink-950), var(--ui-ink-900));
+
   /* Blue semantic scale */
   --ui-blue-900: #2c4568;
   --ui-blue-700: #41679a;
