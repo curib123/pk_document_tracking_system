@@ -19,11 +19,30 @@ class Backups extends MY_Controller
     public function index()
     {
         $this->administrator();
-        $service = $this->service();
+        $state = $this->table_state();
+        $items = [];
+        $configuration = [];
+        $error = '';
+        try {
+            $service = $this->service();
+            $items = $service->list_backups();
+            $configuration = $service->configuration();
+        } catch (Throwable $failure) {
+            log_message('error', 'Backup listing failed: ' . $failure->getMessage());
+            $error = 'Backups are temporarily unavailable. Please try again or contact your administrator.';
+        }
+        require_once APPPATH . 'services/backup/backup_listing.php';
+        $listing = Backup_listing::page($items, $state);
+        $state['page'] = $listing['page'];
+        $state['sort'] = $listing['sort'];
         $this->render('Backup & Restore', 'pages/administration/backups', [
-            'backup_items' => $service->list_backups(),
-            'backup_config' => $service->configuration(),
-            'backup_last_auto' => $this->lastAuto($service->list_backups())
+            'backup_items' => $items,
+            'backup_rows' => $listing['rows'],
+            'total' => $listing['total'],
+            'table' => $state,
+            'backup_error' => $error,
+            'backup_config' => $configuration,
+            'backup_last_auto' => $this->lastAuto($items)
         ]);
     }
     private function lastAuto($list)

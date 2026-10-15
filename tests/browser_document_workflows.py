@@ -44,7 +44,7 @@ try:
     result = subprocess.run([PHP, str(ROOT / 'tests/browser_document_fixture.php')],
                             env=env, capture_output=True, check=True)
     manifest = json.loads(result.stdout)
-    for migration in ['20261013_user_role_assignments.sql', '20261013_task_notification_receipts.sql']:
+    for migration in ['20261013_user_role_assignments.sql', '20261013_task_notification_receipts.sql', '20261015_file_action_permissions.sql']:
         sql((ROOT / 'database/migrations' / migration).read_text(encoding='utf-8'))
     with contextlib.nullcontext(temp_directory.name) as temp:
         router = Path(temp) / 'router.php'
@@ -77,6 +77,8 @@ try:
             page = context.new_page()
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
+            if os.environ.get('PK_BROWSER_REGISTERS_ONLY') == '1':
+                page.on('pageerror', lambda error: print('Browser error:', error, flush=True))
             page.goto(base + 'login')
             page.locator('[name="login"]').fill('browser-admin')
             page.locator('[name="password"]').fill(env['PK_BROWSER_PASSWORD'])
@@ -84,6 +86,14 @@ try:
             page.wait_for_url('**/dashboard')
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
+
+            if os.environ.get('PK_BROWSER_REGISTERS_ONLY') == '1':
+                from browser_register_checks import run_checks
+                run_checks(page, context, base, APP_ROOT, manifest)
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
 
             app_manifest = context.request.get(base + 'manifest.php').json()
             assert app_manifest['id'] == '/pk-document-control' and app_manifest['scope'] == '/'

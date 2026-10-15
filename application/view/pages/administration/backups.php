@@ -1,174 +1,108 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
-$backupTime = static fn($timestamp) =>
-  (new DateTimeImmutable('@' . (int) $timestamp))
-    ->setTimezone(new DateTimeZone('Asia/Manila'))
-    ->format('M j, Y · g\:i A');
+$backupTime = static fn($timestamp) => (new DateTimeImmutable('@' . (int) $timestamp))
+    ->setTimezone(new DateTimeZone('Asia/Manila'))->format('M j, Y · g:i A');
+$canWrite = isset($permissions['*']) || !empty($permissions['backups']['edit']);
+$ready = $backup_config && !in_array(FALSE, $backup_config, TRUE) && $backup_error === '';
+$csrfName = $this->security->get_csrf_token_name();
+$csrfValue = $this->security->get_csrf_hash();
+$dt_rows = [];
+foreach ($backup_rows as $index => $item) {
+    $dt_rows[] = [
+        'id' => ($table['page'] - 1) * $table['limit'] + $index + 1,
+        'cells' => ['name' => $item['name'], 'kind' => $item['kind'],
+            'created_at' => $backupTime($item['created_at']), 'size' => number_format($item['size'] / 1048576, 2) . ' MB'],
+        'buttons' => [['type' => 'download', 'url' => 'admin/backups/download/' . rawurlencode($item['name'])]]
+    ];
+}
+$dt_path = 'admin/backups';
+$dt_columns = ['name' => 'Archive', 'kind' => 'Type', 'created_at' => 'Created', 'size' => 'Size'];
+$dt_q = $table['q']; $dt_filter = ''; $dt_page = $table['page']; $dt_limit = $table['limit']; $dt_total = $total;
+$dt_sort = $table['sort']; $dt_dir = strtolower($table['dir']); $dt_sortable = array_keys($dt_columns);
+$dt_filters = ['type' => ['' => 'All types', 'Manual' => 'Manual', 'Automatic' => 'Automatic', 'Recovery' => 'Recovery']];
+$dt_filter_values = ['type' => $table['type']];
 ?>
 <div class="backup-workspace">
-  <div class="backup-overview">
-    <div class="backup-intro">
-      <span class="backup-emblem" aria-hidden="true"><i class="fa-solid fa-shield-halved"></i></span>
-      <div>
-        <h1>Backup &amp; Restore</h1>
-        <p>Protected ZIP snapshots of database records, controlled documents, audit history and application files.</p>
-      </div>
-    </div>
-    <div class="backup-time">
-      <i class="fa-regular fa-clock" aria-hidden="true"></i>
-      <div><strong>5:00 PM daily</strong><small>Asia/Manila · Server schedule required</small></div>
-    </div>
-    <div class="backup-time">
-      <span class="backup-stat-icon" aria-hidden="true"><i class="fa-solid fa-calendar-check"></i></span>
-      <div><small>Last automatic backup</small>
-        <strong><?= $backup_last_auto ? html_escape($backupTime($backup_last_auto['created_at'])) : 'Not recorded' ?></strong>
-      </div>
-    </div>
-    <div class="">
-      <form method="post" action="<?= site_url('admin/backups/create') ?>"
-        data-confirm="Create a complete encrypted backup of the current system?">
-        <input type="hidden" name="confirmed" value="no">
-        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-          value="<?= $this->security->get_csrf_hash() ?>">
-        <button class="btn btn-primary backup-full-button" type="submit">
-          <i class="fa-solid fa-plus" aria-hidden="true"></i> Backup now
-        </button>
-      </form>
-
-      <form method="post" class="mt-1" action="<?= site_url('admin/backups/cleanup') ?>"
-        data-confirm="Clean up backup ZIPs and daily log archives older than three months?">
-        <input type="hidden" name="confirmed" value="no">
-        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-          value="<?= $this->security->get_csrf_hash() ?>">
-        <button class="btn btn-outline-danger backup-full-button" type="submit">
-          <i class="fa-solid fa-broom" aria-hidden="true"></i> Clean up now
-        </button>
-      </form>
-    </div>
-
-  </div>
-</div>
-<br>
-<?php if (count(array_filter($backup_config)) !== count($backup_config)): ?>
-  <div class="backup-setup-note" role="status">
-    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-    <div>Backup setup is incomplete. Enable PHP ZIP, configure the database client binaries,
-      and set <code>PK_BACKUP_PASSWORD</code> and <code>PK_BACKUP_SIGNING_KEY</code> on the server.
-      Use <code>docs/backup-restore.md</code> for Windows Task Scheduler installation.</div>
-  </div>
-<?php endif; ?>
-
-<section class="workspace-card backup-task-card" aria-labelledby="backupImportTitle">
-  <div class="backup-task-head">
-    <span class="backup-task-icon" aria-hidden="true"><i class="fa-solid fa-file-arrow-up"></i></span>
-    <div>
-      <h2 id="backupImportTitle">Import backup ZIP</h2>
-      <p>Upload a previously generated, signed PK Document Control backup.</p>
-    </div>
-  </div>
-  <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
-    data-confirm="Verify and store this backup ZIP? Existing records will not change.">
-    <label class="form-label" for="backupZip">Backup ZIP</label>
-    <input class="form-control mb-3" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip"
-      required>
-    <input type="hidden" name="confirmed" value="no">
-    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-      value="<?= $this->security->get_csrf_hash() ?>">
-    <button class="btn btn-light backup-full-button" type="submit">
-      <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import backup
-    </button>
-  </form>
-</section>
-<br>
-<section class="workspace-card backup-register" aria-labelledby="backupArchiveTitle">
-  <div class="workspace-card-header backup-register-header">
-    <div>
-      <h2 id="backupArchiveTitle">Available backups</h2>
-      <p>Access is granted when any active role assigned to you allows the action.</p>
-    </div>
-  </div>
-  <?php if (!$backup_items): ?>
-    <div class="empty-state" role="status"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>
-      <strong>No backups available</strong>
-    </div>
-  <?php else: ?>
-    <div class="table-responsive">
-      <table class="table backup-table">
-        <thead>
-          <tr>
-            <th scope="col">Archive</th>
-            <th scope="col">Type</th>
-            <th scope="col">Created</th>
-            <th scope="col">Size</th>
-            <th scope="col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php foreach ($backup_items as $item): ?>
-            <tr>
-              <td class="backup-filename">
-                <i class="fa-solid fa-file-zipper" aria-hidden="true"></i>
-                <?= html_escape($item['name']) ?>
-              </td>
-              <td><span class="backup-kind"><?= html_escape($item['kind']) ?></span></td>
-              <td><?= html_escape($backupTime($item['created_at'])) ?></td>
-              <td><?= number_format($item['size'] / 1024 / 1024, 2) ?> MB</td>
-              <td><a class="btn btn-sm btn-outline-primary"
-                  href="<?= site_url('admin/backups/download/' . rawurlencode($item['name'])) ?>">
-                  <i class="fa-solid fa-download" aria-hidden="true"></i> Download
-                </a></td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-  <?php endif; ?>
-</section>
-<section class="workspace-card backup-restore-card" aria-labelledby="restoreTitle">
-  <div class="backup-task-head">
-    <span class="backup-task-icon backup-restore-icon" aria-hidden="true"><i class="fa-solid fa-rotate-left"></i></span>
-    <div>
-      <h2 id="restoreTitle">Restore system data</h2>
-      <p>Restores the database and private document/audit data. Source files in the ZIP are intended for offline
-        application recovery.</p>
-    </div>
-  </div>
-  <div class="backup-warning">
-    <i class="fa-solid fa-triangle-exclamation" aria-hidden="true"></i>
-    <span>Restoring replaces live database records. A recovery ZIP is created first.
-      Use a maintenance window and verify the backup before proceeding.</span>
-  </div>
-  <form method="post" action="<?= site_url('admin/backups/restore') ?>"
-    data-confirm="This permanently replaces the live database and private data. Continue?">
-    <div class="row g-3">
-      <div class="col-md-6">
-        <label for="restoreArchive" class="form-label">Backup to restore</label>
-        <select class="form-select" id="restoreArchive" name="backup_name" required>
-          <option value="">Select backup</option>
-          <?php foreach ($backup_items as $item): ?>
-            <option value="<?= html_escape($item['name']) ?>"><?= html_escape($item['name']) ?></option>
-          <?php endforeach; ?>
-        </select>
-      </div>
-      <div class="col-md-6">
-        <label for="restoreAdminPassword" class="form-label">Your password</label>
-        <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
-          autocomplete="current-password" required>
-      </div>
-      <div class="col-md-6">
-        <label for="restorePhrase" class="form-label">Type RESTORE to confirm</label>
-        <input class="form-control" id="restorePhrase" name="confirm_phrase" type="text" autocomplete="off"
-          pattern="RESTORE" required>
-      </div>
-      <div class="col-md-6 d-flex align-items-end">
-        <button class="btn btn-danger backup-full-button" type="submit" <?= !$backup_items ? 'disabled' : '' ?>>
-          <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore selected backup
-        </button>
-      </div>
-    </div>
-    <input type="hidden" name="confirmed" value="no">
-    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-      value="<?= $this->security->get_csrf_hash() ?>">
-  </form>
-</section>
+    <header class="backup-overview">
+        <div>
+            <h1>Backup &amp; Restore</h1>
+            <p>Daily schedule: 5:00 PM · Asia/Manila</p>
+            <?php if ($backup_last_auto): ?>
+                <small>Last automatic backup: <?= html_escape($backupTime($backup_last_auto['created_at'])) ?></small>
+            <?php endif; ?>
+        </div>
+        <?php if ($canWrite): ?>
+            <div class="backup-toolbar">
+                <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
+                    data-confirm="Delete backup and log archives older than three months?">
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
+                    <button class="btn btn-light" type="submit" <?= $backup_error ? 'disabled' : '' ?>>Clean up</button>
+                </form>
+                <form method="post" action="<?= site_url('admin/backups/create') ?>"
+                    data-confirm="Create an encrypted backup of the current system?">
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
+                    <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>
+                        <i class="fa-solid fa-plus" aria-hidden="true"></i> Backup now
+                    </button>
+                </form>
+            </div>
+        <?php endif; ?>
+    </header>
+    <?php if ($backup_error): ?>
+        <div class="backup-warning" role="alert"><?= html_escape($backup_error) ?></div>
+    <?php elseif (!$ready): ?>
+        <div class="backup-warning" role="status">Backup setup is incomplete. Contact your system administrator.</div>
+    <?php endif; ?>
+    <section aria-labelledby="backupArchiveTitle">
+        <h2 class="backup-section-title" id="backupArchiveTitle">Available backups</h2>
+        <?php $this->load->view('reusable_components/reusable_datatable', compact(
+            'dt_path', 'dt_columns', 'dt_rows', 'dt_q', 'dt_filter', 'dt_page', 'dt_limit',
+            'dt_total', 'dt_sort', 'dt_dir', 'dt_sortable', 'dt_filters', 'dt_filter_values'
+        )); ?>
+    </section>
+    <?php if ($canWrite): ?>
+        <div class="backup-tools">
+            <details class="workspace-card backup-tool">
+                <summary>Import backup</summary>
+                <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
+                    data-confirm="Verify and store this backup ZIP?">
+                    <label class="form-label" for="backupZip">Backup ZIP</label>
+                    <input class="form-control" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip" required>
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
+                    <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>Import backup</button>
+                </form>
+            </details>
+            <details class="workspace-card backup-tool">
+                <summary>Restore system data</summary>
+                <p class="backup-warning">Replaces live records and private files. A recovery backup is created first.</p>
+                <form method="post" action="<?= site_url('admin/backups/restore') ?>"
+                    data-confirm="Replace the live database and private data with this backup?">
+                    <div>
+                        <label for="restoreArchive" class="form-label">Backup to restore</label>
+                        <select class="form-select" id="restoreArchive" name="backup_name" required>
+                            <option value="">Select backup</option>
+                            <?php foreach ($backup_items as $item): ?>
+                                <option value="<?= html_escape($item['name']) ?>"><?= html_escape($item['name']) ?></option>
+                            <?php endforeach; ?>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="restoreAdminPassword" class="form-label">Your password</label>
+                        <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
+                            autocomplete="current-password" required>
+                    </div>
+                    <div>
+                        <label for="restorePhrase" class="form-label">Type RESTORE to confirm</label>
+                        <input class="form-control" id="restorePhrase" name="confirm_phrase" autocomplete="off" pattern="RESTORE" required>
+                    </div>
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
+                    <button class="btn btn-danger" type="submit" <?= !$ready || !$backup_items ? 'disabled' : '' ?>>Restore selected backup</button>
+                </form>
+            </details>
+        </div>
+    <?php endif; ?>
 </div>
