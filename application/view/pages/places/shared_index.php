@@ -138,7 +138,7 @@ $dt_sortable = array_values(array_intersect(
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form id="editForm" method="post" action="<?= site_url('places/' . $cfg['slug'] . '/save') ?>"
-                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?>>
+                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?> autocomplete="off">
                 <div class="modal-header">
                     <h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -157,7 +157,7 @@ $dt_sortable = array_values(array_intersect(
                                         <label class="form-label"
                                             for="f-<?= html_escape($field) ?>"><?= html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
                                         <select class="form-select" id="f-<?= html_escape($field) ?>"
-                                            name="<?= html_escape($field) ?>" data-searchable>
+                                            name="<?= html_escape($field) ?>" data-searchable autocomplete="off">
                                             <option value="">Select <?= html_escape(str_replace('_id', '', $field)) ?></option>
                                             <?php foreach ($options[$optName] as $option): ?>
                                                 <option value="<?= (int) $option['id'] ?>"><?= html_escape($option['name']) ?></option>
@@ -170,17 +170,17 @@ $dt_sortable = array_values(array_intersect(
                                             for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?></label>
                                         <?php if ($field === 'description'): ?>
                                             <textarea class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" rows="2"></textarea>
+                                                name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code' ? 'required' : '' ?>                 <?= $field === 'value' ? 'type="number" min="0"' : 'maxlength="150"' ?>>
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code' ? 'required' : '' ?>                 <?= $field === 'value' ? 'type="number" min="0"' : 'maxlength="150"' ?> autocomplete="off">
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>
                         <?php endif; ?>
                         <?php if ($cfg['active']): ?>
                             <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox"
-                                        name="active" value="1" checked> Active</label></div>
+                                        name="active" value="1" checked autocomplete="off"> Active</label></div>
                         <?php endif; ?>
                     </div>
                 </div>

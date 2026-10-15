@@ -6,7 +6,7 @@ $softcopyDirect = !empty($softcopyDirect);
 ?>
 <div class="col-md-6">
     <label class="form-label" for="reqType">Softcopy Action</label>
-    <select class="form-select" name="type" id="reqType" required>
+    <select class="form-select" name="type" id="reqType" required autocomplete="off">
         <option value="softcopy_create">Create Softcopy</option>
         <option value="softcopy_revise">Revise Softcopy</option>
         <option value="softcopy_cancel">Cancel Softcopy</option>
@@ -14,11 +14,11 @@ $softcopyDirect = !empty($softcopyDirect);
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSubject">Subject / Reason</label>
-    <input class="form-control" name="subject" id="reqSubject" maxlength="255" required>
+    <input class="form-control" name="subject" id="reqSubject" maxlength="255" required autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSoftcopy">Existing Softcopy Document</label>
-    <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable>
+    <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable autocomplete="off">
         <option value="">Choose a document</option>
         <?php foreach ($softcopy_options as $item): ?>
             <option value="<?= (int) $item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>">
@@ -29,19 +29,19 @@ $softcopyDirect = !empty($softcopyDirect);
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqTitle">Proposed Document Title</label>
-    <input class="form-control" name="title" id="reqTitle" maxlength="255">
+    <input class="form-control" name="title" id="reqTitle" maxlength="255" autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqNumber">Document Number</label>
-    <input class="form-control" name="document_number" id="reqNumber" maxlength="100">
+    <input class="form-control" name="document_number" id="reqNumber" maxlength="100" autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSeries">Series Number <span class="optional-label">(optional)</span></label>
-    <input class="form-control" name="series_number" id="reqSeries" maxlength="100">
+    <input class="form-control" name="series_number" id="reqSeries" maxlength="100" autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqCategory">Category</label>
-    <select class="form-select" name="category_id" id="reqCategory" data-searchable>
+    <select class="form-select" name="category_id" id="reqCategory" data-searchable autocomplete="off">
         <option value="">Choose a category</option>
         <?php foreach ($category_options as $category): ?>
             <option value="<?= (int) $category['id'] ?>"><?= html_escape($category['name']) ?></option>
@@ -50,17 +50,17 @@ $softcopyDirect = !empty($softcopyDirect);
 </div>
 <div class="col-md-6">
     <label class="form-label" for="newRevisionLevel">New Revision Level</label>
-    <input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30">
+    <input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30" autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="revisionPages">Number of Pages</label>
-    <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1">
+    <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1" autocomplete="off">
 </div>
 
 <div class="col-md-6">
     <label class="form-label" for="revisionEffective">Effective Date
         <span class="optional-label">(optional)</span></label>
-    <input class="form-control" type="date" id="revisionEffective" name="effective_date">
+    <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
     <small class="form-text">If blank, effective date defaults to approval day.</small>
 </div>
 
@@ -68,7 +68,7 @@ $softcopyDirect = !empty($softcopyDirect);
     <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and
             Revise · 15 MB maximum)</span></label>
     <input class="form-control" id="revisionFile" type="file" name="revision_attachment"
-        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx">
+        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" autocomplete="off">
     <small class="text-secondary">
         <?= $softcopyDirect
             ? 'Required for direct creation or revision; the controlled file is approved as part of the transaction.'
@@ -77,5 +77,5 @@ $softcopyDirect = !empty($softcopyDirect);
 </div>
 <div class="col-12">
     <label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
-    <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea>
+    <textarea class="form-control" id="reqRemark" name="remarks" rows="3" autocomplete="off"></textarea>
 </div>

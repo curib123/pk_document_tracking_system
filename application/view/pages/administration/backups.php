@@ -40,13 +40,13 @@ $dt_filter_values = ['type' => $table['type']];
                     <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore system data
                 </button>
                 <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
-                    data-confirm="Delete backup and log archives older than three months?">
+                    data-confirm="Delete backup and log archives older than three months?" autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-light" type="submit" <?= $backup_error ? 'disabled' : '' ?>>Clean up</button>
                 </form>
                 <form method="post" action="<?= site_url('admin/backups/create') ?>"
-                    data-confirm="Create an encrypted backup of the current system?">
+                    data-confirm="Create an encrypted backup of the current system?" autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>
@@ -75,14 +75,14 @@ $dt_filter_values = ['type' => $table['type']];
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content">
                 <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
-                    data-confirm="Verify and store this backup ZIP?">
+                    data-confirm="Verify and store this backup ZIP?" autocomplete="off">
                     <div class="modal-header">
                         <h2 class="modal-title fs-6" id="backupImportTitle">Import backup</h2>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <label class="form-label" for="backupZip">Backup ZIP</label>
-                        <input class="form-control" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip" required>
+                        <input class="form-control" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip" required autocomplete="off">
                     </div>
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
@@ -99,7 +99,7 @@ $dt_filter_values = ['type' => $table['type']];
         <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
             <div class="modal-content">
                 <form method="post" action="<?= site_url('admin/backups/restore') ?>"
-                    data-confirm="Replace the live database and private data with this backup?">
+                    data-confirm="Replace the live database and private data with this backup?" autocomplete="off">
                     <div class="modal-header">
                         <h2 class="modal-title fs-6" id="backupRestoreTitle">Restore system data</h2>
                         <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -109,7 +109,7 @@ $dt_filter_values = ['type' => $table['type']];
                         <div class="backup-restore-fields">
                             <div class="backup-field-full">
                                 <label for="restoreArchive" class="form-label">Backup to restore</label>
-                                <select class="form-select" id="restoreArchive" name="backup_name" required>
+                                <select class="form-select" id="restoreArchive" name="backup_name" required autocomplete="off">
                                     <option value="">Select backup</option>
                                     <?php foreach ($backup_items as $item): ?>
                                         <option value="<?= html_escape($item['name']) ?>"><?= html_escape($item['name']) ?></option>
@@ -119,7 +119,7 @@ $dt_filter_values = ['type' => $table['type']];
                             <div>
                                 <label for="restoreAdminPassword" class="form-label">Your password</label>
                                 <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
-                                    autocomplete="current-password" required>
+                                    autocomplete="off" required>
                             </div>
                             <div>
                                 <label for="restorePhrase" class="form-label">Type RESTORE to confirm</label>

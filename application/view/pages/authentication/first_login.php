@@ -10,7 +10,7 @@
       <div class="modal-body">
         <p class="text-secondary">Set a permanent password before accessing documents, requests, or administration.</p>
 
-        <form method="post" action="<?= site_url('change-password') ?>" id="setupPasswordForm">
+        <form method="post" action="<?= site_url('change-password') ?>" id="setupPasswordForm" autocomplete="off">
           <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
             value="<?= $this->security->get_csrf_hash() ?>">
           <input type="hidden" name="confirmed" value="yes">
@@ -18,7 +18,7 @@
         </form>
       </div>
       <div class="modal-footer justify-content-between">
-        <form method="post" action="<?= site_url('logout') ?>" data-logo-logout>
+        <form method="post" action="<?= site_url('logout') ?>" data-logo-logout autocomplete="off">
           <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
             value="<?= $this->security->get_csrf_hash() ?>">
           <input type="hidden" name="confirmed" value="yes">

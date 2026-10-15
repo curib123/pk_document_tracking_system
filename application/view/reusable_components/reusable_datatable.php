@@ -31,10 +31,10 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
 ?>
 <div class="workspace-card" data-live-table>
     <div class="table-toolbar">
-        <form id="tableFilter" class="table-search" method="get" action="<?= site_url($dt_path) ?>">
+        <form id="tableFilter" class="table-search" method="get" action="<?= site_url($dt_path) ?>" autocomplete="off">
             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
             <input class="form-control" name="q" aria-label="Search records" placeholder="Search records..."
-                value="<?= html_escape($dt_q) ?>">
+                value="<?= html_escape($dt_q) ?>" autocomplete="off">
             <input type="hidden" name="page" value="1">
             <input type="hidden" name="sort" value="<?= html_escape($dt_sort) ?>">
             <input type="hidden" name="dir" value="<?= html_escape($dt_dir) ?>">
@@ -52,7 +52,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     <div class="table-filters">
         <?php foreach ($dt_filters as $field => $options): ?>
             <select form="tableFilter" class="form-select" name="<?= html_escape($field) ?>"
-                aria-label="<?= html_escape(ucfirst($field)) ?>" data-auto-submit>
+                aria-label="<?= html_escape(ucfirst($field)) ?>" data-auto-submit autocomplete="off">
                 <?php foreach ($options as $value => $label): ?>
                     <option value="<?= html_escape((string) $value) ?>" <?= (string) ($dt_filter_values[$field] ?? '') === (string) $value ? 'selected' : '' ?>><?= html_escape($label) ?></option>
                 <?php endforeach; ?>
@@ -61,7 +61,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
         <?php if (!empty($dt_date_filters)): ?>
             <?php $datePeriod = $dt_filter_values['period'] ?? 'all'; ?>
             <label class="table-date-filter small text-secondary" for="tablePeriod">
-                <select form="tableFilter" id="tablePeriod" class="form-select" name="period" data-date-period>
+                <select form="tableFilter" id="tablePeriod" class="form-select" name="period" data-date-period autocomplete="off">
                     <?php foreach ([
                         'all' => 'All time',
                         'day' => 'Today',
@@ -78,7 +78,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <?php foreach (['from' => 'Start date', 'to' => 'End date'] as $field => $label): ?>
                 <label class="table-date-filter small text-secondary" data-date-custom <?= $datePeriod !== 'custom' ? 'hidden' : '' ?>><?= $label ?>
                     <input class="form-control" type="date" form="tableFilter" name="<?= $field ?>"
-                        <?= $datePeriod !== 'custom' ? 'disabled' : '' ?> value="<?= html_escape($dt_filter_values[$field] ?? '') ?>">
+                        <?= $datePeriod !== 'custom' ? 'disabled' : '' ?> value="<?= html_escape($dt_filter_values[$field] ?? '') ?>" autocomplete="off">
                 </label>
             <?php endforeach; ?>
            
@@ -210,7 +210,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <?php if ($dt_folder_show_documents): ?>
                 <label class="text-secondary small" for="rowLimit">Rows per page</label>
                 <select class="form-select form-select-sm" id="rowLimit" name="limit" form="tableFilter" style="width:79px"
-                    data-auto-submit>
+                    data-auto-submit autocomplete="off">
                     <?php foreach ([10, 25, 50, 100] as $n): ?>
                         <option value="<?= $n ?>" <?= $dt_limit === $n ? 'selected' : '' ?>><?= $n ?></option><?php endforeach; ?>
                 </select>

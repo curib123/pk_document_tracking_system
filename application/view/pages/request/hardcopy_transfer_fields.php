@@ -3,7 +3,7 @@
 
 <div class="col-12">
  <label class="form-label" for="transferSource">Hardcopy Document</label>
- <select class="form-select" id="transferSource" name="hardcopy_id" data-transfer-source data-searchable required>
+ <select class="form-select" id="transferSource" name="hardcopy_id" data-transfer-source data-searchable required autocomplete="off">
   <option value="">Select hardcopy document</option>
   <?php foreach($transfer_sources as $source): ?>
   <option value="<?= (int)$source['id'] ?>"
@@ -23,7 +23,7 @@
 <div class="col-md-6">
  <label class="form-label" for="original-<?= $key ?>"><?= html_escape($label) ?></label>
  <input class="form-control" id="original-<?= $key ?>" data-transfer-origin="<?= $key ?>"
-   readonly placeholder="Select a hardcopy first">
+   readonly placeholder="Select a hardcopy first" autocomplete="off">
 </div>
 <?php endforeach; ?>
 <div class="col-12 mt-3">
@@ -37,7 +37,7 @@
 <div class="col-md-6">
  <label class="form-label" for="transfer-<?= $level ?>">Destination <?= $meta[0] ?><?= $level==='asset'?' (optional)':'' ?></label>
  <select class="form-select" id="transfer-<?= $level ?>" data-transfer-level="<?= $level ?>"
-   name="destination_<?= $level ?>_id" data-searchable <?= $level==='asset'?'':'required' ?>>
+   name="destination_<?= $level ?>_id" data-searchable <?= $level==='asset'?'':'required' ?> autocomplete="off">
   <option value=""><?= $level==='location'?'Choose a location':($level==='asset'?'No asset / not assigned':'All '.$meta[0]) ?></option>
   <?php foreach($transfer_options[$meta[1]] as $option): ?>
   <option value="<?= (int)$option['id'] ?>"
@@ -52,7 +52,7 @@
 <?php endforeach; ?>
 <div class="col-md-6">
  <label class="form-label" for="transferRecipient">Receiving User</label>
- <select class="form-select" id="transferRecipient" name="recipient_id" data-searchable required>
+ <select class="form-select" id="transferRecipient" name="recipient_id" data-searchable required autocomplete="off">
   <option value="">Select receiving user</option>
   <?php foreach($transfer_options['users'] as $option): ?>
     <option value="<?= (int)$option['id'] ?>"><?= html_escape($option['name']) ?></option>
@@ -61,7 +61,7 @@
 </div>
 <div class="col-md-6">
  <label class="form-label" for="transferSubject">Request Subject</label>
- <input class="form-control" id="transferSubject" name="subject" required maxlength="255">
+ <input class="form-control" id="transferSubject" name="subject" required maxlength="255" autocomplete="off">
 </div>
 <div class="col-12">
  <p class="small text-secondary mb-0" id="transferHelp" role="status">
@@ -70,5 +70,5 @@
 </div>
 <div class="col-12">
  <label class="form-label" for="transferRemarks">Remarks <span class="optional-label">(optional)</span></label>
- <textarea class="form-control" id="transferRemarks" name="remarks" rows="2"></textarea>
+ <textarea class="form-control" id="transferRemarks" name="remarks" rows="2" autocomplete="off"></textarea>
 </div>

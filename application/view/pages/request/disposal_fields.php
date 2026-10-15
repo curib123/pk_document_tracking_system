@@ -5,7 +5,7 @@ $disposal_field_prefix=$disposal_field_prefix??'disposal';
 <div class="col-md-6">
   <label class="form-label" for="<?= html_escape($disposal_field_prefix) ?>Reason">Disposal Reason</label>
   <select class="form-select" id="<?= html_escape($disposal_field_prefix) ?>Reason" name="disposal_reason"
-          data-disposal-reason required>
+          data-disposal-reason required autocomplete="off">
     <option value="">Select disposal reason</option>
     <option value="shred">Shred</option>
     <option value="scratch">Scratch</option>
@@ -15,5 +15,5 @@ $disposal_field_prefix=$disposal_field_prefix??'disposal';
 <div class="col-md-6" data-disposal-other hidden>
   <label class="form-label" for="<?= html_escape($disposal_field_prefix) ?>Other">Other Reason</label>
   <input class="form-control" id="<?= html_escape($disposal_field_prefix) ?>Other" name="disposal_other"
-         maxlength="250" placeholder="Enter disposal reason">
+         maxlength="250" placeholder="Enter disposal reason" autocomplete="off">
 </div>

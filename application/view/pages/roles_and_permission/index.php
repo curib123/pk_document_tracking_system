@@ -84,7 +84,7 @@ $dt_create = $canRole('add') ? 'Add Role' : '';
   <div class="modal-dialog modal-dialog-centered modal-xl">
     <div class="modal-content">
       <form id="editForm" method="post" action="<?= site_url('admin/roles/save') ?>"
-        data-confirm="Save role access permissions?">
+        data-confirm="Save role access permissions?" autocomplete="off">
         <div class="modal-header">
           <div class="role-permissions-heading"><span class="role-permissions-icon" aria-hidden="true"><i
                 class="fa-solid fa-shield-halved"></i></span>
@@ -100,11 +100,11 @@ $dt_create = $canRole('add') ? 'Add Role' : '';
           <div class="role-basics row g-3">
             <div class="col-md-8">
               <label class="form-label" for="roleName">Role Name</label>
-              <input class="form-control" id="roleName" name="name" required maxlength="120">
+              <input class="form-control" id="roleName" name="name" required maxlength="120" autocomplete="off">
             </div>
             <div class="col-md-4 role-status-field"><span class="form-label">Status</span><label
                 class="permission-pill role-status-toggle">
-                <input class="permission-pill-control" type="checkbox" name="active" value="1" checked>
+                <input class="permission-pill-control" type="checkbox" name="active" value="1" checked autocomplete="off">
                 <span class="permission-pill-surface"><span class="permission-pill-mark"
                     aria-hidden="true"></span><span>Active role</span></span></label></div>
           </div>
@@ -125,7 +125,7 @@ $dt_create = $canRole('add') ? 'Add Role' : '';
                   <div class="permission-pills">
                     <?php foreach ($group['items'] as $permission): ?>
                       <label class="permission-pill"><input class="permission-pill-control" name="permissions[]"
-                          type="checkbox" value="<?= (int) $permission['id'] ?>">
+                          type="checkbox" value="<?= (int) $permission['id'] ?>" autocomplete="off">
                         <span class="permission-pill-surface"><span class="permission-pill-mark" aria-hidden="true"></span>
                           <span><?= html_escape($permission['action_label']) ?></span></span></label>
                     <?php endforeach; ?>

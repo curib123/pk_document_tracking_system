@@ -103,7 +103,7 @@ $dt_create = '';
           <div class="d-flex justify-content-between align-items-end gap-3 flex-wrap mb-3">
             <div class="flex-grow-1" style="max-width:360px">
               <label class="form-label" for="workflowVersion-<?= (int) $workflow['id'] ?>">Workflow Version</label>
-              <select class="form-select" id="workflowVersion-<?= (int) $workflow['id'] ?>" data-workflow-version>
+              <select class="form-select" id="workflowVersion-<?= (int) $workflow['id'] ?>" data-workflow-version autocomplete="off">
                 <?php foreach ($versions as $v): ?>
                   <option value="<?= (int) $v['id'] ?>" <?= (int) $v['id'] === $selectedVersionId ? 'selected' : '' ?>>Version
                     <?= (int) $v['version_number'] ?> ·
@@ -114,7 +114,7 @@ $dt_create = '';
             </div>
             <?php if ($canEdit && !$hasDraft): ?>
               <form method="post" action="<?= site_url('admin/workflows/clone') ?>"
-                data-confirm="Create a new editable workflow draft?">
+                data-confirm="Create a new editable workflow draft?" autocomplete="off">
                 <input type="hidden" name="id" value="<?= (int) $workflow['id'] ?>">
                 <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
                 <input type="hidden" name="confirmed" value="no">
@@ -184,7 +184,7 @@ $dt_create = '';
                           </button>
                           <?php foreach (['up' => 'fa-arrow-up', 'down' => 'fa-arrow-down'] as $direction => $icon): ?>
                             <form method="post" action="<?= site_url('admin/workflows/step/move') ?>"
-                              data-confirm="Move this approval step?">
+                              data-confirm="Move this approval step?" autocomplete="off">
                               <input type="hidden" name="id" value="<?= (int) $version['id'] ?>">
                               <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
                               <input type="hidden" name="step_key" value="<?= $esc($step['key']) ?>">
@@ -200,7 +200,7 @@ $dt_create = '';
                             </form>
                           <?php endforeach; ?>
                           <form method="post" action="<?= site_url('admin/workflows/step/remove') ?>"
-                            data-confirm="Remove this approval step?">
+                            data-confirm="Remove this approval step?" autocomplete="off">
                             <input type="hidden" name="id" value="<?= (int) $version['id'] ?>">
                             <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
                             <input type="hidden" name="step_key" value="<?= $esc($step['key']) ?>">
@@ -224,7 +224,7 @@ $dt_create = '';
                     <i class="fa-solid fa-plus me-1"></i>Add Approval Step
                   </button>
                   <form method="post" action="<?= site_url('admin/workflows/publish') ?>"
-                    data-confirm="Publish this approval version as the default for all future requests? Existing requests keep their original approval route.">
+                    data-confirm="Publish this approval version as the default for all future requests? Existing requests keep their original approval route." autocomplete="off">
                     <input type="hidden" name="id" value="<?= (int) $version['id'] ?>">
                     <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
                     <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
@@ -255,7 +255,7 @@ $dt_create = '';
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <form id="stepForm" action="<?= site_url('admin/workflows/step/save') ?>" method="post"
-          data-confirm="Save this approval step?">
+          data-confirm="Save this approval step?" autocomplete="off">
           <div class="modal-header">
             <h2 id="stepTitle" class="modal-title h6">Approval Step</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -267,10 +267,10 @@ $dt_create = '';
             <input type="hidden" name="graph_hash" value="">
             <div class="mb-3"><label for="stepName" class="form-label">Approval Step Name</label>
               <input class="form-control" id="stepName" name="name" maxlength="120" placeholder="e.g. Supervisor Review"
-                required>
+                required autocomplete="off">
             </div>
             <div class="mb-3"><label class="form-label" for="stepApproverType">Approver Type</label>
-              <select class="form-select" id="stepApproverType" name="approver_type" required>
+              <select class="form-select" id="stepApproverType" name="approver_type" required autocomplete="off">
                 <option value="role">Any active member of role</option>
                 <option value="user">Specific user</option>
                 <option value="requester_leader">Requester's leader</option>
@@ -278,14 +278,14 @@ $dt_create = '';
               </select>
             </div>
             <div class="mb-3" id="stepRoleField"><label class="form-label" for="stepRole">Approver Role</label>
-              <select class="form-select" id="stepRole" name="approver_role_id" data-searchable>
+              <select class="form-select" id="stepRole" name="approver_role_id" data-searchable autocomplete="off">
                 <option value="">Select role</option>
                 <?php foreach ($roles as $role): ?>
                   <option value="<?= (int) $role['id'] ?>"><?= $esc($role['name']) ?></option><?php endforeach; ?>
               </select>
             </div>
             <div class="mb-3" id="stepUserField" hidden><label class="form-label" for="stepUser">Specific Approver</label>
-              <select class="form-select" id="stepUser" name="approver_user_id" data-searchable disabled>
+              <select class="form-select" id="stepUser" name="approver_user_id" data-searchable disabled autocomplete="off">
                 <option value="">Select user</option>
                 <?php foreach ($users as $account): ?>
                   <option value="<?= (int) $account['id'] ?>"><?= $esc($account['name']) ?></option><?php endforeach; ?>

@@ -200,7 +200,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
             <form id="editForm" method="post" enctype="multipart/form-data"
                 action="<?= $cfg['domain'] === 'softcopy' ? site_url('documents/softcopy/direct') : site_url('documents/hardcopy/save') ?>"
                 <?= $cfg['domain'] === 'softcopy' ? 'data-softcopy-direct="yes"' : 'data-hardcopy-upsert' ?>
-                data-confirm="<?= $cfg['domain'] === 'softcopy' ? 'Approve and apply this softcopy action directly?' : 'Save document metadata?' ?>">
+                data-confirm="<?= $cfg['domain'] === 'softcopy' ? 'Approve and apply this softcopy action directly?' : 'Save document metadata?' ?>" autocomplete="off">
                 <div class="modal-header">
                     <h2 class="modal-title fs-6" id="editTitle">Add Document</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -269,7 +269,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
             <div class="modal-dialog modal-dialog-centered">
                 <div class="modal-content">
                     <form method="post" enctype="multipart/form-data" action="<?= site_url('files/upload') ?>"
-                        data-confirm="Upload and record this controlled revision?">
+                        data-confirm="Upload and record this controlled revision?" autocomplete="off">
                         <div class="modal-header">
                             <h2 class="modal-title fs-6" id="uploadTitle">Upload Controlled Revision</h2>
                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -278,16 +278,16 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                             <p id="uploadDocumentName" class="small text-secondary"></p>
                             <input type="hidden" name="document_id" id="uploadDocumentId">
                             <label class="form-label" for="uploadLevel">New Revision Level</label>
-                            <input class="form-control mb-3" id="uploadLevel" name="new_revision_level" required maxlength="30">
+                            <input class="form-control mb-3" id="uploadLevel" name="new_revision_level" required maxlength="30" autocomplete="off">
                             <label class="form-label" for="uploadPages">Page Count</label>
                             <input class="form-control mb-3" id="uploadPages" type="number" name="page_number" min="1"
-                                value="1">
+                                value="1" autocomplete="off">
                             <label class="form-label" for="uploadReason">Reason <span
                                     class="optional-label">(optional)</span></label>
-                            <textarea class="form-control mb-3" id="uploadReason" name="reason" rows="2"></textarea>
+                            <textarea class="form-control mb-3" id="uploadReason" name="reason" rows="2" autocomplete="off"></textarea>
                             <label class="form-label" for="uploadFile">File (15 MB maximum)</label>
                             <input class="form-control" type="file" id="uploadFile" name="attachment"
-                                accept=".pdf,.txt,.jpg,.jpeg,.png,.docx,.xlsx" required>
+                                accept=".pdf,.txt,.jpg,.jpeg,.png,.docx,.xlsx" required autocomplete="off">
                         </div>
                         <input type="hidden" name="confirmed" value="no">
                         <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"

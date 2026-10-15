@@ -34,11 +34,11 @@ if ($folder_value !== '')
       <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
     </div>
     <form class="p-3" method="post" action="<?= site_url('admin/document-assignments/location') ?>"
-      data-confirm="Assign all active Hardcopy documents in this Location to the selected user?">
+      data-confirm="Assign all active Hardcopy documents in this Location to the selected user?" autocomplete="off">
       <div class="row g-3 align-items-end">
         <div class="col-lg-5">
           <label class="form-label" for="locationAssignmentPlace">Location</label>
-          <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required>
+          <select class="form-select" id="locationAssignmentPlace" name="location_id" data-searchable required autocomplete="off">
             <option value="">Choose Location</option>
             <?php foreach ($location_options as $place): ?>
               <option value="<?= (int) $place['id'] ?>"><?= html_escape($place['name'] . ' · ' . $place['code']) ?></option>
@@ -47,7 +47,7 @@ if ($folder_value !== '')
         </div>
         <div class="col-lg-5">
           <label class="form-label" for="locationAssignmentUser">Assigned User</label>
-          <select class="form-select" id="locationAssignmentUser" name="recipient_id" data-searchable required>
+          <select class="form-select" id="locationAssignmentUser" name="recipient_id" data-searchable required autocomplete="off">
             <option value="">Choose active user</option>
             <?php foreach ($users_list as $person): ?>
               <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
@@ -129,7 +129,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"
-        data-confirm="Assign this document to the selected staff account?">
+        data-confirm="Assign this document to the selected staff account?" autocomplete="off">
         <div class="modal-header">
           <h2 class="modal-title fs-6" id="assignmentModalTitle">Assign Document</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -141,7 +141,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php if ($domain === 'hardcopy'): ?>
               <div class="col-md-6" data-document-domain="hardcopy">
                 <label class="form-label" for="assignmentHardcopy">Hardcopy Document</label>
-                <select class="form-select" id="assignmentHardcopy" name="hardcopy_id" data-searchable required>
+                <select class="form-select" id="assignmentHardcopy" name="hardcopy_id" data-searchable required autocomplete="off">
                   <option value="">Choose hardcopy from this folder</option>
                   <?php foreach ($hardcopy_options as $doc): ?>
                     <option value="<?= (int) $doc['id'] ?>"><?= html_escape($doc['title']) ?></option>
@@ -151,7 +151,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php else: ?>
               <div class="col-md-6" data-document-domain="softcopy">
                 <label class="form-label" for="assignmentSoftcopy">Softcopy Document</label>
-                <select class="form-select" id="assignmentSoftcopy" name="softcopy_id" data-searchable required>
+                <select class="form-select" id="assignmentSoftcopy" name="softcopy_id" data-searchable required autocomplete="off">
                   <option value="">Choose softcopy from this folder</option>
                   <?php foreach ($softcopy_options as $doc): ?>
                     <option value="<?= (int) $doc['id'] ?>"><?= html_escape($doc['document_number'] . ' · ' . $doc['title']) ?>
@@ -162,7 +162,7 @@ $this->load->view('reusable_components/reusable_datatable', compact(
             <?php endif; ?>
             <div class="col-md-6">
               <label class="form-label" for="assignmentUser">Assigned User</label>
-              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required>
+              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required autocomplete="off">
                 <option value="">Choose an active user</option>
                 <?php foreach ($users_list as $person): ?>
                   <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>

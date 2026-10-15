@@ -328,7 +328,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
         <form id="editForm" method="post" enctype="multipart/form-data"
           action="<?= site_url('my-requests/' . $tab . '/save') ?>"
           data-allowed-request-types="<?= html_escape(json_encode($allowed_request_types)) ?>" <?= $tab === 'hardcopy' ? ' data-hardcopy-upsert="yes" ' : ($tab === 'hardcopy-transfer' ? ' data-hardcopy-transfer="yes" ' : '') ?>
-          data-confirm="Save request draft?">
+          data-confirm="Save request draft?" autocomplete="off">
           <div class="modal-header">
             <h2 class="modal-title fs-6" id="editTitle">New Request</h2>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -345,18 +345,18 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
               <?php elseif ($tab === 'hardcopy'): ?>
                 <div class="col-md-6">
                   <label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required>
+                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
                     <option value="hardcopy_create">Create Hardcopy</option>
                     <option value="hardcopy_update">Update Hardcopy</option>
                   </select>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required>
+                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
                 </div>
                 <div class="col-12" data-hardcopy-existing>
                   <label class="form-label" for="reqHardcopy">Existing Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable>
+                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable autocomplete="off">
                     <option value="">Choose a document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>"
@@ -383,17 +383,17 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
               <?php elseif ($tab === 'hardcopy-disposal'): ?>
                 <div class="col-md-6">
                   <label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required>
+                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
                     <option value="disposal">Dispose Hardcopy</option>
                   </select>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required>
+                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="reqHardcopy">Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required>
+                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required autocomplete="off">
                     <option value="">Choose an active document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>">
@@ -405,25 +405,25 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'requestDisposal']); ?>
                 <div class="col-12">
                   <label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
-                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea>
+                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3" autocomplete="off"></textarea>
                   <p class="form-text mb-0">The document is disposed only after the approval workflow is completed.</p>
                 </div>
               <?php else: ?>
 
                 <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required>
+                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
                     <?php foreach ($typeMap[$tab] as $key => $name): ?>
                       <option value="<?= html_escape($key) ?>"><?= html_escape($name) ?></option>
                     <?php endforeach; ?>
                   </select>
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqSubject">Subject</label>
-                  <input class="form-control" name="subject" id="reqSubject" maxlength="255" required>
+                  <input class="form-control" name="subject" id="reqSubject" maxlength="255" required autocomplete="off">
                 </div>
                 <?php if (in_array($tab, ['access-grant', 'document-assign'], TRUE)): ?>
                   <div class="col-md-6" data-domain-picker>
                     <label class="form-label" for="requestDocumentDomain">Document Type</label>
-                    <select class="form-select" id="requestDocumentDomain" name="document_domain" required>
+                    <select class="form-select" id="requestDocumentDomain" name="document_domain" required autocomplete="off">
                       <option value="softcopy">Softcopy</option>
                       <option value="hardcopy">Hardcopy</option>
                     </select>
@@ -431,7 +431,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 <?php endif; ?>
                 <div class="col-md-6" data-document-domain="softcopy"><label class="form-label" for="reqSoftcopy">Softcopy
                     Document</label>
-                  <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable>
+                  <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable autocomplete="off">
                     <option value="">Not selected</option>
                     <?php foreach ($softcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>">
@@ -442,7 +442,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <div class="col-md-6" data-document-domain="hardcopy"><label class="form-label" for="reqHardcopy">Hardcopy
                     Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable>
+                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable autocomplete="off">
                     <option value="">Not selected</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>"><?= html_escape($item['title']) ?></option>
@@ -450,13 +450,13 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                   </select>
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqTitle">Proposed Document Title</label>
-                  <input class="form-control" name="title" id="reqTitle" maxlength="255">
+                  <input class="form-control" name="title" id="reqTitle" maxlength="255" autocomplete="off">
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqNumber">Document Number</label>
-                  <input class="form-control" name="document_number" id="reqNumber" maxlength="100">
+                  <input class="form-control" name="document_number" id="reqNumber" maxlength="100" autocomplete="off">
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqCategory">Category</label>
-                  <select class="form-select" name="category_id" id="reqCategory" data-searchable>
+                  <select class="form-select" name="category_id" id="reqCategory" data-searchable autocomplete="off">
                     <option value="">No category</option><?php foreach ($category_options as $opt): ?>
                       <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
                     <?php endforeach; ?>
@@ -464,12 +464,12 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <?php if (in_array($tab, ['access-grant', 'document-assign'], TRUE)): ?>
                   <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
-                    <input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly>
+                    <input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly autocomplete="off">
                     <input type="hidden" name="recipient_id" value="<?= (int) $user['id'] ?>">
                   </div>
                 <?php else: ?>
                   <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
-                    <select class="form-select" name="recipient_id" id="reqUser" data-searchable>
+                    <select class="form-select" name="recipient_id" id="reqUser" data-searchable autocomplete="off">
                       <option value="">Not selected</option><?php foreach ($users as $opt): ?>
                         <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
                       <?php endforeach; ?>
@@ -477,10 +477,10 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                   </div>
                 <?php endif; ?>
                 <div class="col-md-6"><label class="form-label" for="reqExpires">Access Expires At</label>
-                  <input class="form-control" name="expires_at" type="date" id="reqExpires">
+                  <input class="form-control" name="expires_at" type="date" id="reqExpires" autocomplete="off">
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqDest">Destination Location</label>
-                  <select class="form-select" name="destination_location_id" id="reqDest" data-searchable>
+                  <select class="form-select" name="destination_location_id" id="reqDest" data-searchable autocomplete="off">
                     <option value="">Not selected</option><?php foreach ($location_options as $opt): ?>
                       <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
                     <?php endforeach; ?>
@@ -489,7 +489,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
 
                 <div class="col-12"><label class="form-label" for="reqRemark">Remarks <span
                       class="optional-label">(optional)</span></label>
-                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3"></textarea>
+                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3" autocomplete="off"></textarea>
                 </div>
 
               <?php endif; ?>

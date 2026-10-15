@@ -104,7 +104,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     aria-labelledby="actionTitle" aria-describedby="actionDescription" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
-            <form id="actionForm" method="post" data-confirm="Confirm this action?">
+            <form id="actionForm" method="post" data-confirm="Confirm this action?" autocomplete="off">
                 <div class="modal-header">
                     <div class="confirmation-heading">
                         <span class="confirmation-symbol"
@@ -118,7 +118,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                     <div id="actionRemarkFields">
                         <label for="actionRemark" class="form-label">Remark <span
                                 class="optional-label">(optional)</span></label>
-                        <textarea class="form-control" id="actionRemark" name="remark" rows="3"></textarea>
+                        <textarea class="form-control" id="actionRemark" name="remark" rows="3" autocomplete="off"></textarea>
                     </div>
                     <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                         <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'directDisposal']); ?>
@@ -182,7 +182,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
             <form action="<?= site_url('change-password') ?>" method="post"
-                data-confirm="Change your account password?">
+                data-confirm="Change your account password?" autocomplete="off">
                 <div class="modal-header">
                     <h2 class="modal-title fs-6" id="passwordModalTitle">Change Password</h2><button type="button"
                         class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

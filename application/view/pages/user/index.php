@@ -94,7 +94,7 @@ $dt_create = $canUser('add') ? 'Add User' : '';
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <form id="editForm" method="post" action="<?= site_url('admin/users/save') ?>" data-user-role-form
-        data-confirm="Save user account?">
+        data-confirm="Save user account?" autocomplete="off">
         <div class="modal-header">
           <h2 class="modal-title fs-6" id="editTitle">User</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -111,11 +111,11 @@ $dt_create = $canUser('add') ? 'Add User' : '';
             ] as $field => $label): ?>
               <div class="col-md-6"><label class="form-label" for="u-<?= $field ?>"><?= $label ?></label>
                 <input class="form-control" id="u-<?= $field ?>" name="<?= $field ?>" maxlength="150"
-                  <?= $field === 'middle_name' ? '' : 'required' ?>>
+                  <?= $field === 'middle_name' ? '' : 'required' ?> autocomplete="off">
               </div>
             <?php endforeach; ?>
             <div class="col-md-6"><label class="form-label" for="u-role">Primary role</label>
-              <select class="form-select" name="role_id" id="u-role" data-user-primary-role required>
+              <select class="form-select" name="role_id" id="u-role" data-user-primary-role required autocomplete="off">
                 <option value="">Select role</option>
                 <?php foreach ($roles as $r): ?>
                   <option value="<?= (int) $r['id'] ?>"><?= html_escape($r['name']) ?></option>
@@ -124,7 +124,7 @@ $dt_create = $canUser('add') ? 'Add User' : '';
             </div>
             <div class="col-md-6"><label class="form-label" for="u-leader">Leader <span
                   class="optional-label">(optional)</span></label>
-              <select class="form-select" name="leader_id" id="u-leader" data-searchable>
+              <select class="form-select" name="leader_id" id="u-leader" data-searchable autocomplete="off">
                 <option value="">No leader</option>
                 <?php foreach ($users as $u): ?>
                   <option value="<?= (int) $u['id'] ?>"><?= html_escape($u['name']) ?></option>
@@ -135,7 +135,7 @@ $dt_create = $canUser('add') ? 'Add User' : '';
               <legend class="form-label">Assigned roles</legend>
               <div class="role-pill-list">
                 <?php foreach ($roles as $r): ?><label class="role-pill">
-                    <input class="role-pill-input" type="checkbox" name="role_ids[]" value="<?= (int) $r['id'] ?>">
+                    <input class="role-pill-input" type="checkbox" name="role_ids[]" value="<?= (int) $r['id'] ?>" autocomplete="off">
                     <span class="role-pill-label"><i class="fa-solid fa-check"
                         aria-hidden="true"></i><?= html_escape($r['name']) ?></span></label><?php endforeach; ?>
               </div>
@@ -144,12 +144,12 @@ $dt_create = $canUser('add') ? 'Add User' : '';
               <div class="alert alert-light border mb-0">
                 A secure temporary password is generated automatically for new accounts and shown once after saving.
                 <label class="form-check mt-2"><input class="form-check-input" type="checkbox" name="reset_password"
-                    value="1">
+                    value="1" autocomplete="off">
                   Generate a new temporary password for this existing account</label>
               </div>
             </div>
             <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox" name="active"
-                  value="1" checked> Active account</label></div>
+                  value="1" checked autocomplete="off"> Active account</label></div>
           </div>
         </div>
         <input type="hidden" name="confirmed" value="no">

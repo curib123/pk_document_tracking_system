@@ -306,7 +306,7 @@ $navPage = end($navParts);
                             <button class="btn btn-light btn-sm" type="button" data-notification-next>Next</button>
                         </div>
                         <label class="notification-inbox-limit">Rows
-                            <select class="form-select form-select-sm" id="notificationInboxLimit">
+                            <select class="form-select form-select-sm" id="notificationInboxLimit" autocomplete="off">
                                 <?php foreach ([5,10,20,50] as $perPage): ?>
                                 <option value="<?= $perPage ?>" <?= $perPage===10?'selected':'' ?>><?= $perPage ?></option>
                                 <?php endforeach; ?>
@@ -365,7 +365,7 @@ $navPage = end($navParts);
                             action="<?= site_url('logout') ?>"
                             method="post"
                             data-confirm="Sign out of your account?"
-                            data-logo-logout
+                            data-logo-logout autocomplete="off"
                         >
                             <input
                                 type="hidden"

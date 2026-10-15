@@ -10,17 +10,17 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 <div class="col-md-8">
   <label class="form-label" for="hardcopyTitle">Document Title</label>
   <input class="form-control" id="hardcopyTitle" name="title" required maxlength="255"
-    placeholder="Enter the hardcopy document title">
+    placeholder="Enter the hardcopy document title" autocomplete="off">
 </div>
 <div class="col-md-4">
   <label class="form-label" for="hardcopySequence">Sequence / Copy Number <span
       class="optional-label">(optional)</span></label>
-  <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100" placeholder="e.g. PK-REC-01">
+  <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100" placeholder="e.g. PK-REC-01" autocomplete="off">
 </div>
 
 <div class="col-md-6">
   <label class="form-label" for="hardcopyArea">Area</label>
-  <select class="form-select" id="hardcopyArea" name="area_id" data-hardcopy-level="area" data-searchable required>
+  <select class="form-select" id="hardcopyArea" name="area_id" data-hardcopy-level="area" data-searchable required autocomplete="off">
     <option value="">No area selected</option>
     <?php foreach ($options['areas'] as $area): ?>
       <option value="<?= (int) $area['id'] ?>"><?= html_escape($area['name']) ?></option>
@@ -30,7 +30,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 <div class="col-md-6">
   <label class="form-label" for="hardcopySpecific">Specific</label>
   <select class="form-select" id="hardcopySpecific" name="specific_id" data-hardcopy-level="specific" data-searchable
-    required>
+    required autocomplete="off">
     <option value="">No specific selected</option>
     <?php foreach ($options['specifics'] as $specific): ?>
       <option value="<?= (int) $specific['id'] ?>" data-area-id="<?= (int) $specific['area_id'] ?>">
@@ -41,7 +41,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 <div class="col-md-6">
   <label class="form-label" for="hardcopyAsset">Asset <span class="optional-label">(optional — can be
       empty)</span></label>
-  <select class="form-select" id="hardcopyAsset" name="asset_id" data-hardcopy-level="asset" data-searchable>
+  <select class="form-select" id="hardcopyAsset" name="asset_id" data-hardcopy-level="asset" data-searchable autocomplete="off">
     <option value="">No asset / not assigned</option>
     <?php foreach ($options['assets'] as $asset): ?>
       <option value="<?= (int) $asset['id'] ?>" data-specific-id="<?= (int) $asset['specific_id'] ?>"
@@ -53,7 +53,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 <div class="col-md-6">
   <label class="form-label" for="hardcopyLocation">Location</label>
   <select class="form-select" id="hardcopyLocation" name="location_id" data-hardcopy-level="location" data-searchable
-    required>
+    required autocomplete="off">
     <option value="">No location selected</option>
     <?php foreach ($options['locations'] as $location): ?>
       <option value="<?= (int) $location['id'] ?>" data-area-id="<?= (int) ($location['area_id'] ?? 0) ?>"
@@ -68,7 +68,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 <div class="col-md-6">
   <label class="form-label" for="hardcopyHolder">Current Holder</label>
   <?php if ($isAdmin): ?>
-    <select class="form-select" id="hardcopyHolder" name="holder_id" required data-searchable>
+    <select class="form-select" id="hardcopyHolder" name="holder_id" required data-searchable autocomplete="off">
       <option value="">Select holder</option>
       <?php foreach ($options['users'] as $holder): ?>
         <option value="<?= (int) $holder['id'] ?>" <?= (int) $holder['id'] === $myHolderId ? 'selected' : '' ?>>
@@ -77,30 +77,30 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
     </select>
   <?php else: ?>
     <input class="form-control" id="hardcopyHolder" name="holder_name" value="<?= html_escape($myHolderName) ?>" readonly
-      aria-describedby="hardcopyHolderHelp">
+      aria-describedby="hardcopyHolderHelp" autocomplete="off">
     <input type="hidden" name="holder_id" value="<?= $myHolderId ?>">
 
   <?php endif; ?>
 </div>
 <div class="col-md-6">
   <label class="form-check mt-4">
-    <input class="form-check-input" type="checkbox" id="hardcopyRetention" name="retention_enabled" value="1"> Track
+    <input class="form-check-input" type="checkbox" id="hardcopyRetention" name="retention_enabled" value="1" autocomplete="off"> Track
     retention period
   </label>
 </div>
 <div class="col-md-6" data-hardcopy-retention hidden>
   <label class="form-label" for="hardcopyRetentionStart">Retention Start <span
       class="optional-label">(optional)</span></label>
-  <input class="form-control" id="hardcopyRetentionStart" type="date" name="retention_start_date">
+  <input class="form-control" id="hardcopyRetentionStart" type="date" name="retention_start_date" autocomplete="off">
 </div>
 <div class="col-md-6" data-hardcopy-retention hidden>
   <label class="form-label" for="hardcopyRetentionEnd">Retention End <span
       class="optional-label">(optional)</span></label>
-  <input class="form-control" id="hardcopyRetentionEnd" type="date" name="retention_end_date">
+  <input class="form-control" id="hardcopyRetentionEnd" type="date" name="retention_end_date" autocomplete="off">
 </div>
 <div class="col-12">
   <label class="form-label" for="hardcopyCreationReason">Reason / Notes <span
       class="optional-label">(optional)</span></label>
   <textarea class="form-control" id="hardcopyCreationReason" name="creation_reason" rows="2"
-    placeholder="Optional document notes"></textarea>
+    placeholder="Optional document notes" autocomplete="off"></textarea>
 </div>
