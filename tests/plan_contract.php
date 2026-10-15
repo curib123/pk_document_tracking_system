@@ -2,6 +2,10 @@
 declare(strict_types=1);
 require_once __DIR__.'/../application/services/workflow/workflow_graph.php';
 
+// Structural checks ignore source-code whitespace (not runtime values).
+function contract_position(string $source, string $fragment) {
+    return contract_position(preg_replace('/\\s+/', '', $source), preg_replace('/\\s+/', '', $fragment));
+}
 function check(bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException($message);
 }
@@ -36,28 +40,28 @@ $requests=file_get_contents($path.'/application/services/request/request_service
 $badge=file_get_contents($path.'/application/models/Notification_model.php');
 $seed=is_file($path.'/database/seed_workflows.sql')
     ? file_get_contents($path.'/database/seed_workflows.sql') : NULL;
-check(strpos($view, 'data-workflow-version-panel')!==FALSE, 'Version panels must render');
-check(strpos($view, 'admin/workflows/publish')!==FALSE, 'Published route action must exist');
-check(strpos($view, 'stepApproverType')!==FALSE, 'Approver chooser must exist');
-check(strpos($renderer, 'readableDetail')!==FALSE, 'Nested details must use safe formatter');
-check(strpos($requests, "if (!empty(\$r['workflow_version_id']) && !empty(\$r['snapshot']))")!==FALSE, 'Returned requests must retain their snapshot');
-check(strpos($badge, "COUNT(DISTINCT r.id)")!==FALSE, 'Task counts must avoid duplicates');
-if ($seed!==NULL) check(strpos($seed, 'NOT EXISTS')!==FALSE,
+check(contract_position($view, 'data-workflow-version-panel')!==FALSE, 'Version panels must render');
+check(contract_position($view, 'admin/workflows/publish')!==FALSE, 'Published route action must exist');
+check(contract_position($view, 'stepApproverType')!==FALSE, 'Approver chooser must exist');
+check(contract_position($renderer, 'readableDetail')!==FALSE, 'Nested details must use safe formatter');
+check(contract_position($requests, "if (!empty(\$r['workflow_version_id']) && !empty(\$r['snapshot']))")!==FALSE, 'Returned requests must retain their snapshot');
+check(contract_position($badge, "COUNT(DISTINCT r.id)")!==FALSE, 'Task counts must avoid duplicates');
+if ($seed!==NULL) check(contract_position($seed, 'NOT EXISTS')!==FALSE,
     'Seeding must not overwrite live workflows'); // Legacy seed no longer bundled.
 $detailsModel=file_get_contents($path.'/application/models/Document_detail_model.php');
 $docHeader=file_get_contents($path.'/application/view/layout/header.php');
 $docFooter=file_get_contents($path.'/application/view/layout/footer.php');
 $docViewJs=file_get_contents($path.'/public/assets/js/document-view.js');
-check(strpos($detailsModel, "'kind'=>'document'")!==FALSE, 'Document details must declare their presentation kind');
-check(strpos($detailsModel, "'context_label'")!==FALSE, 'Document details require contextual metadata');
-check(strpos($docHeader, 'document-view.css')!==FALSE, 'Document view styles must be loaded');
-check(strpos($docFooter, 'document-view.js')!==FALSE, 'Document view renderer must be loaded');
-check(strpos($docFooter, 'viewDocumentStatus')!==FALSE, 'Document modal status must be accessible');
-check(strpos($docViewJs, 'aria-controls')!==FALSE, 'Document tab navigation must identify its panels');
-check(strpos($docViewJs, 'renderOverview(overview,data)')!==FALSE, 'Document overview must render before tabs');
-check(strpos($docViewJs, 'sections.filter(isOverviewSection)')!==FALSE, 'Document overview must be excluded from tabs');
-$overviewPosition=strpos($docFooter, 'id="viewDocumentSummary"');
-$tabsPosition=strpos($docFooter, 'id="viewDetails"');
+check(contract_position($detailsModel, "'kind'=>'document'")!==FALSE, 'Document details must declare their presentation kind');
+check(contract_position($detailsModel, "'context_label'")!==FALSE, 'Document details require contextual metadata');
+check(contract_position($docHeader, 'document-view.css')!==FALSE, 'Document view styles must be loaded');
+check(contract_position($docFooter, 'document-view.js')!==FALSE, 'Document view renderer must be loaded');
+check(contract_position($docFooter, 'viewDocumentStatus')!==FALSE, 'Document modal status must be accessible');
+check(contract_position($docViewJs, 'aria-controls')!==FALSE, 'Document tab navigation must identify its panels');
+check(contract_position($docViewJs, 'renderOverview(overview)')!==FALSE, 'Document overview must render before tabs');
+check(contract_position($docViewJs, 'sections.filter(isOverviewSection)')!==FALSE, 'Document overview must be excluded from tabs');
+$overviewPosition=contract_position($docFooter, 'id="viewDocumentSummary"');
+$tabsPosition=contract_position($docFooter, 'id="viewDetails"');
 check($overviewPosition!==FALSE && $tabsPosition!==FALSE &&
     $overviewPosition<$tabsPosition, 'Document overview must appear above the separate-concern tabs');
 $sidebar=file_get_contents($path.'/application/view/layout/sidebar_top_nav.php');
@@ -69,60 +73,60 @@ $adminController=file_get_contents($path.'/application/controllers/Administratio
 $loginView=file_get_contents($path.'/application/view/pages/authentication/index.php');
 $authSetup=file_get_contents($path.'/application/view/pages/authentication/first_login.php');
 $alertPartial=file_get_contents($path.'/application/view/reusable_components/auth_alert.php');
-check(strpos($sidebar, "flashdata('notice')")===FALSE, 'No flash banner should be shown at page top');
-check(strpos($docFooter, 'id="appAlertModal"')!==FALSE, 'Flash messages must use an alert modal');
-check(strpos($alertPartial, '<dialog')!==FALSE, 'Authentication feedback must use a dialog');
-check(strpos($loginView, 'login-error')===FALSE, 'Login notifications must not be inline banners');
-check(strpos($authSetup, 'alert alert-danger')===FALSE, 'Password setup notices must not be inline banners');
-check(strpos($requestModel, "'hardcopy-disposal'=>['disposal']")!==FALSE,
+check(contract_position($sidebar, "flashdata('notice')")===FALSE, 'No flash banner should be shown at page top');
+check(contract_position($docFooter, 'id="appAlertModal"')!==FALSE, 'Flash messages must use an alert modal');
+check(contract_position($alertPartial, '<dialog')!==FALSE, 'Authentication feedback must use a dialog');
+check(contract_position($loginView, 'login-error')===FALSE, 'Login notifications must not be inline banners');
+check(contract_position($authSetup, 'alert alert-danger')===FALSE, 'Password setup notices must not be inline banners');
+check(contract_position($requestModel, "'hardcopy-disposal'=>['disposal']")!==FALSE,
   'Disposal must have a My Requests/My Tasks tab');
-check(strpos($notificationModel, "'hardcopy-disposal' => ['disposal']")!==FALSE,
+check(contract_position($notificationModel, "'hardcopy-disposal' => ['disposal']")!==FALSE,
   'Disposal must contribute to its request/task badges');
-check(strpos($requestView, '<option value="disposal">')!==FALSE &&
-    strpos($requestView, "pages/request/disposal_fields")!==FALSE,
+check(contract_position($requestView, '<option value="disposal">')!==FALSE &&
+    contract_position($requestView, "pages/request/disposal_fields")!==FALSE,
   'Disposal request modal must offer the existing disposal reasons');
-check(strpos($requestView, "'kind'=>\$isDocumentRequest?'document':'record'")!==FALSE,
+check(contract_position($requestView, "'kind'=>\$isDocumentRequest?'document':'record'")!==FALSE,
   'Document requests must reuse the System Documents view presentation');
-check(strpos($requestView, "tabCount===0")!==FALSE, 'Every request/task tab shows its count');
-check(strpos($sidebar, "taskBadge")!==FALSE, 'My Tasks link must show its notification count');
-check(strpos($renderer, 'window.PKDocumentView.render(container,data)')!==FALSE,
+check(contract_position($requestView, "tabCount===0")!==FALSE, 'Every request/task tab shows its count');
+check(contract_position($sidebar, "taskBadge")!==FALSE, 'My Tasks link must show its notification count');
+check(contract_position($renderer, 'window.PKDocumentView.render(container,data)')!==FALSE,
   'Every system View Details action must use the unified renderer');
-check(strpos($workflowView, 'workflow-setup-guide')!==FALSE, 'Workflow Builder must provide setup guidance');
-check(strpos($workflowView, 'data-draft=')!==FALSE, 'Workflow Builder must identify editable drafts');
-check(strpos($workflowView, 'name="workflow_id"')!==FALSE, 'Workflow actions must retain editor context');
-check(strpos($adminController, "redirect.='?workflow='")!==FALSE, 'Workflow editing must retain context on save');
+check(contract_position($workflowView, 'workflow-setup-guide')!==FALSE, 'Workflow Builder must provide setup guidance');
+check(contract_position($workflowView, 'data-draft=')!==FALSE, 'Workflow Builder must identify editable drafts');
+check(contract_position($workflowView, 'name="workflow_id"')!==FALSE, 'Workflow actions must retain editor context');
+check(contract_position($adminController, "redirect.='?workflow='")!==FALSE, 'Workflow editing must retain context on save');
 $retentionSource=file_get_contents($path.'/application/services/documents/retention_countdown.php');
 $requestDetails=file_get_contents($path.'/application/models/Request_model.php');
-check(strpos($detailsModel, "'Days until disposal'=>Retention_countdown::label")!==FALSE,
+check(contract_position($detailsModel, "'Days until disposal'=>Retention_countdown::label")!==FALSE,
   'Hardcopy document View Details must calculate remaining days to dispose');
-check(strpos($detailsModel, "'Retention Start'=>")===FALSE && strpos($detailsModel, "'Retention End'=>")===FALSE,
+check(contract_position($detailsModel, "'Retention Start'=>")===FALSE && contract_position($detailsModel, "'Retention End'=>")===FALSE,
   'Hardcopy document View Details must not show separate retention start/end fields');
-check(strpos($requestDetails, "'Days until disposal']=Retention_countdown::label")!==FALSE,
+check(contract_position($requestDetails, "'Days until disposal']=Retention_countdown::label")!==FALSE,
   'Hardcopy request View Details must use the same countdown');
-check(strpos($retentionSource, "'No retention'")!==FALSE,
+check(contract_position($retentionSource, "'No retention'")!==FALSE,
   'Disabled or missing retention must be displayed as No retention');
 echo "Unified UI/UX and PHP 8.0 contract checks passed.\n";
 $register=file_get_contents($path.'/application/view/pages/documents/shared_index.php');
 $registerCss=file_get_contents($path.'/public/assets/css/unified-ux.css');
-check(strpos($register, "'title'=>'Document','sequence_number'=>'Copy Number','location_name'=>'Location'")!==FALSE,
+check(contract_position($register, "'title'=>'Document','sequence_number'=>'Copy Number','location_name'=>'Location'")!==FALSE,
   'Hardcopy register must show document, copy number and location only as its primary columns');
-check(strpos($register, "'holder_name'=>'Holder','status'=>'Status'")!==FALSE,
+check(contract_position($register, "'holder_name'=>'Holder','status'=>'Status'")!==FALSE,
   'Hardcopy register must retain holder and status');
-check(strpos($register, "'title'=>'Document','document_number'=>'Document Number'")!==FALSE,
+check(contract_position($register, "'title'=>'Document','document_number'=>'Document Number'")!==FALSE,
   'Softcopy register must show title and document number first');
-check(strpos($register, "'category_name'=>'Category','status'=>'Status'")!==FALSE,
+check(contract_position($register, "'category_name'=>'Category','status'=>'Status'")!==FALSE,
   'Softcopy register must retain category and status');
-check(strpos($register, "'area_name'=>'Area'")===FALSE &&
-      strpos($register, "'asset_name'=>'Asset'")===FALSE &&
-      strpos($register, "'series_number'=>'Series'")===FALSE,
+check(contract_position($register, "'area_name'=>'Area'")===FALSE &&
+      contract_position($register, "'asset_name'=>'Asset'")===FALSE &&
+      contract_position($register, "'series_number'=>'Series'")===FALSE,
   'Detailed physical hierarchy and series must not crowd the register columns');
-check(strpos($register, '$display=$document_details[$r[\'id\']]??$display;')!==FALSE,
+check(contract_position($register, '$display=$document_details[$r[\'id\']]??$display;')!==FALSE,
   'The full permission-scoped detail record must still power View Details');
-check(strpos($register, "'dt_extra_params'")!==FALSE && strpos($register, "'dt_rows'")!==FALSE,
+check(contract_position($register, "'dt_extra_params'")!==FALSE && contract_position($register, "'dt_rows'")!==FALSE,
   'Document register must preserve shared table and action components');
-check(strpos($registerCss, '.document-register-listing[data-doc-domain="hardcopy"]')!==FALSE,
+check(contract_position($registerCss, '.document-register-listing[data-doc-domain="hardcopy"]')!==FALSE,
   'Hardcopy register must have priority-based mobile columns');
-check(strpos($registerCss, '.document-register-listing[data-doc-domain="softcopy"]')!==FALSE,
+check(contract_position($registerCss, '.document-register-listing[data-doc-domain="softcopy"]')!==FALSE,
   'Softcopy register must have priority-based mobile columns');
 echo "Compact System Documents columns and full View Details contracts passed.\n";
 echo "Plan workflow/UX contract checks passed.\n";
