@@ -59,7 +59,7 @@ expect_feature(strpos($normalizedPlaceService,"\$data['asset_id']=\$assetId?:NUL
     'Location service must normalize empty Asset to SQL NULL.');
 expect_feature(strpos(preg_replace('/\\s+/', '', $app),"changed==='asset'&&!asset.value&&location.value")!==FALSE,
     'Cleared Asset must not be silently repopulated by a linked Location.');
-expect_feature(strpos($app,'field.required=showDetails')!==FALSE,
+expect_feature(strpos(preg_replace('/\\s+/', '', $app),'field.required=showDetails')!==FALSE,
     'Form visibility must retain server-matched required/optional input state.');
 
 echo "Sticky top navigation and optional Asset UI/service contracts passed.\n";
