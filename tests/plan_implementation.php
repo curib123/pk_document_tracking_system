@@ -4,6 +4,10 @@ define('BASEPATH',__DIR__);
 define('APPPATH',dirname(__DIR__).'/application/');
 require_once APPPATH.'services/places/hardcopy_place_policy.php';
 
+// Static contract comparison ignores formatting while checking required code paths.
+function planCodePosition(string $source,string $part) {
+    return strpos(preg_replace('/\\s+/', '', $source),preg_replace('/\\s+/', '', $part));
+}
 function planCheck(bool $pass,string $message): void {
     if (!$pass) throw new RuntimeException($message);
 }
@@ -47,41 +51,41 @@ foreach ([
  'Location Specific'=>[$location,'specific_id']
 ] as $label=>$pair) {
     planCheck(preg_match('/<select[^>]*name="'.preg_quote($pair[1],'/').'"[^>]*>/s',$pair[0],$m)===1 &&
-        strpos($m[0],'required')!==FALSE, $label.' should be required in the browser.');
+        planCodePosition($m[0],'required')!==FALSE, $label.' should be required in the browser.');
 }
 foreach ([['Hardcopy',$hardcopy],['Location',$location]] as $pair) {
     planCheck(preg_match('/<select[^>]*name="asset_id"[^>]*>/s',$pair[1],$m)===1 &&
-        strpos($m[0],'required')===FALSE,$pair[0].' must NOT require an Asset.');
+        planCodePosition($m[0],'required')===FALSE,$pair[0].' must NOT require an Asset.');
 }
-planCheck(strpos($transfer,"\$level==='asset'?'':'required'")!==FALSE,
+planCheck(planCodePosition($transfer,"\$level==='asset'?'':'required'")!==FALSE,
     'Transfer form must require Area/Specific/Location, not Asset.');
-planCheck(strpos($service,'Hardcopy_place_policy::require_location_path')!==FALSE &&
-    strpos($places,'Hardcopy_place_policy::require_location_parents')!==FALSE &&
-    strpos($request,'Hardcopy_place_policy::require_location_path')!==FALSE,
+planCheck(planCodePosition($service,'Hardcopy_place_policy::require_location_path')!==FALSE &&
+    planCodePosition($places,'Hardcopy_place_policy::require_location_parents')!==FALSE &&
+    planCodePosition($request,'Hardcopy_place_policy::require_location_path')!==FALSE,
     'Hardcopy, Location and Transfer server validations must share required Places policy.');
-planCheck(strpos($service,'$data[\'asset_id\']=$asset?:NULL;')!==FALSE &&
-    strpos($places,'$data[\'asset_id\']=$assetId?:NULL;')!==FALSE,
+planCheck(planCodePosition($service,'$data[\'asset_id\']=$asset?:NULL;')!==FALSE &&
+    planCodePosition($places,'$data[\'asset_id\']=$assetId?:NULL;')!==FALSE,
     'The optional Asset must be stored as SQL NULL when unassigned.');
-planCheck(strpos($service,'The selected Location is already assigned to a document.')===FALSE &&
-    strpos($request,'The destination is already occupied by another hardcopy.')===FALSE,
+planCheck(planCodePosition($service,'The selected Location is already assigned to a document.')===FALSE &&
+    planCodePosition($request,'The destination is already occupied by another hardcopy.')===FALSE,
     'Hardcopy Locations now support multiple separate documents without an occupancy rule.');
-planCheck(strpos($tree,"'asset'=>['table'=>'assets'")!==FALSE &&
-    strpos($tree,"\$parent='asset'")!==FALSE,
+planCheck(planCodePosition($tree,"'asset'=>['table'=>'assets'")!==FALSE &&
+    planCodePosition($tree,"\$parent='asset'")!==FALSE,
     'Document Repository must keep Asset as an optional folder level.');
-planCheck(strpos($js,'data-hardcopy-level')!==FALSE &&
-    strpos($js,"changed==='asset' && !asset.value && location.value")!==FALSE,
+planCheck(planCodePosition($js,'data-hardcopy-level')!==FALSE &&
+    planCodePosition($js,"changed==='asset' && !asset.value && location.value")!==FALSE,
     'Dependent dropdowns must preserve a deliberately cleared Asset.');
-planCheck(strpos($motionCss,'@keyframes ui-shimmer')!==FALSE &&
-    strpos($motionCss,'.motion-skeleton')!==FALSE &&
-    strpos($motionCss,'prefers-reduced-motion: reduce')!==FALSE,
+planCheck(planCodePosition($motionCss,'@keyframes ui-shimmer')!==FALSE &&
+    planCodePosition($motionCss,'.motion-skeleton')!==FALSE &&
+    planCodePosition($motionCss,'prefers-reduced-motion: reduce')!==FALSE,
     'Skeleton loading and reduced-motion CSS must be available.');
-planCheck(strpos($motionJs,'aria-busy')!==FALSE &&
-    strpos($motionJs,'defaultPrevented')!==FALSE &&
-    strpos($motionJs,'pageshow')!==FALSE,
+planCheck(planCodePosition($motionJs,'aria-busy')!==FALSE &&
+    planCodePosition($motionJs,'defaultPrevented')!==FALSE &&
+    planCodePosition($motionJs,'pageshow')!==FALSE,
     'Skeleton must be scoped to navigation and recovered on canceled or restored pages.');
-planCheck(strpos($header,'assets/css/motion.css')!==FALSE &&
-    strpos($footer,'assets/js/motion.js')!==FALSE &&
-    strpos($login,'assets/js/motion.js')!==FALSE,
+planCheck(planCodePosition($header,'assets/css/motion.css')!==FALSE &&
+    planCodePosition($footer,'assets/js/motion.js')!==FALSE &&
+    planCodePosition($login,'assets/js/motion.js')!==FALSE,
     'Animated loading must be available on authenticated and login pages.');
 planCheck(preg_match('/#[0-9a-fA-F]{3,8}\b/',$motionCss)!==1,
     'New motion CSS must use the centralized colors palette, not hardcoded colors.');
