@@ -8,6 +8,18 @@ def run_checks(page, base, sql, manifest):
     def scalar(statement):
         return sql(statement).strip().splitlines()[-1]
 
+    def verify_animations(panel):
+        timeline = panel.locator('.is-animated-timeline').first
+        expect(timeline).to_be_visible()
+        expect(timeline.locator('.doc-workflow-decision').first).to_have_css('animation-name', 'doc-transfer-enter')
+        expect(timeline.locator('.doc-workflow-decision-marker').first).to_have_css('animation-name', 'doc-transfer-marker')
+        assert timeline.locator('li').first.evaluate('(e) => getComputedStyle(e, "::before").animationName') == 'doc-transfer-connect'
+        page.emulate_media(reduced_motion='reduce')
+        expect(timeline.locator('.doc-workflow-decision').first).to_have_css('animation-name', 'none')
+        expect(timeline.locator('.doc-workflow-decision-marker').first).to_have_css('animation-name', 'none')
+        page.emulate_media(reduced_motion='no-preference')
+        timeline.evaluate('(e) => Promise.all(e.getAnimations({subtree:true}).map(a => a.finished))')
+
     request_id = str(manifest['request']['id'])
     noted = scalar('SELECT id FROM workflow_steps WHERE request_id=' + request_id + ' LIMIT 1')
     sql("UPDATE workflow_steps SET label='Noted By',status='approved',assigned_name='Staff2 Staff2' WHERE id=" + noted)
@@ -37,6 +49,7 @@ def run_checks(page, base, sql, manifest):
         expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
         modal.get_by_role('tab', name='Decision History', exact=True).click()
         panel = modal.locator('[role="tabpanel"]:visible')
+        verify_animations(panel)
         expect(panel.locator('.doc-workflow-decision')).to_have_count(4)
         expect(panel.locator('.doc-workflow-date')).to_have_text('Oct 15, 2026')
         expect(panel.locator('.doc-workflow-decision-time')).to_have_text(['2:17:12 PM', '2:18:32 PM', '2:18:54 PM', '2:20:09 PM'])
@@ -74,6 +87,7 @@ def run_checks(page, base, sql, manifest):
         modal.get_by_role('tab', name='Approval History', exact=True).click()
         panel = modal.locator('[role="tabpanel"]:visible')
         expect(panel.locator('.doc-workflow-toolbar h3')).to_have_text('Approval History')
+        verify_animations(panel)
         expect(panel.locator('.doc-workflow-decision')).to_have_count(count)
         expected_reference = 'BROWSER-REQUEST' if domain == 'softcopy' else 'BROWSER-HC-REQUEST'
         expect(panel.locator('.doc-workflow-decision-request')).to_have_text([expected_reference] * count)

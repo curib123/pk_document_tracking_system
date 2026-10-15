@@ -421,6 +421,8 @@ test('decision history uses dated vertical steps and sorts repeated reviews by t
     ['2:17:12 PM','2:18:32 PM','2:18:54 PM','2:20:09 PM']);
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-step').map(item=>item.textContent),events.map(event=>event.step_label));
   assert.equal(details.querySelector('.doc-workflow-decision-comment').textContent,'fff');
+  assert.ok(details.querySelector('.is-animated-timeline'));
+  assert.equal(details.querySelector('.doc-workflow-decision-marker').children[0].className,'fa-solid fa-check');
   select.value='newest';select.listeners.change();
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-time').map(item=>item.textContent),
     ['2:20:09 PM','2:18:54 PM','2:18:32 PM','2:17:12 PM']);
@@ -457,6 +459,8 @@ test('document Approval History uses the decision stepper with request context a
   ]});
   assert.equal(details.querySelector('.doc-modal-section-title').textContent,'Approval History');
   assert.equal(details.querySelectorAll('.doc-workflow-decision').length,2);
+  assert.ok(details.querySelector('.is-animated-timeline'));
+  assert.equal(details.querySelector('.doc-workflow-decision-marker').children[0].className,'fa-solid fa-arrow-rotate-left');
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-request').map(el=>el.textContent),['REQ-42','REQ-43']);
   assert.equal(details.querySelector('.doc-workflow-decision-comment').textContent,events[0].comments);
   assert.equal(details.querySelectorAll('script').length,0);

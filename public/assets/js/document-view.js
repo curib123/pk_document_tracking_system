@@ -332,8 +332,8 @@
         };
     }
 
-    function makeDecisionTimeline(history, order, animate) {
-        var timeline = node('div', 'doc-workflow-timeline' + (animate ? ' is-animated-timeline' : ''));
+    function makeDecisionTimeline(history, order, isTransfer) {
+        var timeline = node('div', 'doc-workflow-timeline is-animated-timeline');
         var sorted = history.filter(function (event) { return event && typeof event === 'object'; })
             .map(function (event, index) { return {event: event, index: index, stamp: decisionTimestamp(event.created_at)}; });
         var direction = order === 'newest' ? -1 : 1;
@@ -356,10 +356,10 @@
                 .includes(action) ? action : 'neutral';
             var item = node('li', 'doc-workflow-decision');
             item.setAttribute('data-decision-status', status);
-            if (animate) item.setAttribute('style', '--timeline-index: ' + Math.min(index, 8));
+            item.setAttribute('style', '--timeline-index: ' + Math.min(index, 8));
             var marker = node('span', 'doc-workflow-decision-marker');
             marker.setAttribute('aria-hidden', 'true');
-            if (animate) marker.textContent = {for_transfer: '1', in_transit: '2', accepted: '3'}[status] || '·';
+            if (isTransfer) marker.textContent = {for_transfer: '1', in_transit: '2', accepted: '3'}[status] || '·';
             else marker.append(node('i', 'fa-solid ' + ({approved: 'fa-check', returned: 'fa-arrow-rotate-left',
                 rejected: 'fa-xmark', submitted: 'fa-paper-plane', cancelled: 'fa-ban',
                 for_transfer: 'fa-box-archive', in_transit: 'fa-truck-fast', accepted: 'fa-check'}[status] || 'fa-circle')));
