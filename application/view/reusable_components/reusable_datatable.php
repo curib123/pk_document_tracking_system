@@ -43,7 +43,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <?php endforeach; ?>
         </form>
         <?php if (!empty($dt_create)): ?>
-            <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#editModal"
+            <button type="button" class="btn btn-primary js-edit text-nowrap" data-bs-toggle="modal" data-bs-target="#editModal"
                 data-target="#editForm" data-record="{}" data-title="<?= html_escape($dt_create) ?>">
                 <i class="fa-solid fa-plus me-1"></i> <?= html_escape($dt_create) ?>
             </button>

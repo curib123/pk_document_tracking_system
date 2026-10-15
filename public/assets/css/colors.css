@@ -1,64 +1,82 @@
-/* CENTRAL COLOR PALETTE — THE SOLE SOURCE OF BRAND/STATUS/CSS COLORS.
- * Edit these values to recolor every module without hunting through CSS.
- * Existing CSS colors are all references to the semantic tokens below.
- * Keep this stylesheet BEFORE app.css, dashboard.css and other modules.
+
+/* CENTRAL COLOR PALETTE — RUBY RED THEME
+ * The sole source of brand/status/CSS colors.
+ * All existing variable names are preserved.
+ * Load before app.css, dashboard.css and other modules.
  */
 :root {
   --ui-white: #ffffff;
-  --ui-brand-950: #e60d38;
-  --ui-brand-900: #ba142d;
-  --ui-brand-800: #cc0a2b;
-  --ui-brand-700: #f6082f;
-  --ui-brand-600: #b90e2b;
-  --ui-brand-500: #db2b45;
-  --ui-brand-400: #e92945;
-  --ui-brand-300: #e5a0aa;
-  --ui-brand-200: #efc5cb;
-  --ui-brand-150: #f4dce0;
-  --ui-brand-100: #fae9ec;
+
+  /* Ruby red and burgundy brand scale */
+  --ui-brand-950: #780b20;
+  --ui-brand-900: #8f1028;
+  --ui-brand-800: #a81732;
+  --ui-brand-700: #c21e3a;
+  --ui-brand-600: #d32643;
+  --ui-brand-500: #e13950;
+  --ui-brand-400: #e85b6e;
+  --ui-brand-300: #ee8e9c;
+  --ui-brand-200: #f3b9c1;
+  --ui-brand-150: #f7d0d5;
+  --ui-brand-100: #fbe4e7;
   --ui-brand-50: #fff3f5;
-  --ui-navy: #0a0b21;
-  --ui-ink-950: #162238;
-  --ui-ink-900: #1c2e47;
-  --ui-ink-800: #253852;
-  --ui-ink-700: #344963;
-  --ui-ink-600: #455b75;
-  --ui-ink-500: #596e86;
-  --ui-ink-400: #708299;
-  --ui-ink-300: #8b9aab;
-  --ui-ink-200: #a9b6c5;
-  --ui-line-strong: #dbe3ec;
-  --ui-line: #e5eaf1;
-  --ui-line-soft: #edf1f5;
-  --ui-surface-muted: #f2f5f9;
-  --ui-surface-soft: #fafbfd;
-  --ui-canvas: #f6f8fb;
-  --ui-blue-900: #2c496e;
-  --ui-blue-700: #4168a3;
-  --ui-blue-500: #547aa9;
-  --ui-blue-300: #a4bcda;
-  --ui-blue-100: #eaf2fc;
-  --ui-green-900: #0c6747;
-  --ui-green-700: #157e58;
-  --ui-green-500: #3b8a78;
-  --ui-green-300: #bce5d1;
-  --ui-green-100: #e9f8f0;
-  --ui-amber-900: #98651a;
-  --ui-amber-700: #b37d26;
-  --ui-amber-500: #d29541;
-  --ui-amber-300: #ebd29a;
-  --ui-amber-100: #fff3de;
-  --ui-purple-700: #7555aa;
-  --ui-purple-100: #f3eafa;
-  --ui-slate-950: #273148;
-  --ui-slate-800: #46536c;
-  --ui-slate-600: #738197;
-  --ui-slate-400: #9aa6b5;
-  --ui-slate-200: #d4dce6;
-  --ui-slate-100: #f4f6fa;
+
+  /* Core text colors */
+  --ui-navy: #17101c;
+  --ui-ink-950: #241a28;
+  --ui-ink-900: #352631;
+  --ui-ink-800: #493640;
+  --ui-ink-700: #604b55;
+  --ui-ink-600: #78636c;
+  --ui-ink-500: #907b84;
+  --ui-ink-400: #a9959d;
+  --ui-ink-300: #c0b0b6;
+  --ui-ink-200: #d9cdd1;
+
+  /* Borders and surfaces */
+  --ui-line-strong: #e5d8dc;
+  --ui-line: #eee4e7;
+  --ui-line-soft: #f5edef;
+  --ui-surface-muted: #f8f1f3;
+  --ui-surface-soft: #fdfafb;
+  --ui-canvas: #faf6f7;
+
+  /* Blue semantic scale */
+  --ui-blue-900: #2c4568;
+  --ui-blue-700: #41679a;
+  --ui-blue-500: #6488b8;
+  --ui-blue-300: #b3c8e2;
+  --ui-blue-100: #edf3fb;
+
+  /* Green semantic scale */
+  --ui-green-900: #145b43;
+  --ui-green-700: #1d7956;
+  --ui-green-500: #46977a;
+  --ui-green-300: #bce1cf;
+  --ui-green-100: #eaf7f0;
+
+  /* Amber semantic scale */
+  --ui-amber-900: #895719;
+  --ui-amber-700: #ad7424;
+  --ui-amber-500: #d09a42;
+  --ui-amber-300: #ecd49e;
+  --ui-amber-100: #fff5e2;
+
+  /* Purple semantic scale */
+  --ui-purple-700: #7955a4;
+  --ui-purple-100: #f2ebf9;
+
+  /* Slate semantic scale */
+  --ui-slate-950: #2c2737;
+  --ui-slate-800: #514b60;
+  --ui-slate-600: #7d788c;
+  --ui-slate-400: #aaa6b5;
+  --ui-slate-200: #dcd9e3;
+  --ui-slate-100: #f5f4f8;
+
   --ui-black: #000000;
 
-  /* Backward-compatible application aliases. */
+  /* Backward-compatible application aliases */
   --accent: var(--ui-brand-500);
   --accent-dark: var(--ui-brand-800);
   --accent-light: var(--ui-brand-50);
@@ -70,17 +88,17 @@
   --surface: var(--ui-white);
   --bg: var(--ui-canvas);
   --radius: 14px;
-  /* Bootstrap's own semantic controls use this brand palette. */
+
+  /* Bootstrap semantic controls */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 193, 59, 79;
+  --bs-primary-rgb: 225, 57, 80;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 158, 45, 64;
+  --bs-danger-rgb: 194, 30, 58;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
 
-/* Shared action colors, including Bootstrap buttons and status labels.
- * Design accents are always taken from the same root palette above. */
+/* Shared action colors */
 .btn-primary {
   --bs-btn-bg: var(--ui-brand-500);
   --bs-btn-border-color: var(--ui-brand-500);
@@ -111,4 +129,5 @@
   --bs-btn-border-color: var(--ui-brand-300);
   --bs-btn-hover-bg: var(--ui-brand-800);
   --bs-btn-hover-border-color: var(--ui-brand-800);
+
 }

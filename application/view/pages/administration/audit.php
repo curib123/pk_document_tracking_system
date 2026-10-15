@@ -49,11 +49,6 @@ $dt_badges = ['status'];
 $dt_create = '';
 ?>
 <section class="workspace-card mb-3">
-    <div class="workspace-card-header">
-        <strong>Recorded System Activity</strong>
-        <p class="small text-secondary mb-0">Search recorded actions, subjects or user IDs. Filter by result and date to
-            review activity.</p>
-    </div>
     <?php foreach ($audit_warnings as $warning): ?>
         <p class="small text-danger px-3 mb-2" role="status"><?= html_escape($warning) ?></p>
     <?php endforeach; ?>

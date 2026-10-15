@@ -351,20 +351,24 @@ a {
 }
 
 .table-search {
-    max-width: 390px;
-    min-width: 220px;
     width: 100%;
+    min-width: 220px;
+    max-width: none;
     position: relative;
+    box-sizing: border-box;
 }
 
 .table-search input {
+    width: 100%;
+    box-sizing: border-box;
     padding-left: 39px !important;
 }
 
 .table-search i {
     position: absolute;
     left: 14px;
-    top: 13px;
+    top: 50%;
+    transform: translateY(-50%);
     color: var(--ui-ink-300);
 }
 
@@ -376,8 +380,12 @@ a {
 }
 
 .table-filters select {
+    width: 200px;
+    min-width: 200px;
     max-width: 200px;
-    min-width: 160px;
+    height: 38px;
+    box-sizing: border-box;
+    flex: 0 0 200px;
 }
 
 .table-responsive {
