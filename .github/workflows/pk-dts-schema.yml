@@ -1,9 +1,9 @@
 name: PK DTS QA
 on:
   push:
-    branches: [master]
+    branches: [master, development, 'fix/**']
   pull_request:
-    branches: [master]
+    branches: [master, development]
 permissions:
   contents: read
 concurrency:
