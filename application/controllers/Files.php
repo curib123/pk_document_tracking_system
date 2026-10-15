@@ -14,7 +14,8 @@ class Files extends MY_Controller
     private function safe_download_name($name): string
     {
         $name = basename(str_replace(chr(92), '/', (string) $name));
-        $name = preg_replace('/[\\x00-\\x1F\\x7F"\\\\]/', '_', $name);
+        $name = str_replace(['"', chr(92)], '_', $name);
+        $name = preg_replace('/[[:cntrl:]]/', '_', $name);
         return $name !== '' && $name !== '.' ? $name : 'document';
     }
 
