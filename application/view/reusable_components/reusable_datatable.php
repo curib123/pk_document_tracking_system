@@ -81,7 +81,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                         <?= $datePeriod !== 'custom' ? 'disabled' : '' ?> value="<?= html_escape($dt_filter_values[$field] ?? '') ?>">
                 </label>
             <?php endforeach; ?>
-            <span class="table-date-hint small text-secondary">Calendar periods · Manila time</span>
+           
         <?php endif; ?>
         <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i>
             Apply</button>
