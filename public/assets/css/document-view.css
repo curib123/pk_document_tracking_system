@@ -6,17 +6,17 @@
 #viewModal.is-document-view .doc-modal-title-wrap,
 #viewModal.is-document-view .doc-modal-layout,
 #viewModal.is-document-view .doc-modal-main { min-width: 0; }
-#viewModal.is-document-view .doc-modal-title-line { display: flex; align-items: center; gap: 14px; min-width: 0; }
+#viewModal.is-document-view .doc-modal-title-line { display: flex; align-items: center; gap: 16px; min-width: 0; }
 #viewModal.is-document-view .doc-modal-kind-icon {
-    flex: 0 0 32px; display: grid; place-items: center; width: 32px; height: 40px;
-    color: var(--ui-brand-700); font-size: 24px;
+    flex: 0 0 46px; display: grid; place-items: center; width: 46px; height: 50px;
+    color: var(--ui-brand-700); font-size: 23px; background: var(--ui-brand-50); border-radius: 12px;
 }
 #viewModal.is-document-view .doc-modal-eyebrow {
-    margin: 0 0 10px; color: var(--ui-ink-600); font-size: 10px; font-weight: 650; letter-spacing: .1em;
+    margin: 0 0 12px; color: var(--ui-brand-800); font-size: 10px; font-weight: 650; letter-spacing: .12em;
 }
 #viewModal.is-document-view #viewModalTitle {
-    margin: 0; color: var(--ui-ink-950); font-size: clamp(20px, 2vw, 25px);
-    font-weight: 650; line-height: 1.35; letter-spacing: -.025em; overflow-wrap: anywhere;
+    margin: 0; color: var(--ui-ink-950); font-size: clamp(20px, 2vw, 26px);
+    font-weight: 600; line-height: 1.3; letter-spacing: -.035em; overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-modal-reference {
     margin: 6px 0 0; color: var(--ui-ink-600); font-size: 12px; overflow-wrap: anywhere;
@@ -40,44 +40,47 @@
 #viewModal.is-document-view .doc-modal-status.status-disposed,
 #viewModal.is-document-view .doc-modal-status.status-cancelled { color: var(--ui-brand-800); background: var(--ui-brand-50); }
 
-/* Metadata reads as a document, with consistent label/value columns. */
-#viewModal.is-document-view .doc-modal-overview { padding: 26px 32px 30px; }
+/* Section headings sit beside the record facts on the shared surface. */
+#viewModal.is-document-view .doc-modal-overview { padding: 0 30px; }
+#viewModal.is-document-view .doc-overview-group {
+    display: grid; grid-template-columns: 166px minmax(0, 1fr); gap: 28px; padding: 26px 0;
+}
 #viewModal.is-document-view .doc-overview-group + .doc-overview-group {
-    margin-top: 26px; padding-top: 24px; border-top: 1px solid var(--ui-line);
+    border-top: 1px solid var(--ui-line);
 }
 #viewModal.is-document-view .doc-overview-group-title {
-    display: flex; align-items: center; gap: 9px; margin: 0 0 16px; color: var(--ui-ink-800);
-    font-size: 13px; line-height: 1.5; font-weight: 650;
+    display: flex; align-items: baseline; align-self: start; gap: 9px; margin: 3px 0 0;
+    padding-left: 12px; border-left: 2px solid var(--ui-brand-200); color: var(--ui-ink-800);
+    font-size: 12px; line-height: 1.7; font-weight: 600;
 }
-#viewModal.is-document-view .doc-overview-group-title i { color: var(--ui-ink-500); font-size: 13px; }
+#viewModal.is-document-view .doc-overview-group-title i { color: var(--ui-brand-700); font-size: 12px; }
 #viewModal.is-document-view .doc-overview-grid,
 #viewModal.is-document-view .doc-modal-field-grid {
-    display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px 32px; margin: 0;
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 18px 28px; margin: 0;
 }
 #viewModal.is-document-view .doc-overview-item,
-#viewModal.is-document-view .doc-modal-field { min-width: 0; margin: 0; padding: 0; }
+#viewModal.is-document-view .doc-modal-field { min-width: 0; margin: 0; padding: 0 0 14px; border-bottom: 1px solid var(--ui-line-soft); }
 #viewModal.is-document-view .doc-overview-item.is-wide,
 #viewModal.is-document-view .doc-modal-field.is-wide { grid-column: 1 / -1; }
 #viewModal.is-document-view .doc-overview-label,
 #viewModal.is-document-view .doc-modal-field-label {
-    margin: 0 0 6px; color: var(--ui-ink-600); font-size: 11px; font-weight: 500; line-height: 1.5;
+    margin: 0 0 5px; color: var(--ui-ink-600); font-size: 11px; font-weight: 400; line-height: 1.5;
 }
 #viewModal.is-document-view .doc-overview-value,
 #viewModal.is-document-view .doc-modal-field-value {
-    margin: 0; color: var(--ui-ink-900); font-size: 13px; line-height: 1.7;
-    font-weight: 550; white-space: pre-line; overflow-wrap: anywhere; user-select: text;
+    margin: 0; color: var(--ui-ink-950); font-size: 13px; line-height: 1.65;
+    font-weight: 500; white-space: pre-line; overflow-wrap: anywhere; user-select: text;
 }
 
 /* Underlined concern tabs remain visible as the document scrolls. */
 #viewModal.is-document-view .doc-modal-layout { display: block; }
 #viewModal.is-document-view .doc-modal-navigation {
-    position: sticky; top: 0; z-index: 3; display: flex; align-items: stretch; gap: 24px;
-    padding: 0 32px; overflow-x: auto; overscroll-behavior-x: contain; scrollbar-width: thin;
-    border-block: 1px solid var(--ui-line); background: var(--ui-white); scroll-padding-inline: 32px;
+    position: sticky; top: 0; z-index: 3; display: flex; align-items: stretch; flex-wrap: wrap; gap: 0 22px;
+    padding: 0 30px; border-block: 1px solid var(--ui-line); background: var(--ui-surface-soft);
 }
 #viewModal.is-document-view .doc-modal-nav-item {
     display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; gap: 8px;
-    min-height: 52px; padding: 13px 0; margin: 0; border: 0; border-bottom: 2px solid transparent;
+    min-height: 50px; padding: 13px 2px; margin: 0; border: 0; border-bottom: 2px solid transparent;
     border-radius: 0; background: transparent; color: var(--ui-ink-600); font-size: 12px;
     font-weight: 550; white-space: nowrap; cursor: pointer; transition: color .15s ease, border-color .15s ease;
 }
@@ -85,11 +88,11 @@
 #viewModal.is-document-view .doc-modal-nav-item:hover { color: var(--ui-brand-800); }
 #viewModal.is-document-view .doc-modal-nav-item.is-active { color: var(--ui-brand-800); border-bottom-color: var(--ui-brand-600); font-weight: 650; }
 #viewModal.is-document-view .doc-modal-nav-item:focus-visible { outline: 2px solid var(--ui-brand-300); outline-offset: -4px; }
-#viewModal.is-document-view .doc-modal-main { padding: 26px 32px 32px; }
+#viewModal.is-document-view .doc-modal-main { padding: 24px 30px 30px; }
 #viewModal.is-document-view .doc-modal-panel:focus { outline: none; }
 #viewModal.is-document-view .doc-modal-panel:focus-visible { outline: 2px solid var(--ui-brand-300); outline-offset: 5px; }
 #viewModal.is-document-view .doc-modal-section-heading { margin-bottom: 22px; }
-#viewModal.is-document-view .doc-modal-section-title { margin: 0; color: var(--ui-ink-900); font-size: 15px; font-weight: 650; letter-spacing: -.015em; }
+#viewModal.is-document-view .doc-modal-section-title { margin: 0; color: var(--ui-ink-900); font-size: 16px; font-weight: 600; letter-spacing: -.025em; }
 #viewModal.is-document-view .doc-modal-section-subtitle { margin: 6px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6; }
 
 /* Files and activity use full-width rows, with no nested panels. */
@@ -125,20 +128,26 @@
 #viewModal.is-document-view .doc-modal-footnote i { margin-right: 6px; }
 
 @media (max-width: 767.98px) {
-    #viewModal.is-document-view .doc-modal-overview { padding: 22px 20px 26px; }
+    #viewModal.is-document-view .doc-modal-overview { padding: 0 20px; }
+    #viewModal.is-document-view .doc-overview-group { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 22px 0; }
     #viewModal.is-document-view .doc-overview-grid,
-    #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; }
-    #viewModal.is-document-view .doc-modal-navigation { gap: 20px; padding-inline: 20px; scroll-padding-inline: 20px; }
-    #viewModal.is-document-view .doc-modal-nav-item { min-height: 48px; }
+    #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
+    #viewModal.is-document-view .doc-overview-item,
+    #viewModal.is-document-view .doc-modal-field {
+        display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 16px; padding: 11px 0;
+    }
+    #viewModal.is-document-view .doc-overview-label,
+    #viewModal.is-document-view .doc-modal-field-label { margin: 0; align-self: baseline; font-size: 12px; }
+    #viewModal.is-document-view .doc-overview-item.is-wide,
+    #viewModal.is-document-view .doc-modal-field.is-wide { grid-template-columns: minmax(0, 1fr); gap: 6px; }
+    #viewModal.is-document-view .doc-modal-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; padding: 4px 20px; }
+    #viewModal.is-document-view .doc-modal-nav-item { min-height: 44px; justify-content: flex-start; white-space: normal; text-align: left; padding: 10px 0; font-size: 11px; }
+    #viewModal.is-document-view .doc-modal-nav-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
     #viewModal.is-document-view .doc-modal-main { padding: 24px 20px 28px; }
 }
 @media (max-width: 575.98px) {
     #viewModal.is-document-view .doc-modal-file-content { flex-basis: calc(100% - 44px); }
     #viewModal.is-document-view .doc-modal-file-item .btn { flex: 1 1 auto; }
-}
-@media (max-width: 359.98px) {
-    #viewModal.is-document-view .doc-overview-grid,
-    #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: minmax(0, 1fr); }
 }
 @media (prefers-reduced-motion: reduce) {
     #viewModal.is-document-view .doc-modal-nav-item { transition: none; }
@@ -150,10 +159,10 @@
     flex-wrap: wrap; gap: 14px; margin-bottom: 20px;
 }
 #viewModal.is-document-view .doc-workflow-sort-label {
-    display: grid; gap: 6px; min-width: 175px; max-width: 100%;
-    color: var(--ui-ink-600); font-size: 11px; font-weight: 650;
+    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 175px; max-width: 100%;
+    color: var(--ui-ink-600); font-size: 11px; font-weight: 500;
 }
-#viewModal.is-document-view .doc-workflow-sort { width: 100%; min-width: 0; }
+#viewModal.is-document-view .doc-workflow-sort { width: auto; min-width: 150px; flex: 1; }
 #viewModal.is-document-view .has-workflow-steps .doc-modal-field-grid {
     grid-template-columns: 1fr; margin-bottom: 22px;
 }
@@ -216,14 +225,17 @@
 }
 #viewModal.is-document-view .doc-workflow-day + .doc-workflow-day { margin-top: 24px; }
 #viewModal.is-document-view .doc-workflow-date {
-    margin: 0 0 14px; color: var(--ui-ink-600); font-size: 12px; font-weight: 700;
+    display: flex; align-items: center; gap: 16px; margin: 0 0 18px;
+    color: var(--ui-ink-600); font-size: 11px; font-weight: 600; letter-spacing: .02em;
 }
+#viewModal.is-document-view .doc-workflow-date::after { content: ''; flex: 1; height: 1px; background: var(--ui-line); }
 #viewModal.is-document-view .doc-workflow-decisions {
     display: grid; gap: 16px; margin: 0; padding: 0 0 0 42px; list-style: none;
 }
 #viewModal.is-document-view .doc-workflow-decision {
     --decision-color: var(--ui-ink-600); --decision-surface: var(--ui-surface-soft);
-    position: relative; min-width: 0; padding: 2px 0 22px; border: 0; border-bottom: 1px solid var(--ui-line-soft);
+    position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 20px;
+    min-width: 0; padding: 2px 0 22px; border: 0;
     border-radius: 0; background: transparent; overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-workflow-decision::before {
@@ -247,6 +259,7 @@
 }
 #viewModal.is-document-view .doc-workflow-decision-heading {
     display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+    grid-column: 1; grid-row: 1;
 }
 #viewModal.is-document-view .doc-workflow-decision-step {
     margin: 0; color: var(--ui-ink-900); font-size: 13px; line-height: 1.5; font-weight: 700;
@@ -259,9 +272,12 @@
 #viewModal.is-document-view .doc-workflow-decision-time {
     display: block; margin: 7px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6;
 }
-#viewModal.is-document-view .doc-workflow-decision-time { font-variant-numeric: tabular-nums; }
+#viewModal.is-document-view .doc-workflow-decision-time {
+    grid-column: 2; grid-row: 1; margin-top: 3px; font-size: 11px; font-variant-numeric: tabular-nums;
+}
+#viewModal.is-document-view .doc-workflow-decision-actor { grid-column: 1 / -1; }
 #viewModal.is-document-view .doc-workflow-remarks {
-    margin-top: 12px; padding: 2px 0 2px 12px; border-left: 2px solid var(--ui-line-strong);
+    grid-column: 1 / -1; margin-top: 12px; padding: 2px 0 2px 12px; border-left: 2px solid var(--ui-brand-200);
 }
 #viewModal.is-document-view .doc-workflow-remarks-label { color: var(--ui-ink-600); font-size: 10px; }
 #viewModal.is-document-view .doc-workflow-decision-comment {
@@ -273,7 +289,8 @@
     #viewModal.is-document-view .doc-workflow-step-number { left: -36px; }
     #viewModal.is-document-view .doc-workflow-step::before { left: -23px; }
     #viewModal.is-document-view .doc-workflow-decisions { padding-left: 32px; }
-    #viewModal.is-document-view .doc-workflow-decision { padding: 2px 0 20px; }
+    #viewModal.is-document-view .doc-workflow-decision { grid-template-columns: minmax(0, 1fr); padding: 2px 0 20px; }
+    #viewModal.is-document-view .doc-workflow-decision-time { grid-column: 1; grid-row: auto; margin-top: 8px; }
     #viewModal.is-document-view .doc-workflow-decision-marker { left: -32px; width: 24px; height: 24px; }
     #viewModal.is-document-view .doc-workflow-decision::before { left: -21px; top: 26px; }
 }
