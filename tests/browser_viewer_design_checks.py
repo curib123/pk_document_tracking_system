@@ -48,6 +48,10 @@ def run_checks(page, base, app_root):
             if tabs.count():
                 tabs.last.press('Home')
                 expect(tabs.first).to_have_attribute('aria-selected', 'true')
+                assert modal.locator('.doc-modal-navigation').evaluate('(e) => e.scrollWidth <= e.clientWidth + 1'), 'Concern tabs clip at ' + str(width)
+                if width == 390 and route == 'documents/softcopy':
+                    modal.locator('.doc-modal-navigation').evaluate('(e) => e.scrollIntoView({block: "start"})')
+                    page.screenshot(path=str(shots / 'viewer-tabs-390.png'))
             if width in [1440, 390] and route in ['documents/softcopy', 'admin/users', 'my-requests/softcopy']:
                 modal.locator('.modal-body').evaluate('(e) => e.scrollTop = 0')
                 page.screenshot(path=str(shots / ('viewer-' + route.split('/')[0] + '-' + str(width) + '.png')))
