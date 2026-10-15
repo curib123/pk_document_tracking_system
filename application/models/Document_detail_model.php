@@ -163,13 +163,15 @@ class Document_detail_model extends CI_Model
                 $fileFields = [];
                 $links = [];
                 foreach ($fileHistories[$id] ?? [] as $index => $file) {
+                    if (!$can('files', 'history') && empty($file['is_current']))
+                        continue;
                     $fileFields[($index + 1) . '. ' . $file['original_name']] =
                         number_format((int) $file['size']) . ' bytes · ' . $file['mime_type'] . ' · ' . $file['created_at'] .
                         ' · ' . (!empty($file['is_current']) ? 'Current' : 'Superseded');
                     $links[] = [
                         'label' => 'Download ' . $file['original_name'],
-                        'url' => !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : '',
-                        'print_url' => !empty($file['is_current']) ? site_url('files/print/' . $file['id']) : ''
+                        'url' => $can('files', 'download') && !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : '',
+                        'print_url' => $can('files', 'print') && !empty($file['is_current']) ? site_url('files/print/' . $file['id']) : ''
                     ];
                 }
                 $sections[] = [

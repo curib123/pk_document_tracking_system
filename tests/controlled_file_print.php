@@ -6,6 +6,7 @@ define('BASEPATH', __DIR__);
 class MY_Controller {
     protected $user = ['id' => 1];
     protected function authenticate() {}
+    protected function require_permission($module, $action = 'view') {}
 }
 function show_error($message, $status = 500) { throw new RuntimeException($message, $status); }
 function show_404() { throw new RuntimeException('Not found', 404); }

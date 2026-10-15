@@ -65,7 +65,7 @@ class Files extends MY_Controller
     /** Accessible print viewer; every file response repeats the access check. */
     public function print_file($id)
     {
-        $this->authenticate();
+        $this->require_permission('files', 'print');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
             show_error('Controlled file printing is not permitted.', 403);
@@ -90,7 +90,7 @@ class Files extends MY_Controller
 
     public function print_content($id)
     {
-        $this->authenticate();
+        $this->require_permission('files', 'print');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
             show_error('Controlled file printing is not permitted.', 403);
@@ -126,7 +126,7 @@ class Files extends MY_Controller
 
     public function download($id)
     {
-        $this->authenticate();
+        $this->require_permission('files', 'download');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
             show_error('File download is not permitted.', 403);

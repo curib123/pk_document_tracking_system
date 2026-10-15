@@ -3,6 +3,9 @@ $permissions = $permissions ?? [];
 require_once APPPATH . 'services/presentation/document_folder_tree.php';
 $documentTreeNodes = $folder_browser['tree']['nodes'] ?? [];
 $can = isset($permissions['*']) || !empty($permissions[$cfg['domain']]['direct']);
+$canFile = static function ($action) use ($permissions) {
+    return isset($permissions['*']) || !empty($permissions['files'][$action]);
+};
 // Keep document registers scannable. All other metadata remains available in
 // the shared permission-scoped View Details modal, not duplicated in the table.
 $dt_columns = $cfg['domain'] === 'hardcopy'
@@ -66,15 +69,18 @@ foreach ($rows as $r) {
                     'name' => $item['original_name'],
                     'detail' => $item['first_name'] . ' ' . $item['last_name'] . ' — ' . $item['created_at'] .
                         ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded'),
-                    'url' => !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
-                    'print_url' => !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
+                    'url' => $canFile('download') && !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
+                    'print_url' => $canFile('print') && !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
                 ];
             }
-            $buttons[] = ['type' => 'history', 'files' => $historyEntries];
+            if ($canFile('history'))
+                $buttons[] = ['type' => 'history', 'files' => $historyEntries];
             if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
-                $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
-                $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                if ($canFile('print'))
+                    $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
+                if ($canFile('download'))
+                    $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
             }
         }
     }

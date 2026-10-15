@@ -15,7 +15,7 @@ $files=[9=>[$old,$current]];
 $detail=new Document_detail_model();$detail->load=new class {public function model($name){}};
 $detail->db=new class {public function query($sql,$params){return new class {public function result_array(){return [];}};}};
 $detail->Document_model=new class {public function config($domain){return ['table'=>'softcopy_documents'];}public function scope($domain,$viewer){return '1=1';}};
-$detail->Permission_model=new class {public function for_user($viewer){return [];}};
+$detail->Permission_model=new class {public function for_user($viewer){return ['files'=>['history'=>TRUE,'download'=>TRUE,'print'=>TRUE]];}};
 $display=$detail->for_page('softcopy',[$document],['id'=>20,'role_id'=>1],$files)[9];
 $section=array_column($display['sections'],NULL,'key')['files'];
 historyCheck(count($section['fields'])===2,'The document viewer must preserve old controlled-file metadata.');
@@ -26,11 +26,12 @@ historyCheck(strpos(array_values($section['fields'])[0],'Superseded')!==FALSE,
 
 class HistoryViewCaptured extends RuntimeException {}
 class HistoryViewHarness {
+    public $permissions = ['files'=>['view'=>TRUE,'history'=>TRUE,'download'=>TRUE,'print'=>TRUE]];
     public $load,$data;public function __construct(){$this->load=$this;}
     public function view($name,$data){if ($name==='reusable_components/reusable_datatable') {$this->data=$data;throw new HistoryViewCaptured();}}
     public function render($document,$files,$current):array {
         $cfg=['domain'=>'softcopy','fields'=>['document_number','title','series_number','category_id'],'title'=>'Softcopy'];
-        $rows=[$document];$permissions=['files'=>['view'=>TRUE]];$user=['id'=>20,'name'=>'Requester'];$is_administrator=FALSE;
+        $rows=[$document];$permissions=$this->permissions;$user=['id'=>20,'name'=>'Requester'];$is_administrator=FALSE;
         $folder_browser=['tree'=>['nodes'=>[]],'folder'=>'','items'=>[]];$folder_value='';$total=1;$owner_options=[];
         $table=['q'=>'','status'=>'','page'=>1,'limit'=>25,'sort'=>'title','dir'=>'ASC','layout'=>'table','owner'=>'','from'=>'','to'=>''];
         $folder_params=$table;
@@ -50,3 +51,12 @@ $buttons=array_column($view->render($document,[$old],NULL),NULL,'type');
 historyCheck(isset($buttons['history']) && !isset($buttons['download']),
     'History metadata must remain viewable when no current controlled download is available.');
 echo "Controlled-file details and history preserve records with downloads only for the current revision.\n";
+$view->permissions = ['files'=>['view'=>TRUE]];
+$buttons=array_column($view->render($document,[$old,$current],$current),NULL,'type');
+historyCheck(!isset($buttons['history'], $buttons['print'], $buttons['download']),
+    'File access alone cannot grant history, print or download actions.');
+$detail->Permission_model=new class {public function for_user($viewer){return ['files'=>['view'=>TRUE]];}};
+$display=$detail->for_page('softcopy',[$document],['id'=>20,'role_id'=>1],$files)[9];
+$section=array_column($display['sections'],NULL,'key')['files'];
+historyCheck(count($section['fields'])===1 && empty($section['links'][0]['url']) && empty($section['links'][0]['print_url']),
+    'The detail viewer must hide superseded metadata and denied action URLs.');
