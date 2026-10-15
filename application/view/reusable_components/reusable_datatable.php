@@ -60,7 +60,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
         <?php endforeach; ?>
         <?php if (!empty($dt_date_filters)): ?>
             <?php $datePeriod = $dt_filter_values['period'] ?? 'all'; ?>
-            <label class="table-date-filter small text-secondary" for="tablePeriod">Created date
+            <label class="table-date-filter small text-secondary" for="tablePeriod">
                 <select form="tableFilter" id="tablePeriod" class="form-select" name="period" data-date-period>
                     <?php foreach ([
                         'all' => 'All time',
@@ -83,8 +83,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <?php endforeach; ?>
            
         <?php endif; ?>
-        <button class="btn btn-light" type="submit" form="tableFilter"><i class="fa-solid fa-filter me-1"></i>
-            Apply</button>
+       
         <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?>
             <a class="btn btn-light"
                 href="<?= site_url($dt_path) . ($dt_extra_params ? '?' . http_build_query($dt_extra_params) : '') ?>">Clear</a>
