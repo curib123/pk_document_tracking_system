@@ -520,3 +520,25 @@ test('storage route handles missing destinations and unsafe text, and resets for
   window.PKDocumentView.render(details,{Name:'Another record'});
   assert.equal(map.viewDocumentSummary.querySelector('.doc-storage-route'),null);
 });
+
+test('Transfer History uses the shared dated stepper, preserves milestones and sorts without changing data',()=>{
+  const {window,details}=setup();
+  const events=[
+    {action:'for_transfer',step_label:'Office → Records',user_name:'John',position_title:'Current holder',comments:'Reason: Archive <script>',created_at:'2026-10-15 09:00:00'},
+    {action:'in_transit',step_label:'Office → Records',user_name:'John',position_title:'Current holder',created_at:'2026-10-15 10:00:00'},
+    {action:'accepted',step_label:'Office → Records',user_name:'Paul',position_title:'Recipient',created_at:'2026-10-16 11:00:00'}
+  ];
+  const original=JSON.stringify(events);
+  window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
+    {key:'transfers',title:'Transfer History',fields:{},events}
+  ]});
+  assert.equal(details.querySelector('.doc-modal-section-title').textContent,'Transfer History');
+  assert.ok(details.querySelector('.is-animated-timeline'));
+  assert.equal(details.querySelector('.doc-workflow-sort').getAttribute('aria-label'),'Sort transfer history by timestamp');
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-action').map(el=>el.textContent),['For Transfer','In Transit','Accepted']);
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision').map(el=>el.getAttribute('data-decision-status')),['for_transfer','in_transit','accepted']);
+  assert.equal(details.querySelector('.doc-workflow-decision-comment').textContent,events[0].comments);
+  const sort=details.querySelector('.doc-workflow-sort');sort.value='newest';sort.listeners.change();
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-action').map(el=>el.textContent),['Accepted','In Transit','For Transfer']);
+  assert.equal(JSON.stringify(events),original);
+});

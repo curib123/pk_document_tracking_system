@@ -764,6 +764,50 @@
 #viewModal.is-document-view .doc-workflow-decision:last-child::before {
   display: none;
 }
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="for_transfer"] {
+  --decision-color: var(--ui-amber-900);
+  --decision-surface: var(--ui-amber-100);
+}
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="in_transit"] {
+  --decision-color: var(--ui-blue-900);
+  --decision-surface: var(--ui-blue-100);
+}
+#viewModal.is-document-view .doc-workflow-decision[data-decision-status="accepted"] {
+  --decision-color: var(--ui-green-900);
+  --decision-surface: var(--ui-green-100);
+}
+#viewModal.is-document-view .is-animated-timeline .doc-workflow-decision {
+  animation: doc-transfer-enter 460ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--timeline-index) * 100ms);
+}
+#viewModal.is-document-view .is-animated-timeline .doc-workflow-decision::before {
+  transform-origin: top center;
+  animation: doc-transfer-connect 600ms ease-out both;
+  animation-delay: calc(var(--timeline-index) * 100ms + 180ms);
+}
+#viewModal.is-document-view .is-animated-timeline .doc-workflow-decision-marker {
+  font-weight: 700;
+  animation: doc-transfer-marker 600ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--timeline-index) * 100ms + 80ms);
+}
+@keyframes doc-transfer-enter {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes doc-transfer-connect {
+  from { transform: scaleY(0); }
+  to { transform: scaleY(1); }
+}
+@keyframes doc-transfer-marker {
+  0% { transform: scale(.65); box-shadow: 0 0 0 0 transparent; }
+  65% { transform: scale(1.12); box-shadow: 0 0 0 7px var(--decision-surface); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 transparent; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #viewModal.is-document-view .is-animated-timeline .doc-workflow-decision,
+  #viewModal.is-document-view .is-animated-timeline .doc-workflow-decision::before,
+  #viewModal.is-document-view .is-animated-timeline .doc-workflow-decision-marker { animation: none; }
+}
 #viewModal.is-document-view
   .doc-workflow-decision[data-decision-status="approved"] {
   --decision-color: var(--ui-green-900);

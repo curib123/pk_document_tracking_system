@@ -61,7 +61,7 @@ class Document_detail_model extends CI_Model
         if ($domain === 'hardcopy' && $can('transfer', 'view')) {
             $transferScope = $can('transfer', 'view_all') ? '1=1' : "(t.current_holder_id=$userId OR t.recipient_id=$userId)";
             $transfers = $this->db->query("SELECT recent.* FROM (
-                SELECT t.hardcopy_id,t.status,t.created_at,t.transferred_at,t.accepted_at,
+                SELECT t.id,t.hardcopy_id,t.status,t.created_at,t.transferred_at,t.accepted_at,t.reason,t.comments,
                     CONCAT_WS(' ',holder.first_name,holder.last_name) AS holder,
                     CONCAT_WS(' ',recipient.first_name,recipient.last_name) AS recipient,
                     ROW_NUMBER() OVER (PARTITION BY t.hardcopy_id ORDER BY t.id DESC) AS row_rank
@@ -69,10 +69,28 @@ class Document_detail_model extends CI_Model
                 JOIN users holder ON holder.id=t.current_holder_id JOIN users recipient ON recipient.id=t.recipient_id
                 WHERE d.id IN ($placeholders) AND ($scope) AND ($transferScope)
                 ) recent WHERE recent.row_rank<=25 ORDER BY recent.created_at DESC", $ids)->result_array();
-            foreach ($transfers as $index => $transfer)
-                $transfersByDoc[$transfer['hardcopy_id']][($index + 1) . '. ' . $transfer['created_at']] =
-                    $transfer['holder'] . ' → ' . $transfer['recipient'] . ' · ' . ucwords(str_replace('_', ' ', $transfer['status'])) .
-                    ' · Accepted: ' . ($transfer['accepted_at'] ?: 'Not accepted');
+            foreach ($transfers as $transfer) {
+                $base = [
+                    'step_label' => $transfer['holder'] . ' → ' . $transfer['recipient'],
+                    'transfer_reference' => 'Transfer #' . $transfer['id']
+                ];
+                $remarks = [];
+                if (!empty($transfer['reason'])) $remarks[] = 'Reason: ' . $transfer['reason'];
+                if (!empty($transfer['comments'])) $remarks[] = 'Comments: ' . $transfer['comments'];
+                foreach ([
+                    ['for_transfer', $transfer['created_at'], $transfer['holder'], 'Current holder'],
+                    ['in_transit', $transfer['transferred_at'], $transfer['holder'], 'Sender'],
+                    ['accepted', $transfer['accepted_at'], $transfer['recipient'], 'Recipient']
+                ] as [$action, $timestamp, $actor, $role]) {
+                    // Saved status can be known even when a legacy timestamp is absent.
+                    if ($action !== 'for_transfer' && !$timestamp && $transfer['status'] !== $action) continue;
+                    $transfersByDoc[$transfer['hardcopy_id']][] = $base + [
+                        'action' => $action, 'created_at' => $timestamp,
+                        'user_name' => $actor, 'position_title' => $role,
+                        'comments' => $action === 'for_transfer' ? implode("\n", $remarks) : ''
+                    ];
+                }
+            }
         }
         $disposalsByDoc = [];
         $disposedIds = array_map('intval', array_column(array_filter(
@@ -199,7 +217,8 @@ class Document_detail_model extends CI_Model
                     'key' => 'transfers',
                     'title' => 'Transfer History',
                     'description' => 'Physical handoffs visible to your account · latest 25',
-                    'fields' => $transfersByDoc[$id] ?? [],
+                    'fields' => [],
+                    'events' => $transfersByDoc[$id] ?? [],
                     'empty' => 'No transfers available within your permissions.'
                 ];
             $reference = $domain === 'softcopy'

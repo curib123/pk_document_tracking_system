@@ -332,8 +332,8 @@
         };
     }
 
-    function makeDecisionTimeline(history, order) {
-        var timeline = node('div', 'doc-workflow-timeline');
+    function makeDecisionTimeline(history, order, animate) {
+        var timeline = node('div', 'doc-workflow-timeline' + (animate ? ' is-animated-timeline' : ''));
         var sorted = history.filter(function (event) { return event && typeof event === 'object'; })
             .map(function (event, index) { return {event: event, index: index, stamp: decisionTimestamp(event.created_at)}; });
         var direction = order === 'newest' ? -1 : 1;
@@ -342,7 +342,7 @@
             return ((left.stamp.order - right.stamp.order) || (left.index - right.index)) * direction;
         });
         var lastDay, list;
-        sorted.forEach(function (record) {
+        sorted.forEach(function (record, index) {
             var event = record.event, stamp = record.stamp;
             var day = stamp ? stamp.day : 'unknown';
             if (day !== lastDay) {
@@ -352,20 +352,24 @@
                 group.append(list); timeline.append(group); lastDay = day;
             }
             var action = String(event.action || '').toLowerCase();
-            var status = ['approved', 'returned', 'rejected', 'submitted', 'cancelled'].includes(action) ? action : 'neutral';
+            var status = ['approved', 'returned', 'rejected', 'submitted', 'cancelled', 'for_transfer', 'in_transit', 'accepted']
+                .includes(action) ? action : 'neutral';
             var item = node('li', 'doc-workflow-decision');
             item.setAttribute('data-decision-status', status);
+            if (animate) item.setAttribute('style', '--timeline-index: ' + Math.min(index, 8));
             var marker = node('span', 'doc-workflow-decision-marker');
             marker.setAttribute('aria-hidden', 'true');
-            marker.append(node('i', 'fa-solid ' + ({approved: 'fa-check', returned: 'fa-arrow-rotate-left',
-                rejected: 'fa-xmark', submitted: 'fa-paper-plane', cancelled: 'fa-ban'}[status] || 'fa-circle')));
+            if (animate) marker.textContent = {for_transfer: '1', in_transit: '2', accepted: '3'}[status] || '·';
+            else marker.append(node('i', 'fa-solid ' + ({approved: 'fa-check', returned: 'fa-arrow-rotate-left',
+                rejected: 'fa-xmark', submitted: 'fa-paper-plane', cancelled: 'fa-ban',
+                for_transfer: 'fa-box-archive', in_transit: 'fa-truck-fast', accepted: 'fa-check'}[status] || 'fa-circle')));
             var heading = node('div', 'doc-workflow-decision-heading');
             if (event.step_label) heading.append(node('h4', 'doc-workflow-decision-step', event.step_label));
             heading.append(node('strong', 'doc-workflow-decision-action', action.replace(/_/g, ' ')
                 .replace(/\b\w/g, function (letter) { return letter.toUpperCase(); })));
             item.append(marker, heading);
-            if (event.request_reference)
-                item.append(node('p', 'doc-workflow-decision-request', event.request_reference));
+            if (event.request_reference || event.transfer_reference)
+                item.append(node('p', 'doc-workflow-decision-request', event.request_reference || event.transfer_reference));
             var timestamp = node('time', 'doc-workflow-decision-time', stamp ? stamp.time : 'Time not recorded');
             if (stamp) timestamp.setAttribute('datetime', stamp.iso);
             item.append(timestamp);
@@ -422,10 +426,11 @@
             panel.classList.add('has-workflow-steps');
             var toolbar = node('div', 'doc-workflow-toolbar');
             toolbar.append(node('h3', 'doc-modal-section-title',
-                section.title === 'Approval History' ? section.title : 'Approval Workflow'));
+                section.key === 'transfers' || section.title === 'Approval History' ? section.title : 'Approval Workflow'));
             var label = node('label', 'doc-workflow-sort-label', 'Sort by timestamp');
             var sort = node('select', 'form-select form-select-sm doc-workflow-sort');
-            sort.setAttribute('aria-label', 'Sort decision history by timestamp');
+            sort.setAttribute('aria-label', section.key === 'transfers' ?
+                'Sort transfer history by timestamp' : 'Sort decision history by timestamp');
             [['oldest', 'Oldest first'], ['newest', 'Newest first']].forEach(function (option) {
                 var item = node('option', '', option[1]); item.value = option[0]; sort.append(item);
             });
@@ -436,7 +441,8 @@
             result.setAttribute('aria-live', 'polite');
             function update() {
                 result.replaceChildren(hasSteps ? makeWorkflowSteps(section.steps, sort.value) :
-                    (section.events.length ? makeDecisionTimeline(section.events, sort.value) : emptyState(section.empty || 'No approval decisions yet.')));
+                    (section.events.length ? makeDecisionTimeline(section.events, sort.value, section.key === 'transfers') :
+                        emptyState(section.empty || 'No approval decisions yet.')));
             }
             sort.disabled = hasSteps ? !section.steps.some(function (step) { return step.history && step.history.length; }) : !section.events.length;
             sort.addEventListener('change', update);
