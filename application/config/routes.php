@@ -49,6 +49,7 @@ $route['admin/backups/import']['POST'] = 'Backups/import';
 $route['admin/backups/restore']['POST'] = 'Backups/restore';
 $route['admin/backups/download/(:any)']['GET'] = 'Backups/download/$1';
 $route['admin/users']['GET'] = 'Administration/users';
+$route['admin/users/(:num)/assigned-documents']['GET'] = 'Administration/user_assigned_documents/$1';
 $route['admin/users/save']['POST'] = 'Administration/save_user';
 $route['admin/users/deactivate']['POST'] = 'Administration/deactivate_user';
 $route['admin/roles']['GET'] = 'Administration/roles';

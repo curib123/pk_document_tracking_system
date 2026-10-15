@@ -37,6 +37,43 @@ class Administration extends MY_Controller
             'grants' => $kind === 'roles' ? $this->Administration_model->grants(array_column($rows, 'id')) : []
         ]);
     }
+    public function user_assigned_documents($userId)
+    {
+        $this->require_permission('users', 'view');
+        $this->require_permission('assignment', 'direct');
+        $selected = $this->db->get_where('users', ['id' => (int) $userId])->row_array();
+        if (!$selected)
+            show_404();
+        $documents = $this->Administration_model->user_assigned_documents($userId);
+        $sections = [[
+            'key' => 'overview', 'fields' => [
+                'Assigned Documents' => count($documents['hardcopy']) + count($documents['softcopy'])
+            ]
+        ]];
+        foreach ($documents as $domain => $rows) {
+            foreach ($rows as &$row)
+                $row['detail'] = $domain === 'hardcopy' ? 'Current holder' : 'Assigned ' . $row['assigned_at'];
+            unset($row);
+            $sections[] = [
+                'key' => $domain, 'label' => ucfirst($domain),
+                'title' => ucfirst($domain) . ' (' . count($rows) . ')',
+                'documents' => $rows,
+                'empty' => 'No active ' . ucfirst($domain) . ' documents are assigned to this user.',
+                'manage_url' => site_url('admin/document-assignments') . '?' . http_build_query([
+                    'domain' => $domain, 'folder' => 'all', 'owner' => (int) $userId
+                ])
+            ];
+        }
+        $this->output->set_header('Cache-Control: no-store')
+            ->set_content_type('application/json')->set_output(json_encode([
+                'kind' => 'record', 'domain' => 'record',
+                'header' => ['title' => trim($selected['first_name'] . ' ' . $selected['last_name']),
+                    'eyebrow' => 'ASSIGNED DOCUMENTS',
+                    'reference' => $selected['username'], 'status' => $selected['active'] ? 'active' : 'inactive'],
+                'sections' => $sections
+            ]));
+    }
+
     /** Administrative direct assignment. Approval requests remain in My Requests. */
     public function document_assignments()
     {

@@ -11,6 +11,8 @@
     var ICONS = {
         overview: 'fa-circle-info',
         storage: 'fa-box-archive',
+        hardcopy: 'fa-box-archive',
+        softcopy: 'fa-file-lines',
         revision: 'fa-code-branch',
         files: 'fa-paperclip',
         requests: 'fa-clipboard-list',
@@ -198,7 +200,7 @@
         var kicker = document.getElementById('viewDocumentEyebrow');
         if (kicker) {
             kicker.hidden = false;
-            kicker.textContent = domain === 'hardcopy' ? 'PHYSICAL DOCUMENT' : (domain === 'softcopy' ? 'CONTROLLED DIGITAL DOCUMENT' : 'RECORD DETAILS');
+            kicker.textContent = h.eyebrow || (domain === 'hardcopy' ? 'PHYSICAL DOCUMENT' : (domain === 'softcopy' ? 'CONTROLLED DIGITAL DOCUMENT' : 'RECORD DETAILS'));
         }
         var kind = document.getElementById('viewDocumentIcon');
         if (kind) {
@@ -419,7 +421,71 @@
         return list;
     }
 
+    function makeAssignedDocuments(section) {
+        var wrapper = node('div', 'doc-assignment-browser');
+        var toolbar = node('div', 'doc-assignment-toolbar');
+        var label = node('label', 'doc-assignment-search-label');
+        label.append(node('span', 'visually-hidden', 'Search ' + section.label + ' documents'));
+        var search = node('input', 'form-control doc-assignment-search');
+        search.type = 'search';
+        search.placeholder = 'Search by title or reference…';
+        search.setAttribute('aria-label', 'Search ' + section.label + ' documents');
+        search.setAttribute('autocomplete', 'off');
+        label.append(search); toolbar.append(label);
+        var destination = section.manage_url && safeLink(section.manage_url);
+        if (destination) {
+            var manage = node('a', 'btn btn-sm btn-outline-primary doc-assignment-manage', 'Manage assignments');
+            manage.href = destination;
+            toolbar.append(manage);
+        }
+        var results = node('div', 'doc-assignment-results');
+        var footer = node('div', 'doc-assignment-footer');
+        var count = node('span', 'doc-assignment-count');
+        count.setAttribute('role', 'status');
+        var pagination = node('div', 'doc-assignment-pagination');
+        var previous = node('button', 'btn btn-sm btn-light doc-assignment-previous', 'Previous');
+        var next = node('button', 'btn btn-sm btn-light doc-assignment-next', 'Next');
+        previous.type = next.type = 'button';
+        previous.setAttribute('aria-label', 'Previous documents');
+        next.setAttribute('aria-label', 'Next documents');
+        pagination.append(previous, next); footer.append(count, pagination);
+        var page = 0, size = 10;
+        function update() {
+            var query = String(search.value || '').trim().toLowerCase();
+            var matches = section.documents.filter(function (doc) {
+                return (String(doc.title || '') + ' ' + String(doc.code || '')).toLowerCase().includes(query);
+            });
+            var start = page * size;
+            results.replaceChildren();
+            matches.slice(start, start + size).forEach(function (doc) {
+                var item = node('article', 'doc-assignment-item');
+                var emblem = node('span', 'doc-assignment-icon');
+                emblem.append(icon(section.key));
+                var text = node('div', 'doc-assignment-text');
+                text.append(node('span', 'doc-assignment-reference', doc.code || 'No reference assigned'),
+                    node('h4', 'doc-assignment-title', doc.title || 'Untitled document'),
+                    node('p', 'doc-assignment-detail', doc.detail || ''));
+                item.append(emblem, text); results.append(item);
+            });
+            if (!matches.length) results.append(emptyState(query ? 'No documents match your search.' : section.empty));
+            count.textContent = matches.length ? (start + 1) + '–' + Math.min(start + size, matches.length) +
+                ' of ' + matches.length + ' documents' : '0 documents';
+            previous.disabled = page === 0;
+            next.disabled = start + size >= matches.length;
+            pagination.hidden = matches.length <= size;
+        }
+        search.addEventListener('input', function () { page = 0; update(); });
+        previous.addEventListener('click', function () { if (page > 0) { page--; update(); } });
+        next.addEventListener('click', function () { if (!next.disabled) { page++; update(); } });
+        wrapper.append(toolbar, results, footer); update();
+        return wrapper;
+    }
+
     function renderSection(panel, section) {
+        if (Array.isArray(section.documents)) {
+            panel.append(sectionTitle(section), makeAssignedDocuments(section));
+            return;
+        }
         var entries = normalizedEntries(section.fields);
         var hasSteps = section.key === 'approvals' && Array.isArray(section.steps) && section.steps.length;
         if (hasSteps || Array.isArray(section.events)) {

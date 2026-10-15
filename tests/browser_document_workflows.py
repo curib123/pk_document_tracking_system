@@ -74,7 +74,8 @@ try:
             context = p.chromium.launch_persistent_context(str(Path(temp) / 'browser-profile'),
                 channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000},
                 # A controlling worker can bypass Playwright network routes.
-                service_workers='block' if os.environ.get('PK_BROWSER_VIEWERS_ONLY') == '1' else 'allow')
+                service_workers='block' if any(os.environ.get(flag) == '1' for flag in
+                    ['PK_BROWSER_VIEWERS_ONLY', 'PK_BROWSER_USER_ASSIGNMENTS_ONLY']) else 'allow')
             # Default coverage includes the Bootstrap-free office network path.
             if os.environ.get('PK_BROWSER_ONLINE') != '1':
                 context.route(re.compile(r'^https://'), lambda route: route.abort())
@@ -99,6 +100,15 @@ try:
             acknowledge_initial_task(page)
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
+
+            if os.environ.get('PK_BROWSER_USER_ASSIGNMENTS_ONLY') == '1':
+                from browser_user_assignment_checks import run_checks
+                os.environ['PK_BROWSER_PASSWORD'] = env['PK_BROWSER_PASSWORD']
+                run_checks(page, base, sql)
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
 
             if os.environ.get('PK_BROWSER_TRANSFERS_ONLY') == '1':
                 from browser_transfer_history_checks import run_checks

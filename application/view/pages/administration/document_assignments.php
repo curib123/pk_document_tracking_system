@@ -13,7 +13,7 @@ if ($folder_value !== '')
     <p>Showing the current folder's document assignments and holders.</p>
   </div>
   <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
-    data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
+    data-target="#assignmentForm" data-record="<?= html_escape(json_encode(['recipient_id' => (int) ($table['owner'] ?? 0) ?: ''])) ?>" data-title="Assign Document">
     <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
   </button>
 </div>

@@ -46,6 +46,11 @@ foreach ($rows as $r) {
     ],
     'buttons' => $canUser('edit') && (isset($permissions['*']) || !($r['has_administrator'] ?? (strcasecmp($r['role_name'], 'Administrator') === 0))) ? [['type' => 'view'], ['type' => 'edit']] : [['type' => 'view']]
   ];
+  if (isset($permissions['*']) || !empty($permissions['assignment']['direct']))
+    $dt_rows[count($dt_rows) - 1]['buttons'][] = [
+      'type' => 'view', 'label' => 'Assigned Documents', 'icon' => 'fa-solid fa-folder-open',
+      'view_url' => site_url('admin/users/' . (int) $r['id'] . '/assigned-documents')
+    ];
   if ($canUser('delete') && (isset($permissions['*']) || !($r['has_administrator'] ?? (strcasecmp($r['role_name'], 'Administrator') === 0))) && $r['active'] && $r['id'] != $user['id'])
     $dt_rows[count($dt_rows) - 1]['buttons'][] =
       [

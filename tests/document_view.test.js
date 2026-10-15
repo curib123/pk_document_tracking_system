@@ -129,6 +129,26 @@ const data = {
   ]
 };
 
+test('assigned document lists search every page, preserve text and reject unsafe destinations',()=>{
+  const {window,details}=setup();
+  const documents=Array.from({length:12},(_,i)=>({title:'Document '+i,code:'HC-'+i,detail:'Current holder'}));
+  documents[11].title='<script>unsafe title</script>';
+  window.PKDocumentView.render(details,{kind:'record',header:{title:'Assigned user'},sections:[
+    {key:'hardcopy',title:'Hardcopy (12)',label:'Hardcopy',documents,manage_url:'https://outside.test/private'}
+  ]});
+  assert.equal(details.querySelectorAll('.doc-assignment-item').length,10);
+  const next=details.querySelector('.doc-assignment-next');next.listeners.click();
+  assert.equal(details.querySelectorAll('.doc-assignment-item').length,2);
+  const search=details.querySelector('.doc-assignment-search');
+  assert.equal(search.getAttribute('autocomplete'),'off');
+  search.value='HC-11';search.listeners.input();
+  assert.equal(details.querySelectorAll('.doc-assignment-item').length,1);
+  assert.equal(details.querySelector('.doc-assignment-title').textContent,'<script>unsafe title</script>');
+  assert.equal(details.querySelector('.doc-assignment-manage'),null);
+  search.value='missing';search.listeners.input();
+  assert.equal(details.querySelector('.doc-modal-empty-message').textContent,'No documents match your search.');
+});
+
 test('document modal activates only on authorized document display shapes',() => {
   const {window,details,map,modal}=setup();
   assert.equal(window.PKDocumentView.handles(data),true);
