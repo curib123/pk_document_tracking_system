@@ -14,7 +14,7 @@ class Administration extends MY_Controller
         $module = $map[$kind];
         $this->require_permission($module, 'view');
         $t = $this->table_state($kind === 'users' ? 'username' : 'name');
-        list($rows, $total, $t['page']) = $this->Administration_model->$kind(
+        [$rows, $total, $t['page']] = $this->Administration_model->$kind(
             $t['q'],
             $t['status'],
             $t['page'],
@@ -51,7 +51,7 @@ class Administration extends MY_Controller
             show_404();
         $browser = $this->Folder_model->browse($domain, $folder);
         $table = $this->table_state('assigned_date');
-        list($assignmentRows, $total, $table['page']) = $this->Administration_model->document_assignments($domain, $browser, $table);
+        [$assignmentRows, $total, $table['page']] = $this->Administration_model->document_assignments($domain, $browser, $table);
         $this->render('Assign Documents', 'pages/administration/document_assignments', [
             'selected_domain' => $domain,
             'folder_value' => $browser['folder'],
@@ -73,12 +73,12 @@ class Administration extends MY_Controller
     {
         $this->require_permission('assignment', 'direct');
         $this->confirmed();
-        $domain = (string) $this->input->post('document_domain', TRUE);
+        $domain = (string) $this->input->post('document_domain');
         $payload = ['document_domain' => $domain];
         $soft = (int) $this->input->post('softcopy_id');
         $hard = (int) $this->input->post('hardcopy_id');
         $recipient = (int) $this->input->post('recipient_id');
-        $folder = trim((string) $this->input->post('folder', TRUE));
+        $folder = trim((string) $this->input->post('folder'));
         try {
             $this->load->model('Folder_model');
             $this->load->model('Document_model');
@@ -161,7 +161,7 @@ class Administration extends MY_Controller
             if ($this->db->trans_status() === FALSE)
                 throw new DomainException('Location assignment transaction failed.');
             $this->db->trans_commit();
-            
+
             $this->load->library('Audit_file');
             $written = $this->audit_file->append(
                 (int) $this->user['id'],
@@ -184,7 +184,7 @@ class Administration extends MY_Controller
             } else {
                 $this->notice(count($rows) . ' Hardcopy documents assigned successfully.');
             }
-          
+
         } catch (Throwable $e) {
             $this->db->trans_rollback();
             $this->notice($e instanceof DomainException ? $e->getMessage() :
@@ -272,25 +272,25 @@ class Administration extends MY_Controller
     public function save_workflow_step()
     {
         $this->mutate('workflows', 'edit', function () {
-            (new Administration_service())->save_workflow_step($this->input->post());
+            (new Administration_service())->save_workflow_step($this->input->post(''));
         }, 'admin/workflows');
     }
     public function remove_workflow_step()
     {
         $this->mutate('workflows', 'edit', function () {
-            (new Administration_service())->remove_workflow_step($this->input->post());
+            (new Administration_service())->remove_workflow_step($this->input->post(''));
         }, 'admin/workflows');
     }
     public function move_workflow_step()
     {
         $this->mutate('workflows', 'edit', function () {
-            (new Administration_service())->move_workflow_step($this->input->post());
+            (new Administration_service())->move_workflow_step($this->input->post(''));
         }, 'admin/workflows');
     }
     public function publish_workflow()
     {
         $this->mutate('workflows', 'edit', function () {
-            (new Administration_service())->publish_workflow((int) $this->input->post('id'), $this->user['id'], $this->input->post());
+            (new Administration_service())->publish_workflow((int) $this->input->post('id'), $this->user['id'], $this->input->post(''));
         }, 'admin/workflows');
     }
     public function clone_workflow()

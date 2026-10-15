@@ -268,13 +268,13 @@ $navPage = end($navParts);
             </button>
 
             <div>
-                <span class="topbar-module">
+                <h1 class="topbar-module">
                     <?= html_escape($navModule) ?>
-                </span>
+                </h1>
 
-                <span class="topbar-label">
+                <h2 class="topbar-label">
                     <?= html_escape($navPage) ?>
-                </span>
+                </h2>
             </div>
 
             <button type="button" id="pwaInstallButton" class="pwa-install-button" hidden
