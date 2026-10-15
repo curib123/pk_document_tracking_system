@@ -57,20 +57,6 @@ class Document_detail_model extends CI_Model
                 $approvalsByDoc[$request['document_id']][] = $event;
             }
         }
-        $auditByDoc = [];
-        if ($can('audit', 'view')) {
-            $audit = $this->db->query("SELECT recent.* FROM (
-                SELECT h.document_id,h.action,h.previous_status,h.new_status,h.remarks,h.created_at,
-                    CONCAT_WS(' ',u.first_name,u.last_name) AS actor,
-                    ROW_NUMBER() OVER (PARTITION BY h.document_id ORDER BY h.id DESC) AS row_rank
-                FROM status_history h JOIN $table d ON d.id=h.document_id JOIN users u ON u.id=h.user_id
-                WHERE h.domain=? AND d.id IN ($placeholders) AND ($scope)
-                ) recent WHERE recent.row_rank<=25 ORDER BY recent.created_at DESC", array_merge([$domain], $ids))->result_array();
-            foreach ($audit as $index => $event)
-                $auditByDoc[$event['document_id']][($index + 1) . '. ' . $event['created_at']] =
-                    ucwords(str_replace('_', ' ', $event['action'])) . ' · ' . $event['actor'] . ' · ' .
-                    ($event['previous_status'] ?: 'New') . ' → ' . $event['new_status'] . ($event['remarks'] ? ' · ' . $event['remarks'] : '');
-        }
         $transfersByDoc = [];
         if ($domain === 'hardcopy' && $can('transfer', 'view')) {
             $transferScope = $can('transfer', 'view_all') ? '1=1' : "(t.current_holder_id=$userId OR t.recipient_id=$userId)";
@@ -215,14 +201,6 @@ class Document_detail_model extends CI_Model
                     'description' => 'Physical handoffs visible to your account · latest 25',
                     'fields' => $transfersByDoc[$id] ?? [],
                     'empty' => 'No transfers available within your permissions.'
-                ];
-            if ($can('audit', 'view'))
-                $sections[] = [
-                    'key' => 'audit',
-                    'title' => 'Audit Trail',
-                    'description' => 'Recorded document status activity · latest 25',
-                    'fields' => $auditByDoc[$id] ?? [],
-                    'empty' => 'No document audit entries yet.'
                 ];
             $reference = $domain === 'softcopy'
                 ? ($document['document_number'] ?? '') : ($document['sequence_number'] ?? '');
