@@ -114,6 +114,12 @@ class MY_Controller extends CI_Controller
         $this->load->model('Notification_model');
         $data['navigation_counts'] = $this->Notification_model->for_user($this->user);
         $data['content_view'] = $view;
+        // Reuse the same authorized view for in-place register updates.
+        if ($this->input->method(TRUE) === 'GET' && $this->input->get_request_header('X-PK-Table') === '1') {
+            $this->output->set_header('X-PK-Table: 1');
+            $this->load->view($view, $data);
+            return;
+        }
         $this->load->view('layout/header', $data);
         $this->load->view('layout/sidebar_top_nav', $data);
         $this->load->view($view, $data);

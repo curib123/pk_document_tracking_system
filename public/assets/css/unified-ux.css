@@ -1455,6 +1455,18 @@
 }
 
 
+.table-update-status {
+  padding: 10px 20px;
+  color: var(--ui-ink-600);
+  font-size: 13px;
+}
+.table-update-status.is-error { color: var(--ui-brand-700); }
+.table-update-status .btn { margin-inline-start: 12px; }
+[data-live-table][aria-busy="true"] [data-table-results] { opacity: .65; }
+@media (prefers-reduced-motion: no-preference) {
+  [data-table-results] { transition: opacity 150ms ease; }
+}
+
 /* Fixed-in-view top navigation, without taking content out of document flow.
  * Sticky reserves its own height so the page, forms, tabs and modal triggers
  * never slide underneath a position:fixed header. */

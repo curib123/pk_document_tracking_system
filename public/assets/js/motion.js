@@ -107,7 +107,7 @@
     // Autosubmit filters use form.submit(), which skips the submit event.
     document.addEventListener('change', function (event) {
         if (event.target && event.target.matches('[data-auto-submit]') &&
-            event.target.form) begin();
+            event.target.form && !event.target.closest('[data-live-ready]')) begin();
     });
 
     window.addEventListener('pageshow', reset);

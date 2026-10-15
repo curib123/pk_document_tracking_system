@@ -1147,13 +1147,14 @@
         reopenWorkflow();
     }
 
-    document.querySelectorAll('[data-auto-submit]').forEach(function (control) {
-        control.addEventListener('change', function () {
-            if (this.form) {
-                var page = this.form.querySelector('[name="page"]');
+    document.addEventListener('change', function (event) {
+        var control = event.target;
+        if (control.matches('[data-auto-submit]') && !control.closest('[data-live-ready]')) {
+            if (control.form) {
+                var page = control.form.querySelector('[name="page"]');
                 if (page) page.value = '1';
-                this.form.submit();
+                control.form.requestSubmit();
             }
-        });
+        }
     });
 })();

@@ -29,7 +29,7 @@ $dt_link = function ($page, $sortOverride = NULL, $dirOverride = NULL) use ($dt_
 };
 $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page * $dt_limit, $dt_total) : '0';
 ?>
-<div class="workspace-card">
+<div class="workspace-card" data-live-table>
     <div class="table-toolbar">
         <form id="tableFilter" class="table-search" method="get" action="<?= site_url($dt_path) ?>">
             <i class="fa-solid fa-magnifying-glass" aria-hidden="true"></i>
@@ -84,11 +84,11 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
            
         <?php endif; ?>
        
-        <?php if ($dt_q !== '' || count(array_filter($dt_filter_values, 'strlen'))): ?>
-            <a class="btn btn-light"
+            <a class="btn btn-light" data-table-clear <?= $dt_q === '' && !count(array_filter($dt_filter_values, 'strlen')) ? 'hidden' : '' ?>
                 href="<?= site_url($dt_path) . ($dt_extra_params ? '?' . http_build_query($dt_extra_params) : '') ?>">Clear</a>
-        <?php endif; ?>
     </div>
+    <div class="table-update-status" data-table-status role="status" aria-live="polite" hidden></div>
+    <div data-table-results>
     <?php if ($dt_layout === 'folder'): ?>
         <?php $this->load->view('reusable_components/document_folder_list', compact(
             'dt_folder_browser',
@@ -231,5 +231,6 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                             aria-hidden="true"></i></span><?php endif; ?>
             <?php endif; /* No document pagination at folder root */ ?>
         </div>
+    </div>
     </div>
 </div>
