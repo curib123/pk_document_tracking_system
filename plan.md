@@ -11,3 +11,5 @@ implement
 #5 apply pagination and limit and use reusable datatable Available backups redesign also the backup pages remove unnesasry text and components make it clean and organize
 
 #6 fix the request view modal not responding
+
+#7 proper error handling

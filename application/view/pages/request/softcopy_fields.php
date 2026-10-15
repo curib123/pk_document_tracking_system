@@ -21,8 +21,8 @@ $softcopyDirect = !empty($softcopyDirect);
     <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable>
         <option value="">Choose a document</option>
         <?php foreach ($softcopy_options as $item): ?>
-            <option value="<?= (int)$item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>">
-                <?= html_escape($item['document_number'].' · '.$item['title']) ?>
+            <option value="<?= (int) $item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>">
+                <?= html_escape($item['document_number'] . ' · ' . $item['title']) ?>
             </option>
         <?php endforeach; ?>
     </select>
@@ -44,7 +44,7 @@ $softcopyDirect = !empty($softcopyDirect);
     <select class="form-select" name="category_id" id="reqCategory" data-searchable>
         <option value="">Choose a category</option>
         <?php foreach ($category_options as $category): ?>
-            <option value="<?= (int)$category['id'] ?>"><?= html_escape($category['name']) ?></option>
+            <option value="<?= (int) $category['id'] ?>"><?= html_escape($category['name']) ?></option>
         <?php endforeach; ?>
     </select>
 </div>
@@ -59,15 +59,16 @@ $softcopyDirect = !empty($softcopyDirect);
 
 <div class="col-md-6">
     <label class="form-label" for="revisionEffective">Effective Date
-      <span class="optional-label">(optional)</span></label>
+        <span class="optional-label">(optional)</span></label>
     <input class="form-control" type="date" id="revisionEffective" name="effective_date">
     <small class="form-text">If blank, effective date defaults to approval day.</small>
 </div>
 
 <div class="col-12">
-    <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and Revise · 15 MB maximum)</span></label>
+    <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and
+            Revise · 15 MB maximum)</span></label>
     <input class="form-control" id="revisionFile" type="file" name="revision_attachment"
-           accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx">
+        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx">
     <small class="text-secondary">
         <?= $softcopyDirect
             ? 'Required for direct creation or revision; the controlled file is approved as part of the transaction.'

@@ -1,6 +1,7 @@
 <?php
 $canUser = function ($action) use ($permissions) {
-  return isset($permissions['*']) || !empty($permissions['users'][$action]); };
+  return isset($permissions['*']) || !empty($permissions['users'][$action]);
+};
 $dt_columns = [
   'name' => 'Full Name',
   'username' => 'Username',

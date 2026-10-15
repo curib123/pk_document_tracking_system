@@ -81,8 +81,7 @@ $renderDocument = function (array $dt_row) use ($dt_columns, $dt_folder_domain) 
                 data-title="View Document Details" data-display="<?= html_escape(json_encode(
                     $dt_row['display'],
                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
-                )) ?>"
-                aria-label="View <?= html_escape($title) ?> details"><?= html_escape($displayName) ?></button>
+                )) ?>" aria-label="View <?= html_escape($title) ?> details"><?= html_escape($displayName) ?></button>
             <?php if ($fileName !== '' && $fileName !== $title): ?>
                 <span class="doc-tree-document-title"><?= html_escape($title) ?></span>
             <?php endif; ?>
@@ -137,9 +136,11 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
             </summary>
             <ul class="doc-tree-children">
                 <?php foreach ($children as $child):
-                    $renderNode($child, $depth + 1); endforeach; ?>
+                    $renderNode($child, $depth + 1);
+                endforeach; ?>
                 <?php foreach ($items as $dt_row):
-                    $renderDocument($dt_row); endforeach; ?>
+                    $renderDocument($dt_row);
+                endforeach; ?>
                 <?php if ($isCurrent): ?>
                     <li class="doc-tree-view-folder">
                         <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
@@ -182,8 +183,7 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
     </div>
     <div class="doc-tree-filter-line">
         <a href="<?= html_escape($folderUrl('all')) ?>"
-            class="doc-tree-all-link <?= $currentFolder === 'all' ? 'is-active' : '' ?>"
-            <?= $currentFolder === 'all' ? 'aria-current="page"' : '' ?>>
+            class="doc-tree-all-link <?= $currentFolder === 'all' ? 'is-active' : '' ?>" <?= $currentFolder === 'all' ? 'aria-current="page"' : '' ?>>
             <i class="fa-solid fa-layer-group" aria-hidden="true"></i> All documents
         </a>
         <span>Open each folder to follow the hierarchy to its documents.</span>
@@ -199,7 +199,8 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
     <div class="doc-tree-scroll">
         <ul class="doc-tree-root" aria-label="Document folders">
             <?php foreach ($visibleRoots as $key):
-                $renderNode($key); endforeach; ?>
+                $renderNode($key);
+            endforeach; ?>
             <?php if (!empty($byFolder['unfiled'])): ?>
                 <li class="doc-tree-node doc-tree-unfiled">
                     <details data-folder-node <?= $searching ? 'open' : '' ?>>
@@ -213,7 +214,8 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
                         </summary>
                         <ul class="doc-tree-children">
                             <?php foreach ($byFolder['unfiled'] as $row):
-                                $renderDocument($row); endforeach; ?>
+                                $renderDocument($row);
+                            endforeach; ?>
                         </ul>
                     </details>
                 </li>
