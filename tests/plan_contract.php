@@ -4,7 +4,7 @@ require_once __DIR__.'/../application/services/workflow/workflow_graph.php';
 
 // Structural checks ignore source-code whitespace (not runtime values).
 function contract_position(string $source, string $fragment) {
-    return contract_position(preg_replace('/\\s+/', '', $source), preg_replace('/\\s+/', '', $fragment));
+    return strpos(preg_replace('/\\s+/', '', $source), preg_replace('/\\s+/', '', $fragment));
 }
 function check(bool $condition, string $message): void {
     if (!$condition) throw new RuntimeException($message);
