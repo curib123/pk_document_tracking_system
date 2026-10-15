@@ -17,7 +17,7 @@
 
 /* A slow color drift stays behind navigation without moving its controls. */
 .app-sidebar {
-  animation: ui-sidebar-gradient 28s ease-in-out infinite;
+  animation: ui-sidebar-gradient 10s ease-in-out infinite;
 }
 
 @keyframes ui-sidebar-gradient {
