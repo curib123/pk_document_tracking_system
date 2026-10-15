@@ -13,7 +13,7 @@ class Files extends MY_Controller
     /** Prevent response-splitting and broken Content-Disposition headers. */
     private function safe_download_name($name): string
     {
-        $name = basename(str_replace('\\\\', '/', (string) $name));
+        $name = basename(str_replace(chr(92), '/', (string) $name));
         $name = preg_replace('/[\\x00-\\x1F\\x7F"\\\\]/', '_', $name);
         return $name !== '' && $name !== '.' ? $name : 'document';
     }
@@ -64,7 +64,7 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Content-Security-Policy: sandbox');
         header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;
@@ -126,7 +126,7 @@ class Files extends MY_Controller
             ? "frame-ancestors 'self'"
             : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;
@@ -155,7 +155,7 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
         header('Content-Disposition: attachment; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($filePath));
         readfile($filePath);
         exit;
