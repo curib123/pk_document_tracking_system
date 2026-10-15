@@ -53,16 +53,7 @@ $dt_badges = [];
 $dt_create = '';
 ?>
 
-<div class="workflow-setup-guide" aria-label="Workflow setup steps">
-  <div><span class="workflow-guide-number">1</span><strong>Start draft</strong><small>Choose a predefined workflow and
-      create an editable version.</small></div>
-  <div><span class="workflow-guide-number">2</span><strong>Build approval route</strong><small>Add reviewers, select
-      approver types and arrange their order.</small></div>
-  <div><span class="workflow-guide-number">3</span><strong>Validate &amp; publish</strong><small>Publish the approved
-      route for future submissions only.</small></div>
-</div>
-<p class="small text-secondary mb-3"><i class="fa-solid fa-circle-info me-1" aria-hidden="true"></i>Click <strong>Step
-    Actions</strong> on any workflow to configure its steps. Each save returns to that workflow automatically.</p>
+
 <?php $this->load->view('reusable_components/reusable_datatable', compact(
   'dt_path',
   'dt_q',

@@ -128,7 +128,7 @@ $dt_filter_values = [
     'to' => $table['to']
 ];
 $dt_badges = ['status'];
-$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Add Document') : '';
+$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Hardcopy Direct') : '';
 $dt_folder_browser = $folder_browser;
 $dt_folder_domain = $cfg['domain'];
 $activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
@@ -141,14 +141,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
     return site_url('documents/' . $cfg['domain']) . '?' . http_build_query($params);
 };
 ?>
-<nav class="tab-bar" aria-label="Document types">
-    <?php foreach (['hardcopy' => 'Hardcopy Documents', 'softcopy' => 'Softcopy Documents'] as $kind => $label):
-        if (isset($permissions['*']) || !empty($permissions[$kind]['view'])): ?>
-            <a class="tab-link <?= $cfg['domain'] === $kind ? 'active' : '' ?>"
-                href="<?= html_escape(site_url('documents/' . $kind) . '?' . http_build_query(['layout' => $activeLayout])) ?>"
-                <?= $cfg['domain'] === $kind ? 'aria-current="page"' : '' ?>>
-                <?= html_escape($label) ?></a><?php endif; endforeach; ?>
-</nav>
+
 
 <div class="document-layout-bar">
     <div class="document-layout-description">

@@ -220,7 +220,7 @@ $navPage = end($navParts);
                         href="<?= site_url('admin/audit') ?>"
                     >
                         <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i>
-                        Audit Trail
+                        Internal Audit Trail
                     </a>
                 <?php endif; ?>
 
