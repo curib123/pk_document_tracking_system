@@ -5,7 +5,8 @@
   --dashboard-ink: var(--ui-ink-900);
   --dashboard-muted: var(--ui-ink-500);
   --dashboard-line: var(--ui-line);
-  --dashboard-shadow: 0 4px 18px color-mix(in srgb, var(--ui-ink-950) 4%, transparent);
+  --dashboard-shadow: 0 4px 18px
+    color-mix(in srgb, var(--ui-ink-950) 4%, transparent);
 
   width: 100%;
   min-width: 0;
@@ -26,12 +27,12 @@
   border-radius: 20px;
 
   background:
-    radial-gradient(ellipse at 100% 0%,
+    radial-gradient(
+      ellipse at 100% 0%,
       color-mix(in srgb, var(--ui-brand-500) 18%, transparent),
-      transparent 55%),
-    linear-gradient(115deg,
-      var(--ui-ink-950),
-      var(--ui-ink-900));
+      transparent 55%
+    ),
+    linear-gradient(115deg, var(--ui-ink-950), var(--ui-ink-900));
 
   box-shadow: 0 10px 26px color-mix(in srgb, var(--ui-ink-950) 12%, transparent);
 }
@@ -44,9 +45,7 @@
   z-index: 2;
   width: 4px;
 
-  background: linear-gradient(180deg,
-      var(--ui-brand-400),
-      var(--ui-brand-700));
+  background: linear-gradient(180deg, var(--ui-brand-400), var(--ui-brand-700));
 
   border-radius: 20px 0 0 20px;
   pointer-events: none;
@@ -63,12 +62,14 @@
   width: 75%;
   height: 200%;
 
-  background: linear-gradient(110deg,
-      transparent 0%,
-      color-mix(in srgb, var(--ui-brand-200) 22%, transparent) 45%,
-      color-mix(in srgb, var(--ui-white) 15%, transparent) 60%,
-      color-mix(in srgb, var(--ui-brand-100) 20%, transparent) 55%,
-      transparent 82%);
+  background: linear-gradient(
+    110deg,
+    transparent 0%,
+    color-mix(in srgb, var(--ui-brand-200) 22%, transparent) 45%,
+    color-mix(in srgb, var(--ui-white) 15%, transparent) 60%,
+    color-mix(in srgb, var(--ui-brand-100) 20%, transparent) 55%,
+    transparent 82%
+  );
 
   transform: translateX(-100%) skewX(-18deg);
   animation: dashboard-gradient-wave 5s ease-in-out infinite;
@@ -125,9 +126,7 @@
 
   border-radius: 999px;
 
-  background: color-mix(in srgb,
-      var(--ui-white) 6%,
-      transparent);
+  background: color-mix(in srgb, var(--ui-white) 6%, transparent);
 
   font-size: 10.5px;
   font-weight: 700;
@@ -189,9 +188,7 @@
 
   border-radius: 13px;
 
-  background: color-mix(in srgb,
-      var(--ui-white) 5%,
-      transparent);
+  background: color-mix(in srgb, var(--ui-white) 5%, transparent);
 
   white-space: nowrap;
 }
@@ -207,9 +204,7 @@
 
   border-radius: 11px;
 
-  background: color-mix(in srgb,
-      var(--ui-white) 9%,
-      transparent);
+  background: color-mix(in srgb, var(--ui-white) 9%, transparent);
 
   color: var(--ui-brand-150);
 }
@@ -284,7 +279,9 @@
   border-radius: 16px;
   background: var(--ui-white);
   box-shadow: var(--dashboard-shadow);
-  transition: border-color .18s ease, box-shadow .18s ease;
+  transition:
+    border-color 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .dashboard-page .dashboard-stat-card::before {
@@ -295,7 +292,7 @@
   width: 100%;
   height: 2px;
   background: var(--stat-accent, var(--ui-brand-700));
-  opacity: .82;
+  opacity: 0.82;
 }
 
 .dashboard-page .dashboard-stat-card:hover {
@@ -403,8 +400,8 @@
   background: var(--ui-white);
 }
 
-.dashboard-page .dashboard-section-header>div {
-  min-width: 0
+.dashboard-page .dashboard-section-header > div {
+  min-width: 0;
 }
 
 .dashboard-page .dashboard-section-icon {
@@ -432,7 +429,7 @@
   font-size: 15px !important;
   font-weight: 700 !important;
   line-height: 1.4;
-  letter-spacing: -.22px;
+  letter-spacing: -0.22px;
 }
 
 .dashboard-page .dashboard-section-header p {
@@ -492,7 +489,7 @@
   color: var(--dashboard-muted);
   font-size: 10.5px;
   font-weight: 700;
-  letter-spacing: .5px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
   background: var(--ui-surface-soft);
   border-bottom: 1px solid var(--ui-line-soft);
@@ -561,12 +558,12 @@
   color: var(--dashboard-muted);
   font-size: 11px;
   font-weight: 700;
-  letter-spacing: .5px;
+  letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
 .dashboard-page .dashboard-activity-table tbody tr {
-  transition: background .15s ease;
+  transition: background 0.15s ease;
 }
 
 .dashboard-page .dashboard-activity-table tbody td {
@@ -648,7 +645,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-.dashboard-page .dashboard-activity-card>.empty-state {
+.dashboard-page .dashboard-activity-card > .empty-state {
   margin: 0;
   padding: 40px 20px;
   min-height: 180px;
@@ -658,7 +655,7 @@
   font-size: 12px;
 }
 
-@media (max-width:767.98px) {
+@media (max-width: 767.98px) {
   .dashboard-page .dashboard-welcome {
     gap: 14px;
     margin-bottom: 17px;
@@ -672,35 +669,35 @@
   }
 
   .dashboard-page .dashboard-welcome p {
-    font-size: 12px
+    font-size: 12px;
   }
 
   .dashboard-page .dashboard-welcome-date {
     align-self: flex-start;
-    padding: 10px 13px 10px 9px
+    padding: 10px 13px 10px 9px;
   }
 
   .dashboard-page .dashboard-metric-row {
-    margin-bottom: 17px !important
+    margin-bottom: 17px !important;
   }
 
   .dashboard-page .dashboard-stat-card {
     min-height: 152px;
-    grid-template-columns: minmax(0, 1fr) 35px
+    grid-template-columns: minmax(0, 1fr) 35px;
   }
 
   .dashboard-page .dashboard-stat-icon {
     width: 35px;
-    height: 35px
+    height: 35px;
   }
 
   .dashboard-page .dashboard-section-header {
-    padding: 17px 19px
+    padding: 17px 19px;
   }
 
   .dashboard-page .dashboard-breakdown-table thead th,
   .dashboard-page .dashboard-breakdown-table tbody td {
-    padding-inline: 18px
+    padding-inline: 18px;
   }
 
   .dashboard-page .dashboard-status-summary {
@@ -709,19 +706,19 @@
   }
 }
 
-@media (max-width:479.98px) {
+@media (max-width: 479.98px) {
   .dashboard-page .dashboard-welcome {
-    padding: 20px 19px
+    padding: 20px 19px;
   }
 
   .dashboard-page .dashboard-welcome-kicker {
     font-size: 9px;
-    letter-spacing: .4px;
-    max-width: 100%
+    letter-spacing: 0.4px;
+    max-width: 100%;
   }
 
   .dashboard-page .dashboard-welcome p {
-    line-height: 1.65
+    line-height: 1.65;
   }
 
   .dashboard-page .dashboard-stat-card {
@@ -754,32 +751,31 @@
   }
 
   .dashboard-page .dashboard-chart-box-doughnut {
-    height: 248px
+    height: 248px;
   }
 
   .dashboard-page .dashboard-chart-box-bars {
     height: 260px;
-    padding: 13px 12px 8px
+    padding: 13px 12px 8px;
   }
 
   .dashboard-page .dashboard-section-header {
     gap: 10px;
-    padding: 17px 16px
+    padding: 17px 16px;
   }
 
   .dashboard-page .dashboard-section-header h2 {
-    font-size: 14px !important
+    font-size: 14px !important;
   }
 }
 
-@media (prefers-reduced-motion:reduce) {
-
+@media (prefers-reduced-motion: reduce) {
   .dashboard-page .dashboard-stat-card,
   .dashboard-page .dashboard-activity-table tbody tr {
-    transition: none
+    transition: none;
   }
 
   .dashboard-page .dashboard-stat-card:hover {
-    transform: none
+    transform: none;
   }
 }

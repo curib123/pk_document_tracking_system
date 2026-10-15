@@ -1,296 +1,744 @@
 /* Shared record content: one reading surface, separated by space and rules.
  * Modal sizing and controls live in view-modals.css; no field or event cards.
  */
-#viewModal.is-document-view [hidden] { display: none !important; }
+#viewModal.is-document-view [hidden] {
+  display: none !important;
+}
 #viewModal.is-document-view .doc-modal-heading,
 #viewModal.is-document-view .doc-modal-title-wrap,
 #viewModal.is-document-view .doc-modal-layout,
-#viewModal.is-document-view .doc-modal-main { min-width: 0; }
-#viewModal.is-document-view .doc-modal-title-line { display: flex; align-items: center; gap: 16px; min-width: 0; }
+#viewModal.is-document-view .doc-modal-main {
+  min-width: 0;
+}
+#viewModal.is-document-view .doc-modal-title-line {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  min-width: 0;
+}
 #viewModal.is-document-view .doc-modal-kind-icon {
-    flex: 0 0 46px; display: grid; place-items: center; width: 46px; height: 50px;
-    color: var(--ui-brand-700); font-size: 23px; background: var(--ui-brand-50); border-radius: 12px;
+  flex: 0 0 46px;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 50px;
+  color: var(--ui-brand-700);
+  font-size: 23px;
+  background: var(--ui-brand-50);
+  border-radius: 12px;
 }
 #viewModal.is-document-view .doc-modal-eyebrow {
-    margin: 0 0 12px; color: var(--ui-brand-800); font-size: 10px; font-weight: 650; letter-spacing: .12em;
+  margin: 0 0 12px;
+  color: var(--ui-brand-800);
+  font-size: 10px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
 }
 #viewModal.is-document-view #viewModalTitle {
-    margin: 0; color: var(--ui-ink-950); font-size: clamp(20px, 2vw, 26px);
-    font-weight: 600; line-height: 1.3; letter-spacing: -.035em; overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--ui-ink-950);
+  font-size: clamp(20px, 2vw, 26px);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.035em;
+  overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-modal-reference {
-    margin: 6px 0 0; color: var(--ui-ink-600); font-size: 12px; overflow-wrap: anywhere;
+  margin: 6px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  overflow-wrap: anywhere;
 }
-#viewModal.is-document-view .doc-modal-top-actions { display: flex; align-items: center; gap: 16px; flex-shrink: 0; }
+#viewModal.is-document-view .doc-modal-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-shrink: 0;
+}
 #viewModal.is-document-view .doc-modal-status {
-    display: inline-flex; align-items: center; gap: 7px; border: 0; border-radius: 999px;
-    background: var(--ui-slate-100); color: var(--ui-ink-600); padding: 6px 11px;
-    font-size: 11px; font-weight: 650; white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--ui-slate-100);
+  color: var(--ui-ink-600);
+  padding: 6px 11px;
+  font-size: 11px;
+  font-weight: 650;
+  white-space: nowrap;
 }
 #viewModal.is-document-view .doc-modal-status::before {
-    content: ''; width: 6px; height: 6px; flex: 0 0 6px; border-radius: 50%; background: currentColor;
+  content: "";
+  width: 6px;
+  height: 6px;
+  flex: 0 0 6px;
+  border-radius: 50%;
+  background: currentColor;
 }
 #viewModal.is-document-view .doc-modal-status.status-active,
 #viewModal.is-document-view .doc-modal-status.status-approved,
-#viewModal.is-document-view .doc-modal-status.status-completed { color: var(--ui-green-900); background: var(--ui-green-100); }
+#viewModal.is-document-view .doc-modal-status.status-completed {
+  color: var(--ui-green-900);
+  background: var(--ui-green-100);
+}
 #viewModal.is-document-view .doc-modal-status.status-submitted,
 #viewModal.is-document-view .doc-modal-status.status-pending,
-#viewModal.is-document-view .doc-modal-status.status-returned { color: var(--ui-amber-900); background: var(--ui-amber-100); }
+#viewModal.is-document-view .doc-modal-status.status-returned {
+  color: var(--ui-amber-900);
+  background: var(--ui-amber-100);
+}
 #viewModal.is-document-view .doc-modal-status.status-rejected,
 #viewModal.is-document-view .doc-modal-status.status-disposed,
-#viewModal.is-document-view .doc-modal-status.status-cancelled { color: var(--ui-brand-800); background: var(--ui-brand-50); }
+#viewModal.is-document-view .doc-modal-status.status-cancelled {
+  color: var(--ui-brand-800);
+  background: var(--ui-brand-50);
+}
 
 /* Section headings sit beside the record facts on the shared surface. */
-#viewModal.is-document-view .doc-modal-overview { padding: 0 30px; }
+#viewModal.is-document-view .doc-modal-overview {
+  padding: 0 30px;
+}
 #viewModal.is-document-view .doc-overview-group {
-    display: grid; grid-template-columns: 166px minmax(0, 1fr); gap: 28px; padding: 26px 0;
+  display: grid;
+  grid-template-columns: 166px minmax(0, 1fr);
+  gap: 28px;
+  padding: 26px 0;
 }
 #viewModal.is-document-view .doc-overview-group + .doc-overview-group {
-    border-top: 1px solid var(--ui-line);
+  border-top: 1px solid var(--ui-line);
 }
 #viewModal.is-document-view .doc-overview-group-title {
-    display: flex; align-items: baseline; align-self: start; gap: 9px; margin: 3px 0 0;
-    padding-left: 12px; border-left: 2px solid var(--ui-brand-200); color: var(--ui-ink-800);
-    font-size: 12px; line-height: 1.7; font-weight: 600;
+  display: flex;
+  align-items: baseline;
+  align-self: start;
+  gap: 9px;
+  margin: 3px 0 0;
+  padding-left: 12px;
+  border-left: 2px solid var(--ui-brand-200);
+  color: var(--ui-ink-800);
+  font-size: 12px;
+  line-height: 1.7;
+  font-weight: 600;
 }
-#viewModal.is-document-view .doc-overview-group-title i { color: var(--ui-brand-700); font-size: 12px; }
+#viewModal.is-document-view .doc-overview-group-title i {
+  color: var(--ui-brand-700);
+  font-size: 12px;
+}
 #viewModal.is-document-view .doc-overview-grid,
 #viewModal.is-document-view .doc-modal-field-grid {
-    display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 18px 28px; margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr));
+  gap: 18px 28px;
+  margin: 0;
 }
 #viewModal.is-document-view .doc-overview-item,
-#viewModal.is-document-view .doc-modal-field { min-width: 0; margin: 0; padding: 0 0 14px; border-bottom: 1px solid var(--ui-line-soft); }
+#viewModal.is-document-view .doc-modal-field {
+  min-width: 0;
+  margin: 0;
+  padding: 0 0 14px;
+  border-bottom: 1px solid var(--ui-line-soft);
+}
 #viewModal.is-document-view .doc-overview-item.is-wide,
-#viewModal.is-document-view .doc-modal-field.is-wide { grid-column: 1 / -1; }
+#viewModal.is-document-view .doc-modal-field.is-wide {
+  grid-column: 1 / -1;
+}
 #viewModal.is-document-view .doc-overview-label,
 #viewModal.is-document-view .doc-modal-field-label {
-    margin: 0 0 5px; color: var(--ui-ink-600); font-size: 11px; font-weight: 400; line-height: 1.5;
+  margin: 0 0 5px;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  font-weight: 400;
+  line-height: 1.5;
 }
 #viewModal.is-document-view .doc-overview-value,
 #viewModal.is-document-view .doc-modal-field-value {
-    margin: 0; color: var(--ui-ink-950); font-size: 13px; line-height: 1.65;
-    font-weight: 500; white-space: pre-line; overflow-wrap: anywhere; user-select: text;
+  margin: 0;
+  color: var(--ui-ink-950);
+  font-size: 13px;
+  line-height: 1.65;
+  font-weight: 500;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+  user-select: text;
 }
 
 /* Underlined concern tabs remain visible as the document scrolls. */
-#viewModal.is-document-view .doc-modal-layout { display: block; }
+#viewModal.is-document-view .doc-modal-layout {
+  display: block;
+}
 #viewModal.is-document-view .doc-modal-navigation {
-    position: sticky; top: 0; z-index: 3; display: flex; align-items: stretch; flex-wrap: wrap; gap: 0 22px;
-    padding: 0 30px; border-block: 1px solid var(--ui-line); background: var(--ui-surface-soft);
+  position: sticky;
+  top: 0;
+  z-index: 3;
+  display: flex;
+  align-items: stretch;
+  flex-wrap: wrap;
+  gap: 0 22px;
+  padding: 0 30px;
+  border-block: 1px solid var(--ui-line);
+  background: var(--ui-surface-soft);
 }
 #viewModal.is-document-view .doc-modal-nav-item {
-    display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; gap: 8px;
-    min-height: 50px; padding: 13px 2px; margin: 0; border: 0; border-bottom: 2px solid transparent;
-    border-radius: 0; background: transparent; color: var(--ui-ink-600); font-size: 12px;
-    font-weight: 550; white-space: nowrap; cursor: pointer; transition: color .15s ease, border-color .15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  gap: 8px;
+  min-height: 50px;
+  padding: 13px 2px;
+  margin: 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  font-weight: 550;
+  white-space: nowrap;
+  cursor: pointer;
+  transition:
+    color 0.15s ease,
+    border-color 0.15s ease;
 }
-#viewModal.is-document-view .doc-modal-nav-item i { font-size: 13px; }
-#viewModal.is-document-view .doc-modal-nav-item:hover { color: var(--ui-brand-800); }
-#viewModal.is-document-view .doc-modal-nav-item.is-active { color: var(--ui-brand-800); border-bottom-color: var(--ui-brand-600); font-weight: 650; }
-#viewModal.is-document-view .doc-modal-nav-item:focus-visible { outline: 2px solid var(--ui-brand-300); outline-offset: -4px; }
-#viewModal.is-document-view .doc-modal-main { padding: 24px 30px 30px; }
-#viewModal.is-document-view .doc-modal-panel:focus { outline: none; }
-#viewModal.is-document-view .doc-modal-panel:focus-visible { outline: 2px solid var(--ui-brand-300); outline-offset: 5px; }
-#viewModal.is-document-view .doc-modal-section-heading { margin-bottom: 22px; }
-#viewModal.is-document-view .doc-modal-section-title { margin: 0; color: var(--ui-ink-900); font-size: 16px; font-weight: 600; letter-spacing: -.025em; }
-#viewModal.is-document-view .doc-modal-section-subtitle { margin: 6px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6; }
+#viewModal.is-document-view .doc-modal-nav-item i {
+  font-size: 13px;
+}
+#viewModal.is-document-view .doc-modal-nav-item:hover {
+  color: var(--ui-brand-800);
+}
+#viewModal.is-document-view .doc-modal-nav-item.is-active {
+  color: var(--ui-brand-800);
+  border-bottom-color: var(--ui-brand-600);
+  font-weight: 650;
+}
+#viewModal.is-document-view .doc-modal-nav-item:focus-visible {
+  outline: 2px solid var(--ui-brand-300);
+  outline-offset: -4px;
+}
+#viewModal.is-document-view .doc-modal-main {
+  padding: 24px 30px 30px;
+}
+#viewModal.is-document-view .doc-modal-panel:focus {
+  outline: none;
+}
+#viewModal.is-document-view .doc-modal-panel:focus-visible {
+  outline: 2px solid var(--ui-brand-300);
+  outline-offset: 5px;
+}
+#viewModal.is-document-view .doc-modal-section-heading {
+  margin-bottom: 22px;
+}
+#viewModal.is-document-view .doc-modal-section-title {
+  margin: 0;
+  color: var(--ui-ink-900);
+  font-size: 16px;
+  font-weight: 600;
+  letter-spacing: -0.025em;
+}
+#viewModal.is-document-view .doc-modal-section-subtitle {
+  margin: 6px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.6;
+}
 
 /* Files and activity use full-width rows, with no nested panels. */
 #viewModal.is-document-view .doc-modal-activity,
-#viewModal.is-document-view .doc-modal-file-list { display: flex; flex-direction: column; }
+#viewModal.is-document-view .doc-modal-file-list {
+  display: flex;
+  flex-direction: column;
+}
 #viewModal.is-document-view .doc-modal-activity-item,
 #viewModal.is-document-view .doc-modal-file-item {
-    display: flex; align-items: flex-start; gap: 16px; min-width: 0; padding: 18px 0;
-    border: 0; border-bottom: 1px solid var(--ui-line-soft);
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  min-width: 0;
+  padding: 18px 0;
+  border: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
 }
 #viewModal.is-document-view .doc-modal-activity-item:first-child,
-#viewModal.is-document-view .doc-modal-file-item:first-child { padding-top: 0; }
+#viewModal.is-document-view .doc-modal-file-item:first-child {
+  padding-top: 0;
+}
 #viewModal.is-document-view .doc-modal-activity-item:last-child,
-#viewModal.is-document-view .doc-modal-file-item:last-child { border-bottom: 0; padding-bottom: 0; }
-#viewModal.is-document-view .doc-modal-file-item { flex-wrap: wrap; align-items: center; }
+#viewModal.is-document-view .doc-modal-file-item:last-child {
+  border-bottom: 0;
+  padding-bottom: 0;
+}
+#viewModal.is-document-view .doc-modal-file-item {
+  flex-wrap: wrap;
+  align-items: center;
+}
 #viewModal.is-document-view .doc-modal-activity-marker,
 #viewModal.is-document-view .doc-modal-file-icon {
-    display: grid; flex: 0 0 28px; place-items: center; width: 28px; height: 32px;
-    color: var(--ui-brand-700); font-size: 17px;
+  display: grid;
+  flex: 0 0 28px;
+  place-items: center;
+  width: 28px;
+  height: 32px;
+  color: var(--ui-brand-700);
+  font-size: 17px;
 }
-#viewModal.is-document-view .doc-modal-activity-content { min-width: 0; flex: 1; }
-#viewModal.is-document-view .doc-modal-file-content { min-width: 0; flex: 1 1 200px; }
+#viewModal.is-document-view .doc-modal-activity-content {
+  min-width: 0;
+  flex: 1;
+}
+#viewModal.is-document-view .doc-modal-file-content {
+  min-width: 0;
+  flex: 1 1 200px;
+}
 #viewModal.is-document-view .doc-modal-activity-title,
-#viewModal.is-document-view .doc-modal-file-title { display: block; color: var(--ui-ink-900); font-size: 13px; font-weight: 600; line-height: 1.6; overflow-wrap: anywhere; }
+#viewModal.is-document-view .doc-modal-file-title {
+  display: block;
+  color: var(--ui-ink-900);
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
+}
 #viewModal.is-document-view .doc-modal-activity-description,
-#viewModal.is-document-view .doc-modal-file-meta { margin: 5px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.8; white-space: pre-line; overflow-wrap: anywhere; }
-#viewModal.is-document-view .doc-modal-download { flex: 0 0 auto; gap: 7px; font-size: 12px; font-weight: 600; }
-#viewModal.is-document-view .doc-modal-empty { padding: 30px 16px; text-align: center; }
-#viewModal.is-document-view .doc-modal-empty-icon { display: block; margin-bottom: 12px; color: var(--ui-ink-400); font-size: 22px; }
-#viewModal.is-document-view .doc-modal-empty-heading { color: var(--ui-ink-700); font-size: 13px; font-weight: 600; }
-#viewModal.is-document-view .doc-modal-empty-message { margin: 8px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.7; }
-#viewModal.is-document-view .doc-modal-footnote { margin: 0; color: var(--ui-ink-600); font-size: 11px; line-height: 1.6; }
-#viewModal.is-document-view .doc-modal-footnote i { margin-right: 6px; }
+#viewModal.is-document-view .doc-modal-file-meta {
+  margin: 5px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.8;
+  white-space: pre-line;
+  overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-download {
+  flex: 0 0 auto;
+  gap: 7px;
+  font-size: 12px;
+  font-weight: 600;
+}
+#viewModal.is-document-view .doc-modal-empty {
+  padding: 30px 16px;
+  text-align: center;
+}
+#viewModal.is-document-view .doc-modal-empty-icon {
+  display: block;
+  margin-bottom: 12px;
+  color: var(--ui-ink-400);
+  font-size: 22px;
+}
+#viewModal.is-document-view .doc-modal-empty-heading {
+  color: var(--ui-ink-700);
+  font-size: 13px;
+  font-weight: 600;
+}
+#viewModal.is-document-view .doc-modal-empty-message {
+  margin: 8px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.7;
+}
+#viewModal.is-document-view .doc-modal-footnote {
+  margin: 0;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  line-height: 1.6;
+}
+#viewModal.is-document-view .doc-modal-footnote i {
+  margin-right: 6px;
+}
 
 @media (max-width: 767.98px) {
-    #viewModal.is-document-view .doc-modal-overview { padding: 0 20px; }
-    #viewModal.is-document-view .doc-overview-group { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 22px 0; }
-    #viewModal.is-document-view .doc-overview-grid,
-    #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
-    #viewModal.is-document-view .doc-overview-item,
-    #viewModal.is-document-view .doc-modal-field {
-        display: grid; grid-template-columns: minmax(0, .85fr) minmax(0, 1.15fr); gap: 16px; padding: 11px 0;
-    }
-    #viewModal.is-document-view .doc-overview-label,
-    #viewModal.is-document-view .doc-modal-field-label { margin: 0; align-self: baseline; font-size: 12px; }
-    #viewModal.is-document-view .doc-overview-item.is-wide,
-    #viewModal.is-document-view .doc-modal-field.is-wide { grid-template-columns: minmax(0, 1fr); gap: 6px; }
-    #viewModal.is-document-view .doc-modal-navigation { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 14px; padding: 4px 20px; }
-    #viewModal.is-document-view .doc-modal-nav-item { min-height: 44px; justify-content: flex-start; white-space: normal; text-align: left; padding: 10px 0; font-size: 11px; }
-    #viewModal.is-document-view .doc-modal-nav-item:last-child:nth-child(odd) { grid-column: 1 / -1; }
-    #viewModal.is-document-view .doc-modal-main { padding: 24px 20px 28px; }
+  #viewModal.is-document-view .doc-modal-overview {
+    padding: 0 20px;
+  }
+  #viewModal.is-document-view .doc-overview-group {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 16px;
+    padding: 22px 0;
+  }
+  #viewModal.is-document-view .doc-overview-grid,
+  #viewModal.is-document-view .doc-modal-field-grid {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 0;
+  }
+  #viewModal.is-document-view .doc-overview-item,
+  #viewModal.is-document-view .doc-modal-field {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: 16px;
+    padding: 11px 0;
+  }
+  #viewModal.is-document-view .doc-overview-label,
+  #viewModal.is-document-view .doc-modal-field-label {
+    margin: 0;
+    align-self: baseline;
+    font-size: 12px;
+  }
+  #viewModal.is-document-view .doc-overview-item.is-wide,
+  #viewModal.is-document-view .doc-modal-field.is-wide {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 6px;
+  }
+  #viewModal.is-document-view .doc-modal-navigation {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0 14px;
+    padding: 4px 20px;
+  }
+  #viewModal.is-document-view .doc-modal-nav-item {
+    min-height: 44px;
+    justify-content: flex-start;
+    white-space: normal;
+    text-align: left;
+    padding: 10px 0;
+    font-size: 11px;
+  }
+  #viewModal.is-document-view .doc-modal-nav-item:last-child:nth-child(odd) {
+    grid-column: 1 / -1;
+  }
+  #viewModal.is-document-view .doc-modal-main {
+    padding: 24px 20px 28px;
+  }
 }
 @media (max-width: 575.98px) {
-    #viewModal.is-document-view .doc-modal-file-content { flex-basis: calc(100% - 44px); }
-    #viewModal.is-document-view .doc-modal-file-item .btn { flex: 1 1 auto; }
+  #viewModal.is-document-view .doc-modal-file-content {
+    flex-basis: calc(100% - 44px);
+  }
+  #viewModal.is-document-view .doc-modal-file-item .btn {
+    flex: 1 1 auto;
+  }
 }
 @media (prefers-reduced-motion: reduce) {
-    #viewModal.is-document-view .doc-modal-nav-item { transition: none; }
+  #viewModal.is-document-view .doc-modal-nav-item {
+    transition: none;
+  }
 }
 
 /* Vertical approval route and timestamp-sorted decision history. */
 #viewModal.is-document-view .doc-workflow-toolbar {
-    display: flex; align-items: center; justify-content: space-between;
-    flex-wrap: wrap; gap: 14px; margin-bottom: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 14px;
+  margin-bottom: 20px;
 }
 #viewModal.is-document-view .doc-workflow-sort-label {
-    display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; min-width: 175px; max-width: 100%;
-    color: var(--ui-ink-600); font-size: 11px; font-weight: 500;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 12px;
+  min-width: 175px;
+  max-width: 100%;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  font-weight: 500;
 }
-#viewModal.is-document-view .doc-workflow-sort { width: auto; min-width: 150px; flex: 1; }
+#viewModal.is-document-view .doc-workflow-sort {
+  width: auto;
+  min-width: 150px;
+  flex: 1;
+}
 #viewModal.is-document-view .has-workflow-steps .doc-modal-field-grid {
-    grid-template-columns: 1fr; margin-bottom: 22px;
+  grid-template-columns: 1fr;
+  margin-bottom: 22px;
 }
 #viewModal.is-document-view .has-workflow-steps .doc-modal-field {
-    display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 14px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 14px;
 }
-#viewModal.is-document-view .has-workflow-steps .doc-modal-field-value { margin: 0; }
+#viewModal.is-document-view .has-workflow-steps .doc-modal-field-value {
+  margin: 0;
+}
 #viewModal.is-document-view .doc-workflow-steps {
-    display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px;
-    padding: 0; margin: 0; list-style: none;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+  padding: 0;
+  margin: 0;
+  list-style: none;
 }
 #viewModal.is-document-view .doc-workflow-step {
-    --step-color: var(--ui-ink-500); --step-surface: var(--ui-surface-soft); --step-line: var(--ui-line-strong);
-    position: relative; min-width: 0; margin-inline-start: 44px; padding: 4px 0 22px;
-    border: 0; border-bottom: 1px solid var(--ui-line-soft); border-radius: 0; background: transparent;
+  --step-color: var(--ui-ink-500);
+  --step-surface: var(--ui-surface-soft);
+  --step-line: var(--ui-line-strong);
+  position: relative;
+  min-width: 0;
+  margin-inline-start: 44px;
+  padding: 4px 0 22px;
+  border: 0;
+  border-bottom: 1px solid var(--ui-line-soft);
+  border-radius: 0;
+  background: transparent;
 }
 #viewModal.is-document-view .doc-workflow-step::before {
-    content: ''; position: absolute; left: -31px; top: 32px; bottom: -21px;
-    width: 2px; background: var(--ui-line-strong);
+  content: "";
+  position: absolute;
+  left: -31px;
+  top: 32px;
+  bottom: -21px;
+  width: 2px;
+  background: var(--ui-line-strong);
 }
-#viewModal.is-document-view .doc-workflow-step:last-child::before { display: none; }
+#viewModal.is-document-view .doc-workflow-step:last-child::before {
+  display: none;
+}
 #viewModal.is-document-view .doc-workflow-step[data-step-status="active"] {
-    --step-color: var(--ui-blue-900); --step-surface: var(--ui-blue-100); --step-line: var(--ui-blue-300);
+  --step-color: var(--ui-blue-900);
+  --step-surface: var(--ui-blue-100);
+  --step-line: var(--ui-blue-300);
 }
 #viewModal.is-document-view .doc-workflow-step[data-step-status="approved"] {
-    --step-color: var(--ui-green-900); --step-surface: var(--ui-green-100); --step-line: var(--ui-green-300);
+  --step-color: var(--ui-green-900);
+  --step-surface: var(--ui-green-100);
+  --step-line: var(--ui-green-300);
 }
 #viewModal.is-document-view .doc-workflow-step[data-step-status="returned"] {
-    --step-color: var(--ui-amber-900); --step-surface: var(--ui-amber-100); --step-line: var(--ui-amber-300);
+  --step-color: var(--ui-amber-900);
+  --step-surface: var(--ui-amber-100);
+  --step-line: var(--ui-amber-300);
 }
 #viewModal.is-document-view .doc-workflow-step[data-step-status="rejected"] {
-    --step-color: var(--ui-brand-800); --step-surface: var(--ui-brand-50); --step-line: var(--ui-brand-200);
+  --step-color: var(--ui-brand-800);
+  --step-surface: var(--ui-brand-50);
+  --step-line: var(--ui-brand-200);
 }
 #viewModal.is-document-view .doc-workflow-step[data-step-status="superseded"],
-#viewModal.is-document-view .doc-workflow-step[data-step-status="cancelled"] { border-bottom-style: dashed; }
+#viewModal.is-document-view .doc-workflow-step[data-step-status="cancelled"] {
+  border-bottom-style: dashed;
+}
 #viewModal.is-document-view .doc-workflow-step-heading {
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 #viewModal.is-document-view .doc-workflow-step-number {
-    position: absolute; left: -44px; top: 4px; display: grid; place-items: center;
-    width: 28px; height: 28px; border: 2px solid var(--step-line); border-radius: 50%;
-    background: var(--step-surface); color: var(--step-color); font-size: 12px; font-weight: 750;
+  position: absolute;
+  left: -44px;
+  top: 4px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 2px solid var(--step-line);
+  border-radius: 50%;
+  background: var(--step-surface);
+  color: var(--step-color);
+  font-size: 12px;
+  font-weight: 750;
 }
 #viewModal.is-document-view .doc-workflow-step-name {
-    margin: 0; color: var(--ui-ink-900); font-size: 14px; line-height: 1.5;
-    font-weight: 700; overflow-wrap: anywhere;
+  margin: 0;
+  color: var(--ui-ink-900);
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 700;
+  overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-workflow-step-status {
-    display: inline-flex; padding: 4px 9px; border-radius: 20px; background: var(--step-surface);
-    color: var(--step-color); font-size: 11px; font-weight: 700; max-width: 100%; overflow-wrap: anywhere;
+  display: inline-flex;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: var(--step-surface);
+  color: var(--step-color);
+  font-size: 11px;
+  font-weight: 700;
+  max-width: 100%;
+  overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-workflow-step-approver {
-    margin: 7px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6; overflow-wrap: anywhere;
+  margin: 7px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.6;
+  overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-workflow-history {
-    margin-top: 18px; padding-top: 16px; border-top: 1px solid var(--ui-line);
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1px solid var(--ui-line);
 }
 #viewModal.is-document-view .doc-workflow-history-title {
-    margin: 0 0 14px; color: var(--ui-ink-600); font-size: 11px; font-weight: 700;
+  margin: 0 0 14px;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  font-weight: 700;
 }
-#viewModal.is-document-view .doc-workflow-day + .doc-workflow-day { margin-top: 24px; }
+#viewModal.is-document-view .doc-workflow-day + .doc-workflow-day {
+  margin-top: 24px;
+}
 #viewModal.is-document-view .doc-workflow-date {
-    display: flex; align-items: center; gap: 16px; margin: 0 0 18px;
-    color: var(--ui-ink-600); font-size: 11px; font-weight: 600; letter-spacing: .02em;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin: 0 0 18px;
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
-#viewModal.is-document-view .doc-workflow-date::after { content: ''; flex: 1; height: 1px; background: var(--ui-line); }
+#viewModal.is-document-view .doc-workflow-date::after {
+  content: "";
+  flex: 1;
+  height: 1px;
+  background: var(--ui-line);
+}
 #viewModal.is-document-view .doc-workflow-decisions {
-    display: grid; gap: 16px; margin: 0; padding: 0 0 0 42px; list-style: none;
+  display: grid;
+  gap: 16px;
+  margin: 0;
+  padding: 0 0 0 42px;
+  list-style: none;
 }
 #viewModal.is-document-view .doc-workflow-decision {
-    --decision-color: var(--ui-ink-600); --decision-surface: var(--ui-surface-soft);
-    position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 0 20px;
-    min-width: 0; padding: 2px 0 22px; border: 0;
-    border-radius: 0; background: transparent; overflow-wrap: anywhere;
+  --decision-color: var(--ui-ink-600);
+  --decision-surface: var(--ui-surface-soft);
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 0 20px;
+  min-width: 0;
+  padding: 2px 0 22px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  overflow-wrap: anywhere;
 }
 #viewModal.is-document-view .doc-workflow-decision::before {
-    content: ''; position: absolute; left: -29px; top: 30px; bottom: -19px;
-    width: 2px; background: var(--ui-line-strong);
+  content: "";
+  position: absolute;
+  left: -29px;
+  top: 30px;
+  bottom: -19px;
+  width: 2px;
+  background: var(--ui-line-strong);
 }
-#viewModal.is-document-view .doc-workflow-decision:last-child::before { display: none; }
-#viewModal.is-document-view .doc-workflow-decision[data-decision-status="approved"] {
-    --decision-color: var(--ui-green-900); --decision-surface: var(--ui-green-100);
+#viewModal.is-document-view .doc-workflow-decision:last-child::before {
+  display: none;
 }
-#viewModal.is-document-view .doc-workflow-decision[data-decision-status="returned"] {
-    --decision-color: var(--ui-amber-900); --decision-surface: var(--ui-amber-100);
+#viewModal.is-document-view
+  .doc-workflow-decision[data-decision-status="approved"] {
+  --decision-color: var(--ui-green-900);
+  --decision-surface: var(--ui-green-100);
 }
-#viewModal.is-document-view .doc-workflow-decision[data-decision-status="rejected"] {
-    --decision-color: var(--ui-brand-800); --decision-surface: var(--ui-brand-50);
+#viewModal.is-document-view
+  .doc-workflow-decision[data-decision-status="returned"] {
+  --decision-color: var(--ui-amber-900);
+  --decision-surface: var(--ui-amber-100);
+}
+#viewModal.is-document-view
+  .doc-workflow-decision[data-decision-status="rejected"] {
+  --decision-color: var(--ui-brand-800);
+  --decision-surface: var(--ui-brand-50);
 }
 #viewModal.is-document-view .doc-workflow-decision-marker {
-    position: absolute; left: -42px; top: 2px; display: grid; place-items: center;
-    width: 28px; height: 28px; border: 1px solid var(--ui-line); border-radius: 50%;
-    background: var(--decision-surface); color: var(--decision-color); font-size: 11px;
+  position: absolute;
+  left: -42px;
+  top: 2px;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--ui-line);
+  border-radius: 50%;
+  background: var(--decision-surface);
+  color: var(--decision-color);
+  font-size: 11px;
 }
 #viewModal.is-document-view .doc-workflow-decision-heading {
-    display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;
-    grid-column: 1; grid-row: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+  grid-column: 1;
+  grid-row: 1;
 }
 #viewModal.is-document-view .doc-workflow-decision-step {
-    margin: 0; color: var(--ui-ink-900); font-size: 13px; line-height: 1.5; font-weight: 700;
+  margin: 0;
+  color: var(--ui-ink-900);
+  font-size: 13px;
+  line-height: 1.5;
+  font-weight: 700;
 }
 #viewModal.is-document-view .doc-workflow-decision-action {
-    padding: 4px 9px; border-radius: 20px; background: var(--decision-surface);
-    color: var(--decision-color); font-size: 11px; font-weight: 700;
+  padding: 4px 9px;
+  border-radius: 20px;
+  background: var(--decision-surface);
+  color: var(--decision-color);
+  font-size: 11px;
+  font-weight: 700;
 }
 #viewModal.is-document-view .doc-workflow-decision-actor,
 #viewModal.is-document-view .doc-workflow-decision-time {
-    display: block; margin: 7px 0 0; color: var(--ui-ink-600); font-size: 12px; line-height: 1.6;
+  display: block;
+  margin: 7px 0 0;
+  color: var(--ui-ink-600);
+  font-size: 12px;
+  line-height: 1.6;
 }
 #viewModal.is-document-view .doc-workflow-decision-time {
-    grid-column: 2; grid-row: 1; margin-top: 3px; font-size: 11px; font-variant-numeric: tabular-nums;
+  grid-column: 2;
+  grid-row: 1;
+  margin-top: 3px;
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
 }
-#viewModal.is-document-view .doc-workflow-decision-actor { grid-column: 1 / -1; }
+#viewModal.is-document-view .doc-workflow-decision-actor {
+  grid-column: 1 / -1;
+}
 #viewModal.is-document-view .doc-workflow-remarks {
-    grid-column: 1 / -1; margin-top: 12px; padding: 2px 0 2px 12px; border-left: 2px solid var(--ui-brand-200);
+  grid-column: 1 / -1;
+  margin-top: 12px;
+  padding: 2px 0 2px 12px;
+  border-left: 2px solid var(--ui-brand-200);
 }
-#viewModal.is-document-view .doc-workflow-remarks-label { color: var(--ui-ink-600); font-size: 10px; }
+#viewModal.is-document-view .doc-workflow-remarks-label {
+  color: var(--ui-ink-600);
+  font-size: 10px;
+}
 #viewModal.is-document-view .doc-workflow-decision-comment {
-    margin: 4px 0 0; color: var(--ui-ink-900); font-size: 12px; line-height: 1.6; white-space: pre-wrap;
+  margin: 4px 0 0;
+  color: var(--ui-ink-900);
+  font-size: 12px;
+  line-height: 1.6;
+  white-space: pre-wrap;
 }
 @media (max-width: 575.98px) {
-    #viewModal.is-document-view .doc-workflow-sort-label { width: 100%; }
-    #viewModal.is-document-view .doc-workflow-step { margin-inline-start: 36px; padding: 4px 0 20px; }
-    #viewModal.is-document-view .doc-workflow-step-number { left: -36px; }
-    #viewModal.is-document-view .doc-workflow-step::before { left: -23px; }
-    #viewModal.is-document-view .doc-workflow-decisions { padding-left: 32px; }
-    #viewModal.is-document-view .doc-workflow-decision { grid-template-columns: minmax(0, 1fr); padding: 2px 0 20px; }
-    #viewModal.is-document-view .doc-workflow-decision-time { grid-column: 1; grid-row: auto; margin-top: 8px; }
-    #viewModal.is-document-view .doc-workflow-decision-marker { left: -32px; width: 24px; height: 24px; }
-    #viewModal.is-document-view .doc-workflow-decision::before { left: -21px; top: 26px; }
+  #viewModal.is-document-view .doc-workflow-sort-label {
+    width: 100%;
+  }
+  #viewModal.is-document-view .doc-workflow-step {
+    margin-inline-start: 36px;
+    padding: 4px 0 20px;
+  }
+  #viewModal.is-document-view .doc-workflow-step-number {
+    left: -36px;
+  }
+  #viewModal.is-document-view .doc-workflow-step::before {
+    left: -23px;
+  }
+  #viewModal.is-document-view .doc-workflow-decisions {
+    padding-left: 32px;
+  }
+  #viewModal.is-document-view .doc-workflow-decision {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 2px 0 20px;
+  }
+  #viewModal.is-document-view .doc-workflow-decision-time {
+    grid-column: 1;
+    grid-row: auto;
+    margin-top: 8px;
+  }
+  #viewModal.is-document-view .doc-workflow-decision-marker {
+    left: -32px;
+    width: 24px;
+    height: 24px;
+  }
+  #viewModal.is-document-view .doc-workflow-decision::before {
+    left: -21px;
+    top: 26px;
+  }
 }
