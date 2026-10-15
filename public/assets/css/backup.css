@@ -1,5 +1,5 @@
 /* Backup workspace; register styling comes from the reusable table. */
-.backup-workspace { display: grid; gap: 24px; min-width: 0; max-width: 1450px; margin: 0 auto; }
+.backup-workspace { display: grid; grid-template-columns: minmax(0, 1fr); gap: 24px; min-width: 0; max-width: 1450px; margin: 0 auto; }
 .backup-overview { display: flex; align-items: center; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
 .backup-overview h1 { font-size: 22px; font-weight: 750; margin: 0 0 6px; color: var(--ui-ink-900); }
 .backup-overview p, .backup-overview small { margin: 0; color: var(--ui-ink-600); font-size: 12px; }
@@ -10,7 +10,9 @@
 .backup-tool { padding: 20px; min-width: 0; }
 .backup-tool summary { cursor: pointer; font-weight: 650; color: var(--ui-ink-800); }
 .backup-tool form { display: grid; gap: 16px; margin-top: 20px; }
+.backup-tool .form-control, .backup-tool .form-select { width: 100%; min-width: 0; max-width: 100%; }
 .backup-tool .backup-warning { margin: 18px 0 0; }
 .backup-tool .btn { justify-self: start; }
 .backup-workspace td:first-child { overflow-wrap: anywhere; }
+.backup-workspace .table { min-width: 740px; }
 @media (max-width: 700px) { .backup-tools { grid-template-columns: 1fr; } .backup-tool { padding: 16px; } }
