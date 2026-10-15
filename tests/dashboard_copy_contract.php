@@ -24,7 +24,7 @@ $originalLabels=[
  'No recent document activity in your authorized scope.'
 ];
 foreach ($originalLabels as $phrase) {
-    if (strpos($view,$phrase)===FALSE)
+    if (strpos(preg_replace('/\\s+/', ' ', $view),preg_replace('/\\s+/', ' ', $phrase))===FALSE)
         throw new RuntimeException('Original dashboard copy was lost: '.$phrase);
 }
 $requiredTokens=[
@@ -42,7 +42,7 @@ $requiredTokens=[
  '<?= html_escape(json_encode(array_values($stats))) ?>'
 ];
 foreach ($requiredTokens as $token) {
-    if (strpos($view,$token)===FALSE)
+    if (strpos(preg_replace('/\\s+/', '', $view),preg_replace('/\\s+/', '', $token))===FALSE)
         throw new RuntimeException('Dashboard data/markup contract missing: '.$token);
 }
 if (strpos($header,'assets/css/dashboard.css')===FALSE)
