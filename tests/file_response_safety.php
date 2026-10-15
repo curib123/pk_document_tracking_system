@@ -5,6 +5,7 @@ define('APPPATH', dirname(__DIR__) . '/application/');
 class MY_Controller {}
 require APPPATH . 'controllers/Files.php';
 $method = new ReflectionMethod(Files::class, 'safe_download_name');
+$method->setAccessible(TRUE);
 $controller = (new ReflectionClass(Files::class))->newInstanceWithoutConstructor();
 $cases = [
     ['../report.pdf', 'report.pdf'],
