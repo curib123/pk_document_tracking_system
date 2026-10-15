@@ -12,50 +12,53 @@
  * Set PK_BACKUP_PASSWORD, PK_BACKUP_SIGNING_KEY and DB_* in the scheduler
  * process environment. Check docs/backup-restore.md before enabling 5 PM.
  */
-if (PHP_SAPI!=='cli') {http_response_code(403);exit("CLI only\n");}
-define('BASEPATH', __DIR__.'/../');
+if (PHP_SAPI !== 'cli') {
+    http_response_code(403);
+    exit("CLI only\n");
+}
+define('BASEPATH', __DIR__ . '/../');
 define('PK_ROOT', dirname(__DIR__));
-require_once PK_ROOT.'/application/services/backup/backup_service.php';
+require_once PK_ROOT . '/application/services/backup/backup_service.php';
 date_default_timezone_set('Asia/Manila');
-$command=$argv[1]??'';
+$command = $argv[1] ?? '';
 try {
-    $service=new Backup_service(PK_ROOT);
-    if ($command==='auto' || $command==='manual') {
-        $result=$service->backup($command);
-        echo "Created encrypted signed backup: ".$result['name']."\n";
-        if ($result['retention']===NULL || $result['retention']['failed'])
-            fwrite(STDERR,"Retention cleanup was incomplete; retry php tools/backup.php retention.\n");
-    } elseif ($command==='retention') {
-        $result=$service->apply_retention();
-        echo "Three-month retention cutoff: ".$result['cutoff']."\n";
-        foreach ($result['deleted'] as $kind=>$count)
-            echo "Deleted ".$kind.": ".$count."\n";
+    $service = new Backup_service(PK_ROOT);
+    if ($command === 'auto' || $command === 'manual') {
+        $result = $service->backup($command);
+        echo "Created encrypted signed backup: " . $result['name'] . "\n";
+        if ($result['retention'] === NULL || $result['retention']['failed'])
+            fwrite(STDERR, "Retention cleanup was incomplete; retry php tools/backup.php retention.\n");
+    } elseif ($command === 'retention') {
+        $result = $service->apply_retention();
+        echo "Three-month retention cutoff: " . $result['cutoff'] . "\n";
+        foreach ($result['deleted'] as $kind => $count)
+            echo "Deleted " . $kind . ": " . $count . "\n";
         if ($result['failed']) {
-            fwrite(STDERR,"Retention cleanup was incomplete for ".count($result['failed'])." paths; check permissions and locks, then retry.\n");
+            fwrite(STDERR, "Retention cleanup was incomplete for " . count($result['failed']) . " paths; check permissions and locks, then retry.\n");
             exit(1);
         }
-    } elseif ($command==='list') {
+    } elseif ($command === 'list') {
         foreach ($service->list_backups() as $item)
-            echo $item['name']."\t".$item['size']." bytes\n";
-    } elseif ($command==='verify') {
-        $path=$service->resolve((string)($argv[2]??''));
-        $manifest=$service->verify($path);
-        echo "Verified ".$manifest['database']." archive with ".count($manifest['files'])." files.\n";
-    } elseif ($command==='restore') {
-        if (($argv[3]??'')!=='--confirm') {
-            fwrite(STDERR,"Restore requires an explicit --confirm flag and a maintenance window.\n");
+            echo $item['name'] . "\t" . $item['size'] . " bytes\n";
+    } elseif ($command === 'verify') {
+        $path = $service->resolve((string) ($argv[2] ?? ''));
+        $manifest = $service->verify($path);
+        echo "Verified " . $manifest['database'] . " archive with " . count($manifest['files']) . " files.\n";
+    } elseif ($command === 'restore') {
+        if (($argv[3] ?? '') !== '--confirm') {
+            fwrite(STDERR, "Restore requires an explicit --confirm flag and a maintenance window.\n");
             exit(2);
         }
-        $result=$service->restore((string)($argv[2]??''));
-        echo "Restored data: ".$result['restored']."\n".
-             "Pre-restore recovery snapshot: ".$result['recovery']."\n";
+        $result = $service->restore((string) ($argv[2] ?? ''));
+        echo "Restored data: " . $result['restored'] . "\n" .
+            "Pre-restore recovery snapshot: " . $result['recovery'] . "\n";
     } else {
-        fwrite(STDERR,"Usage: php tools/backup.php auto|manual|list|retention|verify <archive>|restore <archive> --confirm\n");
+        fwrite(STDERR, "Usage: php tools/backup.php auto|manual|list|retention|verify <archive>|restore <archive> --confirm\n");
         exit(2);
     }
     exit(0);
 } catch (Throwable $error) {
     // Never print passwords, dumped SQL or backup contents.
-    fwrite(STDERR,"Backup/restore failed: ".$error->getMessage()."\n");
+    fwrite(STDERR, "Backup/restore failed: " . $error->getMessage() . "\n");
     exit(1);
 }
