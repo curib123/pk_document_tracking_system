@@ -14,6 +14,7 @@ php tests/approval_step_tiles.php
 php tests/controlled_file_history.php
 php tests/controlled_file_print.php
 php tests/file_action_permissions.php
+php tests/file_response_safety.php
 php tests/action_errors.php
 php tests/backup_listing.php
 php tests/backup_listing_regression.php
