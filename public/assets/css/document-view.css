@@ -43,17 +43,11 @@
 /* Section headings sit beside the record facts on the shared surface. */
 #viewModal.is-document-view .doc-modal-overview { padding: 0 30px; }
 #viewModal.is-document-view .doc-overview-group {
-    display: grid; grid-template-columns: 166px minmax(0, 1fr); gap: 28px; padding: 26px 0;
+    min-width: 0; padding: 26px 0;
 }
 #viewModal.is-document-view .doc-overview-group + .doc-overview-group {
     border-top: 1px solid var(--ui-line);
 }
-#viewModal.is-document-view .doc-overview-group-title {
-    display: flex; align-items: baseline; align-self: start; gap: 9px; margin: 3px 0 0;
-    padding-left: 12px; border-left: 2px solid var(--ui-brand-200); color: var(--ui-ink-800);
-    font-size: 12px; line-height: 1.7; font-weight: 600;
-}
-#viewModal.is-document-view .doc-overview-group-title i { color: var(--ui-brand-700); font-size: 12px; }
 #viewModal.is-document-view .doc-overview-grid,
 #viewModal.is-document-view .doc-modal-field-grid {
     display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 180px), 1fr)); gap: 18px 28px; margin: 0;
@@ -129,7 +123,7 @@
 
 @media (max-width: 767.98px) {
     #viewModal.is-document-view .doc-modal-overview { padding: 0 20px; }
-    #viewModal.is-document-view .doc-overview-group { grid-template-columns: minmax(0, 1fr); gap: 16px; padding: 22px 0; }
+    #viewModal.is-document-view .doc-overview-group { padding: 22px 0; }
     #viewModal.is-document-view .doc-overview-grid,
     #viewModal.is-document-view .doc-modal-field-grid { grid-template-columns: minmax(0, 1fr); gap: 0; }
     #viewModal.is-document-view .doc-overview-item,

@@ -98,10 +98,6 @@
             });
             if (!entries.length) return;
             var group = node('section', 'doc-overview-group');
-            var groupTitle = node('h4', 'doc-overview-group-title');
-            groupTitle.append(icon(section.key),
-                node('span', '', section.key === 'overview' ? 'Record & Ownership' : section.title || 'Document details'));
-            group.append(groupTitle);
             var grid = node('dl', 'doc-overview-grid');
             entries.forEach(function (entry) {
                 var value = valueText(entry[1]);

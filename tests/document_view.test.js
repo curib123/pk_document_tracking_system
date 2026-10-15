@@ -137,7 +137,7 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(modal.classList.contains('is-document-view'),true);
   assert.equal(map.viewModalTitle.textContent,data.header.title);
   assert.equal(map.viewDocumentStatus.textContent,'Active');
-  assert.equal(map.viewDocumentSummary.children.length,2); // Record & Ownership and Storage & Custody.
+  assert.equal(map.viewDocumentSummary.children.length,2); // Preserve overview and storage groups.
   assert.equal(map.viewDocumentSummary.hidden,false);
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
   const tabLabels=details.querySelectorAll('[role="tab"]').map((t)=>t.children[1].textContent);
@@ -155,7 +155,8 @@ test('all identity and custody fields appear above the tabs, not inside a tab',(
   const overview=map.viewDocumentSummary;
   const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
-  const labels=groups.flatMap((g)=>g.children[1].children.map((n)=>n.children[0].textContent));
+  assert.equal(overview.querySelectorAll('.doc-overview-group-title').length,0);
+  const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
   assert.deepEqual(labels,['Created By','Created','Area','Location']);
   assert.equal(overview.parentNode.children[1],details);
   assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
@@ -176,7 +177,7 @@ test('softcopy revision and classification fields remain in the top overview',()
   window.PKDocumentView.render(details,softcopy);
   const groups=map.viewDocumentSummary.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
-  const labels=groups.flatMap((g)=>g.children[1].children.map((n)=>n.children[0].textContent));
+  const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
   assert.deepEqual(labels,['Created By','Record Version','Category / Folder','Series','Revision Level','Pages']);
   assert.equal(details.querySelectorAll('[role="tab"]').length,2);
   assert.equal(details.querySelectorAll('[role="tab"]')[0].children[1].textContent,'Controlled Files');
