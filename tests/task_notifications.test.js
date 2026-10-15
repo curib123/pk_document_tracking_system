@@ -1,4 +1,12 @@
 const test=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm');
+test('authenticated pages load automatic task notifications after modal initialization',()=>{
+ const footer=fs.readFileSync('application/view/layout/footer.php','utf8');
+ const scripts=[...footer.matchAll(/<script src="<\?= base_url\('([^']+)'\) \?>"><\/script>/g)].map(match=>match[1]);
+ assert.equal(scripts.filter(path=>path==='assets/js/task-notifications.js').length,1,
+  'The automatic notifier must be loaded on every authenticated page.');
+ assert.ok(scripts.indexOf('assets/js/task-notifications.js')>scripts.indexOf('assets/js/app.js'),
+  'Bootstrap and the offline modal fallback must exist before polling starts.');
+});
 function setup(shared=new Set()){
  const listeners={},windowListeners={},timers=new Map();let next=0,now=0;
  const element=tag=>({tagName:tag.toUpperCase(),children:[],attributes:{},textContent:'',hidden:false,

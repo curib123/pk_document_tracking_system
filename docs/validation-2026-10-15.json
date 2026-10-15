@@ -137,8 +137,8 @@
     }
   ],
   "node_summary": {
-    "tests": 75,
-    "pass": 73,
+    "tests": 76,
+    "pass": 74,
     "fail": 2
   },
   "node_failed_tests": [
@@ -162,7 +162,8 @@
     "Request/task modal, tabs, close, malformed record error",
     "Backup modals at 1440, 390 and 320 pixels; explicit dismissal, restore phrase validation and retained entries after canceled confirmation",
     "File action and URL permission denials for a document owner",
-    "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal"
+    "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal",
+    "Automatic task modal: loaded on authenticated pages; initial task, arrivals without reload, durable receipts, refresh deduplication and deferral behind an open form"
   ],
   "schema_check": "Fresh import and migration rerun passed on an owned disposable test database; no operational seed data.",
   "local_migration": "File action permissions installed after a private full database backup; business record counts unchanged.",
@@ -177,6 +178,7 @@
     "tests/request_return.php",
     "tests/controlled_file_replacement.php",
     "tests/user_role_assignments.php",
-    "tests/user_role_permissions.php --database"
+    "tests/user_role_permissions.php --database",
+    "tests/task_notifications.php"
   ]
 }

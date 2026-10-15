@@ -84,6 +84,15 @@ try:
             page.locator('[name="password"]').fill(env['PK_BROWSER_PASSWORD'])
             page.locator('button[type="submit"]').click()
             page.wait_for_url('**/dashboard')
+            if os.environ.get('PK_BROWSER_TASKS_ONLY') == '1':
+                from browser_task_notification_checks import run_checks
+                run_checks(page, context, base, sql)
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
+            from browser_task_notification_checks import acknowledge_initial_task
+            acknowledge_initial_task(page)
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
 
