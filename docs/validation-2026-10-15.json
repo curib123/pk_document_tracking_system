@@ -164,7 +164,8 @@
     "File action and URL permission denials for a document owner",
     "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal",
     "Automatic task modal: loaded on authenticated pages; initial task, arrivals without reload, durable receipts, refresh deduplication and deferral behind an open form",
-    "Vertical Approval Route and Decision History in My Requests/My Tasks: date groups, oldest/newest timestamp sorting, repeated approvals, remarks, route order and 1440/390/320 pixel layouts"
+    "Vertical Approval Route and Decision History in My Requests/My Tasks: date groups, oldest/newest timestamp sorting, repeated approvals, remarks, route order and 1440/390/320 pixel layouts",
+    "Unified viewer redesign: documents, requests, tasks, users, roles, places, workflows, assignments and audit; file history and workflow route viewers; Bootstrap 5.3.3 and confirmed CDN-blocked fallback at 1440/390/320 pixels, keyboard tabs, long audit details, file actions and explicit dismissal"
   ],
   "schema_check": "Fresh import and migration rerun passed on an owned disposable test database; no operational seed data.",
   "local_migration": "File action permissions installed after a private full database backup; business record counts unchanged.",

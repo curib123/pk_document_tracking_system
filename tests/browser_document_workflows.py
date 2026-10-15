@@ -2,6 +2,7 @@
 import json
 import contextlib
 import os
+import re
 from pathlib import Path
 import secrets
 import shutil
@@ -71,9 +72,12 @@ try:
         with sync_playwright() as p:
             browser = p.chromium.launch(channel='msedge', headless=True)
             context = p.chromium.launch_persistent_context(str(Path(temp) / 'browser-profile'),
-                channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000})
-            # Also validate the app's existing offline modal implementation.
-            context.route('https://**', lambda route: route.abort())
+                channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000},
+                # A controlling worker can bypass Playwright network routes.
+                service_workers='block' if os.environ.get('PK_BROWSER_VIEWERS_ONLY') == '1' else 'allow')
+            # Default coverage includes the Bootstrap-free office network path.
+            if os.environ.get('PK_BROWSER_ONLINE') != '1':
+                context.route(re.compile(r'^https://'), lambda route: route.abort())
             page = context.new_page()
             errors = []
             page.on('pageerror', lambda error: errors.append(str(error)))
@@ -95,6 +99,14 @@ try:
             acknowledge_initial_task(page)
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
+
+            if os.environ.get('PK_BROWSER_VIEWERS_ONLY') == '1':
+                from browser_viewer_design_checks import run_checks
+                run_checks(page, base, APP_ROOT)
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
 
             if os.environ.get('PK_BROWSER_STEPPER_ONLY') == '1':
                 from browser_workflow_stepper_checks import run_checks
@@ -238,7 +250,7 @@ try:
             assert '/login' in response.url and b'Browser controlled text' not in response.body()
             guest.close()
             staff = browser.new_context()
-            staff.route('https://**', lambda route: route.abort())
+            staff.route(re.compile(r'^https://'), lambda route: route.abort())
             staff_page = staff.new_page()
             staff_page.goto(base + 'login')
             staff_page.locator('[name="login"]').fill('browser-staff')
