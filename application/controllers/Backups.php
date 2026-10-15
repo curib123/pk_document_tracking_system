@@ -133,6 +133,7 @@ class Backups extends MY_Controller
     public function download($name = '')
     {
         $this->administrator();
+        $this->authorizeWrite();
         $service = $this->service();
         try {
             $path = $service->resolve((string) $name);
