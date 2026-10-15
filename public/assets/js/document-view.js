@@ -312,6 +312,8 @@
             heading.append(node('strong', 'doc-workflow-decision-action', action.replace(/_/g, ' ')
                 .replace(/\b\w/g, function (letter) { return letter.toUpperCase(); })));
             item.append(marker, heading);
+            if (event.request_reference)
+                item.append(node('p', 'doc-workflow-decision-request', event.request_reference));
             var timestamp = node('time', 'doc-workflow-decision-time', stamp ? stamp.time : 'Time not recorded');
             if (stamp) timestamp.setAttribute('datetime', stamp.iso);
             item.append(timestamp);
@@ -367,7 +369,8 @@
         if (hasSteps || Array.isArray(section.events)) {
             panel.classList.add('has-workflow-steps');
             var toolbar = node('div', 'doc-workflow-toolbar');
-            toolbar.append(node('h3', 'doc-modal-section-title', 'Approval Workflow'));
+            toolbar.append(node('h3', 'doc-modal-section-title',
+                section.title === 'Approval History' ? section.title : 'Approval Workflow'));
             var label = node('label', 'doc-workflow-sort-label', 'Sort by timestamp');
             var sort = node('select', 'form-select form-select-sm doc-workflow-sort');
             sort.setAttribute('aria-label', 'Sort decision history by timestamp');
@@ -381,7 +384,7 @@
             result.setAttribute('aria-live', 'polite');
             function update() {
                 result.replaceChildren(hasSteps ? makeWorkflowSteps(section.steps, sort.value) :
-                    (section.events.length ? makeDecisionTimeline(section.events, sort.value) : emptyState('No approval decisions yet.')));
+                    (section.events.length ? makeDecisionTimeline(section.events, sort.value) : emptyState(section.empty || 'No approval decisions yet.')));
             }
             sort.disabled = hasSteps ? !section.steps.some(function (step) { return step.history && step.history.length; }) : !section.events.length;
             sort.addEventListener('change', update);

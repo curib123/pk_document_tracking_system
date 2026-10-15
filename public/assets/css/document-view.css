@@ -270,6 +270,9 @@
     grid-column: 2; grid-row: 1; margin-top: 3px; font-size: 11px; font-variant-numeric: tabular-nums;
 }
 #viewModal.is-document-view .doc-workflow-decision-actor { grid-column: 1 / -1; }
+#viewModal.is-document-view .doc-workflow-decision-request {
+    grid-column: 1 / -1; margin: 6px 0 0; color: var(--ui-ink-600); font-size: 11px; overflow-wrap: anywhere;
+}
 #viewModal.is-document-view .doc-workflow-remarks {
     grid-column: 1 / -1; margin-top: 12px; padding: 2px 0 2px 12px; border-left: 2px solid var(--ui-brand-200);
 }

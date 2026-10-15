@@ -39,21 +39,23 @@ class Document_detail_model extends CI_Model
         if ($requestIds) {
             $slots = implode(',', array_fill(0, count($requestIds), '?'));
             $historyRows = $this->db->query("SELECT recent.* FROM (
-                SELECT h.request_id,h.action,h.user_name,h.created_at,
+                SELECT h.request_id,h.step_id,s.label AS step_label,h.action,h.user_name,h.position_title,h.comments,h.created_at,
                     ROW_NUMBER() OVER (PARTITION BY h.request_id ORDER BY h.id DESC) AS row_rank
-                FROM workflow_history h WHERE h.request_id IN ($slots)
+                FROM workflow_history h LEFT JOIN workflow_steps s ON s.id=h.step_id AND s.request_id=h.request_id
+                WHERE h.request_id IN ($slots)
                 ) recent WHERE recent.row_rank<=30 ORDER BY recent.created_at DESC", $requestIds)->result_array();
             foreach ($historyRows as $history)
-                $histories[$history['request_id']][] =
-                    ucwords(str_replace('_', ' ', $history['action'])) . ' · ' . $history['user_name'] . ' · ' . $history['created_at'];
+                $histories[$history['request_id']][] = $history;
         }
         $requestsByDoc = [];
         $approvalsByDoc = [];
         foreach ($requests as $request) {
             $requestsByDoc[$request['document_id']][$request['reference']] =
                 ucwords(str_replace('_', ' ', $request['type'])) . ' · ' . ucfirst($request['status']) . ' · ' . ($request['subject'] ?? '');
-            if (!empty($histories[$request['id']]))
-                $approvalsByDoc[$request['document_id']][$request['reference']] = implode("\n", $histories[$request['id']]);
+            foreach ($histories[$request['id']] ?? [] as $event) {
+                $event['request_reference'] = $request['reference'];
+                $approvalsByDoc[$request['document_id']][] = $event;
+            }
         }
         $auditByDoc = [];
         if ($can('audit', 'view')) {
@@ -202,7 +204,8 @@ class Document_detail_model extends CI_Model
                 'key' => 'approvals',
                 'title' => 'Approval History',
                 'description' => 'Workflow decisions for visible requests',
-                'fields' => $approvalsByDoc[$id] ?? [],
+                'fields' => [],
+                'events' => $approvalsByDoc[$id] ?? [],
                 'empty' => 'No approval history available for these requests.'
             ];
             if ($domain === 'hardcopy' && $can('transfer', 'view'))

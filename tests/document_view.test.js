@@ -443,3 +443,24 @@ test('approval sorting reorders decisions within each step and preserves the ass
   assert.deepEqual(details.querySelectorAll('.doc-workflow-step-name').map(item=>item.textContent),['First review','Final review']);
   assert.deepEqual(details.querySelectorAll('.doc-workflow-date').map(item=>item.textContent),['Oct 15, 2026','Oct 14, 2026']);
 });
+
+test('document Approval History uses the decision stepper with request context and safe remarks',()=>{
+  const {window,details}=setup();
+  const events=[
+    {request_reference:'REQ-42',step_label:'Manager Review',action:'returned',user_name:'Manager',position_title:'Plant Manager',comments:'Correct <script>alert(1)</script>',created_at:'2026-10-15 10:00:00'},
+    {request_reference:'REQ-43',step_label:'Final Review',action:'approved',user_name:'Officer',comments:'Accepted',created_at:'2026-10-16 11:00:00'}
+  ];
+  const original=JSON.stringify(events);
+  window.PKDocumentView.render(details,{kind:'document',domain:'softcopy',header:{title:'Policy'},sections:[
+    {key:'approvals',title:'Approval History',fields:{},events}
+  ]});
+  assert.equal(details.querySelector('.doc-modal-section-title').textContent,'Approval History');
+  assert.equal(details.querySelectorAll('.doc-workflow-decision').length,2);
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-request').map(el=>el.textContent),['REQ-42','REQ-43']);
+  assert.equal(details.querySelector('.doc-workflow-decision-comment').textContent,events[0].comments);
+  assert.equal(details.querySelectorAll('script').length,0);
+  const sort=details.querySelector('.doc-workflow-sort');
+  sort.value='newest';sort.listeners.change();
+  assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-request').map(el=>el.textContent),['REQ-43','REQ-42']);
+  assert.equal(JSON.stringify(events),original);
+});

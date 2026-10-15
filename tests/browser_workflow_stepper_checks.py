@@ -34,6 +34,7 @@ def run_checks(page, base, sql, manifest):
         page.locator('tbody tr').filter(has_text='BROWSER-REQUEST').locator('.js-view').click()
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
+        expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
         modal.get_by_role('tab', name='Decision History', exact=True).click()
         panel = modal.locator('[role="tabpanel"]:visible')
         expect(panel.locator('.doc-workflow-decision')).to_have_count(4)
@@ -59,4 +60,37 @@ def run_checks(page, base, sql, manifest):
         assert modal.locator('.modal-body').evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
         modal.get_by_role('button', name='Close', exact=True).last.click()
         page.set_viewport_size({'width': 1440, 'height': 950})
+
+    hardcopy_id = scalar("SELECT id FROM hardcopy_documents WHERE sequence_number='BROWSER-HC'")
+    hardcopy_request = scalar("INSERT INTO requests (reference,type,requested_by,hardcopy_id,payload,status) VALUES " +
+                              "('BROWSER-HC-REQUEST','hardcopy_update',1," + hardcopy_id + ",'{}','completed'); SELECT LAST_INSERT_ID()")
+    sql("INSERT INTO workflow_history (request_id,action,user_id,user_name,position_title,created_at,comments) VALUES (" +
+        hardcopy_request + ",'approved',1,'Records Officer','Document Control','2026-10-15 15:00:00','Hardcopy accepted')")
+    for domain, reference, count in [('softcopy', 'BROWSER-TXT', 4), ('hardcopy', 'BROWSER-HC', 1)]:
+        page.goto(base + 'documents/' + domain)
+        page.locator('tbody tr').filter(has_text=reference).locator('.js-view').first.click()
+        modal = page.locator('#viewModal')
+        expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
+        modal.get_by_role('tab', name='Approval History', exact=True).click()
+        panel = modal.locator('[role="tabpanel"]:visible')
+        expect(panel.locator('.doc-workflow-toolbar h3')).to_have_text('Approval History')
+        expect(panel.locator('.doc-workflow-decision')).to_have_count(count)
+        expected_reference = 'BROWSER-REQUEST' if domain == 'softcopy' else 'BROWSER-HC-REQUEST'
+        expect(panel.locator('.doc-workflow-decision-request')).to_have_text([expected_reference] * count)
+        expect(panel.locator('.doc-workflow-decision-comment')).to_have_text('fff' if domain == 'softcopy' else 'Hardcopy accepted')
+        panel.locator('.doc-workflow-sort').select_option('newest')
+        if domain == 'softcopy':
+            expect(panel.locator('.doc-workflow-decision-time')).to_have_text(['2:20:09 PM', '2:18:54 PM', '2:18:32 PM', '2:17:12 PM'])
+        for width in [1440, 390, 320]:
+            page.set_viewport_size({'width': width, 'height': 950})
+            assert modal.locator('.modal-body').evaluate('(e) => e.scrollWidth <= e.clientWidth + 1'), (domain, width)
+            grid = modal.locator('.doc-overview-grid').first
+            group = modal.locator('.doc-overview-group').first
+            assert abs(grid.bounding_box()['width'] - group.bounding_box()['width']) < 2, 'Removed title must leave no empty column'
+            if width in [1440, 390]:
+                panel.locator('.doc-workflow-toolbar').evaluate('(e) => e.scrollIntoView({block: "start"})')
+                page.screenshot(path=str(Path(__file__).parent / ('approval-history-' + domain + '-' + str(width) + '.png')))
+        modal.get_by_role('button', name='Close', exact=True).last.click()
+        page.set_viewport_size({'width': 1440, 'height': 950})
+    print('Softcopy/hardcopy Approval History shares the decision stepper; overview titles removed with full-width metadata at 1440/390/320 pixels.', flush=True)
     print('Request/task vertical workflow, dated decisions, both timestamp orders, repeated approvals, remarks and mobile sizing passed.', flush=True)
