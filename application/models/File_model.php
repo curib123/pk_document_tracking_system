@@ -81,8 +81,8 @@ class File_model extends CI_Model
             return [];
         // Historical revisions require explicit history permission. Current-file
         // metadata is returned separately to preserve authorized file actions.
-        $canHistory = $this->Permission_model->allowed($user, 'files', 'history');
         $scope = $this->file_scope($user);
+        $canHistory = $this->Permission_model->allowed($user, 'files', 'history');
         $this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
                 f.status,u.first_name,u.last_name,
                 (f.status="approved" AND current.file_id=f.id) AS is_current,
