@@ -10,6 +10,15 @@ class Files extends MY_Controller
         require_once APPPATH . 'services/files/file_service.php';
     }
 
+    /** Prevent response-splitting and broken Content-Disposition headers. */
+    private function safe_download_name($name): string
+    {
+        $name = basename(str_replace(chr(92), '/', (string) $name));
+        $name = str_replace(['"', chr(92)], '_', $name);
+        $name = preg_replace('/[[:cntrl:]]/', '_', $name);
+        return $name !== '' && $name !== '.' ? $name : 'document';
+    }
+
     public function upload()
     {
         $this->require_permission('files', 'upload');
@@ -46,7 +55,7 @@ class Files extends MY_Controller
             return;
         }
         $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path)) {
+        if (!is_file($path) || is_link($path)) {
             show_404();
             return;
         }
@@ -56,7 +65,7 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Content-Security-Policy: sandbox');
         header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;
@@ -118,7 +127,7 @@ class Files extends MY_Controller
             ? "frame-ancestors 'self'"
             : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;
@@ -137,17 +146,17 @@ class Files extends MY_Controller
             return;
         }
         $filePath = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($filePath)) {
+        if (!is_file($filePath) || is_link($filePath)) {
             show_404();
             return;
         }
-        // Retry any old-file cleanup deferred by a temporary filesystem lock.
-        (new File_service())->cleanup_superseded((int) $file['document_id']);
+        // File delivery must not depend on maintenance cleanup succeeding.
+        // Run deferred cleanup independently, not during a user's download.
         header('Content-Type: application/octet-stream');
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
         header('Content-Disposition: attachment; filename="' .
-            str_replace(['"', "\r", "\n"], '_', $file['original_name']) . '"');
+            $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($filePath));
         readfile($filePath);
         exit;

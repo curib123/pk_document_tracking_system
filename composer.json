@@ -13,7 +13,7 @@
     "ext-mysqli": "*"
   },
   "scripts": {
-    "test": "php tests/lint.php && php tests/static_contract.php"
+    "test": "bash tests/run_unit.sh"
   },
   "config": {
     "allow-plugins": false,

@@ -4,12 +4,16 @@ define('BASEPATH',__DIR__);
 require_once __DIR__.'/../application/services/presentation/query_state.php';
 require_once __DIR__.'/../application/services/authentication/authentication_service.php';
 
+// Structural assertions are format-independent to allow equivalent PHP styles.
+function currentCodePosition(string $source,string $fragment) {
+    return strpos(preg_replace('/\\s+/', '', $source),preg_replace('/\\s+/', '', $fragment));
+}
 function newPlanCheck(bool $okay,string $message): void {
     if (!$okay) throw new RuntimeException($message);
 }
 function planReject(callable $fn,string $error): void {
     try{$fn();}catch(DomainException $e) {
-        newPlanCheck(strpos($e->getMessage(),$error)!==FALSE,
+        newPlanCheck(currentCodePosition($e->getMessage(),$error)!==FALSE,
             'Expected error: '.$error.'; got: '.$e->getMessage());
         return;
     }
@@ -57,46 +61,47 @@ $files=[
     'footer'=>file_get_contents($root.'/application/view/layout/footer.php'),
     'routes'=>file_get_contents($root.'/application/config/routes.php'),
     'css'=>file_get_contents($root.'/public/assets/css/plan-enhancements.css'),
+    'viewer_css'=>file_get_contents($root.'/public/assets/css/document-view.css'),
     'js'=>file_get_contents($root.'/public/assets/js/plan-controls.js')
 ];
 foreach (['area','specific','asset'] as $slug)
-    newPlanCheck(strpos($files['places'],"['area','specific','asset']")!==FALSE,
+    newPlanCheck(currentCodePosition($files['places'],"['area','specific','asset']")!==FALSE,
         'Area, Specific and Asset must have no View Details button.');
-newPlanCheck(strpos($files['request_form'],'value="<?= html_escape($user[\'name\']) ?>" readonly')!==FALSE
-    &&strpos($files['request_service'],'$payload[\'recipient_id\']=(int)$user[\'id\']')!==FALSE,
+newPlanCheck(currentCodePosition($files['request_form'],'value="<?= html_escape($user[\'name\']) ?>" readonly')!==FALSE
+    &&currentCodePosition($files['request_service'],'$payload[\'recipient_id\']=(int)$user[\'id\']')!==FALSE,
     'Assignment/access request recipient must be the signed-in user, enforced server-side.');
-newPlanCheck(strpos($files['assignment'],'public function assign_location()')!==FALSE &&
-    strpos($files['assignment_view'],'name="location_id"')!==FALSE,
+newPlanCheck(currentCodePosition($files['assignment'],'public function assign_location()')!==FALSE &&
+    currentCodePosition($files['assignment_view'],'name="location_id"')!==FALSE,
     'Location-wide document assignment must be accessible to authorized administrators.');
-newPlanCheck(strpos($files['notice'],'public function inbox()')!==FALSE &&
-    strpos($files['notice'],'public function mark_read()')!==FALSE &&
-    strpos($files['inbox_model'],'public function unread_page(')!==FALSE &&
-    strpos($files['topbar'],'notificationBellButton')!==FALSE,
+newPlanCheck(currentCodePosition($files['notice'],'public function inbox()')!==FALSE &&
+    currentCodePosition($files['notice'],'public function mark_read()')!==FALSE &&
+    currentCodePosition($files['inbox_model'],'public function unread_page(')!==FALSE &&
+    currentCodePosition($files['topbar'],'notificationBellButton')!==FALSE,
     'Unread-only bell notifications must use server-side listing and acknowledgement.');
-newPlanCheck(strpos($files['file_controller'],'public function print_file(')!==FALSE &&
-    strpos($files['file_controller'],'$this->File_model->allowed(')!==FALSE &&
-    strpos($files['action'],"\$type==='print'")!==FALSE,
+newPlanCheck(currentCodePosition($files['file_controller'],'public function print_file(')!==FALSE &&
+    currentCodePosition($files['file_controller'],'$this->File_model->allowed(')!==FALSE &&
+    currentCodePosition($files['action'],"\$type==='print'")!==FALSE,
     'Printable controlled files require the same file permissions as download.');
-newPlanCheck(strpos($files['document_view'],"'type'=>'print'")!==FALSE,
+newPlanCheck(currentCodePosition($files['document_view'],"'type'=>'print'")!==FALSE,
     'Document records must show a Print action for printable controlled files.');
-newPlanCheck(strpos($files['backup'],'public function cleanup()')!==FALSE &&
-    strpos($files['backup_view'],"admin/backups/cleanup")!==FALSE,
+newPlanCheck(currentCodePosition($files['backup'],'public function cleanup()')!==FALSE &&
+    currentCodePosition($files['backup_view'],"admin/backups/cleanup")!==FALSE,
     'Manual backup cleanup must use existing retention service.');
-newPlanCheck(strpos($files['table'],'data-date-period')!==FALSE &&
-    strpos($files['table'],'data-date-custom')!==FALSE,
+newPlanCheck(currentCodePosition($files['table'],'data-date-period')!==FALSE &&
+    currentCodePosition($files['table'],'data-date-custom')!==FALSE,
     'Table filters must provide presets and custom range controls.');
-newPlanCheck(strpos($files['css'],'backdrop-filter:blur(')!==FALSE &&
-    strpos($files['css'],'#viewModal .doc-overview-group')!==FALSE &&
-    strpos($files['css'],'.notification-inbox')!==FALSE,
+newPlanCheck(currentCodePosition($files['css'],'backdrop-filter:blur(')!==FALSE &&
+    currentCodePosition($files['viewer_css'],'.doc-overview-group')!==FALSE &&
+    currentCodePosition($files['css'],'.notification-inbox')!==FALSE,
     'Modal backdrop blur, details layout and notification styling must exist.');
-newPlanCheck(strpos($files['header'],'plan-enhancements.css')!==FALSE &&
-    strpos($files['footer'],'plan-controls.js')!==FALSE &&
-    strpos($files['footer'],'notification-inbox.js')!==FALSE,
+newPlanCheck(currentCodePosition($files['header'],'plan-enhancements.css')!==FALSE &&
+    currentCodePosition($files['footer'],'plan-controls.js')!==FALSE &&
+    currentCodePosition($files['footer'],'notification-inbox.js')!==FALSE,
     'New shared CSS/JS must load for every authenticated page.');
-newPlanCheck(strpos($files['routes'],'notifications/inbox/read')!==FALSE &&
-    strpos($files['routes'],'admin/document-assignments/location')!==FALSE &&
-    strpos($files['routes'],'files/print/(:num)')!==FALSE,
+newPlanCheck(currentCodePosition($files['routes'],'notifications/inbox/read')!==FALSE &&
+    currentCodePosition($files['routes'],'admin/document-assignments/location')!==FALSE &&
+    currentCodePosition($files['routes'],'files/print/(:num)')!==FALSE,
     'Protected routes must be registered.');
-newPlanCheck(strpos($files['js'],'PM')!==FALSE && strpos($files['js'],' AM')!==FALSE,
+newPlanCheck(currentCodePosition($files['js'],'PM')!==FALSE && currentCodePosition($files['js'],' AM')!==FALSE,
     '24-hour timestamps must be formatted to 12-hour display.');
 echo "Current plan: password, assignment, modal, date, print, notification and cleanup contracts passed.\n";

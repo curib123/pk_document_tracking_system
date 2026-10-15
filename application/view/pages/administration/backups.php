@@ -12,7 +12,7 @@ foreach ($backup_rows as $index => $item) {
         'id' => ($table['page'] - 1) * $table['limit'] + $index + 1,
         'cells' => ['name' => $item['name'], 'kind' => $item['kind'],
             'created_at' => $backupTime($item['created_at']), 'size' => number_format($item['size'] / 1048576, 2) . ' MB'],
-        'buttons' => [['type' => 'download', 'url' => 'admin/backups/download/' . rawurlencode($item['name'])]]
+        'buttons' => $canWrite ? [['type' => 'download', 'url' => 'admin/backups/download/' . rawurlencode($item['name'])]] : []
     ];
 }
 $dt_path = 'admin/backups';

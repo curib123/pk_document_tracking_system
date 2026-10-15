@@ -3,13 +3,17 @@ declare(strict_types=1);
 define('BASEPATH', __DIR__);
 require_once __DIR__.'/../application/services/backup/backup_service.php';
 
+// Structural references may be formatted differently without changing behavior.
+function backupCodePosition(string $source,string $part) {
+    return strpos(preg_replace('/\\s+/', '', $source),preg_replace('/\\s+/', '', $part));
+}
 function backup_assert(bool $pass,string $message): void {
     if (!$pass) throw new RuntimeException($message);
 }
 function backup_fails(callable $callback,string $expected):void {
     try {$callback();}
     catch (DomainException $e) {
-        backup_assert(strpos($e->getMessage(),$expected)!==FALSE,
+        backup_assert(backupCodePosition($e->getMessage(),$expected)!==FALSE,
             'Unexpected backup validation message: '.$e->getMessage());
         return;
     }
@@ -28,39 +32,39 @@ $service=file_get_contents($root.'/application/services/backup/backup_service.ph
 
 foreach (['admin/backups','admin/backups/create','admin/backups/import',
           'admin/backups/restore','admin/backups/download'] as $route)
-    backup_assert(strpos($routes,$route)!==FALSE,'Missing administrator backup route.');
-backup_assert(strpos($controller,"\$this->require_permission('backups','view')")!==FALSE,
+    backup_assert(backupCodePosition($routes,$route)!==FALSE,'Missing administrator backup route.');
+backup_assert(backupCodePosition($controller,"\$this->require_permission('backups','view')")!==FALSE,
     'Backup endpoints must use the shared role permission policy.');
-backup_assert(strpos($controller,'$this->confirmed()')!==FALSE,
+backup_assert(backupCodePosition($controller,'$this->confirmed()')!==FALSE,
     'Backup writes must require CSRF-enabled POST confirmation.');
-backup_assert(strpos($controller,'password_verify(')!==FALSE &&
-    strpos($controller,"'confirm_phrase'")!==FALSE,
+backup_assert(backupCodePosition($controller,'password_verify(')!==FALSE &&
+    backupCodePosition($controller,"'confirm_phrase'")!==FALSE,
     'Restore requires current admin password and typed confirmation.');
-backup_assert(strpos($controller,"'Content-Type: application/zip'")!==FALSE,
+backup_assert(backupCodePosition($controller,"'Content-Type: application/zip'")!==FALSE,
     'Archive downloads must be protected by a controller.');
-backup_assert(strpos($nav,'Backup &amp; Restore')!==FALSE,
+backup_assert(backupCodePosition($nav,'Backup &amp; Restore')!==FALSE,
     'Backup and Restore must appear in Administrator navigation.');
-backup_assert(strpos($view,'name="backup_zip"')!==FALSE &&
-    strpos($view,'name="admin_password"')!==FALSE,
+backup_assert(backupCodePosition($view,'name="backup_zip"')!==FALSE &&
+    backupCodePosition($view,'name="admin_password"')!==FALSE,
     'Backup upload and restore controls must be provided.');
-backup_assert(strpos($script,"-Daily -At '5:00PM'")!==FALSE &&
-    strpos($script,'StartWhenAvailable')!==FALSE,
+backup_assert(backupCodePosition($script,"-Daily -At '5:00PM'")!==FALSE &&
+    backupCodePosition($script,'StartWhenAvailable')!==FALSE,
     'Windows scheduler must run daily at 5 PM.');
-if ($docs!==NULL) backup_assert(strpos($docs,'CRON_TZ=Asia/Manila')!==FALSE,
+if ($docs!==NULL) backup_assert(backupCodePosition($docs,'CRON_TZ=Asia/Manila')!==FALSE,
     'Linux scheduled backup instructions must use Philippines timezone.');
-backup_assert(strpos($service,'ZipArchive::EM_AES_256')!==FALSE &&
-    strpos($service,"hash_hmac('sha256'")!==FALSE,
+backup_assert(backupCodePosition($service,'ZipArchive::EM_AES_256')!==FALSE &&
+    backupCodePosition($service,"hash_hmac('sha256'")!==FALSE,
     'Every ZIP must use AES encryption and a signed manifest.');
-backup_assert(strpos($service,'storage/sessions')!==FALSE &&
-    strpos($service,"\\.env")!==FALSE,
+backup_assert(backupCodePosition($service,'storage/sessions')!==FALSE &&
+    backupCodePosition($service,"\\.env")!==FALSE,
     'Transient session and secrets must not be included in backups.');
-backup_assert(strpos($service,"sourceFiles()")!==FALSE &&
-    strpos($service,"'files/storage/'")!==FALSE,
+backup_assert(backupCodePosition($service,"sourceFiles()")!==FALSE &&
+    backupCodePosition($service,"'files/storage/'")!==FALSE,
     'Backup must cover source files and restore private controlled documents.');
-backup_assert(strpos($service,"'recovery'")!==FALSE,
+backup_assert(backupCodePosition($service,"'recovery'")!==FALSE,
     'Restore must create a pre-restore recovery backup.');
-backup_assert(strpos($service,'$leaveMaintenance=TRUE;')!==FALSE &&
-    strpos($service,'if (!$leaveMaintenance) @unlink($maintenance);')!==FALSE,
+backup_assert(backupCodePosition($service,'$leaveMaintenance=TRUE;')!==FALSE &&
+    backupCodePosition($service,'if (!$leaveMaintenance) @unlink($maintenance);')!==FALSE,
     'Failed rollback must leave maintenance mode enabled for safe intervention.');
 
 $testRoot=sys_get_temp_dir().'/pk-dts-backup-'.bin2hex(random_bytes(8));

@@ -48,7 +48,7 @@ class Requests extends MY_Controller
         ];
         $requestTypes = [];
         foreach ($this->Request_model->types($tab) as $type) {
-            if ($this->can($actionModules[$type], 'request'))
+            if (isset($actionModules[$type]) && $this->can($actionModules[$type], 'request'))
                 $requestTypes[] = $type;
         }
         $history = $this->Request_model->histories(array_column($rows, 'id'));

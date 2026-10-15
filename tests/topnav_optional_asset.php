@@ -50,14 +50,16 @@ expect_feature(strpos($location,'name="code" type="text"')!==FALSE &&
     'Location Name and Code must remain editable and validated.');
 expect_feature(strpos($transfer,"\$level==='asset'?'No asset / not assigned'")!==FALSE,
     'Transfer destination must accept an empty Asset choice.');
-expect_feature(strpos($hardcopyService,"'asset_id','location_id'")!==FALSE &&
-    strpos($hardcopyService,"?(int)\$payload[\$field]:NULL")!==FALSE,
+$normalizedHardcopyService = preg_replace('/\\s+/', '', $hardcopyService);
+expect_feature(strpos($normalizedHardcopyService,"'asset_id','location_id'")!==FALSE &&
+    strpos($normalizedHardcopyService,'$data[$field]=!empty($payload[$field])?(int)$payload[$field]:NULL;')!==FALSE,
     'Hardcopy service must normalize empty Asset to SQL NULL.');
-expect_feature(strpos($placeService,"\$data['asset_id']=\$assetId?:NULL;")!==FALSE,
+$normalizedPlaceService = preg_replace('/\\s+/', '', $placeService);
+expect_feature(strpos($normalizedPlaceService,"\$data['asset_id']=\$assetId?:NULL;")!==FALSE,
     'Location service must normalize empty Asset to SQL NULL.');
-expect_feature(strpos($app,"changed==='asset' && !asset.value && location.value")!==FALSE,
+expect_feature(strpos(preg_replace('/\\s+/', '', $app),"changed==='asset'&&!asset.value&&location.value")!==FALSE,
     'Cleared Asset must not be silently repopulated by a linked Location.');
-expect_feature(strpos($app,'field.required=showDetails')!==FALSE,
+expect_feature(strpos(preg_replace('/\\s+/', '', $app),'field.required=showDetails')!==FALSE,
     'Form visibility must retain server-matched required/optional input state.');
 
 echo "Sticky top navigation and optional Asset UI/service contracts passed.\n";

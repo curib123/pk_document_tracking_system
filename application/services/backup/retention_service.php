@@ -41,16 +41,22 @@ final class Retention_service
             if (!is_file($path) || is_link($path))
                 continue;
             $name = basename($path);
-            if (!$this->managedDate('backups', $name))
+            $archiveDate = $this->managedDate('backups', $name);
+            if (!$archiveDate)
                 continue;
             $kind = strpos($name, 'pk-dts-recovery-') === 0
                 ? 'recovery' : 'regular';
-            $stamp = (int) filemtime($path);
+            // Files copied/imported between disks often have the same mtime.
+            // Use the archive's validated timestamp instead, with mtime as a tie-breaker.
+            $stamp = $archiveDate->getTimestamp();
+            $modified = (int) @filemtime($path);
             if (
                 !isset($latestByClass[$kind]) ||
-                $stamp > $latestByClass[$kind]['stamp']
+                $stamp > $latestByClass[$kind]['stamp'] ||
+                ($stamp === $latestByClass[$kind]['stamp'] &&
+                    $modified > $latestByClass[$kind]['modified'])
             ) {
-                $latestByClass[$kind] = ['name' => $name, 'stamp' => $stamp];
+                $latestByClass[$kind] = ['name' => $name, 'stamp' => $stamp, 'modified' => $modified];
             }
         }
         foreach ($latestByClass as $latest) {

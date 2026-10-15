@@ -90,10 +90,11 @@ try {
     ] as $path) $preserved[]=retention_fixture($root,$path);
     $result=$service->apply_retention($now);
     retention_check($result['cutoff']==='2026-07-13T17:00:00+08:00','Retention must use three calendar months in Asia/Manila.');
-    retention_check($result['deleted']===['backups'=>4,'audit'=>1,'logs'=>1],
-        'Expired managed snapshots, audit files and application logs must be deleted.');
+    retention_check($result['deleted']===['backups'=>3,'audit'=>1,'logs'=>1],
+        'Expired archives except the newest recovery snapshot, plus daily logs, must be deleted.');
     retention_check(!file_exists($logOld) && !file_exists($auditOld),'Expired daily logs must be removed.');
-    foreach (array_merge($preserved,[$boundary,$recent,$logBoundary,$auditBoundary]) as $path)
+    $preservedRecovery = $root.'/storage/backups/pk-dts-recovery-20260713-165959-1234567890.zip';
+    foreach (array_merge($preserved,[$boundary,$recent,$logBoundary,$auditBoundary,$preservedRecovery]) as $path)
         retention_check(is_file($path),'Retention must preserve boundary, live and unmanaged files: '.basename($path));
     retention_check($service->apply_retention($now)['deleted']===['backups'=>0,'audit'=>0,'logs'=>0],
         'Repeated cleanup must be idempotent.');

@@ -65,11 +65,12 @@ test('missing Chart.js hides only graph canvases, leaving count tables visible',
 
 test('dashboard icons do not replace original accessible metric text',()=>{
     const view=fs.readFileSync('application/view/pages/dashboard/index.php','utf8');
-    assert.ok(view.includes('dashboard-page'));
-    assert.ok(view.includes('data-metric="<?= $key ?>"'));
-    assert.ok(view.includes('dashboard-stat-icon'));
-    assert.ok(view.includes('aria-hidden="true"'));
-    assert.ok(view.includes("<?= (int)$metrics[$key] ?>"));
-    assert.ok(view.includes('data-chart-counts="<?= html_escape(json_encode(array_values($document_counts))) ?>"'));
-    assert.ok(view.includes('data-chart-counts="<?= html_escape(json_encode(array_values($stats))) ?>"'));
+    const compact=view.replace(/\s+/g,'');
+    assert.ok(compact.includes('dashboard-page'.replace(/\s+/g, '')));
+    assert.ok(compact.includes('data-metric="<?= $key ?>"'.replace(/\s+/g, '')));
+    assert.ok(compact.includes('dashboard-stat-icon'.replace(/\s+/g, '')));
+    assert.ok(compact.includes('aria-hidden="true"'.replace(/\s+/g, '')));
+    assert.ok(compact.includes("<?= (int)$metrics[$key] ?>".replace(/\s+/g, '')));
+    assert.ok(compact.includes('data-chart-counts="<?= html_escape(json_encode(array_values($document_counts))) ?>"'.replace(/\s+/g, '')));
+    assert.ok(compact.includes('data-chart-counts="<?= html_escape(json_encode(array_values($stats))) ?>"'.replace(/\s+/g, '')));
 });
