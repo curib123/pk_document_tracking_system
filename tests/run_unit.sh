@@ -1,5 +1,8 @@
 #!/usr/bin/env bash
-set -euo pipefail
+set -Euo pipefail
+# Run every independent regression even when one fails, then fail the suite.
+failed=0
+trap 'failed=$((failed+1))' ERR
 echo "Linting tracked PHP source..."
 while IFS= read -r file; do
   php -l "$file" >/dev/null
@@ -41,4 +44,8 @@ php tests/backup_retention.php
 php tests/high_priority_security.php
 php tests/dashboard_copy_contract.php
 node --test tests/document_view.test.js tests/controlled_print.test.js tests/pwa.test.js tests/date_controls.test.js tests/dashboard_visual.test.js tests/motion_navigation.test.js tests/action_feedback.test.js tests/login_transition.test.js tests/logout_transition.test.js tests/row_actions.test.js tests/task_notifications.test.js tests/modal_dismissal.test.js tests/live_table_contract.test.js
+if (( failed > 0 )); then
+  echo "$failed check(s) failed; see the errors above." >&2
+  exit 1
+fi
 echo "Static and syntax checks passed."
