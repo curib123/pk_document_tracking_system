@@ -5,637 +5,1268 @@
 -- Create the first administrator with: php tools/create_admin.php <username>
 -- No operational records, user identities, password hashes or workflow history.
 
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
-/*!40103 SET TIME_ZONE='+00:00' */;
-/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
-/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
-/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
-/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `access_grants` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `request_id` bigint(20) unsigned DEFAULT NULL,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) unsigned NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
-  `granted_by` bigint(20) unsigned NOT NULL,
-  `granted_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `expires_at` datetime NOT NULL,
-  `revoked_at` datetime DEFAULT NULL,
-  `revoked_by` bigint(20) unsigned DEFAULT NULL,
-  `reason` text NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'access_granted',
-  `version` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `request_id` (`request_id`),
-  KEY `user_id` (`user_id`),
-  KEY `granted_by` (`granted_by`),
-  KEY `revoked_by` (`revoked_by`),
-  KEY `access_check` (`domain`,`document_id`,`user_id`,`status`,`expires_at`),
-  CONSTRAINT `access_grants_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  CONSTRAINT `access_grants_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `access_grants_ibfk_3` FOREIGN KEY (`granted_by`) REFERENCES `users` (`id`),
-  CONSTRAINT `access_grants_ibfk_4` FOREIGN KEY (`revoked_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `areas` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `assets` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `specific_id` bigint(20) unsigned NOT NULL,
-  `asset_number` varchar(100) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `asset_number` (`asset_number`),
-  KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
-  KEY `specific_id` (`specific_id`),
-  CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `assignments` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `softcopy_id` bigint(20) unsigned NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
-  `assigned_by` bigint(20) unsigned NOT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `assigned_document` (`softcopy_id`,`user_id`),
-  KEY `user_id` (`user_id`),
-  KEY `assigned_by` (`assigned_by`),
-  CONSTRAINT `assignments_ibfk_1` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
-  CONSTRAINT `assignments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `categories` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `parent_id` bigint(20) unsigned DEFAULT NULL,
-  `name` varchar(150) NOT NULL,
-  `folder_name` varchar(150) NOT NULL,
-  `description` text DEFAULT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `created_by` bigint(20) unsigned NOT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `parent_id` (`parent_id`),
-  KEY `created_by` (`created_by`),
-  CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`),
-  CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `disposals` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `request_id` bigint(20) unsigned DEFAULT NULL,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) unsigned NOT NULL,
-  `previous_status` varchar(30) NOT NULL,
-  `previous_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`previous_state`)),
-  `disposal_action` varchar(20) NOT NULL,
-  `remarks` text NOT NULL,
-  `disposed_by` bigint(20) unsigned NOT NULL,
-  `disposed_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `request_id` (`request_id`),
-  KEY `disposed_by` (`disposed_by`),
-  CONSTRAINT `disposals_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  CONSTRAINT `disposals_ibfk_2` FOREIGN KEY (`disposed_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `files` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `original_name` varchar(255) NOT NULL,
-  `storage_name` varchar(100) NOT NULL,
-  `size` bigint(20) unsigned NOT NULL,
-  `mime_type` varchar(150) NOT NULL,
-  `fingerprint` char(64) NOT NULL,
-  `extension` varchar(10) NOT NULL,
-  `purpose` varchar(30) NOT NULL DEFAULT 'upload',
-  `domain` varchar(10) DEFAULT NULL,
-  `document_id` bigint(20) unsigned DEFAULT NULL,
-  `uploaded_by` bigint(20) unsigned NOT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'pending',
-  `approved_by` bigint(20) unsigned DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
-  `rejected_by` bigint(20) unsigned DEFAULT NULL,
-  `rejected_at` datetime DEFAULT NULL,
-  `rejection_reason` text DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `storage_name` (`storage_name`),
-  KEY `uploaded_by` (`uploaded_by`),
-  KEY `approved_by` (`approved_by`),
-  KEY `rejected_by` (`rejected_by`),
-  KEY `document_files` (`domain`,`document_id`,`status`),
-  CONSTRAINT `files_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
-  CONSTRAINT `files_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`),
-  CONSTRAINT `files_ibfk_3` FOREIGN KEY (`rejected_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `hardcopy_documents` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `title` varchar(255) NOT NULL,
-  `area_id` bigint(20) unsigned DEFAULT NULL,
-  `specific_id` bigint(20) unsigned DEFAULT NULL,
-  `asset_id` bigint(20) unsigned DEFAULT NULL,
-  `location_id` bigint(20) unsigned DEFAULT NULL,
-  `sequence_number` varchar(100) DEFAULT NULL,
-  `retention_enabled` tinyint(4) NOT NULL DEFAULT 0,
-  `retention_start_date` date DEFAULT NULL,
-  `retention_end_date` date DEFAULT NULL,
-  `holder_id` bigint(20) unsigned NOT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'active',
-  `previous_status` varchar(30) DEFAULT NULL,
-  `created_by` bigint(20) unsigned NOT NULL,
-  `creation_source` varchar(20) NOT NULL,
-  `creation_reason` text NOT NULL,
-  `source_request_id` bigint(20) unsigned DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `area_id` (`area_id`),
-  KEY `specific_id` (`specific_id`),
-  KEY `asset_id` (`asset_id`),
-  KEY `holder_id` (`holder_id`),
-  KEY `created_by` (`created_by`),
-  KEY `hardcopy_status` (`status`,`title`),
-  KEY `idx_hardcopy_documents_location` (`location_id`),
-  CONSTRAINT `hardcopy_documents_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
-  CONSTRAINT `hardcopy_documents_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
-  CONSTRAINT `hardcopy_documents_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
-  CONSTRAINT `hardcopy_documents_ibfk_4` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
-  CONSTRAINT `hardcopy_documents_ibfk_5` FOREIGN KEY (`holder_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `hardcopy_documents_ibfk_6` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `locations` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `area_id` bigint(20) unsigned DEFAULT NULL,
-  `specific_id` bigint(20) unsigned DEFAULT NULL,
-  `asset_id` bigint(20) unsigned DEFAULT NULL,
-  `name` varchar(150) NOT NULL,
-  `code` varchar(100) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `archive_date` date DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `code` (`code`),
-  KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
-  KEY `area_id` (`area_id`),
-  KEY `specific_id` (`specific_id`),
-  KEY `asset_id` (`asset_id`),
-  CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
-  CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
-  CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `login_attempts` (
-  `attempt_key` char(64) NOT NULL,
-  `failures` int(11) NOT NULL DEFAULT 0,
-  `window_started` datetime NOT NULL,
-  PRIMARY KEY (`attempt_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `notifications` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `user_id` bigint(20) unsigned NOT NULL,
-  `title` varchar(150) NOT NULL,
-  `message` text NOT NULL,
-  `request_id` bigint(20) unsigned DEFAULT NULL,
-  `read_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `request_id` (`request_id`),
-  KEY `inbox` (`user_id`,`read_at`,`created_at`),
-  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `permissions` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(150) NOT NULL,
-  `module_key` varchar(60) NOT NULL,
-  `module_label` varchar(100) NOT NULL,
-  `action_key` varchar(60) NOT NULL,
-  `action_label` varchar(100) NOT NULL,
-  `description` text DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `capability` (`module_key`,`action_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `requests` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `reference` varchar(50) NOT NULL,
-  `type` varchar(50) NOT NULL,
-  `softcopy_id` bigint(20) unsigned DEFAULT NULL,
-  `hardcopy_id` bigint(20) unsigned DEFAULT NULL,
-  `requested_by` bigint(20) unsigned NOT NULL,
-  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`)),
-  `workflow_version_id` bigint(20) unsigned DEFAULT NULL,
-  `snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`snapshot`)),
-  `current_node` varchar(50) DEFAULT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'draft',
-  `result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`result`)),
-  `version` int(11) NOT NULL DEFAULT 1,
-  `submitted_at` datetime DEFAULT NULL,
-  `completed_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `reference` (`reference`),
-  KEY `softcopy_id` (`softcopy_id`),
-  KEY `hardcopy_id` (`hardcopy_id`),
-  KEY `requested_by` (`requested_by`),
-  KEY `request_queue` (`status`,`type`,`requested_by`),
-  KEY `request_workflow_version` (`workflow_version_id`,`status`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `revision_artifacts` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `revision_id` bigint(20) unsigned NOT NULL,
-  `artifact_type` varchar(20) NOT NULL,
-  `file_id` bigint(20) unsigned NOT NULL,
-  `source_fingerprint` char(64) NOT NULL,
-  `generator_version` varchar(50) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `file_id` (`file_id`),
-  UNIQUE KEY `artifact_source` (`revision_id`,`artifact_type`,`source_fingerprint`),
-  CONSTRAINT `revision_artifacts_ibfk_1` FOREIGN KEY (`revision_id`) REFERENCES `softcopy_revisions` (`id`),
-  CONSTRAINT `revision_artifacts_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `role_permissions` (
-  `role_id` bigint(20) unsigned NOT NULL,
-  `permission_id` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`role_id`,`permission_id`),
-  KEY `permission_id` (`permission_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `roles` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `name` varchar(120) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `schema_migrations` (
-  `version` int(11) NOT NULL,
-  `applied_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`version`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `sequences` (
-  `sequence_key` varchar(80) NOT NULL,
-  `value` bigint(20) unsigned NOT NULL,
-  PRIMARY KEY (`sequence_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `settings` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `setting_key` varchar(80) NOT NULL,
-  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`)),
-  `version` int(11) NOT NULL DEFAULT 1,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `setting_key` (`setting_key`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `softcopy_documents` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `document_number` varchar(100) NOT NULL,
-  `series_number` varchar(100) DEFAULT NULL,
-  `title` varchar(255) NOT NULL,
-  `category_id` bigint(20) unsigned NOT NULL,
-  `current_revision_id` bigint(20) unsigned DEFAULT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'active',
-  `previous_status` varchar(30) DEFAULT NULL,
-  `created_by` bigint(20) unsigned NOT NULL,
-  `creation_source` varchar(20) NOT NULL,
-  `creation_reason` text NOT NULL,
-  `source_request_id` bigint(20) unsigned DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `document_number` (`document_number`),
-  KEY `category_id` (`category_id`),
-  KEY `created_by` (`created_by`),
-  KEY `softcopy_status` (`status`,`title`),
-  KEY `current_revision_fk` (`current_revision_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `softcopy_revisions` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `document_id` bigint(20) unsigned NOT NULL,
-  `revision_number` int(10) unsigned NOT NULL,
-  `reason` text NOT NULL,
-  `effective_date` date NOT NULL,
-  `page_number` int(10) unsigned NOT NULL,
-  `series_number` varchar(100) DEFAULT NULL,
-  `document_title` varchar(255) NOT NULL,
-  `previous_revision_level` varchar(30) DEFAULT NULL,
-  `new_revision_level` varchar(30) NOT NULL,
-  `previous_effective_date` date DEFAULT NULL,
-  `new_effective_date` date NOT NULL,
-  `date_received` date NOT NULL,
-  `date_released` date NOT NULL,
-  `approval_date` date NOT NULL,
-  `file_id` bigint(20) unsigned NOT NULL,
-  `uploaded_by` bigint(20) unsigned NOT NULL,
-  `approved_by` bigint(20) unsigned NOT NULL,
-  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `file_id` (`file_id`),
-  UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
-  KEY `uploaded_by` (`uploaded_by`),
-  KEY `approved_by` (`approved_by`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `specifics` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `area_id` bigint(20) unsigned NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `specific_name` (`area_id`,`name`),
-  KEY `specific_lookup` (`active`,`area_id`,`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `status_history` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) unsigned NOT NULL,
-  `previous_status` varchar(30) NOT NULL,
-  `new_status` varchar(30) NOT NULL,
-  `action` varchar(60) NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `user_id` (`user_id`),
-  KEY `lifecycle` (`domain`,`document_id`,`created_at`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `task_notification_receipts` (
-  `user_id` bigint(20) unsigned NOT NULL,
-  `step_id` bigint(20) unsigned NOT NULL,
-  `activation` int(11) NOT NULL,
-  `shown_at` datetime NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`user_id`,`step_id`,`activation`),
-  KEY `idx_task_receipt_step` (`step_id`),
-  CONSTRAINT `fk_task_receipt_step` FOREIGN KEY (`step_id`) REFERENCES `workflow_steps` (`id`) ON DELETE CASCADE,
-  CONSTRAINT `fk_task_receipt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `transfers` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `request_id` bigint(20) unsigned DEFAULT NULL,
-  `hardcopy_id` bigint(20) unsigned NOT NULL,
-  `origin` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`origin`)),
-  `destination` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`destination`)),
-  `current_holder_id` bigint(20) unsigned NOT NULL,
-  `recipient_id` bigint(20) unsigned NOT NULL,
-  `document_copy_number` varchar(100) NOT NULL,
-  `reason` text NOT NULL,
-  `comments` text DEFAULT NULL,
-  `status` varchar(40) NOT NULL DEFAULT 'for_transfer',
-  `recipient_status` varchar(20) NOT NULL DEFAULT 'pending',
-  `transferred_by` bigint(20) unsigned DEFAULT NULL,
-  `transferred_at` datetime DEFAULT NULL,
-  `accepted_by` bigint(20) unsigned DEFAULT NULL,
-  `accepted_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `request_id` (`request_id`),
-  KEY `hardcopy_id` (`hardcopy_id`),
-  KEY `current_holder_id` (`current_holder_id`),
-  KEY `recipient_id` (`recipient_id`),
-  KEY `transferred_by` (`transferred_by`),
-  KEY `accepted_by` (`accepted_by`),
-  KEY `transfer_queue` (`status`,`recipient_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `user_roles` (
-  `user_id` bigint(20) unsigned NOT NULL,
-  `role_id` bigint(20) unsigned NOT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`user_id`,`role_id`),
-  KEY `idx_user_roles_role` (`role_id`),
-  CONSTRAINT `fk_user_roles_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
-  CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `users` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `username` varchar(80) NOT NULL,
-  `first_name` varchar(100) NOT NULL,
-  `middle_name` varchar(100) DEFAULT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `position_title` varchar(150) NOT NULL,
-  `role_id` bigint(20) unsigned NOT NULL,
-  `leader_id` bigint(20) unsigned DEFAULT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `require_password_change` tinyint(4) NOT NULL DEFAULT 1,
-  `session_version` int(11) NOT NULL DEFAULT 1,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `username` (`username`),
-  KEY `role_id` (`role_id`),
-  KEY `leader_id` (`leader_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `workflow_history` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `request_id` bigint(20) unsigned NOT NULL,
-  `step_id` bigint(20) unsigned DEFAULT NULL,
-  `action` varchar(50) NOT NULL,
-  `user_id` bigint(20) unsigned NOT NULL,
-  `user_name` varchar(255) NOT NULL,
-  `position_title` varchar(150) NOT NULL,
-  `before_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`before_state`)),
-  `after_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`after_state`)),
-  `comments` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  KEY `step_id` (`step_id`),
-  KEY `user_id` (`user_id`),
-  KEY `request_history` (`request_id`,`created_at`,`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `workflow_steps` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `request_id` bigint(20) unsigned NOT NULL,
-  `node_key` varchar(50) NOT NULL,
-  `label` varchar(120) NOT NULL,
-  `assignment` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`assignment`)),
-  `candidates` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`candidates`)),
-  `assigned_user_id` bigint(20) unsigned DEFAULT NULL,
-  `assigned_name` varchar(255) DEFAULT NULL,
-  `assigned_position` varchar(150) DEFAULT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'pending',
-  `decision` varchar(20) DEFAULT NULL,
-  `comments` text DEFAULT NULL,
-  `acting_user_id` bigint(20) unsigned DEFAULT NULL,
-  `acting_name` varchar(255) DEFAULT NULL,
-  `acting_position` varchar(150) DEFAULT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `acted_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  PRIMARY KEY (`id`),
-  KEY `assigned_user_id` (`assigned_user_id`),
-  KEY `acting_user_id` (`acting_user_id`),
-  KEY `pending_steps` (`status`,`request_id`),
-  KEY `request_steps` (`request_id`,`id`,`status`,`decision`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `workflow_versions` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `workflow_id` bigint(20) unsigned NOT NULL,
-  `version_number` int(10) unsigned NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'draft',
-  `is_default` tinyint(4) NOT NULL DEFAULT 0,
-  `graph` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`graph`)),
-  `created_by` bigint(20) unsigned NOT NULL,
-  `published_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `workflow_version` (`workflow_id`,`version_number`),
-  KEY `created_by` (`created_by`),
-  KEY `publication` (`workflow_id`,`status`,`is_default`),
-  KEY `draft_workflow` (`workflow_id`,`status`,`version_number`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `workflows` (
-  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
-  `workflow_key` varchar(80) NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `description` text DEFAULT NULL,
-  `request_type` varchar(50) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 0,
-  `active_request_type` varchar(50) GENERATED ALWAYS AS (case when `active` = 1 then `request_type` else NULL end) STORED,
-  `created_by` bigint(20) unsigned NOT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
-  PRIMARY KEY (`id`),
-  UNIQUE KEY `workflow_key` (`workflow_key`),
-  UNIQUE KEY `one_active_workflow` (`active_request_type`),
-  KEY `workflow_type` (`request_type`),
-  KEY `created_by` (`created_by`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
-
-/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
-/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
-/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
-/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
-
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+
+/*!40101 SET NAMES utf8mb4 */;
+
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+
+/*!40103 SET TIME_ZONE='+00:00' */;
+
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `access_grants` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `domain` varchar(10) NOT NULL,
+
+  `document_id` bigint(20) unsigned NOT NULL,
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `granted_by` bigint(20) unsigned NOT NULL,
+
+  `granted_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `expires_at` datetime NOT NULL,
+
+  `revoked_at` datetime DEFAULT NULL,
+
+  `revoked_by` bigint(20) unsigned DEFAULT NULL,
+
+  `reason` text NOT NULL,
+
+  `status` varchar(20) NOT NULL DEFAULT 'access_granted',
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `request_id` (`request_id`),
+
+  KEY `user_id` (`user_id`),
+
+  KEY `granted_by` (`granted_by`),
+
+  KEY `revoked_by` (`revoked_by`),
+
+  KEY `access_check` (`domain`,`document_id`,`user_id`,`status`,`expires_at`),
+
+  CONSTRAINT `access_grants_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
+
+  CONSTRAINT `access_grants_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `access_grants_ibfk_3` FOREIGN KEY (`granted_by`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `access_grants_ibfk_4` FOREIGN KEY (`revoked_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `areas` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `name` varchar(150) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `name` (`name`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `assets` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `specific_id` bigint(20) unsigned NOT NULL,
+
+  `asset_number` varchar(100) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `asset_number` (`asset_number`),
+
+  KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
+
+  KEY `specific_id` (`specific_id`),
+
+  CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `assignments` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `softcopy_id` bigint(20) unsigned NOT NULL,
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `assigned_by` bigint(20) unsigned NOT NULL,
+
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `assigned_document` (`softcopy_id`,`user_id`),
+
+  KEY `user_id` (`user_id`),
+
+  KEY `assigned_by` (`assigned_by`),
+
+  CONSTRAINT `assignments_ibfk_1` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
+
+  CONSTRAINT `assignments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `categories` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `parent_id` bigint(20) unsigned DEFAULT NULL,
+
+  `name` varchar(150) NOT NULL,
+
+  `folder_name` varchar(150) NOT NULL,
+
+  `description` text DEFAULT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `created_by` bigint(20) unsigned NOT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  KEY `parent_id` (`parent_id`),
+
+  KEY `created_by` (`created_by`),
+
+  CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`),
+
+  CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `disposals` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `domain` varchar(10) NOT NULL,
+
+  `document_id` bigint(20) unsigned NOT NULL,
+
+  `previous_status` varchar(30) NOT NULL,
+
+  `previous_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`previous_state`)),
+
+  `disposal_action` varchar(20) NOT NULL,
+
+  `remarks` text NOT NULL,
+
+  `disposed_by` bigint(20) unsigned NOT NULL,
+
+  `disposed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `request_id` (`request_id`),
+
+  KEY `disposed_by` (`disposed_by`),
+
+  CONSTRAINT `disposals_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
+
+  CONSTRAINT `disposals_ibfk_2` FOREIGN KEY (`disposed_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `files` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `original_name` varchar(255) NOT NULL,
+
+  `storage_name` varchar(100) NOT NULL,
+
+  `size` bigint(20) unsigned NOT NULL,
+
+  `mime_type` varchar(150) NOT NULL,
+
+  `fingerprint` char(64) NOT NULL,
+
+  `extension` varchar(10) NOT NULL,
+
+  `purpose` varchar(30) NOT NULL DEFAULT 'upload',
+
+  `domain` varchar(10) DEFAULT NULL,
+
+  `document_id` bigint(20) unsigned DEFAULT NULL,
+
+  `uploaded_by` bigint(20) unsigned NOT NULL,
+
+  `status` varchar(30) NOT NULL DEFAULT 'pending',
+
+  `approved_by` bigint(20) unsigned DEFAULT NULL,
+
+  `approved_at` datetime DEFAULT NULL,
+
+  `rejected_by` bigint(20) unsigned DEFAULT NULL,
+
+  `rejected_at` datetime DEFAULT NULL,
+
+  `rejection_reason` text DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `storage_name` (`storage_name`),
+
+  KEY `uploaded_by` (`uploaded_by`),
+
+  KEY `approved_by` (`approved_by`),
+
+  KEY `rejected_by` (`rejected_by`),
+
+  KEY `document_files` (`domain`,`document_id`,`status`),
+
+  CONSTRAINT `files_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `files_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `files_ibfk_3` FOREIGN KEY (`rejected_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `hardcopy_documents` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `title` varchar(255) NOT NULL,
+
+  `area_id` bigint(20) unsigned DEFAULT NULL,
+
+  `specific_id` bigint(20) unsigned DEFAULT NULL,
+
+  `asset_id` bigint(20) unsigned DEFAULT NULL,
+
+  `location_id` bigint(20) unsigned DEFAULT NULL,
+
+  `sequence_number` varchar(100) DEFAULT NULL,
+
+  `retention_enabled` tinyint(4) NOT NULL DEFAULT 0,
+
+  `retention_start_date` date DEFAULT NULL,
+
+  `retention_end_date` date DEFAULT NULL,
+
+  `holder_id` bigint(20) unsigned NOT NULL,
+
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+
+  `previous_status` varchar(30) DEFAULT NULL,
+
+  `created_by` bigint(20) unsigned NOT NULL,
+
+  `creation_source` varchar(20) NOT NULL,
+
+  `creation_reason` text NOT NULL,
+
+  `source_request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  KEY `area_id` (`area_id`),
+
+  KEY `specific_id` (`specific_id`),
+
+  KEY `asset_id` (`asset_id`),
+
+  KEY `holder_id` (`holder_id`),
+
+  KEY `created_by` (`created_by`),
+
+  KEY `hardcopy_status` (`status`,`title`),
+
+  KEY `idx_hardcopy_documents_location` (`location_id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_4` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_5` FOREIGN KEY (`holder_id`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `hardcopy_documents_ibfk_6` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `locations` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `area_id` bigint(20) unsigned DEFAULT NULL,
+
+  `specific_id` bigint(20) unsigned DEFAULT NULL,
+
+  `asset_id` bigint(20) unsigned DEFAULT NULL,
+
+  `name` varchar(150) NOT NULL,
+
+  `code` varchar(100) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `archive_date` date DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `code` (`code`),
+
+  KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
+
+  KEY `area_id` (`area_id`),
+
+  KEY `specific_id` (`specific_id`),
+
+  KEY `asset_id` (`asset_id`),
+
+  CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
+
+  CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
+
+  CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `login_attempts` (
+
+  `attempt_key` char(64) NOT NULL,
+
+  `failures` int(11) NOT NULL DEFAULT 0,
+
+  `window_started` datetime NOT NULL,
+
+  PRIMARY KEY (`attempt_key`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `notifications` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `title` varchar(150) NOT NULL,
+
+  `message` text NOT NULL,
+
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `read_at` datetime DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  KEY `request_id` (`request_id`),
+
+  KEY `inbox` (`user_id`,`read_at`,`created_at`),
+
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+
+  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `permissions` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `name` varchar(150) NOT NULL,
+
+  `module_key` varchar(60) NOT NULL,
+
+  `module_label` varchar(100) NOT NULL,
+
+  `action_key` varchar(60) NOT NULL,
+
+  `action_label` varchar(100) NOT NULL,
+
+  `description` text DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `capability` (`module_key`,`action_key`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `requests` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `reference` varchar(50) NOT NULL,
+
+  `type` varchar(50) NOT NULL,
+
+  `softcopy_id` bigint(20) unsigned DEFAULT NULL,
+
+  `hardcopy_id` bigint(20) unsigned DEFAULT NULL,
+
+  `requested_by` bigint(20) unsigned NOT NULL,
+
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`)),
+
+  `workflow_version_id` bigint(20) unsigned DEFAULT NULL,
+
+  `snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`snapshot`)),
+
+  `current_node` varchar(50) DEFAULT NULL,
+
+  `status` varchar(30) NOT NULL DEFAULT 'draft',
+
+  `result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`result`)),
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `submitted_at` datetime DEFAULT NULL,
+
+  `completed_at` datetime DEFAULT NULL,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `reference` (`reference`),
+
+  KEY `softcopy_id` (`softcopy_id`),
+
+  KEY `hardcopy_id` (`hardcopy_id`),
+
+  KEY `requested_by` (`requested_by`),
+
+  KEY `request_queue` (`status`,`type`,`requested_by`),
+
+  KEY `request_workflow_version` (`workflow_version_id`,`status`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `revision_artifacts` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `revision_id` bigint(20) unsigned NOT NULL,
+
+  `artifact_type` varchar(20) NOT NULL,
+
+  `file_id` bigint(20) unsigned NOT NULL,
+
+  `source_fingerprint` char(64) NOT NULL,
+
+  `generator_version` varchar(50) NOT NULL,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `file_id` (`file_id`),
+
+  UNIQUE KEY `artifact_source` (`revision_id`,`artifact_type`,`source_fingerprint`),
+
+  CONSTRAINT `revision_artifacts_ibfk_1` FOREIGN KEY (`revision_id`) REFERENCES `softcopy_revisions` (`id`),
+
+  CONSTRAINT `revision_artifacts_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `role_permissions` (
+
+  `role_id` bigint(20) unsigned NOT NULL,
+
+  `permission_id` bigint(20) unsigned NOT NULL,
+
+  PRIMARY KEY (`role_id`,`permission_id`),
+
+  KEY `permission_id` (`permission_id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `roles` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `name` varchar(120) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `name` (`name`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `schema_migrations` (
+
+  `version` int(11) NOT NULL,
+
+  `applied_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`version`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `sequences` (
+
+  `sequence_key` varchar(80) NOT NULL,
+
+  `value` bigint(20) unsigned NOT NULL,
+
+  PRIMARY KEY (`sequence_key`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `settings` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `setting_key` varchar(80) NOT NULL,
+
+  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`)),
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `setting_key` (`setting_key`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `softcopy_documents` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `document_number` varchar(100) NOT NULL,
+
+  `series_number` varchar(100) DEFAULT NULL,
+
+  `title` varchar(255) NOT NULL,
+
+  `category_id` bigint(20) unsigned NOT NULL,
+
+  `current_revision_id` bigint(20) unsigned DEFAULT NULL,
+
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+
+  `previous_status` varchar(30) DEFAULT NULL,
+
+  `created_by` bigint(20) unsigned NOT NULL,
+
+  `creation_source` varchar(20) NOT NULL,
+
+  `creation_reason` text NOT NULL,
+
+  `source_request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `document_number` (`document_number`),
+
+  KEY `category_id` (`category_id`),
+
+  KEY `created_by` (`created_by`),
+
+  KEY `softcopy_status` (`status`,`title`),
+
+  KEY `current_revision_fk` (`current_revision_id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `softcopy_revisions` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `document_id` bigint(20) unsigned NOT NULL,
+
+  `revision_number` int(10) unsigned NOT NULL,
+
+  `reason` text NOT NULL,
+
+  `effective_date` date NOT NULL,
+
+  `page_number` int(10) unsigned NOT NULL,
+
+  `series_number` varchar(100) DEFAULT NULL,
+
+  `document_title` varchar(255) NOT NULL,
+
+  `previous_revision_level` varchar(30) DEFAULT NULL,
+
+  `new_revision_level` varchar(30) NOT NULL,
+
+  `previous_effective_date` date DEFAULT NULL,
+
+  `new_effective_date` date NOT NULL,
+
+  `date_received` date NOT NULL,
+
+  `date_released` date NOT NULL,
+
+  `approval_date` date NOT NULL,
+
+  `file_id` bigint(20) unsigned NOT NULL,
+
+  `uploaded_by` bigint(20) unsigned NOT NULL,
+
+  `approved_by` bigint(20) unsigned NOT NULL,
+
+  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `file_id` (`file_id`),
+
+  UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
+
+  KEY `uploaded_by` (`uploaded_by`),
+
+  KEY `approved_by` (`approved_by`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `specifics` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `area_id` bigint(20) unsigned NOT NULL,
+
+  `name` varchar(150) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `specific_name` (`area_id`,`name`),
+
+  KEY `specific_lookup` (`active`,`area_id`,`name`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `status_history` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `domain` varchar(10) NOT NULL,
+
+  `document_id` bigint(20) unsigned NOT NULL,
+
+  `previous_status` varchar(30) NOT NULL,
+
+  `new_status` varchar(30) NOT NULL,
+
+  `action` varchar(60) NOT NULL,
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `remarks` text DEFAULT NULL,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  KEY `user_id` (`user_id`),
+
+  KEY `lifecycle` (`domain`,`document_id`,`created_at`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `task_notification_receipts` (
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `step_id` bigint(20) unsigned NOT NULL,
+
+  `activation` int(11) NOT NULL,
+
+  `shown_at` datetime NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`user_id`,`step_id`,`activation`),
+
+  KEY `idx_task_receipt_step` (`step_id`),
+
+  CONSTRAINT `fk_task_receipt_step` FOREIGN KEY (`step_id`) REFERENCES `workflow_steps` (`id`) ON DELETE CASCADE,
+
+  CONSTRAINT `fk_task_receipt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `transfers` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+
+  `hardcopy_id` bigint(20) unsigned NOT NULL,
+
+  `origin` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`origin`)),
+
+  `destination` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`destination`)),
+
+  `current_holder_id` bigint(20) unsigned NOT NULL,
+
+  `recipient_id` bigint(20) unsigned NOT NULL,
+
+  `document_copy_number` varchar(100) NOT NULL,
+
+  `reason` text NOT NULL,
+
+  `comments` text DEFAULT NULL,
+
+  `status` varchar(40) NOT NULL DEFAULT 'for_transfer',
+
+  `recipient_status` varchar(20) NOT NULL DEFAULT 'pending',
+
+  `transferred_by` bigint(20) unsigned DEFAULT NULL,
+
+  `transferred_at` datetime DEFAULT NULL,
+
+  `accepted_by` bigint(20) unsigned DEFAULT NULL,
+
+  `accepted_at` datetime DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `request_id` (`request_id`),
+
+  KEY `hardcopy_id` (`hardcopy_id`),
+
+  KEY `current_holder_id` (`current_holder_id`),
+
+  KEY `recipient_id` (`recipient_id`),
+
+  KEY `transferred_by` (`transferred_by`),
+
+  KEY `accepted_by` (`accepted_by`),
+
+  KEY `transfer_queue` (`status`,`recipient_id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `user_roles` (
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `role_id` bigint(20) unsigned NOT NULL,
+
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`user_id`,`role_id`),
+
+  KEY `idx_user_roles_role` (`role_id`),
+
+  CONSTRAINT `fk_user_roles_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
+
+  CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `users` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `username` varchar(80) NOT NULL,
+
+  `first_name` varchar(100) NOT NULL,
+
+  `middle_name` varchar(100) DEFAULT NULL,
+
+  `last_name` varchar(100) NOT NULL,
+
+  `position_title` varchar(150) NOT NULL,
+
+  `role_id` bigint(20) unsigned NOT NULL,
+
+  `leader_id` bigint(20) unsigned DEFAULT NULL,
+
+  `password_hash` varchar(255) NOT NULL,
+
+  `require_password_change` tinyint(4) NOT NULL DEFAULT 1,
+
+  `session_version` int(11) NOT NULL DEFAULT 1,
+
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `username` (`username`),
+
+  KEY `role_id` (`role_id`),
+
+  KEY `leader_id` (`leader_id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `workflow_history` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `request_id` bigint(20) unsigned NOT NULL,
+
+  `step_id` bigint(20) unsigned DEFAULT NULL,
+
+  `action` varchar(50) NOT NULL,
+
+  `user_id` bigint(20) unsigned NOT NULL,
+
+  `user_name` varchar(255) NOT NULL,
+
+  `position_title` varchar(150) NOT NULL,
+
+  `before_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`before_state`)),
+
+  `after_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`after_state`)),
+
+  `comments` text DEFAULT NULL,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  KEY `step_id` (`step_id`),
+
+  KEY `user_id` (`user_id`),
+
+  KEY `request_history` (`request_id`,`created_at`,`id`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `workflow_steps` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `request_id` bigint(20) unsigned NOT NULL,
+
+  `node_key` varchar(50) NOT NULL,
+
+  `label` varchar(120) NOT NULL,
+
+  `assignment` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`assignment`)),
+
+  `candidates` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`candidates`)),
+
+  `assigned_user_id` bigint(20) unsigned DEFAULT NULL,
+
+  `assigned_name` varchar(255) DEFAULT NULL,
+
+  `assigned_position` varchar(150) DEFAULT NULL,
+
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+
+  `decision` varchar(20) DEFAULT NULL,
+
+  `comments` text DEFAULT NULL,
+
+  `acting_user_id` bigint(20) unsigned DEFAULT NULL,
+
+  `acting_name` varchar(255) DEFAULT NULL,
+
+  `acting_position` varchar(150) DEFAULT NULL,
+
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `acted_at` datetime DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  PRIMARY KEY (`id`),
+
+  KEY `assigned_user_id` (`assigned_user_id`),
+
+  KEY `acting_user_id` (`acting_user_id`),
+
+  KEY `pending_steps` (`status`,`request_id`),
+
+  KEY `request_steps` (`request_id`,`id`,`status`,`decision`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `workflow_versions` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `workflow_id` bigint(20) unsigned NOT NULL,
+
+  `version_number` int(10) unsigned NOT NULL,
+
+  `status` varchar(20) NOT NULL DEFAULT 'draft',
+
+  `is_default` tinyint(4) NOT NULL DEFAULT 0,
+
+  `graph` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`graph`)),
+
+  `created_by` bigint(20) unsigned NOT NULL,
+
+  `published_at` datetime DEFAULT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `workflow_version` (`workflow_id`,`version_number`),
+
+  KEY `created_by` (`created_by`),
+
+  KEY `publication` (`workflow_id`,`status`,`is_default`),
+
+  KEY `draft_workflow` (`workflow_id`,`status`,`version_number`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+
+/*!40101 SET character_set_client = utf8 */;
+
+CREATE TABLE `workflows` (
+
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+
+  `workflow_key` varchar(80) NOT NULL,
+
+  `name` varchar(150) NOT NULL,
+
+  `description` text DEFAULT NULL,
+
+  `request_type` varchar(50) NOT NULL,
+
+  `active` tinyint(4) NOT NULL DEFAULT 0,
+
+  `active_request_type` varchar(50) GENERATED ALWAYS AS (case when `active` = 1 then `request_type` else NULL end) STORED,
+
+  `created_by` bigint(20) unsigned NOT NULL,
+
+  `version` int(11) NOT NULL DEFAULT 1,
+
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+
+  PRIMARY KEY (`id`),
+
+  UNIQUE KEY `workflow_key` (`workflow_key`),
+
+  UNIQUE KEY `one_active_workflow` (`active_request_type`),
+
+  KEY `workflow_type` (`request_type`),
+
+  KEY `created_by` (`created_by`)
+
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+
+
 
 START TRANSACTION;
 -- Original static PK DTS role, permission, and UI-setting seeds from user-supplied SQL.
