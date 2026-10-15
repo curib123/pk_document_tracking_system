@@ -8,4 +8,6 @@ implement
 
 #4 cleanup css properties that did no use or classes or id that did not use anymore clean up css file and js file only remove not use 
 
-#5 
+#5 apply pagination and limit and use reusable datatable Available backups redesign also the backup pages remove unnesasry text and components make it clean and organize
+
+#6 
