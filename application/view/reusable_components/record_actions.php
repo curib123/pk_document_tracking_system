@@ -18,7 +18,7 @@
         ][$type] ?? 'Action';
         ?>
         <?php if ($type === 'view'): ?>
-            <button type="button" class="btn-icon record-action record-action-view js-view" title="<?= html_escape($label) ?>"
+            <button type="button" class="btn-icon record-action record-action-view js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>"
                 <?php if (!empty($button['view_url'])): ?>data-view-url="<?= html_escape($button['view_url']) ?>"<?php endif; ?>
                 data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
