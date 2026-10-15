@@ -149,8 +149,8 @@ class Files extends MY_Controller
             show_404();
             return;
         }
-        // Retry any old-file cleanup deferred by a temporary filesystem lock.
-        (new File_service())->cleanup_superseded((int) $file['document_id']);
+        // File delivery must not depend on maintenance cleanup succeeding.
+        // Run deferred cleanup independently, not during a user's download.
         header('Content-Type: application/octet-stream');
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
