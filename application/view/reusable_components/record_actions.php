@@ -19,7 +19,7 @@
         ?>
         <?php if ($type === 'view'): ?>
             <button type="button" class="btn-icon record-action record-action-view js-view" title="<?= html_escape($label) ?>"
-                aria-label="<?= html_escape($label) ?>" data-bs-toggle="modal" data-bs-target="#viewModal"
+                aria-label="<?= html_escape($label) ?>"
                 data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
                 data-title="<?= html_escape($button['label'] ?? 'View Details') ?>">
                 <i class="fa-regular fa-eye" aria-hidden="true"></i><span><?= html_escape($label) ?></span>

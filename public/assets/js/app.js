@@ -227,19 +227,31 @@
 
     // Each data cell opens the exact same reusable View modal as the eye
     // action; action buttons and links remain independent and never trigger it.
-    function showTableCellDetails(row) {
-        if (!row || !row.hasAttribute('data-row-view')) return;
-        var data;
-        try { data = JSON.parse(row.getAttribute('data-row-view') || '{}'); }
-        catch (error) { return; }
+    function openRecordDetails(serialized, recordTitle) {
         var modal = document.getElementById('viewModal');
         var details = document.getElementById('viewDetails');
         var heading = document.getElementById('viewModalTitle');
         if (!modal || !details) return;
-        renderRecordDetails(details, data);
-        if (heading && !window.PKDocumentView)
-            heading.textContent = row.getAttribute('data-row-title') || 'View Details';
+        try {
+            var data = JSON.parse(serialized);
+            if (!data || typeof data !== 'object') throw new Error('Invalid record details');
+            renderRecordDetails(details, data);
+            if (heading && !window.PKDocumentView) heading.textContent = recordTitle || 'View Details';
+        } catch (error) {
+            if (window.PKDocumentView) window.PKDocumentView.reset();
+            if (heading) heading.textContent = 'Details unavailable';
+            var notice = document.createElement('p');
+            notice.className = 'text-danger mb-0';
+            notice.setAttribute('role', 'alert');
+            notice.textContent = 'Unable to display this record. Refresh the page and try again.';
+            details.replaceChildren(notice);
+            console.error('Record details could not be rendered:', error);
+        }
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
+    }
+    function showTableCellDetails(row) {
+        if (!row || !row.hasAttribute('data-row-view')) return;
+        openRecordDetails(row.getAttribute('data-row-view'), row.getAttribute('data-row-title'));
     }
     document.addEventListener('click', function (event) {
         var cell = event.target.closest('td.table-cell-view');
@@ -345,11 +357,8 @@
 
         var view = event.target.closest('.js-view');
         if (view) {
-            var data = parse(view, 'display');
-            var details = document.getElementById('viewDetails');
-            var title = document.getElementById('viewModalTitle');
-            if (title && !window.PKDocumentView) title.textContent = view.getAttribute('data-title') || 'Details';
-            if (details) renderRecordDetails(details, data);
+            event.preventDefault();
+            openRecordDetails(view.getAttribute('data-display'), view.getAttribute('data-title'));
         }
 
         var fileHistory = event.target.closest('.js-file-history');

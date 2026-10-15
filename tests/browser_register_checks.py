@@ -29,6 +29,8 @@ def run_checks(page, context, base, app_root, manifest):
 
     for route in ['my-requests/softcopy', 'my-tasks/softcopy']:
         page.goto(base + route)
+        # Viewing must not depend on Bootstrap's separate declarative toggle handler.
+        page.locator('.js-view').first.evaluate('(e) => e.removeAttribute("data-bs-toggle")')
         page.locator('.js-view').first.click()
         viewer = page.locator('#viewModal')
         expect(viewer).to_be_visible()
@@ -38,6 +40,11 @@ def run_checks(page, context, base, app_root, manifest):
         expect(tabs.last).to_have_attribute('aria-selected', 'true')
         viewer.locator('[data-bs-dismiss="modal"]').last.click()
         expect(viewer).to_be_hidden()
+        page.locator('.js-view').first.evaluate('(e) => e.setAttribute("data-display", "{invalid")')
+        page.locator('.js-view').first.click()
+        expect(viewer).to_be_visible()
+        expect(viewer.get_by_role('alert')).to_contain_text('Unable to display this record')
+        viewer.locator('[data-bs-dismiss="modal"]').last.click()
     print('Request and task modal opening, tabs and closing passed.', flush=True)
 
     backups = Path(app_root) / 'storage/backups'

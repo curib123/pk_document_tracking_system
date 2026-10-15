@@ -77,7 +77,7 @@ $renderDocument = function (array $dt_row) use ($dt_columns, $dt_folder_domain) 
     <li class="doc-tree-file" data-record-id="<?= (int) $dt_row['id'] ?>">
         <span class="doc-tree-file-icon" aria-hidden="true"><i class="fa-regular <?= html_escape($fileIcon) ?>"></i></span>
         <div class="doc-tree-file-content">
-            <button class="doc-tree-file-name js-view" type="button" data-bs-toggle="modal" data-bs-target="#viewModal"
+            <button class="doc-tree-file-name js-view" type="button"
                 data-title="View Document Details" data-display="<?= html_escape(json_encode(
                     $dt_row['display'],
                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
