@@ -267,7 +267,7 @@ $navPage = end($navParts);
                 <i class="fa-solid fa-bars" aria-hidden="true"></i>
             </button>
 
-            <div>
+            <div class="topbar-context">
                 <span class="topbar-module">
                     <?= html_escape($navModule) ?>
                 </span>
