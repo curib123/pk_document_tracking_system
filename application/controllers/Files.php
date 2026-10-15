@@ -10,6 +10,14 @@ class Files extends MY_Controller
         require_once APPPATH . 'services/files/file_service.php';
     }
 
+    /** Prevent response-splitting and broken Content-Disposition headers. */
+    private function safe_download_name($name): string
+    {
+        $name = basename(str_replace('\\\\', '/', (string) $name));
+        $name = preg_replace('/[\\x00-\\x1F\\x7F"\\\\]/', '_', $name);
+        return $name !== '' && $name !== '.' ? $name : 'document';
+    }
+
     public function upload()
     {
         $this->require_permission('files', 'upload');
@@ -46,7 +54,7 @@ class Files extends MY_Controller
             return;
         }
         $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path)) {
+        if (!is_file($path) || is_link($path)) {
             show_404();
             return;
         }
@@ -137,7 +145,7 @@ class Files extends MY_Controller
             return;
         }
         $filePath = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($filePath)) {
+        if (!is_file($filePath) || is_link($filePath)) {
             show_404();
             return;
         }
