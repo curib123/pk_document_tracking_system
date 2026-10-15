@@ -1,259 +1,651 @@
--- phpMyAdmin SQL Dump
--- version 5.2.1
--- https://www.phpmyadmin.net/
---
--- Host: 127.0.0.1
--- Generation Time: Oct 13, 2026 at 07:58 AM
--- Server version: 10.4.32-MariaDB
--- PHP Version: 8.0.30
+-- PK DTS fresh-install schema and default data, refreshed 2026-10-15.
+-- MariaDB 10.4 / MySQL 8 compatible; application runtime PHP 8.0.
+-- Import into an EMPTY database. Existing installs use database/migrations.
+-- Contains default roles, permissions and appearance only.
+-- Create the first administrator with: php tools/create_admin.php <username>
+-- No operational records, user identities, password hashes or workflow history.
 
-SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8mb4 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `access_grants` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+  `domain` varchar(10) NOT NULL,
+  `document_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `granted_by` bigint(20) unsigned NOT NULL,
+  `granted_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `expires_at` datetime NOT NULL,
+  `revoked_at` datetime DEFAULT NULL,
+  `revoked_by` bigint(20) unsigned DEFAULT NULL,
+  `reason` text NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'access_granted',
+  `version` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_id` (`request_id`),
+  KEY `user_id` (`user_id`),
+  KEY `granted_by` (`granted_by`),
+  KEY `revoked_by` (`revoked_by`),
+  KEY `access_check` (`domain`,`document_id`,`user_id`,`status`,`expires_at`),
+  CONSTRAINT `access_grants_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
+  CONSTRAINT `access_grants_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `access_grants_ibfk_3` FOREIGN KEY (`granted_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `access_grants_ibfk_4` FOREIGN KEY (`revoked_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `areas` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(150) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `assets` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `specific_id` bigint(20) unsigned NOT NULL,
+  `asset_number` varchar(100) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `asset_number` (`asset_number`),
+  KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
+  KEY `specific_id` (`specific_id`),
+  CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `assignments` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `softcopy_id` bigint(20) unsigned NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `assigned_by` bigint(20) unsigned NOT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `assigned_document` (`softcopy_id`,`user_id`),
+  KEY `user_id` (`user_id`),
+  KEY `assigned_by` (`assigned_by`),
+  CONSTRAINT `assignments_ibfk_1` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
+  CONSTRAINT `assignments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `categories` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `parent_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(150) NOT NULL,
+  `folder_name` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `parent_id` (`parent_id`),
+  KEY `created_by` (`created_by`),
+  CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`),
+  CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `disposals` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+  `domain` varchar(10) NOT NULL,
+  `document_id` bigint(20) unsigned NOT NULL,
+  `previous_status` varchar(30) NOT NULL,
+  `previous_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`previous_state`)),
+  `disposal_action` varchar(20) NOT NULL,
+  `remarks` text NOT NULL,
+  `disposed_by` bigint(20) unsigned NOT NULL,
+  `disposed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_id` (`request_id`),
+  KEY `disposed_by` (`disposed_by`),
+  CONSTRAINT `disposals_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
+  CONSTRAINT `disposals_ibfk_2` FOREIGN KEY (`disposed_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `files` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `original_name` varchar(255) NOT NULL,
+  `storage_name` varchar(100) NOT NULL,
+  `size` bigint(20) unsigned NOT NULL,
+  `mime_type` varchar(150) NOT NULL,
+  `fingerprint` char(64) NOT NULL,
+  `extension` varchar(10) NOT NULL,
+  `purpose` varchar(30) NOT NULL DEFAULT 'upload',
+  `domain` varchar(10) DEFAULT NULL,
+  `document_id` bigint(20) unsigned DEFAULT NULL,
+  `uploaded_by` bigint(20) unsigned NOT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'pending',
+  `approved_by` bigint(20) unsigned DEFAULT NULL,
+  `approved_at` datetime DEFAULT NULL,
+  `rejected_by` bigint(20) unsigned DEFAULT NULL,
+  `rejected_at` datetime DEFAULT NULL,
+  `rejection_reason` text DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `storage_name` (`storage_name`),
+  KEY `uploaded_by` (`uploaded_by`),
+  KEY `approved_by` (`approved_by`),
+  KEY `rejected_by` (`rejected_by`),
+  KEY `document_files` (`domain`,`document_id`,`status`),
+  CONSTRAINT `files_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `files_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`),
+  CONSTRAINT `files_ibfk_3` FOREIGN KEY (`rejected_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hardcopy_documents` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `title` varchar(255) NOT NULL,
+  `area_id` bigint(20) unsigned DEFAULT NULL,
+  `specific_id` bigint(20) unsigned DEFAULT NULL,
+  `asset_id` bigint(20) unsigned DEFAULT NULL,
+  `location_id` bigint(20) unsigned DEFAULT NULL,
+  `sequence_number` varchar(100) DEFAULT NULL,
+  `retention_enabled` tinyint(4) NOT NULL DEFAULT 0,
+  `retention_start_date` date DEFAULT NULL,
+  `retention_end_date` date DEFAULT NULL,
+  `holder_id` bigint(20) unsigned NOT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+  `previous_status` varchar(30) DEFAULT NULL,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `creation_source` varchar(20) NOT NULL,
+  `creation_reason` text NOT NULL,
+  `source_request_id` bigint(20) unsigned DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `area_id` (`area_id`),
+  KEY `specific_id` (`specific_id`),
+  KEY `asset_id` (`asset_id`),
+  KEY `holder_id` (`holder_id`),
+  KEY `created_by` (`created_by`),
+  KEY `hardcopy_status` (`status`,`title`),
+  KEY `idx_hardcopy_documents_location` (`location_id`),
+  CONSTRAINT `hardcopy_documents_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
+  CONSTRAINT `hardcopy_documents_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
+  CONSTRAINT `hardcopy_documents_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
+  CONSTRAINT `hardcopy_documents_ibfk_4` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
+  CONSTRAINT `hardcopy_documents_ibfk_5` FOREIGN KEY (`holder_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `hardcopy_documents_ibfk_6` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `locations` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `area_id` bigint(20) unsigned DEFAULT NULL,
+  `specific_id` bigint(20) unsigned DEFAULT NULL,
+  `asset_id` bigint(20) unsigned DEFAULT NULL,
+  `name` varchar(150) NOT NULL,
+  `code` varchar(100) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `archive_date` date DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `code` (`code`),
+  KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
+  KEY `area_id` (`area_id`),
+  KEY `specific_id` (`specific_id`),
+  KEY `asset_id` (`asset_id`),
+  CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
+  CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
+  CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `login_attempts` (
+  `attempt_key` char(64) NOT NULL,
+  `failures` int(11) NOT NULL DEFAULT 0,
+  `window_started` datetime NOT NULL,
+  PRIMARY KEY (`attempt_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `notifications` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `title` varchar(150) NOT NULL,
+  `message` text NOT NULL,
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+  `read_at` datetime DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `request_id` (`request_id`),
+  KEY `inbox` (`user_id`,`read_at`,`created_at`),
+  CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
+  CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `permissions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(150) NOT NULL,
+  `module_key` varchar(60) NOT NULL,
+  `module_label` varchar(100) NOT NULL,
+  `action_key` varchar(60) NOT NULL,
+  `action_label` varchar(100) NOT NULL,
+  `description` text DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `capability` (`module_key`,`action_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `requests` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `reference` varchar(50) NOT NULL,
+  `type` varchar(50) NOT NULL,
+  `softcopy_id` bigint(20) unsigned DEFAULT NULL,
+  `hardcopy_id` bigint(20) unsigned DEFAULT NULL,
+  `requested_by` bigint(20) unsigned NOT NULL,
+  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`)),
+  `workflow_version_id` bigint(20) unsigned DEFAULT NULL,
+  `snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`snapshot`)),
+  `current_node` varchar(50) DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'draft',
+  `result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`result`)),
+  `version` int(11) NOT NULL DEFAULT 1,
+  `submitted_at` datetime DEFAULT NULL,
+  `completed_at` datetime DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `reference` (`reference`),
+  KEY `softcopy_id` (`softcopy_id`),
+  KEY `hardcopy_id` (`hardcopy_id`),
+  KEY `requested_by` (`requested_by`),
+  KEY `request_queue` (`status`,`type`,`requested_by`),
+  KEY `request_workflow_version` (`workflow_version_id`,`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `revision_artifacts` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `revision_id` bigint(20) unsigned NOT NULL,
+  `artifact_type` varchar(20) NOT NULL,
+  `file_id` bigint(20) unsigned NOT NULL,
+  `source_fingerprint` char(64) NOT NULL,
+  `generator_version` varchar(50) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `file_id` (`file_id`),
+  UNIQUE KEY `artifact_source` (`revision_id`,`artifact_type`,`source_fingerprint`),
+  CONSTRAINT `revision_artifacts_ibfk_1` FOREIGN KEY (`revision_id`) REFERENCES `softcopy_revisions` (`id`),
+  CONSTRAINT `revision_artifacts_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `role_permissions` (
+  `role_id` bigint(20) unsigned NOT NULL,
+  `permission_id` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`role_id`,`permission_id`),
+  KEY `permission_id` (`permission_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `roles` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(120) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `schema_migrations` (
+  `version` int(11) NOT NULL,
+  `applied_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`version`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sequences` (
+  `sequence_key` varchar(80) NOT NULL,
+  `value` bigint(20) unsigned NOT NULL,
+  PRIMARY KEY (`sequence_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `settings` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `setting_key` varchar(80) NOT NULL,
+  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`)),
+  `version` int(11) NOT NULL DEFAULT 1,
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `setting_key` (`setting_key`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `softcopy_documents` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `document_number` varchar(100) NOT NULL,
+  `series_number` varchar(100) DEFAULT NULL,
+  `title` varchar(255) NOT NULL,
+  `category_id` bigint(20) unsigned NOT NULL,
+  `current_revision_id` bigint(20) unsigned DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+  `previous_status` varchar(30) DEFAULT NULL,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `creation_source` varchar(20) NOT NULL,
+  `creation_reason` text NOT NULL,
+  `source_request_id` bigint(20) unsigned DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `document_number` (`document_number`),
+  KEY `category_id` (`category_id`),
+  KEY `created_by` (`created_by`),
+  KEY `softcopy_status` (`status`,`title`),
+  KEY `current_revision_fk` (`current_revision_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `softcopy_revisions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `document_id` bigint(20) unsigned NOT NULL,
+  `revision_number` int(10) unsigned NOT NULL,
+  `reason` text NOT NULL,
+  `effective_date` date NOT NULL,
+  `page_number` int(10) unsigned NOT NULL,
+  `series_number` varchar(100) DEFAULT NULL,
+  `document_title` varchar(255) NOT NULL,
+  `previous_revision_level` varchar(30) DEFAULT NULL,
+  `new_revision_level` varchar(30) NOT NULL,
+  `previous_effective_date` date DEFAULT NULL,
+  `new_effective_date` date NOT NULL,
+  `date_received` date NOT NULL,
+  `date_released` date NOT NULL,
+  `approval_date` date NOT NULL,
+  `file_id` bigint(20) unsigned NOT NULL,
+  `uploaded_by` bigint(20) unsigned NOT NULL,
+  `approved_by` bigint(20) unsigned NOT NULL,
+  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `file_id` (`file_id`),
+  UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
+  KEY `uploaded_by` (`uploaded_by`),
+  KEY `approved_by` (`approved_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `specifics` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `area_id` bigint(20) unsigned NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `specific_name` (`area_id`,`name`),
+  KEY `specific_lookup` (`active`,`area_id`,`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `status_history` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `domain` varchar(10) NOT NULL,
+  `document_id` bigint(20) unsigned NOT NULL,
+  `previous_status` varchar(30) NOT NULL,
+  `new_status` varchar(30) NOT NULL,
+  `action` varchar(60) NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `remarks` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `user_id` (`user_id`),
+  KEY `lifecycle` (`domain`,`document_id`,`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `task_notification_receipts` (
+  `user_id` bigint(20) unsigned NOT NULL,
+  `step_id` bigint(20) unsigned NOT NULL,
+  `activation` int(11) NOT NULL,
+  `shown_at` datetime NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`user_id`,`step_id`,`activation`),
+  KEY `idx_task_receipt_step` (`step_id`),
+  CONSTRAINT `fk_task_receipt_step` FOREIGN KEY (`step_id`) REFERENCES `workflow_steps` (`id`) ON DELETE CASCADE,
+  CONSTRAINT `fk_task_receipt_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `transfers` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` bigint(20) unsigned DEFAULT NULL,
+  `hardcopy_id` bigint(20) unsigned NOT NULL,
+  `origin` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`origin`)),
+  `destination` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`destination`)),
+  `current_holder_id` bigint(20) unsigned NOT NULL,
+  `recipient_id` bigint(20) unsigned NOT NULL,
+  `document_copy_number` varchar(100) NOT NULL,
+  `reason` text NOT NULL,
+  `comments` text DEFAULT NULL,
+  `status` varchar(40) NOT NULL DEFAULT 'for_transfer',
+  `recipient_status` varchar(20) NOT NULL DEFAULT 'pending',
+  `transferred_by` bigint(20) unsigned DEFAULT NULL,
+  `transferred_at` datetime DEFAULT NULL,
+  `accepted_by` bigint(20) unsigned DEFAULT NULL,
+  `accepted_at` datetime DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `request_id` (`request_id`),
+  KEY `hardcopy_id` (`hardcopy_id`),
+  KEY `current_holder_id` (`current_holder_id`),
+  KEY `recipient_id` (`recipient_id`),
+  KEY `transferred_by` (`transferred_by`),
+  KEY `accepted_by` (`accepted_by`),
+  KEY `transfer_queue` (`status`,`recipient_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_roles` (
+  `user_id` bigint(20) unsigned NOT NULL,
+  `role_id` bigint(20) unsigned NOT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`user_id`,`role_id`),
+  KEY `idx_user_roles_role` (`role_id`),
+  CONSTRAINT `fk_user_roles_role` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
+  CONSTRAINT `fk_user_roles_user` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(80) NOT NULL,
+  `first_name` varchar(100) NOT NULL,
+  `middle_name` varchar(100) DEFAULT NULL,
+  `last_name` varchar(100) NOT NULL,
+  `position_title` varchar(150) NOT NULL,
+  `role_id` bigint(20) unsigned NOT NULL,
+  `leader_id` bigint(20) unsigned DEFAULT NULL,
+  `password_hash` varchar(255) NOT NULL,
+  `require_password_change` tinyint(4) NOT NULL DEFAULT 1,
+  `session_version` int(11) NOT NULL DEFAULT 1,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `username` (`username`),
+  KEY `role_id` (`role_id`),
+  KEY `leader_id` (`leader_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `workflow_history` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` bigint(20) unsigned NOT NULL,
+  `step_id` bigint(20) unsigned DEFAULT NULL,
+  `action` varchar(50) NOT NULL,
+  `user_id` bigint(20) unsigned NOT NULL,
+  `user_name` varchar(255) NOT NULL,
+  `position_title` varchar(150) NOT NULL,
+  `before_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`before_state`)),
+  `after_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`after_state`)),
+  `comments` text DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `step_id` (`step_id`),
+  KEY `user_id` (`user_id`),
+  KEY `request_history` (`request_id`,`created_at`,`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `workflow_steps` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `request_id` bigint(20) unsigned NOT NULL,
+  `node_key` varchar(50) NOT NULL,
+  `label` varchar(120) NOT NULL,
+  `assignment` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`assignment`)),
+  `candidates` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`candidates`)),
+  `assigned_user_id` bigint(20) unsigned DEFAULT NULL,
+  `assigned_name` varchar(255) DEFAULT NULL,
+  `assigned_position` varchar(150) DEFAULT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'pending',
+  `decision` varchar(20) DEFAULT NULL,
+  `comments` text DEFAULT NULL,
+  `acting_user_id` bigint(20) unsigned DEFAULT NULL,
+  `acting_name` varchar(255) DEFAULT NULL,
+  `acting_position` varchar(150) DEFAULT NULL,
+  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `acted_at` datetime DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `assigned_user_id` (`assigned_user_id`),
+  KEY `acting_user_id` (`acting_user_id`),
+  KEY `pending_steps` (`status`,`request_id`),
+  KEY `request_steps` (`request_id`,`id`,`status`,`decision`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `workflow_versions` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `workflow_id` bigint(20) unsigned NOT NULL,
+  `version_number` int(10) unsigned NOT NULL,
+  `status` varchar(20) NOT NULL DEFAULT 'draft',
+  `is_default` tinyint(4) NOT NULL DEFAULT 0,
+  `graph` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`graph`)),
+  `created_by` bigint(20) unsigned NOT NULL,
+  `published_at` datetime DEFAULT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `workflow_version` (`workflow_id`,`version_number`),
+  KEY `created_by` (`created_by`),
+  KEY `publication` (`workflow_id`,`status`,`is_default`),
+  KEY `draft_workflow` (`workflow_id`,`status`,`version_number`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `workflows` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `workflow_key` varchar(80) NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `request_type` varchar(50) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 0,
+  `active_request_type` varchar(50) GENERATED ALWAYS AS (case when `active` = 1 then `request_type` else NULL end) STORED,
+  `created_by` bigint(20) unsigned NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `workflow_key` (`workflow_key`),
+  UNIQUE KEY `one_active_workflow` (`active_request_type`),
+  KEY `workflow_type` (`request_type`),
+  KEY `created_by` (`created_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+
 START TRANSACTION;
-SET time_zone = "+00:00";
-
-
-/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
-/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
-/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
-/*!40101 SET NAMES utf8mb4 */;
-
---
--- Database: `pk_dts`
---
-
--- --------------------------------------------------------
-
---
--- Table structure for table `access_grants`
---
-
-CREATE TABLE `access_grants` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `granted_by` bigint(20) UNSIGNED NOT NULL,
-  `granted_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `expires_at` datetime NOT NULL,
-  `revoked_at` datetime DEFAULT NULL,
-  `revoked_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `reason` text NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'access_granted',
-  `version` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `areas`
---
-
-CREATE TABLE `areas` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `assets`
---
-
-CREATE TABLE `assets` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `specific_id` bigint(20) UNSIGNED NOT NULL,
-  `asset_number` varchar(100) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `assignments`
---
-
-CREATE TABLE `assignments` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `softcopy_id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `assigned_by` bigint(20) UNSIGNED NOT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `categories`
---
-
-CREATE TABLE `categories` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `name` varchar(150) NOT NULL,
-  `folder_name` varchar(150) NOT NULL,
-  `description` text DEFAULT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `created_by` bigint(20) UNSIGNED NOT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `disposals`
---
-
-CREATE TABLE `disposals` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) UNSIGNED NOT NULL,
-  `previous_status` varchar(30) NOT NULL,
-  `previous_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`previous_state`)),
-  `disposal_action` varchar(20) NOT NULL,
-  `remarks` text NOT NULL,
-  `disposed_by` bigint(20) UNSIGNED NOT NULL,
-  `disposed_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `files`
---
-
-CREATE TABLE `files` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `original_name` varchar(255) NOT NULL,
-  `storage_name` varchar(100) NOT NULL,
-  `size` bigint(20) UNSIGNED NOT NULL,
-  `mime_type` varchar(150) NOT NULL,
-  `fingerprint` char(64) NOT NULL,
-  `extension` varchar(10) NOT NULL,
-  `purpose` varchar(30) NOT NULL DEFAULT 'upload',
-  `domain` varchar(10) DEFAULT NULL,
-  `document_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `uploaded_by` bigint(20) UNSIGNED NOT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'pending',
-  `approved_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `approved_at` datetime DEFAULT NULL,
-  `rejected_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `rejected_at` datetime DEFAULT NULL,
-  `rejection_reason` text DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `hardcopy_documents`
---
-
-CREATE TABLE `hardcopy_documents` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `title` varchar(255) NOT NULL,
-  `area_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `specific_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `asset_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `location_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `sequence_number` varchar(100) DEFAULT NULL,
-  `retention_enabled` tinyint(4) NOT NULL DEFAULT 0,
-  `retention_start_date` date DEFAULT NULL,
-  `retention_end_date` date DEFAULT NULL,
-  `holder_id` bigint(20) UNSIGNED NOT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'active',
-  `previous_status` varchar(30) DEFAULT NULL,
-  `created_by` bigint(20) UNSIGNED NOT NULL,
-  `creation_source` varchar(20) NOT NULL,
-  `creation_reason` text NOT NULL,
-  `source_request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `locations`
---
-
-CREATE TABLE `locations` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `area_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `specific_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `asset_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `name` varchar(150) NOT NULL,
-  `code` varchar(100) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `archive_date` date DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `login_attempts`
---
-
-CREATE TABLE `login_attempts` (
-  `attempt_key` char(64) NOT NULL,
-  `failures` int(11) NOT NULL DEFAULT 0,
-  `window_started` datetime NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `notifications`
---
-
-CREATE TABLE `notifications` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `title` varchar(150) NOT NULL,
-  `message` text NOT NULL,
-  `request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `read_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `permissions`
---
-
-CREATE TABLE `permissions` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `module_key` varchar(60) NOT NULL,
-  `module_label` varchar(100) NOT NULL,
-  `action_key` varchar(60) NOT NULL,
-  `action_label` varchar(100) NOT NULL,
-  `description` text DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `permissions`
---
+-- Original static PK DTS role, permission, and UI-setting seeds from user-supplied SQL.
+-- No live user/password/attempt data. Fresh database installation only.
+INSERT INTO `roles` (`id`, `name`, `active`, `version`, `created_at`, `updated_at`) VALUES
+(1, 'Administrator', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(2, 'Document Control Officer', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(3, 'Plant Manager', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(4, 'Internal Auditor', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10'),
+(5, 'Staff', 1, 1, '2026-10-08 09:51:10', '2026-10-08 09:51:10');
 
 INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_key`, `action_label`, `description`, `version`) VALUES
 (1, 'Users: View', 'users', 'Users', 'view', 'View', 'Allows view operations for users.', 1),
@@ -341,91 +733,6 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (83, 'Sequences: View', 'sequences', 'Sequences', 'view', 'View', 'Allows view operations for sequences.', 1),
 (84, 'Settings: View', 'settings', 'Settings', 'view', 'View', 'Allows view operations for settings.', 1),
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `requests`
---
-
-CREATE TABLE `requests` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `reference` varchar(50) NOT NULL,
-  `type` varchar(50) NOT NULL,
-  `softcopy_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `hardcopy_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `requested_by` bigint(20) UNSIGNED NOT NULL,
-  `payload` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`payload`)),
-  `workflow_version_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `snapshot` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`snapshot`)),
-  `current_node` varchar(50) DEFAULT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'draft',
-  `result` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`result`)),
-  `version` int(11) NOT NULL DEFAULT 1,
-  `submitted_at` datetime DEFAULT NULL,
-  `completed_at` datetime DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `revision_artifacts`
---
-
-CREATE TABLE `revision_artifacts` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `revision_id` bigint(20) UNSIGNED NOT NULL,
-  `artifact_type` varchar(20) NOT NULL,
-  `file_id` bigint(20) UNSIGNED NOT NULL,
-  `source_fingerprint` char(64) NOT NULL,
-  `generator_version` varchar(50) NOT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `roles`
---
-
-CREATE TABLE `roles` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(120) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `roles`
---
-
-INSERT INTO `roles` (`id`, `name`, `active`, `version`, `created_at`, `updated_at`) VALUES
-(1, 'Administrator', 1, 1, '2026-10-08 01:51:10', '2026-10-08 01:51:10'),
-(2, 'Document Control Officer', 1, 2, '2026-10-08 01:51:10', '2026-10-13 01:45:06'),
-(3, 'Plant Manager', 1, 1, '2026-10-08 01:51:10', '2026-10-08 01:51:10'),
-(4, 'Internal Auditor', 1, 1, '2026-10-08 01:51:10', '2026-10-08 01:51:10'),
-(5, 'Staff', 1, 2, '2026-10-08 01:51:10', '2026-10-13 03:57:53'),
-(6, 'Super Admin', 1, 1, '2026-10-13 03:51:55', '2026-10-13 03:51:55');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `role_permissions`
---
-
-CREATE TABLE `role_permissions` (
-  `role_id` bigint(20) UNSIGNED NOT NULL,
-  `permission_id` bigint(20) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `role_permissions`
---
 
 INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 1),
@@ -543,10 +850,8 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (2, 40),
 (2, 41),
 (2, 42),
-(2, 43),
 (2, 44),
 (2, 45),
-(2, 46),
 (2, 47),
 (2, 48),
 (2, 49),
@@ -557,11 +862,7 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (2, 54),
 (2, 55),
 (2, 56),
-(2, 57),
-(2, 58),
-(2, 59),
 (2, 60),
-(2, 61),
 (2, 62),
 (2, 63),
 (2, 64),
@@ -575,7 +876,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (2, 74),
 (2, 75),
 (2, 76),
-(2, 77),
 (2, 78),
 (2, 79),
 (2, 80),
@@ -630,6 +930,7 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (4, 80),
 (4, 81),
 (4, 82),
+(5, 29),
 (5, 33),
 (5, 34),
 (5, 35),
@@ -654,1042 +955,25 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (5, 76),
 (5, 78),
 (5, 80),
-(5, 81),
-(6, 1),
-(6, 2),
-(6, 3),
-(6, 4),
-(6, 5),
-(6, 6),
-(6, 7),
-(6, 8),
-(6, 9),
-(6, 10),
-(6, 11),
-(6, 12),
-(6, 13),
-(6, 14),
-(6, 15),
-(6, 16),
-(6, 17),
-(6, 18),
-(6, 19),
-(6, 20),
-(6, 21),
-(6, 22),
-(6, 23),
-(6, 24),
-(6, 25),
-(6, 26),
-(6, 27),
-(6, 28),
-(6, 29),
-(6, 30),
-(6, 31),
-(6, 32),
-(6, 33),
-(6, 34),
-(6, 35),
-(6, 36),
-(6, 37),
-(6, 38),
-(6, 39),
-(6, 40),
-(6, 41),
-(6, 42),
-(6, 43),
-(6, 44),
-(6, 45),
-(6, 46),
-(6, 47),
-(6, 48),
-(6, 49),
-(6, 50),
-(6, 51),
-(6, 52),
-(6, 53),
-(6, 54),
-(6, 55),
-(6, 56),
-(6, 57),
-(6, 58),
-(6, 59),
-(6, 60),
-(6, 61),
-(6, 62),
-(6, 63),
-(6, 64),
-(6, 65),
-(6, 66),
-(6, 67),
-(6, 68),
-(6, 69),
-(6, 70),
-(6, 71),
-(6, 72),
-(6, 73),
-(6, 74),
-(6, 75),
-(6, 76),
-(6, 77),
-(6, 78),
-(6, 79),
-(6, 80),
-(6, 81),
-(6, 82),
-(6, 83),
-(6, 84),
-(6, 85);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `schema_migrations`
---
-
-CREATE TABLE `schema_migrations` (
-  `version` int(11) NOT NULL,
-  `applied_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sequences`
---
-
-CREATE TABLE `sequences` (
-  `sequence_key` varchar(80) NOT NULL,
-  `value` bigint(20) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `settings`
---
-
-CREATE TABLE `settings` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `setting_key` varchar(80) NOT NULL,
-  `value` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`value`)),
-  `version` int(11) NOT NULL DEFAULT 1,
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `settings`
---
+(5, 81);
 
 INSERT INTO `settings` (`id`, `setting_key`, `value`, `version`, `updated_at`) VALUES
-(1, 'appearance', '{\"theme_scope\":\"global\",\"color_mode\":\"system\",\"color_theme\":\"default\",\"styling_enabled\":false}', 1, '2026-10-08 01:51:10');
+(1, 'appearance', '{\"theme_scope\":\"global\",\"color_mode\":\"system\",\"color_theme\":\"default\",\"styling_enabled\":false}', 1, '2026-10-08 09:51:10');
+
+-- Rerunnable. Preserve existing file access on first installation of each action.
+-- Rerunning never restores a permission later removed by an administrator.
+SET @add_history = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files' AND action_key='history');
+SET @add_print = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files' AND action_key='print');
+SET @add_download = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files' AND action_key='download');
+INSERT IGNORE INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
+('Files: History','files','Files','history','File History','View controlled file revision history within authorized documents.',1),
+('Files: Print','files','Files','print','Print','Print the current approved file within authorized documents.',1),
+('Files: Download','files','Files','download','Download','Download the current approved file within authorized documents.',1);
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT DISTINCT rp.role_id, added.id
+FROM role_permissions rp
+JOIN permissions existing ON existing.id=rp.permission_id AND existing.module_key='files' AND existing.action_key IN ('view','view_all')
+JOIN permissions added ON added.module_key='files' AND
+ ((added.action_key='history' AND @add_history) OR (added.action_key='print' AND @add_print) OR (added.action_key='download' AND @add_download));
 
--- --------------------------------------------------------
-
---
--- Table structure for table `softcopy_documents`
---
-
-CREATE TABLE `softcopy_documents` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `document_number` varchar(100) NOT NULL,
-  `series_number` varchar(100) DEFAULT NULL,
-  `title` varchar(255) NOT NULL,
-  `category_id` bigint(20) UNSIGNED NOT NULL,
-  `current_revision_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `status` varchar(30) NOT NULL DEFAULT 'active',
-  `previous_status` varchar(30) DEFAULT NULL,
-  `created_by` bigint(20) UNSIGNED NOT NULL,
-  `creation_source` varchar(20) NOT NULL,
-  `creation_reason` text NOT NULL,
-  `source_request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `softcopy_revisions`
---
-
-CREATE TABLE `softcopy_revisions` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `document_id` bigint(20) UNSIGNED NOT NULL,
-  `revision_number` int(10) UNSIGNED NOT NULL,
-  `reason` text NOT NULL,
-  `effective_date` date NOT NULL,
-  `page_number` int(10) UNSIGNED NOT NULL,
-  `series_number` varchar(100) DEFAULT NULL,
-  `document_title` varchar(255) NOT NULL,
-  `previous_revision_level` varchar(30) DEFAULT NULL,
-  `new_revision_level` varchar(30) NOT NULL,
-  `previous_effective_date` date DEFAULT NULL,
-  `new_effective_date` date NOT NULL,
-  `date_received` date NOT NULL,
-  `date_released` date NOT NULL,
-  `approval_date` date NOT NULL,
-  `file_id` bigint(20) UNSIGNED NOT NULL,
-  `uploaded_by` bigint(20) UNSIGNED NOT NULL,
-  `approved_by` bigint(20) UNSIGNED NOT NULL,
-  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `specifics`
---
-
-CREATE TABLE `specifics` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `area_id` bigint(20) UNSIGNED NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `status_history`
---
-
-CREATE TABLE `status_history` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `domain` varchar(10) NOT NULL,
-  `document_id` bigint(20) UNSIGNED NOT NULL,
-  `previous_status` varchar(30) NOT NULL,
-  `new_status` varchar(30) NOT NULL,
-  `action` varchar(60) NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `remarks` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `transfers`
---
-
-CREATE TABLE `transfers` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `request_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `hardcopy_id` bigint(20) UNSIGNED NOT NULL,
-  `origin` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`origin`)),
-  `destination` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`destination`)),
-  `current_holder_id` bigint(20) UNSIGNED NOT NULL,
-  `recipient_id` bigint(20) UNSIGNED NOT NULL,
-  `document_copy_number` varchar(100) NOT NULL,
-  `reason` text NOT NULL,
-  `comments` text DEFAULT NULL,
-  `status` varchar(40) NOT NULL DEFAULT 'for_transfer',
-  `recipient_status` varchar(20) NOT NULL DEFAULT 'pending',
-  `transferred_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `transferred_at` datetime DEFAULT NULL,
-  `accepted_by` bigint(20) UNSIGNED DEFAULT NULL,
-  `accepted_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `users`
---
-
-CREATE TABLE `users` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `username` varchar(80) NOT NULL,
-  `first_name` varchar(100) NOT NULL,
-  `middle_name` varchar(100) DEFAULT NULL,
-  `last_name` varchar(100) NOT NULL,
-  `position_title` varchar(150) NOT NULL,
-  `role_id` bigint(20) UNSIGNED NOT NULL,
-  `leader_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `password_hash` varchar(255) NOT NULL,
-  `require_password_change` tinyint(4) NOT NULL DEFAULT 1,
-  `session_version` int(11) NOT NULL DEFAULT 1,
-  `active` tinyint(4) NOT NULL DEFAULT 1,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `users`
---
-
-INSERT INTO `users` (`id`, `username`, `first_name`, `middle_name`, `last_name`, `position_title`, `role_id`, `leader_id`, `password_hash`, `require_password_change`, `session_version`, `active`, `version`, `created_at`, `updated_at`) VALUES
-(2, 'curibjp', 'John Paul', 'Cajes', 'Curib', 'System Programmer I', 1, NULL, '$2y$10$SadIgHIiZ3yeKbrmCEwyh.2.j6lBWT0URaXVyh6GPRt9sNy8fImSq', 0, 2, 1, 1, '2026-10-12 02:31:03', '2026-10-12 02:31:53'),
-(3, 'plant_manager', 'Plant', NULL, 'Manager', 'manager', 3, NULL, '$2y$10$ze8Up/nVAXbNeCfCfs/7FOdlgIYZPB1QBMMG4Ql43wm8vVLosOklS', 0, 7, 1, 6, '2026-10-12 05:23:21', '2026-10-13 03:56:58'),
-(4, 'staff1', 'Staff1', 'Staff1', 'Staff1', 'Staff1', 5, NULL, '$2y$10$YaPhn7iF2eBrmeZGvYYBfeE/BqsP7VAAkewZecrqhgG0XSfFx1O4S', 0, 3, 1, 1, '2026-10-12 05:33:10', '2026-10-13 03:57:53'),
-(5, 'staff2', 'Staff2', 'Staff2', 'Staff2', 'Staff2', 5, 4, '$2y$10$XIH8tqsxK4dyJiO8WUcT0ObMEMI2/UgSm4uPSPtR6MufP.he/kiau', 0, 3, 1, 1, '2026-10-12 05:34:34', '2026-10-13 03:57:53'),
-(6, 'dco', 'Document', 'Controll', 'Officer', 'Document Controll Officer', 2, NULL, '$2y$10$1kOu6GYCIzQs0djnbPAU4.cNf2XTyYy/4qpaICEoL.MQ.HsdDguiG', 0, 3, 1, 1, '2026-10-12 05:41:40', '2026-10-13 01:45:06');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `workflows`
---
-
-CREATE TABLE `workflows` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `workflow_key` varchar(80) NOT NULL,
-  `name` varchar(150) NOT NULL,
-  `description` text DEFAULT NULL,
-  `request_type` varchar(50) NOT NULL,
-  `active` tinyint(4) NOT NULL DEFAULT 0,
-  `active_request_type` varchar(50) GENERATED ALWAYS AS (case when `active` = 1 then `request_type` else NULL end) STORED,
-  `created_by` bigint(20) UNSIGNED NOT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `workflows`
---
-
-INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_type`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(10, 'softcopy_create', 'Softcopy Create approval', NULL, 'softcopy_create', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(11, 'softcopy_revise', 'Softcopy Revise approval', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(12, 'softcopy_cancel', 'Softcopy Cancel approval', NULL, 'softcopy_cancel', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(13, 'hardcopy_create', 'Hardcopy Create approval', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(14, 'hardcopy_update', 'Hardcopy Update approval', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(15, 'transfer', 'Transfer approval', NULL, 'transfer', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(16, 'assignment', 'Assignment approval', NULL, 'assignment', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(17, 'access', 'Access approval', NULL, 'access', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
-(18, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `workflow_history`
---
-
-CREATE TABLE `workflow_history` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `request_id` bigint(20) UNSIGNED NOT NULL,
-  `step_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `action` varchar(50) NOT NULL,
-  `user_id` bigint(20) UNSIGNED NOT NULL,
-  `user_name` varchar(255) NOT NULL,
-  `position_title` varchar(150) NOT NULL,
-  `before_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`before_state`)),
-  `after_state` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`after_state`)),
-  `comments` text DEFAULT NULL,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `workflow_history`
---
-
-INSERT INTO `workflow_history` (`id`, `request_id`, `step_id`, `action`, `user_id`, `user_name`, `position_title`, `before_state`, `after_state`, `comments`, `created_at`) VALUES
-(1, 1, NULL, 'submitted', 2, 'John Paul Curib', 'System Programmer I', NULL, NULL, NULL, '2026-10-12 06:03:17'),
-(2, 3, NULL, 'submitted', 5, 'Staff2 Staff2', 'Staff2', NULL, NULL, NULL, '2026-10-12 06:38:12'),
-(3, 3, 3, 'approved', 3, 'Plant Manager', 'manager', NULL, NULL, '', '2026-10-12 06:44:25'),
-(4, 1, 1, 'approved', 3, 'Plant Manager', 'manager', NULL, NULL, '', '2026-10-12 06:44:28'),
-(6, 1, 2, 'returned', 6, 'Document Officer', 'Document Controll Officer', NULL, NULL, 'uii', '2026-10-12 07:14:22'),
-(7, 3, 4, 'approved', 6, 'Document Officer', 'Document Controll Officer', NULL, NULL, '', '2026-10-12 07:23:27'),
-(8, 4, NULL, 'submitted', 2, 'John Paul Curib', 'System Programmer I', NULL, NULL, NULL, '2026-10-12 09:11:13'),
-(9, 1, NULL, 'submitted', 2, 'John Paul Curib', 'System Programmer I', NULL, NULL, NULL, '2026-10-12 09:11:53'),
-(10, 6, NULL, 'submitted', 5, 'Staff2 Staff2', 'Staff2', NULL, NULL, NULL, '2026-10-12 10:24:07'),
-(11, 6, 9, 'approved', 4, 'Staff1 Staff1', 'Staff1', NULL, NULL, 'ok', '2026-10-12 10:25:51'),
-(12, 6, 10, 'approved', 3, 'Plant Manager', 'manager', NULL, NULL, '', '2026-10-12 10:30:14'),
-(13, 6, 11, 'approved', 6, 'Document Officer', 'Document Controll Officer', NULL, NULL, '', '2026-10-12 10:34:54'),
-(14, 7, NULL, 'submitted', 5, 'Staff2 Staff2', 'Staff2', NULL, NULL, NULL, '2026-10-13 03:32:45'),
-(15, 7, 12, 'approved', 3, 'Plant Manager', 'manager', NULL, NULL, '', '2026-10-13 03:33:50'),
-(16, 7, 13, 'approved', 6, 'Document Officer', 'Document Controll Officer', NULL, NULL, '', '2026-10-13 03:34:19'),
-(17, 8, NULL, 'submitted', 4, 'Staff1 Staff1', 'Staff1', NULL, NULL, NULL, '2026-10-13 05:42:59'),
-(18, 8, 14, 'approved', 3, 'Plant Manager', 'manager', NULL, NULL, 'approve by plant manager sample #1', '2026-10-13 05:44:09'),
-(19, 8, 15, 'returned', 6, 'Document Officer', 'Document Controll Officer', NULL, NULL, 'there some issues', '2026-10-13 05:46:31');
-
--- --------------------------------------------------------
-
---
--- Table structure for table `workflow_steps`
---
-
-CREATE TABLE `workflow_steps` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `request_id` bigint(20) UNSIGNED NOT NULL,
-  `node_key` varchar(50) NOT NULL,
-  `label` varchar(120) NOT NULL,
-  `assignment` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`assignment`)),
-  `candidates` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`candidates`)),
-  `assigned_user_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `assigned_name` varchar(255) DEFAULT NULL,
-  `assigned_position` varchar(150) DEFAULT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'pending',
-  `decision` varchar(20) DEFAULT NULL,
-  `comments` text DEFAULT NULL,
-  `acting_user_id` bigint(20) UNSIGNED DEFAULT NULL,
-  `acting_name` varchar(255) DEFAULT NULL,
-  `acting_position` varchar(150) DEFAULT NULL,
-  `assigned_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  `acted_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `workflow_steps`
---
-
-INSERT INTO `workflow_steps` (`id`, `request_id`, `node_key`, `label`, `assignment`, `candidates`, `assigned_user_id`, `assigned_name`, `assigned_position`, `status`, `decision`, `comments`, `acting_user_id`, `acting_name`, `acting_position`, `assigned_at`, `acted_at`, `version`) VALUES
-(1, 1, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 3, 'Plant Manager', 'manager', '2026-10-12 06:03:17', '2026-10-12 08:44:28', 1),
-(2, 1, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'returned', 'returned', 'uii', 6, 'Document Officer', 'Document Controll Officer', '2026-10-12 06:03:17', '2026-10-12 09:14:22', 1),
-(3, 3, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 3, 'Plant Manager', 'manager', '2026-10-12 06:38:12', '2026-10-12 08:44:25', 1),
-(4, 3, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 6, 'Document Officer', 'Document Controll Officer', '2026-10-12 06:38:12', '2026-10-12 09:23:27', 1),
-(5, 4, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-10-12 09:11:13', NULL, 1),
-(6, 4, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'pending', NULL, NULL, NULL, NULL, NULL, '2026-10-12 09:11:13', NULL, 1),
-(7, 1, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'active', NULL, NULL, NULL, NULL, NULL, '2026-10-12 09:11:53', NULL, 1),
-(8, 1, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'pending', NULL, NULL, NULL, NULL, NULL, '2026-10-12 09:11:53', NULL, 1),
-(9, 6, 'step_1', 'Noted By', '{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}', '[]', 4, 'Staff1 Staff1', 'Staff1', 'approved', 'approved', 'ok', 4, 'Staff1 Staff1', 'Staff1', '2026-10-12 10:24:07', '2026-10-12 12:25:51', 1),
-(10, 6, 'step_2', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 3, 'Plant Manager', 'manager', '2026-10-12 10:24:07', '2026-10-12 12:30:14', 1),
-(11, 6, 'step_3', 'Document Officer Approval', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 6, 'Document Officer', 'Document Controll Officer', '2026-10-12 10:24:07', '2026-10-12 12:34:54', 1),
-(12, 7, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 3, 'Plant Manager', 'manager', '2026-10-13 03:32:45', '2026-10-13 05:33:50', 1),
-(13, 7, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', '', 6, 'Document Officer', 'Document Controll Officer', '2026-10-13 03:32:45', '2026-10-13 05:34:19', 1),
-(14, 8, 'step_1', 'Plant Manager Approval', '{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}', '[]', NULL, NULL, NULL, 'approved', 'approved', 'approve by plant manager sample #1', 3, 'Plant Manager', 'manager', '2026-10-13 05:42:59', '2026-10-13 07:44:09', 1),
-(15, 8, 'step_2', 'Document Controll Officer', '{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}', '[]', NULL, NULL, NULL, 'returned', 'returned', 'there some issues', 6, 'Document Officer', 'Document Controll Officer', '2026-10-13 05:42:59', '2026-10-13 07:46:31', 1);
-
--- --------------------------------------------------------
-
---
--- Table structure for table `workflow_versions`
---
-
-CREATE TABLE `workflow_versions` (
-  `id` bigint(20) UNSIGNED NOT NULL,
-  `workflow_id` bigint(20) UNSIGNED NOT NULL,
-  `version_number` int(10) UNSIGNED NOT NULL,
-  `status` varchar(20) NOT NULL DEFAULT 'draft',
-  `is_default` tinyint(4) NOT NULL DEFAULT 0,
-  `graph` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL CHECK (json_valid(`graph`)),
-  `created_by` bigint(20) UNSIGNED NOT NULL,
-  `published_at` datetime DEFAULT NULL,
-  `version` int(11) NOT NULL DEFAULT 1,
-  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
-
---
--- Dumping data for table `workflow_versions`
---
-
-INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`, `is_default`, `graph`, `created_by`, `published_at`, `version`, `created_at`) VALUES
-(22, 13, 1, 'published', 0, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}}]}', 2, '2026-10-12 07:37:28', 1, '2026-10-12 05:31:55'),
-(23, 14, 1, 'published', 0, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}}]}', 2, '2026-10-12 07:38:10', 1, '2026-10-12 05:37:38'),
-(24, 18, 1, 'published', 0, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}}]}', 2, '2026-10-12 07:39:53', 1, '2026-10-12 05:38:17'),
-(25, 18, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Controll Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:47:53', 1, '2026-10-12 05:40:10'),
-(26, 13, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Controll Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:43:07', 1, '2026-10-12 05:42:36'),
-(27, 14, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Controll Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:47:19', 1, '2026-10-12 05:45:34'),
-(28, 16, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Controll Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:51:25', 1, '2026-10-12 05:50:23'),
-(29, 17, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:53:17', 1, '2026-10-12 05:51:33'),
-(30, 10, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:56:28', 1, '2026-10-12 05:54:14'),
-(31, 11, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-12 07:58:07', 1, '2026-10-12 05:56:42'),
-(32, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Transfer Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-12 08:00:16', 1, '2026-10-12 05:58:21'),
-(33, 12, 1, 'published', 0, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-13 02:54:18', 1, '2026-10-13 00:52:47'),
-(34, 12, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-13 05:09:16', 1, '2026-10-13 03:08:30');
-
---
--- Indexes for dumped tables
---
-
---
--- Indexes for table `access_grants`
---
-ALTER TABLE `access_grants`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `request_id` (`request_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `granted_by` (`granted_by`),
-  ADD KEY `revoked_by` (`revoked_by`),
-  ADD KEY `access_check` (`domain`,`document_id`,`user_id`,`status`,`expires_at`);
-
---
--- Indexes for table `areas`
---
-ALTER TABLE `areas`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `assets`
---
-ALTER TABLE `assets`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `asset_number` (`asset_number`),
-  ADD KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
-  ADD KEY `specific_id` (`specific_id`);
-
---
--- Indexes for table `assignments`
---
-ALTER TABLE `assignments`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `assigned_document` (`softcopy_id`,`user_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `assigned_by` (`assigned_by`);
-
---
--- Indexes for table `categories`
---
-ALTER TABLE `categories`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `parent_id` (`parent_id`),
-  ADD KEY `created_by` (`created_by`);
-
---
--- Indexes for table `disposals`
---
-ALTER TABLE `disposals`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `request_id` (`request_id`),
-  ADD KEY `disposed_by` (`disposed_by`);
-
---
--- Indexes for table `files`
---
-ALTER TABLE `files`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `storage_name` (`storage_name`),
-  ADD KEY `uploaded_by` (`uploaded_by`),
-  ADD KEY `approved_by` (`approved_by`),
-  ADD KEY `rejected_by` (`rejected_by`),
-  ADD KEY `document_files` (`domain`,`document_id`,`status`);
-
---
--- Indexes for table `hardcopy_documents`
---
-ALTER TABLE `hardcopy_documents`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `area_id` (`area_id`),
-  ADD KEY `specific_id` (`specific_id`),
-  ADD KEY `asset_id` (`asset_id`),
-  ADD KEY `holder_id` (`holder_id`),
-  ADD KEY `created_by` (`created_by`),
-  ADD KEY `hardcopy_status` (`status`,`title`),
-  ADD KEY `idx_hardcopy_documents_location` (`location_id`);
-
---
--- Indexes for table `locations`
---
-ALTER TABLE `locations`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`),
-  ADD KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
-  ADD KEY `area_id` (`area_id`),
-  ADD KEY `specific_id` (`specific_id`),
-  ADD KEY `asset_id` (`asset_id`);
-
---
--- Indexes for table `login_attempts`
---
-ALTER TABLE `login_attempts`
-  ADD PRIMARY KEY (`attempt_key`);
-
---
--- Indexes for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `request_id` (`request_id`),
-  ADD KEY `inbox` (`user_id`,`read_at`,`created_at`);
-
---
--- Indexes for table `permissions`
---
-ALTER TABLE `permissions`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `capability` (`module_key`,`action_key`);
-
---
--- Indexes for table `requests`
---
-ALTER TABLE `requests`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `reference` (`reference`),
-  ADD KEY `softcopy_id` (`softcopy_id`),
-  ADD KEY `hardcopy_id` (`hardcopy_id`),
-  ADD KEY `requested_by` (`requested_by`),
-  ADD KEY `request_queue` (`status`,`type`,`requested_by`),
-  ADD KEY `request_workflow_version` (`workflow_version_id`,`status`);
-
---
--- Indexes for table `revision_artifacts`
---
-ALTER TABLE `revision_artifacts`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `file_id` (`file_id`),
-  ADD UNIQUE KEY `artifact_source` (`revision_id`,`artifact_type`,`source_fingerprint`);
-
---
--- Indexes for table `roles`
---
-ALTER TABLE `roles`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `name` (`name`);
-
---
--- Indexes for table `role_permissions`
---
-ALTER TABLE `role_permissions`
-  ADD PRIMARY KEY (`role_id`,`permission_id`),
-  ADD KEY `permission_id` (`permission_id`);
-
---
--- Indexes for table `schema_migrations`
---
-ALTER TABLE `schema_migrations`
-  ADD PRIMARY KEY (`version`);
-
---
--- Indexes for table `sequences`
---
-ALTER TABLE `sequences`
-  ADD PRIMARY KEY (`sequence_key`);
-
---
--- Indexes for table `settings`
---
-ALTER TABLE `settings`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `setting_key` (`setting_key`);
-
---
--- Indexes for table `softcopy_documents`
---
-ALTER TABLE `softcopy_documents`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `document_number` (`document_number`),
-  ADD KEY `category_id` (`category_id`),
-  ADD KEY `created_by` (`created_by`),
-  ADD KEY `softcopy_status` (`status`,`title`),
-  ADD KEY `current_revision_fk` (`current_revision_id`);
-
---
--- Indexes for table `softcopy_revisions`
---
-ALTER TABLE `softcopy_revisions`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `file_id` (`file_id`),
-  ADD UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
-  ADD KEY `uploaded_by` (`uploaded_by`),
-  ADD KEY `approved_by` (`approved_by`);
-
---
--- Indexes for table `specifics`
---
-ALTER TABLE `specifics`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `specific_name` (`area_id`,`name`),
-  ADD KEY `specific_lookup` (`active`,`area_id`,`name`);
-
---
--- Indexes for table `status_history`
---
-ALTER TABLE `status_history`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `lifecycle` (`domain`,`document_id`,`created_at`);
-
---
--- Indexes for table `transfers`
---
-ALTER TABLE `transfers`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `request_id` (`request_id`),
-  ADD KEY `hardcopy_id` (`hardcopy_id`),
-  ADD KEY `current_holder_id` (`current_holder_id`),
-  ADD KEY `recipient_id` (`recipient_id`),
-  ADD KEY `transferred_by` (`transferred_by`),
-  ADD KEY `accepted_by` (`accepted_by`),
-  ADD KEY `transfer_queue` (`status`,`recipient_id`);
-
---
--- Indexes for table `users`
---
-ALTER TABLE `users`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `username` (`username`),
-  ADD KEY `role_id` (`role_id`),
-  ADD KEY `leader_id` (`leader_id`);
-
---
--- Indexes for table `workflows`
---
-ALTER TABLE `workflows`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `workflow_key` (`workflow_key`),
-  ADD UNIQUE KEY `one_active_workflow` (`active_request_type`),
-  ADD KEY `workflow_type` (`request_type`),
-  ADD KEY `created_by` (`created_by`);
-
---
--- Indexes for table `workflow_history`
---
-ALTER TABLE `workflow_history`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `step_id` (`step_id`),
-  ADD KEY `user_id` (`user_id`),
-  ADD KEY `request_history` (`request_id`,`created_at`,`id`);
-
---
--- Indexes for table `workflow_steps`
---
-ALTER TABLE `workflow_steps`
-  ADD PRIMARY KEY (`id`),
-  ADD KEY `assigned_user_id` (`assigned_user_id`),
-  ADD KEY `acting_user_id` (`acting_user_id`),
-  ADD KEY `pending_steps` (`status`,`request_id`),
-  ADD KEY `request_steps` (`request_id`,`id`,`status`,`decision`);
-
---
--- Indexes for table `workflow_versions`
---
-ALTER TABLE `workflow_versions`
-  ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `workflow_version` (`workflow_id`,`version_number`),
-  ADD KEY `created_by` (`created_by`),
-  ADD KEY `publication` (`workflow_id`,`status`,`is_default`),
-  ADD KEY `draft_workflow` (`workflow_id`,`status`,`version_number`);
-
---
--- AUTO_INCREMENT for dumped tables
---
-
---
--- AUTO_INCREMENT for table `access_grants`
---
-ALTER TABLE `access_grants`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `areas`
---
-ALTER TABLE `areas`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=8;
-
---
--- AUTO_INCREMENT for table `assets`
---
-ALTER TABLE `assets`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
-
---
--- AUTO_INCREMENT for table `assignments`
---
-ALTER TABLE `assignments`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `categories`
---
-ALTER TABLE `categories`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `disposals`
---
-ALTER TABLE `disposals`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `files`
---
-ALTER TABLE `files`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
-
---
--- AUTO_INCREMENT for table `hardcopy_documents`
---
-ALTER TABLE `hardcopy_documents`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=1611;
-
---
--- AUTO_INCREMENT for table `locations`
---
-ALTER TABLE `locations`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=63;
-
---
--- AUTO_INCREMENT for table `notifications`
---
-ALTER TABLE `notifications`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `permissions`
---
-ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=86;
-
---
--- AUTO_INCREMENT for table `requests`
---
-ALTER TABLE `requests`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=9;
-
---
--- AUTO_INCREMENT for table `revision_artifacts`
---
-ALTER TABLE `revision_artifacts`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `roles`
---
-ALTER TABLE `roles`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `settings`
---
-ALTER TABLE `settings`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
-
---
--- AUTO_INCREMENT for table `softcopy_documents`
---
-ALTER TABLE `softcopy_documents`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2050;
-
---
--- AUTO_INCREMENT for table `softcopy_revisions`
---
-ALTER TABLE `softcopy_revisions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
-
---
--- AUTO_INCREMENT for table `specifics`
---
-ALTER TABLE `specifics`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT for table `status_history`
---
-ALTER TABLE `status_history`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3660;
-
---
--- AUTO_INCREMENT for table `transfers`
---
-ALTER TABLE `transfers`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
-
---
--- AUTO_INCREMENT for table `users`
---
-ALTER TABLE `users`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
-
---
--- AUTO_INCREMENT for table `workflows`
---
-ALTER TABLE `workflows`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=19;
-
---
--- AUTO_INCREMENT for table `workflow_history`
---
-ALTER TABLE `workflow_history`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
-
---
--- AUTO_INCREMENT for table `workflow_steps`
---
-ALTER TABLE `workflow_steps`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=16;
-
---
--- AUTO_INCREMENT for table `workflow_versions`
---
-ALTER TABLE `workflow_versions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
-
---
--- Constraints for dumped tables
---
-
---
--- Constraints for table `access_grants`
---
-ALTER TABLE `access_grants`
-  ADD CONSTRAINT `access_grants_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  ADD CONSTRAINT `access_grants_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `access_grants_ibfk_3` FOREIGN KEY (`granted_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `access_grants_ibfk_4` FOREIGN KEY (`revoked_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `assets`
---
-ALTER TABLE `assets`
-  ADD CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`);
-
---
--- Constraints for table `assignments`
---
-ALTER TABLE `assignments`
-  ADD CONSTRAINT `assignments_ibfk_1` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
-  ADD CONSTRAINT `assignments_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `assignments_ibfk_3` FOREIGN KEY (`assigned_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `categories`
---
-ALTER TABLE `categories`
-  ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`),
-  ADD CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `disposals`
---
-ALTER TABLE `disposals`
-  ADD CONSTRAINT `disposals_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  ADD CONSTRAINT `disposals_ibfk_2` FOREIGN KEY (`disposed_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `files`
---
-ALTER TABLE `files`
-  ADD CONSTRAINT `files_ibfk_1` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `files_ibfk_2` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `files_ibfk_3` FOREIGN KEY (`rejected_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `hardcopy_documents`
---
-ALTER TABLE `hardcopy_documents`
-  ADD CONSTRAINT `hardcopy_documents_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
-  ADD CONSTRAINT `hardcopy_documents_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
-  ADD CONSTRAINT `hardcopy_documents_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
-  ADD CONSTRAINT `hardcopy_documents_ibfk_4` FOREIGN KEY (`location_id`) REFERENCES `locations` (`id`),
-  ADD CONSTRAINT `hardcopy_documents_ibfk_5` FOREIGN KEY (`holder_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `hardcopy_documents_ibfk_6` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `locations`
---
-ALTER TABLE `locations`
-  ADD CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
-  ADD CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
-  ADD CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`);
-
---
--- Constraints for table `notifications`
---
-ALTER TABLE `notifications`
-  ADD CONSTRAINT `notifications_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `notifications_ibfk_2` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`);
-
---
--- Constraints for table `requests`
---
-ALTER TABLE `requests`
-  ADD CONSTRAINT `requests_ibfk_1` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
-  ADD CONSTRAINT `requests_ibfk_2` FOREIGN KEY (`hardcopy_id`) REFERENCES `hardcopy_documents` (`id`),
-  ADD CONSTRAINT `requests_ibfk_3` FOREIGN KEY (`requested_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `requests_ibfk_4` FOREIGN KEY (`workflow_version_id`) REFERENCES `workflow_versions` (`id`);
-
---
--- Constraints for table `revision_artifacts`
---
-ALTER TABLE `revision_artifacts`
-  ADD CONSTRAINT `revision_artifacts_ibfk_1` FOREIGN KEY (`revision_id`) REFERENCES `softcopy_revisions` (`id`),
-  ADD CONSTRAINT `revision_artifacts_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`);
-
---
--- Constraints for table `role_permissions`
---
-ALTER TABLE `role_permissions`
-  ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
-  ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`);
-
---
--- Constraints for table `softcopy_documents`
---
-ALTER TABLE `softcopy_documents`
-  ADD CONSTRAINT `current_revision_fk` FOREIGN KEY (`current_revision_id`) REFERENCES `softcopy_revisions` (`id`),
-  ADD CONSTRAINT `softcopy_documents_ibfk_1` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`),
-  ADD CONSTRAINT `softcopy_documents_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `softcopy_revisions`
---
-ALTER TABLE `softcopy_revisions`
-  ADD CONSTRAINT `softcopy_revisions_ibfk_1` FOREIGN KEY (`document_id`) REFERENCES `softcopy_documents` (`id`),
-  ADD CONSTRAINT `softcopy_revisions_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`),
-  ADD CONSTRAINT `softcopy_revisions_ibfk_3` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `softcopy_revisions_ibfk_4` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `specifics`
---
-ALTER TABLE `specifics`
-  ADD CONSTRAINT `specifics_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`);
-
---
--- Constraints for table `status_history`
---
-ALTER TABLE `status_history`
-  ADD CONSTRAINT `status_history_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `transfers`
---
-ALTER TABLE `transfers`
-  ADD CONSTRAINT `transfers_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  ADD CONSTRAINT `transfers_ibfk_2` FOREIGN KEY (`hardcopy_id`) REFERENCES `hardcopy_documents` (`id`),
-  ADD CONSTRAINT `transfers_ibfk_3` FOREIGN KEY (`current_holder_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `transfers_ibfk_4` FOREIGN KEY (`recipient_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `transfers_ibfk_5` FOREIGN KEY (`transferred_by`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `transfers_ibfk_6` FOREIGN KEY (`accepted_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `users`
---
-ALTER TABLE `users`
-  ADD CONSTRAINT `users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
-  ADD CONSTRAINT `users_ibfk_2` FOREIGN KEY (`leader_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `workflows`
---
-ALTER TABLE `workflows`
-  ADD CONSTRAINT `workflows_ibfk_1` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `workflow_history`
---
-ALTER TABLE `workflow_history`
-  ADD CONSTRAINT `workflow_history_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  ADD CONSTRAINT `workflow_history_ibfk_2` FOREIGN KEY (`step_id`) REFERENCES `workflow_steps` (`id`),
-  ADD CONSTRAINT `workflow_history_ibfk_3` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `workflow_steps`
---
-ALTER TABLE `workflow_steps`
-  ADD CONSTRAINT `workflow_steps_ibfk_1` FOREIGN KEY (`request_id`) REFERENCES `requests` (`id`),
-  ADD CONSTRAINT `workflow_steps_ibfk_2` FOREIGN KEY (`assigned_user_id`) REFERENCES `users` (`id`),
-  ADD CONSTRAINT `workflow_steps_ibfk_3` FOREIGN KEY (`acting_user_id`) REFERENCES `users` (`id`);
-
---
--- Constraints for table `workflow_versions`
---
-ALTER TABLE `workflow_versions`
-  ADD CONSTRAINT `workflow_versions_ibfk_1` FOREIGN KEY (`workflow_id`) REFERENCES `workflows` (`id`),
-  ADD CONSTRAINT `workflow_versions_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
 COMMIT;
-
-/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
-/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
-/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;

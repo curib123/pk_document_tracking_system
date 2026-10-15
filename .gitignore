@@ -10,6 +10,7 @@ __pycache__/
 /database/*.sql
 !/database/schema.sql
 !/database/seed.sql
+!/database/pk_dts.sql
 /database/*.sql.gz
 /database/*.dump
 *.bak.sql
