@@ -106,6 +106,136 @@
 #viewModal.is-document-view .doc-overview-group + .doc-overview-group {
   border-top: 1px solid var(--ui-line);
 }
+
+/* The saved physical route: connectors draw toward the final location. */
+#viewModal.is-document-view .doc-storage-route {
+  display: grid;
+  grid-template-columns: repeat(var(--route-count, 4), minmax(0, 1fr));
+  margin: 0;
+  padding: 8px 0 10px;
+  list-style: none;
+  isolation: isolate;
+}
+#viewModal.is-document-view .doc-storage-route + .doc-overview-grid {
+  margin-top: 24px;
+}
+#viewModal.is-document-view .doc-storage-route-step {
+  position: relative;
+  min-width: 0;
+  padding: 0 12px;
+  text-align: center;
+}
+#viewModal.is-document-view .doc-storage-route-step::before,
+#viewModal.is-document-view .doc-storage-route-step::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  top: 17px;
+  left: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--ui-brand-100);
+}
+#viewModal.is-document-view .doc-storage-route-step::after {
+  background: var(--ui-brand-400);
+  transform-origin: left center;
+  animation: doc-route-connect 480ms ease-out both;
+  animation-delay: calc(var(--route-index) * 160ms + 180ms);
+}
+#viewModal.is-document-view .doc-storage-route-step:last-child::before,
+#viewModal.is-document-view .doc-storage-route-step:last-child::after {
+  display: none;
+}
+#viewModal.is-document-view .doc-storage-route-marker {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  margin: 0 auto 14px;
+  border: 1px solid var(--ui-brand-200);
+  border-radius: 50%;
+  background: var(--ui-brand-50);
+  color: var(--ui-brand-800);
+  box-shadow: 0 0 0 5px var(--ui-white);
+  font-size: 12px;
+  font-weight: 650;
+  animation: doc-route-arrive 440ms cubic-bezier(.2, .8, .2, 1) both;
+  animation-delay: calc(var(--route-index) * 160ms);
+}
+#viewModal.is-document-view .doc-storage-route-label,
+#viewModal.is-document-view .doc-storage-route-value {
+  display: block;
+  overflow-wrap: anywhere;
+  animation: doc-route-reveal 400ms ease-out both;
+  animation-delay: calc(var(--route-index) * 160ms + 100ms);
+}
+#viewModal.is-document-view .doc-storage-route-label {
+  color: var(--ui-ink-600);
+  font-size: 11px;
+  line-height: 1.5;
+}
+#viewModal.is-document-view .doc-storage-route-value {
+  margin-top: 5px;
+  color: var(--ui-ink-900);
+  font-size: 13px;
+  font-weight: 550;
+  line-height: 1.6;
+  white-space: pre-line;
+  user-select: text;
+}
+#viewModal.is-document-view .doc-storage-route-step.is-destination .doc-storage-route-marker {
+  border-color: var(--ui-brand-600);
+  background: var(--ui-brand-600);
+  color: var(--ui-white);
+  box-shadow: 0 0 0 5px var(--ui-brand-50);
+}
+#viewModal.is-document-view .doc-storage-route-step.is-destination .doc-storage-route-label {
+  color: var(--ui-brand-800);
+  font-weight: 650;
+}
+#viewModal.is-document-view .doc-storage-route-step.is-unassigned .doc-storage-route-marker {
+  border-style: dashed;
+  border-color: var(--ui-line);
+  background: var(--ui-white);
+  color: var(--ui-ink-500);
+  box-shadow: 0 0 0 5px var(--ui-white);
+}
+#viewModal.is-document-view .doc-storage-route-step.is-unassigned .doc-storage-route-value {
+  color: var(--ui-ink-500);
+  font-weight: 400;
+}
+@keyframes doc-route-connect {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+@keyframes doc-route-arrive {
+  from { opacity: 0; transform: translateY(8px) scale(.8); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+@keyframes doc-route-reveal {
+  from { opacity: 0; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@media (max-width: 575.98px) {
+  #viewModal.is-document-view .doc-storage-route-step { padding: 0 5px; }
+  #viewModal.is-document-view .doc-storage-route-step::before,
+  #viewModal.is-document-view .doc-storage-route-step::after { top: 14px; }
+  #viewModal.is-document-view .doc-storage-route-marker {
+    width: 30px;
+    height: 30px;
+    margin-bottom: 12px;
+    font-size: 11px;
+  }
+  #viewModal.is-document-view .doc-storage-route-value { font-size: 11px; }
+  #viewModal.is-document-view .doc-storage-route-label { font-size: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #viewModal.is-document-view .doc-storage-route-step::after,
+  #viewModal.is-document-view .doc-storage-route-marker,
+  #viewModal.is-document-view .doc-storage-route-label,
+  #viewModal.is-document-view .doc-storage-route-value { animation: none; }
+}
 #viewModal.is-document-view .doc-overview-grid,
 #viewModal.is-document-view .doc-modal-field-grid {
   display: grid;

@@ -80,6 +80,38 @@
         return !!section && ['overview', 'storage', 'revision'].includes(section.key);
     }
 
+    var STORAGE_LEVELS = ['Area', 'Specific', 'Asset', 'Location'];
+
+    function hasStorageValue(value) {
+        return value != null && String(value).trim() !== '';
+    }
+
+    function makeStorageRoute(fields) {
+        if (!fields || !STORAGE_LEVELS.some(function (label) {
+            return Object.prototype.hasOwnProperty.call(fields, label);
+        })) return null;
+        var levels = STORAGE_LEVELS.filter(function (label) {
+            return label !== 'Asset' || hasStorageValue(fields[label]);
+        });
+        var route = node('ol', 'doc-storage-route');
+        route.setAttribute('aria-label', 'Storage route');
+        route.setAttribute('style', '--route-count: ' + levels.length);
+        levels.forEach(function (label, index) {
+            var assigned = hasStorageValue(fields[label]);
+            var destination = label === 'Location';
+            var step = node('li', 'doc-storage-route-step' +
+                (destination ? ' is-destination' : '') + (assigned ? '' : ' is-unassigned'));
+            step.setAttribute('style', '--route-index: ' + index);
+            if (destination && assigned) step.setAttribute('aria-current', 'location');
+            var marker = node('span', 'doc-storage-route-marker', index + 1);
+            marker.setAttribute('aria-hidden', 'true');
+            step.append(marker, node('span', 'doc-storage-route-label', label),
+                node('strong', 'doc-storage-route-value', assigned ? fields[label] : 'Not specified'));
+            route.append(step);
+        });
+        return route;
+    }
+
     function renderOverview(sections) {
         var summary = document.getElementById('viewDocumentSummary');
         if (!summary) return;
@@ -98,6 +130,11 @@
             });
             if (!entries.length) return;
             var group = node('section', 'doc-overview-group');
+            var route = section.key === 'storage' ? makeStorageRoute(section.fields) : null;
+            if (route) {
+                group.append(route);
+                entries = entries.filter(function (entry) { return !STORAGE_LEVELS.includes(entry[0]); });
+            }
             var grid = node('dl', 'doc-overview-grid');
             entries.forEach(function (entry) {
                 var value = valueText(entry[1]);
@@ -106,7 +143,7 @@
                     node('dd', 'doc-overview-value', value));
                 grid.append(item);
             });
-            group.append(grid);
+            if (entries.length) group.append(grid);
             summary.append(group);
         });
         summary.hidden = false;

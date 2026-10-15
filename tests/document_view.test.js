@@ -156,8 +156,9 @@ test('all identity and custody fields appear above the tabs, not inside a tab',(
   const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
   assert.equal(overview.querySelectorAll('.doc-overview-group-title').length,0);
-  const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
-  assert.deepEqual(labels,['Created By','Created','Area','Location']);
+  const labels=overview.querySelectorAll('.doc-overview-label').map((n)=>n.textContent);
+  assert.deepEqual(labels,['Created By','Created']);
+  assert.deepEqual(overview.querySelectorAll('.doc-storage-route-value').map((n)=>n.textContent),['Plant','Not specified','Rack 3']);
   assert.equal(overview.parentNode.children[1],details);
   assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
 });
@@ -463,4 +464,53 @@ test('document Approval History uses the decision stepper with request context a
   sort.value='newest';sort.listeners.change();
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-request').map(el=>el.textContent),['REQ-43','REQ-42']);
   assert.equal(JSON.stringify(events),original);
+});
+
+test('storage route follows the saved hierarchy, ends at Location and keeps custody metadata',()=>{
+  const {window,details,map}=setup();
+  const fields={Area:'Plant',Specific:'Production',Asset:'Machine 12',Location:'Shelf 4',
+    'Location Code':'LOC-4','Current Holder':'Records Officer','Days until disposal':'60 days'};
+  const original=JSON.stringify(fields);
+  window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
+    {key:'storage',fields}
+  ]});
+  const route=map.viewDocumentSummary.querySelector('.doc-storage-route');
+  assert.equal(route.tagName,'OL');
+  assert.equal(route.getAttribute('aria-label'),'Storage route');
+  assert.deepEqual(route.querySelectorAll('.doc-storage-route-label').map(el=>el.textContent),['Area','Specific','Asset','Location']);
+  assert.deepEqual(route.querySelectorAll('.doc-storage-route-value').map(el=>el.textContent),['Plant','Production','Machine 12','Shelf 4']);
+  assert.equal(route.children[3].getAttribute('aria-current'),'location');
+  assert.equal(route.children[3].classList.contains('is-destination'),true);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),['Location Code','Current Holder','Days until disposal']);
+  assert.equal(JSON.stringify(fields),original);
+});
+
+test('storage route skips only an empty Asset and renumbers the final Location',()=>{
+  for(const asset of [null,undefined,'','   ']) {
+    const {window,details,map}=setup();
+    window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
+      {key:'storage',fields:{Area:'Plant',Specific:'Office',Asset:asset,Location:'Cabinet'}}
+    ]});
+    const route=map.viewDocumentSummary.querySelector('.doc-storage-route');
+    assert.ok(route);
+    assert.deepEqual(route.querySelectorAll('.doc-storage-route-label').map(el=>el.textContent),['Area','Specific','Location']);
+    assert.deepEqual(route.querySelectorAll('.doc-storage-route-marker').map(el=>el.textContent),['1','2','3']);
+    assert.equal(route.children[2].getAttribute('aria-current'),'location');
+  }
+});
+
+test('storage route handles missing destinations and unsafe text, and resets for the next record',()=>{
+  const {window,details,map}=setup();
+  const name='<script>alert(1)</script>';
+  window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
+    {key:'storage',fields:{Area:name,Specific:'',Asset:'0',Location:null}}
+  ]});
+  const route=map.viewDocumentSummary.querySelector('.doc-storage-route');
+  assert.equal(route.querySelector('.doc-storage-route-value').textContent,name);
+  assert.equal(route.querySelectorAll('script').length,0);
+  assert.equal(route.children.length,4,'An asset named 0 is a recorded value.');
+  assert.equal(route.children[3].getAttribute('aria-current'),null);
+  assert.equal(route.children[3].classList.contains('is-unassigned'),true);
+  window.PKDocumentView.render(details,{Name:'Another record'});
+  assert.equal(map.viewDocumentSummary.querySelector('.doc-storage-route'),null);
 });
