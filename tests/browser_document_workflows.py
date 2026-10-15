@@ -89,7 +89,7 @@ try:
 
             if os.environ.get('PK_BROWSER_REGISTERS_ONLY') == '1':
                 from browser_register_checks import run_checks
-                run_checks(page, context, base, APP_ROOT, manifest)
+                run_checks(page, context, base, APP_ROOT, manifest, sql, browser, env['PK_BROWSER_PASSWORD'])
                 assert not errors, errors
                 context.close()
                 browser.close()
@@ -152,7 +152,8 @@ try:
                 assert not page.locator('#tableFilter').evaluate('(e)=>e.checkValidity()')
                 page.locator('[name="from"]').fill('2025-01-15')
                 page.locator('[name="to"]').fill('2025-01-15')
-                page.locator('button[form="tableFilter"]').click()
+                # Custom date changes update live tables without an Apply button.
+                page.locator('[name="to"]').press('Tab')
                 page.wait_for_url('**period=custom**')
                 page.wait_for_load_state('load')
                 if route == 'documents/hardcopy':

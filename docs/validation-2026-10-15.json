@@ -1,0 +1,182 @@
+{
+  "date": "2026-10-15",
+  "php": "8.0.30",
+  "baseline_revision": "981b9ce",
+  "php_tests": [
+    {
+      "file": "tests/user_role_permissions.php",
+      "passed": true
+    },
+    {
+      "file": "tests/approval_step_tiles.php",
+      "passed": true
+    },
+    {
+      "file": "tests/controlled_file_history.php",
+      "passed": true
+    },
+    {
+      "file": "tests/controlled_file_print.php",
+      "passed": true
+    },
+    {
+      "file": "tests/file_action_permissions.php",
+      "passed": true
+    },
+    {
+      "file": "tests/action_errors.php",
+      "passed": true
+    },
+    {
+      "file": "tests/backup_listing.php",
+      "passed": true
+    },
+    {
+      "file": "tests/plan_contract.php",
+      "passed": false,
+      "failure": "Document details must declare their presentation kind",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/login_transition_handoff.php",
+      "passed": true
+    },
+    {
+      "file": "tests/logout_handoff.php",
+      "passed": true
+    },
+    {
+      "file": "tests/request_disposal.php",
+      "passed": true
+    },
+    {
+      "file": "tests/disposal_view_details.php",
+      "passed": true
+    },
+    {
+      "file": "tests/role_lifecycle.php",
+      "passed": true
+    },
+    {
+      "file": "tests/audit_listing.php",
+      "passed": true
+    },
+    {
+      "file": "tests/retention_countdown.php",
+      "passed": true
+    },
+    {
+      "file": "tests/topnav_optional_asset.php",
+      "passed": false,
+      "failure": "Top nav must remain visible on scroll without absolute positioning.",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/document_folder_layout.php",
+      "passed": false,
+      "failure": "Switching Hardcopy and Softcopy tabs must keep the selected layout",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/folder_search.php",
+      "passed": true
+    },
+    {
+      "file": "tests/hardcopy_folder_projection.php",
+      "passed": true
+    },
+    {
+      "file": "tests/hardcopy_contextual_folders.php",
+      "passed": true
+    },
+    {
+      "file": "tests/colors_actions_contract.php",
+      "passed": true
+    },
+    {
+      "file": "tests/plan_implementation.php",
+      "passed": false,
+      "failure": "The optional Asset must be stored as SQL NULL when unassigned.",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/current_plan_contract.php",
+      "passed": false,
+      "failure": "Area, Specific and Asset must have no View Details button.",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/date_range.php",
+      "passed": true
+    },
+    {
+      "file": "tests/pwa_manifest.php",
+      "passed": true
+    },
+    {
+      "file": "tests/backup_contract.php",
+      "passed": false,
+      "failure": "Backup endpoints must use the shared role permission policy.",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/backup_retention.php",
+      "passed": false,
+      "failure": "Expired managed snapshots, audit files and application logs must be deleted.",
+      "same_failure_at_baseline": true
+    },
+    {
+      "file": "tests/high_priority_security.php",
+      "passed": true
+    },
+    {
+      "file": "tests/dashboard_copy_contract.php",
+      "passed": false,
+      "failure": "Original dashboard copy was lost: % of finalized requests approved or completed",
+      "same_failure_at_baseline": true
+    }
+  ],
+  "node_summary": {
+    "tests": 75,
+    "pass": 73,
+    "fail": 2
+  },
+  "node_failed_tests": [
+    {
+      "file": "tests/dashboard_visual.test.js",
+      "name": "dashboard icons do not replace original accessible metric text",
+      "preexisting": true
+    },
+    {
+      "file": "tests/modal_dismissal.test.js",
+      "name": "native login notification also resists accidental Escape dismissal",
+      "preexisting": true
+    }
+  ],
+  "browser_checks": [
+    "Live search in table and folder layouts, focus and empty states",
+    "A buffered older response cannot overwrite newer search results",
+    "Network failure and retry preserves prior results",
+    "Custom date clear synchronizes validation",
+    "Pagination Back/Forward and page limit",
+    "Request/task modal, tabs, close, malformed record error",
+    "Backup layout with expanded import/restore at 1440 and 390 pixels",
+    "File action and URL permission denials for a document owner",
+    "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal"
+  ],
+  "schema_check": "Fresh import and migration rerun passed on an owned disposable test database; no operational seed data.",
+  "local_migration": "File action permissions installed after a private full database backup; business record counts unchanged.",
+  "note": "The legacy suite is not fully green. All listed PHP failures were reproduced unchanged at baseline 981b9ce. The two Node failures also predate this work.",
+  "syntax": {
+    "php_files": 143,
+    "javascript_files": 29,
+    "failures": 0,
+    "php_runtime": "8.0.30"
+  },
+  "database_regressions": [
+    "tests/request_return.php",
+    "tests/controlled_file_replacement.php",
+    "tests/user_role_assignments.php",
+    "tests/user_role_permissions.php --database"
+  ]
+}
