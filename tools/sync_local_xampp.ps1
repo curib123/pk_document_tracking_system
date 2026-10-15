@@ -29,7 +29,7 @@ if ($LASTEXITCODE -ne 0) { throw 'Checkout histories have diverged. Review their
 Invoke-GitChecked $targetRoot @('merge', '--ff-only', 'FETCH_HEAD')
 
 # Verify the actual HTTP response, not only files on disk.
-foreach ($asset in @('assets/js/live-table.js', 'assets/js/app.js', 'assets/js/task-notifications.js', 'assets/css/backup.css')) {
+foreach ($asset in @('assets/js/live-table.js', 'assets/js/app.js', 'assets/js/task-notifications.js', 'assets/css/backup.css', 'assets/js/document-view.js', 'assets/css/document-view.css')) {
     $url = $LiveBaseUrl.TrimEnd('/') + '/' + $asset
     $response = Invoke-WebRequest -Uri $url -UseBasicParsing -Headers @{ 'Cache-Control' = 'no-cache' }
     $algorithm = [System.Security.Cryptography.SHA256]::Create()
