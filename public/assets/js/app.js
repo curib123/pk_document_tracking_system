@@ -285,7 +285,6 @@
     }
     toggle?.addEventListener('click', function () { setSidebar(!sidebar?.classList.contains('is-open'), true); });
     sidebarBackdrop?.addEventListener('click', function () { setSidebar(false, true); });
-    document.getElementById('sidebarClose')?.addEventListener('click', function () { setSidebar(false, true); });
     sidebar?.addEventListener('click', function (event) { if (event.target.closest('a')) setSidebar(false, false); });
     mobileNavigation.addEventListener('change', function () { setSidebar(false, false); });
     document.addEventListener('keydown', function (event) {

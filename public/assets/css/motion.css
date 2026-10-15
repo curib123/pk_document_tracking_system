@@ -71,7 +71,6 @@
     .workspace-card,
     .stat-card,
     .document-record-card,
-    .folder-tile,
     .doc-tree-folder-row,
     .btn,
     .record-action,
@@ -90,8 +89,6 @@
         border-color: var(--ui-line-strong);
         box-shadow: 0 9px 24px color-mix(in srgb, var(--ui-ink-950) 7%, transparent);
     }
-
-    .folder-tile:hover,
     .doc-tree-folder-row:hover {
         transform: translateX(2px)
     }
@@ -224,7 +221,6 @@ body.motion-login-loading .login-card::after,
     .workspace-card,
     .stat-card,
     .document-record-card,
-    .folder-tile,
     .doc-tree-folder-row,
     .btn,
     .record-action,

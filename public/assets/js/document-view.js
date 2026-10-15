@@ -80,7 +80,7 @@
         return !!section && ['overview', 'storage', 'revision'].includes(section.key);
     }
 
-    function renderOverview(sections, data) {
+    function renderOverview(sections) {
         var summary = document.getElementById('viewDocumentSummary');
         if (!summary) return;
         summary.replaceChildren();
@@ -216,7 +216,7 @@
 
     function makeActivity(entries) {
         var list = node('div', 'doc-modal-activity');
-        entries.forEach(function (entry, index) {
+        entries.forEach(function (entry) {
             var item = node('article', 'doc-modal-activity-item');
             var indicator = node('span', 'doc-modal-activity-marker');
             indicator.append(icon('overview'));
@@ -361,7 +361,7 @@
         var sections = Array.isArray(data.sections) ? data.sections : [];
         var overview = sections.filter(isOverviewSection);
         var concerns = sections.filter(function (section) { return !isOverviewSection(section); });
-        renderOverview(overview, data);
+        renderOverview(overview);
 
         // Each tab is one separately scoped concern. Overview is NEVER a tab.
         if (!concerns.length) {

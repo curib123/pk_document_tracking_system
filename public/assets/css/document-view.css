@@ -603,7 +603,6 @@
     }
 }
 
-
 /* ================================================================
    Document overview first, independent concern tabs second.
    The complete overview scrolls as part of the modal rather than
@@ -620,33 +619,6 @@
     padding: 24px 30px 28px;
     border-bottom: 1px solid var(--ui-line);
     background: linear-gradient(180deg, var(--ui-surface-soft) 0%, var(--ui-white) 100%);
-}
-
-#viewModal.is-document-view .doc-overview-intro {
-    margin-bottom: 19px;
-}
-
-#viewModal.is-document-view .doc-overview-kicker {
-    color: var(--ui-brand-700);
-    font-size: 10px;
-    font-weight: 800;
-    letter-spacing: .12em;
-}
-
-#viewModal.is-document-view .doc-overview-title {
-    margin: 6px 0 4px;
-    color: var(--ui-ink-900);
-    font-size: 17px;
-    line-height: 1.35;
-    font-weight: 800;
-    letter-spacing: -.03em;
-}
-
-#viewModal.is-document-view .doc-overview-description {
-    margin: 0;
-    color: var(--ui-slate-600);
-    font-size: 12px;
-    line-height: 1.6;
 }
 
 #viewModal.is-document-view .doc-overview-group+.doc-overview-group {

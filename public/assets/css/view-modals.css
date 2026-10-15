@@ -30,11 +30,6 @@
     overflow-wrap: anywhere;
 }
 
-.table-date-hint {
-    align-self: center;
-    font-size: 11px;
-}
-
 .workflow-steps-modal .modal-content {
     border-radius: 22px;
 }
@@ -52,7 +47,6 @@
     #fileHistoryModal .file-history-item .btn {
         flex: 1 1 auto;
     }
-    .table-date-hint { flex-basis: 100%; }
 }
 
 @media (max-width: 359.98px) {
