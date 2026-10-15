@@ -37,7 +37,9 @@ foreach ($asset in @('assets/js/live-table.js', 'assets/js/app.js', 'assets/css/
         $response.RawContentStream.Position = 0
         $actual = [BitConverter]::ToString($algorithm.ComputeHash($response.RawContentStream)).Replace('-', '')
     } finally { $algorithm.Dispose() }
-    $expected = (Get-FileHash -LiteralPath (Join-Path $sourcePath ('public/' + $asset)) -Algorithm SHA256).Hash
+    # Git may convert LF to CRLF when updating the Windows served checkout.
+    # Its committed tree is identical; HTTP bytes must match its working file.
+    $expected = (Get-FileHash -LiteralPath (Join-Path $targetRoot ('public/' + $asset)) -Algorithm SHA256).Hash
     if ($actual -ne $expected) { throw "The running server returned different bytes for ${url}. Check its document root." }
     Write-Host "Verified $url"
 }
