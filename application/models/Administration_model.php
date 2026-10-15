@@ -181,6 +181,19 @@ class Administration_model extends CI_Model
         return [$rows, $total, $page];
     }
 
+    /** Current assignments across every folder; fetched only when a user's modal opens. */
+    public function user_assigned_documents($userId)
+    {
+        $hardcopy = $this->db->select('d.id,d.title,d.sequence_number AS code')
+            ->from('hardcopy_documents d')->where('d.holder_id', (int) $userId)
+            ->where('d.status', 'active')->order_by('d.title')->order_by('d.id')->get()->result_array();
+        $softcopy = $this->db->select('d.id,d.title,d.document_number AS code,a.assigned_at')
+            ->from('assignments a')->join('softcopy_documents d', 'd.id=a.softcopy_id')
+            ->where('a.user_id', (int) $userId)->where('a.active', 1)->where('d.status', 'active')
+            ->order_by('d.title')->order_by('d.id')->get()->result_array();
+        return ['hardcopy' => $hardcopy, 'softcopy' => $softcopy];
+    }
+
     public function role_options()
     {
         return $this->db->select('id,name')->from('roles')->where('active', 1)

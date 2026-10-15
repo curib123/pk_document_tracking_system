@@ -227,7 +227,9 @@
 
     // Each data cell opens the exact same reusable View modal as the eye
     // action; action buttons and links remain independent and never trigger it.
+    var recordViewRequest = 0;
     function openRecordDetails(serialized, recordTitle) {
+        recordViewRequest++;
         var modal = document.getElementById('viewModal');
         var details = document.getElementById('viewDetails');
         var heading = document.getElementById('viewModalTitle');
@@ -249,6 +251,50 @@
         }
         window.bootstrap.Modal.getOrCreateInstance(modal).show();
     }
+    function openRemoteRecordDetails(button) {
+        openRecordDetails(JSON.stringify({kind: 'record', header: {title: button.getAttribute('data-title')},
+            sections: []}), button.getAttribute('data-title'));
+        var request = recordViewRequest;
+        var details = document.getElementById('viewDetails');
+        if (!details) return;
+        var loading = document.createElement('div');
+        loading.className = 'doc-assignment-loading';
+        loading.setAttribute('role', 'status');
+        var spinner = document.createElement('span');
+        spinner.className = 'spinner-border spinner-border-sm';
+        spinner.setAttribute('aria-hidden', 'true');
+        loading.append(spinner, document.createTextNode(' Loading assigned documents…'));
+        details.replaceChildren(loading);
+        Promise.resolve().then(function () {
+            var url = new URL(button.getAttribute('data-view-url'), window.location.origin);
+            if (url.origin !== window.location.origin || !['http:', 'https:'].includes(url.protocol))
+                throw new Error('Invalid view destination');
+            return fetch(url.href, {credentials: 'same-origin', cache: 'no-store', headers: {'Accept': 'application/json'}});
+        }).then(function (response) {
+            if (!response.ok) throw new Error('Details unavailable');
+            return response.json();
+        }).then(function (data) {
+            if (request !== recordViewRequest) return;
+            if (!data || data.kind !== 'record' || !Array.isArray(data.sections)) throw new Error('Invalid details');
+            renderRecordDetails(details, data);
+        }).catch(function () {
+            if (request !== recordViewRequest) return;
+            var notice = document.createElement('div');
+            notice.className = 'doc-assignment-loading';
+            notice.setAttribute('role', 'alert');
+            var message = document.createElement('p');
+            message.textContent = 'Unable to load assigned documents. Please try again.';
+            var retry = document.createElement('button');
+            retry.type = 'button';
+            retry.className = 'btn btn-sm btn-outline-primary';
+            retry.textContent = 'Retry';
+            retry.addEventListener('click', function () { openRemoteRecordDetails(button); });
+            notice.append(message, retry);
+            details.replaceChildren(notice);
+        });
+    }
+    var sharedViewModal = document.getElementById('viewModal');
+    if (sharedViewModal) sharedViewModal.addEventListener('hidden.bs.modal', function () { recordViewRequest++; });
     function showTableCellDetails(row) {
         if (!row || !row.hasAttribute('data-row-view')) return;
         openRecordDetails(row.getAttribute('data-row-view'), row.getAttribute('data-row-title'));
@@ -357,7 +403,8 @@
         var view = event.target.closest('.js-view');
         if (view) {
             event.preventDefault();
-            openRecordDetails(view.getAttribute('data-display'), view.getAttribute('data-title'));
+            if (view.hasAttribute('data-view-url')) openRemoteRecordDetails(view);
+            else openRecordDetails(view.getAttribute('data-display'), view.getAttribute('data-title'));
         }
 
         var fileHistory = event.target.closest('.js-file-history');

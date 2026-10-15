@@ -7,26 +7,25 @@ if ($folder_value !== '')
 ?>
 
 <section class="document-assignments-page" aria-label="Document assignments">
-  <div class="assignments-heading">
-
-    <nav class="tab-bar assignments-tabs" aria-label="Assignment document type">
-      <?php foreach (['hardcopy' => 'Hardcopy / Places', 'softcopy' => 'Softcopy / Categories'] as $key => $label): ?>
-        <a class="tab-link <?= $domain === $key ? 'active' : '' ?>"
-          href="<?= site_url('admin/document-assignments') . '?domain=' . $key ?>" <?= $domain === $key ? 'aria-current="page"' : '' ?>>
-          <i class="fa-solid <?= $key === 'hardcopy' ? 'fa-box-archive' : 'fa-folder-tree' ?> me-1"
-            aria-hidden="true"></i>
-          <?= html_escape($label) ?>
-        </a>
-      <?php endforeach; ?>
-    </nav>
-
-    <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
-      data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
-      <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
-    </button>
-
+<div class="assignments-heading">
+  <div>
+    <h2><?= html_escape(ucfirst($domain)) ?> Assignments</h2>
+    <p>Showing the current folder's document assignments and holders.</p>
   </div>
-
+  <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
+    data-target="#assignmentForm" data-record="{}" data-title="Assign Document">
+    <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign Document
+  </button>
+</div>
+<nav class="tab-bar assignments-tabs" aria-label="Assignment document type">
+  <?php foreach (['hardcopy' => 'Hardcopy / Places', 'softcopy' => 'Softcopy / Categories'] as $key => $label): ?>
+    <a class="tab-link <?= $domain === $key ? 'active' : '' ?>"
+      href="<?= site_url('admin/document-assignments') . '?domain=' . $key ?>" <?= $domain === $key ? 'aria-current="page"' : '' ?>>
+      <i class="fa-solid <?= $key === 'hardcopy' ? 'fa-box-archive' : 'fa-folder-tree' ?> me-1" aria-hidden="true"></i>
+      <?= html_escape($label) ?>
+    </a>
+  <?php endforeach; ?>
+</nav>
 
 
   <?php if ($domain === 'hardcopy'): ?>
