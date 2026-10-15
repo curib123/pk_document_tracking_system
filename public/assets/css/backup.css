@@ -6,13 +6,11 @@
 .backup-toolbar { display: flex; gap: 10px; flex-wrap: wrap; }
 .backup-warning { padding: 14px 18px; border: 1px solid var(--ui-amber-300); border-radius: 12px; background: var(--ui-amber-100); color: var(--ui-amber-900); font-size: 13px; line-height: 1.5; }
 .backup-section-title { font-size: 15px; font-weight: 750; margin: 0 0 12px; color: var(--ui-ink-900); }
-.backup-tools { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 20px; align-items: start; }
-.backup-tool { padding: 20px; min-width: 0; }
-.backup-tool summary { cursor: pointer; font-weight: 650; color: var(--ui-ink-800); }
-.backup-tool form { display: grid; gap: 16px; margin-top: 20px; }
-.backup-tool .form-control, .backup-tool .form-select { width: 100%; min-width: 0; max-width: 100%; }
-.backup-tool .backup-warning { margin: 18px 0 0; }
-.backup-tool .btn { justify-self: start; }
+.backup-modal form { display: flex; flex-direction: column; min-height: 0; max-height: inherit; }
+.backup-modal .form-control, .backup-modal .form-select { width: 100%; min-width: 0; max-width: 100%; }
+.backup-modal .backup-warning { margin: 0 0 20px; }
+.backup-restore-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+.backup-field-full { grid-column: 1 / -1; }
 .backup-workspace td:first-child { overflow-wrap: anywhere; }
 .backup-workspace .table { min-width: 740px; }
-@media (max-width: 700px) { .backup-tools { grid-template-columns: 1fr; } .backup-tool { padding: 16px; } }
+@media (max-width: 575.98px) { .backup-restore-fields { grid-template-columns: minmax(0, 1fr); } }

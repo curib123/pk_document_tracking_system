@@ -33,6 +33,12 @@ $dt_filter_values = ['type' => $table['type']];
         </div>
         <?php if ($canWrite): ?>
             <div class="backup-toolbar">
+                <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#backupImportModal">
+                    <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import backup
+                </button>
+                <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#backupRestoreModal">
+                    <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore system data
+                </button>
                 <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
                     data-confirm="Delete backup and log archives older than three months?">
                     <input type="hidden" name="confirmed" value="no">
@@ -62,47 +68,73 @@ $dt_filter_values = ['type' => $table['type']];
             'dt_total', 'dt_sort', 'dt_dir', 'dt_sortable', 'dt_filters', 'dt_filter_values'
         )); ?>
     </section>
-    <?php if ($canWrite): ?>
-        <div class="backup-tools">
-            <details class="workspace-card backup-tool">
-                <summary>Import backup</summary>
+</div>
+<?php if ($canWrite): ?>
+    <div class="modal fade backup-modal" id="backupImportModal" tabindex="-1" aria-labelledby="backupImportTitle"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content">
                 <form method="post" enctype="multipart/form-data" action="<?= site_url('admin/backups/import') ?>"
                     data-confirm="Verify and store this backup ZIP?">
-                    <label class="form-label" for="backupZip">Backup ZIP</label>
-                    <input class="form-control" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip" required>
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-6" id="backupImportTitle">Import backup</h2>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <label class="form-label" for="backupZip">Backup ZIP</label>
+                        <input class="form-control" type="file" name="backup_zip" id="backupZip" accept=".zip,application/zip" required>
+                    </div>
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
-                    <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>Import backup</button>
+                    <div class="modal-footer">
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>Import backup</button>
+                    </div>
                 </form>
-            </details>
-            <details class="workspace-card backup-tool">
-                <summary>Restore system data</summary>
-                <p class="backup-warning">Replaces live records and private files. A recovery backup is created first.</p>
+            </div>
+        </div>
+    </div>
+    <div class="modal fade backup-modal" id="backupRestoreModal" tabindex="-1" aria-labelledby="backupRestoreTitle"
+        aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable modal-lg">
+            <div class="modal-content">
                 <form method="post" action="<?= site_url('admin/backups/restore') ?>"
                     data-confirm="Replace the live database and private data with this backup?">
-                    <div>
-                        <label for="restoreArchive" class="form-label">Backup to restore</label>
-                        <select class="form-select" id="restoreArchive" name="backup_name" required>
-                            <option value="">Select backup</option>
-                            <?php foreach ($backup_items as $item): ?>
-                                <option value="<?= html_escape($item['name']) ?>"><?= html_escape($item['name']) ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-6" id="backupRestoreTitle">Restore system data</h2>
+                        <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div>
-                        <label for="restoreAdminPassword" class="form-label">Your password</label>
-                        <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
-                            autocomplete="current-password" required>
-                    </div>
-                    <div>
-                        <label for="restorePhrase" class="form-label">Type RESTORE to confirm</label>
-                        <input class="form-control" id="restorePhrase" name="confirm_phrase" autocomplete="off" pattern="RESTORE" required>
+                    <div class="modal-body">
+                        <p class="backup-warning">Replaces live records and private files. A recovery backup is created first.</p>
+                        <div class="backup-restore-fields">
+                            <div class="backup-field-full">
+                                <label for="restoreArchive" class="form-label">Backup to restore</label>
+                                <select class="form-select" id="restoreArchive" name="backup_name" required>
+                                    <option value="">Select backup</option>
+                                    <?php foreach ($backup_items as $item): ?>
+                                        <option value="<?= html_escape($item['name']) ?>"><?= html_escape($item['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="restoreAdminPassword" class="form-label">Your password</label>
+                                <input class="form-control" id="restoreAdminPassword" name="admin_password" type="password"
+                                    autocomplete="current-password" required>
+                            </div>
+                            <div>
+                                <label for="restorePhrase" class="form-label">Type RESTORE to confirm</label>
+                                <input class="form-control" id="restorePhrase" name="confirm_phrase" autocomplete="off" pattern="RESTORE" required>
+                            </div>
+                        </div>
                     </div>
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
-                    <button class="btn btn-danger" type="submit" <?= !$ready || !$backup_items ? 'disabled' : '' ?>>Restore selected backup</button>
+                    <div class="modal-footer">
+                        <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-danger" type="submit" <?= !$ready || !$backup_items ? 'disabled' : '' ?>>Restore selected backup</button>
+                    </div>
                 </form>
-            </details>
+            </div>
         </div>
-    <?php endif; ?>
-</div>
+    </div>
+<?php endif; ?>

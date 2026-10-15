@@ -118,14 +118,62 @@ def run_checks(page, context, base, app_root, manifest, sql, browser, password):
     expect(page.locator('tbody tr[data-record-id]')).to_have_count(1)
     expect(page.locator('#restoreArchive option')).to_have_count(33)
     print('Backup pagination, limits, search and complete restore selection passed.', flush=True)
-    for width in [1440, 390]:
+    for width in [1440, 390, 320]:
         page.set_viewport_size({'width': width, 'height': 950})
         page.wait_for_timeout(350)  # Let the existing sidebar resize transition finish.
-        page.locator('.backup-tool').evaluate_all('(items) => items.forEach(item => item.open = true)')
+        for name, selector in [('Import backup', '#backupImportModal'), ('Restore system data', '#backupRestoreModal')]:
+            page.get_by_role('button', name=name, exact=True).click()
+            dialog = page.locator(selector)
+            expect(dialog).to_be_visible()
+            page.wait_for_function('''selector => {
+                const dialog = document.querySelector(selector);
+                return getComputedStyle(dialog).opacity === '1' &&
+                    getComputedStyle(dialog.querySelector('.modal-content')).opacity === '1';
+            }''', arg=selector)
+            assert dialog.locator('.modal-content').evaluate('(e) => e.getBoundingClientRect().width <= innerWidth')
+            assert dialog.locator('.modal-body').evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
+            if width == 390:
+                page.screenshot(path=str(Path(__file__).parent / (selector[1:] + '-390.png')))
+            dialog.press('Escape')
+            expect(dialog).to_be_visible()
+            dialog.click(position={'x': 4, 'y': 4}, force=True)
+            expect(dialog).to_be_visible()
+            dialog.get_by_role('button', name='Cancel', exact=True).click()
+            expect(dialog).to_be_hidden()
         page.screenshot(path=str(Path(__file__).parent / ('backup-register-' + str(width) + '.png')))
-        assert page.locator('body').evaluate('(e) => e.scrollWidth <= innerWidth + 1'), page.evaluate('''() =>
+        assert page.locator('.backup-workspace').evaluate('(e) => e.getBoundingClientRect().right <= innerWidth + 1'), page.evaluate('''() =>
             Array.from(document.querySelectorAll('body *')).filter(e => e.getBoundingClientRect().right > innerWidth + 1)
                 .slice(0, 15).map(e => [e.tagName, e.className, e.getBoundingClientRect().width])''')
+    page.get_by_role('button', name='Import backup', exact=True).click()
+    dialog = page.locator('#backupImportModal')
+    dialog.locator('input[type="file"]').set_input_files({'name': 'fixture.zip', 'mimeType': 'application/zip', 'buffer': b'test fixture'})
+    # The test server intentionally has no backup secrets. Exercise confirmation
+    # without making a backup request or changing records.
+    dialog.locator('button[type="submit"]').evaluate('(e) => e.disabled = false')
+    dialog.locator('button[type="submit"]').click()
+    expect(page.locator('#confirmModal')).to_be_visible()
+    expect(dialog).to_be_hidden()
+    page.locator('#confirmModal').get_by_role('button', name='Cancel', exact=True).click()
+    expect(dialog).to_be_visible()
+    assert dialog.locator('input[type="file"]').evaluate('(e) => e.files.length') == 1
+    dialog.get_by_role('button', name='Cancel', exact=True).click()
+    page.get_by_role('button', name='Restore system data', exact=True).click()
+    dialog = page.locator('#backupRestoreModal')
+    dialog.locator('[name="backup_name"]').select_option(index=1)
+    dialog.locator('[name="admin_password"]').fill('modal-test-only')
+    dialog.locator('[name="confirm_phrase"]').fill('restore')
+    assert not dialog.locator('form').evaluate('(e) => e.checkValidity()')
+    dialog.locator('[name="confirm_phrase"]').fill('RESTORE')
+    assert dialog.locator('form').evaluate('(e) => e.checkValidity()')
+    dialog.locator('button[type="submit"]').evaluate('(e) => e.disabled = false')
+    dialog.locator('button[type="submit"]').click()
+    expect(page.locator('#confirmModal')).to_be_visible()
+    expect(dialog).to_be_hidden()
+    page.locator('#confirmModal').get_by_role('button', name='Cancel', exact=True).click()
+    expect(dialog).to_be_visible()
+    expect(dialog.locator('[name="confirm_phrase"]')).to_have_value('RESTORE')
+    dialog.get_by_role('button', name='Cancel', exact=True).click()
+    print('Backup modals, mobile layout, explicit dismissal, restore validation and canceled confirmation passed.', flush=True)
 
     # Scope and action permissions must both pass. The staff member owns this
     # document so these denials cannot be accidentally satisfied by scope alone.

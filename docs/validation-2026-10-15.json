@@ -160,7 +160,7 @@
     "Custom date clear synchronizes validation",
     "Pagination Back/Forward and page limit",
     "Request/task modal, tabs, close, malformed record error",
-    "Backup layout with expanded import/restore at 1440 and 390 pixels",
+    "Backup modals at 1440, 390 and 320 pixels; explicit dismissal, restore phrase validation and retained entries after canceled confirmation",
     "File action and URL permission denials for a document owner",
     "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal"
   ],
