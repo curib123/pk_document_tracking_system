@@ -70,8 +70,8 @@ class Places extends MY_Controller
         try {
             (new Place_service())->save($cfg, $this->input->post(), (int) $this->user['id']);
             $this->notice('Record saved.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('places/' . $slug);
     }
@@ -83,8 +83,8 @@ class Places extends MY_Controller
         try {
             (new Place_service())->deactivate($cfg, (int) $this->input->post('id'));
             $this->notice('Record deactivated.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('places/' . $slug);
     }

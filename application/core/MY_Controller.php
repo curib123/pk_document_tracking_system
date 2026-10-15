@@ -82,6 +82,16 @@ class MY_Controller extends CI_Controller
             show_error('Confirmation required.', 400);
     }
 
+    protected function error_notice(Throwable $error)
+    {
+        if ($error instanceof DomainException) {
+            $this->notice($error->getMessage(), 'danger');
+            return;
+        }
+        log_message('error', get_class($error) . ': ' . $error->getMessage());
+        $this->notice('The action could not be completed. Please try again or contact your administrator.', 'danger');
+    }
+
     protected function notice($message, $type = 'success')
     {
         // Daily JSON audit is filesystem-only; never insert operational audit

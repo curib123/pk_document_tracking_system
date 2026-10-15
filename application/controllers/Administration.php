@@ -213,8 +213,8 @@ class Administration extends MY_Controller
         try {
             $callback();
             $this->notice('Changes saved.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         // Preserve the selected workflow after a form POST so an editor does
         // not lose context when changing steps or publishing a new version.
@@ -240,8 +240,8 @@ class Administration extends MY_Controller
                 );
                 return;
             }
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('admin/users');
     }

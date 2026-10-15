@@ -139,8 +139,8 @@ class Documents extends MY_Controller
                 $_FILES['revision_attachment'] ?? NULL
             );
             $this->notice('Softcopy action approved and applied directly.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('documents/softcopy');
     }
@@ -155,8 +155,8 @@ class Documents extends MY_Controller
         try {
             (new Document_service())->save($domain, $this->input->post(), $this->user);
             $this->notice('Document saved.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('documents/' . $domain);
     }
@@ -184,8 +184,8 @@ class Documents extends MY_Controller
                 $payload['disposal_reason']
             );
             $this->notice('Document disposed and history recorded.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('documents/' . $domain);
     }

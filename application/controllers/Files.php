@@ -27,8 +27,8 @@ class Files extends MY_Controller
                 $this->input->post()
             );
             $this->notice('Controlled revision uploaded.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('documents/softcopy');
     }

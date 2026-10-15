@@ -124,8 +124,8 @@ class Requests extends MY_Controller
                 $_FILES['revision_attachment'] ?? NULL
             );
             $this->notice('Request draft saved.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-requests/' . $tab);
     }
@@ -137,8 +137,8 @@ class Requests extends MY_Controller
         try {
             (new Request_service())->submit($tab, (int) $this->input->post('id'), $this->user);
             $this->notice('Request submitted for approval.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-requests/' . $tab);
     }
@@ -157,8 +157,8 @@ class Requests extends MY_Controller
                 (string) $this->input->post('remark')
             );
             $this->notice('Approval decision recorded.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-tasks/' . $tab);
     }
@@ -169,8 +169,8 @@ class Requests extends MY_Controller
         try {
             (new Transfer_service())->dispatch((int) $this->input->post('id'), $this->user);
             $this->notice('Hardcopy dispatched. Awaiting recipient acceptance.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-tasks/hardcopy-transfer');
     }
@@ -182,8 +182,8 @@ class Requests extends MY_Controller
         try {
             (new Transfer_service())->accept((int) $this->input->post('id'), $this->user);
             $this->notice('Hardcopy received. Physical handoff is complete.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-tasks/hardcopy-transfer');
     }
@@ -196,8 +196,8 @@ class Requests extends MY_Controller
         try {
             (new Request_service())->cancel($tab, (int) $this->input->post('id'), $this->user);
             $this->notice('Draft cancelled.');
-        } catch (DomainException $e) {
-            $this->notice($e->getMessage(), 'danger');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
         }
         redirect('my-requests/' . $tab);
     }
