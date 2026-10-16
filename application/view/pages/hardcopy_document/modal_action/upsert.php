@@ -13,7 +13,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
     placeholder="Enter the hardcopy document title" autocomplete="off">
 </div>
 <div class="col-md-4">
-  <label class="form-label" for="hardcopySequence">Sequence / Copy Number <span
+  <label class="form-label" for="hardcopySequence">Document Copy Number <span
       class="optional-label">(optional)</span></label>
   <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100" placeholder="e.g. PK-REC-01" autocomplete="off">
 </div>
