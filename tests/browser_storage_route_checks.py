@@ -32,6 +32,7 @@ def run_checks(page, base, sql):
             metadata = modal.locator('.doc-overview-item').filter(has=page.get_by_text(label, exact=True))
             assert metadata.bounding_box()['y'] >= route_box['y'] + route_box['height'], label + ' must follow the storage route'
         expect(modal.locator('.modal-body')).not_to_contain_text('Location Code')
+        expect(modal.locator('.modal-body')).not_to_contain_text('Location Sequence')
         expect(modal.locator('.modal-body')).not_to_contain_text('Current Holder')
         expect(modal.locator('.modal-body')).not_to_contain_text('Days until disposal')
         assert header.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
