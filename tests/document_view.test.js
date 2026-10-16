@@ -175,6 +175,8 @@ test('all identity and custody fields appear above the tabs, not inside a tab',(
   const overview=map.viewDocumentSummary;
   const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
+  assert.ok(groups[0].querySelector('.doc-storage-route'));
+  assert.deepEqual(groups[1].querySelectorAll('.doc-overview-label').map((n)=>n.textContent),['Created By','Created']);
   assert.equal(overview.querySelectorAll('.doc-overview-group-title').length,0);
   const labels=overview.querySelectorAll('.doc-overview-label').map((n)=>n.textContent);
   assert.deepEqual(labels,['Created By','Created']);

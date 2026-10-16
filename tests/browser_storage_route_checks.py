@@ -12,23 +12,30 @@ def run_checks(page, base, sql):
         page.locator('tbody tr').filter(has_text='BROWSER-HC').locator('.js-view').click()
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
+        # Measure after the modal's scale/slide animation, not between frames.
+        modal.evaluate('(e) => Promise.all(e.getAnimations({subtree:true}).filter(a => a.effect.getComputedTiming().iterations !== Infinity).map(a => a.finished))')
         header = modal.locator('.modal-header')
         expect(header.locator('.doc-modal-custody-label')).to_have_text(['Current Holder', 'Days until disposal'])
         expect(header.locator('.doc-modal-custody-value')).to_have_text(['Browser Administrator', 'No retention'])
         badges = header.locator('.doc-modal-badges')
-        expect(badges.locator('#viewDocumentStatus')).to_have_text('Active')
+        actions = header.locator('.doc-modal-top-actions')
+        expect(actions.locator('#viewDocumentStatus')).to_have_text('Active')
         expect(badges.locator('.doc-modal-custody-item')).to_have_count(2)
         assert badges.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
-        if page.viewport_size['width'] >= 768:
-            status = badges.locator('#viewDocumentStatus').bounding_box()
-            for badge in badges.locator('.doc-modal-custody-item').all():
-                box = badge.bounding_box()
-                assert abs(box['y'] + box['height'] / 2 - status['y'] - status['height'] / 2) < 2, 'Custody badges must sit beside Status'
+        status = actions.locator('#viewDocumentStatus').bounding_box()
+        close = actions.get_by_role('button', name='Close', exact=True).bounding_box()
+        assert status['x'] + status['width'] <= close['x'], 'Status must sit beside Close at the top right'
+        assert abs(status['y'] + status['height'] / 2 - close['y'] - close['height'] / 2) < 2, (status, close, page.viewport_size)
+        route = modal.locator('.doc-storage-route')
+        route_box = route.bounding_box()
+        for label in ['Created By', 'Created', 'Modified', 'Record Version']:
+            metadata = modal.locator('.doc-overview-item').filter(has=page.get_by_text(label, exact=True))
+            assert metadata.bounding_box()['y'] >= route_box['y'] + route_box['height'], label + ' must follow the storage route'
         expect(modal.locator('.modal-body')).not_to_contain_text('Location Code')
         expect(modal.locator('.modal-body')).not_to_contain_text('Current Holder')
         expect(modal.locator('.modal-body')).not_to_contain_text('Days until disposal')
         assert header.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
-        return modal, modal.locator('.doc-storage-route')
+        return modal, route
 
     for with_asset in [False, True]:
         sql('UPDATE hardcopy_documents SET asset_id=' + ('1' if with_asset else 'NULL') +

@@ -163,7 +163,15 @@
       Status: true,
     };
 
-    sections.forEach(function (section) {
+    // Physical storage is the first overview group; creation metadata follows
+    // the route. Keep the supplied data and other section ordering intact.
+    var orderedSections = sections.filter(function (section) {
+      return section.key === "storage";
+    }).concat(sections.filter(function (section) {
+      return section.key !== "storage";
+    }));
+
+    orderedSections.forEach(function (section) {
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
           !(section.key === "overview" && repeated[entry[0]]) &&

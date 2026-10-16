@@ -157,11 +157,11 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                         </div>
                     </div>
                     <div class="doc-modal-badges">
-                        <span class="doc-modal-status" id="viewDocumentStatus" hidden></span>
                         <dl class="doc-modal-custody" id="viewDocumentCustody" hidden></dl>
                     </div>
                 </div>
                 <div class="doc-modal-top-actions">
+                    <span class="doc-modal-status" id="viewDocumentStatus" hidden></span>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
             </div>
