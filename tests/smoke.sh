@@ -28,10 +28,20 @@ db -e "ALTER TABLE hardcopy_documents DROP INDEX idx_hardcopy_documents_location
 db < database/migrations/20261013_allow_multiple_hardcopies_per_location.sql
 db -e "INSERT INTO areas(id,name,active) VALUES (99901,'Test area',1);"
 db -e "INSERT INTO specifics(id,area_id,name,active) VALUES (99901,99901,'Test specific',1);"
-db -e "INSERT INTO locations(id,area_id,specific_id,asset_id,name,code,active) VALUES (99901,99901,99901,NULL,'Test location','TEST-L-99901',1);"
+# Emulate the previous schema and validate the ONE-TIME in-place migration.
+db -e "ALTER TABLE locations DROP INDEX idx_locations_specific_sequence, DROP COLUMN sequence_number, ADD COLUMN code VARCHAR(100) NOT NULL DEFAULT '' AFTER name, ADD UNIQUE KEY code(code);"
+db -e "CREATE TABLE sequences(sequence_key VARCHAR(80) PRIMARY KEY, value BIGINT UNSIGNED NOT NULL); INSERT INTO sequences VALUES ('legacy-counter',5);"
+db -e "INSERT INTO locations(id,area_id,specific_id,asset_id,name,code,active) VALUES (99901,99901,99901,NULL,'Location A','OLD-A',1),(99902,99901,99901,NULL,'Location B','OLD-B',1),(99903,99901,99901,NULL,'Location C','OLD-C',1);"
+db < database/migrations/20261016_location_sequence_remove_code.sql
+sequence="$(db -N -e 'SELECT GROUP_CONCAT(sequence_number ORDER BY id) FROM locations WHERE specific_id=99901;')"
+test "$sequence" = "1,2,3" || { echo "Location sequence migration failed: $sequence" >&2; exit 1; }
+old_code="$(db -N -e "SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='locations' AND COLUMN_NAME='code';")"
+test "$old_code" = "0" || { echo "Legacy Location Code survived migration" >&2; exit 1; }
+old_sequences="$(db -N -e "SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='sequences';")"
+test "$old_sequences" = "0" || { echo "Standalone Sequences table survived migration" >&2; exit 1; }
 db -e "INSERT INTO hardcopy_documents(title,area_id,specific_id,asset_id,location_id,holder_id,status,created_by,creation_source,creation_reason) VALUES ('Document A',99901,99901,NULL,99901,1,'active',1,'direct','test'),('Document B',99901,99901,NULL,99901,1,'active',1,'direct','test');"
 documents="$(db -N -e 'SELECT COUNT(*) FROM hardcopy_documents WHERE location_id=99901;')"
 test "$documents" = "2" || { echo "Expected two documents at same Location"; exit 1; }
 index_unique="$(db -N -e "SELECT NON_UNIQUE FROM information_schema.STATISTICS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='hardcopy_documents' AND INDEX_NAME='idx_hardcopy_documents_location' LIMIT 1;")"
 test "$index_unique" = "1" || { echo "Hardcopy Location index must be non-unique"; exit 1; }
-echo "Schema, workflows, and multiple Hardcopy documents per Location migration passed."
+echo "Schema, workflows, per-Location sequences, Location Code removal, and multiple Hardcopy documents passed."
