@@ -33,9 +33,6 @@ if ($folder_value !== '')
       <form class="assignments-location-form" method="post"
         action="<?= site_url('admin/document-assignments/location') ?>"
         data-confirm="Assign all active Hardcopy documents in this Location to the selected user?" autocomplete="off">
-        <div class="assignments-location-heading">
-          <strong><i class="fa-solid fa-location-dot me-2" aria-hidden="true"></i>Assign by Location</strong>
-        </div>
         <div class="assignments-location-fields row g-3 align-items-end">
           <div class="col-lg-5">
             <label class="form-label" for="locationAssignmentPlace">Location</label>

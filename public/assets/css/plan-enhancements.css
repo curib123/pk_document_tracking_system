@@ -71,14 +71,10 @@
 }
 .document-assignments-page .assignments-location-form {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 18px;
   padding: 14px 16px;
-}
-.document-assignments-page .assignments-location-heading {
-  color: var(--ui-ink-800);
-  font-size: 12px;
 }
 .document-assignments-page .assignments-location-fields {
   display: grid;
