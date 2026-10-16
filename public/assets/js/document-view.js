@@ -169,8 +169,7 @@
           !(section.key === "overview" && repeated[entry[0]]) &&
           !(
             section.key === "storage" &&
-            (entry[0] === "Location Code" ||
-              STORAGE_HEADER_FIELDS.includes(entry[0]))
+            STORAGE_HEADER_FIELDS.includes(entry[0])
           )
         );
       });
