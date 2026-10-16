@@ -72,7 +72,8 @@ class Administration_model extends CI_Model
             $row['role_ids'] = array_keys($roles);
             $row['roles_label'] = implode(' · ', array_values($roles));
             $row['has_administrator'] = count(array_filter($roles, static function ($name) {
-                return strcasecmp($name, 'Administrator') === 0; })) > 0;
+                return strcasecmp($name, 'Administrator') === 0;
+            })) > 0;
         }
         unset($row);
         return $result;

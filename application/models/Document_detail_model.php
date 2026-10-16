@@ -75,18 +75,23 @@ class Document_detail_model extends CI_Model
                     'transfer_reference' => 'Transfer #' . $transfer['id']
                 ];
                 $remarks = [];
-                if (!empty($transfer['reason'])) $remarks[] = 'Reason: ' . $transfer['reason'];
-                if (!empty($transfer['comments'])) $remarks[] = 'Comments: ' . $transfer['comments'];
+                if (!empty($transfer['reason']))
+                    $remarks[] = 'Reason: ' . $transfer['reason'];
+                if (!empty($transfer['comments']))
+                    $remarks[] = 'Comments: ' . $transfer['comments'];
                 foreach ([
                     ['for_transfer', $transfer['created_at'], $transfer['holder'], 'Current holder'],
                     ['in_transit', $transfer['transferred_at'], $transfer['holder'], 'Sender'],
                     ['accepted', $transfer['accepted_at'], $transfer['recipient'], 'Recipient']
                 ] as [$action, $timestamp, $actor, $role]) {
                     // Saved status can be known even when a legacy timestamp is absent.
-                    if ($action !== 'for_transfer' && !$timestamp && $transfer['status'] !== $action) continue;
+                    if ($action !== 'for_transfer' && !$timestamp && $transfer['status'] !== $action)
+                        continue;
                     $transfersByDoc[$transfer['hardcopy_id']][] = $base + [
-                        'action' => $action, 'created_at' => $timestamp,
-                        'user_name' => $actor, 'position_title' => $role,
+                        'action' => $action,
+                        'created_at' => $timestamp,
+                        'user_name' => $actor,
+                        'position_title' => $role,
                         'comments' => $action === 'for_transfer' ? implode("\n", $remarks) : ''
                     ];
                 }
@@ -96,7 +101,8 @@ class Document_detail_model extends CI_Model
         $disposedIds = array_map('intval', array_column(array_filter(
             $rows,
             static function ($row) {
-                return $row['status'] === 'disposed'; }
+                return $row['status'] === 'disposed';
+            }
         ), 'id'));
         if ($disposedIds) {
             require_once APPPATH . 'services/presentation/disposal_details.php';
