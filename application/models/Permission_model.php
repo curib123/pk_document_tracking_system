@@ -15,7 +15,6 @@ class Permission_model extends CI_Model
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'sequence' => 'sequences',
             'tasks' => 'requests'
         ][$module] ?? $module;
         if ($module === 'requests' && $action === 'approve')
