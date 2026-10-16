@@ -1,17 +1,9 @@
-implement
+issues
 
-#1 auto chnage dynamically the data in table or folder layout realtime from search smoothly
+#1 make sure dont show or remove the access of documents after successful approve accept transfer hardcopy documents because the even the documents is transfer to another user its they or showing in the previous holder.
 
-#2 add permission in softcopy system documents table where this action button no permission like file history , print and download permissions
+#2 finish the unfinish ASSIGNED DOCUMENTS modal in user management make clean and copact and have better ui
 
-#3 update the pk_dts schema based on latest current with default data on it
+#3 sequence is the sequence of location like location A is sequence 1 then b is 2 then c 3 like that a sequnce of location so its not a table its belong to location table.
 
-#4 cleanup css properties that did no use or classes or id that did not use anymore clean up css file and js file only remove not use 
-
-#5 apply pagination and limit and use reusable datatable Available backups redesign also the backup pages remove unnesasry text and components make it clean and organize
-
-#6 fix the request view modal not responding
-
-#7 proper error handling
-
-#8 must follow php 8.0 
+#4 	Location Code is unnecessary remove it in schema and in current table and in the system
