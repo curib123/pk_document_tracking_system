@@ -64,7 +64,7 @@
       dateRange(select.form);
     });
   });
-  var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\b/g;
+  var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\b(?:[ \t]+(AM|PM)\b)?/gi;
   var selectors =
     "td, .doc-modal-body, .doc-modal-reference, .doc-overview-value, " +
     ".dashboard-activity-date, .file-history-item, .notification-inbox, " +
@@ -72,7 +72,10 @@
   function convert(text) {
     return text.replace(
       pattern,
-      function (match, day, hours, minutes, seconds) {
+      function (match, day, hours, minutes, seconds, meridiem) {
+        // Observer callbacks also see our formatted text. Leave it unchanged
+        // so two-digit 12-hour times cannot trigger an endless mutation loop.
+        if (meridiem) return match;
         var hour = Number(hours);
         if (hour > 23 || Number(minutes) > 59) return match;
         return (
