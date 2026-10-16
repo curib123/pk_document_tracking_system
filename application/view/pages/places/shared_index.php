@@ -10,9 +10,7 @@ $dt_columns = [];
 $labels = [
     'name' => 'Name',
     'asset_number' => 'Asset Number',
-    'sequence_key' => 'Sequence',
-    'value' => 'Current Value',
-    'code' => 'Location Code',
+    'sequence_number' => 'Sequence',
     'description' => 'Description',
     'folder_name' => 'Folder',
     'area_name' => 'Area',
@@ -90,7 +88,7 @@ $dt_sort = $table['sort'];
 $dt_dir = strtolower($table['dir']);
 $dt_sortable = array_values(array_intersect(
     array_keys($dt_columns),
-    ['name', 'code', 'asset_number', 'folder_name', 'sequence_key', 'value', 'active']
+    ['name', 'sequence_number', 'asset_number', 'folder_name', 'active']
 ));
 ?>
 
@@ -100,7 +98,6 @@ $dt_sortable = array_values(array_intersect(
         'specific' => 'Specific',
         'asset' => 'Asset',
         'location' => 'Location',
-        'sequence' => 'Sequence',
         'softcopy-categories' => 'Softcopy Categories'
     ] as $slug => $label):
         $perm = [
@@ -108,7 +105,6 @@ $dt_sortable = array_values(array_intersect(
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'sequence' => 'sequences',
             'softcopy-categories' => 'categories'
         ][$slug];
         if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
@@ -173,7 +169,7 @@ $dt_sortable = array_values(array_intersect(
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code' ? 'required' : '' ?>                 <?= $field === 'value' ? 'type="number" min="0"' : 'maxlength="150"' ?> autocomplete="off">
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' ? 'required' : '' ?>                 maxlength="150" autocomplete="off">
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>
