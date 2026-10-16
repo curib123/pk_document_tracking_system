@@ -15,6 +15,15 @@ def run_checks(page, base, sql):
         header = modal.locator('.modal-header')
         expect(header.locator('.doc-modal-custody-label')).to_have_text(['Current Holder', 'Days until disposal'])
         expect(header.locator('.doc-modal-custody-value')).to_have_text(['Browser Administrator', 'No retention'])
+        badges = header.locator('.doc-modal-badges')
+        expect(badges.locator('#viewDocumentStatus')).to_have_text('Active')
+        expect(badges.locator('.doc-modal-custody-item')).to_have_count(2)
+        assert badges.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
+        if page.viewport_size['width'] >= 768:
+            status = badges.locator('#viewDocumentStatus').bounding_box()
+            for badge in badges.locator('.doc-modal-custody-item').all():
+                box = badge.bounding_box()
+                assert abs(box['y'] + box['height'] / 2 - status['y'] - status['height'] / 2) < 2, 'Custody badges must sit beside Status'
         expect(modal.locator('.modal-body')).not_to_contain_text('Location Code')
         expect(modal.locator('.modal-body')).not_to_contain_text('Current Holder')
         expect(modal.locator('.modal-body')).not_to_contain_text('Days until disposal')
