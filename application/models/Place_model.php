@@ -75,7 +75,7 @@ class Place_model extends CI_Model
         $sorts = array_intersect($c['fields'], ['name', 'sequence_number', 'asset_number', 'folder_name']);
         if ($c['active'])
             $sorts[] = 'active';
-        $sort = in_array($state['sort'] ?? '', $sorts, TRUE) ? $state['sort'] : $c['key'];
+        $sort = in_array($state['sort'] ?? '', $sorts, TRUE) ? $state['sort'] : ($c['slug'] === 'location' ? 'sequence_number' : $c['key']);
         $dir = ($state['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
         $rows = $this->db->order_by('p.' . $sort, $dir)->order_by('p.' . $c['key'], 'ASC')
             ->limit($limit, ($page - 1) * $limit)->get()->result_array();
