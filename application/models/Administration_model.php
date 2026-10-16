@@ -185,8 +185,9 @@ class Administration_model extends CI_Model
     /** Current assignments across every folder; fetched only when a user's modal opens. */
     public function user_assigned_documents($userId)
     {
-        $hardcopy = $this->db->select('d.id,d.title,d.sequence_number AS code')
-            ->from('hardcopy_documents d')->where('d.holder_id', (int) $userId)
+        $hardcopy = $this->db->select('d.id,d.title,d.sequence_number AS code,l.name AS location_name,l.sequence_number AS location_sequence')
+            ->from('hardcopy_documents d')->join('locations l', 'l.id=d.location_id', 'left')
+            ->where('d.holder_id', (int) $userId)
             ->where('d.status', 'active')->order_by('d.title')->order_by('d.id')->get()->result_array();
         $softcopy = $this->db->select('d.id,d.title,d.document_number AS code,a.assigned_at')
             ->from('assignments a')->join('softcopy_documents d', 'd.id=a.softcopy_id')
