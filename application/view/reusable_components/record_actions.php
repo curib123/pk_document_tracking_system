@@ -21,7 +21,7 @@
             <button type="button" class="btn-icon record-action record-action-view js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>"
                 <?php if (!empty($button['view_url'])): ?>data-view-url="<?= html_escape($button['view_url']) ?>"<?php endif; ?>
-                data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>"
                 data-title="<?= html_escape($button['label'] ?? 'View Details') ?>">
                 <i class="<?= html_escape($button['icon'] ?? 'fa-regular fa-eye') ?>" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
@@ -30,7 +30,7 @@
                 aria-label="<?= html_escape($label) ?>" data-bs-toggle="modal"
                 data-bs-target="<?= html_escape($button['modal'] ?? '#editModal') ?>"
                 data-target="<?= html_escape($button['form'] ?? '#editForm') ?>"
-                data-record="<?= html_escape(json_encode($dt_row['record'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>"
+                data-record="<?= html_escape(json_encode($dt_row['record'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>"
                 data-title="Edit Record">
                 <i class="fa-solid fa-pen" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
@@ -50,7 +50,7 @@
             <button type="button" class="btn-icon record-action record-action-history js-file-history"
                 title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>" data-bs-toggle="modal"
                 data-bs-target="#fileHistoryModal"
-                data-files="<?= html_escape(json_encode($button['files'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
+                data-files="<?= html_escape(json_encode($button['files'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>">
                 <i class="fa-solid fa-clock-rotate-left" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
         <?php elseif ($type === 'upload'): ?>
