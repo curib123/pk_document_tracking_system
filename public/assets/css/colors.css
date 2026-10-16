@@ -21,28 +21,28 @@
   --ui-brand-50: #fff3f5;
 
   /* Core text colors */
-  --ui-navy: #17101c;
-  --ui-ink-950: #241a28;
-  --ui-ink-900: #352631;
-  --ui-ink-800: #493640;
-  --ui-ink-700: #604b55;
-  --ui-ink-600: #78636c;
-  --ui-ink-500: #907b84;
-  --ui-ink-400: #a9959d;
-  --ui-ink-300: #c0b0b6;
-  --ui-ink-200: #d9cdd1;
+  --ui-navy: #131a27;
+  --ui-ink-950: #182130;
+  --ui-ink-900: #293447;
+  --ui-ink-800: #3d485b;
+  --ui-ink-700: #526074;
+  --ui-ink-600: #66758a;
+  --ui-ink-500: #7b899d;
+  --ui-ink-400: #94a0b1;
+  --ui-ink-300: #b2bccb;
+  --ui-ink-200: #d5dce6;
 
   /* Borders and surfaces */
-  --ui-line-strong: #e5d8dc;
-  --ui-line: #eee4e7;
-  --ui-line-soft: #f5edef;
-  --ui-surface-muted: #f8f1f3;
-  --ui-surface-soft: #fdfafb;
-  --ui-canvas: #faf6f7;
+  --ui-line-strong: #dce2ea;
+  --ui-line: #e6eaf0;
+  --ui-line-soft: #f0f3f7;
+  --ui-surface-muted: #f2f5f8;
+  --ui-surface-soft: #fbfcfe;
+  --ui-canvas: #f6f8fb;
 
   /* Shared background for the greeting header and animated sidebar. */
   --ui-welcome-gradient:
-    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--ui-brand-500) 18%, transparent), transparent 55%),
+    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--ui-brand-500) 10%, transparent), transparent 55%),
     linear-gradient(115deg, var(--ui-ink-950), var(--ui-ink-900));
 
   /* Blue semantic scale */
@@ -71,12 +71,12 @@
   --ui-purple-100: #f2ebf9;
 
   /* Slate semantic scale */
-  --ui-slate-950: #2c2737;
-  --ui-slate-800: #514b60;
-  --ui-slate-600: #7d788c;
-  --ui-slate-400: #aaa6b5;
-  --ui-slate-200: #dcd9e3;
-  --ui-slate-100: #f5f4f8;
+  --ui-slate-950: #293447;
+  --ui-slate-800: #445168;
+  --ui-slate-600: #738095;
+  --ui-slate-400: #a0adbe;
+  --ui-slate-200: #dce3ec;
+  --ui-slate-100: #f3f5f8;
 
   --ui-black: #000000;
 

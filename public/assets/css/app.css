@@ -16,7 +16,7 @@
 
 body {
   margin: 0;
-  font-family: "Poppins", sans-serif;
+  font-family: "Poppins", "Segoe UI", sans-serif;
   color: var(--text);
   background: var(--bg);
   font-size: 14px;
@@ -37,8 +37,8 @@ a {
 }
 
 .app-sidebar {
-  width: 288px;
-  min-width: 288px;
+  width: 264px;
+  min-width: 264px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -69,10 +69,11 @@ a {
 .brand {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 11px;
   color: var(--ui-white);
-  padding: 24px 20px;
-  border-bottom: 1px solid var(--ui-slate-950);
+  min-height: 77px;
+  padding: 18px 20px;
+  border-bottom: 1px solid color-mix(in srgb, var(--ui-white) 8%, transparent);
 }
 
 .brand img {
@@ -84,7 +85,7 @@ a {
 }
 
 .brand strong {
-  font-size: 14px;
+  font-size: 13px;
   display: block;
   letter-spacing: 0.15px;
 }
@@ -103,27 +104,27 @@ a {
 .side-links {
   overflow-y: auto;
   flex: 1;
-  padding: 14px 12px 24px;
+  padding: 16px 12px 24px;
 }
 
 .side-heading {
   text-transform: uppercase;
-  letter-spacing: 1.2px;
+  letter-spacing: 1px;
   font-size: 10px;
-  font-weight: 800;
+  font-weight: 600;
   color: var(--ui-ink-400);
-  margin: 25px 11px 10px;
+  margin: 24px 12px 9px;
 }
 
 .side-link {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-radius: 9px;
-  padding: 11px 13px;
+  border-radius: 10px;
+  padding: 11px 12px;
   margin: 3px 0;
   color: var(--ui-slate-200);
-  font-size: 13px;
+  font-size: 12.5px;
   font-weight: 500;
   transition:
     background 0.18s ease,
@@ -138,19 +139,20 @@ a {
 
 .side-link:hover {
   color: var(--ui-white);
-  background: var(--navy-soft);
+  background: color-mix(in srgb, var(--ui-white) 7%, transparent);
 }
 
 .side-link.active {
-  background: var(--accent);
+  background: var(--ui-brand-700);
   color: var(--ui-white);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--ui-black) 13.33%, transparent);
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--ui-white) 12%, transparent),
+    0 3px 10px color-mix(in srgb, var(--ui-black) 10%, transparent);
 }
 
 .sidebar-bottom {
   padding: 19px 24px;
   color: var(--ui-slate-400);
-  border-top: 1px solid var(--ui-slate-950);
+  border-top: 1px solid color-mix(in srgb, var(--ui-white) 8%, transparent);
   font-size: 11px;
 }
 
@@ -227,7 +229,7 @@ a {
 ========================================================= */
 
 .page-content {
-  padding: 29px 35px 50px;
+  padding: 28px 32px 48px;
   max-width: 1680px;
   margin: 0 auto;
 }
@@ -281,8 +283,8 @@ a {
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: var(--radius);
-  box-shadow: 0 4px 25px
-    color-mix(in srgb, var(--ui-ink-950) 3.14%, transparent);
+  box-shadow: 0 2px 10px
+    color-mix(in srgb, var(--ui-ink-950) 2.5%, transparent);
   overflow: hidden;
 }
 
@@ -305,11 +307,11 @@ a {
 
 .tab-link {
   padding: 11px 17px;
-  color: var(--ui-ink-500);
+  color: var(--ui-ink-600);
   white-space: nowrap;
   font-size: 13px;
   font-weight: 600;
-  border-bottom: 3px solid transparent;
+  border-bottom: 2px solid transparent;
 }
 
 .tab-link:hover {
@@ -329,10 +331,17 @@ a {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 13px;
-  padding: 18px 20px 12px;
+  gap: 12px;
+  padding: 20px 20px 12px;
 }
+
+.table-toolbar > .btn {
+  flex: 0 0 auto;
+  white-space: nowrap;
+}
+
 .table-search {
+  flex: 1 1 auto;
   width: 100%;
   min-width: 220px;
   max-width: none;
@@ -357,17 +366,18 @@ a {
 .table-filters {
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 10px;
-  padding: 0 20px 15px;
+  padding: 0 20px 18px;
 }
 
 .table-filters select {
-  width: 200px;
-  min-width: 200px;
-  max-width: 200px;
-  height: 38px;
+  width: 180px;
+  min-width: 150px;
+  max-width: 220px;
+  height: 40px;
   box-sizing: border-box;
-  flex: 0 0 200px;
+  flex: 0 1 180px;
 }
 
 .table-responsive {
@@ -383,18 +393,22 @@ a {
 ========================================================= */
 
 .table {
+  border-collapse: collapse;
+  border-spacing: 0;
+  width: 100%;
   margin: 0;
   font-size: 13px;
   --bs-table-bg: transparent;
 }
 
 .table thead th {
-  background: var(--ui-canvas);
-  color: var(--ui-slate-600);
+  background: var(--ui-surface-muted);
+  color: var(--ui-ink-600);
   font-size: 11px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  text-align: left;
   border-bottom: 1px solid var(--border);
   white-space: nowrap;
   padding: 14px 17px;
@@ -403,7 +417,7 @@ a {
 .table td {
   padding: 14px 17px;
   vertical-align: middle;
-  border-bottom-color: var(--ui-line-soft);
+  border-bottom: 1px solid var(--ui-line-soft);
   color: var(--ui-slate-950);
 }
 
@@ -498,12 +512,25 @@ a {
   align-items: center;
   flex-wrap: wrap;
   gap: 12px;
-  padding: 15px 21px;
+  padding: 14px 20px;
   border-top: 1px solid var(--border);
+  background: var(--ui-surface-soft);
+}
+
+.table-footer > div {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.table-footer .form-select {
+  width: auto;
+  min-width: 68px;
 }
 
 .table-footer small {
-  color: var(--ui-ink-300);
+  color: var(--ui-ink-600);
 }
 
 .table .table-actions-column,
@@ -565,12 +592,23 @@ a {
 
 .form-control,
 .form-select {
-  border-color: var(--ui-line);
+  display: block;
+  width: 100%;
+  border: 1px solid var(--ui-line-strong);
   border-radius: 9px;
   min-height: 40px;
+  font-family: inherit;
   font-size: 13px;
   padding: 9px 12px;
   color: var(--ui-slate-950);
+  background-color: var(--ui-white);
+  line-height: 1.5;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.form-control::placeholder {
+  color: var(--ui-ink-400);
+  opacity: 1;
 }
 
 .form-control:focus,
@@ -581,8 +619,9 @@ a {
 }
 
 .form-label {
+  display: block;
   font-size: 12px;
-  font-weight: 700;
+  font-weight: 550;
   color: var(--ui-slate-800);
   margin-bottom: 7px;
 }
@@ -597,19 +636,30 @@ a {
 ========================================================= */
 
 .btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 40px;
+  border: 1px solid transparent;
   border-radius: 9px;
+  font-family: inherit;
   font-size: 13px;
   font-weight: 600;
   padding: 9px 15px;
+  line-height: 1.4;
+  text-decoration: none;
 }
 
 .btn-sm {
+  min-height: 34px;
   padding: 7px 10px;
 }
 
 .btn-primary {
-  background: var(--accent);
-  border-color: var(--accent);
+  background: var(--ui-brand-700);
+  border-color: var(--ui-brand-700);
+  color: var(--ui-white);
 }
 
 .btn-primary:hover,
@@ -629,8 +679,8 @@ a {
 }
 
 .btn-light {
-  background: var(--ui-slate-100);
-  border: 1px solid var(--ui-line-soft);
+  background: var(--ui-white);
+  border: 1px solid var(--ui-line-strong);
   color: var(--ui-slate-800);
 }
 
@@ -1213,6 +1263,21 @@ a {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 0;
+}
+
+/* Match the form grid when Bootstrap is unavailable on the office network. */
+.offline-ui .modal-body .row {
+  gap: 18px 0;
+  margin-inline: -8px;
+}
+
+.offline-ui .modal-body .row > [class*="col-"] {
+  padding-inline: 8px;
+}
+
+.offline-ui .modal-body textarea.form-control {
+  min-height: 88px;
+  resize: vertical;
 }
 
 .offline-ui .col-12 {

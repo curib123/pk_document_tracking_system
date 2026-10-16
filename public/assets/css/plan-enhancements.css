@@ -71,14 +71,10 @@
 }
 .document-assignments-page .assignments-location-form {
   display: grid;
-  grid-template-columns: 150px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr);
   align-items: center;
   gap: 18px;
   padding: 14px 16px;
-}
-.document-assignments-page .assignments-location-heading {
-  color: var(--ui-ink-800);
-  font-size: 12px;
 }
 .document-assignments-page .assignments-location-fields {
   display: grid;
@@ -280,12 +276,12 @@
   box-shadow: 0 22px 68px color-mix(in srgb, var(--ui-ink-950) 28%, transparent);
 }
 .modal-dialog .modal-header {
-  padding: 19px 23px;
-  background: linear-gradient(125deg, var(--ui-white), var(--ui-brand-50));
+  padding: 20px 24px;
+  background: var(--ui-white);
   border-bottom: 1px solid var(--ui-line);
 }
 .modal-dialog .modal-header .modal-title {
-  font-weight: 800;
+  font-weight: 650;
   letter-spacing: -0.3px;
   color: var(--ui-ink-900);
 }
