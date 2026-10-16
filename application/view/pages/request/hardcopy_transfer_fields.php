@@ -44,7 +44,7 @@
    <?php if($level!=='area'): ?>data-area-id="<?= (int)($option['area_id']??0) ?>"<?php endif; ?>
    <?php if($level==='asset'||$level==='location'): ?>data-specific-id="<?= (int)($option['specific_id']??0) ?>"<?php endif; ?>
    <?php if($level==='location'): ?>data-asset-id="<?= (int)($option['asset_id']??0) ?>"<?php endif; ?>>
-   <?= html_escape($option['name'].($level==='location'?' · '.$option['code']:'')) ?>
+   <?= html_escape($option['name'].($level==='location'?' · Sequence '.$option['sequence_number']:'')) ?>
   </option>
   <?php endforeach; ?>
  </select>
