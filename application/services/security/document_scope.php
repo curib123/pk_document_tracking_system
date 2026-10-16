@@ -53,9 +53,10 @@ class Document_scope
         )
             return '1=1';
 
-        $parts = [$alias . '.created_by=' . $id];
-        if ($domain === 'hardcopy')
-            $parts[] = $alias . '.holder_id=' . $id;
+        // Physical documents follow CURRENT custody. A previous holder/creator
+        // must not keep implicit access after an accepted transfer or reassignment.
+        // Explicit global permissions and active access grants remain authoritative.
+        $parts = [$alias . ($domain === 'hardcopy' ? '.holder_id=' : '.created_by=') . $id];
         if ($domain === 'softcopy' && $can('documents', 'view_assigned')) {
             $parts[] = 'EXISTS (SELECT 1 FROM assignments scope_assignment WHERE ' .
                 'scope_assignment.softcopy_id=' . $alias . '.id AND ' .
