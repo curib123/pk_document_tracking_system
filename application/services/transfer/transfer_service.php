@@ -86,6 +86,20 @@ class Transfer_service
                 'location_id' => $location['id'],
                 'holder_id' => $actor['id']
             ]);
+            // A previous holder loses any personal hardcopy grant as custody
+            // transfers. Administrators with explicit global access remain unaffected.
+            if ((int) $transfer['current_holder_id'] !== (int) $actor['id']) {
+                $this->ci->db->where('domain', 'hardcopy')
+                    ->where('document_id', (int) $transfer['hardcopy_id'])
+                    ->where('user_id', (int) $transfer['current_holder_id'])
+                    ->where('status', 'access_granted')
+                    ->where('revoked_at IS NULL', NULL, FALSE)
+                    ->update('access_grants', [
+                        'status' => 'revoked',
+                        'revoked_at' => date('Y-m-d H:i:s'),
+                        'revoked_by' => (int) $actor['id']
+                    ]);
+            }
             $this->ci->db->where('id', $id)->update('transfers', [
                 'status' => 'accepted',
                 'recipient_status' => 'accepted',
