@@ -45,9 +45,10 @@ foreach ([
 }
 expect_feature(strpos($hardcopy,'name="title" required')!==FALSE,
     'The hardcopy title must remain mandatory.');
-expect_feature(strpos($location,'name="code" type="text"')!==FALSE &&
-    strpos($location,'name="name" type="text"')!==FALSE,
-    'Location Name and Code must remain editable and validated.');
+expect_feature(strpos($location,'name="sequence_number" type="number"')!==FALSE &&
+    strpos($location,'name="name" type="text"')!==FALSE &&
+    strpos($location,'name="code"')===FALSE,
+    'Location Name and ordered Sequence must replace obsolete Location Code.');
 expect_feature(strpos($transfer,"\$level==='asset'?'No asset / not assigned'")!==FALSE,
     'Transfer destination must accept an empty Asset choice.');
 $normalizedHardcopyService = preg_replace('/\\s+/', '', $hardcopyService);
