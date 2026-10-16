@@ -125,7 +125,7 @@ class Document_model extends CI_Model
             $this->db->join('areas a', 'a.id=d.area_id', 'left')->select('a.name AS area_name')
                 ->join('specifics s', 's.id=d.specific_id', 'left')->select('s.name AS specific_name')
                 ->join('assets b', 'b.id=d.asset_id', 'left')->select('b.asset_number AS asset_name')
-                ->join('locations l', 'l.id=d.location_id', 'left')->select('l.name AS location_name,l.code AS location_code')
+                ->join('locations l', 'l.id=d.location_id', 'left')->select('l.name AS location_name,l.sequence_number AS location_sequence')
                 ->join('users h', 'h.id=d.holder_id', 'left')
                 ->select('CONCAT_WS(" ",h.first_name,h.last_name) AS holder_name');
         }
@@ -209,7 +209,7 @@ class Document_model extends CI_Model
     // They never require a new schema, and inactive parents are not selectable.
     public function hardcopy_locations()
     {
-        return $this->db->select('l.id,l.name,l.code,l.area_id,l.specific_id,l.asset_id')
+        return $this->db->select('l.id,l.name,l.sequence_number,l.area_id,l.specific_id,l.asset_id')
             ->from('locations l')
             ->join('areas a', 'a.id=l.area_id', 'left')
             ->join('specifics s', 's.id=l.specific_id', 'left')
@@ -221,7 +221,7 @@ class Document_model extends CI_Model
             ->or_where('s.active', 1)->group_end()
             ->group_start()->where('l.asset_id IS NULL', NULL, FALSE)
             ->or_where('b.active', 1)->group_end()
-            ->order_by('l.name')->order_by('l.id')->get()->result_array();
+            ->order_by('l.specific_id')->order_by('l.sequence_number')->order_by('l.name')->order_by('l.id')->get()->result_array();
     }
 
     // Immutable original place/holder descriptions for transfer requests.
@@ -231,7 +231,7 @@ class Document_model extends CI_Model
         return $this->db->select('d.id,d.title,d.sequence_number,d.area_id,
             d.specific_id,d.asset_id,d.location_id,d.holder_id,
             a.name AS area_name,s.name AS specific_name,b.asset_number AS asset_name,
-            l.name AS location_name,l.code AS location_code,
+            l.name AS location_name,l.sequence_number AS location_sequence,
             CONCAT_WS(" ",h.first_name,h.last_name) AS holder_name', FALSE)
             ->from('hardcopy_documents d')
             ->join('areas a', 'a.id=d.area_id', 'left')
