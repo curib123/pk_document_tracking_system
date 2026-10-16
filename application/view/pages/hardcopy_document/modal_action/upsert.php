@@ -59,7 +59,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
       <option value="<?= (int) $location['id'] ?>" data-area-id="<?= (int) ($location['area_id'] ?? 0) ?>"
         data-specific-id="<?= (int) ($location['specific_id'] ?? 0) ?>"
         data-asset-id="<?= (int) ($location['asset_id'] ?? 0) ?>">
-        <?= html_escape($location['name'] . ' · ' . $location['code']) ?></option>
+        <?= html_escape($location['name'] . ' · Sequence ' . $location['sequence_number']) ?></option>
     <?php endforeach; ?>
   </select>
 
