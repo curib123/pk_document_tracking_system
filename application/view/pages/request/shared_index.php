@@ -29,7 +29,8 @@ $canRequest = static function ($action) use ($permissions) {
 $allowed_request_types = $allowed_request_types ?? array_keys($typeMap[$tab]);
 $dt_rows = [];
 foreach ($rows as $row) {
-  $payload = json_decode($row['payload'], TRUE) ?: [];
+  $decodedPayload = json_decode((string) ($row['payload'] ?? ''), TRUE);
+  $payload = is_array($decodedPayload) ? $decodedPayload : [];
   $entries = $history[$row['id']] ?? [];
   $stepLabels = [];
   foreach ($approval_routes[$row['id']] ?? [] as $step)
@@ -78,7 +79,7 @@ foreach ($rows as $row) {
   // Never pretend an unapproved proposal is already the stored document.
   $isDocumentRequest = in_array($tab, ['softcopy', 'hardcopy', 'hardcopy-disposal'], TRUE);
   $documentDomain = $tab === 'softcopy' ? 'softcopy' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record');
-  $detail = $row['detail_labels'] ?? [];
+  $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
   $headerTitle = (string) ($payload['title'] ?? '');
   if ($headerTitle === '')
     $headerTitle = (string) ($row['source_title'] ?? '');
@@ -360,7 +361,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                     <option value="">Choose a document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>"
-                        data-hardcopy="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
+                        data-hardcopy="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>">
                         <?= html_escape($item['title']) ?>
                       </option>
                     <?php endforeach; ?>

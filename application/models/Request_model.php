@@ -144,7 +144,7 @@ class Request_model extends CI_Model
                 'title' => 'Proposed Title',
                 'document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
-                'sequence_number' => 'Copy / Sequence Number',
+                'sequence_number' => 'Document Copy Number',
                 'new_revision_level' => 'Proposed Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',

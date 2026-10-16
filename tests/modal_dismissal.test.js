@@ -33,7 +33,7 @@ test('every Bootstrap and mandatory modal declares static backdrop and no Escape
 
 function createOfflineModal() {
     const script=fs.readFileSync('public/assets/js/app.js','utf8');
-    const marker='    // Keep detail modals human-readable even when the server returns nested';
+    const marker='// Keep detail modals human-readable even when the server returns nested';
     const end=script.indexOf(marker);
     assert.ok(end>0,'Could not isolate Bootstrap fallback.');
     const listeners={};

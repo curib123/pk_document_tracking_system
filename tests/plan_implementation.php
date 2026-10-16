@@ -73,7 +73,7 @@ planCheck(planCodePosition($tree,"'asset'=>['table'=>'assets'")!==FALSE &&
     planCodePosition($tree,"\$parent='asset'")!==FALSE,
     'Document Repository must keep Asset as an optional folder level.');
 planCheck(planCodePosition($js,'data-hardcopy-level')!==FALSE &&
-    planCodePosition($js,"changed==='asset' && !asset.value && location.value")!==FALSE,
+    preg_match('/changed\\s*===\\s*[\"\\\']asset[\"\\\']\\s*&&\\s*!asset\\.value\\s*&&\\s*location\\.value/', $js) === 1,
     'Dependent dropdowns must preserve a deliberately cleared Asset.');
 planCheck(planCodePosition($motionCss,'@keyframes ui-shimmer')!==FALSE &&
     planCodePosition($motionCss,'.motion-skeleton')!==FALSE &&

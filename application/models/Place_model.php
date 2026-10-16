@@ -10,13 +10,7 @@ class Place_model extends CI_Model
             'table' => 'locations',
             'label' => 'Locations',
             'key' => 'name',
-            'fields' => ['name', 'code', 'area_id', 'specific_id', 'asset_id', 'archive_date']
-        ],
-        'sequence' => [
-            'table' => 'sequences',
-            'label' => 'Sequences',
-            'key' => 'sequence_key',
-            'fields' => ['sequence_key', 'value']
+            'fields' => ['name', 'sequence_number', 'area_id', 'specific_id', 'asset_id', 'archive_date']
         ],
         'softcopy-categories' => [
             'table' => 'categories',
@@ -31,8 +25,8 @@ class Place_model extends CI_Model
             show_404();
         $c = $this->definitions[$slug];
         $c['slug'] = $slug;
-        $c['active'] = $slug !== 'sequence';
-        $c['read_only'] = $slug === 'sequence';
+        $c['active'] = TRUE;
+        $c['read_only'] = FALSE;
         return $c;
     }
     private function scope($c, $q, $status, $state = [])
@@ -40,7 +34,7 @@ class Place_model extends CI_Model
         $this->db->from($c['table'] . ' p');
         if ($q !== '') {
             $this->db->group_start()->like('p.' . $c['key'], $q);
-            foreach (['code', 'folder_name', 'description'] as $field) {
+            foreach (['folder_name', 'description'] as $field) {
                 if (in_array($field, $c['fields'], TRUE))
                     $this->db->or_like('p.' . $field, $q);
             }
@@ -78,10 +72,10 @@ class Place_model extends CI_Model
         foreach ($joins[$c['slug']] ?? [] as $join) {
             $this->db->join($join[0], $join[1], 'left')->select($join[2]);
         }
-        $sorts = array_intersect($c['fields'], ['name', 'code', 'asset_number', 'folder_name', 'sequence_key', 'value']);
+        $sorts = array_intersect($c['fields'], ['name', 'sequence_number', 'asset_number', 'folder_name']);
         if ($c['active'])
             $sorts[] = 'active';
-        $sort = in_array($state['sort'] ?? '', $sorts, TRUE) ? $state['sort'] : $c['key'];
+        $sort = in_array($state['sort'] ?? '', $sorts, TRUE) ? $state['sort'] : ($c['slug'] === 'location' ? 'sequence_number' : $c['key']);
         $dir = ($state['dir'] ?? 'ASC') === 'DESC' ? 'DESC' : 'ASC';
         $rows = $this->db->order_by('p.' . $sort, $dir)->order_by('p.' . $c['key'], 'ASC')
             ->limit($limit, ($page - 1) * $limit)->get()->result_array();

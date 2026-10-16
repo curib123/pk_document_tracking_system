@@ -177,7 +177,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                         $rowTitle = (string) ($dt_row['cells']['title'] ??
                             $dt_row['cells']['name'] ?? $dt_row['cells']['reference'] ?? 'View Details'); ?>
                         <tr data-record-id="<?= (int) $dt_row['id'] ?>" <?= $rowCanView ?
-                              'data-row-view="' . html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) . '"' .
+                              'data-row-view="' . html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) . '"' .
                               ' data-row-title="' . html_escape($rowTitle) . '"' : '' ?>>
                             <?php foreach ($dt_columns as $key => $label): ?>
                                 <td <?= $rowCanView ? 'class="table-cell-view"' . ($key === array_key_first($dt_columns)

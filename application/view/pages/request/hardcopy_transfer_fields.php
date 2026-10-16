@@ -18,7 +18,7 @@
  <p class="small text-secondary">Automatically loaded from the selected hardcopy record.</p>
 </div>
 <?php foreach(['title'=>'Document Title','sequence_number'=>'Reference / Copy Number','area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
- 'location_name'=>'Location','location_code'=>'Location Code',
+ 'location_name'=>'Location','location_sequence'=>'Location Sequence',
  'holder_name'=>'Current Holder'] as $key=>$label): ?>
 <div class="col-md-6">
  <label class="form-label" for="original-<?= $key ?>"><?= html_escape($label) ?></label>
@@ -44,7 +44,7 @@
    <?php if($level!=='area'): ?>data-area-id="<?= (int)($option['area_id']??0) ?>"<?php endif; ?>
    <?php if($level==='asset'||$level==='location'): ?>data-specific-id="<?= (int)($option['specific_id']??0) ?>"<?php endif; ?>
    <?php if($level==='location'): ?>data-asset-id="<?= (int)($option['asset_id']??0) ?>"<?php endif; ?>>
-   <?= html_escape($option['name'].($level==='location'?' · '.$option['code']:'')) ?>
+   <?= html_escape($option['name'].($level==='location'?' · Sequence '.$option['sequence_number']:'')) ?>
   </option>
   <?php endforeach; ?>
  </select>

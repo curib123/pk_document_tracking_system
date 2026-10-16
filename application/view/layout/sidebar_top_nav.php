@@ -14,7 +14,7 @@ $active = function ($prefix) use ($path) {
 // Show Setup Places only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'sequences', 'categories'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;

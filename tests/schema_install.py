@@ -18,6 +18,10 @@ def sql(statement, selected=True):
 try:
     sql('CREATE DATABASE `' + database + '` CHARACTER SET utf8mb4;', False)
     sql((root / 'database/pk_dts.sql').read_text(encoding='utf-8'))
+    assert sql("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='locations' AND COLUMN_NAME='sequence_number'") == '1'
+    assert sql("SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='locations' AND COLUMN_NAME='code'") == '0'
+    assert sql("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA=DATABASE() AND TABLE_NAME='sequences'") == '0'
+    assert sql("SELECT COUNT(*) FROM permissions WHERE module_key='sequences'") == '0'
     assert sql('SELECT COUNT(*) FROM roles') == '5'
     assert sql("SELECT COUNT(*) FROM permissions WHERE module_key='files' AND action_key IN ('history','print','download')") == '3'
     for table in ['users', 'requests', 'workflow_history', 'files', 'softcopy_documents', 'hardcopy_documents', 'task_notification_receipts', 'user_roles']:

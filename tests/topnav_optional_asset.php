@@ -45,9 +45,10 @@ foreach ([
 }
 expect_feature(strpos($hardcopy,'name="title" required')!==FALSE,
     'The hardcopy title must remain mandatory.');
-expect_feature(strpos($location,'name="code" type="text"')!==FALSE &&
-    strpos($location,'name="name" type="text"')!==FALSE,
-    'Location Name and Code must remain editable and validated.');
+expect_feature(strpos($location,'name="sequence_number" type="number"')!==FALSE &&
+    strpos($location,'name="name" type="text"')!==FALSE &&
+    strpos($location,'name="code"')===FALSE,
+    'Location Name and ordered Sequence must replace obsolete Location Code.');
 expect_feature(strpos($transfer,"\$level==='asset'?'No asset / not assigned'")!==FALSE,
     'Transfer destination must accept an empty Asset choice.');
 $normalizedHardcopyService = preg_replace('/\\s+/', '', $hardcopyService);
@@ -57,7 +58,7 @@ expect_feature(strpos($normalizedHardcopyService,"'asset_id','location_id'")!==F
 $normalizedPlaceService = preg_replace('/\\s+/', '', $placeService);
 expect_feature(strpos($normalizedPlaceService,"\$data['asset_id']=\$assetId?:NULL;")!==FALSE,
     'Location service must normalize empty Asset to SQL NULL.');
-expect_feature(strpos(preg_replace('/\\s+/', '', $app),"changed==='asset'&&!asset.value&&location.value")!==FALSE,
+expect_feature(preg_match('/changed\\s*===\\s*[\"\\\']asset[\"\\\']\\s*&&\\s*!asset\\.value\\s*&&\\s*location\\.value/', $app) === 1,
     'Cleared Asset must not be silently repopulated by a linked Location.');
 expect_feature(strpos(preg_replace('/\\s+/', '', $app),'field.required=showDetails')!==FALSE,
     'Form visibility must retain server-matched required/optional input state.');

@@ -201,7 +201,7 @@ CREATE TABLE `locations` (
   `specific_id` bigint(20) UNSIGNED DEFAULT NULL,
   `asset_id` bigint(20) UNSIGNED DEFAULT NULL,
   `name` varchar(150) NOT NULL,
-  `code` varchar(100) NOT NULL,
+  `sequence_number` int(10) UNSIGNED NOT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `archive_date` date DEFAULT NULL,
   `version` int(11) NOT NULL DEFAULT 1,
@@ -359,17 +359,6 @@ CREATE TABLE `schema_migrations` (
 -- Dumping data for table `schema_migrations`
 --
 
-
--- --------------------------------------------------------
-
---
--- Table structure for table `sequences`
---
-
-CREATE TABLE `sequences` (
-  `sequence_key` varchar(80) NOT NULL,
-  `value` bigint(20) UNSIGNED NOT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -714,7 +703,7 @@ ALTER TABLE `hardcopy_documents`
 --
 ALTER TABLE `locations`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `code` (`code`),
+  ADD UNIQUE KEY `idx_locations_specific_sequence` (`specific_id`,`sequence_number`),
   ADD KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
   ADD KEY `area_id` (`area_id`),
   ADD KEY `specific_id` (`specific_id`),
@@ -780,12 +769,6 @@ ALTER TABLE `role_permissions`
 --
 ALTER TABLE `schema_migrations`
   ADD PRIMARY KEY (`version`);
-
---
--- Indexes for table `sequences`
---
-ALTER TABLE `sequences`
-  ADD PRIMARY KEY (`sequence_key`);
 
 --
 -- Indexes for table `settings`

@@ -13,7 +13,9 @@ while IFS= read -r file; do
 done < <(git ls-files '*.js')
 echo "Running workflow and plan contract tests..."
 php tests/user_role_permissions.php
+php tests/hardcopy_after_transfer_scope.php
 php tests/approval_step_tiles.php
+php tests/request_view_new_types.php
 php tests/controlled_file_history.php
 php tests/controlled_file_print.php
 php tests/file_action_permissions.php

@@ -4,18 +4,18 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 ?>
 <div class="col-12">
     <h3 class="fs-6 fw-bold mb-1">Location details</h3>
-    <p class="text-secondary small mb-0">Enter a unique name and location code.</p>
+    <p class="text-secondary small mb-0">Name the Location and set its order within the selected Specific.</p>
 </div>
 <div class="col-md-7">
     <label class="form-label" for="location-name">Location Name</label>
     <input class="form-control" id="location-name" name="name" type="text" maxlength="150"
-        placeholder="e.g. Archive Shelf A" required autocomplete="off">
+        placeholder="e.g. Location A" required autocomplete="off">
 </div>
 <div class="col-md-5">
-    <label class="form-label" for="location-code">Location Code</label>
-    <input class="form-control" id="location-code" name="code" type="text" maxlength="100"
-        placeholder="e.g. ARC-SHELF-A" required autocomplete="off">
-    <div class="form-text">Code must be unique in all locations.</div>
+    <label class="form-label" for="location-sequence">Sequence <span class="optional-label">(auto if empty)</span></label>
+    <input class="form-control" id="location-sequence" name="sequence_number" type="number"
+        min="1" max="1000000" step="1" placeholder="e.g. 1" autocomplete="off">
+    <div class="form-text">Unique within this Specific. A = 1, B = 2, C = 3.</div>
 </div>
 
 <div class="col-md-4">

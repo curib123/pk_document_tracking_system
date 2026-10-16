@@ -18,7 +18,6 @@ class Places extends MY_Controller
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'sequence' => 'sequences',
             'softcopy-categories' => 'categories'
         ] as $slug => $module) {
             if ($this->can($module, 'view')) {
@@ -51,7 +50,6 @@ class Places extends MY_Controller
             'specific' => 'specific',
             'asset' => 'asset_number',
             'location' => 'location',
-            'sequence' => 'sequence',
             'softcopy-categories' => 'softcopy_category'
         ];
         $this->render(
@@ -63,8 +61,6 @@ class Places extends MY_Controller
     public function save($slug)
     {
         $cfg = $this->Place_model->config($slug);
-        if (!empty($cfg['read_only']))
-            show_error('System sequences are read-only.', 403);
         $this->require_permission($cfg['table'], (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {

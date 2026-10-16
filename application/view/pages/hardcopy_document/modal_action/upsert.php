@@ -13,7 +13,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
     placeholder="Enter the hardcopy document title" autocomplete="off">
 </div>
 <div class="col-md-4">
-  <label class="form-label" for="hardcopySequence">Sequence / Copy Number <span
+  <label class="form-label" for="hardcopySequence">Document Copy Number <span
       class="optional-label">(optional)</span></label>
   <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100" placeholder="e.g. PK-REC-01" autocomplete="off">
 </div>
@@ -59,7 +59,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
       <option value="<?= (int) $location['id'] ?>" data-area-id="<?= (int) ($location['area_id'] ?? 0) ?>"
         data-specific-id="<?= (int) ($location['specific_id'] ?? 0) ?>"
         data-asset-id="<?= (int) ($location['asset_id'] ?? 0) ?>">
-        <?= html_escape($location['name'] . ' · ' . $location['code']) ?></option>
+        <?= html_escape($location['name'] . ' · Sequence ' . $location['sequence_number']) ?></option>
     <?php endforeach; ?>
   </select>
 

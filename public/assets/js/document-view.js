@@ -72,6 +72,7 @@
 
   function reset() {
     modal.classList.remove("is-document-view");
+    modal.classList.remove("is-assignment-view");
     [
       "viewDocumentEyebrow",
       "viewDocumentIcon",
@@ -168,8 +169,7 @@
           !(section.key === "overview" && repeated[entry[0]]) &&
           !(
             section.key === "storage" &&
-            (entry[0] === "Location Code" ||
-              STORAGE_HEADER_FIELDS.includes(entry[0]))
+            STORAGE_HEADER_FIELDS.includes(entry[0])
           )
         );
       });
@@ -733,12 +733,12 @@
     pagination.append(previous, next);
     footer.append(count, pagination);
     var page = 0,
-      size = 10;
+      size = section.compact ? 8 : 10;
     function update() {
       var query = String(search.value || "")
         .trim()
         .toLowerCase();
-      var matches = section.documents.filter(function (doc) {
+      var matches = section.documents.filter(function (doc) { return doc && typeof doc === "object"; }).filter(function (doc) {
         return (String(doc.title || "") + " " + String(doc.code || ""))
           .toLowerCase()
           .includes(query);
@@ -911,12 +911,45 @@
     container.replaceChildren();
     var body = modal.querySelector(".doc-modal-body");
     if (body) body.scrollTop = 0;
-    var sections = Array.isArray(data.sections) ? data.sections : [];
+    // Historic or partially created request payloads can contain empty nodes.
+    // Discard invalid sections rather than crashing the shared View modal.
+    var sections = (Array.isArray(data.sections) ? data.sections : []).filter(function (section) {
+      return section && typeof section === "object" && !Array.isArray(section);
+    });
     var overview = sections.filter(isOverviewSection);
     var concerns = sections.filter(function (section) {
       return !isOverviewSection(section);
     });
-    renderOverview(overview);
+    // User Management's Assigned Documents has its own compact presentation.
+    // It is still permission-scoped by the existing authenticated controller.
+    var assigned = data.kind === "record" &&
+      data.header && data.header.eyebrow === "ASSIGNED DOCUMENTS" &&
+      concerns.some(function (part) { return Array.isArray(part.documents); });
+    if (assigned) {
+      modal.classList.add("is-assignment-view");
+      var summary = document.getElementById("viewDocumentSummary");
+      if (summary) { summary.hidden = true; summary.replaceChildren(); }
+      var totals = node("section", "doc-assignment-summary");
+      totals.setAttribute("aria-label", "Assigned document counts");
+      var total = concerns.reduce(function (count, part) {
+        return count + (Array.isArray(part.documents) ? part.documents.length : 0);
+      }, 0);
+      [
+        ["Total assigned", total],
+        ["Hardcopy", concerns.filter(function (part) { return part.key === "hardcopy" && Array.isArray(part.documents); })
+          .reduce(function (n, part) { return n + part.documents.length; }, 0)],
+        ["Softcopy", concerns.filter(function (part) { return part.key === "softcopy" && Array.isArray(part.documents); })
+          .reduce(function (n, part) { return n + part.documents.length; }, 0)]
+      ].forEach(function (metric) {
+        var item = node("div", "doc-assignment-stat");
+        item.append(node("strong", "doc-assignment-stat-value", metric[1]),
+          node("span", "doc-assignment-stat-label", metric[0]));
+        totals.append(item);
+      });
+      container.append(totals);
+    } else {
+      renderOverview(overview);
+    }
 
     // Each tab is one separately scoped concern. Overview is NEVER a tab.
     if (!concerns.length) {
@@ -927,7 +960,7 @@
     var layout = node("div", "doc-modal-layout");
     var sidebar = node("nav", "doc-modal-navigation");
     sidebar.setAttribute("role", "tablist");
-    sidebar.setAttribute("aria-label", "Document detail concerns");
+    sidebar.setAttribute("aria-label", assigned ? "Assigned document types" : "Document detail concerns");
     var main = node("div", "doc-modal-main");
     concerns.forEach(function (section, i) {
       var key = section.key || "overview";

@@ -421,7 +421,7 @@ CREATE TABLE `locations` (
 
   `name` varchar(150) NOT NULL,
 
-  `code` varchar(100) NOT NULL,
+  `sequence_number` int(10) unsigned NOT NULL,
 
   `active` tinyint(4) NOT NULL DEFAULT 1,
 
@@ -435,7 +435,7 @@ CREATE TABLE `locations` (
 
   PRIMARY KEY (`id`),
 
-  UNIQUE KEY `code` (`code`),
+  UNIQUE KEY `idx_locations_specific_sequence` (`specific_id`,`sequence_number`),
 
   KEY `location_hierarchy` (`active`,`asset_id`,`specific_id`,`area_id`),
 
@@ -696,16 +696,6 @@ CREATE TABLE `schema_migrations` (
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 
 /*!40101 SET character_set_client = utf8 */;
-
-CREATE TABLE `sequences` (
-
-  `sequence_key` varchar(80) NOT NULL,
-
-  `value` bigint(20) unsigned NOT NULL,
-
-  PRIMARY KEY (`sequence_key`)
-
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -1361,7 +1351,6 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (80, 'Notifications: View', 'notifications', 'Notifications', 'view', 'View', 'Allows view operations for notifications.', 1),
 (81, 'Notifications: Edit', 'notifications', 'Notifications', 'edit', 'Edit', 'Allows edit operations for notifications.', 1),
 (82, 'Audit: View', 'audit', 'Audit', 'view', 'View', 'Allows view operations for audit.', 1),
-(83, 'Sequences: View', 'sequences', 'Sequences', 'view', 'View', 'Allows view operations for sequences.', 1),
 (84, 'Settings: View', 'settings', 'Settings', 'view', 'View', 'Allows view operations for settings.', 1),
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1);
 
@@ -1448,7 +1437,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 80),
 (1, 81),
 (1, 82),
-(1, 83),
 (1, 84),
 (1, 85),
 (2, 13),
@@ -1512,7 +1500,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (2, 80),
 (2, 81),
 (2, 82),
-(2, 83),
 (3, 29),
 (3, 33),
 (3, 34),

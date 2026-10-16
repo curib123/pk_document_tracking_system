@@ -42,7 +42,7 @@ class Folder_model extends CI_Model
                 if ($definition['parent'])
                     $fields .= ',' . $definition['parent'] . '_id';
                 if ($kind === 'location')
-                    $fields .= ',area_id,specific_id,asset_id,code';
+                    $fields .= ',area_id,specific_id,asset_id,sequence_number';
                 $rows = $this->db->select($fields)->get_where($definition['table'], ['active' => 1])->result_array();
                 foreach ($rows as $row) {
                     if ($kind === 'specific')
@@ -78,7 +78,7 @@ class Folder_model extends CI_Model
                         'key' => $kind . ':' . $row['id'],
                         'parent' => $parent ? $parent . ':' . $parentId : '',
                         'name' => $row[$definition['title']],
-                        'meta' => $kind === 'location' ? $row['code'] : ucfirst($kind),
+                        'meta' => $kind === 'location' ? 'Sequence ' . (int) $row['sequence_number'] : ucfirst($kind),
                         'kind' => $kind
                     ];
                 }

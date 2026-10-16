@@ -493,7 +493,7 @@ test('document Approval History uses the decision stepper with request context a
 test('storage route follows the saved hierarchy, ends at Location and keeps custody metadata',()=>{
   const {window,details,map}=setup();
   const fields={Area:'Plant',Specific:'Production',Asset:'Machine 12',Location:'Shelf 4',
-    'Location Code':'LOC-4','Current Holder':'Records Officer','Days until disposal':'60 days'};
+    'Location Sequence':4,'Current Holder':'Records Officer','Days until disposal':'60 days'};
   const original=JSON.stringify(fields);
   window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
     {key:'storage',fields}
@@ -505,7 +505,8 @@ test('storage route follows the saved hierarchy, ends at Location and keeps cust
   assert.deepEqual(route.querySelectorAll('.doc-storage-route-value').map(el=>el.textContent),['Plant','Production','Machine 12','Shelf 4']);
   assert.equal(route.children[3].getAttribute('aria-current'),'location');
   assert.equal(route.children[3].classList.contains('is-destination'),true);
-  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),[]);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),['Location Sequence']);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(el=>el.textContent),['4']);
   assert.equal(map.viewDocumentCustody.hidden,false);
   assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-label').map(el=>el.textContent),['Current Holder','Days until disposal']);
   assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-value').map(el=>el.textContent),['Records Officer','60 days']);
@@ -565,4 +566,50 @@ test('Transfer History uses the shared dated stepper, preserves milestones and s
   const sort=details.querySelector('.doc-workflow-sort');sort.value='newest';sort.listeners.change();
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-action').map(el=>el.textContent),['Accepted','In Transit','For Transfer']);
   assert.equal(JSON.stringify(events),original);
+});
+
+
+test('user Assigned Documents modal shows compact totals, category tabs and cleans up on close',()=>{
+  const {window,details,modal,map}=setup();
+  window.PKDocumentView.render(details,{
+    kind:'record',domain:'record',header:{title:'Assigned QA employee',eyebrow:'ASSIGNED DOCUMENTS'},
+    sections:[
+      {key:'overview',fields:{'Assigned Documents':3}},
+      {key:'hardcopy',title:'Hardcopy (2)',label:'Hardcopy',compact:true,documents:[
+        {id:1,title:'Shelf One',code:'HC-1',detail:'Location A · Sequence 1'},
+        {id:2,title:'Shelf Two',code:'HC-2',detail:'Location B · Sequence 2'}]},
+      {key:'softcopy',title:'Softcopy (1)',label:'Softcopy',compact:true,documents:[
+        {id:3,title:'Digital Policy',code:'SC-3',detail:'Assigned today'}]}
+    ]
+  });
+  assert.equal(modal.classList.contains('is-assignment-view'),true);
+  assert.equal(map.viewDocumentSummary.hidden,true);
+  assert.deepEqual(details.querySelectorAll('.doc-assignment-stat-value').map(x=>x.textContent),['3','2','1']);
+  const tabs=details.querySelectorAll('[role="tab"]');
+  assert.equal(tabs.length,2);
+  assert.equal(details.querySelectorAll('.doc-assignment-item').length,3);
+  modal.listeners.click({target:tabs[1]});
+  assert.equal(tabs[1].getAttribute('aria-selected'),'true');
+  assert.equal(details.querySelectorAll('[role="tabpanel"]')[0].hidden,true);
+  modal.listeners['hidden.bs.modal']();
+  assert.equal(modal.classList.contains('is-assignment-view'),false);
+  assert.equal(details.children.length,0);
+});
+
+test('newly drafted requests render safely without approval steps or history',()=>{
+  const {window,details,modal}=setup();
+  for(const domain of ['softcopy','hardcopy','record']){
+    const request={
+      kind:domain==='record'?'record':'document',domain,header:{title:'New request',status:'draft'},
+      sections:[
+        {key:'overview',fields:{'Request Reference':'REQ-NEW','Request Action':'Create'}},
+        {key:'approvals',title:'Approval Route',fields:{Steps:'No steps assigned yet'},steps:[]},
+        {key:'audit',title:'Decision History',fields:{History:'No approval decisions yet'},events:[]}
+      ]
+    };
+    window.PKDocumentView.render(details,request);
+    assert.equal(modal.classList.contains('is-document-view'),true);
+    assert.equal(details.querySelectorAll('[role="tab"]').length,2);
+    assert.equal(details.querySelectorAll('[role="tabpanel"]').length,2);
+  }
 });

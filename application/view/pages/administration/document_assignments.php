@@ -43,7 +43,7 @@ if ($folder_value !== '')
               autocomplete="off">
               <option value="">Choose Location</option>
               <?php foreach ($location_options as $place): ?>
-                <option value="<?= (int) $place['id'] ?>"><?= html_escape($place['name'] . ' · ' . $place['code']) ?>
+                <option value="<?= (int) $place['id'] ?>"><?= html_escape($place['name'] . ' · Sequence ' . $place['sequence_number']) ?>
                 </option>
               <?php endforeach; ?>
             </select>
