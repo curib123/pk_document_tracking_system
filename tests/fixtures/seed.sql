@@ -90,7 +90,6 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (80, 'Notifications: View', 'notifications', 'Notifications', 'view', 'View', 'Allows view operations for notifications.', 1),
 (81, 'Notifications: Edit', 'notifications', 'Notifications', 'edit', 'Edit', 'Allows edit operations for notifications.', 1),
 (82, 'Audit: View', 'audit', 'Audit', 'view', 'View', 'Allows view operations for audit.', 1),
-(83, 'Sequences: View', 'sequences', 'Sequences', 'view', 'View', 'Allows view operations for sequences.', 1),
 (84, 'Settings: View', 'settings', 'Settings', 'view', 'View', 'Allows view operations for settings.', 1),
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1);
 
@@ -177,7 +176,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 80),
 (1, 81),
 (1, 82),
-(1, 83),
 (1, 84),
 (1, 85),
 (2, 13),
