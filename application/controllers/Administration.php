@@ -51,13 +51,18 @@ class Administration extends MY_Controller
             ]
         ]];
         foreach ($documents as $domain => $rows) {
-            foreach ($rows as &$row)
-                $row['detail'] = $domain === 'hardcopy' ? 'Current holder' : 'Assigned ' . $row['assigned_at'];
+            foreach ($rows as &$row) {
+                $row['detail'] = $domain === 'hardcopy'
+                    ? ('Current holder' . (!empty($row['location_name'])
+                        ? ' · ' . $row['location_name'] . ' · Sequence ' . $row['location_sequence'] : ''))
+                    : 'Assigned ' . ($row['assigned_at'] ?? 'date not specified');
+            }
             unset($row);
             $sections[] = [
                 'key' => $domain, 'label' => ucfirst($domain),
                 'title' => ucfirst($domain) . ' (' . count($rows) . ')',
                 'documents' => $rows,
+                'compact' => TRUE,
                 'empty' => 'No active ' . ucfirst($domain) . ' documents are assigned to this user.',
                 'manage_url' => site_url('admin/document-assignments') . '?' . http_build_query([
                     'domain' => $domain, 'folder' => 'all', 'owner' => (int) $userId
