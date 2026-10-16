@@ -11,24 +11,20 @@ class Place_service
 
     public function save($c, $post, $actorId)
     {
-        // sequences has a string primary key and controls system counters.
-        // It has no numeric id or active column, so keep it read-only in Places.
-        if (!empty($c['read_only']))
-            throw new DomainException('System sequences are managed automatically.');
         $id = (int) ($post['id'] ?? 0);
         $data = [];
         foreach ($c['fields'] as $field) {
             $value = trim((string) ($post[$field] ?? ''));
             if (str_ends_with($field, '_id'))
                 $data[$field] = $value !== '' ? (int) $value : NULL;
-            elseif ($field === 'value')
-                $data[$field] = max(0, (int) $value);
+            elseif ($field === 'sequence_number')
+                $data[$field] = $value === '' ? NULL : (ctype_digit($value) ? (int) $value : 0);
             else
                 $data[$field] = $value;
         }
         if ($data[$c['key']] === '')
-            throw new DomainException('Name/code is required.');
-        foreach (['name', 'code', 'asset_number', 'sequence_key', 'folder_name'] as $key) {
+            throw new DomainException('Name is required.');
+        foreach (['name', 'asset_number', 'folder_name'] as $key) {
             if (isset($data[$key]) && mb_strlen((string) $data[$key]) > 150)
                 throw new DomainException('Value is too long.');
         }
@@ -75,9 +71,14 @@ class Place_service
                 if (isset($post['version']) && $post['version'] !== '' && (int) $post['version'] !== (int) $old['version'])
                     throw new DomainException('This place changed in another session. Refresh before editing.');
                 $data['version'] = (int) $old['version'] + 1;
+                if ($c['slug'] === 'location')
+                    $this->location_sequence($data, $old);
                 $this->ci->db->where('id', $id)->update($c['table'], $data);
-            } else
+            } else {
+                if ($c['slug'] === 'location')
+                    $this->location_sequence($data);
                 $this->ci->db->insert($c['table'], $data);
+            }
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Could not save. Check unique values and relations.');
             $this->ci->db->trans_commit();
@@ -95,11 +96,11 @@ class Place_service
      */
     private function prepare_location(&$data)
     {
-        if (empty($data['code']))
-            throw new DomainException('Location code is required.');
-        if (mb_strlen($data['name']) > 150 || mb_strlen($data['code']) > 100) {
-            throw new DomainException('Location name must be 150 characters or less and code 100 or less.');
-        }
+        if (mb_strlen($data['name']) > 150)
+            throw new DomainException('Location name must be 150 characters or less.');
+        if ($data['sequence_number'] !== NULL &&
+            ($data['sequence_number'] < 1 || $data['sequence_number'] > 1000000))
+            throw new DomainException('Location sequence must be between 1 and 1,000,000.');
 
         $date = $data['archive_date'] ?? '';
         if ($date === '')
@@ -162,10 +163,31 @@ class Place_service
         $data['asset_id'] = $assetId ?: NULL;
     }
 
+    /**
+     * Sequence belongs to the Location, ordered within its Specific.
+     * Assign the next number inside the transaction; the database unique key
+     * prevents simultaneous inserts from silently sharing a position.
+     */
+    private function location_sequence(&$data, $old = NULL)
+    {
+        if ($data['sequence_number'] !== NULL)
+            return;
+        $sameParent = $old && (int) ($old['specific_id'] ?? 0) === (int) $data['specific_id'];
+        if ($sameParent && (int) ($old['sequence_number'] ?? 0) > 0) {
+            $data['sequence_number'] = (int) $old['sequence_number'];
+            return;
+        }
+        $latest = $this->ci->db->query(
+            'SELECT sequence_number FROM locations WHERE specific_id=? ORDER BY sequence_number DESC LIMIT 1 FOR UPDATE',
+            [(int) $data['specific_id']]
+        )->row_array();
+        $data['sequence_number'] = $latest ? (int) $latest['sequence_number'] + 1 : 1;
+        if ($data['sequence_number'] > 1000000)
+            throw new DomainException('Location sequence limit reached for this Specific.');
+    }
+
     public function deactivate($c, $id)
     {
-        if (!$c['active'])
-            throw new DomainException('Sequences cannot be deactivated.');
         $record = $this->ci->Place_model->find($c, $id);
         if (!$record)
             throw new DomainException('Record not found.');
