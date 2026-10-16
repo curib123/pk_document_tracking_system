@@ -23,7 +23,7 @@ foreach ([1=>'browser-admin',2=>'browser-staff'] as $id=>$username) fixtureInser
 fixtureInsert($db,'categories',['id'=>1,'name'=>'Browser Test Category','folder_name'=>'Browser Test Category','created_by'=>1]);
 fixtureInsert($db,'areas',['id'=>1,'name'=>'Browser Test Area']);
 fixtureInsert($db,'specifics',['id'=>1,'name'=>'Browser Test Specific','area_id'=>1]);
-fixtureInsert($db,'locations',['id'=>1,'name'=>'Browser Test Location','code'=>'BROWSER-LOCATION','area_id'=>1,'specific_id'=>1]);
+fixtureInsert($db,'locations',['id'=>1,'name'=>'Browser Test Location','sequence_number'=>1,'area_id'=>1,'specific_id'=>1]);
 $blobs = [];
 $successful = false;
 register_shutdown_function(static function () use (&$blobs, &$successful) {
