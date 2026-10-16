@@ -866,7 +866,7 @@ a {
     105deg,
     color-mix(in srgb, var(--ui-navy) 90%, transparent) 0%,
     color-mix(in srgb, var(--ui-navy) 90%, transparent) 44%,
-    color-mix(in srgb, var(--ui-navy) 95%, transparent) 75%,
+    color-mix(in srgb, var(--ui-navy) 90%, transparent) 75%,
     color-mix(in srgb, var(--ui-navy) 94%, transparent) 100%
   );
 }
