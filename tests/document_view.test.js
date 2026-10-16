@@ -493,7 +493,7 @@ test('document Approval History uses the decision stepper with request context a
 test('storage route follows the saved hierarchy, ends at Location and keeps custody metadata',()=>{
   const {window,details,map}=setup();
   const fields={Area:'Plant',Specific:'Production',Asset:'Machine 12',Location:'Shelf 4',
-    'Location Code':'LOC-4','Current Holder':'Records Officer','Days until disposal':'60 days'};
+    'Location Sequence':4,'Current Holder':'Records Officer','Days until disposal':'60 days'};
   const original=JSON.stringify(fields);
   window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
     {key:'storage',fields}
@@ -505,7 +505,8 @@ test('storage route follows the saved hierarchy, ends at Location and keeps cust
   assert.deepEqual(route.querySelectorAll('.doc-storage-route-value').map(el=>el.textContent),['Plant','Production','Machine 12','Shelf 4']);
   assert.equal(route.children[3].getAttribute('aria-current'),'location');
   assert.equal(route.children[3].classList.contains('is-destination'),true);
-  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),[]);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(el=>el.textContent),['Location Sequence']);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(el=>el.textContent),['4']);
   assert.equal(map.viewDocumentCustody.hidden,false);
   assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-label').map(el=>el.textContent),['Current Holder','Days until disposal']);
   assert.deepEqual(map.viewDocumentCustody.querySelectorAll('.doc-modal-custody-value').map(el=>el.textContent),['Records Officer','60 days']);
