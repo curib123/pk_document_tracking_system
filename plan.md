@@ -7,3 +7,7 @@ issues
 #3 sequence is the sequence of location like location A is sequence 1 then b is 2 then c 3 like that a sequnce of location so its not a table its belong to location table.
 
 #4 	Location Code is unnecessary remove it in schema and in current table and in the system
+
+#5 fix view document request cant open in a new a request type fix it why its noy opening and loading and crash.
+
+#6 
