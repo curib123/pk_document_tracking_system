@@ -739,7 +739,7 @@
       var query = String(search.value || "")
         .trim()
         .toLowerCase();
-      var matches = section.documents.filter(function (doc) {
+      var matches = section.documents.filter(function (doc) { return doc && typeof doc === "object"; }).filter(function (doc) {
         return (String(doc.title || "") + " " + String(doc.code || ""))
           .toLowerCase()
           .includes(query);
@@ -912,7 +912,11 @@
     container.replaceChildren();
     var body = modal.querySelector(".doc-modal-body");
     if (body) body.scrollTop = 0;
-    var sections = Array.isArray(data.sections) ? data.sections : [];
+    // Historic or partially created request payloads can contain empty nodes.
+    // Discard invalid sections rather than crashing the shared View modal.
+    var sections = (Array.isArray(data.sections) ? data.sections : []).filter(function (section) {
+      return section && typeof section === "object" && !Array.isArray(section);
+    });
     var overview = sections.filter(isOverviewSection);
     var concerns = sections.filter(function (section) {
       return !isOverviewSection(section);
@@ -933,8 +937,10 @@
       }, 0);
       [
         ["Total assigned", total],
-        ["Hardcopy", (concerns.find(function (part) { return part.key === "hardcopy"; }) || {documents: []}).documents.length],
-        ["Softcopy", (concerns.find(function (part) { return part.key === "softcopy"; }) || {documents: []}).documents.length]
+        ["Hardcopy", concerns.filter(function (part) { return part.key === "hardcopy" && Array.isArray(part.documents); })
+          .reduce(function (n, part) { return n + part.documents.length; }, 0)],
+        ["Softcopy", concerns.filter(function (part) { return part.key === "softcopy" && Array.isArray(part.documents); })
+          .reduce(function (n, part) { return n + part.documents.length; }, 0)]
       ].forEach(function (metric) {
         var item = node("div", "doc-assignment-stat");
         item.append(node("strong", "doc-assignment-stat-value", metric[1]),
