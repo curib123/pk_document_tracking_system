@@ -17,6 +17,11 @@ if ($folder_value !== '')
   <?php endforeach; ?>
 </nav>
 
+  <div class="d-flex justify-content-end mb-3">
+    <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
+      data-target="#assignmentForm" data-title="Assign Document"
+      data-record="<?= html_escape(json_encode(['recipient_id' => (int) $table['owner']])) ?>">Assign Document</button>
+  </div>
 
   <?php if ($domain === 'hardcopy'): ?>
     <section class="workspace-card assignments-location-card">
