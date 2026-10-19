@@ -33,7 +33,11 @@ def run_checks(page, base, app_root):
             expect(modal).to_be_visible()
             expect(modal).to_have_css('opacity', '1')
             expect(modal.locator('#viewModalTitle')).not_to_be_empty()
-            expect(modal.locator('.doc-overview-value').first).to_be_visible()
+            if route == 'documents/hardcopy':
+                expect(modal.locator('.modal-header .doc-modal-metadata-item')).to_have_count(4)
+                expect(modal.locator('.doc-storage-route')).to_be_visible()
+            else:
+                expect(modal.locator('.doc-overview-value').first).to_be_visible()
             expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
             if route == 'admin/audit':
                 expect(modal.locator('.doc-overview-item.is-wide')).to_contain_text('Long audit details remain readable.')

@@ -155,6 +155,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                             <h2 class="modal-title" id="viewModalTitle">Details</h2>
                         </div>
                     </div>
+                    <dl class="doc-modal-metadata" id="viewDocumentMetadata" aria-label="Record information" hidden></dl>
                     <div class="doc-modal-badges">
                         <dl class="doc-modal-custody" id="viewDocumentCustody" hidden></dl>
                     </div>

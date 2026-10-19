@@ -83,7 +83,7 @@ class Element {
 function setup() {
   const ids = ['viewModal','viewDetails','viewModalTitle','viewDocumentEyebrow',
     'viewDocumentIcon','viewDocumentRef','viewDocumentStatus',
-    'viewDocumentSummary','viewDocumentCustody','viewDocumentFootnote'];
+    'viewDocumentSummary','viewDocumentCustody','viewDocumentMetadata','viewDocumentFootnote'];
   const map = Object.fromEntries(ids.map((id) => [id,new Element()]));
   const body = new Element();
   body.className = 'doc-modal-body';
@@ -115,7 +115,7 @@ const data = {
     context_value:'Office Records'
   },
   sections:[
-    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active','Created By':'Records Officer','Created':'2026-10-11'}},
+    {key:'overview',title:'Overview',fields:{Title:'Safety Manual',Status:'Active','Created By':'Production I','Created':'2026-10-19 13:33:00','Modified':'2026-10-19 13:33:00','Record Version':1}},
     {key:'storage',title:'Storage & Custody',fields:{Area:'Plant',Location:'Rack 3'}},
     {key:'requests',title:'Related Requests',fields:{'REQ-1':'Returned for correction'}},
     {key:'approvals',title:'Approval History',fields:{'REQ-1':'Supervisor approved'}},
@@ -157,7 +157,7 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(modal.classList.contains('is-document-view'),true);
   assert.equal(map.viewModalTitle.textContent,data.header.title);
   assert.equal(map.viewDocumentStatus.textContent,'Active');
-  assert.equal(map.viewDocumentSummary.children.length,2); // Preserve overview and storage groups.
+  assert.equal(map.viewDocumentSummary.children.length,1); // Creation metadata now belongs to the title header.
   assert.equal(map.viewDocumentSummary.hidden,false);
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
   const tabLabels=details.querySelectorAll('[role="tab"]').map((t)=>t.children[1].textContent);
@@ -169,17 +169,19 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(details.querySelectorAll('script').length,0);
 });
 
-test('all identity and custody fields appear above the tabs, not inside a tab',() => {
+test('hardcopy creation badges sit with the title while storage remains above the tabs',() => {
   const {window,details,map}=setup();
   window.PKDocumentView.render(details,data);
   const overview=map.viewDocumentSummary;
   const groups=overview.children.filter((c)=>c.classList.contains('doc-overview-group'));
-  assert.equal(groups.length,2);
+  assert.equal(groups.length,1);
   assert.ok(groups[0].querySelector('.doc-storage-route'));
-  assert.deepEqual(groups[1].querySelectorAll('.doc-overview-label').map((n)=>n.textContent),['Created By','Created']);
+  assert.equal(map.viewDocumentMetadata.hidden,false);
+  assert.deepEqual(map.viewDocumentMetadata.querySelectorAll('.doc-modal-metadata-label').map(n=>n.children[1].textContent),['Created By','Created','Modified','Record Version']);
+  assert.deepEqual(map.viewDocumentMetadata.querySelectorAll('.doc-modal-metadata-value').map(n=>n.textContent),['Production I','Oct 19, 2026 · 1:33:00 PM','Oct 19, 2026 · 1:33:00 PM','1']);
   assert.equal(overview.querySelectorAll('.doc-overview-group-title').length,0);
   const labels=overview.querySelectorAll('.doc-overview-label').map((n)=>n.textContent);
-  assert.deepEqual(labels,['Created By','Created']);
+  assert.deepEqual(labels,[]);
   assert.deepEqual(overview.querySelectorAll('.doc-storage-route-value').map((n)=>n.textContent),['Plant','Not specified','Rack 3']);
   assert.equal(overview.parentNode.children[1],details);
   assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
@@ -198,6 +200,8 @@ test('softcopy revision and classification fields remain in the top overview',()
     ]
   };
   window.PKDocumentView.render(details,softcopy);
+  assert.equal(map.viewDocumentMetadata.hidden,true);
+  assert.equal(map.viewDocumentMetadata.children.length,0);
   const groups=map.viewDocumentSummary.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,2);
   const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
@@ -266,6 +270,8 @@ test('reset returns reusable modal to ordinary view state',() => {
   assert.equal(map.viewDocumentSummary.hidden,true);
   assert.equal(map.viewDocumentSummary.children.length,0);
   assert.equal(map.viewDocumentStatus.hidden,true);
+  assert.equal(map.viewDocumentMetadata.hidden,true);
+  assert.equal(map.viewDocumentMetadata.children.length,0);
 });
 
 

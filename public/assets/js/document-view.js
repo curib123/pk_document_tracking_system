@@ -104,6 +104,7 @@
       "viewDocumentIcon",
       "viewDocumentRef",
       "viewDocumentStatus",
+      "viewDocumentMetadata",
       "viewDocumentSummary",
       "viewDocumentCustody",
       "viewDocumentFootnote",
@@ -111,7 +112,7 @@
       var el = document.getElementById(id);
       if (!el) return;
       el.hidden = true;
-      if (id === "viewDocumentSummary" || id === "viewDocumentCustody")
+      if (["viewDocumentSummary", "viewDocumentCustody", "viewDocumentMetadata"].includes(id))
         el.replaceChildren();
     });
     var status = document.getElementById("viewDocumentStatus");
@@ -128,6 +129,7 @@
 
   var STORAGE_LEVELS = ["Area", "Specific", "Asset", "Location"];
   var STORAGE_HEADER_FIELDS = ["Current Holder", "Days until disposal"];
+  var HARDCOPY_HEADER_FIELDS = ["Created By", "Created", "Modified", "Record Version"];
 
   function hasStorageValue(value) {
     return value != null && String(value).trim() !== "";
@@ -175,7 +177,7 @@
     return route;
   }
 
-  function renderOverview(sections) {
+  function renderOverview(sections, domain) {
     var summary = document.getElementById("viewDocumentSummary");
     if (!summary) return;
     summary.replaceChildren();
@@ -199,7 +201,8 @@
     orderedSections.forEach(function (section) {
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
-          !(section.key === "overview" && repeated[entry[0]]) &&
+          !(section.key === "overview" && (repeated[entry[0]] ||
+            (domain === "hardcopy" && HARDCOPY_HEADER_FIELDS.includes(entry[0])))) &&
           !(
             section.key === "storage" &&
             (STORAGE_HEADER_FIELDS.includes(entry[0]) ||
@@ -306,6 +309,26 @@
           : "record";
     var title = document.getElementById("viewModalTitle");
     if (title) title.textContent = h.title || "Untitled document";
+
+    var metadata = document.getElementById("viewDocumentMetadata");
+    if (metadata && domain === "hardcopy") {
+      var overview = data.sections.find(function (section) {
+        return section.key === "overview";
+      });
+      var recordFields = (overview && overview.fields) || {};
+      var metadataIcons = ["fa-user", "fa-calendar-plus", "fa-clock-rotate-left", "fa-code-branch"];
+      HARDCOPY_HEADER_FIELDS.forEach(function (label, index) {
+        if (!Object.prototype.hasOwnProperty.call(recordFields, label)) return;
+        var item = node("div", "doc-modal-metadata-item" + (label === "Record Version" ? " is-version" : ""));
+        var term = node("dt", "doc-modal-metadata-label");
+        var glyph = node("i", "fa-solid " + metadataIcons[index]);
+        glyph.setAttribute("aria-hidden", "true");
+        term.append(glyph, node("span", "", label));
+        item.append(term, node("dd", "doc-modal-metadata-value", fieldValue([label, recordFields[label]])));
+        metadata.append(item);
+      });
+      metadata.hidden = !metadata.children.length;
+    }
 
     var kicker = document.getElementById("viewDocumentEyebrow");
     if (kicker) {
@@ -985,7 +1008,7 @@
       });
       container.append(totals);
     } else {
-      renderOverview(overview);
+      renderOverview(overview, data.domain);
     }
 
     // Each tab is one separately scoped concern. Overview is NEVER a tab.

@@ -9,7 +9,8 @@ def run_checks(page, base, sql):
 
     def open_document():
         page.goto(base + 'documents/hardcopy')
-        page.locator('tbody tr').filter(has_text='BROWSER-HC').locator('.js-view').click()
+        document_id = sql("SELECT id FROM hardcopy_documents WHERE sequence_number='BROWSER-HC'").strip().splitlines()[-1]
+        page.locator('tr[data-record-id="'+document_id+'"]').locator('.js-view').click()
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
         # Measure after the modal's scale/slide animation, not between frames.
@@ -28,9 +29,14 @@ def run_checks(page, base, sql):
         assert abs(status['y'] + status['height'] / 2 - close['y'] - close['height'] / 2) < 2, (status, close, page.viewport_size)
         route = modal.locator('.doc-storage-route')
         route_box = route.bounding_box()
+        metadata = header.locator('#viewDocumentMetadata')
+        expect(metadata.locator('.doc-modal-metadata-label')).to_have_text(['Created By', 'Created', 'Modified', 'Record Version'])
+        title_box = header.locator('#viewModalTitle').bounding_box()
+        assert metadata.bounding_box()['y'] >= title_box['y'] + title_box['height']
+        assert metadata.bounding_box()['y'] + metadata.bounding_box()['height'] <= route_box['y']
         for label in ['Created By', 'Created', 'Modified', 'Record Version']:
-            metadata = modal.locator('.doc-overview-item').filter(has=page.get_by_text(label, exact=True))
-            assert metadata.bounding_box()['y'] >= route_box['y'] + route_box['height'], label + ' must follow the storage route'
+            expect(modal.locator('.modal-body').get_by_text(label, exact=True)).to_have_count(0)
+        assert metadata.evaluate('(e) => e.scrollWidth <= e.clientWidth + 1')
         expect(modal.locator('.modal-body')).not_to_contain_text('Location Code')
         expect(modal.locator('.modal-body')).not_to_contain_text('Location Sequence')
         expect(modal.locator('.modal-body')).not_to_contain_text('Current Holder')
