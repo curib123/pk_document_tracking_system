@@ -53,10 +53,6 @@ $dt_badges = [];
 $dt_create = '';
 ?>
 
-<div class="workflow-setup-guide small text-secondary mb-3" role="note">
-  To configure an Approval Process Timeline, open Step Actions on a workflow, create an editable draft, add or reorder approver steps,
-  then publish the validated draft. A published version stays unchanged for requests already submitted.
-</div>
 
 <?php $this->load->view('reusable_components/reusable_datatable', compact(
   'dt_path',
