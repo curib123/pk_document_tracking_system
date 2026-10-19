@@ -9,6 +9,7 @@ class Audit_context
     private $route;
     private $targets = [];
     private $before;
+    private $truncated = FALSE;
     private const FIELDS = ['id','title','name','username','asset_number','folder_name','version','status','active',
         'holder_id','area_id','specific_id','asset_id','location_id','category_id','parent_id',
         'role_id','leader_id','position_title','document_id','softcopy_id','hardcopy_id','user_id',
@@ -16,7 +17,12 @@ class Audit_context
         'request_id','requested_by','type','current_node','current_revision_id','revision_number',
         'file_id','purpose','workflow_id','workflow_version_id','node_key','label','assignment','assigned_user_id','graph',
         'assigned_by','assigned_at','permission_id','version_number','is_default','expires_at','revoked_at',
-        'created_at','updated_at','submitted_at','completed_at','transferred_at','accepted_at'];
+        'created_at','updated_at','submitted_at','completed_at','transferred_at','accepted_at',
+        'document_number','sequence_number','series_number','retention_enabled','retention_start_date','retention_end_date',
+        'archive_date','previous_status','new_revision_level','new_effective_date','effective_date','date_received','date_released','page_number',
+        'first_name','middle_name','last_name','require_password_change','domain','original_name','extension','mime_type','size','fingerprint',
+        'approved_by','approved_at','rejected_by','rejected_at','rejection_reason','uploaded_by','created_by','source_request_id',
+        'granted_by','granted_at','revoked_by','disposal_action','disposed_by','disposed_at'];
 
     public function __construct($db, string $route, array $post)
     {
@@ -45,11 +51,15 @@ class Audit_context
         if ($id > 0) $this->targets[$table][$id] = $id;
     }
 
-    private function rows(string $table, string $key, array $ids): array
+    private function rows(string $table, string $key, array $ids, bool $bounded = TRUE): array
     {
         if (!$ids) return [];
-        $query = $this->db->where_in($key, array_values($ids))->limit(2001)->get($table);
-        return $query ? $query->result_array() : [];
+        $this->db->where_in($key, array_values($ids));
+        if ($bounded) $this->db->limit(2001);
+        $query = $this->db->get($table);
+        $rows = $query ? $query->result_array() : [];
+        if ($bounded && count($rows) === 2001) $this->truncated = TRUE;
+        return $rows;
     }
 
     private function snapshot(): array
@@ -73,10 +83,16 @@ class Audit_context
             foreach ($this->rows('softcopy_documents', 'category_id', $ids) as $row)
                 if ($row['status'] === 'active') $this->add('softcopy_documents', (int) $row['id']);
         }
-        foreach (['requests','transfers'] as $table) {
+        foreach (['transfers','requests'] as $table) {
             foreach ($this->rows($table, 'id', $this->targets[$table] ?? []) as $row) {
                 if (!empty($row['hardcopy_id'])) $this->add('hardcopy_documents', (int)$row['hardcopy_id']);
                 if (!empty($row['softcopy_id'])) $this->add('softcopy_documents', (int)$row['softcopy_id']);
+                if ($table === 'transfers' && !empty($row['request_id'])) $this->add('requests',(int)$row['request_id']);
+                if ($table === 'requests') {
+                    $payload = json_decode((string)($row['payload'] ?? ''), TRUE);
+                    foreach (['controlled_file_id','revision_file_id'] as $key)
+                        if (!empty($payload[$key])) $this->add('files',(int)$payload[$key]);
+                }
             }
         }
         foreach ($this->targets as $table=>$ids)
@@ -84,6 +100,8 @@ class Audit_context
                 $out[$table . ':' . $row['id']] = array_intersect_key($row, array_flip(self::FIELDS));
         $related = [
             ['assignments','softcopy_id',$this->targets['softcopy_documents'] ?? []],
+            ['files','document_id',$this->targets['softcopy_documents'] ?? []],
+            ['softcopy_revisions','document_id',$this->targets['softcopy_documents'] ?? []],
             ['access_grants','request_id',$this->targets['requests'] ?? []],
             ['workflow_steps','request_id',$this->targets['requests'] ?? []],
             ['workflow_versions','workflow_id',$this->targets['workflows'] ?? []],
@@ -92,13 +110,21 @@ class Audit_context
             ['role_permissions','role_id',$this->targets['roles'] ?? []]
         ];
         foreach ($related as [$table,$key,$ids])
-            foreach ($this->rows($table,$key,$ids) as $index=>$row)
+            foreach ($this->rows($table,$key,$ids,FALSE) as $index=>$row)
                 $out[$table . ':' . ($row['id'] ?? ($row[$key] . ':' . $index))] = array_intersect_key($row,array_flip(self::FIELDS));
+        foreach (['hardcopy','softcopy'] as $domain) {
+            $ids = $this->targets[$domain . '_documents'] ?? [];
+            if (!$ids) continue;
+            $this->db->where('domain',$domain);
+            foreach ($this->rows('access_grants','document_id',$ids,FALSE) as $row)
+                $out['access_grants:' . $row['id']] = array_intersect_key($row,array_flip(self::FIELDS));
+        }
         return $out;
     }
 
     public function finish(): array
     {
-        return ['input'=>$this->input, 'before'=>$this->before, 'after'=>$this->snapshot()];
+        $after = $this->snapshot();
+        return ['input'=>$this->input, 'before'=>$this->before, 'after'=>$after, 'truncated'=>$this->truncated];
     }
 }
