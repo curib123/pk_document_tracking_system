@@ -11,7 +11,8 @@ def run_checks(page, base, sql):
 
     def open_history(reference='BROWSER-HC'):
         page.goto(base + 'documents/hardcopy')
-        page.locator('tbody tr').filter(has_text=reference).locator('.js-view').click()
+        document_id = sql("SELECT id FROM hardcopy_documents WHERE sequence_number='"+reference+"'").strip().splitlines()[-1]
+        page.locator('tr[data-record-id="'+document_id+'"]').locator('.js-view').click()
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
         modal.get_by_role('tab', name='Transfer History', exact=True).click()

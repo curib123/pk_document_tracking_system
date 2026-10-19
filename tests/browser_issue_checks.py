@@ -6,6 +6,80 @@ import zipfile
 from playwright.sync_api import expect
 
 
+def run_reference_checks(page, context, base, sql, manifest):
+    def scalar(statement): return sql(statement).strip().splitlines()[-1]
+    tabs = ['softcopy','hardcopy','hardcopy-transfer','hardcopy-disposal','access-grant','document-assign']
+    for register in ['my-requests','my-tasks']:
+        for tab in tabs:
+            page.goto(base+register+'/'+tab)
+            expect(page.locator('th').filter(has_text='Request Reference')).to_be_visible()
+            expect(page.get_by_role('columnheader', name='Reference', exact=True)).to_have_count(0)
+            expect(page.get_by_text('Document Copy Number', exact=True)).to_have_count(0)
+    page.goto(base+'my-tasks/softcopy')
+    row = page.locator('tr[data-record-id="'+str(manifest['request']['id'])+'"]')
+    expect(row.get_by_text('BROWSER-REQUEST', exact=True)).to_be_visible()
+    row.locator('.js-view').click()
+    modal = page.locator('#viewModal')
+    request_field = modal.locator('.doc-overview-item').filter(has=page.get_by_text('Request Reference', exact=True))
+    expect(request_field).to_contain_text('BROWSER-REQUEST')
+    expect(modal.locator('#viewDocumentRef')).to_have_count(0)
+    modal.get_by_role('button', name='Close', exact=True).last.click()
+    page.goto(base+'documents/softcopy')
+    page.locator('tr[data-record-id="'+str(manifest['txt']['document_id'])+'"]').locator('.js-view').click()
+    modal.get_by_role('tab', name='Related Requests', exact=True).click()
+    expect(modal.locator('[role="tabpanel"]:visible')).to_contain_text('BROWSER-REQUEST')
+    modal.get_by_role('button', name='Close', exact=True).last.click()
+
+    hardcopy_id = scalar("SELECT id FROM hardcopy_documents WHERE sequence_number='BROWSER-HC'")
+    page.goto(base+'documents/hardcopy')
+    expect(page.get_by_role('columnheader', name='Copy Number', exact=True)).to_have_count(0)
+    row = page.locator('tr[data-record-id="'+hardcopy_id+'"]')
+    expect(row).not_to_contain_text('BROWSER-HC')
+    row.locator('.js-view').click()
+    expect(modal.get_by_text('Copy Number', exact=True)).to_have_count(0)
+    expect(modal).not_to_contain_text('BROWSER-HC')
+    modal.get_by_role('button', name='Close', exact=True).last.click()
+    row.get_by_role('button', name='Edit', exact=True).click()
+    copy_field = page.locator('#editForm [name="sequence_number"]')
+    expect(copy_field).to_have_attribute('type','hidden')
+    expect(copy_field).to_have_value('BROWSER-HC')
+    page.locator('#editForm [name="title"]').fill('Hardcopy title after hidden copy field')
+    page.locator('#editForm button[type="submit"]').click()
+    with page.expect_navigation(wait_until='load'):
+        page.locator('#confirmProceed').click()
+    assert scalar('SELECT sequence_number FROM hardcopy_documents WHERE id='+hardcopy_id)=='BROWSER-HC'
+    assert scalar('SELECT title FROM hardcopy_documents WHERE id='+hardcopy_id)=='Hardcopy title after hidden copy field'
+
+    page.goto(base+'my-requests/hardcopy')
+    page.get_by_role('button', name='New Request', exact=True).click()
+    page.locator('#reqType').select_option('hardcopy_update')
+    page.locator('#reqHardcopy').select_option(hardcopy_id, force=True)
+    expect(page.locator('#reqHardcopy option[value="'+hardcopy_id+'"]')).not_to_contain_text('BROWSER-HC')
+    expect(page.locator('#editForm [name="sequence_number"]')).to_have_attribute('type','hidden')
+    expect(page.locator('#editForm [name="sequence_number"]')).to_have_value('BROWSER-HC')
+    page.locator('#reqSubject').fill('Reference UI hidden copy preservation')
+    page.locator('#editForm button[type="submit"]').click()
+    with page.expect_navigation(wait_until='load'):
+        page.locator('#confirmProceed').click()
+    condition = "JSON_UNQUOTE(JSON_EXTRACT(payload,'$.subject'))='Reference UI hidden copy preservation'"
+    assert scalar("SELECT JSON_UNQUOTE(JSON_EXTRACT(payload,'$.sequence_number')) FROM requests WHERE "+condition)=='BROWSER-HC'
+    saved_reference = scalar('SELECT reference FROM requests WHERE '+condition)
+    expect(page.get_by_text(saved_reference, exact=True)).to_be_visible()
+
+    request_id = scalar("INSERT INTO requests(reference,type,requested_by,payload,status,current_node) VALUES "
+        "('BROWSER-REFERENCE-ALERT','hardcopy_create',2,'{\"subject\":\"Reference alert subject\"}','submitted','step_1'); SELECT LAST_INSERT_ID()")
+    sql("INSERT INTO workflow_steps(request_id,node_key,label,assignment,candidates,assigned_user_id,status) VALUES ("+
+        request_id+",'step_1','Reference alert approval','{\"type\":\"user\",\"value\":1}','[1]',1,'active')")
+    inbox = context.request.get(base+'notifications/inbox').json()
+    assert any(item.get('request_reference')=='BROWSER-REFERENCE-ALERT' for item in inbox['items'])
+    page.goto(base+'dashboard')
+    alert = page.locator('#taskNotificationModal')
+    expect(alert).to_be_visible(timeout=20000)
+    expect(alert).to_contain_text('BROWSER-REFERENCE-ALERT')
+    expect(alert).to_contain_text('Reference alert subject')
+    print('Request Reference restored on all request/task tabs, details, related requests and notifications; Copy Number hidden and preserved across direct edits and request saves.', flush=True)
+
+
 def run_checks(page, context, base, app_root, sql, manifest, password):
     def scalar(statement): return sql(statement).strip().splitlines()[-1]
     sql("INSERT INTO categories(id,parent_id,name,folder_name,created_by) VALUES "

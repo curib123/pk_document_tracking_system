@@ -81,7 +81,8 @@
   function normalizedEntries(fields) {
     if (!fields || typeof fields !== "object") return [];
     return Object.entries(fields).filter(function (entry) {
-      return /^Request Reference$/i.test(entry[0]) || !/reference/i.test(entry[0]);
+      return !/\bcopy[\s_/-]+number\b/i.test(entry[0]) &&
+        (/^Request Reference$/i.test(entry[0]) || !/reference/i.test(entry[0]));
     });
   }
 
@@ -785,12 +786,9 @@
         var emblem = node("span", "doc-assignment-icon");
         emblem.append(icon(section.key));
         var text = node("div", "doc-assignment-text");
+        if (section.key !== "hardcopy" && doc.code)
+          text.append(node("span", "doc-assignment-reference", doc.code));
         text.append(
-          node(
-            "span",
-            "doc-assignment-reference",
-            doc.code || "",
-          ),
           node("h4", "doc-assignment-title", doc.title || "Untitled document"),
           node("p", "doc-assignment-detail", formatDates(doc.detail || "")),
         );

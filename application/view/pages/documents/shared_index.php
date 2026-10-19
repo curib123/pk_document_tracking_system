@@ -11,7 +11,6 @@ $canFile = static function ($action) use ($permissions) {
 $dt_columns = $cfg['domain'] === 'hardcopy'
     ? [
         'title' => 'Document',
-        'sequence_number' => 'Copy Number',
         'location_name' => 'Location',
         'holder_name' => 'Holder',
         'status' => 'Status'
@@ -122,7 +121,7 @@ $dt_total = $total;
 $dt_sort = $table['sort'];
 $dt_dir = strtolower($table['dir']);
 $dt_sortable = $cfg['domain'] === 'hardcopy'
-    ? ['title', 'sequence_number', 'status'] : ['title', 'document_number', 'status'];
+    ? ['title', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'archived' => 'Archived', 'cancelled' => 'Cancelled']];
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');

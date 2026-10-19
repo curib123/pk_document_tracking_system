@@ -642,13 +642,24 @@ test('SQL and ISO timestamps use the same Manila display, including invalid and 
 test('date formatting preserves official numbers, titles and dated file names',()=>{
   const {window,details,map}=setup();
   window.PKDocumentView.render(details,{kind:'record',header:{title:'SOP-2026-10-19'},sections:[
-    {key:'overview',fields:{'Document Number':'2026-10-19','Proposed Title':'SOP-2026-10-19','Copy Number':'DOC-2026-99-19'}},
+    {key:'overview',fields:{'Document Number':'2026-10-19','Proposed Title':'SOP-2026-10-19','Identifier':'DOC-2026-99-19'}},
     {key:'files',fields:{'review-2026-10-19.docx':'Updated 2026-10-19 09:20:30'}}
   ]});
   assert.equal(map.viewModalTitle.textContent,'SOP-2026-10-19');
   assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(x=>x.textContent),['2026-10-19','SOP-2026-10-19','DOC-2026-99-19']);
   assert.equal(details.querySelector('.doc-modal-file-title').textContent,'review-2026-10-19.docx');
   assert.equal(details.querySelector('.doc-modal-file-meta').textContent,'Updated Oct 19, 2026 · 9:20:30 AM');
+});
+
+test('Copy Number stays hidden in legacy metadata and hardcopy assignment cards',()=>{
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Manual'},sections:[
+    {key:'overview',fields:{'Copy Number':'HIDDEN-COPY','Document Copy Number':'HIDDEN-PROPOSAL','Request Reference':'REQ-VISIBLE'}},
+    {key:'hardcopy',documents:[{title:'Assigned manual',code:'HIDDEN-ASSIGNMENT'}]}
+  ]});
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Request Reference']);
+  assert.equal(details.querySelector('.doc-assignment-reference'),null);
+  assert.equal(details.querySelector('.doc-assignment-title').textContent,'Assigned manual');
 });
 
 test('only Request Reference is restored while other Reference fields and headers stay hidden',()=>{

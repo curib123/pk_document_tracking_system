@@ -138,13 +138,12 @@ class Request_model extends CI_Model
             $details = [];
             if (!empty($row['source_title']))
                 $details['Selected Document'] = $row['source_title'];
-            if (!empty($row['source_reference']))
-                $details[!empty($row['hardcopy_id']) ? 'Copy Number' : 'Document Number'] = $row['source_reference'];
+            if (empty($row['hardcopy_id']) && !empty($row['source_reference']))
+                $details['Document Number'] = $row['source_reference'];
             foreach ([
                 'title' => 'Proposed Title',
                 'document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
-                'sequence_number' => 'Document Copy Number',
                 'new_revision_level' => 'Proposed Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',

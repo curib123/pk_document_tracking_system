@@ -81,7 +81,8 @@ def run_checks(page, base, sql, manifest):
         hardcopy_request + ",'approved',1,'Records Officer','Document Control','2026-10-15 15:00:00','Hardcopy accepted')")
     for domain, reference, count in [('softcopy', 'BROWSER-TXT', 4), ('hardcopy', 'BROWSER-HC', 1)]:
         page.goto(base + 'documents/' + domain)
-        page.locator('tbody tr').filter(has_text=reference).locator('.js-view').first.click()
+        document_id = manifest['txt']['document_id'] if domain == 'softcopy' else hardcopy_id
+        page.locator('tr[data-record-id="'+str(document_id)+'"]').locator('.js-view').first.click()
         modal = page.locator('#viewModal')
         expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
         modal.get_by_role('tab', name='Approval History', exact=True).click()

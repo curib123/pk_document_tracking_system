@@ -392,7 +392,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                     <option value="">Choose an active document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>">
-                        <?= html_escape(($item['sequence_number'] ?? '') . ' · ' . $item['title']) ?>
+                        <?= html_escape($item['title']) ?>
                       </option>
                     <?php endforeach; ?>
                   </select>

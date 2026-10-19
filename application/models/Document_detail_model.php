@@ -126,16 +126,17 @@ class Document_detail_model extends CI_Model
                     'key' => 'overview',
                     'title' => 'Overview',
                     'description' => 'Document information and ownership',
-                    'fields' => [
-                        'Title' => $document['title'],
-                        ($domain === 'softcopy' ? 'Document Number' : 'Copy Number') => $document[$domain === 'softcopy' ? 'document_number' : 'sequence_number'] ?? '',
+                    'fields' => array_merge(
+                        ['Title' => $document['title']],
+                        $domain === 'softcopy' ? ['Document Number' => $document['document_number'] ?? ''] : [],
+                        [
                         'Document Type' => ucfirst($domain),
                         'Status' => ucfirst($document['status']),
                         'Created By' => $document['creator_name'],
                         'Created' => $document['created_at'],
                         'Modified' => $document['updated_at'],
                         'Record Version' => $document['version']
-                    ]
+                    ])
                 ]
             ];
             if ($domain === 'hardcopy') {

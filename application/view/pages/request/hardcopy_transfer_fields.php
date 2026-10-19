@@ -8,7 +8,7 @@
   <?php foreach($transfer_sources as $source): ?>
   <option value="<?= (int)$source['id'] ?>"
     data-transfer-doc="<?= html_escape(json_encode($source,JSON_HEX_TAG|JSON_HEX_AMP|JSON_HEX_APOS|JSON_HEX_QUOT)) ?>">
-    <?= html_escape($source['title'].($source['sequence_number']?' · '.$source['sequence_number']:'')) ?>
+    <?= html_escape($source['title']) ?>
   </option>
   <?php endforeach; ?>
  </select>
@@ -17,7 +17,7 @@
  <h3 class="fs-6 fw-bold mb-1">Original Places and Holder</h3>
  <p class="small text-secondary">Automatically loaded from the selected hardcopy record.</p>
 </div>
-<?php foreach(['title'=>'Document Title','sequence_number'=>'Copy Number','area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
+<?php foreach(['title'=>'Document Title','area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
  'location_name'=>'Location','location_sequence'=>'Location Sequence',
  'holder_name'=>'Current Holder'] as $key=>$label): ?>
 <div class="col-md-6">

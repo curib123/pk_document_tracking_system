@@ -7,16 +7,12 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
 
 ?>
 
-<div class="col-md-8">
+<div class="col-12">
   <label class="form-label" for="hardcopyTitle">Document Title</label>
   <input class="form-control" id="hardcopyTitle" name="title" required maxlength="255"
     placeholder="Enter the hardcopy document title" autocomplete="off">
 </div>
-<div class="col-md-4">
-  <label class="form-label" for="hardcopySequence">Document Copy Number <span
-      class="optional-label">(optional)</span></label>
-  <input class="form-control" id="hardcopySequence" name="sequence_number" maxlength="100" placeholder="e.g. PK-REC-01" autocomplete="off">
-</div>
+<input type="hidden" id="hardcopySequence" name="sequence_number">
 
 <div class="col-md-6">
   <label class="form-label" for="hardcopyArea">Area</label>

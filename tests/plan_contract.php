@@ -108,8 +108,9 @@ check(contract_position($retentionSource, "'No retention'")!==FALSE,
 echo "Unified UI/UX and PHP 8.0 contract checks passed.\n";
 $register=file_get_contents($path.'/application/view/pages/documents/shared_index.php');
 $registerCss=file_get_contents($path.'/public/assets/css/unified-ux.css');
-check(contract_position($register, "'title'=>'Document','sequence_number'=>'Copy Number','location_name'=>'Location'")!==FALSE,
-  'Hardcopy register must show document, copy number and location only as its primary columns');
+check(contract_position($register, "'title'=>'Document','location_name'=>'Location'")!==FALSE &&
+      contract_position($register, "'sequence_number'=>'Copy Number'")===FALSE,
+  'Hardcopy register must show document and location without a Copy Number column');
 check(contract_position($register, "'holder_name'=>'Holder','status'=>'Status'")!==FALSE,
   'Hardcopy register must retain holder and status');
 check(contract_position($register, "'title'=>'Document','document_number'=>'Document Number'")!==FALSE,
