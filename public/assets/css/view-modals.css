@@ -32,9 +32,9 @@
   flex: 0 0 auto;
   padding: 24px 28px;
   gap: 20px;
-  border-top: 2px solid var(--ui-brand-200);
+  border-top: 3px solid var(--ui-brand-600);
   border-bottom: 1px solid var(--ui-line);
-  background: var(--ui-white);
+  background: linear-gradient(115deg, var(--ui-brand-50), var(--ui-white) 75%);
 }
 #viewModal .modal-body,
 #fileHistoryModal .modal-body,
@@ -148,31 +148,45 @@
 #fileHistoryModal .file-history-header > div > div {
   min-width: 0;
 }
+#fileHistoryModal .file-history-header > div {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
 #fileHistoryModal .file-history-header-icon {
   display: grid;
   place-items: center;
   flex: 0 0 42px;
   width: 42px;
   height: 44px;
-  color: var(--ui-brand-700);
+  color: var(--ui-white);
   font-size: 20px;
-  border: 1px solid var(--ui-brand-100);
+  border: 1px solid var(--ui-brand-600);
   border-radius: 10px;
-  background: var(--ui-brand-50);
+  background: linear-gradient(145deg, var(--ui-brand-500), var(--ui-brand-700));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-brand-600) 18%, transparent);
+}
+#fileHistoryModal .file-history-header-icon > i { display: none; }
+#fileHistoryModal .file-history-header-icon::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4v5h5M3.5 9a9 9 0 1 1 0 7M12 7v5l3 2'/%3E%3C/svg%3E") center / contain no-repeat;
 }
 #fileHistoryModal .file-history-eyebrow {
   display: block;
   margin-bottom: 8px;
-  color: var(--ui-ink-600);
+  color: var(--ui-brand-700);
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: 0.1em;
 }
 #fileHistoryModal #fileHistoryTitle {
   margin: 0;
   color: var(--ui-ink-950);
   font-size: 22px;
-  font-weight: 600;
+  font-weight: 700;
   line-height: 1.4;
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
@@ -234,18 +248,43 @@
 }
 
 /* Workflow configuration keeps all version and step controls in their places. */
+.workflow-steps-modal .workflow-modal-heading {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  min-width: 0;
+}
+.workflow-steps-modal .workflow-modal-heading > div { min-width: 0; }
+.workflow-steps-modal .workflow-modal-icon {
+  display: grid;
+  place-items: center;
+  flex: 0 0 42px;
+  height: 44px;
+  border: 1px solid var(--ui-brand-600);
+  border-radius: 10px;
+  color: var(--ui-white);
+  background: linear-gradient(145deg, var(--ui-brand-500), var(--ui-brand-700));
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--ui-brand-600) 18%, transparent);
+}
+.workflow-steps-modal .workflow-modal-icon::before {
+  content: '';
+  width: 22px;
+  height: 22px;
+  background: currentColor;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='6' cy='5' r='2.5'/%3E%3Ccircle cx='6' cy='19' r='2.5'/%3E%3Ccircle cx='18' cy='5' r='2.5'/%3E%3Cpath d='M6 7.5v9M18 7.5v2A4.5 4.5 0 0 1 13.5 14H6'/%3E%3C/svg%3E") center / contain no-repeat;
+}
 .workflow-steps-modal .workflow-modal-eyebrow {
   margin: 0 0 8px;
-  color: var(--ui-brand-800);
+  color: var(--ui-brand-700);
   font-size: 10px;
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: .1em;
   text-transform: uppercase;
 }
 .workflow-steps-modal .modal-header .modal-title {
   margin: 0;
-  font-size: 20px;
-  font-weight: 650;
+  font-size: 22px;
+  font-weight: 700;
   color: var(--ui-ink-950);
 }
 .workflow-steps-modal .modal-header p:not(.workflow-modal-eyebrow) {

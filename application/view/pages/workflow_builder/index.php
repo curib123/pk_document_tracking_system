@@ -95,12 +95,15 @@ $dt_create = '';
     <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
       <div class="modal-content">
         <div class="modal-header">
-          <div>
-            <p class="workflow-modal-eyebrow">Approval workflow</p>
-            <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
-            </h2>
-            <p class="small text-secondary mb-0">Approval Process Timeline for
-              <?= $esc(ucwords(str_replace('_', ' ', $workflow['request_type']))) ?> requests</p>
+          <div class="workflow-modal-heading">
+            <span class="workflow-modal-icon" aria-hidden="true"></span>
+            <div>
+              <p class="workflow-modal-eyebrow">Approval workflow</p>
+              <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
+              </h2>
+              <p class="small text-secondary mb-0">Approval Process Timeline for
+                <?= $esc(ucwords(str_replace('_', ' ', $workflow['request_type']))) ?> requests</p>
+            </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
