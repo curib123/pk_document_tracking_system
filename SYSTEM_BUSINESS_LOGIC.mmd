@@ -1,0 +1,181 @@
+flowchart TB
+    subgraph accountAccess["Accounts and permissions"]
+        login(["User signs in"]) --> credentials{"Active account and valid password?"}
+        credentials -->|"No"| loginDenied["Reject login and track failed attempts"]
+        credentials -->|"Yes"| passwordSetup{"Password change required?"}
+        passwordSetup -->|"Yes"| changePassword["Set and confirm a valid new password"]
+        changePassword --> authorizedUser["Authenticated user with assigned roles"]
+        passwordSetup -->|"No"| authorizedUser
+        authorizedUser --> permissionCheck{"Action permitted and record in scope?"}
+        permissionCheck -->|"No"| actionDenied["Deny access without changing records"]
+        permissionCheck -->|"Yes"| chooseAction{"Choose business action"}
+        authorizedUser --> logout["Sign out and invalidate the session"]
+    end
+
+    subgraph administration["Business administration"]
+        manageRules["Manage users, roles, permissions, and reporting leaders"]
+        configureWorkflow["Configure ordered approvers and publish a default workflow version"]
+        classifyDocuments["Maintain parent categories and subcategories"]
+        configureStorage["Maintain Area, Specific, optional Asset, and Location"]
+        manageRules -.-> authorizedUser
+        classifyDocuments -.-> categorySelection
+        configureStorage -.-> hardcopyChange
+        configureStorage -.-> validateHandoff
+    end
+
+    subgraph requestWorkflow["Requests and approval workflow"]
+        requestType["Choose create, revise, update, cancel document, transfer, disposal, assignment, or access"]
+        requestType --> draft["Save a request draft and proposed document details"]
+        draft --> draftChoice{"Draft action?"}
+        draftChoice -->|"Edit"| draft
+        draftChoice -->|"Cancel draft"| cancelledDraft["Mark request cancelled and retire its pending attachment"]
+        draftChoice -->|"Submit"| validateRequest["Validate request ownership, permissions, document, recipient, and required attachment"]
+        validateRequest --> submissionValid{"Proposal and published workflow available?"}
+        submissionValid -->|"No"| keepDraft["Keep the editable request and show validation feedback"]
+        keepDraft --> draft
+        submissionValid -->|"Yes"| workflowSnapshot["Pin the workflow version and create ordered approval steps"]
+        workflowSnapshot --> activateApprover["Mark request submitted and activate the current approver"]
+        activateApprover --> notifyApprover["Show the assigned user or role a new approval task"]
+        notifyApprover --> approverCheck{"Actor is the currently assigned approver?"}
+        approverCheck -->|"No"| actionDenied
+        approverCheck -->|"Yes"| reviewProposal["Review proposed details, pending file, and decision history"]
+        reviewProposal --> decision{"Approval decision?"}
+        decision -->|"Approve"| finalStep{"Final approval step?"}
+        finalStep -->|"No"| nextApprover["Activate the immediately next workflow step"]
+        nextApprover --> activateApprover
+        finalStep -->|"Yes"| applyBusinessAction["Validate current records and apply the approved business action"]
+        decision -->|"Return"| firstStep{"First approval step?"}
+        firstStep -->|"No"| previousApprover["Reactivate the immediately previous approver and preserve prior decisions"]
+        previousApprover --> activateApprover
+        firstStep -->|"Yes"| returnedRequest["Return the request to its requester for correction"]
+        returnedRequest --> correctRequest["Edit and resubmit using the original workflow snapshot"]
+        correctRequest --> validateRequest
+        decision -->|"Reject"| rejectedRequest["Mark request rejected and retire its pending attachment"]
+    end
+
+    subgraph documentOperations["Document business actions"]
+        directAction["Confirm a permitted direct action and validate the current document"]
+        softcopyChange["Create or revise a softcopy with a required controlled file"]
+        softcopyChange --> approvedRevision["Create the approved revision and make its file current"]
+        approvedRevision --> supersedeOld["Preserve revision history and mark older approved files superseded"]
+        hardcopyChange["Create or update a hardcopy with valid storage, holder, and retention details"]
+        cancelSoftcopy["Mark the softcopy cancelled and retire its controlled files"]
+        disposeDocument["Record disposal reason and previous document state; mark the document disposed"]
+        disposeDocument --> disposalDomain{"Disposal path?"}
+        disposalDomain -->|"Approved hardcopy request"| clearLocation["Clear the hardcopy location and revoke its access grants"]
+        disposalDomain -->|"Direct softcopy disposal"| retireDisposedFiles["Retire the disposed softcopy files"]
+        disposalDomain -->|"Direct hardcopy disposal"| retainDisposal["Preserve the recorded disposal history"]
+    end
+
+    subgraph assignmentsAndAccess["Document assignments and access"]
+        assignmentMode{"Assignment selection?"}
+        assignmentMode -->|"Individual document"| assignmentDomain{"Document type?"}
+        assignmentMode -->|"Softcopy category"| categorySelection["Select an active parent category or subcategory and an active user"]
+        categorySelection --> categoryBranch["Include active softcopies in the selected category and every descendant"]
+        categoryBranch --> softcopyAssignment["Create or reactivate assignments for the selected user; keep other users assigned"]
+        assignmentMode -->|"Hardcopy location"| locationSelection["Select all active hardcopies at the location; reject open transfers"]
+        locationSelection --> hardcopyAssignment["Update the hardcopy holder to the selected active user"]
+        assignmentDomain -->|"Softcopy"| softcopyAssignment
+        assignmentDomain -->|"Hardcopy"| hardcopyAssignment
+        accessGrant["Grant document access to an active user with a valid future expiry date"]
+        accessGrant -.->|"After successful grant"| accessValidity{"Grant unrevoked, unexpired, and document active?"}
+        accessValidity -->|"Yes"| scopedAccess["Allow the permitted document and file actions"]
+        accessValidity -->|"No"| actionDenied
+    end
+
+    subgraph physicalTransfer["Physical hardcopy handoff"]
+        approvedTransfer["Create a for-transfer record; keep the current holder and location unchanged"]
+        senderDispatch["Only the current holder may dispatch the approved transfer"]
+        senderDispatch --> inTransit["Mark transfer in transit and await the assigned recipient"]
+        inTransit --> validateHandoff{"Assigned recipient, original holder, active document, and approved destination still valid?"}
+        validateHandoff -->|"No"| rejectHandoff["Reject acceptance without changing custody"]
+        validateHandoff -->|"Yes"| acceptHandoff["Atomically update holder and approved storage; revoke the previous holder's personal grants"]
+        acceptHandoff --> transferCompleted["Mark transfer accepted and its approved request completed"]
+    end
+
+    subgraph controlledFiles["Controlled file access"]
+        viewDocument["View documents and histories within the user's permitted scope"]
+        viewDocument --> approvedFileCheck{"Requested file is current, approved, and accessible?"}
+        approvedFileCheck -->|"Yes"| fileAction["Allow the separately permitted Download or Print action"]
+        approvedFileCheck -->|"No"| actionDenied
+        reviewProposal --> pendingFileCheck{"Requester or active approver can access this pending file?"}
+        pendingFileCheck -->|"No"| actionDenied
+        pendingFileCheck -->|"Yes"| reviewFile["Review in the browser, download, or open Word, Excel, or WPS"]
+        reviewFile -->|"Native app"| nativeReviewCheck{"Native review link unexpired and reviewer still authorized?"}
+        nativeReviewCheck -->|"Yes"| reviewCopy["Deliver a review copy; local edits do not revise the stored document"]
+        nativeReviewCheck -->|"No"| actionDenied
+    end
+
+    subgraph transactionHistory["Consistency, history, and audit"]
+        requestOutcome{"Action origin and outcome?"}
+        requestOutcome -->|"Other approved request"| completedRequest["Include completed request status in the transaction"]
+        requestOutcome -->|"Approved transfer request"| awaitingTransfer["Include approved request status; await physical acceptance"]
+        requestOutcome -->|"Direct action"| directCompleted["Apply directly without creating an approval request"]
+        completedRequest --> saveChanges{"Commit all business changes atomically?"}
+        awaitingTransfer --> saveChanges
+        directCompleted --> saveChanges
+        saveChanges -->|"No"| rollback["Roll back business changes and report the failure"]
+        saveChanges -->|"Yes"| committedAction["Business records, request outcome, and history saved"]
+        committedAction --> transferReady{"Approved transfer awaiting dispatch?"}
+        transferReady -->|"Yes"| senderDispatch
+        transferReady -->|"No"| actionCompleted(["Business action completed"])
+        committedAction -.->|"Retired attachments"| cleanupFiles["After commit, remove retired attachment bytes while preserving historical records"]
+        auditTrail["Record actor, action, affected records, before and after values, outcome, and timestamp"]
+        committedAction -.-> auditTrail
+        rollback -.-> auditTrail
+        decision -.-> auditTrail
+        cancelledDraft -.-> auditTrail
+        fileAction -.-> auditTrail
+        reviewCopy -.-> auditTrail
+        transferCompleted -.-> auditTrail
+        inTransit -.-> auditTrail
+        manageRules -.-> auditTrail
+        configureWorkflow -.-> auditTrail
+        classifyDocuments -.-> auditTrail
+        configureStorage -.-> auditTrail
+        credentials -.-> auditTrail
+        logout -.-> auditTrail
+    end
+
+    chooseAction -->|"Administration"| manageRules
+    chooseAction -->|"Workflow setup"| configureWorkflow
+    chooseAction -->|"Category setup"| classifyDocuments
+    chooseAction -->|"Storage setup"| configureStorage
+    chooseAction -->|"My Requests"| requestType
+    chooseAction -->|"My Tasks"| approverCheck
+    chooseAction -->|"Direct document action"| directAction
+    chooseAction -->|"Assign documents"| assignmentMode
+    chooseAction -->|"View documents"| viewDocument
+    chooseAction -->|"Review request attachment"| pendingFileCheck
+    configureWorkflow -.-> workflowSnapshot
+
+    directAction -->|"Softcopy create or revise"| softcopyChange
+    directAction -->|"Hardcopy create or update"| hardcopyChange
+    directAction -->|"Softcopy cancellation"| cancelSoftcopy
+    directAction -->|"Disposal"| disposeDocument
+
+    applyBusinessAction -->|"Softcopy create or revise"| softcopyChange
+    applyBusinessAction -->|"Hardcopy create or update"| hardcopyChange
+    applyBusinessAction -->|"Softcopy cancellation"| cancelSoftcopy
+    applyBusinessAction -->|"Hardcopy disposal"| disposeDocument
+    applyBusinessAction -->|"Assignment to requester"| assignmentDomain
+    applyBusinessAction -->|"Access for requester"| accessGrant
+    applyBusinessAction -->|"Transfer"| approvedTransfer
+
+    supersedeOld --> requestOutcome
+    hardcopyChange --> requestOutcome
+    cancelSoftcopy --> requestOutcome
+    clearLocation --> requestOutcome
+    retireDisposedFiles --> requestOutcome
+    retainDisposal --> requestOutcome
+    softcopyAssignment --> requestOutcome
+    hardcopyAssignment --> requestOutcome
+    accessGrant --> requestOutcome
+    approvedTransfer --> requestOutcome
+
+    classDef terminal fill:#e8f5e9,stroke:#2e7d32,color:#173a1a
+    classDef denied fill:#ffebee,stroke:#c62828,color:#7f1717
+    classDef pending fill:#fff8e1,stroke:#f9a825,color:#594200
+    class login,authorizedUser,actionCompleted,transferCompleted terminal
+    class loginDenied,actionDenied,rejectedRequest,rejectHandoff,rollback denied
+    class draft,activateApprover,returnedRequest,inTransit,awaitingTransfer pending
