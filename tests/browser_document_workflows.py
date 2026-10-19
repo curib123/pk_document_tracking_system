@@ -37,6 +37,7 @@ def sql(statement, use_database=True):
 try:
     for directory in ['application', 'public', 'vendor']:
         shutil.copytree(ROOT / directory, APP_ROOT / directory)
+    shutil.copytree(ROOT / 'tools/office-opener', APP_ROOT / 'tools/office-opener')
     (APP_ROOT / 'storage/documents').mkdir(parents=True)
     sql('CREATE DATABASE `' + database + '` CHARACTER SET utf8mb4;', False)
     created = True
@@ -75,7 +76,7 @@ try:
                 channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000},
                 # A controlling worker can bypass Playwright network routes.
                 service_workers='block' if any(os.environ.get(flag) == '1' for flag in
-                    ['PK_BROWSER_VIEWERS_ONLY', 'PK_BROWSER_USER_ASSIGNMENTS_ONLY']) else 'allow')
+                    ['PK_BROWSER_VIEWERS_ONLY', 'PK_BROWSER_USER_ASSIGNMENTS_ONLY', 'PK_BROWSER_ISSUES_ONLY']) else 'allow')
             # Default coverage includes the Bootstrap-free office network path.
             if os.environ.get('PK_BROWSER_ONLINE') != '1':
                 context.route(re.compile(r'^https://'), lambda route: route.abort())
@@ -100,6 +101,14 @@ try:
             acknowledge_initial_task(page)
             page.wait_for_timeout(800)
             page.locator('.modal.show [data-bs-dismiss="modal"]').first.click() if page.locator('.modal.show').count() else None
+
+            if os.environ.get('PK_BROWSER_ISSUES_ONLY') == '1':
+                from browser_issue_checks import run_checks
+                run_checks(page, context, base, APP_ROOT, sql, manifest, env['PK_BROWSER_PASSWORD'])
+                assert not errors, errors
+                context.close()
+                browser.close()
+                raise SystemExit(0)
 
             if os.environ.get('PK_BROWSER_USER_ASSIGNMENTS_ONLY') == '1':
                 from browser_user_assignment_checks import run_checks

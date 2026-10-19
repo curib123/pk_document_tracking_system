@@ -59,6 +59,20 @@ class Files extends MY_Controller
             show_404();
             return;
         }
+        $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
+        if (in_array($extension, ['docx', 'xlsx'], TRUE) && $this->input->get('download') !== '1') {
+            require_once APPPATH . 'services/files/office_review_ticket.php';
+            $ticket = (new Office_review_ticket())->issue($this->user, (int) $requestId, (int) $file['id']);
+            $contentUrl = site_url('files/review-content/' . (int) $requestId . '/' . $ticket . '/review.' . $extension);
+            $this->audit_event('files/review-open', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+            header('Cache-Control: private, no-store');
+            header('Referrer-Policy: no-referrer');
+            $this->load->view('pages/files/review', ['file' => $file, 'request_id' => (int) $requestId,
+                'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
+                'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
+                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '=')]);
+            return;
+        }
         $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
         $this->audit_event('files/review', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
         header('Content-Type: ' . ($inline ? $file['mime_type'] : 'application/octet-stream'));
@@ -69,6 +83,64 @@ class Files extends MY_Controller
             $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
+        exit;
+    }
+
+    /** Native apps have no browser session: validate the short-lived capability and current access again. */
+    public function review_content($requestId, $ticket, $filename = '')
+    {
+        require_once APPPATH . 'services/files/office_review_ticket.php';
+        try { $claims = (new Office_review_ticket())->verify((string) $ticket, (int) $requestId); }
+        catch (DomainException $error) { show_error($error->getMessage(), 403); return; }
+        $viewer = $this->Identity_model->active_user((int) $claims['user_id']);
+        if (!$viewer || (int) $viewer['session_version'] !== (int) $claims['session_version'] || !empty($viewer['require_password_change'])) {
+            show_error('Review access has expired. Reopen Review File.', 403); return;
+        }
+        $file = $this->File_model->review_file((int) $requestId, $viewer);
+        if (!$file || (int) $file['id'] !== (int) $claims['file_id']) { show_error('Review access is no longer available.', 403); return; }
+        if (!preg_match('/^[a-f0-9]{64}$/D', (string) $file['storage_name'])) { show_404(); return; }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path) || is_link($path)) { show_404(); return; }
+        $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
+        $mime = ['docx'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'][$extension] ?? NULL;
+        if (!$mime) { show_404(); return; }
+        $this->audit_event('files/review-content', 'requests:' . (int) $requestId,
+            ['file_id'=>(int)$file['id']], (int)$viewer['id']);
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: private, no-store');
+        header('Referrer-Policy: no-referrer');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
+    public function office_setup()
+    {
+        $this->authenticate();
+        foreach (['install.ps1','open-office.ps1','README.txt'] as $name) {
+            if (!is_readable(PK_ROOT . '/tools/office-opener/' . $name)) {
+                show_error('Setup package is unavailable. Contact your administrator.', 503); return;
+            }
+        }
+        $path = tempnam(PK_ROOT . '/storage', '.office-setup-');
+        $zip = new ZipArchive();
+        if (!$path || $zip->open($path, ZipArchive::OVERWRITE) !== TRUE) {
+            if ($path) unlink($path);
+            show_error('Setup package is unavailable.', 503); return;
+        }
+        foreach (['install.ps1','open-office.ps1','README.txt'] as $name)
+            $zip->addFile(PK_ROOT . '/tools/office-opener/' . $name, $name);
+        $zip->addFromString('config.json', json_encode(['BaseUrl'=>base_url()]));
+        $zip->close();
+        $this->audit_event('files/office-setup');
+        header('Content-Type: application/zip');
+        header('Cache-Control: private, no-store');
+        header('Content-Disposition: attachment; filename="PK-DTS-WPS-Opener.zip"');
+        header('Content-Length: ' . filesize($path));
+        try { readfile($path); } finally { unlink($path); }
         exit;
     }
 
