@@ -66,11 +66,9 @@
   });
   var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\s+(AM|PM))?\b/g;
   var selectors =
-    "td, .doc-modal-body, .doc-modal-reference, .doc-overview-value, " +
-    ".dashboard-activity-date, .file-history-item, .notification-inbox, " +
-    ".detail-grid dd, .workflow-step-history, .table-cell-view, .backup-table";
+    "[data-date-value], .dashboard-activity-date, .file-history-item small";
   function convert(text) {
-    if (window.PKDocumentView) return window.PKDocumentView.formatDates(text);
+    if (window.PKDocumentView) return window.PKDocumentView.formatDates(text, true);
     return text.replace(
       pattern,
       function (match, day, hours, minutes, seconds, meridiem) {

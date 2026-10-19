@@ -630,13 +630,25 @@ test('legacy empty sections cannot crash heading or approval rendering',()=>{
 test('SQL and ISO timestamps use the same Manila display, including invalid and date-only values',()=>{
   const {window,details,map}=setup();
   window.PKDocumentView.render(details,{kind:'record',header:{title:'Dates'},sections:[
-    {key:'overview',fields:{Created:'2026-10-19 09:20:30',Modified:'2026-10-19T01:20:30Z',Date:'2026-10-19',Invalid:'2026-02-30 10:00:00'}},
+    {key:'overview',fields:{Created:'2026-10-19 09:20:30',Modified:'2026-10-19T01:20:30Z',Date:'2026-10-19','Invalid Date':'2026-02-30 10:00:00'}},
     {key:'audit',events:[{action:'approved',created_at:'2026-10-19T01:20:30.123Z'}]}
   ]});
   assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(x=>x.textContent),[
     'Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026','Date not recorded'
   ]);
   assert.equal(details.querySelector('.doc-workflow-decision-time').textContent,'9:20:30 AM');
+});
+
+test('date formatting preserves official numbers, titles and dated file names',()=>{
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{kind:'record',header:{title:'SOP-2026-10-19'},sections:[
+    {key:'overview',fields:{'Document Number':'2026-10-19','Title':'SOP-2026-10-19','Copy Number':'DOC-2026-99-19'}},
+    {key:'files',fields:{'review-2026-10-19.docx':'Updated 2026-10-19 09:20:30'}}
+  ]});
+  assert.equal(map.viewModalTitle.textContent,'SOP-2026-10-19');
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(x=>x.textContent),['2026-10-19','SOP-2026-10-19','DOC-2026-99-19']);
+  assert.equal(details.querySelector('.doc-modal-file-title').textContent,'review-2026-10-19.docx');
+  assert.equal(details.querySelector('.doc-modal-file-meta').textContent,'Updated Oct 19, 2026 · 9:20:30 AM');
 });
 
 test('Reference fields and the legacy reference header are absent from every shared viewer',()=>{

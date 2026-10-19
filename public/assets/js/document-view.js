@@ -52,10 +52,30 @@
         })
         .join("\n");
     }
-    return String(value).replace(/\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?\b/g, function (raw) {
+    return String(value);
+  }
+
+  function formatDates(value, dateOnly) {
+    var text = valueText(value);
+    function display(raw) {
+      var legacy = /^(\d{4}-\d{2}-\d{2}) (\d{1,2}):(\d{2})(?::(\d{2}))? (AM|PM)$/.exec(raw);
+      if (legacy) {
+        var hour = Number(legacy[2]);
+        if (hour < 1 || hour > 12) return "Date not recorded";
+        raw = legacy[1] + " " + String(hour % 12 + (legacy[5] === "PM" ? 12 : 0)).padStart(2, "0") + ":" + legacy[3] + ":" + (legacy[4] || "00");
+      }
       var stamp = decisionTimestamp(raw);
       return stamp ? stamp.date + (raw.length > 10 ? " · " + stamp.time : "") : "Date not recorded";
+    }
+    if (dateOnly && /^\d{4}-\d{2}-\d{2}$/.test(text)) return display(text);
+    return text.replace(/(^|[\s·—])(\d{4}-\d{2}-\d{2}[ T]\d{1,2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2}| (?:AM|PM))?)(?=$|[\s·—])/g, function (_, prefix, raw) {
+      return prefix + display(raw);
     });
+  }
+
+  function fieldValue(entry) {
+    return /\b(date|time|created|modified|updated|submitted|completed|disposed|assigned|received|released|expiry|recorded)\b/i.test(entry[0])
+      ? formatDates(entry[1], true) : valueText(entry[1]);
   }
 
   function normalizedEntries(fields) {
@@ -196,7 +216,7 @@
       }
       var grid = node("dl", "doc-overview-grid");
       entries.forEach(function (entry) {
-        var value = valueText(entry[1]);
+        var value = fieldValue(entry);
         var item = node(
           "div",
           "doc-overview-item" +
@@ -383,7 +403,7 @@
   function makeGrid(entries) {
     var list = node("dl", "doc-modal-field-grid");
     entries.forEach(function (entry) {
-      var value = valueText(entry[1]);
+      var value = fieldValue(entry);
       var field = node(
         "div",
         "doc-modal-field" +
@@ -428,7 +448,7 @@
           entry[0].replace(/^\d+\.\s*/, ""),
         ),
       );
-      content.append(node("p", "doc-modal-file-meta", valueText(entry[1])));
+      content.append(node("p", "doc-modal-file-meta", formatDates(entry[1])));
       row.append(fileIcon, content);
       var link = links[index] || {};
       var destination = link.url ? safeLink(link.url) : null;
@@ -770,7 +790,7 @@
             doc.code || "",
           ),
           node("h4", "doc-assignment-title", doc.title || "Untitled document"),
-          node("p", "doc-assignment-detail", doc.detail || ""),
+          node("p", "doc-assignment-detail", formatDates(doc.detail || "")),
         );
         item.append(emblem, text);
         results.append(item);
@@ -1057,6 +1077,6 @@
     },
     render: render,
     reset: reset,
-    formatDates: valueText,
+    formatDates: formatDates,
   };
 })();
