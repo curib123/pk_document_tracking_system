@@ -23,9 +23,8 @@ $dt_columns = [
   'status' => 'Status',
   'updated' => 'Updated'
 ];
-$canRequest = static function ($action) use ($permissions) {
-  return isset($permissions['*']) || !empty($permissions['requests'][$action]);
-};
+$canRequest = fn($action) => isset($permissions['*']) || !empty($permissions['requests'][$action]);
+
 $allowed_request_types = $allowed_request_types ?? array_keys($typeMap[$tab]);
 $dt_rows = [];
 foreach ($rows as $row) {
