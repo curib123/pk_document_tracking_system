@@ -1,24 +1,28 @@
-/* CENTRAL COLOR PALETTE — RUBY RED THEME
+
+/*
+ * CENTRAL COLOR PALETTE — MOTHER RED THEME
+ *
  * The sole source of brand/status/CSS colors.
  * All existing variable names are preserved.
  * Load before app.css, dashboard.css and other modules.
  */
+
 :root {
   --ui-white: #ffffff;
 
-  /* Ruby red and burgundy brand scale */
-  --ui-brand-950: #780b20;
-  --ui-brand-900: #8f1028;
-  --ui-brand-800: #a81732;
-  --ui-brand-700: #c21e3a;
-  --ui-brand-600: #d32643;
-  --ui-brand-500: #e13950;
-  --ui-brand-400: #e85b6e;
-  --ui-brand-300: #ee8e9c;
-  --ui-brand-200: #f3b9c1;
-  --ui-brand-150: #f7d0d5;
-  --ui-brand-100: #fbe4e7;
-  --ui-brand-50: #fff3f5;
+  /* Mother Red and burgundy brand scale */
+  --ui-brand-950: #650018;
+  --ui-brand-900: #800020;
+  --ui-brand-800: #a0002a;
+  --ui-brand-700: #bd1238;
+  --ui-brand-600: #d51f45;
+  --ui-brand-500: #e52b50;
+  --ui-brand-400: #ed526d;
+  --ui-brand-300: #f28a9b;
+  --ui-brand-200: #f6b6c0;
+  --ui-brand-150: #f9cfd6;
+  --ui-brand-100: #fce3e8;
+  --ui-brand-50: #fff2f5;
 
   /* Core text colors */
   --ui-navy: #131a27;
@@ -40,10 +44,18 @@
   --ui-surface-soft: #fbfcfe;
   --ui-canvas: #f6f8fb;
 
-  /* Shared background for the greeting header and animated sidebar. */
+  /* Shared background for greeting header and animated sidebar */
   --ui-welcome-gradient:
-    radial-gradient(ellipse at 100% 0%, color-mix(in srgb, var(--ui-brand-500) 10%, transparent), transparent 55%),
-    linear-gradient(115deg, var( --ui-ink-900), var(--ui-brand-500));
+    radial-gradient(
+      ellipse at 100% 0%,
+      color-mix(in srgb, var(--ui-brand-500) 10%, transparent),
+      transparent 55%
+    ),
+    linear-gradient(
+      115deg,
+      var(--ui-ink-900),
+      var(--ui-brand-500)
+    );
 
   /* Blue semantic scale */
   --ui-blue-900: #2c4568;
@@ -95,9 +107,9 @@
 
   /* Bootstrap semantic controls */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 225, 57, 80;
+  --bs-primary-rgb: 229, 43, 80;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 194, 30, 58;
+  --bs-danger-rgb: 189, 18, 56;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
