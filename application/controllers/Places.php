@@ -64,7 +64,8 @@ class Places extends MY_Controller
         $this->require_permission($cfg['table'], (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {
-            (new Place_service())->save($cfg, $this->input->post(), (int) $this->user['id']);
+            $savedId = (new Place_service())->save($cfg, $this->input->post(), (int) $this->user['id']);
+            $this->audit_created($cfg['table'], $savedId);
             $this->notice('Record saved.');
         } catch (Throwable $e) {
             $this->error_notice($e);

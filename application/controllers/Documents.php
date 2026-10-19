@@ -133,11 +133,12 @@ class Documents extends MY_Controller
             ) {
                 throw new DomainException('Document is not available in your authorized scope.');
             }
-            (new Softcopy_direct_service())->execute(
+            $result = (new Softcopy_direct_service())->execute(
                 $this->input->post(),
                 (int) $this->user['id'],
                 $_FILES['revision_attachment'] ?? NULL
             );
+            $this->audit_created('softcopy_documents', $result['document_id']);
             $this->notice('Softcopy action approved and applied directly.');
         } catch (Throwable $e) {
             $this->error_notice($e);
@@ -153,7 +154,8 @@ class Documents extends MY_Controller
         $this->require_permission($domain, 'direct');
         $this->confirmed();
         try {
-            (new Document_service())->save($domain, $this->input->post(), $this->user);
+            $savedId = (new Document_service())->save($domain, $this->input->post(), $this->user);
+            $this->audit_created('hardcopy_documents', $savedId);
             $this->notice('Document saved.');
         } catch (Throwable $e) {
             $this->error_notice($e);

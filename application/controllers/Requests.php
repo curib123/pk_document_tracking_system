@@ -117,12 +117,13 @@ class Requests extends MY_Controller
         $this->require_permission('requests', (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {
-            (new Request_service())->save(
+            $savedId = (new Request_service())->save(
                 $tab,
                 $this->input->post(),
                 $this->user,
                 $_FILES['revision_attachment'] ?? NULL
             );
+            $this->audit_created('requests', $savedId);
             $this->notice('Request draft saved.');
         } catch (Throwable $e) {
             $this->error_notice($e);

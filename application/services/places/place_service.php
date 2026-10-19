@@ -78,10 +78,12 @@ class Place_service
                 if ($c['slug'] === 'location')
                     $this->location_sequence($data);
                 $this->ci->db->insert($c['table'], $data);
+                $id = (int) $this->ci->db->insert_id();
             }
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Could not save. Check unique values and relations.');
             $this->ci->db->trans_commit();
+            return $id;
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException)

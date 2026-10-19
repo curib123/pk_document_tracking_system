@@ -35,6 +35,7 @@ class Auth extends MY_Controller
         }
         $user = $this->Identity_model->find_login($username);
         if (!$user || !password_verify($password, $user['password_hash'])) {
+            $this->audit_event('auth/login', NULL, [], 0, 'failed');
             if (!$attempt || strtotime($attempt['window_started']) <= time() - 900) {
                 $this->db->replace('login_attempts', [
                     'attempt_key' => $key,
@@ -54,6 +55,7 @@ class Auth extends MY_Controller
             'user_id' => (int) $user['id'],
             'session_version' => (int) $user['session_version']
         ]);
+        $this->audit_event('auth/login', 'users:' . (int) $user['id'], [], (int) $user['id']);
         // Presentation only: the existing successful redirect stays unchanged.
         if (empty($user['require_password_change']))
             $this->session->set_flashdata('login_transition', TRUE);
@@ -68,6 +70,7 @@ class Auth extends MY_Controller
         if (!session_destroy())
             show_error('Sign out could not be completed.', 500);
         $_SESSION = [];
+        $this->audit_event('auth/logout', 'users:' . (int) ($this->user['id'] ?? 0));
         if ($this->input->is_ajax_request())
             return $this->auth_response(['logged_out' => TRUE, 'login_url' => site_url('login')]);
         redirect('login');

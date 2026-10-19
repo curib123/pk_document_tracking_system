@@ -6,6 +6,7 @@ define('APPPATH', dirname(__DIR__).'/application/');
 class LoginRedirect extends RuntimeException {}
 function redirect($path) { throw new LoginRedirect($path); }
 class MY_Controller {
+    protected function audit_event(...$args) {}
     public $input; public $db; public $session; public $Identity_model; public $user;
     public $notices=[];
     protected function notice($message,$type='success') { $this->notices[]=[$message,$type]; }

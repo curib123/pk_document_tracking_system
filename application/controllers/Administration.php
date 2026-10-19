@@ -45,6 +45,7 @@ class Administration extends MY_Controller
         if (!$selected)
             show_404();
         $documents = $this->Administration_model->user_assigned_documents($userId);
+        $this->audit_event('view/user-assigned-documents', 'users:' . (int) $userId);
         $sections = [[
             'key' => 'overview', 'fields' => [
                 'Assigned Documents' => count($documents['hardcopy']) + count($documents['softcopy'])
@@ -316,6 +317,7 @@ class Administration extends MY_Controller
         $this->confirmed();
         try {
             $result = (new Administration_service())->save_user($this->input->post(), $this->user['id']);
+            $this->audit_created('users', $result['id']);
             $this->notice('Account saved.');
             if ($result['temporary_password'] !== NULL) {
                 $this->render(
@@ -339,7 +341,8 @@ class Administration extends MY_Controller
     public function save_role()
     {
         $this->mutate('roles', (int) $this->input->post('id') ? 'edit' : 'add', function () {
-            (new Administration_service())->save_role($this->input->post(), $this->user['id']);
+            $savedId = (new Administration_service())->save_role($this->input->post(), $this->user['id']);
+            $this->audit_created('roles', $savedId);
         }, 'admin/roles');
     }
     public function deactivate_role()

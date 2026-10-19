@@ -30,6 +30,7 @@ php tests/request_disposal.php
 php tests/disposal_view_details.php
 php tests/role_lifecycle.php
 php tests/audit_listing.php
+php tests/audit_context.php
 php tests/retention_countdown.php
 php tests/topnav_optional_asset.php
 php tests/document_folder_layout.php

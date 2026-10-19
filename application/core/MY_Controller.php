@@ -3,6 +3,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class MY_Controller extends CI_Controller
 {
     protected $user = NULL;
+    private $auditContext = NULL;
 
     public function __construct()
     {
@@ -80,6 +81,27 @@ class MY_Controller extends CI_Controller
             show_error('Method not allowed.', 405);
         if ($this->input->post('confirmed') !== 'yes')
             show_error('Confirmation required.', 400);
+        require_once APPPATH . 'services/audit/audit_context.php';
+        try {
+            $post = $this->input->post() ?: [];
+            if (uri_string() === 'change-password' && $this->user) $post['id'] = $this->user['id'];
+            $this->auditContext = new Audit_context($this->db, trim(uri_string(), '/'), $post);
+        } catch (Throwable $error) {
+            log_message('error', 'Audit context could not be captured: ' . $error->getMessage());
+        }
+    }
+
+    protected function audit_created($table, $id)
+    {
+        if ($this->auditContext) $this->auditContext->add($table, (int) $id);
+    }
+
+    protected function audit_event($action, $subject = NULL, array $metadata = [], $actorId = NULL, $status = 'success')
+    {
+        $this->load->library('Audit_file');
+        $written = $this->audit_file->append($actorId ?? (int) ($this->user['id'] ?? 0), $action, $subject, $metadata, $status);
+        if (!$written) log_message('error', 'Unable to persist audit event: ' . $action);
+        return $written;
     }
 
     protected function error_notice(Throwable $error)
@@ -97,17 +119,16 @@ class MY_Controller extends CI_Controller
         // Daily JSON audit is filesystem-only; never insert operational audit
         // events into an additional SQL table.
         if ($this->user && $this->input->method(TRUE) === 'POST') {
-            $this->load->library('Audit_file');
-            if (
-                !$this->audit_file->append(
-                    (int) $this->user['id'],
-                    trim(uri_string(), '/'),
-                    NULL,
-                    [],
-                    $type === 'success' ? 'success' : 'failed'
-                )
-            ) {
-                log_message('error', 'Unable to write JSON audit file for successful action.');
+            $metadata = ['result_type' => $type];
+            try {
+                if ($this->auditContext) $metadata += $this->auditContext->finish();
+            } catch (Throwable $error) {
+                $metadata['snapshot_unavailable'] = TRUE;
+                log_message('error', 'Audit result snapshot failed: ' . $error->getMessage());
+            }
+            if (!$this->audit_event(trim(uri_string(), '/'), NULL, $metadata, NULL, $type === 'danger' ? 'failed' : 'success')) {
+                $message .= ' Audit logging failed. Contact your administrator.';
+                if ($type === 'success') $type = 'warning';
             }
         }
         $this->session->set_flashdata('notice', $message);
@@ -117,6 +138,8 @@ class MY_Controller extends CI_Controller
     protected function render($title, $view, $data = [])
     {
         $this->authenticate();
+        if ($this->input->method(TRUE) === 'GET' && $this->input->get_request_header('X-PK-Table') !== '1')
+            $this->audit_event('view/' . trim(uri_string(), '/'));
         $this->output->set_header('Cache-Control: no-store, private');
         $data['title'] = $title;
         $data['user'] = $this->user;

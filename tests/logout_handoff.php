@@ -6,6 +6,7 @@ function redirect($path){throw new LogoutRedirect($path);}
 function site_url($path){return 'http://localhost/'.$path;}
 function show_error($message,$status){throw new RuntimeException($message,$status);}
 class MY_Controller {
+    protected function audit_event(...$args) {}
     public $input,$session,$output,$security,$user;
     protected function confirmed(){
         if($this->input->method(TRUE)!=='POST'||$this->input->post('confirmed')!=='yes')

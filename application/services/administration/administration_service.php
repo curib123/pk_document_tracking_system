@@ -249,6 +249,7 @@ class Administration_service
                 ->set('session_version','session_version+1',FALSE)->update('users');
             if ($this->ci->db->trans_status() === FALSE) throw new DomainException('Role update failed. Check duplicate names.');
             $this->ci->db->trans_commit();
+            return $id;
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException) throw $e;

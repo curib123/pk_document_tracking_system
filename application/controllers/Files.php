@@ -60,6 +60,7 @@ class Files extends MY_Controller
             return;
         }
         $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
+        $this->audit_event('files/review', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
         header('Content-Type: ' . ($inline ? $file['mime_type'] : 'application/octet-stream'));
         header('Cache-Control: private, no-store');
         header('X-Content-Type-Options: nosniff');
@@ -91,6 +92,7 @@ class Files extends MY_Controller
         }
         header('Cache-Control: private, no-store');
         header("Content-Security-Policy: default-src 'none'; style-src 'self'; script-src 'self'; img-src 'self'; frame-src 'self'; frame-ancestors 'self'; base-uri 'none'");
+        $this->audit_event('files/print', 'files:' . (int) $id);
         $this->load->view('pages/files/print', [
             'file' => $file,
             'text' => $file['mime_type'] === 'text/plain' ? file_get_contents($path) : NULL
@@ -119,6 +121,7 @@ class Files extends MY_Controller
             return;
         }
         header('Content-Type: ' . $file['mime_type']);
+        $this->audit_event('files/print-content', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store');
         // Native PDF viewers use a browser plugin, which CSP sandbox disables.
@@ -153,6 +156,7 @@ class Files extends MY_Controller
         // File delivery must not depend on maintenance cleanup succeeding.
         // Run deferred cleanup independently, not during a user's download.
         header('Content-Type: application/octet-stream');
+        $this->audit_event('files/download', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
         header('Content-Disposition: attachment; filename="' .

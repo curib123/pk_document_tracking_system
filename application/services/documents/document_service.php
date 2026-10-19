@@ -52,6 +52,7 @@ class Document_service
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Document save failed. Check unique numbers and related records.');
             $this->ci->db->trans_commit();
+            return $id;
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException)
