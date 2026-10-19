@@ -642,7 +642,7 @@ test('SQL and ISO timestamps use the same Manila display, including invalid and 
 test('date formatting preserves official numbers, titles and dated file names',()=>{
   const {window,details,map}=setup();
   window.PKDocumentView.render(details,{kind:'record',header:{title:'SOP-2026-10-19'},sections:[
-    {key:'overview',fields:{'Document Number':'2026-10-19','Title':'SOP-2026-10-19','Copy Number':'DOC-2026-99-19'}},
+    {key:'overview',fields:{'Document Number':'2026-10-19','Proposed Title':'SOP-2026-10-19','Copy Number':'DOC-2026-99-19'}},
     {key:'files',fields:{'review-2026-10-19.docx':'Updated 2026-10-19 09:20:30'}}
   ]});
   assert.equal(map.viewModalTitle.textContent,'SOP-2026-10-19');
