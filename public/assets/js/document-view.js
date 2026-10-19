@@ -104,6 +104,7 @@
       "viewDocumentEyebrow",
       "viewDocumentIcon",
       "viewDocumentRef",
+      "viewDocumentNumber",
       "viewDocumentStatus",
       "viewDocumentMetadata",
       "viewDocumentSummary",
@@ -113,7 +114,7 @@
       var el = document.getElementById(id);
       if (!el) return;
       el.hidden = true;
-      if (["viewDocumentSummary", "viewDocumentCustody", "viewDocumentMetadata"].includes(id))
+      if (["viewDocumentSummary", "viewDocumentCustody", "viewDocumentMetadata", "viewDocumentNumber"].includes(id))
         el.replaceChildren();
     });
     var status = document.getElementById("viewDocumentStatus");
@@ -189,7 +190,7 @@
     return route;
   }
 
-  function renderOverview(sections) {
+  function renderOverview(sections, domain) {
     var summary = document.getElementById("viewDocumentSummary");
     if (!summary) return;
     summary.replaceChildren();
@@ -214,6 +215,7 @@
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
           !(section.key === "overview" && (repeated[entry[0]] || Object.prototype.hasOwnProperty.call(HEADER_FIELDS, entry[0]))) &&
+          !(domain === "softcopy" && entry[0] === "Document Number" && hasStorageValue(entry[1])) &&
           !(
             section.key === "storage" &&
             (STORAGE_HEADER_FIELDS.includes(entry[0]) ||
@@ -321,6 +323,20 @@
     var title = document.getElementById("viewModalTitle");
     if (title) title.textContent = h.title || "Untitled document";
     modal.setAttribute("data-view-domain", domain);
+
+    var documentNumber = document.getElementById("viewDocumentNumber");
+    if (documentNumber && domain === "softcopy") {
+      var numberedSection = data.sections.find(function (section) {
+        return isOverviewSection(section) && section.fields && hasStorageValue(section.fields["Document Number"]);
+      });
+      if (numberedSection) {
+        documentNumber.append(
+          node("span", "doc-modal-number-label", "Document Number"),
+          node("span", "doc-modal-number-value", valueText(numberedSection.fields["Document Number"])),
+        );
+        documentNumber.hidden = false;
+      }
+    }
 
     var metadata = document.getElementById("viewDocumentMetadata");
     if (metadata) {
@@ -1020,7 +1036,7 @@
       });
       container.append(totals);
     } else {
-      renderOverview(overview);
+      renderOverview(overview, data.domain);
     }
 
     // Each tab is one separately scoped concern. Overview is NEVER a tab.

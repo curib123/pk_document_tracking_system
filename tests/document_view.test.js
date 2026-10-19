@@ -82,7 +82,7 @@ class Element {
 
 function setup() {
   const ids = ['viewModal','viewDetails','viewModalTitle','viewDocumentEyebrow',
-    'viewDocumentIcon','viewDocumentRef','viewDocumentStatus',
+    'viewDocumentIcon','viewDocumentRef','viewDocumentNumber','viewDocumentStatus',
     'viewDocumentSummary','viewDocumentCustody','viewDocumentMetadata','viewDocumentFootnote'];
   const map = Object.fromEntries(ids.map((id) => [id,new Element()]));
   const body = new Element();
@@ -193,7 +193,7 @@ test('softcopy ownership badges and classification stay above the concern tabs',
     kind:'document',domain:'softcopy',
     header:{title:'Release guide',reference:'SC-12',status:'active',record_version:3},
     sections:[
-      {key:'overview',title:'Overview',fields:{'Title':'Release guide','Created By':'Records Officer','Record Version':3}},
+      {key:'overview',title:'Overview',fields:{'Title':'Release guide','Document Number':'DOC-12','Created By':'Records Officer','Record Version':3}},
       {key:'revision',title:'Revision & Classification',fields:{'Category / Folder':'Policies','Series':'2026','Revision Level':'C','Pages':6}},
       {key:'files',title:'Document Files',fields:{}},
       {key:'approvals',title:'Approval History',fields:{}}
@@ -203,6 +203,8 @@ test('softcopy ownership badges and classification stay above the concern tabs',
   assert.equal(map.viewDocumentMetadata.hidden,false);
   assert.deepEqual(map.viewDocumentMetadata.querySelectorAll('.doc-modal-metadata-value').map(n=>n.textContent),['Records Officer','3']);
   assert.equal(map.viewModal.getAttribute('data-view-domain'),'softcopy');
+  assert.equal(map.viewDocumentNumber.hidden,false);
+  assert.equal(map.viewDocumentNumber.querySelector('.doc-modal-number-value').textContent,'DOC-12');
   const groups=map.viewDocumentSummary.children.filter((c)=>c.classList.contains('doc-overview-group'));
   assert.equal(groups.length,1);
   const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
@@ -679,6 +681,7 @@ test('only Request Reference is restored while other Reference fields and header
     {key:'requests',fields:{'Document Reference':'OLD','Subject':'Review manual'}}
   ]});
   assert.equal(map.viewDocumentRef.hidden,true);
-  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Request Reference','Document Number']);
+  assert.equal(map.viewDocumentNumber.querySelector('.doc-modal-number-value').textContent,'DOC-1');
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Request Reference']);
   assert.deepEqual(details.querySelectorAll('.doc-modal-activity-title').map(x=>x.textContent),['Subject']);
 });
