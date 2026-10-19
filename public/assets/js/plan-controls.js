@@ -64,15 +64,17 @@
       dateRange(select.form);
     });
   });
-  var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?\b/g;
+  var pattern = /\b([12]\d{3}-\d{2}-\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?(?:\s+(AM|PM))?\b/g;
   var selectors =
     "td, .doc-modal-body, .doc-modal-reference, .doc-overview-value, " +
     ".dashboard-activity-date, .file-history-item, .notification-inbox, " +
     ".detail-grid dd, .workflow-step-history, .table-cell-view, .backup-table";
   function convert(text) {
+    if (window.PKDocumentView) return window.PKDocumentView.formatDates(text);
     return text.replace(
       pattern,
-      function (match, day, hours, minutes, seconds) {
+      function (match, day, hours, minutes, seconds, meridiem) {
+        if (meridiem) return match;
         var hour = Number(hours);
         if (hour > 23 || Number(minutes) > 59) return match;
         return (

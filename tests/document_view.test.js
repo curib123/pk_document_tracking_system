@@ -412,7 +412,7 @@ test('approval tiles retain every repeated decision, actor, timestamp and commen
     ['Returned','Returned','Approved','Unexpected" Onclick="Bad']);
   assert.deepEqual(events.map(event=>event.querySelector('.doc-workflow-decision-time').textContent),
     ['10:00:00 AM','11:00:00 AM','12:00:00 PM','1:00:00 PM']);
-  assert.equal(events[0].querySelector('.doc-workflow-decision-time').getAttribute('datetime'),'2026-10-13T10:00:00');
+  assert.equal(events[0].querySelector('.doc-workflow-decision-time').getAttribute('datetime'),'2026-10-13T10:00:00+08:00');
   assert.equal(events[0].querySelector('.doc-workflow-decision-actor').textContent,'Manager · Plant Manager');
   assert.equal(events[1].querySelector('.doc-workflow-decision-comment').textContent,'Second return\nCheck the document');
   assert.equal(events[2].querySelector('.doc-workflow-decision-actor').textContent,'<img src=x onerror=alert(1)> · Plant Manager');
@@ -614,4 +614,27 @@ test('newly drafted requests render safely without approval steps or history',()
     assert.equal(details.querySelectorAll('[role="tab"]').length,2);
     assert.equal(details.querySelectorAll('[role="tabpanel"]').length,2);
   }
+});
+
+test('legacy empty sections cannot crash heading or approval rendering',()=>{
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{kind:'document',domain:'hardcopy',header:{title:'Legacy document'},sections:[
+    null, false, [], {key:'overview',fields:{Created:'0000-00-00 00:00:00'}},
+    {key:'approvals',steps:[null,{label:'Manager',history:[null,{created_at:'invalid',action:'approved'}]}]}
+  ]});
+  assert.equal(map.viewModalTitle.textContent,'Legacy document');
+  assert.equal(details.querySelectorAll('.doc-workflow-step').length,1);
+  assert.equal(details.querySelector('.doc-workflow-decision-time').textContent,'Time not recorded');
+});
+
+test('SQL and ISO timestamps use the same Manila display, including invalid and date-only values',()=>{
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{kind:'record',header:{title:'Dates'},sections:[
+    {key:'overview',fields:{Created:'2026-10-19 09:20:30',Modified:'2026-10-19T01:20:30Z',Date:'2026-10-19',Invalid:'2026-02-30 10:00:00'}},
+    {key:'audit',events:[{action:'approved',created_at:'2026-10-19T01:20:30.123Z'}]}
+  ]});
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(x=>x.textContent),[
+    'Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026','Date not recorded'
+  ]);
+  assert.equal(details.querySelector('.doc-workflow-decision-time').textContent,'9:20:30 AM');
 });

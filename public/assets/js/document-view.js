@@ -52,7 +52,10 @@
         })
         .join("\n");
     }
-    return String(value);
+    return String(value).replace(/\b\d{4}-\d{2}-\d{2}(?:[ T]\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})?)?\b/g, function (raw) {
+      var stamp = decisionTimestamp(raw);
+      return stamp ? stamp.date + (raw.length > 10 ? " · " + stamp.time : "") : "Date not recorded";
+    });
   }
 
   function normalizedEntries(fields) {
@@ -245,7 +248,7 @@
         ].concat(
           sections.slice(1).map(function (section, index) {
             return Object.assign({}, section, {
-              key: section.key || "detail_" + index,
+              key: (section && section.key) || "detail_" + index,
             });
           }),
         ),
@@ -477,15 +480,15 @@
 
   function decisionTimestamp(value) {
     var match =
-      /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(
+      /^(\d{4})-(\d{2})-(\d{2})(?:[ T](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?(Z|[+-]\d{2}:\d{2})?)?$/.exec(
         String(value || ""),
       );
     if (!match) return null;
     var year = Number(match[1]),
       month = Number(match[2]),
       day = Number(match[3]);
-    var hour = Number(match[4]),
-      minute = Number(match[5]),
+    var hour = Number(match[4] || 0),
+      minute = Number(match[5] || 0),
       second = Number(match[6] || 0);
     var date = new Date(Date.UTC(year, month - 1, day, hour, minute, second));
     if (
@@ -498,11 +501,22 @@
       second > 59
     )
       return null;
-    // SQL timestamps are already the displayed application wall time.
-    // UTC here keeps parsing/sorting independent of the browser's timezone.
+    // SQL values are Manila wall time. Explicit ISO offsets describe instants;
+    // convert those to Manila before displaying or grouping by calendar day.
+    if (match[7]) {
+      var offset = match[7] === "Z" ? 0 :
+        (Number(match[7].slice(1, 3)) * 60 + Number(match[7].slice(4, 6))) *
+        (match[7][0] === "+" ? 1 : -1);
+      if (Math.abs(offset) > 14 * 60 || Number(match[7].slice(4, 6)) > 59) return null;
+      date = new Date(date.getTime() + (480 - offset) * 60000);
+      hour = date.getUTCHours();
+      minute = date.getUTCMinutes();
+      second = date.getUTCSeconds();
+    }
+    var day = date.toISOString().slice(0, 10);
     return {
       order: date.getTime(),
-      day: match[1] + "-" + match[2] + "-" + match[3],
+      day: day,
       date: date.toLocaleDateString("en-US", {
         month: "short",
         day: "numeric",
@@ -512,11 +526,12 @@
       time:
         (hour % 12 || 12) +
         ":" +
-        match[5] +
+        String(minute).padStart(2, "0") +
         ":" +
         String(second).padStart(2, "0") +
         (hour >= 12 ? " PM" : " AM"),
-      iso: String(value).replace(" ", "T"),
+      iso: day + "T" + String(hour).padStart(2, "0") + ":" +
+        String(minute).padStart(2, "0") + ":" + String(second).padStart(2, "0") + "+08:00",
     };
   }
 
@@ -657,7 +672,7 @@
   function makeWorkflowSteps(steps, order) {
     var list = node("ol", "doc-workflow-steps");
     list.setAttribute("aria-label", "Steps");
-    steps.forEach(function (step, index) {
+    steps.filter(function (step) { return step && typeof step === "object"; }).forEach(function (step, index) {
       var rawStatus = String(step.status || "pending").toLowerCase();
       var status = [
         "active",
@@ -872,7 +887,7 @@
       }
       sort.disabled = hasSteps
         ? !section.steps.some(function (step) {
-            return step.history && step.history.length;
+            return step && Array.isArray(step.history) && step.history.length;
           })
         : !section.events.length;
       sort.addEventListener("change", update);
@@ -915,6 +930,10 @@
 
   function render(container, data) {
     data = normalizeRecord(data);
+    // Validate before the heading scans storage sections as well as before tabs.
+    data = Object.assign({}, data, {sections: (Array.isArray(data.sections) ? data.sections : []).filter(function (section) {
+      return section && typeof section === "object" && !Array.isArray(section);
+    })});
     reset();
     prepareHeading(data);
     container.replaceChildren();
@@ -1049,5 +1068,6 @@
     },
     render: render,
     reset: reset,
+    formatDates: valueText,
   };
 })();

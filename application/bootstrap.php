@@ -1,6 +1,7 @@
 <?php
 // Shared paths for CodeIgniter 3 and CLI; no REST endpoints.
 defined('PK_ROOT') OR define('PK_ROOT', dirname(__DIR__));
+date_default_timezone_set('Asia/Manila');
 
 function pk_base_url()
 {
