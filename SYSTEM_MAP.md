@@ -72,7 +72,7 @@ Audit:    authenticated action -> target IDs + before/after -> daily JSON file
 - Category bulk assignment includes the selected parent/subcategory and all active descendants. It assigns all matching active softcopies, independent of visible table paging. Existing assignments to other users remain. A failed batch rolls back.
 - Hardcopy bulk assignment uses Location; custody is stored in `hardcopy_documents.holder_id`. Softcopy assignment uses `assignments`; these domains do not share a synthetic assignment schema.
 - The shared View modal validates legacy empty sections before rendering. SQL wall times use Asia/Manila; explicit ISO offsets convert to Manila. Date-only values omit time; invalid dates have a safe fallback. Formatting is idempotent to avoid observer loops.
-- Reference is removed from user-facing fields and headers. Internal request identifiers and database relationships remain for history; official Document Number and Copy Number retain their meaning.
+- Request Reference is visible in request/task lists, details, notifications and related histories. Other Reference fields and generic reference headers remain hidden. Copy Number is hidden from document, request and assignment UI; stored copy values and historical links are preserved. Softcopy Document Number remains visible.
 - WPS requires the per-user Windows opener plus an installed WPS Office application. Word/Excel use their installed application URI handlers. All review app links are read-only capabilities; saving a local review copy does not revise the stored document.
 
 ## Complete project file tree
@@ -319,7 +319,7 @@ pk_document_tracking_system/
 |   |-- backup_retention.php  # Regression: backup retention
 |   |-- browser_document_fixture.php  # Browser check: browser document fixture
 |   |-- browser_document_workflows.py  # Owns disposable DB/app copy and Edge browser lifecycle
-|   |-- browser_issue_checks.py  # Parent/subcategory assignment, audits, Office tickets and WPS setup browser checks
+|   |-- browser_issue_checks.py  # Category/audit/native-review and Request Reference/hidden-copy browser checks
 |   |-- browser_register_checks.py  # Browser check: browser register checks
 |   |-- browser_storage_route_checks.py  # Browser check: browser storage route checks
 |   |-- browser_task_notification_checks.py  # Browser check: browser task notification checks
@@ -397,6 +397,7 @@ pk_document_tracking_system/
 |-- package-lock.json  # Pinned frontend package metadata
 |-- package.json  # Frontend package metadata; some legacy build-script targets are absent
 |-- plan.md  # Requested issues/backlog
+|-- SYSTEM_BUSINESS_LOGIC.mmd  # Copyable Mermaid code for the business workflow
 `-- SYSTEM_MAP.md  # This complete structural and connection map
 ```
 
@@ -939,6 +940,7 @@ These files are generated/installed from `composer.lock`. They belong to CodeIgn
 - `tests/run_unit.sh`: tracked PHP/JS syntax plus independent PHP/Node regressions. On Windows use PHP and Node directly when Bash is unavailable.
 - `tests/browser_document_workflows.py`: creates its own test database and temporary app copy; flags select focused checks. It never imports fixtures into the company database.
 - `PK_BROWSER_ISSUES_ONLY=1`: category assignment/audit/native review/setup ZIP checks.
+- `PK_BROWSER_REFERENCE_UI_ONLY=1`: Request Reference across requests/tasks/notifications and hidden Copy Number preservation during edits and request saves.
 - `PK_BROWSER_VIEWERS_ONLY=1`: ten shared viewer routes at 1440/390/320 pixels with CDN resources blocked.
 - `PK_BROWSER_USER_ASSIGNMENTS_ONLY=1`: assigned-document tabs/search and return to the selected user's assignment form.
 - `tests/apache_root_urls.py`: real Apache clean route, legacy redirect, static asset, manifest and private-path checks without a database.
