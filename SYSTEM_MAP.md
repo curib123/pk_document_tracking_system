@@ -297,7 +297,7 @@ pk_document_tracking_system/
 |   |       |-- pwa.js  # Install-button lifecycle and worker registration
 |   |       |-- row-actions.js  # Confirmation, decision/disposal dialogs and form actions
 |   |       `-- task-notifications.js  # Durable once-per-occurrence task alerts
-|   |-- .htaccess  # Front-controller fallback when public is the server document root
+|   |-- .htaccess  # Legacy URL redirect plus fallback when public is the server document root
 |   |-- index.php  # Bootstraps application then vendor CodeIgniter framework
 |   |-- manifest.php  # Install metadata, canonical scope and stable legacy PWA identity
 |   `-- service-worker.js  # Live network requests; authenticated pages/files are not cached
