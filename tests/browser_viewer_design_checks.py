@@ -26,7 +26,7 @@ def run_checks(page, base, app_root):
     for width in [1440, 390, 320]:
         page.set_viewport_size({'width': width, 'height': 950})
         for route in routes:
-            page.goto(base + route)
+            page.goto(base + route + ('?q=browser.viewer' if route == 'admin/audit' else ''))
             assert page.locator('.js-view').count(), 'No viewer fixture at ' + route + ' (' + page.url + ')'
             page.locator('.js-view').first.click()
             modal = page.locator('#viewModal')
