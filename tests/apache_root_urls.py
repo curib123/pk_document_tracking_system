@@ -22,6 +22,7 @@ with tempfile.TemporaryDirectory(prefix='pk-dts-routing-', dir=HTDOCS) as owned:
     (site / 'application').mkdir()
     (site / 'application/private.txt').write_text('private', encoding='utf-8')
     (site / 'SYSTEM_MAP.md').write_text('private docs', encoding='utf-8')
+    (site / 'SYSTEM_BUSINESS_LOGIC.mmd').write_text('flowchart TB', encoding='utf-8')
     (site / 'composer.json').write_text('{}', encoding='utf-8')
     shutil.copyfile(ROOT / 'public/manifest.php', site / 'public/manifest.php')
     base = 'http://localhost/' + site.name + '/'
@@ -34,7 +35,7 @@ with tempfile.TemporaryDirectory(prefix='pk-dts-routing-', dir=HTDOCS) as owned:
     except HTTPError as response:
         assert response.code == 308 and response.headers['Location'] == base + 'login?next=dashboard', response.headers
     else: raise AssertionError('Legacy URL did not redirect')
-    for path in ['application/private.txt', 'SYSTEM_MAP.md', 'composer.json', '.git/config']:
+    for path in ['application/private.txt', 'SYSTEM_MAP.md', 'SYSTEM_BUSINESS_LOGIC.mmd', 'composer.json', '.git/config']:
         try: urlopen(base + path)
         except HTTPError as response: assert response.code == 403, (path, response.code)
         else: raise AssertionError('Private path was exposed: ' + path)
