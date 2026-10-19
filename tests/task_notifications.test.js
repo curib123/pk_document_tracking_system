@@ -72,8 +72,8 @@ test('competing pages use the server claim so only one can display a task',async
  const shared=new Set(),first=setup(shared),second=setup(shared);await first.flush();await second.flush();
  assert.equal(first.shown+second.shown,1);
 });
-test('references stay plain text and task links cannot navigate to an external site',async()=>{
- const x=setup();x.tasks=[{key:'101:1',reference:'<script>alert(1)</script>',label:'<img src=x>',url:'https://outside.example/steal'}];
+test('task titles stay plain text and task links cannot navigate to an external site',async()=>{
+ const x=setup();x.tasks=[{key:'101:1',title:'<script>alert(1)</script>',label:'<img src=x>',url:'https://outside.example/steal'}];
  await x.flush();assert.equal(x.shown,1);
  assert.equal(x.list.children[0].children[0].children[0].textContent,'<script>alert(1)</script>');
  assert.equal(x.list.children[0].children[0].tagName,'DIV');

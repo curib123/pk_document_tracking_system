@@ -89,7 +89,7 @@ def run_checks(page, base, sql, manifest):
         expect(panel.locator('.doc-workflow-toolbar h3')).to_have_text('Approval History')
         verify_animations(panel)
         expect(panel.locator('.doc-workflow-decision')).to_have_count(count)
-        expected_reference = 'BROWSER-REQUEST' if domain == 'softcopy' else 'BROWSER-HC-REQUEST'
+        expected_reference = 'Request #' + (str(manifest['request']['id']) if domain == 'softcopy' else hardcopy_request)
         expect(panel.locator('.doc-workflow-decision-request')).to_have_text([expected_reference] * count)
         expect(panel.locator('.doc-workflow-decision-comment')).to_have_text('fff' if domain == 'softcopy' else 'Hardcopy accepted')
         panel.locator('.doc-workflow-sort').select_option('newest')

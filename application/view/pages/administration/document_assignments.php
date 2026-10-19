@@ -99,13 +99,12 @@ if ($folder_value !== '')
     <?php
     $dt_path = 'admin/document-assignments';
     $dt_extra_params = ['domain' => $domain, 'folder' => $folder_value, 'layout' => $table['layout']];
-    $dt_columns = ['title' => 'Document', 'code' => 'Reference', 'assignee' => 'Assigned To', 'assigned_date' => 'Updated'];
+    $dt_columns = ['title' => 'Document', 'assignee' => 'Assigned To', 'assigned_date' => 'Updated'];
     $dt_rows = [];
     foreach ($assignment_rows as $item) {
       $details = [
         'Document Type' => ucfirst($domain),
         'Document' => $item['title'],
-        'Reference' => $item['code'] ?: '—',
         'Assigned To' => $item['assignee'],
         'Updated' => $item['assigned_date']
       ];

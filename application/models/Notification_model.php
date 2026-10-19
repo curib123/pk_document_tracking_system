@@ -117,7 +117,7 @@ class Notification_model extends CI_Model
         $pages = max(1, (int) ceil($total / $limit));
         $page = min($page, $pages);
         $this->unreadQuery($user);
-        $rows = $this->db->select('r.id AS request_id,r.reference,r.type,s.id AS step_id,s.label,s.version')
+        $rows = $this->db->select('r.id AS request_id,r.reference,r.type,r.payload,s.id AS step_id,s.label,s.version')
             ->order_by('s.id', 'DESC')->limit($limit, ($page - 1) * $limit)
             ->get()->result_array();
         $items = [];
@@ -127,7 +127,7 @@ class Notification_model extends CI_Model
                 continue;
             $items[] = [
                 'key' => $row['step_id'] . ':' . $row['version'],
-                'reference' => $row['reference'],
+                'title' => $this->taskTitle($row),
                 'label' => $row['label'],
                 'url' => 'my-tasks/' . $tab . '?' . http_build_query(['q' => $row['reference']])
             ];
@@ -148,7 +148,7 @@ class Notification_model extends CI_Model
             return [];
         $userId = (int) $user['id'];
         $roles = implode(',', User_roles::ids($user) ?: [0]);
-        $rows = $this->db->select('r.id AS request_id,r.reference,r.type,s.id AS step_id,s.label,s.version')
+        $rows = $this->db->select('r.id AS request_id,r.reference,r.type,r.payload,s.id AS step_id,s.label,s.version')
             ->from('workflow_steps s')->join('requests r', 'r.id=s.request_id AND r.current_node=s.node_key')
             ->join('task_notification_receipts seen', 'seen.step_id=s.id AND seen.activation=s.version AND seen.user_id=' . $userId, 'left')
             ->where('s.status', 'active')->where('r.status', 'submitted')->where('seen.step_id IS NULL', NULL, FALSE)
@@ -166,9 +166,17 @@ class Notification_model extends CI_Model
                 continue;
             $row['key'] = $row['step_id'] . ':' . $row['version'];
             $row['tab'] = $tab;
+            $row['title'] = $this->taskTitle($row);
             $out[] = $row;
         }
         return $out;
+    }
+
+    private function taskTitle(array $row): string
+    {
+        $payload = json_decode((string) ($row['payload'] ?? ''), TRUE);
+        return (string) ($payload['subject'] ?? $payload['title'] ??
+            ucwords(str_replace('_', ' ', $row['type'])));
     }
 
     /** Atomic claims prevent another tab/device from showing the same occurrence. */

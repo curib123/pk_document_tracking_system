@@ -14,7 +14,7 @@ foreach ($rows as $row) {
         ],
         'display' => [
             'kind' => 'record',
-            'header' => ['title' => 'Audit Event', 'reference' => $row['action'], 'status' => $row['status']],
+            'header' => ['title' => 'Audit Event', 'status' => $row['status']],
             'sections' => [
                 [
                     'key' => 'overview',

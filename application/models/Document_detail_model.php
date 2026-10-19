@@ -50,10 +50,10 @@ class Document_detail_model extends CI_Model
         $requestsByDoc = [];
         $approvalsByDoc = [];
         foreach ($requests as $request) {
-            $requestsByDoc[$request['document_id']][$request['reference']] =
+            $requestsByDoc[$request['document_id']]['Request #' . $request['id']] =
                 ucwords(str_replace('_', ' ', $request['type'])) . ' · ' . ucfirst($request['status']) . ' · ' . ($request['subject'] ?? '');
             foreach ($histories[$request['id']] ?? [] as $event) {
-                $event['request_reference'] = $request['reference'];
+                $event['request_title'] = 'Request #' . $request['id'];
                 $approvalsByDoc[$request['document_id']][] = $event;
             }
         }
@@ -128,7 +128,7 @@ class Document_detail_model extends CI_Model
                     'description' => 'Document information and ownership',
                     'fields' => [
                         'Title' => $document['title'],
-                        'Reference / Copy Number' => $document[$domain === 'softcopy' ? 'document_number' : 'sequence_number'] ?? '',
+                        ($domain === 'softcopy' ? 'Document Number' : 'Copy Number') => $document[$domain === 'softcopy' ? 'document_number' : 'sequence_number'] ?? '',
                         'Document Type' => ucfirst($domain),
                         'Status' => ucfirst($document['status']),
                         'Created By' => $document['creator_name'],
@@ -227,14 +227,11 @@ class Document_detail_model extends CI_Model
                     'events' => $transfersByDoc[$id] ?? [],
                     'empty' => 'No transfers available within your permissions.'
                 ];
-            $reference = $domain === 'softcopy'
-                ? ($document['document_number'] ?? '') : ($document['sequence_number'] ?? '');
             $output[$id] = [
                 'kind' => 'document',
                 'domain' => $domain,
                 'header' => [
                     'title' => (string) ($document['title'] ?? ''),
-                    'reference' => (string) $reference,
                     'status' => (string) ($document['status'] ?? ''),
                     'updated_at' => (string) ($document['updated_at'] ?? ''),
                     'record_version' => (int) ($document['version'] ?? 0),

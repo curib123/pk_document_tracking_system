@@ -5,7 +5,7 @@ from playwright.sync_api import expect
 def acknowledge_initial_task(page):
     modal = page.locator('#taskNotificationModal')
     expect(modal).to_be_visible(timeout=15000)
-    expect(modal).to_contain_text('BROWSER-REQUEST')
+    expect(modal).to_contain_text('Browser revision proposal')
     modal.get_by_role('button', name='Got it', exact=True).click()
     expect(modal).to_be_hidden()
 
@@ -31,7 +31,7 @@ def run_checks(page, context, base, sql):
     step_id = new_task('BROWSER-ALERT-NEW')
     modal = page.locator('#taskNotificationModal')
     expect(modal).to_be_visible(timeout=20000)
-    expect(modal).to_contain_text('BROWSER-ALERT-NEW')
+    expect(modal).to_contain_text('Hardcopy Create')
     assert page.evaluate('window.taskPageMarker') == marker, 'New task alerts must not need a reload.'
     assert value('SELECT COUNT(*) FROM task_notification_receipts WHERE user_id=1 AND step_id=' + step_id) == '1'
     modal.get_by_role('button', name='Got it', exact=True).click()
@@ -49,7 +49,7 @@ def run_checks(page, context, base, sql):
     assert value('SELECT COUNT(*) FROM task_notification_receipts WHERE user_id=1 AND step_id=' + deferred_step) == '0'
     form_modal.get_by_role('button', name='Cancel', exact=True).click()
     expect(modal).to_be_visible(timeout=5000)
-    expect(modal).to_contain_text('BROWSER-ALERT-DEFERRED')
+    expect(modal).to_contain_text('Hardcopy Create')
     modal.get_by_role('button', name='Got it', exact=True).click()
     assert context.request.get(base + 'notifications/tasks').json()['tasks'] == []
     print('Automatic task alerts: initial task, live arrivals, durable receipts, refresh deduplication and deferral behind an open form passed.', flush=True)

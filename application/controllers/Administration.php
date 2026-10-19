@@ -74,7 +74,7 @@ class Administration extends MY_Controller
                 'kind' => 'record', 'domain' => 'record',
                 'header' => ['title' => trim($selected['first_name'] . ' ' . $selected['last_name']),
                     'eyebrow' => 'ASSIGNED DOCUMENTS',
-                    'reference' => $selected['username'], 'status' => $selected['active'] ? 'active' : 'inactive'],
+                    'status' => $selected['active'] ? 'active' : 'inactive'],
                 'sections' => $sections
             ]));
     }

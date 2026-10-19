@@ -139,7 +139,7 @@ class Request_model extends CI_Model
             if (!empty($row['source_title']))
                 $details['Selected Document'] = $row['source_title'];
             if (!empty($row['source_reference']))
-                $details['Document Reference'] = $row['source_reference'];
+                $details[!empty($row['hardcopy_id']) ? 'Copy Number' : 'Document Number'] = $row['source_reference'];
             foreach ([
                 'title' => 'Proposed Title',
                 'document_number' => 'Proposed Document Number',

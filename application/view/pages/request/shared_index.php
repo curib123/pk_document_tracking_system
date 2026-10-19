@@ -16,7 +16,6 @@ $typeMap = [
   'document-assign' => ['assignment' => 'Assign']
 ];
 $dt_columns = [
-  'reference' => 'Reference',
   'type' => 'Action',
   'subject' => 'Subject',
   'requester' => 'Requester',
@@ -86,14 +85,8 @@ foreach ($rows as $row) {
   if ($headerTitle === '')
     $headerTitle = (string) ($payload['subject'] ?? '');
   if ($headerTitle === '')
-    $headerTitle = $row['reference'];
-  $documentReference = (string) ($payload['document_number'] ?? ($payload['sequence_number'] ?? ''));
-  if ($documentReference === '')
-    $documentReference = (string) ($row['source_reference'] ?? '');
-  if ($documentReference === '')
-    $documentReference = $row['reference'];
+    $headerTitle = 'Request #' . $row['id'];
   $requestOverview = [
-    'Request Reference' => $row['reference'],
     'Request Action' => ucwords(str_replace('_', ' ', $row['type'])),
     'Subject / Reason' => $payload['subject'] ?? '',
     'Requested By' => $row['requester_name'],
@@ -152,7 +145,6 @@ foreach ($rows as $row) {
     'domain' => $documentDomain,
     'header' => [
       'title' => $headerTitle,
-      'reference' => $documentReference,
       'status' => $row['status'],
       'record_version' => $row['version'],
       'context_label' => 'Requested By',
@@ -249,7 +241,6 @@ foreach ($rows as $row) {
   $dt_rows[] = [
     'id' => $row['id'],
     'cells' => [
-      'reference' => $row['reference'],
       'type' => ucwords(str_replace('_', ' ', $row['type'])),
       'subject' => $payload['subject'] ?? '',
       'requester' => $row['requester_name'],
@@ -268,7 +259,7 @@ $dt_limit = $table['limit'];
 $dt_total = $total;
 $dt_sort = $table['sort'];
 $dt_dir = strtolower($table['dir']);
-$dt_sortable = ['reference', 'type', 'requester', 'status', 'updated'];
+$dt_sortable = ['type', 'requester', 'status', 'updated'];
 $dt_date_filters = TRUE;
 $dt_filter_values = [
   'status' => $dt_filter,

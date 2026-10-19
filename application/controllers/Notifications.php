@@ -8,7 +8,7 @@ class Notifications extends MY_Controller
         foreach ($tasks as &$task) {
             $task = [
                 'key' => $task['key'],
-                'reference' => $task['reference'],
+                'title' => $task['title'],
                 'label' => $task['label'],
                 'url' => site_url('my-tasks/' . $task['tab']) . '?' . http_build_query(['q' => $task['reference']])
             ];

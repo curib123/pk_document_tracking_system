@@ -472,8 +472,8 @@ test('approval sorting reorders decisions within each step and preserves the ass
 test('document Approval History uses the decision stepper with request context and safe remarks',()=>{
   const {window,details}=setup();
   const events=[
-    {request_reference:'REQ-42',step_label:'Manager Review',action:'returned',user_name:'Manager',position_title:'Plant Manager',comments:'Correct <script>alert(1)</script>',created_at:'2026-10-15 10:00:00'},
-    {request_reference:'REQ-43',step_label:'Final Review',action:'approved',user_name:'Officer',comments:'Accepted',created_at:'2026-10-16 11:00:00'}
+    {request_title:'REQ-42',step_label:'Manager Review',action:'returned',user_name:'Manager',position_title:'Plant Manager',comments:'Correct <script>alert(1)</script>',created_at:'2026-10-15 10:00:00'},
+    {request_title:'REQ-43',step_label:'Final Review',action:'approved',user_name:'Officer',comments:'Accepted',created_at:'2026-10-16 11:00:00'}
   ];
   const original=JSON.stringify(events);
   window.PKDocumentView.render(details,{kind:'document',domain:'softcopy',header:{title:'Policy'},sections:[
@@ -637,4 +637,15 @@ test('SQL and ISO timestamps use the same Manila display, including invalid and 
     'Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026','Date not recorded'
   ]);
   assert.equal(details.querySelector('.doc-workflow-decision-time').textContent,'9:20:30 AM');
+});
+
+test('Reference fields and the legacy reference header are absent from every shared viewer',()=>{
+  const {window,details,map}=setup();
+  window.PKDocumentView.render(details,{kind:'document',domain:'softcopy',header:{title:'Manual',reference:'LEGACY-REF'},sections:[
+    {key:'overview',fields:{Reference:'LEGACY-REF','Request Reference':'REQ-OLD','Document Number':'DOC-1'}},
+    {key:'requests',fields:{'Document Reference':'OLD','Subject':'Review manual'}}
+  ]});
+  assert.equal(map.viewDocumentRef.hidden,true);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Document Number']);
+  assert.deepEqual(details.querySelectorAll('.doc-modal-activity-title').map(x=>x.textContent),['Subject']);
 });

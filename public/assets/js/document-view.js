@@ -60,7 +60,7 @@
 
   function normalizedEntries(fields) {
     if (!fields || typeof fields !== "object") return [];
-    return Object.entries(fields);
+    return Object.entries(fields).filter(function (entry) { return !/reference/i.test(entry[0]); });
   }
 
   function safeLink(url) {
@@ -157,11 +157,10 @@
     if (!summary) return;
     summary.replaceChildren();
 
-    // Document name, reference, type and status are already displayed
+    // Document name, type and status are already displayed
     // in the modal title bar; avoid repeating them as metadata tiles.
     var repeated = {
       Title: true,
-      "Reference / Copy Number": true,
       "Document Type": true,
       Status: true,
     };
@@ -240,7 +239,6 @@
               first.title ||
               "Record details",
           ),
-          reference: String(firstFields.Reference || firstFields.Code || ""),
           status: String(firstFields.Status || ""),
         },
         sections: [
@@ -260,7 +258,6 @@
       fields.Role ||
       fields.Document ||
       fields.Workflow ||
-      fields.Reference ||
       fields.Username ||
       "Record details";
     var status = fields.Status || "";
@@ -269,7 +266,6 @@
       domain: "record",
       header: {
         title: String(title),
-        reference: String(fields.Reference || fields.Code || ""),
         status: String(status),
       },
       sections: [{ key: "overview", title: "Record Overview", fields: fields }],
@@ -311,13 +307,6 @@
               : "overview",
         ),
       );
-    }
-    var reference = document.getElementById("viewDocumentRef");
-    if (reference) {
-      reference.hidden = !h.reference && domain === "record";
-      reference.textContent = h.reference
-        ? "Reference  ·  " + h.reference
-        : "No reference assigned";
     }
     var custody = document.getElementById("viewDocumentCustody");
     if (custody) {
@@ -629,12 +618,12 @@
         ),
       );
       item.append(marker, heading);
-      if (event.request_reference || event.transfer_reference)
+      if (event.request_title || event.transfer_reference)
         item.append(
           node(
             "p",
             "doc-workflow-decision-request",
-            event.request_reference || event.transfer_reference,
+            event.request_title || event.transfer_reference,
           ),
         );
       var timestamp = node(
@@ -721,7 +710,7 @@
     );
     var search = node("input", "form-control doc-assignment-search");
     search.type = "search";
-    search.placeholder = "Search by title or reference…";
+    search.placeholder = "Search by title or document number…";
     search.setAttribute("aria-label", "Search " + section.label + " documents");
     search.setAttribute("autocomplete", "off");
     label.append(search);
@@ -778,7 +767,7 @@
           node(
             "span",
             "doc-assignment-reference",
-            doc.code || "No reference assigned",
+            doc.code || "",
           ),
           node("h4", "doc-assignment-title", doc.title || "Untitled document"),
           node("p", "doc-assignment-detail", doc.detail || ""),

@@ -103,7 +103,7 @@
       body.className = "task-notification-link";
       if (safe) body.href = url.href;
       var reference = document.createElement("strong");
-      reference.textContent = task.reference;
+      reference.textContent = task.title || 'Approval task';
       var label = document.createElement("span");
       label.textContent = task.label;
       body.append(reference, label);
