@@ -107,6 +107,7 @@ class Administration extends MY_Controller
             'hardcopy_options' => $domain === 'hardcopy' ?
                 $this->Document_model->options_in_folder('hardcopy', $browser, $table['q']) : [],
             'location_options' => $domain === 'hardcopy' ? $this->Document_model->hardcopy_locations() : [],
+            'category_options' => $domain === 'softcopy' ? $this->Folder_model->tree('softcopy') : [],
             'users_list' => $this->Administration_model->user_options(),
             'assignment_rows' => $assignmentRows
         ]);
@@ -233,6 +234,48 @@ class Administration extends MY_Controller
                 'Location assignment failed. No changes were saved.', 'danger');
         }
         redirect('admin/document-assignments?domain=hardcopy&folder=location:' . $locationId);
+    }
+
+    /** Assign all active softcopies in the selected category branch atomically. */
+    public function assign_category()
+    {
+        $this->require_permission('assignment', 'direct');
+        $this->confirmed();
+        $categoryId = (int) $this->input->post('category_id');
+        $recipientId = (int) $this->input->post('recipient_id');
+        try {
+            $this->load->model('Folder_model');
+            $tree = $this->Folder_model->tree('softcopy');
+            $keys = Folder_tree::branch($tree, 'category:' . $categoryId);
+            $categoryIds = array_map(static function ($key) { return (int) substr($key, 9); }, $keys);
+            $this->db->trans_begin();
+            $slots = implode(',', array_fill(0, count($categoryIds), '?'));
+            $rows = $this->db->query('SELECT id FROM softcopy_documents WHERE status=? AND category_id IN (' .
+                $slots . ') ORDER BY id FOR UPDATE', array_merge(['active'], $categoryIds))->result_array();
+            if (!$rows) throw new DomainException('No active Softcopy documents in this category or its subcategories.');
+            if (count($rows) > 2000) throw new DomainException('More than 2000 documents. Choose a smaller subcategory.');
+            require_once APPPATH . 'services/documents/document_access_service.php';
+            $service = new Document_access_service();
+            foreach ($rows as $row)
+                $service->apply('assignment', ['document_domain' => 'softcopy'], (int) $row['id'], 0,
+                    $recipientId, (int) $this->user['id']);
+            if ($this->db->trans_status() === FALSE || $this->db->trans_commit() === FALSE)
+                throw new DomainException('Category assignment transaction failed.');
+            $this->load->library('Audit_file');
+            if (!$this->audit_file->append((int) $this->user['id'], 'softcopy_category_bulk_assigned',
+                'category:' . $categoryId, ['category_ids' => $categoryIds, 'recipient_id' => $recipientId,
+                    'document_ids' => array_map('intval', array_column($rows, 'id')), 'count' => count($rows)])) {
+                $this->notice('Documents assigned, but audit logging failed. Contact your administrator.', 'warning');
+            } else {
+                $this->notice(count($rows) . ' Softcopy documents assigned, including subcategories.');
+            }
+        } catch (Throwable $e) {
+            $this->db->trans_rollback();
+            $this->error_notice($e);
+        }
+        redirect('admin/document-assignments?' . http_build_query([
+            'domain' => 'softcopy', 'folder' => 'category:' . $categoryId, 'owner' => $recipientId
+        ]));
     }
 
     public function users()

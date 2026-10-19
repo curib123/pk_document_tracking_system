@@ -56,6 +56,44 @@ if ($folder_value !== '')
           value="<?= $this->security->get_csrf_hash() ?>">
       </form>
     </section>
+  <?php else: ?>
+    <section class="workspace-card assignments-location-card">
+      <form class="assignments-location-form" method="post" id="categoryAssignmentForm"
+        action="<?= site_url('admin/document-assignments/category') ?>"
+        data-confirm="Assign all active Softcopy documents in this category and all its subcategories to this user?" autocomplete="off">
+        <div class="assignments-location-fields row g-3 align-items-end">
+          <div class="col-lg-5">
+            <label class="form-label" for="categoryAssignmentCategory">Category / Subcategory</label>
+            <select class="form-select" id="categoryAssignmentCategory" name="category_id" data-searchable required>
+              <option value="">Choose a parent category or subcategory</option>
+              <?php foreach ($category_options['nodes'] as $key => $category):
+                $chain = [$category['name']];
+                $parent = $category['parent'];
+                while ($parent !== '' && isset($category_options['nodes'][$parent])) {
+                  array_unshift($chain, $category_options['nodes'][$parent]['name']);
+                  $parent = $category_options['nodes'][$parent]['parent'];
+                }
+                $categoryId = (int) substr($key, 9); ?>
+                <option value="<?= $categoryId ?>" <?= $folder_value === $key ? 'selected' : '' ?>><?= html_escape(implode(' / ', $chain)) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-lg-5">
+            <label class="form-label" for="categoryAssignmentUser">Assigned User</label>
+            <select class="form-select" id="categoryAssignmentUser" name="recipient_id" data-searchable required>
+              <option value="">Choose an active user</option>
+              <?php foreach ($users_list as $person): ?>
+                <option value="<?= (int) $person['id'] ?>" <?= (int) $table['owner'] === (int) $person['id'] ? 'selected' : '' ?>><?= html_escape($person['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="col-lg-2"><button class="btn btn-primary w-100" type="submit">Assign All</button></div>
+          <p class="form-text mb-0">Includes active documents in this category and every subcategory. Existing assignments to other users are kept.</p>
+        </div>
+        <input type="hidden" name="confirmed" value="no">
+        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+      </form>
+    </section>
   <?php endif; ?>
   <div class="assignments-register">
     <?php

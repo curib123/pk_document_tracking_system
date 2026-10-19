@@ -42,6 +42,7 @@ $route['admin/document-assignments']['GET'] = 'Administration/document_assignmen
 $route['admin/audit']['GET'] = 'Audit/index';
 $route['admin/document-assignments/save']['POST'] = 'Administration/save_document_assignment';
 $route['admin/document-assignments/location']['POST'] = 'Administration/assign_location';
+$route['admin/document-assignments/category']['POST'] = 'Administration/assign_category';
 $route['admin/backups']['GET'] = 'Backups/index';
 $route['admin/backups/create']['POST'] = 'Backups/create';
 $route['admin/backups/cleanup']['POST'] = 'Backups/cleanup';

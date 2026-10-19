@@ -40,6 +40,7 @@ php tests/colors_actions_contract.php
 php tests/plan_implementation.php
 php tests/current_plan_contract.php
 php tests/date_range.php
+php tests/category_assignment.php
 php tests/pwa_manifest.php
 php tests/backup_contract.php
 php tests/backup_retention.php

@@ -4,6 +4,22 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 /** Build a bounded, cycle-safe presentation tree without recursive database queries. */
 class Folder_tree
 {
+    /** Selected folder and descendants, in visible order, with cycle protection. */
+    public static function branch(array $tree, string $key): array
+    {
+        if (!isset($tree['nodes'][$key]))
+            throw new DomainException('Choose an active category.');
+        $selected = [];
+        $pending = [$key];
+        while ($pending) {
+            $at = array_shift($pending);
+            if (isset($selected[$at]) || !isset($tree['nodes'][$at])) continue;
+            $selected[$at] = TRUE;
+            foreach ($tree['nodes'][$at]['children'] as $child) $pending[] = $child;
+        }
+        return array_keys($selected);
+    }
+
     public static function build(array $rows)
     {
         $all = [];
