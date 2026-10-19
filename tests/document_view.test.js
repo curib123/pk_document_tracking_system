@@ -651,13 +651,13 @@ test('date formatting preserves official numbers, titles and dated file names',(
   assert.equal(details.querySelector('.doc-modal-file-meta').textContent,'Updated Oct 19, 2026 · 9:20:30 AM');
 });
 
-test('Reference fields and the legacy reference header are absent from every shared viewer',()=>{
+test('only Request Reference is restored while other Reference fields and headers stay hidden',()=>{
   const {window,details,map}=setup();
   window.PKDocumentView.render(details,{kind:'document',domain:'softcopy',header:{title:'Manual',reference:'LEGACY-REF'},sections:[
     {key:'overview',fields:{Reference:'LEGACY-REF','Request Reference':'REQ-OLD','Document Number':'DOC-1'}},
     {key:'requests',fields:{'Document Reference':'OLD','Subject':'Review manual'}}
   ]});
   assert.equal(map.viewDocumentRef.hidden,true);
-  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Document Number']);
+  assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-label').map(x=>x.textContent),['Request Reference','Document Number']);
   assert.deepEqual(details.querySelectorAll('.doc-modal-activity-title').map(x=>x.textContent),['Subject']);
 });

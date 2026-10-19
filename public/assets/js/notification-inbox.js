@@ -87,7 +87,7 @@
       btn.className = "notification-inbox-item";
       var title = document.createElement("strong"),
         subtitle = document.createElement("span");
-      title.textContent = item.title || 'Approval task';
+      title.textContent = (item.request_reference ? item.request_reference + ' · ' : '') + (item.title || 'Approval task');
       subtitle.textContent = item.label;
       btn.append(title, subtitle);
       btn.addEventListener("click", function () {

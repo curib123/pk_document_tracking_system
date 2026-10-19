@@ -78,6 +78,11 @@ test('task titles stay plain text and task links cannot navigate to an external 
  assert.equal(x.list.children[0].children[0].children[0].textContent,'<script>alert(1)</script>');
  assert.equal(x.list.children[0].children[0].tagName,'DIV');
 });
+test('approval notifications show the Request Reference with the task title',async()=>{
+ const x=setup();x.tasks=[{key:'101:1',request_reference:'REQ-RESTORED',title:'Review manual',label:'Approval',url:'/my-tasks/softcopy'}];
+ await x.flush();
+ assert.equal(x.list.children[0].children[0].children[0].textContent,'REQ-RESTORED · Review manual');
+});
 test('claims and later form submissions use the current CSRF cookie',async()=>{
  const x=setup();x.document.cookie='pk_csrf=latest';await x.flush();
  const post=x.requests.find(request=>request.options.method==='POST');assert.equal(post.options.body.get('csrf'),'latest');

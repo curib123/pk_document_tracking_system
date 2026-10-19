@@ -9,11 +9,15 @@ class RequestViewFixture
 {
     public $load;
     public $captured;
+    public $columns;
+    public $sortable;
     public function __construct() { $this->load = $this; }
     public function view($view, $data)
     {
         if ($view === 'reusable_components/reusable_datatable') {
             $this->captured = $data['dt_rows'][0] ?? NULL;
+            $this->columns = $data['dt_columns'];
+            $this->sortable = $data['dt_sortable'];
             throw new RequestViewFixtureComplete();
         }
     }
@@ -73,5 +77,10 @@ foreach ($cases as [$tab, $type]) {
         throw new RuntimeException('Draft request sections incomplete for ' . $type);
     if (($display['header']['status'] ?? '') !== 'draft')
         throw new RuntimeException('New request status missing for ' . $type);
+    if (($view->columns['reference'] ?? '') !== 'Request Reference' ||
+        ($view->captured['cells']['reference'] ?? '') !== 'REQ-NEW-501' ||
+        ($sections['overview']['fields']['Request Reference'] ?? '') !== 'REQ-NEW-501' ||
+        !in_array('reference', $view->sortable, TRUE))
+        throw new RuntimeException('Request Reference must be visible and sortable in every request/task type.');
 }
 echo "All 9 new request types produce complete, valid View modal payloads.\n";

@@ -128,6 +128,7 @@ class Notification_model extends CI_Model
             $items[] = [
                 'key' => $row['step_id'] . ':' . $row['version'],
                 'title' => $this->taskTitle($row),
+                'request_reference' => $row['reference'],
                 'label' => $row['label'],
                 'url' => 'my-tasks/' . $tab . '?' . http_build_query(['q' => $row['reference']])
             ];

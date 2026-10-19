@@ -80,7 +80,9 @@
 
   function normalizedEntries(fields) {
     if (!fields || typeof fields !== "object") return [];
-    return Object.entries(fields).filter(function (entry) { return !/reference/i.test(entry[0]); });
+    return Object.entries(fields).filter(function (entry) {
+      return /^Request Reference$/i.test(entry[0]) || !/reference/i.test(entry[0]);
+    });
   }
 
   function safeLink(url) {
@@ -638,12 +640,12 @@
         ),
       );
       item.append(marker, heading);
-      if (event.request_title || event.transfer_reference)
+      if (event.request_reference || event.request_title || event.transfer_reference)
         item.append(
           node(
             "p",
             "doc-workflow-decision-request",
-            event.request_title || event.transfer_reference,
+            event.request_reference || event.request_title || event.transfer_reference,
           ),
         );
       var timestamp = node(

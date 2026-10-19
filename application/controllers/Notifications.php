@@ -9,6 +9,7 @@ class Notifications extends MY_Controller
             $task = [
                 'key' => $task['key'],
                 'title' => $task['title'],
+                'request_reference' => $task['reference'],
                 'label' => $task['label'],
                 'url' => site_url('my-tasks/' . $task['tab']) . '?' . http_build_query(['q' => $task['reference']])
             ];

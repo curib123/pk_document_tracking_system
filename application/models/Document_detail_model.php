@@ -50,10 +50,10 @@ class Document_detail_model extends CI_Model
         $requestsByDoc = [];
         $approvalsByDoc = [];
         foreach ($requests as $request) {
-            $requestsByDoc[$request['document_id']]['Request #' . $request['id']] =
+            $requestsByDoc[$request['document_id']][$request['reference']] =
                 ucwords(str_replace('_', ' ', $request['type'])) . ' · ' . ucfirst($request['status']) . ' · ' . ($request['subject'] ?? '');
             foreach ($histories[$request['id']] ?? [] as $event) {
-                $event['request_title'] = 'Request #' . $request['id'];
+                $event['request_reference'] = $request['reference'];
                 $approvalsByDoc[$request['document_id']][] = $event;
             }
         }

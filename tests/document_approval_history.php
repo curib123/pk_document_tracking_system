@@ -49,7 +49,7 @@ $display = $detail->for_page('softcopy', $documents, ['id'=>20, 'role_id'=>5], [
 foreach ([9=>[42, 'REQ-42'], 10=>[43, 'REQ-43']] as $id=>$request) {
     $approval = array_column($display[$id]['sections'], null, 'key')['approvals'];
     $expected = array_values(array_filter($events, static function($event) use ($request) { return $event['request_id']===$request[0]; }));
-    foreach ($expected as &$event) $event['request_title'] = 'Request #' . $request[0];
+    foreach ($expected as &$event) $event['request_reference'] = $request[1];
     unset($event);
     if (($approval['events'] ?? null) !== $expected)
         throw new RuntimeException('Approval History must expose each scoped event with its request, step, actor, timestamp and remarks.');
