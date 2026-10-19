@@ -321,7 +321,7 @@
         if (!Object.prototype.hasOwnProperty.call(recordFields, label)) return;
         var item = node("div", "doc-modal-metadata-item" + (label === "Record Version" ? " is-version" : ""));
         var term = node("dt", "doc-modal-metadata-label");
-        var glyph = node("i", "fa-solid " + metadataIcons[index]);
+        var glyph = node("span", "doc-modal-metadata-icon " + metadataIcons[index]);
         glyph.setAttribute("aria-hidden", "true");
         term.append(glyph, node("span", "", label));
         item.append(term, node("dd", "doc-modal-metadata-value", fieldValue([label, recordFields[label]])));
