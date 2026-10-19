@@ -44,9 +44,7 @@ class Document_scope
         $id = (int) $userId;
         if ($id <= 0)
             return '1=0';
-        $can = static function ($module, $action) use ($permissions) {
-            return isset($permissions['*']) || !empty($permissions[$module][$action]);
-        };
+        $can = static fn($module, $action) => isset($permissions['*']) || !empty($permissions[$module][$action]);
         if (
             $can('documents', 'access_all') || $can('documents', 'view_all') ||
             ($catalog && $can('documents', 'request_catalog'))
@@ -54,20 +52,24 @@ class Document_scope
             return '1=1';
 
         // Physical documents follow CURRENT custody. A previous holder/creator
-        // must not keep implicit access after an accepted transfer or reassignment.
-        // Explicit global permissions and active access grants remain authoritative.
-        $parts = [$alias . ($domain === 'hardcopy' ? '.holder_id=' : '.created_by=') . $id];
+// must not keep implicit access after an accepted transfer or reassignment.
+// Explicit global permissions and active access grants remain authoritative.
+
+        $parts = ["{$alias}" . ($domain === 'hardcopy' ? '.holder_id=' : '.created_by=') . $id];
+
         if ($domain === 'softcopy' && $can('documents', 'view_assigned')) {
-            $parts[] = 'EXISTS (SELECT 1 FROM assignments scope_assignment WHERE ' .
-                'scope_assignment.softcopy_id=' . $alias . '.id AND ' .
-                'scope_assignment.user_id=' . $id . ' AND scope_assignment.active=1)';
+            $parts[] = "EXISTS (SELECT 1 FROM assignments scope_assignment WHERE " .
+                "scope_assignment.softcopy_id={$alias}.id AND " .
+                "scope_assignment.user_id={$id} AND scope_assignment.active=1)";
         }
+
         if ($can('documents', 'view_granted')) {
             $parts[] = "EXISTS (SELECT 1 FROM access_grants scope_grant WHERE " .
-                "scope_grant.domain='" . $domain . "' AND scope_grant.document_id=" . $alias . '.id AND ' .
-                'scope_grant.user_id=' . $id . " AND scope_grant.status='access_granted' AND " .
-                'scope_grant.revoked_at IS NULL AND scope_grant.expires_at >= CURRENT_TIMESTAMP)';
+                "scope_grant.domain='{$domain}' AND scope_grant.document_id={$alias}.id AND " .
+                "scope_grant.user_id={$id} AND scope_grant.status='access_granted' AND " .
+                "scope_grant.revoked_at IS NULL AND scope_grant.expires_at >= CURRENT_TIMESTAMP)";
         }
+
         return '(' . implode(' OR ', $parts) . ')';
     }
 }

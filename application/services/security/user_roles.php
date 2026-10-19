@@ -7,8 +7,7 @@ final class User_roles
     public static function ids(array $user): array
     {
         $ids = array_key_exists('role_ids', $user) ? (array) $user['role_ids'] : [(int) ($user['role_id'] ?? 0)];
-        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static function ($id) {
-            return $id > 0; })));
+        $ids = array_values(array_unique(array_filter(array_map('intval', $ids), static fn($id) => $id > 0)));
         sort($ids, SORT_NUMERIC);
         return $ids;
     }
@@ -40,11 +39,10 @@ final class User_roles
             !preg_match('/^[a-z][a-z0-9_]*$/i', $alias)
         )
             throw new InvalidArgumentException('Invalid role scope.');
-        $primary = $alias . '.role_id=' . $role;
+        $primary = "{$alias}.role_id={$role}";
         if (!self::available($db))
             return $primary;
-        return '(' . $primary . ' OR EXISTS (SELECT 1 FROM user_roles role_member WHERE role_member.user_id=' .
-            $alias . '.id AND role_member.role_id=' . $role . '))';
+        return "({$primary} OR EXISTS (SELECT 1 FROM user_roles role_member WHERE role_member.user_id={$alias}.id AND role_member.role_id={$role}))";
     }
     public static function has_member($db, int $roleId): bool
     {
