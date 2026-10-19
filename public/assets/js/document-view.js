@@ -99,6 +99,7 @@
   function reset() {
     modal.classList.remove("is-document-view");
     modal.classList.remove("is-assignment-view");
+    modal.setAttribute("data-view-domain", "");
     [
       "viewDocumentEyebrow",
       "viewDocumentIcon",
@@ -129,7 +130,18 @@
 
   var STORAGE_LEVELS = ["Area", "Specific", "Asset", "Location"];
   var STORAGE_HEADER_FIELDS = ["Current Holder", "Days until disposal"];
-  var HARDCOPY_HEADER_FIELDS = ["Created By", "Created", "Modified", "Record Version"];
+  var HEADER_FIELDS = {
+    "Created By": "fa-user",
+    "Requested By": "fa-user",
+    "Created": "fa-calendar-plus",
+    "Created At": "fa-calendar-plus",
+    "Modified": "fa-clock-rotate-left",
+    "Last Updated": "fa-clock-rotate-left",
+    "Updated At": "fa-clock-rotate-left",
+    "Recorded At": "fa-clock-rotate-left",
+    "Record Version": "fa-code-branch",
+    "Request Version": "fa-code-branch",
+  };
 
   function hasStorageValue(value) {
     return value != null && String(value).trim() !== "";
@@ -177,7 +189,7 @@
     return route;
   }
 
-  function renderOverview(sections, domain) {
+  function renderOverview(sections) {
     var summary = document.getElementById("viewDocumentSummary");
     if (!summary) return;
     summary.replaceChildren();
@@ -190,8 +202,8 @@
       Status: true,
     };
 
-    // Physical storage is the first overview group; creation metadata follows
-    // the route. Keep the supplied data and other section ordering intact.
+    // Physical storage stays first in the body; provenance belongs to the
+    // title header. Preserve the remaining section order and supplied data.
     var orderedSections = sections.filter(function (section) {
       return section.key === "storage";
     }).concat(sections.filter(function (section) {
@@ -201,8 +213,7 @@
     orderedSections.forEach(function (section) {
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
-          !(section.key === "overview" && (repeated[entry[0]] ||
-            (domain === "hardcopy" && HARDCOPY_HEADER_FIELDS.includes(entry[0])))) &&
+          !(section.key === "overview" && (repeated[entry[0]] || Object.prototype.hasOwnProperty.call(HEADER_FIELDS, entry[0]))) &&
           !(
             section.key === "storage" &&
             (STORAGE_HEADER_FIELDS.includes(entry[0]) ||
@@ -309,19 +320,20 @@
           : "record";
     var title = document.getElementById("viewModalTitle");
     if (title) title.textContent = h.title || "Untitled document";
+    modal.setAttribute("data-view-domain", domain);
 
     var metadata = document.getElementById("viewDocumentMetadata");
-    if (metadata && domain === "hardcopy") {
+    if (metadata) {
       var overview = data.sections.find(function (section) {
         return section.key === "overview";
       });
       var recordFields = (overview && overview.fields) || {};
-      var metadataIcons = ["fa-user", "fa-calendar-plus", "fa-clock-rotate-left", "fa-code-branch"];
-      HARDCOPY_HEADER_FIELDS.forEach(function (label, index) {
-        if (!Object.prototype.hasOwnProperty.call(recordFields, label)) return;
-        var item = node("div", "doc-modal-metadata-item" + (label === "Record Version" ? " is-version" : ""));
+      normalizedEntries(recordFields).forEach(function (entry) {
+        var label = entry[0];
+        if (!Object.prototype.hasOwnProperty.call(HEADER_FIELDS, label)) return;
+        var item = node("div", "doc-modal-metadata-item" + (/Version$/.test(label) ? " is-version" : ""));
         var term = node("dt", "doc-modal-metadata-label");
-        var glyph = node("span", "doc-modal-metadata-icon " + metadataIcons[index]);
+        var glyph = node("span", "doc-modal-metadata-icon " + HEADER_FIELDS[label]);
         glyph.setAttribute("aria-hidden", "true");
         term.append(glyph, node("span", "", label));
         item.append(term, node("dd", "doc-modal-metadata-value", fieldValue([label, recordFields[label]])));
@@ -1008,7 +1020,7 @@
       });
       container.append(totals);
     } else {
-      renderOverview(overview, data.domain);
+      renderOverview(overview);
     }
 
     // Each tab is one separately scoped concern. Overview is NEVER a tab.

@@ -58,7 +58,7 @@ check(contract_position($docHeader, 'document-view.css')!==FALSE, 'Document view
 check(contract_position($docFooter, 'document-view.js')!==FALSE, 'Document view renderer must be loaded');
 check(contract_position($docFooter, 'viewDocumentStatus')!==FALSE, 'Document modal status must be accessible');
 check(contract_position($docViewJs, 'aria-controls')!==FALSE, 'Document tab navigation must identify its panels');
-check(contract_position($docViewJs, 'renderOverview(overview, data.domain)')!==FALSE, 'Document overview must render before tabs');
+check(contract_position($docViewJs, 'renderOverview(overview)')!==FALSE, 'Document overview must render before tabs');
 check(contract_position($docViewJs, 'sections.filter(isOverviewSection)')!==FALSE, 'Document overview must be excluded from tabs');
 $overviewPosition=contract_position($docFooter, 'id="viewDocumentSummary"');
 $tabsPosition=contract_position($docFooter, 'id="viewDetails"');

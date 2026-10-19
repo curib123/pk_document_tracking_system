@@ -187,7 +187,7 @@ test('hardcopy creation badges sit with the title while storage remains above th
   assert.equal(details.querySelectorAll('[role="tab"]').filter((t)=>t.textContent==='Overview').length,0);
 });
 
-test('softcopy revision and classification fields remain in the top overview',() => {
+test('softcopy ownership badges and classification stay above the concern tabs',() => {
   const {window,details,map}=setup();
   const softcopy={
     kind:'document',domain:'softcopy',
@@ -200,12 +200,13 @@ test('softcopy revision and classification fields remain in the top overview',()
     ]
   };
   window.PKDocumentView.render(details,softcopy);
-  assert.equal(map.viewDocumentMetadata.hidden,true);
-  assert.equal(map.viewDocumentMetadata.children.length,0);
+  assert.equal(map.viewDocumentMetadata.hidden,false);
+  assert.deepEqual(map.viewDocumentMetadata.querySelectorAll('.doc-modal-metadata-value').map(n=>n.textContent),['Records Officer','3']);
+  assert.equal(map.viewModal.getAttribute('data-view-domain'),'softcopy');
   const groups=map.viewDocumentSummary.children.filter((c)=>c.classList.contains('doc-overview-group'));
-  assert.equal(groups.length,2);
+  assert.equal(groups.length,1);
   const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
-  assert.deepEqual(labels,['Created By','Record Version','Category / Folder','Series','Revision Level','Pages']);
+  assert.deepEqual(labels,['Category / Folder','Series','Revision Level','Pages']);
   assert.equal(details.querySelectorAll('[role="tab"]').length,2);
   assert.equal(details.querySelectorAll('[role="tab"]')[0].children[1].textContent,'Document Files');
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
@@ -640,7 +641,10 @@ test('SQL and ISO timestamps use the same Manila display, including invalid and 
     {key:'audit',events:[{action:'approved',created_at:'2026-10-19T01:20:30.123Z'}]}
   ]});
   assert.deepEqual(map.viewDocumentSummary.querySelectorAll('.doc-overview-value').map(x=>x.textContent),[
-    'Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026','Date not recorded'
+    'Oct 19, 2026','Date not recorded'
+  ]);
+  assert.deepEqual(map.viewDocumentMetadata.querySelectorAll('.doc-modal-metadata-value').map(x=>x.textContent),[
+    'Oct 19, 2026 · 9:20:30 AM','Oct 19, 2026 · 9:20:30 AM'
   ]);
   assert.equal(details.querySelector('.doc-workflow-decision-time').textContent,'9:20:30 AM');
 });
