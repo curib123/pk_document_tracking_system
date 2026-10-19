@@ -2,6 +2,10 @@ Options -Indexes
 DirectoryIndex index.php
 <IfModule mod_rewrite.c>
 RewriteEngine On
+# A child rewrite context overrides parent rules for existing public/ paths.
+# Canonicalize legacy browser URLs here too; internal asset rewrites are exempt.
+RewriteCond %{THE_REQUEST} \s/+([^\s?]*/)?public(?:[/\s?]) [NC]
+RewriteRule ^(.*)$ /%1$1 [R=308,L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule ^(.*)$ index.php/$1 [L,QSA]

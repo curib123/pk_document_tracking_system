@@ -17,6 +17,7 @@ with tempfile.TemporaryDirectory(prefix='pk-dts-routing-', dir=HTDOCS) as owned:
     shutil.copyfile(ROOT / '.htaccess', site / '.htaccess')
     (site / 'index.php').write_text('<?php header("Content-Type: application/json"); echo json_encode(["script"=>$_SERVER["SCRIPT_NAME"],"uri"=>$_SERVER["REQUEST_URI"]]);', encoding='utf-8')
     (site / 'public/assets').mkdir(parents=True)
+    shutil.copyfile(ROOT / 'public/.htaccess', site / 'public/.htaccess')
     (site / 'public/assets/probe.txt').write_text('public asset', encoding='utf-8')
     (site / 'application').mkdir()
     (site / 'application/private.txt').write_text('private', encoding='utf-8')
