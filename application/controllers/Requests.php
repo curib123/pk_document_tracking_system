@@ -128,7 +128,7 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-requests/' . $tab);
+        redirect("my-requests/{$tab}");
     }
     public function submit($tab)
     {
@@ -141,7 +141,7 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-requests/' . $tab);
+        redirect("my-requests/{$tab}");
     }
     public function decide($tab)
     {
@@ -161,7 +161,7 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-tasks/' . $tab);
+        redirect("my-tasks/{$tab}");
     }
     public function dispatch_transfer()
     {
@@ -173,7 +173,7 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-tasks/hardcopy-transfer');
+        redirect("my-tasks/hardcopy-transfer");
     }
 
     public function accept_transfer()
@@ -186,7 +186,7 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-tasks/hardcopy-transfer');
+        redirect("my-tasks/hardcopy-transfer");
     }
 
     public function cancel($tab)
@@ -200,6 +200,6 @@ class Requests extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('my-requests/' . $tab);
+        redirect("my-requests/{$tab}");
     }
 }

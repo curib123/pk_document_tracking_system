@@ -21,7 +21,7 @@ class Places extends MY_Controller
             'softcopy-categories' => 'categories'
         ] as $slug => $module) {
             if ($this->can($module, 'view')) {
-                redirect('places/' . $slug);
+                redirect("places/{$slug}");
                 return;
             }
         }
@@ -33,7 +33,7 @@ class Places extends MY_Controller
         $cfg = $this->Place_model->config($slug);
         $this->require_permission($cfg['table'], 'view');
         $state = $this->table_state($cfg['key']);
-        list($rows, $total, $state['page']) = $this->Place_model->listing(
+        [$rows, $total, $state['page']] = $this->Place_model->listing(
             $cfg,
             $state['q'],
             $state['status'],
@@ -53,8 +53,8 @@ class Places extends MY_Controller
             'softcopy-categories' => 'softcopy_category'
         ];
         $this->render(
-            'Places · ' . $cfg['label'],
-            'pages/places/' . $views[$slug] . '/index',
+            "Places · {$cfg['label']}",
+            "pages/places/{$views[$slug]}/index",
             ['cfg' => $cfg, 'rows' => $rows, 'total' => $total, 'table' => $state, 'options' => $options]
         );
     }
@@ -70,7 +70,7 @@ class Places extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('places/' . $slug);
+        redirect("places/{$slug}");
     }
     public function deactivate($slug)
     {
@@ -83,6 +83,6 @@ class Places extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('places/' . $slug);
+        redirect("places/{$slug}");
     }
 }

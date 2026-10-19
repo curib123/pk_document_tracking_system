@@ -103,7 +103,7 @@ class Documents extends MY_Controller
             'softcopy_options' => $softcopy_options,
             'category_options' => $category_options,
             'folder_browser' => $browser,
-            'folder_base' => 'documents/' . $domain,
+            'folder_base' => "documents/{$domain}",
             'folder_params' => [
                 'q' => $state['q'],
                 'status' => $state['status'],
@@ -143,7 +143,7 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('documents/softcopy');
+        redirect("documents/softcopy");
     }
 
     public function save($domain)
@@ -160,7 +160,7 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('documents/' . $domain);
+        redirect("documents/{$domain}");
     }
     public function dispose($domain)
     {
@@ -189,6 +189,6 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect('documents/' . $domain);
+        redirect("documents/{$domain}");
     }
 }

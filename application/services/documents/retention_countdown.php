@@ -31,9 +31,9 @@ final class Retention_countdown
             return 'Due today';
         if ($days < 0) {
             $days = abs($days);
-            return 'Overdue by ' . $days . ' ' . ($days === 1 ? 'day' : 'days');
+            return "Overdue by {$days} " . ($days === 1 ? 'day' : 'days');
         }
 
-        return $days . ' ' . ($days === 1 ? 'day' : 'days') . ' remaining';
+        return "{$days} " . ($days === 1 ? 'day' : 'days') . ' remaining';
     }
 }
