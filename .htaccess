@@ -1,11 +1,20 @@
-# Only /public is an application entry point; deny private sibling folders.
+# Repository-root entry point; only explicitly mapped public assets are served.
 Options -Indexes
+DirectoryIndex index.php
 <IfModule mod_rewrite.c>
     RewriteEngine On
-    RewriteRule ^(application|database|storage|vendor|tests|docs|resources|tools)(/|$) - [F,L,NC]
+    RewriteRule ^(application|database|storage|vendor|tests|docs|guide|resources|tools|node_modules|\.git)(/|$) - [F,L,NC]
+    RewriteRule (^|/)\. - [F,L]
+    RewriteCond %{THE_REQUEST} \s/+([^\s?]*/)?public(?:[/\s?]) [NC]
+    RewriteRule ^public(?:/(.*))?$ /%1$1 [R=308,L]
+    RewriteRule ^assets/(.*)$ public/assets/$1 [L]
+    RewriteRule ^(manifest\.php|service-worker\.js)$ public/$1 [L]
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [L,QSA]
 </IfModule>
 <IfModule mod_authz_core.c>
-    <FilesMatch "^(composer\.(json|lock)|package(-lock)?\.json|\.env(\..*)?|\.git.*|README\.md|CHANGELOG\.md|issues-found\.md|modular_plan\.md)$">
+    <FilesMatch "(^\.|\.(md|sql|lock|sh|ps1|py)$|^(composer|package(-lock)?)\.json$)">
         Require all denied
     </FilesMatch>
 </IfModule>

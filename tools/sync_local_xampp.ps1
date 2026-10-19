@@ -1,6 +1,6 @@
 param(
     [string]$TargetPath = 'C:\xampp\htdocs\pk_document_tracking_system',
-    [string]$LiveBaseUrl = 'http://localhost/pk_document_tracking_system/public/'
+    [string]$LiveBaseUrl = 'http://localhost/pk_document_tracking_system/'
 )
 
 $ErrorActionPreference = 'Stop'

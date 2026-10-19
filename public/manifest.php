@@ -3,10 +3,12 @@
 $scope = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'] ?? '/manifest.php')), '/') . '/';
 if ($scope === './')
     $scope = '/';
+$identity = $scope . 'pk-document-control';
+$scope = preg_replace('~/public/$~', '/', $scope);
 header('Content-Type: application/manifest+json; charset=utf-8');
 header('Cache-Control: no-cache');
 echo json_encode([
-    'id' => $scope . 'pk-document-control',
+    'id' => $identity,
     'name' => 'PK Document Control',
     'short_name' => 'PK DTS',
     'description' => 'Manage your documents, requests and approval tasks.',
@@ -28,7 +30,7 @@ echo json_encode([
         [
             'platform' => 'webapp',
             'url' => $scope . 'manifest.php',
-            'id' => $scope . 'pk-document-control'
+            'id' => $identity
         ]
     ]
 ], JSON_UNESCAPED_SLASHES);
