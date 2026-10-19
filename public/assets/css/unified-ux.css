@@ -1817,12 +1817,42 @@
   cursor: default;
 }
 
+/* Keep bulk alerts within the viewport in Bootstrap and the offline fallback.
+   Only the task list scrolls; the heading and dismissal controls stay visible. */
+#taskNotificationModal .modal-dialog {
+  height: calc(100% - 32px);
+  min-height: 0;
+}
+
+#taskNotificationModal .modal-content {
+  max-height: 100%;
+}
+
+#taskNotificationModal .modal-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  max-height: none;
+  overflow: hidden;
+}
+
+#taskNotificationModal .modal-body > h2,
+#taskNotificationModal .modal-body > p {
+  flex-shrink: 0;
+}
+
 .task-notification-list {
   display: grid;
+  align-content: start;
   gap: 10px;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
   list-style: none;
-  padding: 0;
+  padding: 4px;
   margin: 18px 0 0;
+  text-align: left;
 }
 
 .task-notification-item {
@@ -1859,6 +1889,45 @@ a.task-notification-link:is(:hover, :focus-visible) {
 a.task-notification-link:focus-visible {
   outline: 2px solid var(--ui-blue-700);
   outline-offset: 2px;
+}
+
+@media (max-height: 540px) {
+  #taskNotificationModal .modal-header {
+    padding: 12px 22px;
+  }
+
+  #taskNotificationModal .app-alert-symbol {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+  }
+
+  #taskNotificationModal .app-alert-symbol svg {
+    width: 22px;
+    height: 22px;
+  }
+
+  #taskNotificationModal .modal-body {
+    padding-bottom: 0;
+  }
+
+  #taskNotificationModal .modal-body > h2 {
+    margin: 0 0 6px;
+  }
+
+  #taskNotificationModal .modal-body > p {
+    margin: 0;
+    line-height: 1.4;
+  }
+
+  #taskNotificationModal .task-notification-list {
+    margin-top: 10px;
+  }
+
+  #taskNotificationModal .modal-footer {
+    padding: 12px 22px;
+  }
 }
 
 .document-register-listing

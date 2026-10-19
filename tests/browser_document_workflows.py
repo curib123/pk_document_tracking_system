@@ -76,7 +76,7 @@ try:
                 channel='msedge', headless=True, viewport={'width': 1440, 'height': 1000},
                 # A controlling worker can bypass Playwright network routes.
                 service_workers='block' if any(os.environ.get(flag) == '1' for flag in
-                    ['PK_BROWSER_VIEWERS_ONLY', 'PK_BROWSER_USER_ASSIGNMENTS_ONLY', 'PK_BROWSER_ISSUES_ONLY', 'PK_BROWSER_REFERENCE_UI_ONLY']) else 'allow')
+                    ['PK_BROWSER_VIEWERS_ONLY', 'PK_BROWSER_USER_ASSIGNMENTS_ONLY', 'PK_BROWSER_ISSUES_ONLY', 'PK_BROWSER_REFERENCE_UI_ONLY', 'PK_BROWSER_TASKS_ONLY']) else 'allow')
             # Default coverage includes the Bootstrap-free office network path.
             if os.environ.get('PK_BROWSER_ONLINE') != '1':
                 context.route(re.compile(r'^https://'), lambda route: route.abort())
