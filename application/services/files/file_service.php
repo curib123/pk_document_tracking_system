@@ -10,7 +10,7 @@ class File_service
         $this->ci =& get_instance();
     }
 
-    /** A replacement must be usable before the current controlled file is retired. */
+    /** A replacement must be usable before the current Document Fileis retired. */
     public function require_stored_file(array $file): void
     {
         $path = $this->controlled_path((string) ($file['storage_name'] ?? ''));
@@ -100,12 +100,12 @@ class File_service
                 if (@unlink($path))
                     $removed++;
                 else
-                    log_message('error', 'Retired controlled file cleanup failed for file ' . (int) $file['id'] . '.');
+                    log_message('error', 'Retired Document Filecleanup failed for file ' . (int) $file['id'] . '.');
             }
         } catch (Throwable $error) {
             // A committed approval cannot be rolled back after filesystem I/O.
             // Superseded rows remain unavailable for download and eligible for retry.
-            log_message('error', 'Retired controlled file cleanup failed for document ' . $documentId . '.');
+            log_message('error', 'Retired Document Filecleanup failed for document ' . $documentId . '.');
         }
         return $removed;
     }
@@ -128,7 +128,7 @@ class File_service
             ftruncate($lock, 0);
             fwrite($lock, $day);
         } catch (Throwable $error) {
-            log_message('error', 'Daily controlled file cleanup failed; it will be retried.');
+            log_message('error', 'Daily Document Filecleanup failed; it will be retried.');
         } finally {
             flock($lock, LOCK_UN);
             fclose($lock);
@@ -150,7 +150,7 @@ class File_service
         return $this->cleanup_retired();
     }
 
-    // Controlled files are private while awaiting approval.
+    // Document Files are private while awaiting approval.
     // A new document has no document ID until the final approval is applied.
     public function stage_creation($actorId, $upload)
     {
@@ -174,11 +174,11 @@ class File_service
             !is_array($upload) || (int) ($upload['error'] ?? -1) !== UPLOAD_ERR_OK ||
             empty($upload['tmp_name']) || !is_uploaded_file($upload['tmp_name'])
         ) {
-            throw new DomainException('A controlled file is required for Create and Revise.');
+            throw new DomainException('A Document Fileis required for Create and Revise.');
         }
         $size = (int) ($upload['size'] ?? 0);
         if ($size < 1 || $size > 15 * 1024 * 1024) {
-            throw new DomainException('Controlled file must be between 1 byte and 15 MB.');
+            throw new DomainException('Document Filemust be between 1 byte and 15 MB.');
         }
         $name = preg_replace(
             '/[^a-zA-Z0-9._ -]/',
@@ -200,7 +200,7 @@ class File_service
             !$name || strlen($name) > 255 || !isset($allowed[$ext]) ||
             !in_array($mime, $allowed[$ext], TRUE)
         ) {
-            throw new DomainException('Unsupported controlled file format.');
+            throw new DomainException('Unsupported Document Fileformat.');
         }
         $directory = PK_ROOT . '/storage/documents';
         if (!is_dir($directory) && !mkdir($directory, 0700, TRUE)) {
@@ -209,7 +209,7 @@ class File_service
         $storage = bin2hex(random_bytes(32));
         $path = $directory . '/' . $storage;
         if (!move_uploaded_file($upload['tmp_name'], $path)) {
-            throw new DomainException('Could not store the controlled file.');
+            throw new DomainException('Could not store the Document File.');
         }
         chmod($path, 0600);
         $saved = $this->ci->db->insert('files', [
@@ -227,7 +227,7 @@ class File_service
         ]);
         if (!$saved) {
             @unlink($path);
-            throw new DomainException('Unable to record controlled file.');
+            throw new DomainException('Unable to record Document File.');
         }
         return (int) $this->ci->db->insert_id();
     }

@@ -15,7 +15,7 @@ final class Workflow_graph
     {
         $steps = $graph['steps'] ?? NULL;
         if (!is_array($steps) || (is_array($steps) && $steps !== array_values($steps)) || count($steps) > 30 || ($published && !$steps))
-            throw new DomainException('An approval route must contain 1–30 ordered steps before publication.');
+            throw new DomainException('An Approval Process Timeline must contain 1–30 ordered steps before publication.');
         foreach ($steps as $index => $step) {
             if (!is_array($step) || ($step['key'] ?? '') !== 'step_' . ($index + 1))
                 throw new DomainException('Approval step keys must match their sequence.');

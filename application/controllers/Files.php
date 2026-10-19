@@ -47,7 +47,7 @@ class Files extends MY_Controller
         $this->authenticate();
         $file = $this->File_model->review_file((int) $requestId, $this->user);
         if (!$file) {
-            show_error('Controlled file is not available for your review.', 403);
+            show_error('Document Fileis not available for your review.', 403);
             return;
         }
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
@@ -77,7 +77,7 @@ class Files extends MY_Controller
         $this->require_permission('files', 'print');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
-            show_error('Controlled file printing is not permitted.', 403);
+            show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
@@ -102,7 +102,7 @@ class Files extends MY_Controller
         $this->require_permission('files', 'print');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
-            show_error('Controlled file printing is not permitted.', 403);
+            show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
         if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {

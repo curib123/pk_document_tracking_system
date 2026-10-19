@@ -81,9 +81,9 @@ newPlanCheck(currentCodePosition($files['notice'],'public function inbox()')!==F
 newPlanCheck(currentCodePosition($files['file_controller'],'public function print_file(')!==FALSE &&
     currentCodePosition($files['file_controller'],'$this->File_model->allowed(')!==FALSE &&
     currentCodePosition($files['action'],"\$type==='print'")!==FALSE,
-    'Printable controlled files require the same file permissions as download.');
+    'Printable Document Files require the same file permissions as download.');
 newPlanCheck(currentCodePosition($files['document_view'],"'type'=>'print'")!==FALSE,
-    'Document records must show a Print action for printable controlled files.');
+    'Document records must show a Print action for printable Document Files.');
 newPlanCheck(currentCodePosition($files['backup'],'public function cleanup()')!==FALSE &&
     currentCodePosition($files['backup_view'],"admin/backups/cleanup")!==FALSE,
     'Manual backup cleanup must use existing retention service.');

@@ -648,7 +648,7 @@
   function makeStepHistory(history, order) {
     var group = node("div", "doc-workflow-history");
     group.append(
-      node("h5", "doc-workflow-history-title", "Decision History"),
+      node("h5", "doc-workflow-history-title", "Workflow Activity Log"),
       makeDecisionTimeline(history, order),
     );
     return group;
@@ -837,7 +837,7 @@
         "aria-label",
         section.key === "transfers"
           ? "Sort transfer history by timestamp"
-          : "Sort decision history by timestamp",
+          : "Sort Workflow Activity Log by timestamp",
       );
       [
         ["oldest", "Oldest first"],

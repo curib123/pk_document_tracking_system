@@ -642,7 +642,7 @@
   }
 }
 
-/* Vertical approval route and timestamp-sorted decision history. */
+/* Vertical Approval Process Timeline and timestamp-sorted Workflow Activity Log. */
 #viewModal.is-document-view .doc-workflow-toolbar {
   display: flex;
   align-items: center;

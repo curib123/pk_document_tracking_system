@@ -65,13 +65,13 @@ $softcopyDirect = !empty($softcopyDirect);
 </div>
 
 <div class="col-12">
-    <label class="form-label" for="revisionFile">Controlled File <span class="optional-label">(required for Create and
+    <label class="form-label" for="revisionFile">Document File<span class="optional-label">(required for Create and
             Revise · 15 MB maximum)</span></label>
     <input class="form-control" id="revisionFile" type="file" name="revision_attachment"
         accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" autocomplete="off">
     <small class="text-secondary">
         <?= $softcopyDirect
-            ? 'Required for direct creation or revision; the controlled file is approved as part of the transaction.'
+            ? 'Required for direct creation or revision; the Document Fileis approved as part of the transaction.'
             : 'Attach the file for approver review. An existing uploaded file can be retained when editing the draft.' ?>
     </small>
 </div>

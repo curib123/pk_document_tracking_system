@@ -188,11 +188,11 @@ class Document_detail_model extends CI_Model
                 }
                 $sections[] = [
                     'key' => 'files',
-                    'title' => 'Controlled Files',
+                    'title' => 'Document Files',
                     'description' => 'Current approved file and revision history · latest 25',
                     'fields' => $fileFields,
                     'links' => $links,
-                    'empty' => 'No controlled file history available within your file permissions.'
+                    'empty' => 'No Document Filehistory available within your file permissions.'
                 ];
             }
             if ($document['status'] === 'disposed')

@@ -4,7 +4,7 @@ SET @add_history = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files
 SET @add_print = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files' AND action_key='print');
 SET @add_download = NOT EXISTS (SELECT 1 FROM permissions WHERE module_key='files' AND action_key='download');
 INSERT IGNORE INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
-('Files: History','files','Files','history','File History','View controlled file revision history within authorized documents.',1),
+('Files: History','files','Files','history','File History','View Document Filerevision history within authorized documents.',1),
 ('Files: Print','files','Files','print','Print','Print the current approved file within authorized documents.',1),
 ('Files: Download','files','Files','download','Download','Download the current approved file within authorized documents.',1);
 INSERT IGNORE INTO role_permissions (role_id,permission_id)

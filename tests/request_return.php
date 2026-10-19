@@ -124,7 +124,7 @@ returnCheck($request['snapshot']===$beforeRequest['snapshot'] &&
 returnCheck(array_slice($history,0,3)===$beforeHistory && count($history)===4 &&
     $history[3]['action']==='returned' && (int)$history[3]['step_id']===112 &&
     (int)$history[3]['user_id']===30 && $history[3]['comments']==='Check department approval',
-    'The return comment and original approvals must remain in decision history.');
+    'The return comment and original approvals must remain in Workflow Activity Log.');
 returnReject(static function() use($request) {
     Request_policy::editable($request,8,'disposal',['version'=>$request['version']]);
 },'The requester must not be able to edit an intermediate return.');

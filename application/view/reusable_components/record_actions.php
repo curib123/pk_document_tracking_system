@@ -67,7 +67,7 @@
             </a>
         <?php elseif ($type === 'print'): ?>
             <a class="btn-icon record-action record-action-print" href="<?= site_url($button['url']) ?>" target="_blank"
-                rel="noopener" title="Print controlled file" aria-label="Print controlled file">
+                rel="noopener" title="Print Document File" aria-label="Print Document File">
                 <i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span>
             </a>
         <?php elseif ($type === 'download'): ?>

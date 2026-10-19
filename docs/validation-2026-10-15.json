@@ -164,7 +164,7 @@
     "File action and URL permission denials for a document owner",
     "Full document workflow browser suite: date filters, 1440/390/320 pixel viewers, protected printing, rejection and disposal",
     "Automatic task modal: loaded on authenticated pages; initial task, arrivals without reload, durable receipts, refresh deduplication and deferral behind an open form",
-    "Vertical Approval Route and Decision History in My Requests/My Tasks: date groups, oldest/newest timestamp sorting, repeated approvals, remarks, route order and 1440/390/320 pixel layouts",
+    "Vertical Approval Process Timeline and Workflow Activity Log in My Requests/My Tasks: date groups, oldest/newest timestamp sorting, repeated approvals, remarks, route order and 1440/390/320 pixel layouts",
     "Unified viewer redesign: documents, requests, tasks, users, roles, places, workflows, assignments and audit; file history and workflow route viewers; Bootstrap 5.3.3 and confirmed CDN-blocked fallback at 1440/390/320 pixels, keyboard tabs, long audit details, file actions and explicit dismissal",
     "Refined viewer layout: desktop section headings beside fact columns; mobile label/value rows and fully visible concern tabs; aligned decision timestamps and date separators; rechecked ten viewer pages in Bootstrap and CDN-blocked fallback, plus sorted workflow history at 1440/390/320 pixels"
   ],

@@ -54,7 +54,7 @@ $dt_create = '';
 ?>
 
 <div class="workflow-setup-guide small text-secondary mb-3" role="note">
-  To configure an approval route, open Step Actions on a workflow, create an editable draft, add or reorder approver steps,
+  To configure an Approval Process Timeline, open Step Actions on a workflow, create an editable draft, add or reorder approver steps,
   then publish the validated draft. A published version stays unchanged for requests already submitted.
 </div>
 
@@ -99,7 +99,7 @@ $dt_create = '';
             <p class="workflow-modal-eyebrow">Approval workflow</p>
             <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
             </h2>
-            <p class="small text-secondary mb-0">Approval route for
+            <p class="small text-secondary mb-0">Approval Process Timeline for
               <?= $esc(ucwords(str_replace('_', ' ', $workflow['request_type']))) ?> requests</p>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -160,7 +160,7 @@ $dt_create = '';
                     class="empty-hint"><?= $isDraft ? 'Add an approval step before publishing.' : 'This version has no route.' ?></span>
                 </div>
               <?php else: ?>
-                <ol class="workflow-step-list mb-3" aria-label="Approval route">
+                <ol class="workflow-step-list mb-3" aria-label="Approval Process Timeline">
                   <?php foreach ($steps as $i => $step):
                     $approver = $step['approver'] ?? [];
                     $type = $approver['type'] ?? '';
@@ -233,7 +233,7 @@ $dt_create = '';
                     <i class="fa-solid fa-plus me-1"></i>Add Approval Step
                   </button>
                   <form method="post" action="<?= site_url('admin/workflows/publish') ?>"
-                    data-confirm="Publish this approval version as the default for all future requests? Existing requests keep their original approval route." autocomplete="off">
+                    data-confirm="Publish this approval version as the default for all future requests? Existing requests keep their original Approval Process Timeline." autocomplete="off">
                     <input type="hidden" name="id" value="<?= (int) $version['id'] ?>">
                     <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
                     <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">

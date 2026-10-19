@@ -403,7 +403,7 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (82, 'Audit: View', 'audit', 'Audit', 'view', 'View', 'Allows view operations for audit.', 1),
 (84, 'Settings: View', 'settings', 'Settings', 'view', 'View', 'Allows view operations for settings.', 1),
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1),
-(86, 'Files: History', 'files', 'Files', 'history', 'File History', 'View controlled file revision history within authorized documents.', 1),
+(86, 'Files: History', 'files', 'Files', 'history', 'File History', 'View Document Filerevision history within authorized documents.', 1),
 (87, 'Files: Print', 'files', 'Files', 'print', 'Print', 'Print the current approved file within authorized documents.', 1),
 (88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1);
 

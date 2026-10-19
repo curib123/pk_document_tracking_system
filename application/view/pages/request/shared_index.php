@@ -113,7 +113,7 @@ foreach ($rows as $row) {
     ],
     [
       'key' => 'approvals',
-      'title' => 'Approval Route',
+      'title' => 'Approval Process Timeline',
       'fields' => [
         'Workflow Version' => $row['workflow_version_id'] ? 'Assigned at submission' : 'Awaiting submission',
         'Steps' => implode("\n", $routeText) ?: 'No steps assigned yet'
@@ -122,7 +122,7 @@ foreach ($rows as $row) {
     ],
     [
       'key' => 'audit',
-      'title' => 'Decision History',
+      'title' => 'Workflow Activity Log',
       'events' => $decisionEvents,
       'fields' => [
         'History' => implode("\n", $historyText) ?: 'No approval decisions yet'
@@ -139,7 +139,7 @@ foreach ($rows as $row) {
     array_splice($requestSections, 2, 0, [
       [
         'key' => 'files',
-        'title' => 'Controlled File',
+        'title' => 'Document File',
         'fields' => [
           'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
             ? 'Attached to this request for review' : 'No attachment'

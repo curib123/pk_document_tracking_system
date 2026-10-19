@@ -22,7 +22,7 @@ historyCheck(count($section['fields'])===2,'The document viewer must preserve ol
 historyCheck(empty($section['links'][0]['url']) && $section['links'][1]['url']==='/files/download/710',
     'Only the current revision may expose a Download link.');
 historyCheck(strpos(array_values($section['fields'])[0],'Superseded')!==FALSE,
-    'Previous controlled files must be visibly identified as superseded.');
+    'Previous Document Files must be visibly identified as superseded.');
 
 class HistoryViewCaptured extends RuntimeException {}
 class HistoryViewHarness {
@@ -46,7 +46,7 @@ $buttons=array_column($view->render($document,[$old,$current],$current),NULL,'ty
 historyCheck(empty($buttons['history']['files'][0]['url']) && $buttons['history']['files'][1]['url']==='/files/download/710',
     'The File History dialog must omit old download URLs.');
 historyCheck(strpos($buttons['history']['files'][0]['detail'],'Superseded')!==FALSE &&
-    $buttons['download']['url']==='files/download/710','The register download must point to the current controlled file.');
+    $buttons['download']['url']==='files/download/710','The register download must point to the current Document File.');
 $buttons=array_column($view->render($document,[$old],NULL),NULL,'type');
 historyCheck(isset($buttons['history']) && !isset($buttons['download']),
     'History metadata must remain viewable when no current controlled download is available.');

@@ -307,7 +307,7 @@ class Request_service
                     'status'=>'pending','domain'=>'softcopy',
                     'purpose'=>$creation?'creation':'revision'
                 ])->row_array();
-                if (!$file) throw new DomainException('Upload a controlled file for review before submitting.');
+                if (!$file) throw new DomainException('Upload a Document Filefor review before submitting.');
             }
             if (in_array($r['type'],['hardcopy_create','hardcopy_update'],TRUE)) {
                 require_once APPPATH.'services/documents/document_service.php';

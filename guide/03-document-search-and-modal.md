@@ -15,7 +15,7 @@ Use browser Developer Tools Network + Console.
 | UI-08 | Browse Area → Specific → optional Asset → Location and Softcopy nested Category. | Accurate document counts, no unauthorized ancestor or leaf names. |
 | UI-09 | From freshly updated search results click View on first, middle and last row. | Shared modal opens with correct row, no empty dialog, and stays read-only. |
 | UI-10 | Click record cells and use keyboard Enter/Space on the focusable cell. | Opens same View as the action button. |
-| UI-11 | Open request View, switch Overview/Approval Route/Decision History/Controlled File. | Tabs update immediately and content matches the selected request. |
+| UI-11 | Open request View, switch Overview/Approval Process Timeline/Workflow Activity Log/Document File. | Tabs update immediately and content matches the selected request. |
 | UI-12 | Close/reopen modal after selecting a different record, including after live update. | Cleared prior detail, correct heading/status and no duplicated overlay. |
 | UI-13 | Test with Bootstrap CDN blocked while local app remains reachable. | View modal, dialogs, close/cancel and dropdowns still work. |
 | UI-14 | Resize to 375px and 768px; zoom to 200%; use keyboard only. | No clipping of modal actions, tab controls or row buttons; scroll usable. |

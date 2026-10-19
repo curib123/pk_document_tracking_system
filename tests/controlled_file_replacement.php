@@ -78,7 +78,7 @@ function replacementReachFinal($service):void {
 }
 function replacementOriginalIntact($db):void {
     global $paths;
-    replacementCheck(is_file($paths[699]) && is_file($paths[700]),'Original controlled files must remain until successful final approval.');
+    replacementCheck(is_file($paths[699]) && is_file($paths[700]),'Original Document Files must remain until successful final approval.');
     replacementCheck($db->get_where('files',['id'=>700])->row_array()['status']==='approved' &&
         (int)$db->get_where('softcopy_documents',['id'=>9])->row_array()['current_revision_id']===601,
         'Unfinished or failed requests must retain the original active file and revision.');
@@ -155,14 +155,14 @@ replacementCheck(!is_file($paths[700]) && is_file($paths[720]),'Removed document
 // Only final approval retires/deletes old bytes. Pending and unrelated files survive.
 replacementFixture($connection);replacementReachFinal($service);replacementOriginalIntact($connection);
 $service->decide('softcopy',42,replacementActor(40),'approved','Final approved');
-replacementCheck(!is_file($paths[699]) && !is_file($paths[700]),'Final approval must remove the previous controlled files.');
+replacementCheck(!is_file($paths[699]) && !is_file($paths[700]),'Final approval must remove the previous Document Files.');
 replacementCheck(is_file($paths[710]) && is_file($paths[711]) && is_file($paths[720]),
     'Replacement, pending revisions and other documents must survive cleanup.');
 replacementCheck($connection->get_where('files',['id'=>700])->row_array()['status']==='superseded' &&
     $connection->count_all('softcopy_revisions')===3 && $connection->count_all('workflow_history')===3,
     'File/revision metadata and every approval must remain recorded after deleting old bytes.');
 replacementCheck($fileModel->approved_file(700)===NULL && $fileModel->approved_file(710)!==NULL,
-    'Old controlled file URLs must stop downloading while the current approved file stays available.');
+    'Old Document FileURLs must stop downloading while the current approved file stays available.');
 $history=$fileModel->histories_for_documents([9],replacementActor(20))[9];
 replacementCheck(count($history)===3 && count(array_filter($history,static function($file){return (bool)$file['is_current'];}))===1,
     'File history must preserve superseded records and identify only one current download.');

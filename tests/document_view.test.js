@@ -119,7 +119,7 @@ const data = {
     {key:'storage',title:'Storage & Custody',fields:{Area:'Plant',Location:'Rack 3'}},
     {key:'requests',title:'Related Requests',fields:{'REQ-1':'Returned for correction'}},
     {key:'approvals',title:'Approval History',fields:{'REQ-1':'Supervisor approved'}},
-    {key:'files',title:'Controlled Files',fields:{
+    {key:'files',title:'Document Files',fields:{
       '1. report.pdf':'Verified file',
       '2. private.pdf':'Unavailable'
     },links:[
@@ -161,7 +161,7 @@ test('document modal activates only on authorized document display shapes',() =>
   assert.equal(map.viewDocumentSummary.hidden,false);
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
   const tabLabels=details.querySelectorAll('[role="tab"]').map((t)=>t.children[1].textContent);
-  assert.deepEqual(tabLabels,['Related Requests','Approval History','Controlled Files']);
+  assert.deepEqual(tabLabels,['Related Requests','Approval History','Document Files']);
   assert.equal(details.querySelectorAll('[role="tab"]').length,3);
   assert.equal(details.querySelectorAll('[role="tabpanel"]').length,3);
   assert.equal(details.querySelectorAll('[role="tabpanel"]').filter(x=>!x.hidden).length,1);
@@ -193,7 +193,7 @@ test('softcopy revision and classification fields remain in the top overview',()
     sections:[
       {key:'overview',title:'Overview',fields:{'Title':'Release guide','Created By':'Records Officer','Record Version':3}},
       {key:'revision',title:'Revision & Classification',fields:{'Category / Folder':'Policies','Series':'2026','Revision Level':'C','Pages':6}},
-      {key:'files',title:'Controlled Files',fields:{}},
+      {key:'files',title:'Document Files',fields:{}},
       {key:'approvals',title:'Approval History',fields:{}}
     ]
   };
@@ -203,7 +203,7 @@ test('softcopy revision and classification fields remain in the top overview',()
   const labels=groups.flatMap((g)=>g.querySelector('.doc-overview-grid').children.map((n)=>n.children[0].textContent));
   assert.deepEqual(labels,['Created By','Record Version','Category / Folder','Series','Revision Level','Pages']);
   assert.equal(details.querySelectorAll('[role="tab"]').length,2);
-  assert.equal(details.querySelectorAll('[role="tab"]')[0].children[1].textContent,'Controlled Files');
+  assert.equal(details.querySelectorAll('[role="tab"]')[0].children[1].textContent,'Document Files');
   assert.equal(map.viewDocumentSummary.parentNode.children[0],map.viewDocumentSummary);
 });
 
@@ -243,17 +243,17 @@ test('download links only include same-origin file URLs',() => {
   assert.equal(all[0].href,'https://dts.test/files/download/12');
 });
 
-test('superseded controlled files retain their history without a Download action',() => {
+test('superseded Document Files retain their history without a Download action',() => {
   const {window,details}=setup();
   window.PKDocumentView.render(details,{
     kind:'document',domain:'softcopy',header:{title:'Revised policy'},
-    sections:[{key:'files',title:'Controlled Files',fields:{
+    sections:[{key:'files',title:'Document Files',fields:{
       '1. previous.txt':'Earlier revision · Superseded','2. revised.txt':'Approved revision · Current'
     },links:[{url:'',label:'Download previous.txt'},{url:'/files/download/710',label:'Download revised.txt'}]}]
   });
   assert.equal(details.querySelectorAll('.doc-modal-file-item').length,2,'Old metadata must remain visible.');
   const links=details.querySelectorAll('.doc-modal-download');
-  assert.equal(links.length,1,'Only the current controlled file should offer download.');
+  assert.equal(links.length,1,'Only the current Document Fileshould offer download.');
   assert.equal(links[0].href,'https://dts.test/files/download/710');
 });
 
@@ -313,16 +313,16 @@ test('request details use the exact same overview-plus-concerns view as system d
     sections:[
       {key:'overview',title:'Request & Ownership',fields:{'Request Reference':'REQ-15','Requested By':'Jane Smith'}},
       {key:'revision',title:'Proposed Classification & Revision',fields:{'Proposed Title':'Proposed SOP','Series':'PK'}},
-      {key:'files',title:'Controlled File',fields:{'Attachment':'Pending approval'}},
-      {key:'approvals',title:'Approval Route',fields:{'Step 1':'Supervisor'}},
-      {key:'audit',title:'Decision History',fields:{}}
+      {key:'files',title:'Document File',fields:{'Attachment':'Pending approval'}},
+      {key:'approvals',title:'Approval Process Timeline',fields:{'Step 1':'Supervisor'}},
+      {key:'audit',title:'Workflow Activity Log',fields:{}}
     ]
   });
   assert.equal(modal.classList.contains('is-document-view'),true);
   assert.equal(map.viewDocumentStatus.textContent,'Submitted');
   assert.equal(map.viewDocumentSummary.children.filter(c=>c.classList.contains('doc-overview-group')).length,2);
   const labels=details.querySelectorAll('[role="tab"]').map(x=>x.children[1].textContent);
-  assert.deepEqual(labels,['Controlled File','Approval Route','Decision History']);
+  assert.deepEqual(labels,['Document File','Approval Process Timeline','Workflow Activity Log']);
 });
 
 test('nested generic sections retain metadata and put related concerns in tabs',() => {
@@ -344,7 +344,7 @@ test('each approval step renders separately with its ordered label, approver and
   const {window,details}=setup();
   window.PKDocumentView.render(details,{
     kind:'record',domain:'record',header:{title:'Approval request',status:'submitted'},
-    sections:[{key:'approvals',title:'Approval Route',fields:{
+    sections:[{key:'approvals',title:'Approval Process Timeline',fields:{
       'Workflow Version':'Assigned at submission','Steps':'Legacy combined text'
     },steps:[
       {label:'Noted By',approver_label:'Staff1 Staff1',status:'active'},
@@ -369,7 +369,7 @@ test('workflow step names remain text and unknown statuses use a neutral color',
   const {window,details}=setup();
   window.PKDocumentView.render(details,{
     kind:'record',domain:'record',header:{title:'Approval request'},
-    sections:[{key:'approvals',title:'Approval Route',fields:{},steps:[
+    sections:[{key:'approvals',title:'Approval Process Timeline',fields:{},steps:[
       {label:'<script>alert(1)</script>',approver_label:'<img src=x onerror=alert(1)>',status:'unexpected" onclick="bad'},
       {label:'Earlier review',approver_label:'Officer',status:'approved'},
       {label:'Returned review',approver_label:'Manager',status:'returned'},
@@ -395,7 +395,7 @@ test('approval tiles retain every repeated decision, actor, timestamp and commen
   ];
   window.PKDocumentView.render(details,{
     kind:'record',domain:'record',header:{title:'Approval request'},
-    sections:[{key:'approvals',title:'Approval Route',fields:{},steps:[
+    sections:[{key:'approvals',title:'Approval Process Timeline',fields:{},steps:[
       {label:'Plant Manager Approval',approver_label:'Plant Manager',status:'active',history},
       {label:'Final Approval',approver_label:'Document Officer',status:'returned',history:[
         {action:'returned',user_name:'Officer',created_at:'2026-10-13 09:00:00',comments:'Final approver returned'}
@@ -423,7 +423,7 @@ test('approval tiles retain every repeated decision, actor, timestamp and commen
   assert.equal(tiles[0].getAttribute('data-step-status'),'active','Current task status stays separate from saved decisions.');
 });
 
-test('decision history uses dated vertical steps and sorts repeated reviews by timestamp',()=>{
+test('Workflow Activity Log uses dated vertical steps and sorts repeated reviews by timestamp',()=>{
   const {window,details}=setup();
   const events=[
     {step_label:'Noted By',action:'approved',user_name:'Staff2 Staff2',position_title:'Staff2',created_at:'2026-10-15 14:17:12'},
@@ -433,10 +433,10 @@ test('decision history uses dated vertical steps and sorts repeated reviews by t
   ];
   const original=JSON.stringify(events);
   window.PKDocumentView.render(details,{kind:'record',header:{title:'Request'},sections:[
-    {key:'audit',title:'Decision History',fields:{},events}
+    {key:'audit',title:'Workflow Activity Log',fields:{},events}
   ]});
   const select=details.querySelector('.doc-workflow-sort');
-  assert.ok(select,'Decision history needs a timestamp sort control.');
+  assert.ok(select,'Workflow Activity Log needs a timestamp sort control.');
   assert.deepEqual(select.children.map(option=>option.textContent),['Oldest first','Newest first']);
   assert.equal(details.querySelector('.doc-workflow-date').textContent,'Oct 15, 2026');
   assert.deepEqual(details.querySelectorAll('.doc-workflow-decision-time').map(item=>item.textContent),
@@ -454,7 +454,7 @@ test('decision history uses dated vertical steps and sorts repeated reviews by t
 test('approval sorting reorders decisions within each step and preserves the assigned route',()=>{
   const {window,details}=setup();
   window.PKDocumentView.render(details,{kind:'record',header:{title:'Request'},sections:[
-    {key:'approvals',title:'Approval Route',fields:{},steps:[
+    {key:'approvals',title:'Approval Process Timeline',fields:{},steps:[
       {label:'First review',approver_label:'Staff',status:'approved',history:[
         {action:'approved',user_name:'Staff',created_at:'2026-10-14 10:00:00'},
         {action:'approved',user_name:'Staff',created_at:'2026-10-15 11:00:00'}
@@ -605,8 +605,8 @@ test('newly drafted requests render safely without approval steps or history',()
       kind:domain==='record'?'record':'document',domain,header:{title:'New request',status:'draft'},
       sections:[
         {key:'overview',fields:{'Request Reference':'REQ-NEW','Request Action':'Create'}},
-        {key:'approvals',title:'Approval Route',fields:{Steps:'No steps assigned yet'},steps:[]},
-        {key:'audit',title:'Decision History',fields:{History:'No approval decisions yet'},events:[]}
+        {key:'approvals',title:'Approval Process Timeline',fields:{Steps:'No steps assigned yet'},steps:[]},
+        {key:'audit',title:'Workflow Activity Log',fields:{History:'No approval decisions yet'},events:[]}
       ]
     };
     window.PKDocumentView.render(details,request);

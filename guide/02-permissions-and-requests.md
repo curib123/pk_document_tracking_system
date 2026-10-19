@@ -17,7 +17,7 @@ Use an additional approver assigned to exactly one pending step.
 | ACL-09 | Upload a revised document, then open old revision history and current file. | Previous version remains historical metadata only; current approved file is downloadable if authorized. |
 | ACL-10 | Test filenames with quotes, newline, Unicode, Windows separators in QA. | Download response has a safe filename; no extra header, path disclosure or server error. |
 | ACL-11 | Attempt `admin/backups/download/{archive}` as viewer without backup edit. | HTTP 403; only authorized backup editors receive the archive. |
-| REQ-01 | Create draft softcopy and hardcopy requests as allowed user; open Request View. | Correct document metadata, status, workflow route and decision history in read-only modal. |
+| REQ-01 | Create draft softcopy and hardcopy requests as allowed user; open Request View. | Correct document metadata, status, workflow route and Workflow Activity Log in read-only modal. |
 | REQ-02 | Submit each request to approver; approve, reject and return from My Tasks. | Only active assignee can decide; after return, requester can edit and resubmit. |
 | REQ-03 | Attempt to approve same request twice in separate tabs or after reassignment. | Second stale decision rejected; no repeated workflow history or duplicate transition. |
 | REQ-04 | Test disposal and physical hardcopy transfer (dispatch, receipt, custody update). | Required decisions and holder validations enforced server-side; history accurate. |

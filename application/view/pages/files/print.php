@@ -13,7 +13,7 @@ $printable = in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'tex
 
 <body data-print-kind="<?= $mime === 'application/pdf' ? 'pdf' : ($printable ? 'page' : 'office') ?>">
     <header class="print-toolbar">
-        <div><small>CONTROLLED FILE</small>
+        <div><small>Document File</small>
             <h1><?= html_escape($file['original_name']) ?></h1>
         </div>
         <div class="print-actions">

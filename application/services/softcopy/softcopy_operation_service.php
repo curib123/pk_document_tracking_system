@@ -82,7 +82,7 @@ class Softcopy_operation_service
                 'status' => 'pending'
             ])->row_array();
             if (!$file)
-                throw new DomainException('A pending controlled file is required to create a softcopy.');
+                throw new DomainException('A pending Document Fileis required to create a softcopy.');
             $today = date('Y-m-d');
             $revisionLevel = trim((string) ($payload['new_revision_level'] ?? '')) ?: '00';
             $effective = (string) ($payload['effective_date'] ?? '');

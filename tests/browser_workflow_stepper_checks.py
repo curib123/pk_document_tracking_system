@@ -47,7 +47,7 @@ def run_checks(page, base, sql, manifest):
         modal = page.locator('#viewModal')
         expect(modal).to_be_visible()
         expect(modal.locator('.doc-overview-group-title')).to_have_count(0)
-        modal.get_by_role('tab', name='Decision History', exact=True).click()
+        modal.get_by_role('tab', name='Workflow Activity Log', exact=True).click()
         panel = modal.locator('[role="tabpanel"]:visible')
         verify_animations(panel)
         expect(panel.locator('.doc-workflow-decision')).to_have_count(4)
@@ -64,7 +64,7 @@ def run_checks(page, base, sql, manifest):
             if route.startswith('my-tasks') and width in [1440, 390]:
                 panel.locator('.doc-workflow-toolbar').evaluate('(e) => e.scrollIntoView({block: "start"})')
                 page.screenshot(path=str(Path(__file__).parent / ('workflow-stepper-' + str(width) + '.png')))
-        modal.get_by_role('tab', name='Approval Route', exact=True).click()
+        modal.get_by_role('tab', name='Approval Process Timeline', exact=True).click()
         panel = modal.locator('[role="tabpanel"]:visible')
         expect(panel.locator('.doc-workflow-step-name')).to_have_text(['Noted By', 'Plant Manager Approval', 'Document Officer Approval'])
         panel.locator('.doc-workflow-sort').select_option('newest')
