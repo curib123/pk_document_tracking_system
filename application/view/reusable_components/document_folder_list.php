@@ -182,10 +182,7 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
         </div>
     </div>
     <div class="doc-tree-filter-line">
-        <a href="<?= html_escape($folderUrl('all')) ?>"
-            class="doc-tree-all-link <?= $currentFolder === 'all' ? 'is-active' : '' ?>" <?= $currentFolder === 'all' ? 'aria-current="page"' : '' ?>>
-            <i class="fa-solid fa-layer-group" aria-hidden="true"></i> All documents
-        </a>
+       
         <span>Open each folder to follow the hierarchy to its documents.</span>
         <div class="doc-folder-sort" aria-label="Document ordering">
             <a class="<?= $sortRecent ? 'is-active' : '' ?>"

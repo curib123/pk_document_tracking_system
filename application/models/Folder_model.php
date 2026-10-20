@@ -96,7 +96,6 @@ class Folder_model extends CI_Model
             return [
                 'folder' => 'all',
                 'level' => 'all',
-                'label' => 'All Documents',
                 'breadcrumbs' => [
                     ['name' => 'Folders', 'folder' => ''],
                     ['name' => 'All Documents', 'folder' => 'all']
@@ -113,7 +112,6 @@ class Folder_model extends CI_Model
         $result = [
             'folder' => $folder,
             'level' => 'root',
-            'label' => 'All Documents',
             'breadcrumbs' => [['name' => 'All Documents', 'folder' => '']],
             'children' => [],
             'filter' => NULL,
