@@ -1,6 +1,6 @@
 
 /*
- * CENTRAL COLOR PALETTE — ROYAL OXBLOOD
+ * CENTRAL COLOR PALETTE — RUBY LUXE
  *
  * The sole source of brand/status/CSS colors.
  * All existing variable names are preserved.
@@ -8,41 +8,41 @@
  */
 
 :root {
-  --ui-white: #ffffff;
+  --ui-white: #FFFFFF;
 
-  /* Premium ruby and oxblood brand scale */
-  --ui-brand-950: #350914;
-  --ui-brand-900: #4A0E1C;
-  --ui-brand-800: #74172B;
-  --ui-brand-700: #922239;
-  --ui-brand-600: #A62940;
-  --ui-brand-500: #B7354C;
-  --ui-brand-400: #C94B5E;
-  --ui-brand-300: #DE8793;
-  --ui-brand-200: #EAB6BE;
-  --ui-brand-150: #F0CDD2;
-  --ui-brand-100: #F7E8EA;
-  --ui-brand-50: #FCF5F6;
+  /* Ruby Luxe brand scale */
+  --ui-brand-950: #400014;
+  --ui-brand-900: #590018;
+  --ui-brand-800: #850025;
+  --ui-brand-700: #99062F;
+  --ui-brand-600: #B20D3A;
+  --ui-brand-500: #C9224D;
+  --ui-brand-400: #DC3E62;
+  --ui-brand-300: #E96F88;
+  --ui-brand-200: #F1A6B6;
+  --ui-brand-150: #F7C6D0;
+  --ui-brand-100: #FCE2E8;
+  --ui-brand-50: #FFF0F3;
 
-  /* Core text colors */
-  --ui-navy: #19171D;
-  --ui-ink-950: #201B22;
-  --ui-ink-900: #302831;
-  --ui-ink-800: #483D47;
-  --ui-ink-700: #625661;
-  --ui-ink-600: #796E79;
-  --ui-ink-500: #918793;
-  --ui-ink-400: #AAA2AD;
-  --ui-ink-300: #C6BFC9;
-  --ui-ink-200: #DED9E1;
+  /* Core text colors — warm charcoal */
+  --ui-navy: #1D1820;
+  --ui-ink-950: #241B22;
+  --ui-ink-900: #332831;
+  --ui-ink-800: #4B3D48;
+  --ui-ink-700: #635361;
+  --ui-ink-600: #7B6B79;
+  --ui-ink-500: #938494;
+  --ui-ink-400: #ADA0AE;
+  --ui-ink-300: #C9BEC9;
+  --ui-ink-200: #E0D7E0;
 
-  /* Borders and surfaces */
-  --ui-line-strong: #DED5D9;
-  --ui-line: #EAE2E5;
-  --ui-line-soft: #F3ECEF;
-  --ui-surface-muted: #F5F0F2;
+  /* Borders and surfaces — subtle rose undertones */
+  --ui-line-strong: #E0D3D9;
+  --ui-line: #EAE0E5;
+  --ui-line-soft: #F3EBEF;
+  --ui-surface-muted: #F5EFF2;
   --ui-surface-soft: #FDFBFC;
-  --ui-canvas: #F8F5F6;
+  --ui-canvas: #F8F4F6;
 
   /* Shared background for greeting header and animated sidebar */
   --ui-welcome-gradient:
@@ -57,38 +57,38 @@
       var(--ui-brand-800)
     );
 
-  /* Blue semantic scale */
+  /* Blue semantic scale — muted steel blue */
   --ui-blue-900: #294665;
   --ui-blue-700: #426B96;
   --ui-blue-500: #7195B8;
   --ui-blue-300: #B8CDDF;
   --ui-blue-100: #EDF3F8;
 
-  /* Green semantic scale */
+  /* Green semantic scale — elegant sage green */
   --ui-green-900: #185641;
   --ui-green-700: #277858;
   --ui-green-500: #559A79;
   --ui-green-300: #BBDCCB;
   --ui-green-100: #EAF5EE;
 
-  /* Amber semantic scale */
+  /* Amber semantic scale — warm champagne */
   --ui-amber-900: #79501D;
   --ui-amber-700: #A4732C;
   --ui-amber-500: #C79B51;
   --ui-amber-300: #E6D2A5;
   --ui-amber-100: #FBF3E3;
 
-  /* Purple semantic scale */
+  /* Purple semantic scale — muted complementary violet */
   --ui-purple-700: #785A91;
   --ui-purple-100: #F1EBF5;
 
-  /* Slate semantic scale */
-  --ui-slate-950: #302831;
-  --ui-slate-800: #514752;
-  --ui-slate-600: #7B7180;
-  --ui-slate-400: #A8A0AD;
-  --ui-slate-200: #DDD7E0;
-  --ui-slate-100: #F3F0F4;
+  /* Slate semantic scale — warm charcoal and rose-gray */
+  --ui-slate-950: #332831;
+  --ui-slate-800: #4F4350;
+  --ui-slate-600: #7D7181;
+  --ui-slate-400: #AAA0AE;
+  --ui-slate-200: #DDD6E0;
+  --ui-slate-100: #F3EFF4;
 
   --ui-black: #000000;
 
@@ -107,15 +107,16 @@
 
   /* Bootstrap semantic controls */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 183, 53, 76;
+  --bs-primary-rgb: 201, 34, 77;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 146, 34, 57;
+  --bs-danger-rgb: 153, 6, 47;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
 
 /* Shared action colors */
 .btn-primary {
+  --bs-btn-color: #FFFFFF;
   --bs-btn-bg: var(--ui-brand-500);
   --bs-btn-border-color: var(--ui-brand-500);
   --bs-btn-hover-bg: var(--ui-brand-800);
@@ -129,11 +130,13 @@
 .btn-outline-primary {
   --bs-btn-color: var(--ui-brand-700);
   --bs-btn-border-color: var(--ui-brand-300);
+  --bs-btn-hover-color: #FFFFFF;
   --bs-btn-hover-bg: var(--ui-brand-700);
   --bs-btn-hover-border-color: var(--ui-brand-700);
 }
 
 .btn-danger {
+  --bs-btn-color: #FFFFFF;
   --bs-btn-bg: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-800);
   --bs-btn-hover-bg: var(--ui-brand-900);
@@ -143,6 +146,7 @@
 .btn-outline-danger {
   --bs-btn-color: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-300);
+  --bs-btn-hover-color: #FFFFFF;
   --bs-btn-hover-bg: var(--ui-brand-800);
   --bs-btn-hover-border-color: var(--ui-brand-800);
 }
