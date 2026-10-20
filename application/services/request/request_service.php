@@ -18,27 +18,37 @@ class Request_service
     private function authorize($type, $softcopyId, $hardcopyId, array $payload, array $user): void
     {
         if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), 'request'))
-            throw new DomainException('Your role cannot request this document action.');
+            throw new DomainException(
+                'You don’t have permission to perform this action on the selected document.'
+            );
         if (in_array($type, ['softcopy_create', 'hardcopy_create'], TRUE))
             return;
         $catalog = in_array($type, ['access', 'assignment'], TRUE);
         $domain = $catalog ? ($payload['document_domain'] ?? 'softcopy') :
             (str_starts_with($type, 'softcopy_') ? 'softcopy' : 'hardcopy');
         if (!in_array($domain, ['softcopy', 'hardcopy'], TRUE))
-            throw new DomainException('Choose a document domain.');
+            throw new DomainException(
+                'Please select whether this request applies to a softcopy or hardcopy document.'
+            );
         $document = $this->ci->Document_model->visible($domain, $domain === 'softcopy' ? $softcopyId : $hardcopyId, $user, $catalog);
         if (!$document || $document['status'] !== 'active')
-            throw new DomainException('Selected document is unavailable in your authorized scope.');
+            throw new DomainException(
+                'The selected document is unavailable or you don’t have permission to access it.'
+            );
     }
 
     public function save($tab, $post, $user, $attachment = NULL)
     {
         $type = (string) ($post['type'] ?? '');
         if (!in_array($type, $this->ci->Request_model->types($tab), TRUE))
-            throw new DomainException('Request type does not match this tab.');
+            throw new DomainException(
+                'This request type is not valid for the selected tab. Please select the correct tab and try again.'
+            );
         $id = (int) ($post['id'] ?? 0);
         if (!$this->ci->Permission_model->allowed($user, 'requests', $id ? 'edit' : 'add'))
-            throw new DomainException('Request editing permission is required.');
+            throw new DomainException(
+                'You don’t have permission to create or edit this request.'
+            );
         $this->stagedPaths = [];
         $this->ci->db->trans_begin();
         try {
@@ -50,7 +60,9 @@ class Request_service
             $this->authorize($type, (int) ($post['softcopy_id'] ?? 0), (int) ($post['hardcopy_id'] ?? 0), $post, $user);
             $result = $this->save_draft($tab, $post, $user, $attachment);
             if ($this->ci->db->trans_status() === FALSE)
-                throw new DomainException('Draft could not be saved.');
+                throw new DomainException(
+                    'We couldn’t save your request. Please try again.'
+                );
             $this->ci->db->trans_commit();
             $this->stagedPaths = [];
             return $result;
@@ -72,11 +84,15 @@ class Request_service
         $allowed = $this->ci->Request_model->types($tab);
         $type = trim((string) ($post['type'] ?? $allowed[0]));
         if (!in_array($type, $allowed, TRUE))
-            throw new DomainException('Request type does not match this tab.');
+            throw new DomainException(
+                'This request type is not valid for the selected tab. Please select the correct tab and try again.'
+            );
         $id = (int) ($post['id'] ?? 0);
         $subject = trim((string) ($post['subject'] ?? ''));
         if ($subject === '' || mb_strlen($subject) > 255)
-            throw new DomainException('Subject is required.');
+            throw new DomainException(
+                'The subject field is required and must be no longer than 255 characters.'
+            );
         $payload = [
             'subject' => $subject,
             'remarks' => trim((string) ($post['remarks'] ?? '')),
@@ -130,16 +146,16 @@ class Request_service
             // Ignore forged, stale or manually edited recipient_id values.
             $payload['recipient_id'] = (int) $user['id'];
             if (!in_array($domain, ['softcopy', 'hardcopy'], TRUE))
-                throw new DomainException('Choose Softcopy or Hardcopy.');
+                throw new DomainException('Please select whether this request applies to a softcopy or hardcopy document.');
             if (
                 ($domain === 'softcopy' && !$softcopyId) ||
                 ($domain === 'hardcopy' && !$hardcopyId)
             )
-                throw new DomainException('Select a document in the chosen domain.');
+                throw new DomainException('Please select a document in the chosen domain.');
             $table = $domain === 'softcopy' ? 'softcopy_documents' : 'hardcopy_documents';
             $docId = $domain === 'softcopy' ? $softcopyId : $hardcopyId;
             if (!$this->ci->db->get_where($table, ['id' => $docId, 'status' => 'active'])->row_array())
-                throw new DomainException('Selected document is inactive or missing.');
+                throw new DomainException('The selected document is unavailable or you don’t have permission to access it.');
         }
         if (
             in_array($type, ['softcopy_revise', 'softcopy_cancel'], TRUE) &&
@@ -580,7 +596,9 @@ class Request_service
             ])->row_array();
             $this->validate_transfer_destination($hard, $payload);
             if (!$doc || !$loc || !$recipient)
-                throw new DomainException('Hardcopy, recipient and destination must be active.');
+                throw new DomainException(
+                    'Unable to proceed. Please ensure the hardcopy, recipient, and destination are all active and available.'
+                );
             $destination = [
                 'area_id' => $loc['area_id'],
                 'specific_id' => $loc['specific_id'],
@@ -605,7 +623,9 @@ class Request_service
         if ($type === 'disposal') {
             $doc = $this->ci->db->query('SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE', [$hard])->row_array();
             if (!$doc || $doc['status'] !== 'active')
-                throw new DomainException('Active hardcopy is no longer available for disposal.');
+                throw new DomainException(
+                    'This hardcopy is no longer available for disposal. It may have already been disposed of or deactivated.'
+                );
             require_once APPPATH . 'services/documents/disposal_service.php';
             $description = (new Disposal_service())->reason($payload);
             $this->ci->db->insert('disposals', [

@@ -217,6 +217,30 @@ class Request_model extends CI_Model
             ->where('v.is_default', 1)->where('v.status', 'published')
             ->order_by('v.version_number', 'DESC')->limit(1)->get()->row_array();
     }
+
+    public function has_active_request($type, $softcopyId = NULL, $hardcopyId = NULL, $excludeId = NULL)
+    {
+        $documentId = !empty($softcopyId)
+            ? (int) $softcopyId
+            : (int) ($hardcopyId ?? 0);
+
+        if (!$documentId)
+            return FALSE;
+
+        $this->db->from('requests')
+            ->where('type', $type)
+            ->where_in('status', ['draft', 'submitted', 'returned'])
+            ->group_start()
+            ->where('softcopy_id', $documentId)
+            ->or_where('hardcopy_id', $documentId)
+            ->group_end();
+
+        if ($excludeId)
+            $this->db->where('id !=', (int) $excludeId);
+
+        return (bool) $this->db->count_all_results();
+    }
+
     public function request($id)
     {
         return $this->db->get_where('requests', ['id' => (int) $id])->row_array();
