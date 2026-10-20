@@ -218,6 +218,31 @@ class Request_model extends CI_Model
             ->order_by('v.version_number', 'DESC')->limit(1)->get()->row_array();
     }
 
+    /**
+     * Block cross-type submitted access/assignment/transfer requests for one
+     * requester and one document. Call while holding a document row lock.
+     */
+    public function has_submitted_related_request($type, $softcopyId, $hardcopyId, $requesterId, $excludeId = NULL)
+    {
+        if (!in_array($type, ['access', 'assignment', 'transfer'], TRUE))
+            return FALSE;
+        $hardcopyId = (int) $hardcopyId;
+        $softcopyId = (int) $softcopyId;
+        if (!$hardcopyId && !$softcopyId)
+            return FALSE;
+        // Polymorphic document IDs are never compared across domains.
+        $field = $hardcopyId ? 'r.hardcopy_id' : 'r.softcopy_id';
+        $id = $hardcopyId ?: $softcopyId;
+        $this->db->from('requests r')
+            ->where('r.requested_by', (int) $requesterId)
+            ->where('r.status', 'submitted')
+            ->where_in('r.type', ['access', 'assignment', 'transfer'])
+            ->where($field, $id);
+        if ($excludeId)
+            $this->db->where('r.id !=', (int) $excludeId);
+        return (bool) $this->db->count_all_results();
+    }
+
     public function has_active_request($type, $softcopyId = NULL, $hardcopyId = NULL, $excludeId = NULL)
     {
         $documentId = !empty($softcopyId)

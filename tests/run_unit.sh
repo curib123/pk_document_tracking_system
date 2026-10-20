@@ -28,6 +28,7 @@ php tests/plan_contract.php
 php tests/login_transition_handoff.php
 php tests/logout_handoff.php
 php tests/request_disposal.php
+php tests/plan_20261020_regressions.php
 php tests/disposal_view_details.php
 php tests/role_lifecycle.php
 php tests/audit_listing.php

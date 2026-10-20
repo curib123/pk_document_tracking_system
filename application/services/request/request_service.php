@@ -79,6 +79,35 @@ class Request_service
         }
     }
 
+    /**
+     * Serialize checks for different request rows targeting the same document.
+     * The caller has already opened a database transaction.
+     */
+    private function assert_no_submitted_related_request($type, $softcopyId, $hardcopyId, $requesterId, $excludeId = NULL)
+    {
+        if (!in_array($type, ['access', 'assignment', 'transfer'], TRUE))
+            return;
+        $hardcopyId = (int) $hardcopyId;
+        $softcopyId = (int) $softcopyId;
+        $table = $hardcopyId ? 'hardcopy_documents' : 'softcopy_documents';
+        $documentId = $hardcopyId ?: $softcopyId;
+        if (!$documentId)
+            throw new DomainException('Select the document for this request.');
+        $document = $this->ci->db->query(
+            'SELECT id FROM ' . $table . ' WHERE id=? FOR UPDATE',
+            [$documentId]
+        )->row_array();
+        if (!$document)
+            throw new DomainException('The selected document is no longer available.');
+        if ($this->ci->Request_model->has_submitted_related_request(
+            $type, $softcopyId, $hardcopyId, $requesterId, $excludeId
+        ))
+            throw new DomainException(
+                'You already have a submitted access, assignment or transfer request for this document. ' .
+                'Finish that request before starting another for the same document.'
+            );
+    }
+
     private function save_draft($tab, $post, $user, $attachment = NULL)
     {
         $allowed = $this->ci->Request_model->types($tab);
@@ -189,6 +218,9 @@ class Request_service
         }
         if ($type === 'transfer')
             $this->validate_transfer_destination($hardcopyId, $payload);
+        $this->assert_no_submitted_related_request(
+            $type, $softcopyId, $hardcopyId, (int) $user['id'], $id ?: NULL
+        );
         $fileId = NULL;
         $fileField = $type === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id';
         if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
@@ -380,6 +412,10 @@ class Request_service
             $this->authorize($r['type'], (int) $r['softcopy_id'], (int) $r['hardcopy_id'], $currentPayload, $user);
             if ($r['type'] === 'transfer')
                 $this->validate_transfer_destination((int) $r['hardcopy_id'], $currentPayload);
+            $this->assert_no_submitted_related_request(
+                $r['type'], (int) $r['softcopy_id'], (int) $r['hardcopy_id'],
+                (int) $r['requested_by'], (int) $r['id']
+            );
             if (
                 in_array($r['type'], ['assignment', 'access', 'transfer'], TRUE) &&
                 !$this->ci->Identity_model->active_user((int) ($currentPayload['recipient_id'] ?? 0))

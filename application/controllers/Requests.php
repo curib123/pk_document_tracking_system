@@ -56,7 +56,7 @@ class Requests extends MY_Controller
         $handoffs = [];
         $handoffPage = 1;
         $handoffTotal = 0;
-        if ($task && $tab === 'hardcopy-transfer' && $this->can('transfer', 'view')) {
+        if ($task && $tab === 'hardcopy-transfer') {
             list($handoffs, $handoffTotal, $handoffPage) = $this->Transfer_model->pending(
                 $this->user,
                 max(1, (int) $this->input->get('handoff_page')),
@@ -165,7 +165,8 @@ class Requests extends MY_Controller
     }
     public function dispatch_transfer()
     {
-        $this->require_permission('transfer', 'view');
+        // The transfer service enforces exact requester ownership.
+        $this->authenticate();
         $this->confirmed();
         try {
             (new Transfer_service())->dispatch((int) $this->input->post('id'), $this->user);
@@ -178,7 +179,8 @@ class Requests extends MY_Controller
 
     public function accept_transfer()
     {
-        $this->require_permission('transfer', 'view');
+        // The transfer service enforces exact recipient ownership.
+        $this->authenticate();
         $this->confirmed();
         try {
             (new Transfer_service())->accept((int) $this->input->post('id'), $this->user);

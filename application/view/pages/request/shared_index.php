@@ -1,4 +1,5 @@
 <?php
+require_once APPPATH . 'services/presentation/request_title.php';
 $tabs = [
   'softcopy' => 'Softcopy Requests',
   'hardcopy' => 'Hardcopy Requests',
@@ -80,13 +81,10 @@ foreach ($rows as $row) {
   $isDocumentRequest = in_array($tab, ['softcopy', 'hardcopy', 'hardcopy-disposal'], TRUE);
   $documentDomain = $tab === 'softcopy' ? 'softcopy' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record');
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
-  $headerTitle = (string) ($payload['title'] ?? '');
-  if ($headerTitle === '')
-    $headerTitle = (string) ($row['source_title'] ?? '');
-  if ($headerTitle === '')
-    $headerTitle = (string) ($payload['subject'] ?? '');
-  if ($headerTitle === '')
-    $headerTitle = 'Request #' . $row['id'];
+  $headerTitle = Request_title::resolve(
+    (string) $row['type'], $payload, (string) ($row['source_title'] ?? ''),
+    (int) $row['id']
+  );
   $requestOverview = [
     'Request Reference' => $row['reference'],
     'Request Action' => ucwords(str_replace('_', ' ', $row['type'])),
@@ -245,7 +243,7 @@ foreach ($rows as $row) {
     'id' => $row['id'],
     'cells' => [
       'reference' => $row['reference'],
-      'title'=> $record['title'] ?? 'Not Found',
+      'title' => $headerTitle,
       'type' => ucwords(str_replace('_', ' ', $row['type'])),
       'subject' => $payload['subject'] ?? '',
       'requester' => $row['requester_name'],
@@ -504,14 +502,11 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
   </div>
 <?php endif; ?>
 
-<?php if (
-  $task && $tab === 'hardcopy-transfer'
-  && (isset($permissions['*']) || !empty($permissions['transfer']['view']))
-): ?>
+<?php if ($task && $tab === 'hardcopy-transfer'): ?>
   <section class="workspace-card mt-4">
     <div class="workspace-card-header">
       <strong>Physical Transfer Handoffs</strong>
-      <p class="small text-secondary mb-0">Only the current holder can dispatch; only the assigned recipient can accept.
+      <p class="small text-secondary mb-0">Only the transfer requester can dispatch; only the destination recipient can accept.
       </p>
     </div>
     <div class="table-responsive">
@@ -519,6 +514,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
         <thead>
           <tr>
             <th scope="col">Hardcopy</th>
+            <th scope="col">Requester / Dispatcher</th>
             <th scope="col">Current Holder</th>
             <th scope="col">Recipient</th>
             <th scope="col">Stage</th>
@@ -528,20 +524,21 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
         <tbody>
           <?php if (!$handoffs): ?>
             <tr>
-              <td colspan="5" class="empty-state">No physical handoffs assigned to you.</td>
+              <td colspan="6" class="empty-state">No physical handoffs assigned to you.</td>
             </tr><?php endif; ?>
           <?php foreach ($handoffs as $handoff): ?>
             <tr>
               <td><?= html_escape($handoff['document_title']) ?></td>
+              <td><?= html_escape($handoff['requester_name']) ?></td>
               <td><?= html_escape($handoff['holder_name']) ?></td>
               <td><?= html_escape($handoff['recipient_name']) ?></td>
               <td><span
                   class="badge-status status-pending"><?= html_escape(ucwords(str_replace('_', ' ', $handoff['status']))) ?></span>
               </td>
               <td class="text-end">
-                <?php $isHolder = (int) $handoff['current_holder_id'] === (int) $user['id'];
+                <?php $isRequester = (int) $handoff['requester_id'] === (int) $user['id'];
                 $isRecipient = (int) $handoff['recipient_id'] === (int) $user['id']; ?>
-                <?php if ($isHolder && $handoff['status'] === 'for_transfer'): ?>
+                <?php if ($isRequester && $handoff['status'] === 'for_transfer'): ?>
                   <button class="btn btn-outline-primary btn-sm js-action" type="button"
                     data-url="<?= site_url('my-tasks/hardcopy-transfer/dispatch') ?>" data-id="<?= (int) $handoff['id'] ?>"
                     data-title="Dispatch Hardcopy"

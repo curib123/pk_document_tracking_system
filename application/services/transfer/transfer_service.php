@@ -16,11 +16,16 @@ class Transfer_service
         try {
             $rows = $this->ci->db->query('SELECT * FROM transfers WHERE id=? FOR UPDATE', [(int) $id])->result_array();
             $transfer = $rows[0] ?? NULL;
+            // The transfer requester is the dispatcher, not necessarily the holder.
+            $request = $transfer && !empty($transfer['request_id'])
+                ? $this->ci->db->get_where('requests', [
+                    'id' => (int) $transfer['request_id'], 'type' => 'transfer'
+                ])->row_array() : NULL;
             if (
                 !$transfer || $transfer['status'] !== 'for_transfer' ||
-                (int) $transfer['current_holder_id'] !== (int) $actor['id']
+                !$request || (int) $request['requested_by'] !== (int) $actor['id']
             ) {
-                throw new DomainException('Only the current holder can dispatch an approved transfer.');
+                throw new DomainException('Only the transfer requester can dispatch an approved transfer.');
             }
             $this->ci->db->where('id', $id)->update('transfers', [
                 'status' => 'in_transit',
