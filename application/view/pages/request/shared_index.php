@@ -17,6 +17,7 @@ $typeMap = [
 ];
 $dt_columns = [
   'reference' => 'Request Reference',
+  'title'=> 'Document Title',
   'type' => 'Action',
   'subject' => 'Subject',
   'requester' => 'Requester',
@@ -239,10 +240,12 @@ foreach ($rows as $row) {
       ];
     }
 
+    
   $dt_rows[] = [
     'id' => $row['id'],
     'cells' => [
       'reference' => $row['reference'],
+      'title'=> $record['title'] ?? 'Not Found',
       'type' => ucwords(str_replace('_', ' ', $row['type'])),
       'subject' => $payload['subject'] ?? '',
       'requester' => $row['requester_name'],
