@@ -1,6 +1,6 @@
 
 /*
- * CENTRAL COLOR PALETTE — MOTHER RED THEME
+ * CENTRAL COLOR PALETTE — ROYAL OXBLOOD
  *
  * The sole source of brand/status/CSS colors.
  * All existing variable names are preserved.
@@ -10,85 +10,85 @@
 :root {
   --ui-white: #ffffff;
 
-  /* Mother Red and burgundy brand scale */
-  --ui-brand-950: #650018;
-  --ui-brand-900: #800020;
-  --ui-brand-800: #a0002a;
-  --ui-brand-700: #bd1238;
-  --ui-brand-600: #d51f45;
-  --ui-brand-500: #e52b50;
-  --ui-brand-400: #ed526d;
-  --ui-brand-300: #f28a9b;
-  --ui-brand-200: #f6b6c0;
-  --ui-brand-150: #f9cfd6;
-  --ui-brand-100: #fce3e8;
-  --ui-brand-50: #fff2f5;
+  /* Premium ruby and oxblood brand scale */
+  --ui-brand-950: #350914;
+  --ui-brand-900: #4A0E1C;
+  --ui-brand-800: #74172B;
+  --ui-brand-700: #922239;
+  --ui-brand-600: #A62940;
+  --ui-brand-500: #B7354C;
+  --ui-brand-400: #C94B5E;
+  --ui-brand-300: #DE8793;
+  --ui-brand-200: #EAB6BE;
+  --ui-brand-150: #F0CDD2;
+  --ui-brand-100: #F7E8EA;
+  --ui-brand-50: #FCF5F6;
 
   /* Core text colors */
-  --ui-navy: #131a27;
-  --ui-ink-950: #182130;
-  --ui-ink-900: #293447;
-  --ui-ink-800: #3d485b;
-  --ui-ink-700: #526074;
-  --ui-ink-600: #66758a;
-  --ui-ink-500: #7b899d;
-  --ui-ink-400: #94a0b1;
-  --ui-ink-300: #b2bccb;
-  --ui-ink-200: #d5dce6;
+  --ui-navy: #19171D;
+  --ui-ink-950: #201B22;
+  --ui-ink-900: #302831;
+  --ui-ink-800: #483D47;
+  --ui-ink-700: #625661;
+  --ui-ink-600: #796E79;
+  --ui-ink-500: #918793;
+  --ui-ink-400: #AAA2AD;
+  --ui-ink-300: #C6BFC9;
+  --ui-ink-200: #DED9E1;
 
   /* Borders and surfaces */
-  --ui-line-strong: #dce2ea;
-  --ui-line: #e6eaf0;
-  --ui-line-soft: #f0f3f7;
-  --ui-surface-muted: #f2f5f8;
-  --ui-surface-soft: #fbfcfe;
-  --ui-canvas: #f6f8fb;
+  --ui-line-strong: #DED5D9;
+  --ui-line: #EAE2E5;
+  --ui-line-soft: #F3ECEF;
+  --ui-surface-muted: #F5F0F2;
+  --ui-surface-soft: #FDFBFC;
+  --ui-canvas: #F8F5F6;
 
   /* Shared background for greeting header and animated sidebar */
   --ui-welcome-gradient:
     radial-gradient(
       ellipse at 100% 0%,
-      color-mix(in srgb, var(--ui-brand-500) 10%, transparent),
+      color-mix(in srgb, var(--ui-brand-400) 18%, transparent),
       transparent 55%
     ),
     linear-gradient(
       115deg,
-      var(--ui-ink-900),
-      var(--ui-brand-500)
+      var(--ui-ink-950),
+      var(--ui-brand-800)
     );
 
   /* Blue semantic scale */
-  --ui-blue-900: #2c4568;
-  --ui-blue-700: #41679a;
-  --ui-blue-500: #6488b8;
-  --ui-blue-300: #b3c8e2;
-  --ui-blue-100: #edf3fb;
+  --ui-blue-900: #294665;
+  --ui-blue-700: #426B96;
+  --ui-blue-500: #7195B8;
+  --ui-blue-300: #B8CDDF;
+  --ui-blue-100: #EDF3F8;
 
   /* Green semantic scale */
-  --ui-green-900: #145b43;
-  --ui-green-700: #1d7956;
-  --ui-green-500: #46977a;
-  --ui-green-300: #bce1cf;
-  --ui-green-100: #eaf7f0;
+  --ui-green-900: #185641;
+  --ui-green-700: #277858;
+  --ui-green-500: #559A79;
+  --ui-green-300: #BBDCCB;
+  --ui-green-100: #EAF5EE;
 
   /* Amber semantic scale */
-  --ui-amber-900: #895719;
-  --ui-amber-700: #ad7424;
-  --ui-amber-500: #d09a42;
-  --ui-amber-300: #ecd49e;
-  --ui-amber-100: #fff5e2;
+  --ui-amber-900: #79501D;
+  --ui-amber-700: #A4732C;
+  --ui-amber-500: #C79B51;
+  --ui-amber-300: #E6D2A5;
+  --ui-amber-100: #FBF3E3;
 
   /* Purple semantic scale */
-  --ui-purple-700: #7955a4;
-  --ui-purple-100: #f2ebf9;
+  --ui-purple-700: #785A91;
+  --ui-purple-100: #F1EBF5;
 
   /* Slate semantic scale */
-  --ui-slate-950: #293447;
-  --ui-slate-800: #445168;
-  --ui-slate-600: #738095;
-  --ui-slate-400: #a0adbe;
-  --ui-slate-200: #dce3ec;
-  --ui-slate-100: #f3f5f8;
+  --ui-slate-950: #302831;
+  --ui-slate-800: #514752;
+  --ui-slate-600: #7B7180;
+  --ui-slate-400: #A8A0AD;
+  --ui-slate-200: #DDD7E0;
+  --ui-slate-100: #F3F0F4;
 
   --ui-black: #000000;
 
@@ -107,9 +107,9 @@
 
   /* Bootstrap semantic controls */
   --bs-primary: var(--ui-brand-500);
-  --bs-primary-rgb: 229, 43, 80;
+  --bs-primary-rgb: 183, 53, 76;
   --bs-danger: var(--ui-brand-700);
-  --bs-danger-rgb: 189, 18, 56;
+  --bs-danger-rgb: 146, 34, 57;
   --bs-body-color: var(--ui-ink-900);
   --bs-link-color: var(--ui-brand-700);
 }
