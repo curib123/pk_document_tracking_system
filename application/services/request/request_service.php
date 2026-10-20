@@ -94,17 +94,22 @@ class Request_service
         if (!$documentId)
             throw new DomainException('Select the document for this request.');
         $document = $this->ci->db->query(
-            'SELECT id FROM ' . $table . ' WHERE id=? FOR UPDATE',
+            "SELECT id FROM {$table} WHERE id = ? FOR UPDATE",
             [$documentId]
         )->row_array();
         if (!$document)
             throw new DomainException('The selected document is no longer available.');
-        if ($this->ci->Request_model->has_submitted_related_request(
-            $type, $softcopyId, $hardcopyId, $requesterId, $excludeId
-        ))
+        if (
+            $this->ci->Request_model->has_submitted_related_request(
+                $type,
+                $softcopyId,
+                $hardcopyId,
+                $requesterId,
+                $excludeId
+            )
+        )
             throw new DomainException(
-                'You already have a submitted access, assignment or transfer request for this document. ' .
-                'Finish that request before starting another for the same document.'
+                'You already have a pending access, assignment, or transfer request for this document. Please complete or resolve the existing request before submitting another.'
             );
     }
 
@@ -219,7 +224,11 @@ class Request_service
         if ($type === 'transfer')
             $this->validate_transfer_destination($hardcopyId, $payload);
         $this->assert_no_submitted_related_request(
-            $type, $softcopyId, $hardcopyId, (int) $user['id'], $id ?: NULL
+            $type,
+            $softcopyId,
+            $hardcopyId,
+            (int) $user['id'],
+            $id ?: NULL
         );
         $fileId = NULL;
         $fileField = $type === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id';
@@ -293,7 +302,11 @@ class Request_service
             return $id;
         }
         $data += [
-            'reference' => 'REQ-' . date('Ymd') . '-' . strtoupper(bin2hex(random_bytes(5))),
+            'reference' => sprintf(
+                'REQ-%s-%s',
+                date('Ymd'),
+                strtoupper(bin2hex(random_bytes(5)))
+            ),
             'status' => 'draft',
             'requested_by' => $user['id']
         ];
@@ -413,8 +426,11 @@ class Request_service
             if ($r['type'] === 'transfer')
                 $this->validate_transfer_destination((int) $r['hardcopy_id'], $currentPayload);
             $this->assert_no_submitted_related_request(
-                $r['type'], (int) $r['softcopy_id'], (int) $r['hardcopy_id'],
-                (int) $r['requested_by'], (int) $r['id']
+                $r['type'],
+                (int) $r['softcopy_id'],
+                (int) $r['hardcopy_id'],
+                (int) $r['requested_by'],
+                (int) $r['id']
             );
             if (
                 in_array($r['type'], ['assignment', 'access', 'transfer'], TRUE) &&

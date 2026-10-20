@@ -20,10 +20,10 @@
   animation: ui-sidebar-gradient 5s ease-in-out infinite;
 }
 
-@keyframes ui-sidebar-gradient {
+/* @keyframes ui-sidebar-gradient {
   0%, 100% { background-position: 0% 20%; }
   50% { background-position: 100% 80%; }
-}
+} */
 
 @keyframes ui-page-enter {
   from {

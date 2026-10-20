@@ -46,38 +46,51 @@ class Administration extends MY_Controller
             show_404();
         $documents = $this->Administration_model->user_assigned_documents($userId);
         $this->audit_event('view/user-assigned-documents', 'users:' . (int) $userId);
-        $sections = [[
-            'key' => 'overview', 'fields' => [
-                'Assigned Documents' => count($documents['hardcopy']) + count($documents['softcopy'])
+        $sections = [
+            [
+                'key' => 'overview',
+                'fields' => [
+                    'Assigned Documents' => count($documents['hardcopy']) + count($documents['softcopy'])
+                ]
             ]
-        ]];
+        ];
         foreach ($documents as $domain => $rows) {
             foreach ($rows as &$row) {
                 $row['detail'] = $domain === 'hardcopy'
-                    ? ('Current holder' . (!empty($row['location_name'])
-                        ? ' · ' . $row['location_name'] . ' · Sequence ' . $row['location_sequence'] : ''))
+                    ? 'Current holder' . (
+                        !empty($row['location_name'])
+                        ? " · {$row['location_name']} · Sequence {$row['location_sequence']}"
+                        : ''
+                    )
                     : 'Assigned ' . ($row['assigned_at'] ?? 'date not specified');
             }
             unset($row);
+
             $sections[] = [
-                'key' => $domain, 'label' => ucfirst($domain),
-                'title' => ucfirst($domain) . ' (' . count($rows) . ')',
+                'key' => $domain,
+                'label' => ucfirst($domain),
+                'title' => sprintf('%s (%d)', ucfirst($domain), count($rows)),
                 'documents' => $rows,
                 'compact' => TRUE,
-                'empty' => 'No active ' . ucfirst($domain) . ' documents are assigned to this user.',
+                'empty' => "No active " . ucfirst($domain) . " documents are assigned to this user.",
                 'manage_url' => site_url('admin/document-assignments') . '?' . http_build_query([
-                    'domain' => $domain, 'folder' => 'all', 'owner' => (int) $userId
+                    'domain' => $domain,
+                    'folder' => 'all',
+                    'owner' => (int) $userId
                 ])
             ];
         }
         $this->output->set_header('Cache-Control: no-store')
             ->set_content_type('application/json')->set_output(json_encode([
-                'kind' => 'record', 'domain' => 'record',
-                'header' => ['title' => trim($selected['first_name'] . ' ' . $selected['last_name']),
-                    'eyebrow' => 'ASSIGNED DOCUMENTS',
-                    'status' => $selected['active'] ? 'active' : 'inactive'],
-                'sections' => $sections
-            ]));
+                        'kind' => 'record',
+                        'domain' => 'record',
+                        'header' => [
+                            'title' => trim($selected['first_name'] . ' ' . $selected['last_name']),
+                            'eyebrow' => 'ASSIGNED DOCUMENTS',
+                            'status' => $selected['active'] ? 'active' : 'inactive'
+                        ],
+                        'sections' => $sections
+                    ]));
     }
 
     /** Administrative direct assignment. Approval requests remain in My Requests. */
@@ -205,7 +218,7 @@ class Administration extends MY_Controller
             if ($this->db->trans_status() === FALSE)
                 throw new DomainException('Location assignment transaction failed.');
             $this->db->trans_commit();
-            
+
             $this->load->library('Audit_file');
             $written = $this->audit_file->append(
                 (int) $this->user['id'],
@@ -228,7 +241,7 @@ class Administration extends MY_Controller
             } else {
                 $this->notice(count($rows) . ' Hardcopy documents assigned successfully.');
             }
-          
+
         } catch (Throwable $e) {
             $this->db->trans_rollback();
             $this->notice($e instanceof DomainException ? $e->getMessage() :
@@ -247,35 +260,67 @@ class Administration extends MY_Controller
         try {
             $this->load->model('Folder_model');
             $tree = $this->Folder_model->tree('softcopy');
-            $keys = Folder_tree::branch($tree, 'category:' . $categoryId);
-            $categoryIds = array_map(static function ($key) { return (int) substr($key, 9); }, $keys);
+            $keys = Folder_tree::branch($tree, "category: {$categoryId}");
+            $categoryIds = array_map(
+                static fn($key) => (int) substr($key, 9),
+                $keys
+            );
             $this->db->trans_begin();
             $slots = implode(',', array_fill(0, count($categoryIds), '?'));
-            $rows = $this->db->query('SELECT id FROM softcopy_documents WHERE status=? AND category_id IN (' .
-                $slots . ') ORDER BY id FOR UPDATE', array_merge(['active'], $categoryIds))->result_array();
-            if (!$rows) throw new DomainException('No active Softcopy documents in this category or its subcategories.');
-            if (count($rows) > 2000) throw new DomainException('More than 2000 documents. Choose a smaller subcategory.');
+            $rows = $this->db->query(
+                "SELECT id FROM softcopy_documents WHERE status = ? AND category_id IN ({$slots}) ORDER BY id FOR UPDATE",
+                array_merge(['active'], $categoryIds)
+            )->result_array();
+
+            if (!$rows)
+                throw new DomainException('No active Softcopy documents in this category or its subcategories.');
+            if (count($rows) > 2000)
+                throw new DomainException('More than 2000 documents. Choose a smaller subcategory.');
             require_once APPPATH . 'services/documents/document_access_service.php';
             $service = new Document_access_service();
             foreach ($rows as $row)
-                $service->apply('assignment', ['document_domain' => 'softcopy'], (int) $row['id'], 0,
-                    $recipientId, (int) $this->user['id']);
+                $service->apply(
+                    'assignment',
+                    ['document_domain' => 'softcopy'],
+                    (int) $row['id'],
+                    0,
+                    $recipientId,
+                    (int) $this->user['id']
+                );
             if ($this->db->trans_status() === FALSE || $this->db->trans_commit() === FALSE)
                 throw new DomainException('Category assignment transaction failed.');
             $this->load->library('Audit_file');
-            if (!$this->audit_file->append((int) $this->user['id'], 'softcopy_category_bulk_assigned',
-                'category:' . $categoryId, ['category_ids' => $categoryIds, 'recipient_id' => $recipientId,
-                    'document_ids' => array_map('intval', array_column($rows, 'id')), 'count' => count($rows)])) {
+            if (
+                !$this->audit_file->append(
+                    (int) $this->user['id'],
+                    'softcopy_category_bulk_assigned',
+                    "category:{$categoryId}",
+                    [
+                        'category_ids' => $categoryIds,
+                        'recipient_id' => $recipientId,
+                        'document_ids' => array_map(
+                            'intval',
+                            array_column($rows, 'id')
+                        ),
+                        'count' => count($rows)
+                    ]
+                )
+            ) {
                 $this->notice('Documents assigned, but audit logging failed. Contact your administrator.', 'warning');
             } else {
-                $this->notice(count($rows) . ' Softcopy documents assigned, including subcategories.');
+                $this->notice(sprintf(
+                    '%d softcopy documents assigned, including subcategories.',
+                    count($rows)
+                ));
             }
         } catch (Throwable $e) {
             $this->db->trans_rollback();
             $this->error_notice($e);
         }
         redirect('admin/document-assignments?' . http_build_query([
-            'domain' => 'softcopy', 'folder' => 'category:' . $categoryId, 'owner' => $recipientId
+            'domain' => 'softcopy',
+            'folder' => "category:{$categoryId}",
+            'owner' => $recipientId
         ]));
     }
 
@@ -306,8 +351,10 @@ class Administration extends MY_Controller
         // not lose context when changing steps or publishing a new version.
         if ($module === 'workflows' && $redirect === 'admin/workflows') {
             $workflowId = (int) $this->input->post('workflow_id');
-            if ($workflowId > 0)
-                $redirect .= '?workflow=' . $workflowId;
+
+            if ($workflowId > 0) {
+                $redirect .= "?workflow={$workflowId}";
+            }
         }
         redirect($redirect);
     }

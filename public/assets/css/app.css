@@ -723,6 +723,7 @@ a {
 }
 
 .status-pending,
+.status-submitted,
 .status-draft {
   color: var(--ui-amber-900);
   background: var(--ui-amber-100);
