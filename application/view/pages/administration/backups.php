@@ -36,7 +36,7 @@ $dt_filter_values = ['type' => $table['type']];
                 <button class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#backupImportModal">
                     <i class="fa-solid fa-file-import" aria-hidden="true"></i> Import backup
                 </button>
-                <button class="btn btn-outline-danger" type="button" data-bs-toggle="modal" data-bs-target="#backupRestoreModal">
+                <button class="btn btn-outline-primary" type="button" data-bs-toggle="modal" data-bs-target="#backupRestoreModal">
                     <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore system data
                 </button>
                 <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
@@ -62,7 +62,6 @@ $dt_filter_values = ['type' => $table['type']];
         <div class="backup-warning" role="status">Backup setup is incomplete. Contact your system administrator.</div>
     <?php endif; ?>
     <section aria-labelledby="backupArchiveTitle">
-        <h2 class="backup-section-title" id="backupArchiveTitle">Available backups</h2>
         <?php $this->load->view('reusable_components/reusable_datatable', compact(
             'dt_path', 'dt_columns', 'dt_rows', 'dt_q', 'dt_filter', 'dt_page', 'dt_limit',
             'dt_total', 'dt_sort', 'dt_dir', 'dt_sortable', 'dt_filters', 'dt_filter_values'
