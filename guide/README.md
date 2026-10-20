@@ -38,6 +38,7 @@ Do not merge to `development` until the relevant CI run and these manual cases p
 | --- | --- |
 | Installation, login, navigation, errors | 01-smoke-and-navigation.md |
 | Role permissions and request workflow | 02-permissions-and-requests.md |
+| Current plan fixes and title regression cases | 2026-10-20-plan-fixes/README.md and manual-tests.md |
 | Live search, folder browsing, modals, layouts | 03-document-search-and-modal.md |
 | Database, backups, restores, recovery | 04-backup-schema-and-recovery.md |
 | Evidence and final sign-off | 05-results-template.md |

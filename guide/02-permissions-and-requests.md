@@ -20,7 +20,7 @@ Use an additional approver assigned to exactly one pending step.
 | REQ-01 | Create draft softcopy and hardcopy requests as allowed user; open Request View. | Correct document metadata, status, workflow route and Workflow Activity Log in read-only modal. |
 | REQ-02 | Submit each request to approver; approve, reject and return from My Tasks. | Only active assignee can decide; after return, requester can edit and resubmit. |
 | REQ-03 | Attempt to approve same request twice in separate tabs or after reassignment. | Second stale decision rejected; no repeated workflow history or duplicate transition. |
-| REQ-04 | Test disposal and physical hardcopy transfer (dispatch, receipt, custody update). | Required decisions and holder validations enforced server-side; history accurate. |
+| REQ-04 | Test disposal and physical hardcopy transfer (dispatch, receipt, custody update). | Only the transfer requester may Dispatch and only the destination recipient may Accept; custody and history must be correct. |
 | REQ-05 | Remove permission to create one request type but retain another type. | Disallowed action hidden and server refuses direct POST. No undefined permission warning. |
 | REQ-06 | Open request modal, switch all approval/history tabs and close/reopen another row. | Previous request never flashes, tabs respond, no blank panel or JS console exception. |
 
