@@ -115,42 +115,5 @@ $displayName = $firstName !== '' ? $firstName : ($user['username'] ?? 'there');
       </div>
     </section>
   </div>
-  <section class="workspace-card dashboard-activity-card" aria-labelledby="recentActivityTitle">
-    <div class="workspace-card-header dashboard-section-header">
-      <span class="dashboard-section-icon" aria-hidden="true"><i class="fa-solid fa-clock-rotate-left"></i></span>
-      <h2 class="fs-6 fw-bold mb-0" id="recentActivityTitle">Recent document activity</h2>
-    </div>
-    <?php if (!$recent_activities): ?>
-      <p class="empty-state mb-0">No recent document activity in your authorized scope.</p>
-    <?php else: ?>
-      <div class="table-responsive dashboard-activity-scroll">
-        <table class="table mb-0 dashboard-activity-table">
-          <thead>
-            <tr>
-              <th scope="col">Document</th>
-              <th scope="col">Type</th>
-              <th scope="col">Action</th>
-              <th scope="col">Date</th>
-            </tr>
-          </thead>
-          <tbody><?php foreach ($recent_activities as $activity): ?>
-              <tr>
-                <td class="dashboard-activity-title">
-                  <div class="dashboard-activity-label"><span class="dashboard-activity-file-icon" aria-hidden="true"><i
-                        class="fa-regular <?= $activity['domain'] === 'softcopy' ? 'fa-file-lines' : 'fa-folder-closed' ?>"></i></span><span><?= html_escape($activity['title']) ?></span>
-                  </div>
-                </td>
-                <td><span
-                    class="dashboard-type-chip dashboard-type-<?= html_escape($activity['domain']) ?>"><?= html_escape(ucfirst($activity['domain'])) ?></span>
-                </td>
-                <td><span
-                    class="dashboard-action-name"><?= html_escape(ucwords(str_replace('_', ' ', $activity['action']))) ?></span>
-                </td>
-                <td class="dashboard-activity-date"><?= html_escape($activity['created_at']) ?></td>
-              </tr><?php endforeach; ?>
-          </tbody>
-        </table>
-      </div>
-    <?php endif; ?>
-  </section>
+
 </div>
