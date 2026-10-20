@@ -716,6 +716,7 @@ a {
 
 .status-approved,
 .status-active,
+.status-completed,
 .status-1 {
   color: var(--ui-green-700);
   background: var(--ui-green-100);
@@ -734,6 +735,7 @@ a {
 }
 
 .status-rejected,
+.status-cancelled,
 .status-disposed,
 .status-0 {
   color: var(--ui-brand-700);

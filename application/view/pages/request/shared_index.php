@@ -320,7 +320,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
     <div class="modal-dialog modal-dialog-centered modal-lg">
       <div class="modal-content">
         <form id="editForm" method="post" enctype="multipart/form-data"
-          action="<?= site_url('my-requests/' . $tab . '/save') ?>"
+          action="<?= site_url("my-requests/{$tab}/save") ?>"
           data-allowed-request-types="<?= html_escape(json_encode($allowed_request_types)) ?>" <?= $tab === 'hardcopy' ? ' data-hardcopy-upsert="yes" ' : ($tab === 'hardcopy-transfer' ? ' data-hardcopy-transfer="yes" ' : '') ?>
           data-confirm="Save request draft?" autocomplete="off">
           <div class="modal-header">
