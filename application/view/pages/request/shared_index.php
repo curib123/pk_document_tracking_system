@@ -208,7 +208,7 @@ foreach ($rows as $row) {
     if ($canRequest('submit'))
       $buttons[] = [
         'type' => 'action',
-        'url' => 'my-requests/' . $tab . '/submit',
+        'url' => "my-requests/{$tab}/submit",
         'label' => 'Submit',
         'description' => 'Submit this request to the published approval workflow.',
         'icon' => 'fa-solid fa-paper-plane'
@@ -217,7 +217,7 @@ foreach ($rows as $row) {
   if (!$task && $canRequest('cancel') && $row['status'] === 'draft')
     $buttons[] = [
       'type' => 'action',
-      'url' => 'my-requests/' . $tab . '/cancel',
+      'url' => "my-requests/{$tab}/cancel",
       'label' => 'Cancel',
       'description' => 'Cancel this draft request.',
       'icon' => 'fa-solid fa-xmark'
@@ -227,10 +227,10 @@ foreach ($rows as $row) {
     foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
       $buttons[] = [
         'type' => 'action',
-        'url' => 'my-tasks/' . $tab . '/decide',
+        'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
         'label' => $label,
-        'description' => 'Record ' . $label . ' for this workflow step.',
+        'description' => "Record{ $label } for this workflow step.",
         'icon' => $decision === 'approved'
           ? 'fa-solid fa-check'
           : ($decision === 'rejected'
