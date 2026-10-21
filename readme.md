@@ -87,6 +87,7 @@ The available browser checks require Python, Playwright, Microsoft Edge, running
 python -m pip install playwright
 python tests/cancelled_draft_delete.py
 python tests/document_assignments.py
+python tests/assignment_modal_layout.py
 python tests/document_header.py
 python tests/theme_toggle.py
 python tests/dark_mode_feedback.py

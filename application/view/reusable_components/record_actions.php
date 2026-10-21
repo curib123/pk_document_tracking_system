@@ -31,7 +31,7 @@
                 data-bs-target="<?= html_escape($button['modal'] ?? '#editModal') ?>"
                 data-target="<?= html_escape($button['form'] ?? '#editForm') ?>"
                 data-record="<?= html_escape(json_encode($dt_row['record'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>"
-                data-title="Edit Record">
+                data-title="<?= html_escape($button['title'] ?? 'Edit Record') ?>">
                 <i class="fa-solid fa-pen" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
         <?php elseif ($type === 'steps'): ?>
