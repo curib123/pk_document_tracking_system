@@ -34,18 +34,19 @@
             <div class="login-intro">
 
                 <span class="login-kicker">
-                    PEANUT KISSES · DOCUMENT CONTROL
+                    PEANUT KISSES · DOCUMENT TRACKING SYSTEM
                 </span>
 
                 <h1 id="loginWelcomeHeading" class="login-welcome">
-                    Secure access for your document control center.
+                    Secure access for your document tracking control center.
                 </h1>
 
                 <p>
-                    Manage the full document lifecycle from one secure workspace.
-                    This portal keeps records organized, routes access by role,
-                    and brings documents, storage, users, and permissions together
-                    in a clean panel experience.
+                    Keep every document organized and every task on track.
+
+                    Easily manage documents, track approvals, organize files, and control who can access important
+                    information—all in one secure, easy-to-use workspace.
+
                 </p>
 
                 <div class="container-fluid px-0 mt-3">
