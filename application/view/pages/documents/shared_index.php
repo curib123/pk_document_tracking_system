@@ -10,13 +10,13 @@ $canFile = static function ($action) use ($permissions) {
 // the shared permission-scoped View Details modal, not duplicated in the table.
 $dt_columns = $cfg['domain'] === 'hardcopy'
     ? [
-        'title' => 'Document',
+        'title' => 'Document Title',
         'location_name' => 'Location',
         'holder_name' => 'Holder',
         'status' => 'Status'
     ]
     : [
-        'title' => 'Document',
+        'title' => 'Document Title',
         'document_number' => 'Document Number',
         'category_name' => 'Category',
         'status' => 'Status'
