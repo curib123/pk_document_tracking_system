@@ -281,9 +281,7 @@ $navPage = end($navParts);
                 aria-label="Install PK Document Control" title="Install PK Document Control">
                 <i class="fa-solid fa-download" aria-hidden="true"></i><span>Install App</span>
             </button>
-              <button type="button" id="toggleThemeMode" class="theme-icon-button" aria-label="Toggle theme mode" title="Toggle theme mode">
-                <i class="fa-solid fa-sun" ></i>
-            </button>
+             
             <div class="topbar-notifications" id="notificationBellPanel"
                  data-notification-list="<?= html_escape(site_url('notifications/inbox')) ?>"
                  data-notification-read="<?= html_escape(site_url('notifications/inbox/read')) ?>"
