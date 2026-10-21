@@ -18,7 +18,7 @@ $typeMap = [
 ];
 $dt_columns = [
   'reference' => 'Request Reference',
-  'title'=> 'Document Title',
+  'title' => 'Document Title',
   'type' => 'Action',
   'subject' => 'Subject',
   'requester' => 'Requester',
@@ -82,7 +82,9 @@ foreach ($rows as $row) {
   $documentDomain = $tab === 'softcopy' ? 'softcopy' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record');
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
   $headerTitle = Request_title::resolve(
-    (string) $row['type'], $payload, (string) ($row['source_title'] ?? ''),
+    (string) $row['type'],
+    $payload,
+    (string) ($row['source_title'] ?? ''),
     (int) $row['id']
   );
   $requestOverview = [
@@ -228,7 +230,7 @@ foreach ($rows as $row) {
         'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
         'label' => $label,
-        'description' => "Record{ $label } for this workflow step.",
+        'description' => "Record {$record['title']} for this workflow step.",
         'icon' => $decision === 'approved'
           ? 'fa-solid fa-check'
           : ($decision === 'rejected'
@@ -238,7 +240,7 @@ foreach ($rows as $row) {
       ];
     }
 
-    
+
   $dt_rows[] = [
     'id' => $row['id'],
     'cells' => [
@@ -388,7 +390,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <div class="col-12">
                   <label class="form-label" for="reqHardcopy">Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required autocomplete="off">
+                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required
+                    autocomplete="off">
                     <option value="">Choose an active document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>">
@@ -459,7 +462,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <?php if (in_array($tab, ['access-grant', 'document-assign'], TRUE)): ?>
                   <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
-                    <input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly autocomplete="off">
+                    <input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly
+                      autocomplete="off">
                     <input type="hidden" name="recipient_id" value="<?= (int) $user['id'] ?>">
                   </div>
                 <?php else: ?>
@@ -475,7 +479,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                   <input class="form-control" name="expires_at" type="date" id="reqExpires" autocomplete="off">
                 </div>
                 <div class="col-md-6"><label class="form-label" for="reqDest">Destination Location</label>
-                  <select class="form-select" name="destination_location_id" id="reqDest" data-searchable autocomplete="off">
+                  <select class="form-select" name="destination_location_id" id="reqDest" data-searchable
+                    autocomplete="off">
                     <option value="">Not selected</option><?php foreach ($location_options as $opt): ?>
                       <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
                     <?php endforeach; ?>
@@ -506,7 +511,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
   <section class="workspace-card mt-4">
     <div class="workspace-card-header">
       <strong>Physical Transfer Handoffs</strong>
-      <p class="small text-secondary mb-0">Only the transfer requester can dispatch; only the destination recipient can accept.
+      <p class="small text-secondary mb-0">Only the transfer requester can dispatch; only the destination recipient can
+        accept.
       </p>
     </div>
     <div class="table-responsive">
