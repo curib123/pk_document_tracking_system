@@ -86,8 +86,9 @@ if ($folder_value !== '')
               <?php endforeach; ?>
             </select>
           </div>
-          <div class="col-lg-2"><button class="btn btn-primary w-100" type="submit">Assign All</button></div>
-          <p class="form-text mb-0">Includes active documents in this category and every subcategory. Existing assignments to other users are kept.</p>
+         <button class="btn btn-primary w-100" type="submit">
+              <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign All
+            </button>
         </div>
         <input type="hidden" name="confirmed" value="no">
         <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
@@ -145,7 +146,6 @@ if ($folder_value !== '')
       'dt_sort',
       'dt_dir',
       'dt_sortable',
-      'dt_filters',
       'dt_filter_values',
       'dt_badges',
       'dt_create'
@@ -154,74 +154,4 @@ if ($folder_value !== '')
   </div>
 </section>
 
-<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="assignmentModal" tabindex="-1"
-  aria-labelledby="assignmentModalTitle" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-lg">
-    <div class="modal-content">
-      <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"
-        data-confirm="Assign this document to the selected staff account?" autocomplete="off">
-        <div class="modal-header">
-          <h2 class="modal-title fs-6" id="assignmentModalTitle">Assign Document</h2>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body">
-          <div class="assignments-modal-grid row g-3">
-            <input type="hidden" name="document_domain" value="<?= html_escape($domain) ?>">
-            <input type="hidden" name="folder" value="<?= html_escape($folder_value) ?>">
-            <?php if ($domain === 'hardcopy'): ?>
-              <div class="col-md-6" data-document-domain="hardcopy">
-                <label class="form-label" for="assignmentHardcopy">Hardcopy Document</label>
-                <select class="form-select" id="assignmentHardcopy" name="hardcopy_id" data-searchable required
-                  autocomplete="off">
-                  <option value="">Choose hardcopy from this folder</option>
-                  <?php foreach ($hardcopy_options as $doc): ?>
-                    <option value="<?= (int) $doc['id'] ?>"><?= html_escape($doc['title']) ?></option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-            <?php else: ?>
-              <div class="col-md-6" data-document-domain="softcopy">
-                <label class="form-label" for="assignmentSoftcopy">Softcopy Document</label>
-                <select class="form-select" id="assignmentSoftcopy" name="softcopy_id" data-searchable required
-                  autocomplete="off">
-                  <option value="">Choose softcopy from this folder</option>
-                  <?php foreach ($softcopy_options as $doc): ?>
-                    <option value="<?= (int) $doc['id'] ?>">
-                      <?= html_escape($doc['document_number'] . ' · ' . $doc['title']) ?>
-                    </option>
-                  <?php endforeach; ?>
-                </select>
-              </div>
-            <?php endif; ?>
-            <div class="col-md-6">
-              <label class="form-label" for="assignmentUser">Assigned User</label>
-              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required
-                autocomplete="off">
-                <option value="">Choose an active user</option>
-                <?php foreach ($users_list as $person): ?>
-                  <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
-                <?php endforeach; ?>
-              </select>
-            </div>
-            <div class="assignments-help col-12">
-              <p class="form-text mb-2">Up to 500 matching choices. Use the page search or select a more specific folder
-                to find other documents.</p>
-              <p class="form-text mb-0">
-                <?= $domain === 'hardcopy'
-                  ? 'Hardcopy assignment updates the document holder. Physical transfers use the separate transfer workflow.'
-                  : 'Softcopy assignment grants access through the existing assignments table.' ?>
-              </p>
-            </div>
-          </div>
-        </div>
-        <input type="hidden" name="confirmed" value="no">
-        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-          value="<?= $this->security->get_csrf_hash() ?>">
-        <div class="modal-footer">
-          <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-          <button class="btn btn-primary" type="submit">Save Assignment</button>
-        </div>
-      </form>
-    </div>
-  </div>
 </div>

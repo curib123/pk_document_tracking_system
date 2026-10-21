@@ -58,9 +58,7 @@ foreach ($rows as $r) {
     if ($canEdit)
         $buttons[] = ['type' => 'edit'];
     if ($cfg['domain'] === 'softcopy') {
-        if ($canEdit && (isset($permissions['*']) || !empty($permissions['files']['upload']))) {
-            $buttons[] = ['type' => 'upload'];
-        }
+      
         if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
             $historyEntries = [];
             foreach ($file_histories[$r['id']] ?? [] as $item) {
@@ -263,44 +261,5 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
             </div>
         </div>
     </div>
-    <?php if ($can && (isset($permissions['*']) || !empty($permissions['files']['upload']))): ?>
-        <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="uploadModal" tabindex="-1"
-            aria-labelledby="uploadTitle" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <form method="post" enctype="multipart/form-data" action="<?= site_url('files/upload') ?>"
-                        data-confirm="Upload and record this controlled revision?" autocomplete="off">
-                        <div class="modal-header">
-                            <h2 class="modal-title fs-6" id="uploadTitle">Upload Controlled Revision</h2>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                        </div>
-                        <div class="modal-body">
-                            <p id="uploadDocumentName" class="small text-secondary"></p>
-                            <input type="hidden" name="document_id" id="uploadDocumentId">
-                            <label class="form-label" for="uploadLevel">New Revision Level</label>
-                            <input class="form-control mb-3" id="uploadLevel" name="new_revision_level" required maxlength="30"
-                                autocomplete="off">
-                            <label class="form-label" for="uploadPages">Page Count</label>
-                            <input class="form-control mb-3" id="uploadPages" type="number" name="page_number" min="1" value="1"
-                                autocomplete="off">
-                            <label class="form-label" for="uploadReason">Reason <span
-                                    class="optional-label">(optional)</span></label>
-                            <textarea class="form-control mb-3" id="uploadReason" name="reason" rows="2"
-                                autocomplete="off"></textarea>
-                            <label class="form-label" for="uploadFile">File (15 MB maximum)</label>
-                            <input class="form-control" type="file" id="uploadFile" name="attachment"
-                                accept=".pdf,.txt,.jpg,.jpeg,.png,.docx,.xlsx" required autocomplete="off">
-                        </div>
-                        <input type="hidden" name="confirmed" value="no">
-                        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-                            value="<?= $this->security->get_csrf_hash() ?>">
-                        <div class="modal-footer"><button type="button" class="btn btn-light"
-                                data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-primary">Upload Revision</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    <?php endif; ?>
+
 <?php endif; ?>
