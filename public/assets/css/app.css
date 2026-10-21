@@ -171,7 +171,7 @@ a {
    TOPBAR
 ========================================================= */
 .topbar {
-  background: var(--ui-white);
+  background: var(--surface);
   border-bottom: 1px solid var(--border);
   height: 77px;
   padding: 0 34px;
@@ -205,7 +205,7 @@ a {
   height: 40px;
   display: grid;
   place-items: center;
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
   background: var(--ui-brand-600);
   font-weight: 700;
   border-radius: 12px;
@@ -603,7 +603,7 @@ a {
   font-size: 13px;
   padding: 9px 12px;
   color: var(--ui-slate-950);
-  background-color: var(--ui-white);
+  background-color: var(--surface);
   line-height: 1.5;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
@@ -661,7 +661,7 @@ a {
 .btn-primary {
   background: var(--ui-brand-700);
   border-color: var(--ui-brand-700);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .btn-primary:hover,
@@ -681,7 +681,7 @@ a {
 }
 
 .btn-light {
-  background: var(--ui-white);
+  background: var(--surface);
   border: 1px solid var(--ui-line-strong);
   color: var(--ui-slate-800);
 }
@@ -693,7 +693,7 @@ a {
   place-items: center;
   border: 1px solid var(--ui-line);
   border-radius: 8px;
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-ink-500);
 }
 
@@ -891,7 +891,7 @@ a {
   align-items: center;
   min-width: 0;
   padding: 36px 0;
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .login-intro {
@@ -904,7 +904,7 @@ a {
   padding: 8px 15px;
   border-radius: 10px;
   display: inline-block;
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
   font-size: 10px;
   font-weight: 800;
   letter-spacing: 1.65px;
@@ -915,7 +915,7 @@ a {
 .login-cover h1 {
   max-width: 650px;
   margin: 14px 0 15px;
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 
   font-size: clamp(2rem, 5vw, 4rem);
   font-weight: 800;
@@ -947,8 +947,8 @@ a {
 .login-card {
   width: 100%;
   padding: 30px;
-  background: var(--ui-white);
-  border: 1px solid color-mix(in srgb, var(--ui-white) 75%, transparent);
+  background: var(--surface);
+  border: 1px solid color-mix(in srgb, var(--surface) 75%, transparent);
   border-radius: 22px;
   box-shadow: 0 24px 85px color-mix(in srgb, var(--ui-navy) 35%, transparent);
 }
@@ -998,7 +998,7 @@ a {
 }
 
 .login-card .login-input:focus {
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .login-submit {
@@ -1008,7 +1008,7 @@ a {
   margin-top: 8px;
   background: var(--accent);
   border-color: var(--accent);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
   font-size: 14px;
   font-weight: 700;
 }
@@ -1017,7 +1017,7 @@ a {
 .login-submit:focus-visible {
   background: var(--accent-dark);
   border-color: var(--accent-dark);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .login-footnote {
@@ -1178,7 +1178,7 @@ a {
 }
 
 .offline-ui .modal-content {
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .offline-ui .modal-header,
@@ -1219,7 +1219,7 @@ a {
   position: absolute;
   right: 0;
   z-index: 1002;
-  background: var(--ui-white);
+  background: var(--surface);
   min-width: 210px;
   padding: 9px;
   list-style: none;
@@ -1237,7 +1237,7 @@ a {
   color: var(--text);
   padding: 10px 12px;
   border: 0;
-  background: var(--ui-white);
+  background: var(--surface);
   width: 100%;
   text-align: left;
 }
@@ -1251,7 +1251,7 @@ a {
 }
 
 .offline-ui .accordion-button {
-  background: var(--ui-white);
+  background: var(--surface);
   border: 0;
   padding: 16px;
   text-align: left;
@@ -1297,7 +1297,7 @@ a {
 }
 
 .offline-ui .btn-primary {
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .offline-ui .d-flex {
@@ -1391,7 +1391,7 @@ a {
   overflow: hidden;
   background: linear-gradient(
     112deg,
-    var(--ui-white) 0%,
+    var(--surface) 0%,
     var(--ui-brand-50) 58%,
     var(--ui-brand-100) 100%
   );
@@ -1468,7 +1468,7 @@ a {
   padding: 14px 17px;
   border: 1px solid var(--ui-brand-150);
   border-radius: 13px;
-  background: color-mix(in srgb, var(--ui-white) 82%, transparent);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
 }
 
 .dashboard-welcome-date > i {
@@ -1509,7 +1509,7 @@ a {
     margin: 14px 0 20px;
     border: 1px solid var(--ui-line);
     border-radius: 16px;
-    background: var(--ui-white);
+    background: var(--surface);
     box-shadow: 0 5px 24px color-mix(in srgb, var(--ui-ink-950) 3.5%, transparent);
 }
 
@@ -1592,7 +1592,7 @@ a {
   padding: 1.25rem;
   border: 1px solid var(--ui-line);
   border-radius: 0.75rem;
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .document-record-card h3,
@@ -1713,7 +1713,7 @@ a {
 }
 
 .auth-required-dialog .modal-content {
-  background: var(--ui-white);
+  background: var(--surface);
   border-radius: 14px;
   width: 100%;
 }
@@ -1795,7 +1795,7 @@ a {
     left: 18px;
     padding: 12px 18px;
     border-radius: 0 0 10px 10px;
-    background: var(--ui-white);
+    background: var(--surface);
     color: var(--accent-dark);
     font-weight: 700;
     box-shadow: 0 6px 24px color-mix(in srgb, var(--ui-navy) 14.12%, transparent);
@@ -1950,7 +1950,7 @@ a {
 
 .searchable-input {
   padding-right: 36px;
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .searchable-input[aria-expanded="true"] {
@@ -1974,7 +1974,7 @@ a {
   padding: 5px;
   border: 1px solid var(--ui-line-strong);
   border-radius: 10px;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: 0 18px 48px
     color-mix(in srgb, var(--ui-ink-950) 18.82%, transparent);
   scrollbar-width: thin;
@@ -2069,13 +2069,13 @@ a {
 
 .nav-count {
   margin-left: auto;
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
   background: var(--ui-brand-700);
-  border: 1px solid color-mix(in srgb, var(--ui-white) 25.1%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 25.1%, transparent);
 }
 
 .side-link.active .nav-count {
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-brand-800);
 }
 
@@ -2130,7 +2130,7 @@ a {
   gap: 12px;
   margin-bottom: 10px;
   padding: 14px 16px;
-  background: var(--ui-white);
+  background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 12px;
 }

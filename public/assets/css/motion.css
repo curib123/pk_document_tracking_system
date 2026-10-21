@@ -146,7 +146,7 @@
     100deg,
     var(--ui-skeleton-base) 20%,
     var(--ui-slate-100) 38%,
-    var(--ui-white) 48%,
+    var(--surface) 48%,
     var(--ui-slate-100) 58%,
     var(--ui-skeleton-base) 76%
   );
@@ -211,7 +211,7 @@ body.motion-login-loading .login-card::after,
     100deg,
     var(--ui-skeleton-base) 20%,
     var(--ui-slate-100) 38%,
-    var(--ui-white) 48%,
+    var(--surface) 48%,
     var(--ui-slate-100) 58%,
     var(--ui-skeleton-base) 76%
   );

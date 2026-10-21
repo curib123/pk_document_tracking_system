@@ -43,7 +43,7 @@ html[data-logout-return] .logout-transition {
 .logout-transition-veil {
   position: absolute;
   inset: 0;
-  background: var(--ui-white);
+  background: var(--surface);
   opacity: 0;
 }
 

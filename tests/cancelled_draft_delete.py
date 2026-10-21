@@ -169,7 +169,7 @@ def run(page, base, site):
     print('PASS: confirmed hard deletion, all 9 types, ownership/status/category/permission guards, attachments and audit')
 
 
-def main():
+def main(checks=run):
     created = False
     server = None
     try:
@@ -205,7 +205,7 @@ def main():
                     browser = playwright.chromium.launch(channel='msedge', headless=True)
                     context = browser.new_context(service_workers='block')
                     context.route('https://**/*', lambda route: route.abort())
-                    run(context.new_page(), base, site)
+                    checks(context.new_page(), base, site)
                     browser.close()
     finally:
         if server:

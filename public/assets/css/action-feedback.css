@@ -20,7 +20,7 @@
   text-align: center;
   border: 1px solid var(--ui-line);
   border-radius: 22px;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: 0 20px 70px color-mix(in srgb, var(--ui-navy) 24%, transparent);
   pointer-events: auto;
 }
@@ -65,7 +65,7 @@
   height: 47px;
   border: 2px solid var(--ui-brand-300);
   border-radius: 8px;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: -5px 5px 0 var(--ui-brand-100);
   animation: action-paper-bob 1.6s ease-in-out infinite;
 }

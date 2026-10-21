@@ -9,6 +9,9 @@
 
 :root {
   --ui-white: #FFFFFF;
+  --ui-on-accent: #FFFFFF;
+  --ui-sidebar-text: #E0D7E0;
+  --ui-sidebar-muted: #ADA0AE;
 
   /* Ruby Luxe brand scale */
   --ui-brand-950: #400014;
@@ -114,9 +117,73 @@
   --bs-link-color: var(--ui-brand-700);
 }
 
+/* Shared dark palette: preserve white for logos and text on dark banners. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --surface: #221C23;
+  --ui-canvas: #171319;
+  --ui-surface-soft: #211B22;
+  --ui-surface-muted: #29222A;
+  --ui-on-accent: #28151F;
+  --ui-navy: #F7EDF3;
+  --ui-ink-950: #F7EDF3;
+  --ui-ink-900: #EADFE7;
+  --ui-ink-800: #D9CAD5;
+  --ui-ink-700: #C8B8C5;
+  --ui-ink-600: #B7A4B3;
+  --ui-ink-500: #A996A6;
+  --ui-ink-400: #998796;
+  --ui-ink-300: #675765;
+  --ui-ink-200: #4C3E49;
+  --ui-line-strong: #55444F;
+  --ui-line: #40343D;
+  --ui-line-soft: #322830;
+  --ui-brand-950: #FFE5ED;
+  --ui-brand-900: #FFC4D4;
+  --ui-brand-800: #F5A3BB;
+  --ui-brand-700: #EE8DA9;
+  --ui-brand-600: #E9698E;
+  --ui-brand-500: #D84773;
+  --ui-brand-400: #D76888;
+  --ui-brand-300: #7C3F54;
+  --ui-brand-200: #623144;
+  --ui-brand-150: #4B2636;
+  --ui-brand-100: #3D2230;
+  --ui-brand-50: #30202A;
+  --ui-blue-900: #C8DEF5;
+  --ui-blue-700: #94BEE3;
+  --ui-blue-300: #3C5870;
+  --ui-blue-100: #202E3C;
+  --ui-green-900: #B2EBCE;
+  --ui-green-700: #80CFA6;
+  --ui-green-300: #3C6852;
+  --ui-green-100: #1D3328;
+  --ui-amber-900: #F2D2A0;
+  --ui-amber-700: #E7BE77;
+  --ui-amber-300: #6B5330;
+  --ui-amber-100: #352B1F;
+  --ui-purple-700: #C5A4DF;
+  --ui-purple-100: #30243A;
+  --ui-slate-950: #EEE4EE;
+  --ui-slate-800: #D2C3D3;
+  --ui-slate-600: #B5A4B9;
+  --ui-slate-400: #A18DA6;
+  --ui-slate-200: #514455;
+  --ui-slate-100: #2C242F;
+  --ui-welcome-gradient: radial-gradient(ellipse at 100% 0%, #DC3E622E, transparent 55%),
+    linear-gradient(115deg, #241B22, #850025);
+  --bs-body-bg: var(--ui-canvas);
+  --bs-body-color: var(--ui-ink-900);
+  --bs-border-color: var(--ui-line);
+  --bs-secondary-bg: var(--ui-surface-muted);
+  --bs-tertiary-bg: var(--ui-surface-soft);
+  --bs-link-color: var(--ui-brand-700);
+  --bs-link-hover-color: var(--ui-brand-800);
+}
+
 /* Shared action colors */
 .btn-primary {
-  --bs-btn-color: #FFFFFF;
+  --bs-btn-color: var(--ui-on-accent);
   --bs-btn-bg: var(--ui-brand-500);
   --bs-btn-border-color: var(--ui-brand-500);
   --bs-btn-hover-bg: var(--ui-brand-800);
@@ -130,13 +197,13 @@
 .btn-outline-primary {
   --bs-btn-color: var(--ui-brand-700);
   --bs-btn-border-color: var(--ui-brand-300);
-  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-color: var(--ui-on-accent);
   --bs-btn-hover-bg: var(--ui-brand-700);
   --bs-btn-hover-border-color: var(--ui-brand-700);
 }
 
 .btn-danger {
-  --bs-btn-color: #FFFFFF;
+  --bs-btn-color: var(--ui-on-accent);
   --bs-btn-bg: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-800);
   --bs-btn-hover-bg: var(--ui-brand-900);
@@ -146,7 +213,7 @@
 .btn-outline-danger {
   --bs-btn-color: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-300);
-  --bs-btn-hover-color: #FFFFFF;
+  --bs-btn-hover-color: var(--ui-on-accent);
   --bs-btn-hover-bg: var(--ui-brand-800);
   --bs-btn-hover-border-color: var(--ui-brand-800);
 }

@@ -1,0 +1,48 @@
+/* Theme layout only. Palette values live in colors.css. */
+/* Font Awesome Free 6.7.2, SIL OFL 1.1; see fonts/fontawesome-LICENSE.txt.
+   Keep the requested toggle icons available on offline office networks. */
+@font-face {
+  font-family: "PK Theme Icons";
+  font-style: normal;
+  font-weight: 900;
+  font-display: block;
+  src: url("../fonts/fa-solid-900.woff2") format("woff2");
+  unicode-range: U+F185-F186;
+}
+.theme-toggle .fa-solid { font-family: "PK Theme Icons"; font-weight: 900; font-style: normal; }
+.theme-toggle .fa-sun::before { content: "\f185"; }
+.theme-toggle .fa-moon::before { content: "\f186"; }
+.theme-toggle {
+  flex-shrink: 0;
+  margin-left: auto;
+}
+.theme-toggle + .topbar-notifications {
+  margin-left: 0;
+}
+.pwa-install-button:not([hidden]) + .theme-toggle {
+  margin-left: 0;
+}
+.theme-toggle:focus-visible {
+  outline: 3px solid var(--ui-brand-300);
+  outline-offset: 2px;
+}
+:root[data-theme="dark"] .app-sidebar {
+  --ui-ink-200: var(--ui-sidebar-text);
+  --ui-ink-400: var(--ui-sidebar-muted);
+  --ui-slate-200: var(--ui-sidebar-text);
+  background-color: var(--ui-black);
+}
+:root[data-theme="dark"] .side-link.active,
+:root[data-theme="dark"] .side-link[aria-current="page"] {
+  color: var(--ui-on-accent);
+}
+:root[data-theme="dark"] .modal-backdrop,
+:root[data-theme="dark"] .sidebar-backdrop {
+  background: var(--ui-black);
+}
+@media (max-width: 575.98px) {
+  .topbar { gap: 8px; }
+  .topbar-context { min-width: 0; }
+  .topbar-module { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .theme-toggle { width: 40px; height: 40px; }
+}

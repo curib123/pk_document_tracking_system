@@ -59,7 +59,7 @@
     110deg,
     transparent 0%,
     color-mix(in srgb, var(--ui-brand-200) 22%, transparent) 45%,
-    color-mix(in srgb, var(--ui-white) 15%, transparent) 60%,
+    color-mix(in srgb, var(--surface) 15%, transparent) 60%,
     color-mix(in srgb, var(--ui-brand-100) 20%, transparent) 55%,
     transparent 82%
   );
@@ -92,7 +92,7 @@
   bottom: -158px;
 
   border-radius: 50%;
-  border: 1px solid color-mix(in srgb, var(--ui-white) 7%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 7%, transparent);
 
   pointer-events: none;
 }
@@ -115,11 +115,11 @@
   margin-bottom: 13px;
   padding: 6px 10px;
 
-  border: 1px solid color-mix(in srgb, var(--ui-white) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 14%, transparent);
 
   border-radius: 999px;
 
-  background: color-mix(in srgb, var(--ui-white) 6%, transparent);
+  background: color-mix(in srgb, var(--surface) 6%, transparent);
 
   font-size: 10.5px;
   font-weight: 700;
@@ -177,11 +177,11 @@
   min-width: 0;
   padding: 13px 17px 13px 12px;
 
-  border: 1px solid color-mix(in srgb, var(--ui-white) 14%, transparent);
+  border: 1px solid color-mix(in srgb, var(--surface) 14%, transparent);
 
   border-radius: 13px;
 
-  background: color-mix(in srgb, var(--ui-white) 5%, transparent);
+  background: color-mix(in srgb, var(--surface) 5%, transparent);
 
   white-space: nowrap;
 }
@@ -197,7 +197,7 @@
 
   border-radius: 11px;
 
-  background: color-mix(in srgb, var(--ui-white) 9%, transparent);
+  background: color-mix(in srgb, var(--surface) 9%, transparent);
 
   color: var(--ui-brand-150);
 }
@@ -281,7 +281,7 @@
   padding: 20px 22px;
   border: 1px solid var(--ui-line);
   border-radius: 14px;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: var(--dashboard-shadow);
   transition:
     border-color 0.18s ease,
@@ -397,7 +397,7 @@
   border: 1px solid var(--ui-line);
   border-radius: 16px;
   overflow: hidden;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: var(--dashboard-shadow);
 }
 
@@ -413,7 +413,7 @@
   padding: 19px 22px;
   min-height: 76px;
   border-bottom: 1px solid var(--ui-line-soft);
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .dashboard-page .dashboard-section-header > div {
@@ -465,7 +465,7 @@
   height: 300px;
   margin: 0;
   padding: 20px 25px 10px;
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .dashboard-page .dashboard-chart-box-doughnut {
@@ -555,7 +555,7 @@
 
 .dashboard-page .dashboard-activity-card .dashboard-section-header {
   min-height: 74px;
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .dashboard-page .dashboard-activity-scroll {

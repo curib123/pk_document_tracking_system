@@ -20,7 +20,7 @@
   --alert-line: var(--ui-blue-300);
   border: 1px solid var(--ui-line);
   border-radius: 24px;
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-ink-900);
   box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-navy) 20%, transparent);
   overflow: hidden;
@@ -91,7 +91,7 @@
   justify-content: center;
   flex-shrink: 0;
   padding: 32px 28px 22px;
-  background: linear-gradient(180deg, var(--alert-soft), var(--ui-white));
+  background: linear-gradient(180deg, var(--alert-soft), var(--surface));
 }
 
 .app-alert-modal .app-alert-symbol,
@@ -108,7 +108,7 @@
   font-size: 28px;
   box-shadow:
     0 0 0 7px color-mix(in srgb, var(--alert-soft) 55%, transparent),
-    inset 0 1px 0 var(--ui-white);
+    inset 0 1px 0 var(--surface);
 }
 
 .app-alert-modal .app-alert-symbol svg,
@@ -131,7 +131,7 @@
   padding: 14px;
   border: 1px solid var(--ui-line);
   border-radius: 13px;
-  background-color: var(--ui-white);
+  background-color: var(--surface);
   color: var(--ui-ink-500);
   opacity: 1;
   cursor: pointer;
@@ -276,7 +276,7 @@
 
 .workflow-step-row:hover {
   border-color: var(--ui-brand-200);
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 @media (max-width: 760px) {
@@ -411,7 +411,7 @@
   border: 1px solid var(--ui-line);
   border-radius: 24px;
   overflow: hidden;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-navy) 22%, transparent);
 }
 
@@ -428,7 +428,7 @@
   flex: 0 0 auto;
   padding: 28px 28px 20px;
   border: 0;
-  background: linear-gradient(180deg, var(--ui-brand-50), var(--ui-white));
+  background: linear-gradient(180deg, var(--ui-brand-50), var(--surface));
 }
 
 #confirmModal .confirmation-heading {
@@ -450,7 +450,7 @@
   border-radius: 18px;
   background: var(--ui-brand-50);
   color: var(--ui-brand-600);
-  box-shadow: inset 0 1px 0 var(--ui-white);
+  box-shadow: inset 0 1px 0 var(--surface);
 }
 
 .confirmation-symbol svg {
@@ -499,7 +499,7 @@
   padding: 0;
   border: 1px solid var(--ui-line);
   border-radius: 13px;
-  background-color: var(--ui-white);
+  background-color: var(--surface);
   background-size: 12px;
   opacity: 1;
   color: var(--ui-ink-600);
@@ -556,7 +556,7 @@
   padding: 10px 12px;
   border: 1px solid var(--ui-line-strong);
   border-radius: 11px;
-  background-color: var(--ui-white);
+  background-color: var(--surface);
   color: var(--ui-ink-900);
   font-family: inherit;
   font-size: 14px;
@@ -606,7 +606,7 @@
 #actionModal .modal-footer .btn-danger {
   background: var(--ui-brand-800);
   border-color: var(--ui-brand-800);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 #confirmModal .modal-footer .btn-danger:hover,
@@ -617,7 +617,7 @@
 
 #confirmModal .modal-footer .btn-light,
 #actionModal .modal-footer .btn-light {
-  background: var(--ui-white);
+  background: var(--surface);
   border: 1px solid var(--ui-line-strong);
   color: var(--ui-ink-600);
 }
@@ -741,7 +741,7 @@
   gap: 18px;
   margin: 14px 0 15px;
   padding: 13px 17px;
-  background: var(--ui-white);
+  background: var(--surface);
   border: 1px solid var(--ui-line);
   border-radius: 13px;
 }
@@ -803,13 +803,13 @@
 
 .document-layout-choice:hover {
   color: var(--ui-brand-800);
-  background: var(--ui-white);
+  background: var(--surface);
   text-decoration: none;
 }
 
 .document-layout-choice.is-active {
   color: var(--ui-brand-700);
-  background: var(--ui-white);
+  background: var(--surface);
   border-color: var(--ui-line-soft);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 9%, transparent);
 }
@@ -820,7 +820,7 @@
 }
 
 .doc-folder-explorer {
-  background: var(--ui-white);
+  background: var(--surface);
   min-height: 220px;
 }
 
@@ -968,7 +968,7 @@
   height: auto;
   box-sizing: border-box;
   padding-block: 11px;
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 2%, transparent);
 }
 
@@ -1132,7 +1132,7 @@
 .document-layout-choice.is-active {
   color: var(--ui-brand-800);
   border-color: var(--ui-brand-150);
-  background: var(--ui-white);
+  background: var(--surface);
   box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 6%, transparent);
 }
 
@@ -1214,7 +1214,7 @@
   flex-wrap: wrap;
   gap: 10px 16px;
   padding: 11px 22px;
-  background: var(--ui-white);
+  background: var(--surface);
   border-bottom: 1px solid var(--ui-line-soft);
 }
 
@@ -1287,7 +1287,7 @@
   padding: 7px 11px;
   border: 1px solid transparent;
   border-radius: 11px;
-  background: var(--ui-white);
+  background: var(--surface);
   cursor: pointer;
   color: var(--ui-ink-800);
   list-style: none;
@@ -1391,12 +1391,12 @@
   padding: 8px 11px;
   border: 1px solid var(--ui-line-soft);
   border-radius: 10px;
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .doc-tree-file:hover {
   border-color: var(--ui-slate-200);
-  background: var(--ui-white);
+  background: var(--surface);
 }
 
 .doc-tree-file-icon {
@@ -1693,7 +1693,7 @@
   padding: 7px 10px;
   border: 1px solid var(--ui-line);
   border-radius: 9px;
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-ink-600);
   font-size: 11px;
   line-height: 1.35;
@@ -1744,7 +1744,7 @@
 }
 
 .table-actions .record-action-danger:hover {
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
   background: var(--ui-brand-800);
   border-color: var(--ui-brand-800);
 }
@@ -1782,7 +1782,7 @@
   padding: 7px 13px;
   border: 1px solid var(--ui-line-strong);
   border-radius: 999px;
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-ink-600);
   font-size: 12px;
   font-weight: 600;
@@ -1801,7 +1801,7 @@
 .role-pill-input:checked + .role-pill-label {
   border-color: var(--ui-brand-800);
   background: var(--ui-brand-800);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .role-pill-input:checked + .role-pill-label i {
@@ -1882,7 +1882,7 @@
 
 a.task-notification-link:is(:hover, :focus-visible) {
   border-color: var(--ui-blue-700);
-  background: var(--ui-white);
+  background: var(--surface);
   color: var(--ui-blue-900);
 }
 
@@ -1955,7 +1955,7 @@ a.task-notification-link:focus-visible {
   .record-action:is(:hover, :focus-visible) {
   background: var(--record-hover-fill);
   border-color: var(--record-hover-fill);
-  color: var(--ui-white);
+  color: var(--ui-on-accent);
 }
 
 .table-actions .record-action:focus-visible {

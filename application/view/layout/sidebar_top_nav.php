@@ -282,6 +282,10 @@ $navPage = end($navParts);
                 <i class="fa-solid fa-download" aria-hidden="true"></i><span>Install App</span>
             </button>
              
+            <button type="button" id="themeToggle" class="icon-button notification-bell-button theme-toggle" hidden
+                aria-label="Switch to dark mode" title="Switch to dark mode" aria-pressed="false">
+                <i class="fa-solid fa-moon" aria-hidden="true"></i>
+            </button>
             <div class="topbar-notifications" id="notificationBellPanel"
                  data-notification-list="<?= html_escape(site_url('notifications/inbox')) ?>"
                  data-notification-read="<?= html_escape(site_url('notifications/inbox/read')) ?>"
