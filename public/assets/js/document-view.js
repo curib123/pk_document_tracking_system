@@ -404,7 +404,6 @@
       var allowed = [
         "active",
         "disposed",
-        "archived",
         "cancelled",
         "submitted",
         "pending",

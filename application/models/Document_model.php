@@ -80,7 +80,7 @@ class Document_model extends CI_Model
             else
                 $this->Folder_model->scope_documents($domain, $browser, 'd');
         }
-        if ($status !== '' && in_array($status, ['active', 'disposed', 'archived', 'cancelled'], TRUE))
+        if ($status !== '' && in_array($status, ['active', 'disposed', 'cancelled'], TRUE))
             $this->db->where('d.status', $status);
         foreach (['from' => ' >=', 'to' => ' <='] as $name => $operator) {
             if (!empty($filters[$name]))

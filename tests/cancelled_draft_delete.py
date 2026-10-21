@@ -155,6 +155,11 @@ def run(page, base, site):
     post(page, base, 'my-requests/softcopy/delete', record)
     assert attachment.exists(), 'Approved shared file must retain its bytes'
 
+    for domain in ['hardcopy', 'softcopy']:
+        page.goto(base + 'documents/' + domain + '?period=all')
+        choices = page.locator('select[name="status"] option').evaluate_all('(items) => items.map(item => item.value)')
+        assert choices == ['', 'active', 'disposed', 'cancelled'], choices
+
     # Permission changes also apply to direct POSTs.
     record = fixture(actor=other)
     sql("INSERT INTO roles(name,active) VALUES('Delete test no permissions',1); UPDATE users SET role_id=LAST_INSERT_ID() WHERE id=" + str(other))

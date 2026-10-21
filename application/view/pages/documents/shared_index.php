@@ -121,7 +121,7 @@ $dt_dir = strtolower($table['dir']);
 $dt_sortable = $cfg['domain'] === 'hardcopy'
     ? ['title', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
-$dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'archived' => 'Archived', 'cancelled' => 'Cancelled']];
+$dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,

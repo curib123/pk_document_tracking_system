@@ -731,8 +731,7 @@ a {
   background: var(--ui-amber-100);
 }
 
-.status-returned,
-.status-archived {
+.status-returned {
   color: var(--ui-purple-700);
   background: var(--ui-purple-100);
 }
