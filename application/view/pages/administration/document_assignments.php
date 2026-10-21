@@ -126,7 +126,7 @@ if ($folder_value !== '')
           'hardcopy_id' => $domain === 'hardcopy' ? $item['document_id'] : '',
           'recipient_id' => $item['recipient_id']
         ],
-        'buttons' => [['type' => 'view'], ['type' => 'edit', 'modal' => '#assignmentModal', 'form' => '#assignmentForm', 'title' => 'Edit Assignment']]
+        'buttons' => [['type' => 'view'], ['type' => 'edit', 'modal' => '#assignmentModal', 'form' => '#assignmentForm']]
       ];
     }
     $dt_q = $table['q'];
@@ -170,24 +170,14 @@ if ($folder_value !== '')
       <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"
         data-confirm="Assign this document to the selected user?" autocomplete="off">
         <div class="modal-header">
-          <div class="assignment-modal-heading">
-            <span class="assignment-modal-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="9" cy="7" r="3"></circle><path d="M3 20v-2a6 6 0 0 1 10-4.5M15 17l2 2 4-5"></path>
-              </svg>
-            </span>
-            <div>
-              <h2 class="modal-title" id="assignmentModalTitle">Assign Document</h2>
-              <p class="assignment-modal-context"><?= $domain === 'hardcopy' ? 'Hardcopy / Places' : 'Softcopy / Categories' ?></p>
-            </div>
-          </div>
+          <h2 class="modal-title fs-6" id="assignmentModalTitle">Assign Document</h2>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-          <div class="assignments-modal-grid">
+          <div class="assignments-modal-grid row g-3">
             <input type="hidden" name="document_domain" value="<?= html_escape($domain) ?>">
             <input type="hidden" name="folder" value="<?= html_escape($folder_value) ?>">
-            <div class="assignment-field" data-document-domain="<?= html_escape($domain) ?>">
+            <div class="col-md-6" data-document-domain="<?= html_escape($domain) ?>">
               <label class="form-label" for="<?= $domain === 'hardcopy' ? 'assignmentHardcopy' : 'assignmentSoftcopy' ?>"><?= ucfirst($domain) ?> Document</label>
               <select class="form-select" id="<?= $domain === 'hardcopy' ? 'assignmentHardcopy' : 'assignmentSoftcopy' ?>"
                 name="<?= $domain ?>_id" data-searchable required autocomplete="off">
@@ -197,7 +187,7 @@ if ($folder_value !== '')
                 <?php endforeach; ?>
               </select>
             </div>
-            <div class="assignment-field">
+            <div class="col-md-6">
               <label class="form-label" for="assignmentUser">Assigned User</label>
               <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required autocomplete="off">
                 <option value="">Choose an active user</option>
@@ -206,7 +196,7 @@ if ($folder_value !== '')
                 <?php endforeach; ?>
               </select>
             </div>
-            <div class="assignments-help">
+            <div class="assignments-help col-12">
               <p class="form-text mb-0">Use the page search or a specific folder to narrow the document choices.</p>
             </div>
           </div>
