@@ -178,7 +178,7 @@ class Document_model extends CI_Model
     }
 
     // Admin assignment choices are constrained to the currently open folder.
-    public function options_in_folder($domain, $browser, $q = '')
+    public function options_in_folder($domain, $browser, $q = '', $selectedIds = [])
     {
         $c = $this->config($domain);
         $this->load->model('Folder_model');
@@ -191,8 +191,17 @@ class Document_model extends CI_Model
         if ($q !== '')
             $this->db->group_start()->like('d.title', $q)
                 ->or_like($domain === 'softcopy' ? 'd.document_number' : 'd.sequence_number', $q)->group_end();
-        return $this->db->select($columns)->order_by('d.title')
+        $options = $this->db->select($columns)->order_by('d.title')
             ->limit(500)->get()->result_array();
+        // Assignment rows can match an assignee's name rather than the title.
+        // Their current documents must remain selectable, even past the cap.
+        $missing = array_diff(array_map('intval', $selectedIds), array_map('intval', array_column($options, 'id')));
+        if ($missing) {
+            $this->db->from($c['table'] . ' d')->where('d.status', 'active')->where_in('d.id', $missing);
+            $this->Folder_model->scope_documents($domain, $browser, 'd');
+            $options = array_merge($options, $this->db->select($columns)->order_by('d.title')->get()->result_array());
+        }
+        return $options;
     }
 
     /** Validate one selected assignment document, independent of display limits. */

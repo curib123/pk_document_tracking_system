@@ -168,7 +168,8 @@ class Administration_model extends CI_Model
         if (!empty($state['q']))
             $this->db->group_start()->like('d.title', $state['q'])
                 ->or_like($domain === 'softcopy' ? 'd.document_number' : 'd.sequence_number', $state['q'])
-                ->or_like('u.first_name', $state['q'])->or_like('u.last_name', $state['q'])->group_end();
+                ->or_like('u.first_name', $state['q'])->or_like('u.last_name', $state['q'])
+                ->or_like("CONCAT_WS(' ',u.first_name,u.last_name)", $state['q'])->group_end();
         if (!empty($state['owner']))
             $this->db->where('u.id', (int) $state['owner']);
         $query = $this->db->get_compiled_select();

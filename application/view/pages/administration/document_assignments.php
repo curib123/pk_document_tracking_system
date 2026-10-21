@@ -17,6 +17,12 @@ if ($folder_value !== '')
   <?php endforeach; ?>
 </nav>
 
+  <div class="d-flex justify-content-end mb-3">
+    <button type="button" class="btn btn-primary js-edit" data-bs-toggle="modal" data-bs-target="#assignmentModal"
+      data-target="#assignmentForm" data-title="Assign Document"
+      data-record="<?= html_escape(json_encode(['recipient_id' => (int) $table['owner']])) ?>">Assign Document</button>
+  </div>
+
   <?php if ($domain === 'hardcopy'): ?>
     <section class="workspace-card assignments-location-card">
       <form class="assignments-location-form" method="post"
@@ -40,7 +46,7 @@ if ($folder_value !== '')
               autocomplete="off">
               <option value="">Choose active user</option>
               <?php foreach ($users_list as $person): ?>
-                <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
+                <option value="<?= (int) $person['id'] ?>" <?= (int) $table['owner'] === (int) $person['id'] ? 'selected' : '' ?>><?= html_escape($person['name']) ?></option>
               <?php endforeach; ?>
             </select>
           </div>
@@ -86,9 +92,11 @@ if ($folder_value !== '')
               <?php endforeach; ?>
             </select>
           </div>
-         <button class="btn btn-primary w-100" type="submit">
+          <div class="col-lg-2">
+            <button class="btn btn-primary w-100" type="submit">
               <i class="fa-solid fa-user-check me-1" aria-hidden="true"></i> Assign All
             </button>
+          </div>
         </div>
         <input type="hidden" name="confirmed" value="no">
         <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
@@ -146,6 +154,7 @@ if ($folder_value !== '')
       'dt_sort',
       'dt_dir',
       'dt_sortable',
+      'dt_filters',
       'dt_filter_values',
       'dt_badges',
       'dt_create'
@@ -154,4 +163,51 @@ if ($folder_value !== '')
   </div>
 </section>
 
+<div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="assignmentModal" tabindex="-1"
+  aria-labelledby="assignmentModalTitle" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <form id="assignmentForm" method="post" action="<?= site_url('admin/document-assignments/save') ?>"
+        data-confirm="Assign this document to the selected user?" autocomplete="off">
+        <div class="modal-header">
+          <h2 class="modal-title fs-6" id="assignmentModalTitle">Assign Document</h2>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+          <div class="assignments-modal-grid row g-3">
+            <input type="hidden" name="document_domain" value="<?= html_escape($domain) ?>">
+            <input type="hidden" name="folder" value="<?= html_escape($folder_value) ?>">
+            <div class="col-md-6" data-document-domain="<?= html_escape($domain) ?>">
+              <label class="form-label" for="<?= $domain === 'hardcopy' ? 'assignmentHardcopy' : 'assignmentSoftcopy' ?>"><?= ucfirst($domain) ?> Document</label>
+              <select class="form-select" id="<?= $domain === 'hardcopy' ? 'assignmentHardcopy' : 'assignmentSoftcopy' ?>"
+                name="<?= $domain ?>_id" data-searchable required autocomplete="off">
+                <option value="">Choose <?= $domain ?> from this folder</option>
+                <?php foreach ($domain === 'hardcopy' ? $hardcopy_options : $softcopy_options as $doc): ?>
+                  <option value="<?= (int) $doc['id'] ?>"><?= html_escape(($domain === 'softcopy' ? $doc['document_number'] . ' · ' : '') . $doc['title']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label" for="assignmentUser">Assigned User</label>
+              <select class="form-select" id="assignmentUser" name="recipient_id" data-searchable required autocomplete="off">
+                <option value="">Choose an active user</option>
+                <?php foreach ($users_list as $person): ?>
+                  <option value="<?= (int) $person['id'] ?>"><?= html_escape($person['name']) ?></option>
+                <?php endforeach; ?>
+              </select>
+            </div>
+            <div class="assignments-help col-12">
+              <p class="form-text mb-0">Use the page search or a specific folder to narrow the document choices.</p>
+            </div>
+          </div>
+        </div>
+        <input type="hidden" name="confirmed" value="no">
+        <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>" value="<?= $this->security->get_csrf_hash() ?>">
+        <div class="modal-footer">
+          <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
+          <button class="btn btn-primary" type="submit">Save Assignment</button>
+        </div>
+      </form>
+    </div>
+  </div>
 </div>

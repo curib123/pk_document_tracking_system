@@ -58,6 +58,30 @@
   background: var(--ui-surface-muted) !important;
   border-color: var(--ui-line) !important;
 }
+/* Bootstrap's dark icon filter also inverts a custom button background.
+   Draw a text close icon so shared modals stay readable with or without CDN. */
+:root[data-theme="dark"] .modal .btn-close {
+  display: inline-grid;
+  place-items: center;
+  padding: 0;
+  background-color: var(--ui-surface-muted) !important;
+  background-image: none;
+  border-color: var(--ui-line-strong) !important;
+  color: var(--ui-ink-700) !important;
+  filter: none;
+  opacity: 1;
+}
+:root[data-theme="dark"] .modal .btn-close::before {
+  content: "\00d7";
+  font-family: system-ui, sans-serif;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+}
+:root[data-theme="dark"] .modal .btn-close:hover {
+  background-color: var(--ui-line) !important;
+  color: var(--ui-ink-950) !important;
+}
 @media (max-width: 575.98px) {
   .topbar { gap: 8px; }
   .topbar-context { min-width: 0; }

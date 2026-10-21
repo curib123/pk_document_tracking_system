@@ -108,6 +108,7 @@ class Administration extends MY_Controller
         $browser = $this->Folder_model->browse($domain, $folder);
         $table = $this->table_state('assigned_date');
         list($assignmentRows, $total, $table['page']) = $this->Administration_model->document_assignments($domain, $browser, $table);
+        $selectedDocuments = array_column($assignmentRows, 'document_id');
         $this->render('Assign Documents', 'pages/administration/document_assignments', [
             'selected_domain' => $domain,
             'folder_value' => $browser['folder'],
@@ -117,9 +118,9 @@ class Administration extends MY_Controller
             'table' => $table,
             'total' => $total,
             'softcopy_options' => $domain === 'softcopy' ?
-                $this->Document_model->options_in_folder('softcopy', $browser, $table['q']) : [],
+                $this->Document_model->options_in_folder('softcopy', $browser, $table['q'], $selectedDocuments) : [],
             'hardcopy_options' => $domain === 'hardcopy' ?
-                $this->Document_model->options_in_folder('hardcopy', $browser, $table['q']) : [],
+                $this->Document_model->options_in_folder('hardcopy', $browser, $table['q'], $selectedDocuments) : [],
             'location_options' => $domain === 'hardcopy' ? $this->Document_model->hardcopy_locations() : [],
             'category_options' => $domain === 'softcopy' ? $this->Folder_model->tree('softcopy') : [],
             'users_list' => $this->Administration_model->user_options(),
@@ -137,6 +138,8 @@ class Administration extends MY_Controller
         $recipient = (int) $this->input->post('recipient_id');
         $folder = trim((string) $this->input->post('folder', TRUE));
         try {
+            if (!in_array($domain, ['hardcopy', 'softcopy'], TRUE))
+                throw new DomainException('Choose a valid document type.');
             $this->load->model('Folder_model');
             $this->load->model('Document_model');
             $browser = $this->Folder_model->browse($domain, $folder);
@@ -154,13 +157,12 @@ class Administration extends MY_Controller
                 (int) $this->user['id'],
                 NULL
             );
-            if ($this->db->trans_status() === FALSE)
+            if ($this->db->trans_status() === FALSE || $this->db->trans_commit() === FALSE)
                 throw new DomainException('Assignment transaction failed.');
-            $this->db->trans_commit();
             $this->notice('Document assigned successfully.');
-        } catch (DomainException $e) {
+        } catch (Throwable $e) {
             $this->db->trans_rollback();
-            $this->notice($e->getMessage(), 'danger');
+            $this->error_notice($e);
         }
         $query = ['domain' => in_array($domain, ['hardcopy', 'softcopy'], TRUE) ? $domain : 'hardcopy'];
         if ($folder !== '')
@@ -174,12 +176,14 @@ class Administration extends MY_Controller
         $this->confirmed();
         $locationId = (int) $this->input->post('location_id');
         $recipientId = (int) $this->input->post('recipient_id');
+        $redirectFolder = 'all';
         try {
             $this->load->model('Document_model');
             $location = $this->db->get_where('locations', ['id' => $locationId, 'active' => 1])->row_array();
             $recipient = $this->db->get_where('users', ['id' => $recipientId, 'active' => 1])->row_array();
             if (!$location || !$recipient)
                 throw new DomainException('Choose an active Location and assigned user.');
+            $redirectFolder = 'location:' . $locationId;
             require_once APPPATH . 'services/documents/document_access_service.php';
             $this->db->trans_begin();
             // Lock the complete location set, not only the visible page.
@@ -189,6 +193,8 @@ class Administration extends MY_Controller
             )->result_array();
 
             $ids = array_map('intval', array_column($rows, 'id'));
+            if (!$rows)
+                throw new DomainException('No active Hardcopy documents in this Location.');
             $openTransfers = $this->db
                 ->where_in('hardcopy_id', $ids)
                 ->where_in('status', ['for_transfer', 'in_transit'])
@@ -199,8 +205,6 @@ class Administration extends MY_Controller
                     'Complete or cancel those handoffs before reassigning.'
                 );
             }
-            if (!$rows)
-                throw new DomainException('No active Hardcopy documents in this Location.');
             if (count($rows) > 2000)
                 throw new DomainException('More than 2000 documents at this Location. Divide into smaller assignments.');
             $service = new Document_access_service();
@@ -215,9 +219,8 @@ class Administration extends MY_Controller
                     NULL
                 );
             }
-            if ($this->db->trans_status() === FALSE)
+            if ($this->db->trans_status() === FALSE || $this->db->trans_commit() === FALSE)
                 throw new DomainException('Location assignment transaction failed.');
-            $this->db->trans_commit();
 
             $this->load->library('Audit_file');
             $written = $this->audit_file->append(
@@ -247,7 +250,7 @@ class Administration extends MY_Controller
             $this->notice($e instanceof DomainException ? $e->getMessage() :
                 'Location assignment failed. No changes were saved.', 'danger');
         }
-        redirect('admin/document-assignments?domain=hardcopy&folder=location:' . $locationId);
+        redirect('admin/document-assignments?' . http_build_query(['domain' => 'hardcopy', 'folder' => $redirectFolder]));
     }
 
     /** Assign all active softcopies in the selected category branch atomically. */
@@ -257,10 +260,12 @@ class Administration extends MY_Controller
         $this->confirmed();
         $categoryId = (int) $this->input->post('category_id');
         $recipientId = (int) $this->input->post('recipient_id');
+        $redirectFolder = 'all';
         try {
             $this->load->model('Folder_model');
             $tree = $this->Folder_model->tree('softcopy');
-            $keys = Folder_tree::branch($tree, "category: {$categoryId}");
+            $keys = Folder_tree::branch($tree, "category:{$categoryId}");
+            $redirectFolder = "category:{$categoryId}";
             $categoryIds = array_map(
                 static fn($key) => (int) substr($key, 9),
                 $keys
@@ -319,7 +324,7 @@ class Administration extends MY_Controller
         }
         redirect('admin/document-assignments?' . http_build_query([
             'domain' => 'softcopy',
-            'folder' => "category:{$categoryId}",
+            'folder' => $redirectFolder,
             'owner' => $recipientId
         ]));
     }
