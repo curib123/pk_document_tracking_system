@@ -23,6 +23,7 @@ def run(page, base, site):
     toggle = page.get_by_role('button', name='Switch to dark mode', exact=True)
     expect(toggle).to_be_visible()
     expect(toggle.locator('i')).to_have_class('fa-solid fa-moon')
+    assert page.evaluate('document.fonts.load(\'900 16px "PK Theme Icons"\', "\\uf186").then(fonts => fonts.length > 0)'), 'Local Font Awesome font must load'
     assert toggle.evaluate('(e) => e.nextElementSibling.id') == 'notificationBellPanel'
     before = page.locator('body').evaluate('(e) => getComputedStyle(e).backgroundColor')
     toggle.click()
@@ -38,6 +39,16 @@ def run(page, base, site):
         expect(page.locator('html')).to_have_attribute('data-theme', 'dark')
         expect(page.locator('.page-content')).to_be_visible()
         assert 'Database Error' not in page.locator('body').inner_text()
+        if route == 'documents/softcopy':
+            create = page.locator('.table-toolbar .btn-primary')
+            create.hover()
+            expect(create).to_have_css('color', 'rgb(40, 21, 31)')
+            page.mouse.move(0, 0)
+        if route == 'dashboard':
+            # Banner copy must stay light against its retained dark gradient.
+            color = page.locator('.dashboard-welcome p').evaluate('(e) => getComputedStyle(e).color')
+            channels = [int(c.strip()) for c in color.removeprefix('rgb(').removesuffix(')').split(',')]
+            assert min(channels) > 180, color
     evidence = ROOT / 'storage/theme-checks'
     evidence.mkdir(parents=True, exist_ok=True)
     for width in [1440, 390, 320]:

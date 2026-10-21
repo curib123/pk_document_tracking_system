@@ -184,6 +184,8 @@
 /* Shared action colors */
 .btn-primary {
   --bs-btn-color: var(--ui-on-accent);
+  --bs-btn-hover-color: var(--ui-on-accent);
+  --bs-btn-active-color: var(--ui-on-accent);
   --bs-btn-bg: var(--ui-brand-500);
   --bs-btn-border-color: var(--ui-brand-500);
   --bs-btn-hover-bg: var(--ui-brand-800);
@@ -198,12 +200,15 @@
   --bs-btn-color: var(--ui-brand-700);
   --bs-btn-border-color: var(--ui-brand-300);
   --bs-btn-hover-color: var(--ui-on-accent);
+  --bs-btn-active-color: var(--ui-on-accent);
   --bs-btn-hover-bg: var(--ui-brand-700);
   --bs-btn-hover-border-color: var(--ui-brand-700);
 }
 
 .btn-danger {
   --bs-btn-color: var(--ui-on-accent);
+  --bs-btn-hover-color: var(--ui-on-accent);
+  --bs-btn-active-color: var(--ui-on-accent);
   --bs-btn-bg: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-800);
   --bs-btn-hover-bg: var(--ui-brand-900);
@@ -214,6 +219,7 @@
   --bs-btn-color: var(--ui-brand-800);
   --bs-btn-border-color: var(--ui-brand-300);
   --bs-btn-hover-color: var(--ui-on-accent);
+  --bs-btn-active-color: var(--ui-on-accent);
   --bs-btn-hover-bg: var(--ui-brand-800);
   --bs-btn-hover-border-color: var(--ui-brand-800);
 }

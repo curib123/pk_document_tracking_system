@@ -32,6 +32,12 @@
   --ui-slate-200: var(--ui-sidebar-text);
   background-color: var(--ui-black);
 }
+:root[data-theme="dark"] .dashboard-welcome {
+  --ui-ink-200: var(--ui-sidebar-text);
+  --ui-brand-100: var(--ui-white);
+  --ui-brand-150: var(--ui-sidebar-text);
+  --ui-brand-200: var(--ui-sidebar-text);
+}
 :root[data-theme="dark"] .side-link.active,
 :root[data-theme="dark"] .side-link[aria-current="page"] {
   color: var(--ui-on-accent);

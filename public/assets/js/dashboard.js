@@ -4,6 +4,25 @@
 (function () {
   "use strict";
   document.addEventListener("DOMContentLoaded", function () {
+    var charts = [];
+    function color(name) {
+      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+    }
+    function updateTheme(chart) {
+      var pie = chart.config.type === "doughnut";
+      var dataset = chart.data.datasets[0];
+      dataset.backgroundColor = pie ? [color("--ui-blue-700"), color("--ui-brand-600")] : color("--ui-brand-600");
+      dataset.hoverBackgroundColor = pie ? [color("--ui-blue-900"), color("--ui-brand-800")] : color("--ui-brand-800");
+      dataset.borderColor = color("--surface");
+      chart.options.plugins.legend.labels.color = color("--ui-ink-600");
+      if (!pie) {
+        chart.options.scales.x.grid.color = color("--ui-line-soft");
+        chart.options.scales.x.ticks.color = color("--ui-ink-500");
+        chart.options.scales.y.ticks.color = color("--ui-ink-600");
+      }
+      chart.update("none");
+    }
+    window.addEventListener("pk-theme-change", function () { charts.forEach(updateTheme); });
     var chartTypeNodes = document.querySelectorAll(
       ".dashboard-page canvas[data-chart-type]",
     );
@@ -36,7 +55,7 @@
           categoryPercentage: 0.66,
           barPercentage: 0.76,
         };
-        new window.Chart(canvas, {
+        var chart = new window.Chart(canvas, {
           type: canvas.dataset.chartType,
           data: { labels: labels, datasets: [dataset] },
           options: {
@@ -119,6 +138,8 @@
                 }),
           },
         });
+        charts.push(chart);
+        updateTheme(chart);
       } catch (error) {
         var failedChart = canvas.closest(".chart-box");
         if (failedChart) failedChart.hidden = true;

@@ -204,7 +204,8 @@ def main(checks=run):
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(channel='msedge', headless=True)
                     context = browser.new_context(service_workers='block')
-                    context.route('https://**/*', lambda route: route.abort())
+                    if os.environ.get('TEST_EXTERNAL_ASSETS') != '1':
+                        context.route('https://**/*', lambda route: route.abort())
                     checks(context.new_page(), base, site)
                     browser.close()
     finally:
