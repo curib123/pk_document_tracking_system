@@ -846,6 +846,37 @@ class Request_service
             (new File_service())->cleanup_retired(0, $cleanupFileId);
     }
 
+    public function delete($tab, $id, $user)
+    {
+        if (!$this->ci->Permission_model->allowed($user, 'requests', 'cancel'))
+            throw new DomainException('You do not have permission to delete cancelled drafts.');
+        $types = $this->ci->Request_model->types($tab);
+        $this->ci->db->trans_begin();
+        try {
+            $request = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [(int) $id])->row_array();
+            if (!Request_policy::deletable($request, (int) $user['id']) || !in_array($request['type'], $types, TRUE))
+                throw new DomainException('Only your cancelled, unsubmitted draft can be deleted.');
+            require_once APPPATH . 'services/files/file_service.php';
+            $fileId = (new File_service())->retire_request_attachment($request);
+            // Remove request-only dependants; business-record foreign keys still
+            // prevent deletion if this draft has unexpectedly been applied.
+            foreach (['notifications', 'workflow_history', 'workflow_steps'] as $table)
+                $this->ci->db->where('request_id', (int) $id)->delete($table);
+            $this->ci->db->where('id', (int) $id)->delete('requests');
+            if ($this->ci->db->affected_rows() !== 1 || $this->ci->db->trans_status() === FALSE)
+                throw new DomainException('Request deletion failed. Refresh and try again.');
+            if ($this->ci->db->trans_commit() === FALSE)
+                throw new DomainException('Request deletion could not be committed.');
+        } catch (Throwable $e) {
+            $this->ci->db->trans_rollback();
+            if ($e instanceof DomainException)
+                throw $e;
+            throw new DomainException('Request could not be deleted. Refresh and try again.');
+        }
+        if ($fileId)
+            (new File_service())->cleanup_retired(0, $fileId);
+    }
+
     public function cancel($tab, $id, $user)
     {
         $this->ci->db->trans_begin();

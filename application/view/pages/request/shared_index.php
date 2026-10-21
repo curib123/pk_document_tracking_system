@@ -1,5 +1,6 @@
 <?php
 require_once APPPATH . 'services/presentation/request_title.php';
+require_once APPPATH . 'services/request/request_policy.php';
 $tabs = [
   'softcopy' => 'Softcopy Requests',
   'hardcopy' => 'Hardcopy Requests',
@@ -221,6 +222,14 @@ foreach ($rows as $row) {
       'label' => 'Cancel',
       'description' => 'Cancel this draft request.',
       'icon' => 'fa-solid fa-xmark'
+    ];
+  if (!$task && $canRequest('cancel') && Request_policy::deletable($row, (int) $user['id']))
+    $buttons[] = [
+      'type' => 'action',
+      'url' => "my-requests/{$tab}/delete",
+      'label' => 'Delete',
+      'description' => 'Delete this cancelled draft permanently? This cannot be undone.',
+      'icon' => 'fa-solid fa-trash-can'
     ];
   // Rows are already scoped to this user's exact active approval assignment.
   if ($task && $row['status'] === 'submitted')

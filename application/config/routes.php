@@ -126,6 +126,7 @@ $route['my-requests/(:any)']['GET'] = 'Requests/mine/$1';
 $route['my-requests/(:any)/save']['POST'] = 'Requests/save/$1';
 $route['my-requests/(:any)/submit']['POST'] = 'Requests/submit/$1';
 $route['my-requests/(:any)/cancel']['POST'] = 'Requests/cancel/$1';
+$route['my-requests/(:any)/delete']['POST'] = 'Requests/delete/$1';
 
 
 /*

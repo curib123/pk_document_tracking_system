@@ -1,6 +1,14 @@
 <?php
 final class Request_policy
 {
+    public static function deletable(?array $request, int $actor): bool
+    {
+        return $request && (int) $request['requested_by'] === $actor &&
+            $request['status'] === 'cancelled' && empty($request['submitted_at']) &&
+            empty($request['workflow_version_id']) && empty($request['snapshot']) &&
+            empty($request['current_node']) && empty($request['result']);
+    }
+
     public static function module(string $type): string
     {
         $modules = [

@@ -191,6 +191,20 @@ class Requests extends MY_Controller
         redirect("my-tasks/hardcopy-transfer");
     }
 
+    public function delete($tab)
+    {
+        $this->Request_model->types($tab);
+        $this->require_permission('requests', 'cancel');
+        $this->confirmed();
+        try {
+            (new Request_service())->delete($tab, (int) $this->input->post('id'), $this->user);
+            $this->notice('Cancelled draft permanently deleted.');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
+        }
+        redirect("my-requests/{$tab}");
+    }
+
     public function cancel($tab)
     {
         $this->Request_model->types($tab);
