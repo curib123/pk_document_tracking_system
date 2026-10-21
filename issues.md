@@ -1,1 +1,2 @@
 - cancelled draft can be remove / deleted hard delete
+- remove the obsolute archived status
