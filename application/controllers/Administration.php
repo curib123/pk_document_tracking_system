@@ -144,10 +144,18 @@ class Administration extends MY_Controller
             $this->load->model('Document_model');
             $browser = $this->Folder_model->browse($domain, $folder);
             $documentId = $domain === 'softcopy' ? $soft : $hard;
-            if (!$this->Document_model->available_in_folder($domain, $documentId, $browser))
-                throw new DomainException('The document is not available in the selected folder.');
             require_once APPPATH . 'services/documents/document_access_service.php';
             $this->db->trans_begin();
+            $documentTable = $domain === 'softcopy' ? 'softcopy_documents' : 'hardcopy_documents';
+            $document = $this->db->query(
+                "SELECT id FROM {$documentTable} WHERE id=? AND status=? FOR UPDATE",
+                [$documentId, 'active']
+            )->row_array();
+            if (!$document || !$this->Document_model->available_in_folder($domain, $documentId, $browser))
+                throw new DomainException('The document is not available in the selected folder.');
+            if ($domain === 'hardcopy' && $this->db->where('hardcopy_id', $documentId)
+                ->where_in('status', ['for_transfer', 'in_transit'])->limit(1)->get('transfers')->row_array())
+                throw new DomainException('This document has an active transfer. Complete or cancel the handoff before reassigning.');
             (new Document_access_service())->apply(
                 'assignment',
                 $payload,

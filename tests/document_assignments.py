@@ -104,6 +104,14 @@ def run(page, base, site):
             expect(page.locator('select[name="owner"]')).to_be_visible()
             choose(page, 'assignmentUser', 'Theme Test')
             assert 'successfully' in save(page, '#assignmentForm')
+        # Individual custody changes must not invalidate an open handoff.
+        for status in ['for_transfer', 'in_transit']:
+            holder = sql('SELECT holder_id FROM hardcopy_documents WHERE id=' + hard[0])
+            transfer = sql("INSERT INTO transfers(hardcopy_id,origin,destination,current_holder_id,recipient_id,document_copy_number,reason,status) "
+                           "VALUES(" + hard[0] + ",'{}','{}'," + holder + "," + recipient + ",'','Test','" + status + "'); SELECT LAST_INSERT_ID()")
+            post(page, base, 'save', {'document_domain': 'hardcopy', 'hardcopy_id': hard[0], 'recipient_id': recipient, 'folder': 'all'})
+            assert sql('SELECT holder_id FROM hardcopy_documents WHERE id=' + hard[0]) == holder, status + ': active handoff must retain its holder'
+            sql('DELETE FROM transfers WHERE id=' + transfer)
         for width in [1440, 390, 320]:
             page.set_viewport_size({'width': width, 'height': 950})
             page.goto(base + 'admin/document-assignments?domain=softcopy&folder=all')
