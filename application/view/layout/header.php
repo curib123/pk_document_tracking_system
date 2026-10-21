@@ -25,6 +25,7 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/pwa.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/document-header.css') ?>">
     <?php if (!empty($login_transition)): ?>
         <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
         <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">

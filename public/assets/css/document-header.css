@@ -1,0 +1,110 @@
+/* Compact shared document header. Record fields and renderer stay unchanged. */
+#viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header {
+  position: relative;
+  display: block;
+  padding: 16px 20px;
+  border-top: 0;
+  border-bottom: 0;
+  background: var(--ui-document-header-bg);
+  color: var(--ui-white);
+}
+#viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header .doc-modal-heading {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 12px 16px;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-eyebrow {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-right: 126px;
+  color: var(--ui-white);
+  font-size: 9px;
+  line-height: 1.3;
+  opacity: .8;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-title-line {
+  grid-column: 1 / -1;
+  gap: 9px;
+  padding-right: 126px;
+  margin-top: -6px;
+}
+#viewModal.is-document-view .doc-modal-header #viewModalTitle {
+  color: var(--ui-white);
+  font-size: clamp(18px, 2vw, 22px);
+  line-height: 1.25;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-kind-icon {
+  flex-basis: 30px;
+  width: 30px;
+  height: 32px;
+  border-color: color-mix(in srgb, var(--ui-white) 25%, transparent);
+  background: color-mix(in srgb, var(--ui-white) 12%, transparent);
+  color: var(--ui-white);
+  box-shadow: none;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-kind-icon::before { width: 18px; height: 18px; }
+#viewModal.is-document-view .doc-modal-header .doc-modal-number { margin-top: 3px; }
+#viewModal.is-document-view .doc-modal-header :is(.doc-modal-number-label, .doc-modal-number-value) { color: var(--ui-white); }
+#viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header :is(.doc-modal-metadata, .doc-modal-badges, .doc-modal-custody) {
+  display: contents;
+}
+#viewModal.is-document-view .doc-modal-header :is(.doc-modal-metadata-item, .doc-modal-custody-item) {
+  display: block;
+  min-width: 0;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 0 0 10px;
+  border: 0;
+  border-left: 1px solid color-mix(in srgb, var(--ui-white) 30%, transparent);
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-metadata-icon { display: none; }
+#viewModal.is-document-view .doc-modal-header :is(.doc-modal-metadata-label, .doc-modal-custody-label) {
+  display: block;
+  margin: 0;
+  color: var(--ui-white);
+  font-size: 10px;
+  line-height: 1.35;
+  font-weight: 500;
+  opacity: .8;
+}
+#viewModal.is-document-view .doc-modal-header :is(.doc-modal-metadata-value, .doc-modal-custody-value) {
+  display: block;
+  margin: 3px 0 0;
+  color: var(--ui-white);
+  font-size: 11px;
+  line-height: 1.45;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+#viewModal.is-document-view .doc-modal-header .doc-modal-top-actions {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  gap: 8px;
+}
+#viewModal.is-document-view .doc-modal-header .btn-close {
+  width: 34px;
+  height: 34px;
+  flex-basis: 34px;
+  border-color: color-mix(in srgb, var(--ui-white) 30%, transparent);
+  background-color: var(--ui-white);
+  color: var(--ui-document-header-bg);
+}
+@media (max-width: 991.98px) {
+  #viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header .doc-modal-heading {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+@media (max-width: 575.98px) {
+  #viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header { padding: 14px; }
+  #viewModal.is-document-view:not(.is-assignment-view) .doc-modal-header .doc-modal-heading {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px 12px;
+  }
+  #viewModal.is-document-view .doc-modal-header .doc-modal-title-line { padding-right: 0; margin-top: 0; }
+  #viewModal.is-document-view .doc-modal-header .doc-modal-top-actions { top: 10px; right: 10px; }
+  #viewModal.is-document-view .doc-modal-header .doc-modal-status { padding: 5px 8px; font-size: 10px; }
+}
