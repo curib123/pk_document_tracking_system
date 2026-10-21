@@ -61,7 +61,7 @@
 .document-assignments-page .assignments-tabs .tab-link.active {
   background: var(--surface);
   color: var(--ui-brand-800);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-ink-950) 8%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-shadow-ink) 8%, transparent);
 }
 .document-assignments-page .assignments-location-card {
   margin: 0 0 14px;
@@ -273,7 +273,7 @@
   border: 1px solid var(--ui-line) !important;
   border-radius: 19px;
   overflow: hidden;
-  box-shadow: 0 22px 68px color-mix(in srgb, var(--ui-ink-950) 28%, transparent);
+  box-shadow: 0 22px 68px color-mix(in srgb, var(--ui-shadow-ink) 28%, transparent);
 }
 .modal-dialog .modal-header {
   padding: 20px 24px;
@@ -338,9 +338,9 @@
   height: 20px;
   border-radius: 12px;
   padding: 1px 5px;
-  background: var(--ui-brand-700);
+  background: var(--ui-notification-bg);
   border: 2px solid var(--surface);
-  color: var(--ui-on-accent);
+  color: var(--ui-white);
   font-size: 10px;
   font-weight: 800;
 }
@@ -355,7 +355,7 @@
   background: var(--surface);
   border: 1px solid var(--ui-line);
   border-radius: 17px;
-  box-shadow: 0 18px 48px color-mix(in srgb, var(--ui-ink-950) 17%, transparent);
+  box-shadow: 0 18px 48px color-mix(in srgb, var(--ui-shadow-ink) 17%, transparent);
   overflow: hidden;
   z-index: 1090;
 }

@@ -182,7 +182,7 @@
   border: 1px solid color-mix(in srgb, var(--ui-brand-200) 65%, var(--surface));
   border-radius: 14px;
   background: var(--surface);
-  box-shadow: 0 2px 6px color-mix(in srgb, var(--ui-navy) 4%, transparent);
+  box-shadow: 0 2px 6px color-mix(in srgb, var(--ui-shadow-navy) 4%, transparent);
 }
 #viewModal.is-document-view .doc-modal-metadata-item.is-version {
   border-color: var(--ui-brand-200);
@@ -590,7 +590,7 @@
   color: var(--ui-brand-800);
   border-color: var(--ui-line-strong);
   background: var(--surface);
-  box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-ink-950) 4%, transparent);
+  box-shadow: 0 1px 3px color-mix(in srgb, var(--ui-shadow-ink) 4%, transparent);
   font-weight: 650;
 }
 #viewModal.is-document-view .doc-modal-nav-item:focus-visible {

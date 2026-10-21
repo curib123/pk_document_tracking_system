@@ -38,6 +38,7 @@ def run(page, base, site):
     sql("INSERT INTO workflow_steps(request_id,node_key,label,assignment,candidates,assigned_user_id,status) "
         "VALUES(" + record + ",'badge','Badge test','{}','[]'," + actor + ",'active')")
     for theme in ['light', 'dark']:
+        page.set_viewport_size({'width': 390, 'height': 950})
         page.evaluate('(theme) => localStorage.setItem("pk-dts-theme",theme)', theme)
         page.goto(base + 'documents/softcopy')
         badge = page.locator('#notificationBellCount')
@@ -46,6 +47,14 @@ def run(page, base, site):
         for candidate in [badge] + page.locator('.nav-count').all():
             palette = colors(candidate)
             assert contrast(palette['text'], palette['background']) >= 4.5, (theme, palette)
+        page.locator('#notificationBellButton').click()
+        expect(page.locator('#notificationBellMenu')).to_be_visible()
+        if theme == 'dark':
+            assert all(max(shadow[:3]) < 100 for shadow in colors(page.locator('#notificationBellMenu'))['shadows'])
+        evidence = ROOT / 'storage/feedback-checks'
+        evidence.mkdir(parents=True, exist_ok=True)
+        page.screenshot(path=str(evidence / (theme + '-390.png')))
+        page.get_by_role('button', name='Close notifications', exact=True).click()
         page.locator('.table-toolbar .js-edit').click()
         modal = page.locator('#editModal')
         expect(modal).to_be_visible()

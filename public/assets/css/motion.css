@@ -98,7 +98,7 @@
   .workspace-card:hover,
   .document-record-card:hover {
     border-color: var(--ui-line-strong);
-    box-shadow: 0 9px 24px color-mix(in srgb, var(--ui-ink-950) 7%, transparent);
+    box-shadow: 0 9px 24px color-mix(in srgb, var(--ui-shadow-ink) 7%, transparent);
   }
   .doc-tree-folder-row:hover {
     transform: translateX(2px);

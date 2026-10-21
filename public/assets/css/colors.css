@@ -11,6 +11,10 @@
   --ui-white: #FFFFFF;
   --ui-on-accent: #FFFFFF;
   --ui-document-header-bg: #99062F;
+  --ui-notification-bg: var(--ui-document-header-bg);
+  --ui-shadow-ink: var(--ui-ink-950);
+  --ui-shadow-navy: var(--ui-navy);
+  --ui-shadow-soft: var(--ui-ink-900);
   --ui-sidebar-text: #E0D7E0;
   --ui-sidebar-muted: #ADA0AE;
 
@@ -126,7 +130,10 @@
   --ui-surface-soft: #211B22;
   --ui-surface-muted: #29222A;
   --ui-on-accent: #28151F;
-  --ui-navy: #F7EDF3;
+  --ui-navy: #1D1820;
+  --ui-shadow-ink: var(--ui-black);
+  --ui-shadow-navy: var(--ui-black);
+  --ui-shadow-soft: var(--ui-black);
   --ui-ink-950: #F7EDF3;
   --ui-ink-900: #EADFE7;
   --ui-ink-800: #D9CAD5;

@@ -6,7 +6,7 @@
   --dashboard-muted: var(--ui-ink-500);
   --dashboard-line: var(--ui-line);
   --dashboard-shadow: 0 2px 10px
-    color-mix(in srgb, var(--ui-ink-950) 2.5%, transparent);
+    color-mix(in srgb, var(--ui-shadow-ink) 2.5%, transparent);
 
   width: 100%;
   min-width: 0;
@@ -27,7 +27,7 @@
 
   background: var(--ui-welcome-gradient);
 
-  box-shadow: 0 4px 16px color-mix(in srgb, var(--ui-ink-950) 8%, transparent);
+  box-shadow: 0 4px 16px color-mix(in srgb, var(--ui-shadow-ink) 8%, transparent);
 }
 
 /* Left accent line */
@@ -301,7 +301,7 @@
 
 .dashboard-page .dashboard-stat-card:hover {
   border-color: color-mix(in srgb, var(--stat-accent) 28%, var(--ui-line));
-  box-shadow: 0 6px 22px color-mix(in srgb, var(--ui-ink-900) 6%, transparent);
+  box-shadow: 0 6px 22px color-mix(in srgb, var(--ui-shadow-soft) 6%, transparent);
 }
 
 .dashboard-page .dashboard-stat-card[data-stat-kind="documents"] {

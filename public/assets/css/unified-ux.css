@@ -22,7 +22,7 @@
   border-radius: 24px;
   background: var(--surface);
   color: var(--ui-ink-900);
-  box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-navy) 20%, transparent);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-shadow-navy) 20%, transparent);
   overflow: hidden;
 }
 
@@ -412,7 +412,7 @@
   border-radius: 24px;
   overflow: hidden;
   background: var(--surface);
-  box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-navy) 22%, transparent);
+  box-shadow: 0 24px 80px color-mix(in srgb, var(--ui-shadow-navy) 22%, transparent);
 }
 
 #actionModal .modal-content > form {
@@ -811,7 +811,7 @@
   color: var(--ui-brand-700);
   background: var(--surface);
   border-color: var(--ui-line-soft);
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 9%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-shadow-ink) 9%, transparent);
 }
 
 .document-layout-choice:focus-visible {
@@ -969,7 +969,7 @@
   box-sizing: border-box;
   padding-block: 11px;
   background: var(--surface);
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 2%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-shadow-ink) 2%, transparent);
 }
 
 .app-main > .topbar .topbar-context {
@@ -1133,7 +1133,7 @@
   color: var(--ui-brand-800);
   border-color: var(--ui-brand-150);
   background: var(--surface);
-  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-ink-950) 6%, transparent);
+  box-shadow: 0 1px 4px color-mix(in srgb, var(--ui-shadow-ink) 6%, transparent);
 }
 
 .document-layout-choice.is-active .document-layout-choice-icon {

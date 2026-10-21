@@ -43,8 +43,20 @@
   color: var(--ui-on-accent);
 }
 :root[data-theme="dark"] .modal-backdrop,
+:root[data-theme="dark"] .fallback-backdrop,
 :root[data-theme="dark"] .sidebar-backdrop {
   background: var(--ui-black);
+}
+:root[data-theme="dark"] .offline-ui .modal,
+:root[data-theme="dark"] .auth-required-dialog,
+:root[data-theme="dark"] .app-auth-alert::backdrop {
+  background: color-mix(in srgb, var(--ui-black) 65%, transparent);
+}
+:root[data-theme="dark"] .side-link.active { box-shadow: none; }
+:root[data-theme="dark"] .nav-count.is-zero {
+  color: var(--ui-ink-600) !important;
+  background: var(--ui-surface-muted) !important;
+  border-color: var(--ui-line) !important;
 }
 @media (max-width: 575.98px) {
   .topbar { gap: 8px; }

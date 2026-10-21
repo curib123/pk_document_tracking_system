@@ -21,7 +21,7 @@
   border-radius: 16px;
   overflow: hidden;
   background: var(--surface);
-  box-shadow: 0 20px 64px color-mix(in srgb, var(--ui-navy) 18%, transparent);
+  box-shadow: 0 20px 64px color-mix(in srgb, var(--ui-shadow-navy) 18%, transparent);
 }
 #viewModal .modal-header,
 #fileHistoryModal .modal-header,
