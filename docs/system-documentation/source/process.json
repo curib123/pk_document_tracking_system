@@ -41,7 +41,7 @@
       "notes": [
         "Create Softcopy and Revise Softcopy will require a Document File before submission: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB.",
         "Only the requester will be allowed to edit a Draft or Returned proposal. Assignment and access requests will name the requester as recipient.",
-        "Cancel will be available only in Draft status. Only the owner will be allowed to delete an eligible Cancelled draft that has never been submitted."
+        "Request cancellation will be available only in Draft status. Only the owner will be allowed to delete an eligible Cancelled draft that has never been submitted."
       ],
       "legend": [
         "PK DTS: PK Document Tracking System.",
@@ -82,7 +82,7 @@
           "id": "decide",
           "actor": "Assigned approver",
           "icon": "reviewer",
-          "description": "Choose Approve, Return or Reject and enter decision comments."
+          "description": "Choose Approve, Return or Reject; add an optional remark for Return or Reject."
         },
         {
           "id": "history",
