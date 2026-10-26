@@ -15,6 +15,8 @@ This documentation defines the proposed processes, information flows and operati
 
 Each document has an editable original. Visio diagrams contain separate text, shapes and connected arrows. PowerPoint contains editable slide text, layouts and arrow annotations; screen illustrations remain image objects.
 
+[View the diagram page previews](previews/README.md). These images are exported PDF pages; they are not screenshots of the Visio application.
+
 The proposed operation will cover controlled hardcopy and softcopy records, configurable approvals, document access, assignments, physical transfers, disposal, administrative controls, audit and recovery.
 
 The Process Flow presents illustrated responsibilities and activity notes across five subprocesses. The two-sheet DFD shows participants, the central system and labelled information exchanges. The six-sheet Flowchart details authorization, requests, approvals, handoffs, document operations, file access, administration and recovery. Diagram headings, cards, arrows and notes use the Peanut Kisses red theme.

@@ -17,6 +17,8 @@ from zipfile import ZipFile
 import pymupdf
 
 from brand_palette import ACCENT_RED, BRAND_RED, COLORS
+from export_previews import DIAGRAMS
+import hashlib
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs/system-documentation'
@@ -197,6 +199,36 @@ def diagram_checks() -> dict:
             'original_sample_icon_colors_preserved': True}
 
 
+def preview_checks() -> dict:
+    folder = DOCS / 'previews'
+    manifest = json.loads((folder / 'manifest.json').read_text(encoding='utf-8'))
+    assert manifest['kind'] == 'PDF page previews' and manifest['visio_application_screenshots'] is False
+    indexed = {(r['source_pdf'], r['page']): r for r in manifest['pages']}
+    assert len(indexed) == len(manifest['pages']), 'Duplicate preview page'
+    expected = set()
+    for stem, _ in DIAGRAMS:
+        source = DOCS / (stem + '.pdf')
+        source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        with pymupdf.open(source) as document:
+            for number, page in enumerate(document, 1):
+                key = (source.name, number)
+                expected.add(key)
+                record = indexed[key]
+                assert record['file'] == f'{stem}_{number:02d}.png'
+                assert record['editable_original'] == stem + '.vsdx'
+                assert (DOCS / record['editable_original']).is_file()
+                assert record['source_sha256'] == source_hash, 'Stale preview PDF source'
+                path = folder / record['file']
+                assert hashlib.sha256(path.read_bytes()).hexdigest() == record['sha256']
+                actual = pymupdf.Pixmap(path)
+                target = page.get_pixmap(matrix=pymupdf.Matrix(1800 / page.rect.width, 1800 / page.rect.width), alpha=False)
+                assert (actual.width, actual.height) == (record['width'], record['height'])
+                assert actual.samples == target.samples, f'Preview differs from current PDF page: {path.name}'
+    assert set(indexed) == expected, 'Preview coverage differs from document pages'
+    return {'preview_pages_checked': len(expected), 'pixel_match_to_current_pdfs': True,
+            'editable_counterparts_present': True, 'visio_application_screenshots': False}
+
+
 def main():
     results = []
     for name in ['PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_DFD.vsdx', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_User_Guide.pptx']:
@@ -238,6 +270,7 @@ def main():
                     'screen_pointer_targets_in_crops': True, 'screen_pointers_clear_other_annotated_controls': True})
     results.append(sources())
     results.append(diagram_checks())
+    results.append(preview_checks())
     for name, expected_format in [('process', 'sample-process'), ('dfd', 'sample-dfd')]:
         model = json.loads((DOCS / 'source' / (name + '.json')).read_text(encoding='utf-8'))
         assert model['format'] == expected_format
@@ -276,11 +309,14 @@ def main():
                       'PK_DTS_User_Guide.pptx', 'PK_DTS_User_Guide.pdf']
     with ZipFile(bundle) as archive:
         assert archive.testzip() is None
-        assert set(archive.namelist()) == set(expected_files + ['README.txt'])
-        for name in expected_files:
+        preview_files = ['previews/README.md', 'previews/manifest.json'] + [
+            'previews/' + r['file'] for r in json.loads((DOCS / 'previews/manifest.json').read_text(encoding='utf-8'))['pages']]
+        assert set(archive.namelist()) == set(expected_files + preview_files + ['README.txt'])
+        for name in expected_files + preview_files:
             assert archive.read(name) == (DOCS / name).read_bytes(), f'Stale bundle member: {name}'
         public_wording(archive.read('README.txt').decode('utf-8'), bundle.name)
-    results.append({'bundle_members': len(expected_files), 'bundle_matches_delivered_documents': True})
+    results.append({'bundle_members': len(expected_files), 'preview_images': len(preview_files) - 2,
+                    'bundle_matches_delivered_documents': True})
     print(json.dumps(results, indent=2))
 
 

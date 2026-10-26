@@ -19,6 +19,8 @@ python tools/documentation/render_diagrams.py --model docs/system-documentation/
 python tools/documentation/render_diagrams.py --model docs/system-documentation/source/flowchart.json --output-base docs/system-documentation/PK_DTS_Flowchart --visio
 python tools/documentation/render_guide.py --model docs/system-documentation/source/guide.json --screenshots docs/system-documentation/source/screenshots --flows docs/system-documentation/source/sample-flows.json --output docs/system-documentation/PK_DTS_User_Guide.pptx
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/documentation/verify_powerpoint.ps1
+python tools/documentation/export_previews.py
+python tools/documentation/package_documents.py
 python tools/documentation/verify_documents.py
 ```
 
@@ -29,5 +31,7 @@ Document checks compare every diagram description, note and node label with its 
 Native Visio files contain editable shapes, text and glued connectors. Their ZIP/XML structure, relationships and connections were checked, and matching PDF pages were visually inspected. Opening and editing in the Visio desktop application remains unverified because Visio is unavailable in this workspace.
 
 All three diagrams have native `.vsdx` originals; the guide has a `.pptx` original. Embedded illustration and screenshot pixels remain images, while document text, layout and arrow annotations remain editable.
+
+Run `python tools/documentation/export_previews.py` after updating diagram PDFs to refresh all thirteen page images and their hash manifest in `previews`. These are PDF page previews, not screenshots of the Visio desktop application. The document verifier checks each image against its current PDF page.
 
 After exporting the presentation PDF, run `python tools/documentation/package_documents.py` and rerun the document checks. Refresh `docs/system-documentation/source/verification.json` only from the completed checks.

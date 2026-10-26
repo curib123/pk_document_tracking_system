@@ -1,6 +1,7 @@
 """Bundle the finished office/PDF documents without application or company data."""
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
+import json
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs/system-documentation'
@@ -15,8 +16,10 @@ def main():
     for name in FILES:
         assert (DOCS / name).is_file(), f'Missing deliverable: {name}'
     path = DOCS / 'PK_DTS_Documentation.zip'
+    preview_records = json.loads((DOCS / 'previews/manifest.json').read_text(encoding='utf-8'))['pages']
+    previews = ['previews/README.md', 'previews/manifest.json'] + ['previews/' + p['file'] for p in preview_records]
     with ZipFile(path, 'w', ZIP_DEFLATED) as archive:
-        for name in FILES:
+        for name in FILES + previews:
             archive.write(DOCS / name, name)
         archive.writestr('README.txt',
             'PK DOCUMENT TRACKING SYSTEM - PROPOSED DOCUMENTATION\n'
@@ -28,13 +31,15 @@ def main():
             'illustrations, sample data and nine request scenarios.\n\n'
             'The documents define intended processes and user procedures.\n'
             'Diagram headings, cards, arrows and notes use Peanut Kisses red.\n'
+            'The previews folder contains PDF page images, not screenshots\n'
+            'of the Visio application. Each has an editable Visio counterpart.\n'
             'Screen illustrations use sample accounts, records and transactions.\n'
             'The published workflow will determine each request\'s approvers;\n'
             'available actions will depend on assigned permissions and access.\n')
     with ZipFile(path) as archive:
         assert archive.testzip() is None
-        assert set(archive.namelist()) == set(FILES + ['README.txt'])
-    print(f'Created and checked {path.name}: {len(FILES)} documents plus README.')
+        assert set(archive.namelist()) == set(FILES + previews + ['README.txt'])
+    print(f'Created and checked {path.name}: {len(FILES)} documents, {len(preview_records)} page previews and README.')
 
 
 if __name__ == '__main__':

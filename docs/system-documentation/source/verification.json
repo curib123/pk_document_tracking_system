@@ -87,7 +87,7 @@
   "sha256": {
     "PK_DTS_DFD.pdf": "10d8979ff2fa40fbd994ad95e690185855b2be152e51751012bac5a871ebbdcb",
     "PK_DTS_DFD.vsdx": "718c1fc0600d6eef4e317f130d979b1d80bf3d9a2f5ae98ea068029143c8f544",
-    "PK_DTS_Documentation.zip": "93050415d4b505b221a2df1bc5ccea7a5ac73db8195628061ddd224b6e2b19a9",
+    "PK_DTS_Documentation.zip": "5b79004d7c028b693ca9d079a72b9cf39874959352c7baaf772194fe205384e8",
     "PK_DTS_Flowchart.pdf": "c931fb1d0afe503d6fdbb21e12329e6b6e840e76ba38ba3b8dbbae617a79da67",
     "PK_DTS_Flowchart.vsdx": "52007623a10441659a1a23474c7b2a81587aa9fdc8d4a26de907c92cad589fee",
     "PK_DTS_Proposed_Process_Flow.pdf": "a1ecfd91aa27ba6e7d7078a61291e06eb16f17f7d88bf89a29812ce8e4ae5bd8",
@@ -105,6 +105,7 @@
   },
   "bundle": {
     "bundle_members": 8,
+    "preview_images": 13,
     "bundle_matches_delivered_documents": true
   },
   "public_editorial_checks": {
@@ -199,5 +200,11 @@
     "powerpoint_presentations": 1,
     "native_text_and_connectors_checked": true,
     "bitmap_scope": "Sample icons and UI screenshots remain image objects; diagram text/shapes and slide text/annotations remain editable."
+  },
+  "previews": {
+    "preview_pages_checked": 13,
+    "pixel_match_to_current_pdfs": true,
+    "editable_counterparts_present": true,
+    "visio_application_screenshots": false
   }
 }
