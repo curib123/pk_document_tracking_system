@@ -183,7 +183,8 @@ def main():
             for page in document:
                 assert abs(page.rect.width - 792) < 1 and abs(page.rect.height - 612) < 1, 'Sample page format changed'
                 assert len(page.get_image_info()) >= 3, 'Sample illustrations missing'
-                assert 'IN-HOUSE SYSTEM' in page.get_text() if name == 'dfd' else 'PROPOSED PROCESS FLOW' in page.get_text()
+                extracted = page.get_text().replace('\u00a0', ' ').replace('\u00ad', '-')
+                assert 'IN-HOUSE SYSTEM' in extracted if name == 'dfd' else 'PROPOSED PROCESS FLOW' in extracted
         if name == 'dfd':
             assert len(model['pages']) == 2
             for sheet in model['pages']:
