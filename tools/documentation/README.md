@@ -6,6 +6,8 @@ The public documents use a proposed-system perspective. Implementation reference
 
 Content models and original screenshots are in `docs/system-documentation/source`. Models retain application references for maintenance; the public presentation contains user procedures only. Rebuild from the repository root.
 
+Process Flow follows the illustrated responsibility-map format in the supplied `SA Documents/RMS/process flow old.vsdx`. DFD follows the two-sheet participant/system format in `SA Documents/From Alyn/Healthcare Benefits_DFD.pdf`. Their source models select `render_sample_diagrams.py` through the existing diagram command. Original sample illustrations are retained unchanged in `source/icons`, with their source mapping recorded beside them. The separate Flowchart retains its detailed decision notation.
+
 From the repository root:
 
 ```powershell

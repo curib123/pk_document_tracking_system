@@ -372,7 +372,7 @@ def draw_text(page: pdf.Page, layout: dict, color: str = INK) -> None:
     font = BOLD if layout["bold"] else FONT
     name = "pkbold" if layout["bold"] else "pkregular"
     total = len(layout["lines"]) * step
-    y = rect.y0 + max(0, (rect.height-total)/2) + size * .95
+    y = rect.y0 + (0 if layout.get('valign') == 'top' else max(0, (rect.height-total)/2)) + size * .95
     for line in layout["lines"]:
         length = font.text_length(line, fontsize=size)
         x = rect.x0 if layout["align"] == "left" else rect.x0 + (rect.width-length)/2
@@ -483,11 +483,14 @@ def geometry(shape: ET.Element, points: list[tuple], nofill: bool = False, relat
 
 
 def vshape(parent: ET.Element, sid: int, name: str, r: pdf.Rect, layout: dict,
-           nodekind: str = "text", catalog: bool = False, ports: list[tuple] | None = None) -> ET.Element:
+           nodekind: str = "text", catalog: bool = False, ports: list[tuple] | None = None,
+           style: dict | None = None) -> ET.Element:
     shape=sub(parent,"Shape",ID=sid,NameU=name,Name=name,Type="Shape",LineStyle=0,FillStyle=0,TextStyle=0)
     w,h=r.width/72,r.height/72
     for n,v,f in [("PinX",(r.x0+r.width/2)/72,None),("PinY",(HEIGHT-r.y0-r.height/2)/72,None),("Width",w,None),("Height",h,None),("LocPinX",w/2,"Width*0.5"),("LocPinY",h/2,"Height*0.5"),("Angle",0,None)]: cell(shape,n,v,f)
-    fill,line=STYLES[nodekind]
+    style = style or {}
+    default_fill, default_line = STYLES[nodekind]
+    fill, line = style.get('fill', default_fill), style.get('line', default_line)
     for n,v in [("LineColor",line),("LineWeight",1.3/72),("LinePattern",0 if nodekind=="text" else (2 if nodekind=="note" else 1)),("FillForegnd",fill),("FillPattern",0 if nodekind=="text" else 1),("ShdwPattern",0),("BeginArrow",0),("EndArrow",0)]: cell(shape,n,v)
     if nodekind in ("process","terminator"): cell(shape,"Rounding",min(h/2,.15 if nodekind=="process" else h/2))
     if nodekind=="decision": points=[(.5,0),(1,.5),(.5,1),(0,.5),(.5,0)]
@@ -506,7 +509,8 @@ def vshape(parent: ET.Element, sid: int, name: str, r: pdf.Rect, layout: dict,
             cell(row,"DirX",0); cell(row,"DirY",0); cell(row,"Type",0)
     tr=pdf.Rect(layout["rect"])
     for n,v in [("TxtPinX",(tr.x0+tr.width/2-r.x0)/72),("TxtPinY",(r.y1-tr.y0-tr.height/2)/72),("TxtWidth",tr.width/72),("TxtHeight",tr.height/72),("TxtLocPinX",tr.width/144),("TxtLocPinY",tr.height/144)]: cell(shape,n,v)
-    text_cells(shape,layout)
+    text_cells(shape,layout,style.get('text_color', INK))
+    if layout.get('valign') == 'top': cell(shape,'VerticalAlign',0)
     return shape
 
 
@@ -519,7 +523,7 @@ def connector(parent: ET.Element, sid: int, edge: dict, a: int, b: int, pa: int,
     formula_a=f"PAR(PNT(Sheet.{a}!Connections.X{pa+1},Sheet.{a}!Connections.Y{pa+1}))"
     formula_b=f"PAR(PNT(Sheet.{b}!Connections.X{pb+1},Sheet.{b}!Connections.Y{pb+1}))"
     for name,value,formula in [("BeginX",begin[0],formula_a),("BeginY",begin[1],formula_a),("EndX",end[0],formula_b),("EndY",end[1],formula_b),("PinX",(begin[0]+end[0])/2,"(BeginX+EndX)*0.5"),("PinY",(begin[1]+end[1])/2,"(BeginY+EndY)*0.5"),("Width",dx,"EndX-BeginX"),("Height",dy,"EndY-BeginY"),("LocPinX",dx/2,"Width*0.5"),("LocPinY",dy/2,"Height*0.5"),("Angle",0,None)]: cell(shape,name,value,formula)
-    for name,value in [("LineColor",LINE),("LineWeight",1.05/72),("LinePattern",1),("FillPattern",0),("BeginArrow",0),("EndArrow",4),("EndArrowSize",1),("GlueType",2),("ConFixedCode",2),("ShapeRouteStyle",1)]: cell(shape,name,value)
+    for name,value in [("LineColor",edge.get('color', LINE)),("LineWeight",edge.get('line_width',1.05)/72),("LinePattern",1),("FillPattern",0),("BeginArrow",0),("EndArrow",4),("EndArrowSize",1),("GlueType",2),("ConFixedCode",2),("ShapeRouteStyle",1)]: cell(shape,name,value)
     cell(shape,"BegTrigger",2,f"_XFTRIGGER(Sheet.{a}!EventXFMod)")
     cell(shape,"EndTrigger",2,f"_XFTRIGGER(Sheet.{b}!EventXFMod)")
     sec=sub(shape,"Section",N="Geometry",IX=0)
@@ -571,7 +575,7 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
     # Style sheets contain Character/Paragraph sections, but do not carry Text.
     style.remove(style.find(f"{{{VISIO}}}Text"))
     manifest=ET.Element(f"{{{CT}}}Types")
-    for ext,mime in [("rels","application/vnd.openxmlformats-package.relationships+xml"),("xml","application/xml")]: ET.SubElement(manifest,f"{{{CT}}}Default",Extension=ext,ContentType=mime)
+    for ext,mime in [("rels","application/vnd.openxmlformats-package.relationships+xml"),("xml","application/xml"),("png","image/png"),("jpeg","image/jpeg"),("jpg","image/jpeg")]: ET.SubElement(manifest,f"{{{CT}}}Default",Extension=ext,ContentType=mime)
     for part,mime in [("/visio/document.xml","application/vnd.ms-visio.drawing.main+xml"),("/visio/pages/pages.xml","application/vnd.ms-visio.pages+xml"),("/docProps/core.xml","application/vnd.openxmlformats-package.core-properties+xml"),("/docProps/app.xml","application/vnd.openxmlformats-officedocument.extended-properties+xml")]+[(f"/visio/pages/page{i}.xml","application/vnd.ms-visio.page+xml") for i in range(1,len(pages)+1)]: ET.SubElement(manifest,f"{{{CT}}}Override",PartName=part,ContentType=mime)
     page_list=ET.Element(f"{{{VISIO}}}Pages")
     core_ns="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
@@ -588,7 +592,7 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
         pname=re.sub(r"[\\/:*?\[\]]"," ",data["title"])[:60]
         p=sub(page_list,"Page",ID=index-1,NameU=f"Page-{index}",Name=pname,IsCustomName=1,ViewScale=.7,ViewCenterX=WIDTH/144,ViewCenterY=HEIGHT/144)
         ps=sub(p,"PageSheet",LineStyle=0,FillStyle=0,TextStyle=0)
-        for name,value in [("PageWidth",WIDTH/72),("PageHeight",HEIGHT/72),("PageScale",1),("DrawingScale",1),("DrawingScaleType",0),("DrawingSizeType",0),("PrintPageOrientation",2),("PaperKind",8),("PageLeftMargin",.25),("PageRightMargin",.25),("PageTopMargin",.25),("PageBottomMargin",.25)]: cell(ps,name,value)
+        for name,value in [("PageWidth",WIDTH/72),("PageHeight",HEIGHT/72),("PageScale",1),("DrawingScale",1),("DrawingScaleType",0),("DrawingSizeType",0),("PrintPageOrientation",2),("PaperKind",model.get('paper_kind',8)),("PageLeftMargin",.25),("PageRightMargin",.25),("PageTopMargin",.25),("PageBottomMargin",.25)]: cell(ps,name,value)
         sub(p,"Rel",**{f"{{{REL}}}id":f"rId{index}"})
         contents=ET.Element(f"{{{VISIO}}}PageContents",{"{http://www.w3.org/XML/1998/namespace}space":"preserve"})
         shapes=sub(contents,"Shapes")
@@ -606,14 +610,29 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
             a,b,pa,pb=endpoint
             connector(shapes,offset,edge,a,b,pa,pb)
             for cellname,part,target,port in [("BeginX",9,a,pa),("EndX",12,b,pb)]: sub(connects,"Connect",FromSheet=offset,FromCell=cellname,FromPart=part,ToSheet=target,ToCell=f"Connections.X{port+1}",ToPart=100+port)
+        image_relationships = []
         for n in nodes:
-            vshape(shapes,ids[str(n["id"])],str(n["id"]),rect_of(n),n["text_layout"],n["kind"],data["catalog"],ports[str(n["id"])])
+            native = vshape(shapes,ids[str(n["id"])],str(n["id"]),rect_of(n),n["text_layout"],n["kind"],data["catalog"],ports[str(n["id"])],n.get('style'))
+            if n.get('image'):
+                asset = Path(n['image'])
+                media_name = f'icon-{asset.name}'
+                parts[f'visio/media/{media_name}'] = asset.read_bytes()
+                rid = f'rIdImage{len(image_relationships)+1}'
+                image_relationships.append((rid,REL+'image',f'../media/{media_name}'))
+                native.set('Type','Foreign')
+                cell(native,'FillPattern',0)
+                cell(native,'LinePattern',0)
+                for field, value in [('ImgOffsetX',0),('ImgOffsetY',0),('ImgWidth',n['w']/72),('ImgHeight',n['h']/72),('ObjType',1)]: cell(native,field,value)
+                foreign = sub(native,'ForeignData',ForeignType='Bitmap',CompressionType='PNG' if asset.suffix.lower()=='.png' else 'JPEG')
+                sub(foreign,'Rel',**{f'{{{REL}}}id':rid})
+        if image_relationships:
+            parts[f'visio/pages/_rels/page{index}.xml.rels'] = relationship(image_relationships)
         nextid=len(nodes)+len(data["prepared_edges"])+1
         names={"entity":"External participant","process":"Process / activity","store":"Data store","decision":"Decision","terminator":"Start / end","data":"Input / output","document":"Document","port":"Cross-sheet reference"}
         present=list(dict.fromkeys(n["kind"] for n in nodes if n["kind"] not in ("text","note")))
         legend="   |   ".join(names[k] for k in present)+( "   >   Directed connection" if data["prepared_edges"] else "")
         texts=[("Document title",fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM / PROPOSED SYSTEM DESIGN"),pdf.Rect(45,19,1145,34),9,8,True,"left")),("Page title",fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left")),("Subtitle",fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left")),("Legend",fitted(legend,pdf.Rect(45,92,1145,107),8.5,8,False,"left")),("Notes",data["notes_layout"]),("Page number",fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"))]
-        for name,layout in texts:
+        for name,layout in ([] if model.get('custom_canvas') else texts):
             vshape(shapes,nextid,name,pdf.Rect(layout["rect"]),layout)
             nextid+=1
         parts[f"visio/pages/page{index}.xml"]=xmlbytes(contents)
@@ -672,6 +691,10 @@ def main() -> None:
     parser.add_argument("--visio",action="store_true",help="Also create native editable .vsdx")
     args=parser.parse_args()
     model=json.loads(args.model.read_text(encoding="utf-8-sig"))
+    if model.get('format') in ('sample-process', 'sample-dfd'):
+        from render_sample_diagrams import main as render_sample
+        render_sample()
+        return
     if not isinstance(model.get("pages"),list) or not model["pages"]: raise ValueError("Model must contain a nonempty pages list")
     pages=[prepare(p) for p in model["pages"]]
     args.output_base.parent.mkdir(parents=True,exist_ok=True)

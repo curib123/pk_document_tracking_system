@@ -50,7 +50,7 @@ def package(path: Path) -> dict:
                 assert resolved in names, f'{path.name}: missing target {name} -> {resolved}'
         if path.suffix == '.vsdx':
             pages = [r for n, r in xml.items() if re.fullmatch(r'visio/pages/page\d+\.xml', n)]
-            nodes = connectors = 0
+            nodes = connectors = illustrations = 0
             for page in pages:
                 shapes = page.findall('v:Shapes/v:Shape', NS)
                 ids = {s.get('ID') for s in shapes}
@@ -61,14 +61,19 @@ def package(path: Path) -> dict:
                         connectors += 1
                         assert all(c in cells for c in ['BeginX', 'BeginY', 'EndX', 'EndY'])
                         assert shape.find('v:Section[@N="Geometry"]', NS) is not None
+                    elif shape.get('Type') == 'Foreign':
+                        illustrations += 1
+                        assert shape.find('v:ForeignData', NS) is not None
+                        assert float(cells['Width'].get('V')) <= 2 and float(cells['Height'].get('V')) <= 2, 'Diagram flattened into a page image'
                     else:
                         nodes += 1
                 for connection in page.findall('v:Connects/v:Connect', NS):
                     assert connection.get('FromSheet') in ids and connection.get('ToSheet') in ids
             assert nodes > 10 and connectors > 5
-            assert not any('/media/' in name for name in names), 'Diagram unexpectedly rasterized'
+            if 'Flowchart' in path.name:
+                assert illustrations == 0, 'Flowchart unexpectedly rasterized'
             return {'file': path.name, 'pages': len(pages), 'native_shapes': nodes,
-                    'native_connectors': connectors, 'relationships': 'valid'}
+                    'native_connectors': connectors, 'sample_illustrations': illustrations, 'relationships': 'valid'}
         slides = [r for n, r in xml.items() if re.fullmatch(r'ppt/slides/slide\d+\.xml', n)]
         pics = sum(len(s.findall('.//p:pic', NS)) for s in slides)
         arrows = sum(len(s.findall('.//a:headEnd', NS)) + len(s.findall('.//a:tailEnd', NS)) for s in slides)
@@ -168,6 +173,25 @@ def main():
     results.append({'guide_callouts_checked': callouts, 'labels_outside_screenshots': True,
                     'screen_pointer_targets_in_crops': True, 'screen_pointers_clear_other_annotated_controls': True})
     results.append(sources())
+    for name, expected_format in [('process', 'sample-process'), ('dfd', 'sample-dfd')]:
+        model = json.loads((DOCS / 'source' / (name + '.json')).read_text(encoding='utf-8'))
+        assert model['format'] == expected_format
+        assert model.get('sample_reference', '').startswith('SA Documents/')
+        artifact = DOCS / ('PK_DTS_Proposed_Process_Flow.pdf' if name == 'process' else 'PK_DTS_DFD.pdf')
+        with pymupdf.open(artifact) as document:
+            assert len(document) == len(model['pages'])
+            for page in document:
+                assert abs(page.rect.width - 792) < 1 and abs(page.rect.height - 612) < 1, 'Sample page format changed'
+                assert len(page.get_image_info()) >= 3, 'Sample illustrations missing'
+                assert 'IN-HOUSE SYSTEM' in page.get_text() if name == 'dfd' else 'PROPOSED PROCESS FLOW' in page.get_text()
+        if name == 'dfd':
+            assert len(model['pages']) == 2
+            for sheet in model['pages']:
+                assert len(sheet['actors']) == 3
+                assert all(a['inputs'] and a['outputs'] for a in sheet['actors'])
+    results.append({'sample_process_format': 'RMS illustrated responsibility map',
+                    'sample_dfd_format': 'Healthcare participant-to-system map',
+                    'sample_dfd_sheets': 2})
     flows = json.loads((DOCS / 'source/sample-flows.json').read_text(encoding='utf-8'))['flows']
     expected = {'softcopy_create', 'softcopy_revise', 'softcopy_cancel',
                 'hardcopy_create', 'hardcopy_update', 'access', 'assignment', 'transfer', 'disposal'}
