@@ -29,11 +29,11 @@
 
 ## Tasks
 
-- [ ] Inspect sample PDFs/Visio pages and trace current source in parallel.
-- [ ] Generate and inspect Proposed Process Flow (.vsdx and PDF); commit.
-- [ ] Generate and inspect DFD (PDF); commit.
-- [ ] Generate and inspect Flowchart (.vsdx and PDF); commit.
-- [ ] Generate and inspect User Guide (PowerPoint); commit.
-- [ ] Add source models, generation instructions, verification results and a download bundle; commit.
+- [x] Inspect sample PDFs/Visio pages and trace current source in parallel.
+- [x] Generate and inspect Proposed Process Flow (.vsdx and PDF); commit.
+- [x] Generate and inspect DFD (PDF); commit.
+- [x] Generate and inspect Flowchart (.vsdx and PDF); commit.
+- [x] Generate and inspect User Guide (PowerPoint); commit.
+- [x] Add source models, generation instructions, verification results and a download bundle; commit.
 
 Validation uses PDF text/layout inspection and rendered pages, XML/package relationships and connector checks for Visio, and an independent review against the current source. Screenshots, if included, must come from the current code using synthetic data in an isolated database.
