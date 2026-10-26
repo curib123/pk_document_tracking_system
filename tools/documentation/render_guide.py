@@ -8,9 +8,12 @@ Only standard library modules, Pillow, and python-pptx are required.
 from __future__ import annotations
 
 import argparse
+from datetime import datetime, timezone
 import json
 import re
 from pathlib import Path
+from xml.etree import ElementTree as ET
+from zipfile import ZipFile, ZIP_DEFLATED
 
 from PIL import Image, ImageFont
 from pptx import Presentation
@@ -37,7 +40,7 @@ FONT_FILE = Path("C:/Windows/Fonts/calibri.ttf")
 SCREENSHOTS = {
     1: "login", 2: "login", 3: "overview", 4: "hardcopy",
     5: "flow_hardcopy_create", 6: "flow_softcopy_create",
-    7: "flow_softcopy_revise", 8: "draft_softcopy_create",
+    7: "flow_softcopy_revise", 8: "draft_hardcopy_create",
     9: "flow_access", 10: "flow_transfer", 11: "transfer_accept",
     12: "flow_disposal", 13: "approval_task", 14: "notifications",
     15: "direct_hardcopy", 16: "assign_user", 17: "places",
@@ -160,6 +163,26 @@ def set_notes(slide, value):
     slide.notes_slide.notes_text_frame.text = value
 
 
+def normalize_office_metadata(path, slide_count):
+    """Remove inherited template identity and report the actual deck format."""
+    namespace = "http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+    with ZipFile(path) as archive:
+        parts = {item.filename: archive.read(item.filename) for item in archive.infolist()}
+    app = ET.fromstring(parts['docProps/app.xml'])
+    for key, value in {"Application": "Microsoft Office PowerPoint", "PresentationFormat": "Widescreen (16:9)",
+                       "Slides": str(slide_count), "Notes": str(slide_count), "Company": "PK Document Control"}.items():
+        element = app.find(f"{{{namespace}}}{key}")
+        if element is None:
+            element = ET.SubElement(app, f"{{{namespace}}}{key}")
+        element.text = value
+    parts['docProps/app.xml'] = ET.tostring(app, encoding='utf-8', xml_declaration=True)
+    temporary = path.with_suffix('.tmp.pptx')
+    with ZipFile(temporary, 'w', ZIP_DEFLATED) as archive:
+        for name, data in parts.items():
+            archive.writestr(name, data)
+    temporary.replace(path)
+
+
 class GuideDeck:
     def __init__(self, args):
         self.args = args
@@ -179,10 +202,15 @@ class GuideDeck:
         self.flows = flow_data.get("flows", flow_data.get("scenarios", [])) if isinstance(flow_data, dict) else flow_data
         self.prs = Presentation()
         self.prs.slide_width, self.prs.slide_height = Inches(W), Inches(H)
-        self.prs.core_properties.title = "PK Document Control — User Guide"
-        self.prs.core_properties.subject = "Practical system modules and all nine demonstrated request flows"
+        self.prs.core_properties.title = "PK Document Control — Proposed User Guide"
+        self.prs.core_properties.subject = "Planned user procedures and nine request scenarios"
         self.prs.core_properties.author = "PK Document Control"
-        self.prs.core_properties.keywords = "user guide, screenshots, synthetic examples, document control"
+        self.prs.core_properties.last_modified_by = "PK Document Control"
+        self.prs.core_properties.comments = "Proposed operating procedures for document control."
+        self.prs.core_properties.keywords = "proposed user guide, sample scenarios, document control"
+        self.prs.core_properties.created = datetime(2026, 10, 26, tzinfo=timezone.utc)
+        self.prs.core_properties.modified = datetime(2026, 10, 26, tzinfo=timezone.utc)
+        self.prs.core_properties.revision = 2
         self.records, self.missing = [], []
 
     def blank(self, title, chapter="USER GUIDE", subtitle=None):
@@ -202,7 +230,7 @@ class GuideDeck:
         rect(slide, 0.38, 7.13, 12.57, 0.009, LINE)
         left = "PK DOCUMENT CONTROL  |  USER GUIDE"
         textbox(slide, 0.40, 7.24, 3.3, 0.15, left, 7.1, MUTED, True)
-        middle = "Actual system screens · Synthetic demonstration data" if sample else "Source-backed interface instructions"
+        middle = "PROPOSED OPERATING PROCEDURES  ·  REVISION 02"
         textbox(slide, 3.5, 7.24, 6.4, 0.15, middle, 7.2, MUTED, align=PP_ALIGN.CENTER)
         textbox(slide, 11.8, 7.22, 1.12, 0.18, f"{len(self.prs.slides):02d}", 9, NAVY, True, PP_ALIGN.RIGHT)
 
@@ -289,66 +317,119 @@ class GuideDeck:
         requested_crop = crop or self.annotation_record(actual_stem).get("crop")
         cx, cy, cw, ch = self.choose_crop(path, actual_stem, screen_annotations, requested_crop)
         full_w, full_h = Image.open(path).size
-        scale = min((panel[2] - 0.10) / cw, (panel[3] - 0.10) / ch)
+        # Reserve a separate rail so labels never cover the interface.
+        image_area = (2.45, 1.42, 6.63, 5.10)
+        scale = min(image_area[2] / cw, image_area[3] / ch)
         display_w, display_h = cw * scale, ch * scale
-        left = panel[0] + (panel[2] - display_w) / 2
-        top = panel[1] + (panel[3] - display_h) / 2
+        left = image_area[0] + (image_area[2] - display_w) / 2
+        top = image_area[1] + (image_area[3] - display_h) / 2
         pic = slide.shapes.add_picture(str(path), Inches(left), Inches(top), Inches(display_w), Inches(display_h))
         pic.crop_left, pic.crop_top = cx / full_w, cy / full_h
         pic.crop_right = max(0, 1 - (cx + cw) / full_w)
         pic.crop_bottom = max(0, 1 - (cy + ch) / full_h)
-        pic.name = f"Original system screenshot: {path.name} (native picture crop)"
-        visible = []
+        pic.name = f"Screen illustration: {path.name}"
+        visible, omitted = [], []
         for a in screen_annotations:
             x, y = float(a.get("x", 0)), float(a.get("y", 0))
             aw, ah = float(a.get("width", a.get("w", 1))), float(a.get("height", a.get("h", 1)))
             tx, ty = x + aw / 2, y + ah / 2
             if cx <= tx <= cx + cw and cy <= ty <= cy + ch:
+                if x < cx - 1 or y < cy - 1 or x + aw > cx + cw + 1 or y + ah > cy + ch + 1:
+                    raise ValueError(f"Partially clipped control: {actual_stem}: {a.get('label')}")
                 visible.append((a, tx, ty))
-        # Labels occupy an inset rail.  Leaders point at DOM-derived controls.
-        for i, (a, tx, ty) in enumerate(visible, 1):
-            target_x, target_y = left + (tx - cx) * scale, top + (ty - cy) * scale
-            side_left = tx < cx + cw * 0.50
-            rail_x = panel[0] + 0.14 if side_left else panel[0] + panel[2] - 2.55
-            rail_y = max(panel[1] + 0.12, min(panel[1] + panel[3] - 0.46, target_y - 0.50))
-            if "label_y" in a:
-                rail_y = panel[1] + float(a["label_y"])
-            # Keep adjacent labels clear even when form fields share a row.
-            for previous_y in [v[3] for v in getattr(self, "_callout_placements", []) if abs(v[0] - rail_x) < 0.3]:
-                if abs(rail_y - previous_y) < 0.45:
-                    rail_y = min(panel[1] + panel[3] - 0.46, previous_y + 0.47)
-            if not hasattr(self, "_callout_placements"):
-                self._callout_placements = []
-            self._callout_placements.append((rail_x, target_x, target_y, rail_y))
-            self.callout(slide, i, clean(a.get("label", "Control")), rail_x, rail_y, target_x, target_y)
-        self._callout_placements = []
+            else:
+                omitted.append(a.get('label', 'Control'))
+        textbox(slide, 0.53, 1.29, 1.56, 0.25, "ON THIS SCREEN", 8.2, MUTED, True)
+        # Keep label order aligned with the vertical order of the controls.
+        visible.sort(key=lambda item: (item[2], item[1]))
+        centers = [max(1.94, min(6.42, top + (ty - cy) * scale)) for _, _, ty in visible]
+        for i in range(1, len(centers)):
+            centers[i] = max(centers[i], centers[i - 1] + 0.81)
+        if centers and centers[-1] > 6.42:
+            centers[-1] = 6.42
+            for i in range(len(centers) - 2, -1, -1):
+                centers[i] = min(centers[i], centers[i + 1] - 0.81)
+        placements = []
+        control_boxes = [[left + (float(a.get('x', 0)) - cx) * scale,
+                          top + (float(a.get('y', 0)) - cy) * scale,
+                          float(a.get('width', a.get('w', 1))) * scale,
+                          float(a.get('height', a.get('h', 1))) * scale] for a, _, _ in visible]
+        for i, ((a, tx, ty), center_y) in enumerate(zip(visible, centers)):
+            target_left = left + (max(cx, float(a.get("x", 0))) - cx) * scale
+            target_right = left + (min(cx + cw, float(a.get("x", 0)) + float(a.get("width", a.get("w", 1)))) - cx) * scale
+            target_y = top + (ty - cy) * scale
+            if target_left < left - 0.001 or target_right > left + display_w + 0.001:
+                raise ValueError(f"Annotation outside crop: {actual_stem}: {a}")
+            from_right = (target_left + target_right) / 2 > left + display_w * 0.55 and target_right - target_left < display_w * 0.65
+            bx, by, bw, bh = control_boxes[i]
+            candidates = [(target_right + .25, target_y, target_right, target_y),
+                          (target_left - .25, target_y, target_left, target_y)]
+            if not from_right:
+                candidates.reverse()
+            candidates += [(bx + bw / 2, by - .25, bx + bw / 2, by),
+                           (bx + bw / 2, by + bh + .25, bx + bw / 2, by + bh)]
+            def overlaps(a, b):
+                return a[0] < b[0] + b[2] and a[0] + a[2] > b[0] and a[1] < b[1] + b[3] and a[1] + a[3] > b[1]
+            chosen = None
+            for mx, my, ex, ey in candidates:
+                marker_box = [mx - .13, my - .13, .26, .26]
+                if not (2.15 <= marker_box[0] and marker_box[0] + .26 <= 9.47 and 1.12 <= marker_box[1] and marker_box[1] + .26 <= 6.95):
+                    continue
+                if any(overlaps(marker_box, box) for box in control_boxes):
+                    continue
+                if any(overlaps(marker_box, old['marker_box']) for old in placements):
+                    continue
+                chosen = mx, my, ex, ey
+                break
+            if chosen is None:
+                raise ValueError(f"No unobstructed marker position: {actual_stem}: {a.get('label')}")
+            mx, my, target_x, target_y = chosen
+            arrow_start = [mx + (target_x - mx) * .44, my + (target_y - my) * .44]
+            self.callout(slide, chr(65 + i), clean(a.get("label", "Control")), 0.53, center_y - 0.29, target_x, target_y, mx, my)
+            placements.append({"letter": chr(65 + i), "label": a.get("label"),
+                "label_box": [0.53, center_y - 0.29, 1.55, 0.59],
+                "source_control_box": [a.get('x'), a.get('y'), a.get('width', a.get('w')), a.get('height', a.get('h'))],
+                "control_box": control_boxes[i],
+                "target": [round(target_x, 4), round(target_y, 4)],
+                "marker": [round(mx, 4), round(my, 4)], "marker_box": [mx - .11, my - .11, .22, .22],
+                "arrow_start": arrow_start})
         self.records[-1]["screenshot"] = path.name
         self.records[-1]["crop"] = [round(v, 1) for v in (cx, cy, cw, ch)]
         self.records[-1]["annotation_count"] = len(visible)
+        self.records[-1]["image_box"] = [left, top, display_w, display_h]
+        self.records[-1]["callouts"] = placements
+        self.records[-1]["off_crop_annotations"] = omitted
         return path.name
 
-    def callout(self, slide, number, label, x, y, target_x, target_y):
-        # Straight leader and triangle arrowhead are editable OOXML geometry.
-        start_x = x + (2.30 if target_x > x + 1.15 else 0.15)
+    def callout(self, slide, number, label, x, y, target_x, target_y, marker_x, marker_y):
+        # A local letter and short pointer avoid lines across unrelated controls.
+        start_x = marker_x + (target_x - marker_x) * .44
+        start_y = marker_y + (target_y - marker_y) * .44
         connector = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT,
-            Inches(start_x), Inches(y + 0.18), Inches(target_x), Inches(target_y))
+            Inches(start_x), Inches(start_y), Inches(target_x), Inches(target_y))
         connector.line.color.rgb = color(BURGUNDY)
-        connector.line.width = Pt(2.2)
+        connector.line.width = Pt(1.15)
         line_xml = connector._element.spPr.get_or_add_ln()
         arrow = OxmlElement("a:tailEnd")
         arrow.set("type", "triangle")
-        arrow.set("w", "med")
-        arrow.set("len", "med")
+        arrow.set("w", "sm")
+        arrow.set("len", "sm")
         line_xml.append(arrow)
-        rect(slide, x + 0.26, y, 2.15, 0.36, BURGUNDY, radius=True)
-        circle = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x), Inches(y - 0.015), Inches(0.39), Inches(0.39))
+        marker = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL,
+            Inches(marker_x - 0.11), Inches(marker_y - 0.11), Inches(0.22), Inches(0.22))
+        marker.fill.solid()
+        marker.fill.fore_color.rgb = color(WHITE)
+        marker.line.color.rgb = color(BURGUNDY)
+        marker.line.width = Pt(0.9)
+        textbox(slide, marker_x - 0.11, marker_y - 0.077, 0.22, 0.17, number, 8, BURGUNDY, True, PP_ALIGN.CENTER)
+        circle = slide.shapes.add_shape(MSO_AUTO_SHAPE_TYPE.OVAL, Inches(x), Inches(y + 0.14), Inches(0.28), Inches(0.28))
         circle.fill.solid()
         circle.fill.fore_color.rgb = color(WHITE)
         circle.line.color.rgb = color(BURGUNDY)
-        circle.line.width = Pt(1.8)
-        textbox(slide, x, y + 0.035, 0.39, 0.22, number, 11, BURGUNDY, True, PP_ALIGN.CENTER)
-        label = label if len(label) <= 35 else label[:32].rstrip() + "…"
-        textbox(slide, x + 0.44, y + 0.075, 1.88, 0.22, label, 8.4, WHITE, True)
+        circle.line.width = Pt(1.0)
+        textbox(slide, x, y + 0.18, 0.28, 0.18, number, 9, BURGUNDY, True, PP_ALIGN.CENTER)
+        wrapped = wrap_text(label, 1.20, 9.0)
+        textbox(slide, x + 0.35, y + 0.12, 1.20, 0.47, "\n".join(wrapped), 9.0, INK, True)
 
     def narrative(self, slide, steps, notes=None, sample=None, badge=None):
         x, width, y = 9.75, 3.16, 1.14
@@ -357,7 +438,7 @@ class GuideDeck:
             textbox(slide, x + 0.12, y + 0.075, width - 0.24, 0.20, badge.upper(), 9.3, WHITE, True)
             y += 0.52
         if sample:
-            textbox(slide, x, y, width, 0.22, "DEMONSTRATION INPUTS", 9.0, TEAL, True)
+            textbox(slide, x, y, width, 0.22, "EXAMPLE DATA", 9.0, TEAL, True)
             y += 0.30
             for label, value in list(sample.items())[:7]:
                 entry = f"{label}: {value}"
@@ -412,8 +493,7 @@ class GuideDeck:
             self.picture(slide, screenshot, annotations, crop)
             self.narrative(slide, chunk, notes, sample if i == 0 else None, badge)
             self.footer(slide, route)
-            detail = [f"Route: {route}", "Screenshot uses synthetic demonstration records.", "Steps:", *steps,
-                      "Notes:", *(full_notes or notes or []), "Source references:", *(sources or [])]
+            detail = ["Planned procedure:", *steps, "Operating notes:", *(full_notes or notes or [])]
             set_notes(slide, "\n".join(detail))
             self.records[-1]["route"] = route
             self.records[-1]["sources"] = sources or []
@@ -434,20 +514,20 @@ class GuideDeck:
         slide.shapes[0].fill.fore_color.rgb = color(TEAL)
         rect(slide, 0, 0.09, W, 7.41, NAVY)
         rect(slide, 0.58, 0.77, 2.52, 0.34, BURGUNDY, radius=True)
-        textbox(slide, 0.74, 0.85, 2.2, 0.20, "PRACTICAL SYSTEM WALKTHROUGH", 8.6, WHITE, True)
+        textbox(slide, 0.74, 0.85, 2.2, 0.20, "PROPOSED OPERATING PROCEDURES", 8.2, WHITE, True)
         textbox(slide, 0.58, 1.45, 5.6, 1.50, "PK Document\nControl", 38, WHITE, True)
-        textbox(slide, 0.60, 3.04, 5.2, 0.7, "USER GUIDE", 29, "F5B8C9", True)
+        textbox(slide, 0.60, 3.04, 5.2, 0.7, "PROPOSED USER GUIDE", 24, "F5B8C9", True)
         textbox(slide, 0.61, 3.97, 5.15, 1.16,
                 "Find controlled records. Prepare requests.\nReview approvals. Complete physical handoffs.", 17, "D8E3F0")
         textbox(slide, 0.61, 5.37, 5.13, 0.88,
-                "Actual application screens with editable arrows.\nNine request scenarios using synthetic sample data.", 12.5, "D8E3F0")
+                "Planned user procedures, screen illustrations,\nand expected outcomes for nine request scenarios.", 12.5, "D8E3F0")
         path, _ = self.resolve("overview")
         if path:
             rect(slide, 6.15, 1.36, 6.6, 4.65, WHITE, radius=True)
             slide.shapes.add_picture(str(path), Inches(6.25), Inches(1.55), Inches(6.40), Inches(4.27))
-        textbox(slide, 0.61, 6.89, 9, 0.23, "26 OCTOBER 2026  ·  Desktop application reference  ·  No real account credentials included", 9.6, "C7D5E8")
-        self.records[-1]["title"] = "PK Document Control — User Guide"
-        set_notes(slide, "Screenshots captured from the actual application using isolated, synthetic demonstration data. No generated passwords are included.")
+        textbox(slide, 0.61, 6.89, 9, 0.23, "26 OCTOBER 2026  ·  PROPOSAL  ·  REVISION 02", 9.6, "C7D5E8")
+        self.records[-1]["title"] = "PK Document Control — Proposed User Guide"
+        set_notes(slide, "This proposed guide sets out intended user procedures and expected outcomes. Screen illustrations use sample data.")
 
     def roadmap(self):
         slide = self.blank("Your route through the workspace", "HOW TO USE THIS GUIDE")
@@ -462,9 +542,9 @@ class GuideDeck:
             textbox(slide, x + 0.25, 1.92, 3.50, 0.65, n, 36, BURGUNDY, True)
             textbox(slide, x + 0.25, 2.86, 3.51, 0.6, title, 14.4, NAVY, True)
             textbox(slide, x + 0.25, 3.73, 3.49, 1.25, body, 15, MUTED)
-        textbox(slide, 0.65, 5.83, 11.95, 0.72,
-                "Numbered arrows identify the controls to use. Access and actions depend on your role, assigned documents, and the current workflow step.", 17, NAVY)
-        textbox(slide, 0.65, 6.57, 11.95, 0.24, "All people, records, dates, and transactions shown as examples are synthetic demonstration data.", 11, MUTED)
+        textbox(slide, 0.65, 5.65, 11.95, 0.77,
+                "These procedures describe intended operation. Letters match the screen markers; short arrows identify controls. Numbered steps describe actions. Available actions will depend on permissions and the active workflow step.", 16, NAVY)
+        textbox(slide, 0.65, 6.60, 11.95, 0.24, "People, records, dates and transactions in the screen illustrations are sample data.", 11, MUTED)
         self.footer(slide)
 
     def flow(self, flow, index):
@@ -498,11 +578,22 @@ class GuideDeck:
         if typ in ["access", "assignment", "transfer"] and "Subject / Reason" in sample:
             sample["Request Subject" if typ == "transfer" else "Subject"] = sample.pop("Subject / Reason")
         section_steps = guide.get("flow_steps", {}).get(typ) or FLOW_STEPS.get(typ) or guide.get("slide_steps", guide.get("steps", []))[:4]
+        tab_names = {"softcopy": "Softcopy", "hardcopy": "Hardcopy", "access-grant": "Document Access Grants", "document-assign": "Document Assignments", "hardcopy-transfer": "Hardcopy Transfer", "hardcopy-disposal": "Hardcopy Disposal"}
+        tab = tab_names.get(flow.get("tab"), flow.get("tab", "").replace("-", " ").title())
+        if typ == "transfer": tab = "Hardcopy Transfer"
+        elif typ == "disposal": tab = "Hardcopy Disposal"
+        section_steps = [f"Open My Requests → {tab} and select New Request.", *section_steps]
         route = flow.get("route", f"my-requests/{flow.get('tab', 'softcopy')}")
         self.page(f"Sample {index:02d} · {label}", flow.get("form", f"flow_{typ}"), section_steps,
-                  ["Synthetic example. Save Draft first, then Submit after checking the proposal."], route,
-                  guide.get("sources", []), "ALL NINE REQUEST FLOWS · INPUT", sample=sample,
-                  badge="Worked example")
+                  ["Save Draft first. Submit only after checking the document, fields and attachment."], route,
+                  guide.get("sources", []), "PLANNED REQUEST SCENARIOS · INPUT", sample=sample)
+        if typ == "transfer" and (self.screen_dir / "flow_transfer_details.png").exists():
+            self.page(f"Sample {index:02d} · Transfer destination and recipient", "flow_transfer_details", [
+                "Scroll down within the New Request form to the destination fields.",
+                "Select the destination hierarchy and Receiving User; the destination must differ from the original.",
+                "Enter Request Subject and any Remarks, then select Save Draft."],
+                ["Approval will authorize the handoff. Dispatch and receipt will be recorded separately."], route,
+                guide.get("sources", []), "PLANNED REQUEST SCENARIOS · INPUT")
         status = clean(flow.get("status", flow.get("final_status", "")))
         result_stem = flow.get("result", f"result_{typ}")
         result_text = FLOW_RESULTS.get(typ, "Inspect the request status and its recorded result.")
@@ -513,10 +604,10 @@ class GuideDeck:
             result_text,
         ]
         if status:
-            result_steps[-1] += f" The captured request status is {status.replace('_', ' ').title()}."
-        self.page(f"Sample {index:02d} · {label} — result", result_stem, result_steps,
-                  ["The screenshot shows the demonstrated result in the isolated sample workspace."], route,
-                  guide.get("sources", []), "ALL NINE REQUEST FLOWS · OUTCOME", badge=f"Recorded result: {status or 'see screen'}")
+            result_steps[-1] += f" Expected status: {status.replace('_', ' ').title()}."
+        self.page(f"Sample {index:02d} · {label} — expected outcome", result_stem, result_steps,
+                  ["The illustration shows the expected state for this sample scenario."], route,
+                  guide.get("sources", []), "PLANNED REQUEST SCENARIOS · OUTCOME", badge=f"Expected: {status or 'see screen'}")
 
     def extra(self, stem, title, steps, note, chapter="WORKED EXAMPLES", sources=None):
         # These demonstrations are optional for a baseline preview.  A supplied
@@ -524,28 +615,6 @@ class GuideDeck:
         if not (self.screen_dir / (stem + ".png")).exists() and not self.flows:
             return
         self.page(title, stem, steps, [note], sources=sources, chapter=chapter)
-
-    def appendix(self):
-        unique = []
-        for section in self.sections:
-            for source in section.get("sources", []):
-                if source not in unique:
-                    unique.append(source)
-        # All individual claims retain complete references in slide speaker notes.
-        files = sorted(set(re.sub(r":\d+$", "", v) for v in unique))
-        for chunk_index in range(0, len(files), 24):
-            slide = self.blank("Interface evidence and source references", "REFERENCE APPENDIX")
-            textbox(slide, 0.50, 1.20, 12.24, 0.52,
-                    "Each module slide includes precise source paths and line references in its speaker notes. The guide follows the existing interface and verified demonstration flows.", 13, MUTED)
-            chunk = files[chunk_index:chunk_index + 24]
-            for j, item in enumerate(chunk):
-                col, row = divmod(j, 12)
-                textbox(slide, 0.55 + col * 6.34, 2.02 + row * 0.32, 6.08, 0.27,
-                        item, 8.6, INK)
-            textbox(slide, 0.55, 6.22, 12.2, 0.50,
-                    "Screenshots: actual local application, 1440 × 960 capture. Demonstration records are synthetic. The original screenshot files are embedded without image editing; PowerPoint picture crops, arrows, and labels are editable.", 11, TEAL)
-            self.footer(slide, sample=False)
-            set_notes(slide, "\n".join(unique))
 
     def build(self):
         if self.flows and not self.args.allow_missing:
@@ -562,6 +631,12 @@ class GuideDeck:
         else:
             for n in [1, 2, 3, 4]:
                 self.section(n)
+                if n == 2 and (self.screen_dir / "change_password.png").exists():
+                    self.extra("change_password", "Set your permanent password", [
+                        "For a new or reset account, enter the Current or temporary password.",
+                        "Enter a New password with more than 8 characters, up to 72 bytes.",
+                        "Repeat it in Confirm new password, then select Set permanent password."],
+                        "The system will require this step before allowing access to the workspace.", chapter="ACCOUNT ACCESS")
             if (self.screen_dir / "softcopy_files.png").exists():
                 self.extra("softcopy_files", "Open, download and print controlled files", [
                     "Open Softcopy Documents and find the permitted active record.",
@@ -658,12 +733,12 @@ class GuideDeck:
                     sources=["application/controllers/Documents.php:125", "application/view/pages/documents/shared_index.php:227"])
             for n in [16, 17, 18, 19, 20, 21, 22]:
                 self.section(n)
-        self.appendix()
         if self.missing and not self.args.allow_missing:
             raise ValueError("Required screenshots are missing:\n" + "\n".join(sorted(set(self.missing))))
         output = Path(self.args.output)
         output.parent.mkdir(parents=True, exist_ok=True)
         self.prs.save(output)
+        normalize_office_metadata(output, len(self.prs.slides))
         manifest = output.with_suffix(".slides.json")
         manifest.write_text(json.dumps({"slides": self.records, "missing_screenshots": sorted(set(self.missing))}, indent=2), encoding="utf-8")
         print(json.dumps({"output": str(output), "slides": len(self.prs.slides), "manifest": str(manifest),
@@ -674,23 +749,23 @@ FLOW_STEPS = {
     "softcopy_create": ["Choose Create Softcopy and enter Subject / Reason.", "Enter the proposed title, Document Number, optional Series Number, and Category.", "Attach the Document File, add Remarks if needed, and select Save Draft."],
     "softcopy_revise": ["Choose Revise Softcopy and select the Existing Softcopy Document.", "Check the proposed title; enter New Revision Level and Number of Pages.", "Choose an optional Effective Date, attach the revised file, then Save Draft."],
     "softcopy_cancel": ["Choose Cancel Softcopy and select the Existing Softcopy Document.", "Enter Subject / Reason and any Remarks explaining the cancellation.", "Save Draft, check the selected record, and submit the proposal."],
-    "hardcopy_create": ["Choose Create and enter Subject / Reason and Document Title.", "Select Area, Specific, optional Asset, Location, and check Current Holder.", "Optionally enable retention monitoring, then enter both Start and End dates (End on/after Start). Add notes and Save Draft."],
-    "hardcopy_update": ["Choose Update and select the Existing Hardcopy Document.", "Check Document Title, Area, Specific, optional Asset, Location, and Current Holder.", "Update the intended metadata or retention information, then Save Draft."],
-    "access": ["Choose Document Access Grants and enter Subject.", "Choose Document Type, select the document, and check your read-only Recipient field.", "Set Access Expires At, add optional Remarks, then Save Draft."],
+    "hardcopy_create": ["Choose Create Hardcopy and enter Subject / Reason and Document Title.", "Select Area, Specific, optional Asset, Location, and check Current Holder.", "Optionally enable retention monitoring, then enter both Start and End dates (End on/after Start). Add notes and Save Draft."],
+    "hardcopy_update": ["Choose Update Hardcopy and select the Existing Hardcopy Document.", "Check Document Title, Area, Specific, optional Asset, Location, and Current Holder.", "Update the intended metadata or retention information, then Save Draft."],
+    "access": ["Enter Subject in the Document Access Grant form.", "Choose Document Type, select the document, and check your read-only Recipient field.", "Set Access Expires At after today, allowing time for approval; add optional Remarks, then Save Draft."],
     "assignment": ["Choose Document Assignments and enter Subject.", "Choose Document Type and select the document to be assigned to you.", "Check your read-only Recipient / Assigned User, add optional Remarks, then Save Draft."],
     "transfer": ["Select the Hardcopy Document and check Original Places and Holder.", "Choose the destination hierarchy and Receiving User; destination must differ from the original.", "Enter Request Subject and optional Remarks, then Save Draft."],
     "disposal": ["Choose Hardcopy Disposal, enter Subject / Reason, and select the document.", "Choose Disposal Reason: Shred, Scratch, or Other. Complete Other Reason if selected.", "Add optional Remarks, Save Draft, then review and submit the proposal."],
 }
 FLOW_RESULTS = {
-    "softcopy_create": "The new controlled softcopy appears in Softcopy Documents after final approval.",
-    "softcopy_revise": "The approved revision becomes the current controlled file; check the revision and file history.",
-    "softcopy_cancel": "The controlled softcopy is cancelled after final approval; use the Cancelled status filter to inspect it.",
-    "hardcopy_create": "The new hardcopy record appears with its approved storage hierarchy and holder.",
-    "hardcopy_update": "The approved hardcopy metadata is applied; inspect the changed storage or retention fields.",
-    "access": "The approved access grant applies to the selected document and the signed-in recipient until its expiry.",
-    "assignment": "The approved assignment applies to the selected document and signed-in recipient.",
-    "transfer": "Approval creates the handoff work. Complete Dispatch and recipient Accept before treating the physical transfer as received.",
-    "disposal": "The record becomes Disposed; inspect Disposal Details and the selected reason in the document register.",
+    "softcopy_create": "After final approval, the new controlled softcopy will appear in Softcopy Documents.",
+    "softcopy_revise": "The approved revision will become the current controlled file; check the revision and File History.",
+    "softcopy_cancel": "Final approval will cancel the controlled softcopy; use the Cancelled status filter to inspect it.",
+    "hardcopy_create": "The new hardcopy will appear with its approved storage hierarchy and holder.",
+    "hardcopy_update": "Final approval will apply the hardcopy metadata; inspect the changed storage or retention fields.",
+    "access": "The approved grant will give the signed-in recipient access to the selected document until expiry.",
+    "assignment": "The approved assignment will apply to the selected document and signed-in recipient.",
+    "transfer": "Approval will create the handoff work. Complete Dispatch and recipient Accept to record physical receipt.",
+    "disposal": "The record will become Disposed; inspect Disposal Details and the selected reason in the register.",
 }
 
 
