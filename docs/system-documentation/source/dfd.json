@@ -1,0 +1,978 @@
+{
+  "title": "PK DOCUMENT TRACKING SYSTEM / DATA FLOW DIAGRAMS",
+  "pages": [
+    {
+      "title": "Context diagram",
+      "subtitle": "PK Document Tracking System - implemented data exchanges",
+      "sources": [
+        "application/config/routes.php:26-232",
+        "application/controllers/Requests.php:16-221",
+        "application/controllers/Administration.php:40-448",
+        "application/controllers/Files.php:22-239",
+        "application/controllers/Backups.php:6-155"
+      ],
+      "notes": [
+        "Actors are functional responsibilities and may be performed by the same account. Role permissions determine available actions; an approver is selected by the published workflow.",
+        "Only information about physical document dispatch and receipt crosses the software boundary. The paper itself is not a software data flow.",
+        "All account holders authenticate as registered users. No email, SMS or external document cloud is evidenced in the operational code.",
+        "Level 0 is presented as six coordinated subsystem sheets (2-7) using the same process and store identifiers. Cross-sheet ports identify shared audit capture."
+      ],
+      "nodes": [
+        {
+          "id": "E1",
+          "label": "Registered document user\nreader / requester",
+          "kind": "entity",
+          "x": 45,
+          "y": 145,
+          "w": 235,
+          "h": 110
+        },
+        {
+          "id": "E2",
+          "label": "Assigned approver",
+          "kind": "entity",
+          "x": 45,
+          "y": 500,
+          "w": 235,
+          "h": 95
+        },
+        {
+          "id": "P0",
+          "label": "0\nPK Document\nTracking System",
+          "kind": "process",
+          "x": 440,
+          "y": 300,
+          "w": 300,
+          "h": 150,
+          "fontSize": 15
+        },
+        {
+          "id": "E3",
+          "label": "Transfer recipient",
+          "kind": "entity",
+          "x": 910,
+          "y": 145,
+          "w": 235,
+          "h": 110
+        },
+        {
+          "id": "E4",
+          "label": "Authorized maintainer\nand audit / backup user",
+          "kind": "entity",
+          "x": 910,
+          "y": 500,
+          "w": 235,
+          "h": 110
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P0",
+          "label": "Credentials / password changes;\nrecord queries / direct document data;\nrequest drafts / uploads / dispatch",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              340,
+              200
+            ],
+            [
+              340,
+              375
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E1",
+          "label": "Session / validation result;\nrecords / controlled files;\nrequest status / dashboard / task alerts",
+          "sideFrom": "top",
+          "sideTo": "top",
+          "via": [
+            [
+              590,
+              115
+            ],
+            [
+              162.5,
+              115
+            ]
+          ]
+        },
+        {
+          "from": "E2",
+          "to": "P0",
+          "label": "Task / review queries;\napproval, rejection or return; remarks",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              350,
+              547.5
+            ],
+            [
+              350,
+              375
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E2",
+          "label": "Assigned request / review file;\ndecision result / task alerts",
+          "sideFrom": "bottom",
+          "sideTo": "bottom",
+          "via": [
+            [
+              590,
+              675
+            ],
+            [
+              162.5,
+              675
+            ]
+          ]
+        },
+        {
+          "from": "E3",
+          "to": "P0",
+          "label": "Handoff query / receipt acceptance",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              850,
+              200
+            ],
+            [
+              850,
+              375
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E3",
+          "label": "Pending handoff / receipt result",
+          "sideFrom": "top",
+          "sideTo": "top",
+          "via": [
+            [
+              790,
+              300
+            ],
+            [
+              790,
+              115
+            ],
+            [
+              1027.5,
+              115
+            ]
+          ]
+        },
+        {
+          "from": "E4",
+          "to": "P0",
+          "label": "User / role / place / workflow changes;\ndirect assignment; audit filters;\nbackup ZIP / recovery commands",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              840,
+              555
+            ],
+            [
+              840,
+              375
+            ]
+          ]
+        },
+        {
+          "from": "P0",
+          "to": "E4",
+          "label": "Configuration / assignment results;\naudit records; backup list / ZIP;\nrestore / cleanup result",
+          "sideFrom": "bottom",
+          "sideTo": "bottom",
+          "via": [
+            [
+              790,
+              450
+            ],
+            [
+              790,
+              675
+            ],
+            [
+              1027.5,
+              675
+            ]
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Level 0 / 1.0 - authenticate users",
+      "subtitle": "Account credentials become a checked server identity and session; all actors use this registered-user role.",
+      "nodes": [
+        {
+          "id": "E1",
+          "label": "E1 Registered user\n(all account holders)",
+          "kind": "entity",
+          "x": 45,
+          "y": 330,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P1",
+          "label": "1.0\nAuthenticate users",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D1",
+          "label": "D1 Identity / configuration\nAccounts, roles, permissions\nand private session files",
+          "kind": "store",
+          "x": 900,
+          "y": 325,
+          "w": 245,
+          "h": 105
+        },
+        {
+          "id": "P6",
+          "label": "6.0 Audit capture\nCross-sheet port: sheet 7",
+          "kind": "port",
+          "x": 470,
+          "y": 610,
+          "w": 250,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P1",
+          "label": "Credentials /\npassword-change data"
+        },
+        {
+          "from": "P1",
+          "to": "E1",
+          "label": "Session / authentication\nand validation result"
+        },
+        {
+          "from": "D1",
+          "to": "P1",
+          "label": "Active account / roles /\npermissions / login attempts"
+        },
+        {
+          "from": "P1",
+          "to": "D1",
+          "label": "Password hash / attempt\ncounters / session state"
+        },
+        {
+          "from": "P1",
+          "to": "P6",
+          "label": "Authentication audit event"
+        }
+      ],
+      "sources": [
+        "application/controllers/Auth.php:24-75,95-138",
+        "application/models/Identity_model.php:6-40",
+        "application/models/Permission_model.php:23-49",
+        "application/config/config.php:21-24"
+      ],
+      "notes": [
+        "Identity comes from active users and active assigned roles. The Administrator role grants wildcard permissions; other accounts receive the union of their active role grants.",
+        "Password verification, first-login password setup and session_version checks are implemented. No external identity provider or email password-recovery flow is depicted.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Level 0 / 2.0 - maintain documents and files",
+      "subtitle": "Authorized direct changes, scoped browsing and controlled file delivery use the same document register.",
+      "nodes": [
+        {
+          "id": "E1",
+          "label": "E1 Document user / reader",
+          "kind": "entity",
+          "x": 45,
+          "y": 170,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "E4",
+          "label": "E4 Authorized maintainer",
+          "kind": "entity",
+          "x": 45,
+          "y": 505,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P2",
+          "label": "2.0\nMaintain documents\nand controlled files",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D1",
+          "label": "D1 Reference data\nActive users, place hierarchy\nand softcopy categories",
+          "kind": "store",
+          "x": 900,
+          "y": 150,
+          "w": 245,
+          "h": 95
+        },
+        {
+          "id": "D2",
+          "label": "D2 Document / file records\nRegister, revisions, files,\naccess, custody, disposals",
+          "kind": "store",
+          "x": 900,
+          "y": 475,
+          "w": 245,
+          "h": 110
+        },
+        {
+          "id": "P6",
+          "label": "6.0 Audit capture\nCross-sheet port: sheet 7",
+          "kind": "port",
+          "x": 470,
+          "y": 610,
+          "w": 250,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P2",
+          "label": "Record query / direct\ndocument data / file upload"
+        },
+        {
+          "from": "P2",
+          "to": "E1",
+          "label": "Authorized records / files /\nvalidation and action result"
+        },
+        {
+          "from": "E4",
+          "to": "P2",
+          "label": "Direct document / assignment\ninstructions"
+        },
+        {
+          "from": "P2",
+          "to": "E4",
+          "label": "Document / assignment result"
+        },
+        {
+          "from": "D1",
+          "to": "P2",
+          "label": "Valid user / category /\nphysical place options"
+        },
+        {
+          "from": "D2",
+          "to": "P2",
+          "label": "Records / current file /\nrevision and access metadata"
+        },
+        {
+          "from": "P2",
+          "to": "D2",
+          "label": "Document / file / revision /\nassignment / disposal changes"
+        },
+        {
+          "from": "P2",
+          "to": "P6",
+          "label": "Document / file audit event"
+        }
+      ],
+      "sources": [
+        "application/controllers/Documents.php:17-194",
+        "application/controllers/Files.php:22-239",
+        "application/controllers/Administration.php:130-338",
+        "application/services/documents/document_access_service.php:18-85",
+        "application/services/files/file_service.php:171-228"
+      ],
+      "notes": [
+        "Direct actions require module permissions and authorized document scope. Controlled upload bytes are private; approved file access also checks document permissions and scope.",
+        "Softcopy assignment uses assignments.softcopy_id. Hardcopy assignment changes hardcopy_documents.holder_id; no synthetic hardcopy_id column exists in assignments.",
+        "Office/WPS review is an optional local application handoff using a signed content URL. File review, download and printing remain protected application routes.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Level 0 / 3.0 - process requests and transfers",
+      "subtitle": "Draft payloads and decisions become pinned approval records, applied domain changes and recorded custody.",
+      "nodes": [
+        {
+          "id": "E1",
+          "label": "E1 Requester / dispatcher",
+          "kind": "entity",
+          "x": 45,
+          "y": 125,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "E2",
+          "label": "E2 Assigned approver",
+          "kind": "entity",
+          "x": 45,
+          "y": 335,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "E3",
+          "label": "E3 Transfer recipient",
+          "kind": "entity",
+          "x": 45,
+          "y": 555,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P3",
+          "label": "3.0\nProcess requests\nand physical transfers",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D1",
+          "label": "D1 Configuration\nPublished graph / eligible\napprovers / active places",
+          "kind": "store",
+          "x": 900,
+          "y": 125,
+          "w": 245,
+          "h": 95
+        },
+        {
+          "id": "D2",
+          "label": "D2 Document / file records\nStaged file, domain state\nand physical transfer data",
+          "kind": "store",
+          "x": 900,
+          "y": 335,
+          "w": 245,
+          "h": 95
+        },
+        {
+          "id": "D3",
+          "label": "D3 Request runtime\nDraft / snapshot / active\nstep / decision history",
+          "kind": "store",
+          "x": 900,
+          "y": 555,
+          "w": 245,
+          "h": 95
+        },
+        {
+          "id": "P6",
+          "label": "6.0 Audit capture\nCross-sheet port: sheet 7",
+          "kind": "port",
+          "x": 470,
+          "y": 610,
+          "w": 250,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P3",
+          "label": "Draft / submit / cancel / delete\ndata; dispatch confirmation"
+        },
+        {
+          "from": "P3",
+          "to": "E1",
+          "label": "Own requests / history /\nvalidation and action result",
+          "sideFrom": "top",
+          "sideTo": "right",
+          "via": [
+            [
+              595,
+              265
+            ],
+            [
+              282,
+              265
+            ],
+            [
+              282,
+              170
+            ]
+          ]
+        },
+        {
+          "from": "E2",
+          "to": "P3",
+          "label": "Task / review query;\ndecision / remarks"
+        },
+        {
+          "from": "P3",
+          "to": "E2",
+          "label": "Assigned request / review\nfile / decision result"
+        },
+        {
+          "from": "E3",
+          "to": "P3",
+          "label": "Handoff query /\nreceipt acceptance"
+        },
+        {
+          "from": "P3",
+          "to": "E3",
+          "label": "Pending handoff /\nreceipt result"
+        },
+        {
+          "from": "D1",
+          "to": "P3",
+          "label": "Published graph / active\nidentities / place hierarchy"
+        },
+        {
+          "from": "D2",
+          "to": "P3",
+          "label": "Eligible document / staged\nfile / grant / custody data"
+        },
+        {
+          "from": "P3",
+          "to": "D2",
+          "label": "Staged attachment / approved\ndomain changes / handoff state"
+        },
+        {
+          "from": "D3",
+          "to": "P3",
+          "label": "Owned draft / pinned graph /\nactive step / request history"
+        },
+        {
+          "from": "P3",
+          "to": "D3",
+          "label": "Request / step / decision /\nhandoff history changes"
+        },
+        {
+          "from": "P3",
+          "to": "P6",
+          "label": "Request / transfer audit event"
+        }
+      ],
+      "sources": [
+        "application/models/Request_model.php:6-40",
+        "application/services/request/request_service.php:116-317,393-543,565-839,849-906",
+        "application/services/transfer/transfer_service.php:13-143"
+      ],
+      "notes": [
+        "Request types: softcopy_create, softcopy_revise, softcopy_cancel, hardcopy_create, hardcopy_update, transfer, disposal, access and assignment. Draft deletion is limited to the owner's cancelled, unsubmitted request.",
+        "Submission pins a published workflow graph/version and resolves user, role, requester or requester_leader assignments. Approve/reject/return updates the active step and history; only final approval applies the domain proposal atomically.",
+        "An approved transfer creates for_transfer data. Only the transfer requester dispatches it; only the named recipient accepts it. Acceptance updates holder/location, revokes the previous holder's personal grant and completes the request.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Level 0 / 4.0 - maintain system definitions",
+      "subtitle": "Validated administrative data defines account access, document locations and published approval routes.",
+      "nodes": [
+        {
+          "id": "E4",
+          "label": "E4 Authorized maintainer",
+          "kind": "entity",
+          "x": 45,
+          "y": 330,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P4",
+          "label": "4.0\nMaintain accounts, places\nand workflow definitions",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D1",
+          "label": "D1 Identity / configuration\nUsers, roles, permission grants,\nplaces, categories, workflows",
+          "kind": "store",
+          "x": 900,
+          "y": 325,
+          "w": 245,
+          "h": 110
+        },
+        {
+          "id": "P6",
+          "label": "6.0 Audit capture\nCross-sheet port: sheet 7",
+          "kind": "port",
+          "x": 470,
+          "y": 610,
+          "w": 250,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "E4",
+          "to": "P4",
+          "label": "User / role / place /\nworkflow definition changes"
+        },
+        {
+          "from": "P4",
+          "to": "E4",
+          "label": "Current definitions /\nconfiguration result"
+        },
+        {
+          "from": "D1",
+          "to": "P4",
+          "label": "Accounts / grants / places /\nworkflow drafts and versions"
+        },
+        {
+          "from": "P4",
+          "to": "D1",
+          "label": "Validated account / grants /\nplace / workflow versions"
+        },
+        {
+          "from": "P4",
+          "to": "P6",
+          "label": "Administration audit event"
+        }
+      ],
+      "sources": [
+        "application/controllers/Administration.php:340-448",
+        "application/controllers/Places.php:31-88",
+        "application/services/administration/administration_service.php:42-277",
+        "application/services/places/place_service.php:12-200",
+        "application/services/workflow/workflow_builder_service.php:87-201"
+      ],
+      "notes": [
+        "A user may hold multiple active roles. User/role writes enforce delegation rules and invalidate sessions when necessary. Role deactivation/removal checks existing usage.",
+        "Hardcopy place data comprises areas, specifics, assets and locations; softcopy categories form a parent-child hierarchy. Published workflows are versioned; an editable clone is a separate draft.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Level 0 / 5.0 - present dashboard and task alerts",
+      "subtitle": "Scoped record counts and active approval assignments become dashboard metrics and in-application notices.",
+      "nodes": [
+        {
+          "id": "E1",
+          "label": "E1 Registered document user",
+          "kind": "entity",
+          "x": 45,
+          "y": 170,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "E2",
+          "label": "E2 Assigned approver",
+          "kind": "entity",
+          "x": 45,
+          "y": 505,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P5",
+          "label": "5.0\nPresent dashboard\nand task alerts",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D2",
+          "label": "D2 Document / custody data\nScoped documents, status\nhistory and pending handoffs",
+          "kind": "store",
+          "x": 900,
+          "y": 150,
+          "w": 245,
+          "h": 110
+        },
+        {
+          "id": "D3",
+          "label": "D3 Requests / task receipts\nRequest status, active steps\nand unseen occurrences",
+          "kind": "store",
+          "x": 900,
+          "y": 485,
+          "w": 245,
+          "h": 110
+        },
+        {
+          "id": "P6",
+          "label": "6.0 Audit capture\nCross-sheet port: sheet 7",
+          "kind": "port",
+          "x": 470,
+          "y": 610,
+          "w": 250,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "E1",
+          "to": "P5",
+          "label": "Dashboard / navigation query"
+        },
+        {
+          "from": "P5",
+          "to": "E1",
+          "label": "Scoped metrics / activity /\nrequest and task counts"
+        },
+        {
+          "from": "E2",
+          "to": "P5",
+          "label": "Task poll / inbox query /\nread or claim acknowledgement"
+        },
+        {
+          "from": "P5",
+          "to": "E2",
+          "label": "Unread task notices /\nclaim result / current counts"
+        },
+        {
+          "from": "D2",
+          "to": "P5",
+          "label": "Scoped records / custody /\nstatus-history data"
+        },
+        {
+          "from": "D3",
+          "to": "P5",
+          "label": "Request status / active\napproval occurrences"
+        },
+        {
+          "from": "P5",
+          "to": "D3",
+          "label": "Per-user step-activation\nnotification receipt"
+        },
+        {
+          "from": "P5",
+          "to": "P6",
+          "label": "Dashboard-view audit event"
+        }
+      ],
+      "sources": [
+        "application/models/Dashboard_model.php:7-84",
+        "application/models/Notification_model.php:26-225",
+        "application/controllers/Notifications.php:25-91",
+        "application/core/MY_Controller.php:138-157"
+      ],
+      "notes": [
+        "Current task notices derive requests + workflow_steps + task_notification_receipts. An occurrence is keyed by step_id and step activation/version; atomic claims prevent repeat display across tabs/devices.",
+        "The schema contains notifications, but the current inbox/pending implementation does not read it. No email, SMS or push-provider delivery is evidenced; notices are application HTTP/JSON responses.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Level 0 / 6.0 - capture audit and manage recovery",
+      "subtitle": "Operational events become private audit arrays; verified snapshots protect database and private working data.",
+      "nodes": [
+        {
+          "id": "E4",
+          "label": "E4 Authorized audit /\nbackup user",
+          "kind": "entity",
+          "x": 45,
+          "y": 335,
+          "w": 225,
+          "h": 90
+        },
+        {
+          "id": "P6",
+          "label": "6.0\nCapture / inspect audit\nand manage recovery",
+          "kind": "process",
+          "x": 470,
+          "y": 325,
+          "w": 250,
+          "h": 105,
+          "fontSize": 13
+        },
+        {
+          "id": "D4",
+          "label": "D4 Audit / recovery files\nDaily JSON audit arrays and\nencrypted signed ZIP archives",
+          "kind": "store",
+          "x": 900,
+          "y": 325,
+          "w": 245,
+          "h": 110
+        },
+        {
+          "id": "D1",
+          "label": "D1 Identity / configuration\nDatabase and session policy",
+          "kind": "store",
+          "x": 470,
+          "y": 125,
+          "w": 250,
+          "h": 85
+        },
+        {
+          "id": "D2",
+          "label": "D2 Document / file data\nDatabase and private file bytes",
+          "kind": "store",
+          "x": 900,
+          "y": 585,
+          "w": 245,
+          "h": 100
+        },
+        {
+          "id": "D3",
+          "label": "D3 Requests / task runtime\nDatabase snapshot data",
+          "kind": "store",
+          "x": 45,
+          "y": 585,
+          "w": 245,
+          "h": 100
+        },
+        {
+          "id": "AUDITPORT",
+          "label": "Audit-event source ports\nFrom 1.0-5.0 on sheets 2-6",
+          "kind": "port",
+          "x": 45,
+          "y": 125,
+          "w": 245,
+          "h": 85
+        }
+      ],
+      "edges": [
+        {
+          "from": "E4",
+          "to": "P6",
+          "label": "Audit filters / ZIP import /\nbackup or restore command"
+        },
+        {
+          "from": "P6",
+          "to": "E4",
+          "label": "Audit records / backup list /\nZIP / restore or cleanup result"
+        },
+        {
+          "from": "AUDITPORT",
+          "to": "P6",
+          "label": "Actor / action / subject /\nresult and audit metadata"
+        },
+        {
+          "from": "D4",
+          "to": "P6",
+          "label": "Audit arrays / encrypted\narchive and signed manifest"
+        },
+        {
+          "from": "P6",
+          "to": "D4",
+          "label": "Audit entry / protected ZIP /\nmanaged retention changes"
+        },
+        {
+          "from": "D1",
+          "to": "P6",
+          "label": "Identity / configuration\nbackup snapshot"
+        },
+        {
+          "from": "P6",
+          "to": "D1",
+          "label": "Verified identity /\nconfiguration restore"
+        },
+        {
+          "from": "D2",
+          "to": "P6",
+          "label": "Document / controlled-file /\nprivate-data backup snapshot"
+        },
+        {
+          "from": "P6",
+          "to": "D2",
+          "label": "Verified document /\nprivate-data restore"
+        },
+        {
+          "from": "D3",
+          "to": "P6",
+          "label": "Request / runtime\nbackup snapshot"
+        },
+        {
+          "from": "P6",
+          "to": "D3",
+          "label": "Verified request /\nruntime restore"
+        }
+      ],
+      "sources": [
+        "application/core/MY_Controller.php:78-157",
+        "application/libraries/Audit_file.php:5-52",
+        "application/controllers/Audit.php:6-30",
+        "application/controllers/Backups.php:6-155",
+        "application/services/backup/backup_service.php:109-362",
+        "application/services/backup/retention_service.php:21-135"
+      ],
+      "notes": [
+        "Audit data is stored as private daily JSON arrays, not an operational SQL audit table. Audit listing filters these files. Backup/restore permissions are separately checked.",
+        "A backup contains a SQL dump plus application/private files, excluding sessions/cache and backup recursion. Its ZIP entries are AES-256 encrypted and the manifest is signed; imported archives are verified.",
+        "Web restore reapplies the database and private working data after a pre-restore recovery snapshot. Application-code recovery is offline. Restore maintenance blocks ordinary requests; retention maintains managed archives and daily audit/application logs.",
+        "D1-D4 are logical store groups; see the physical store catalog on sheet 8. A cross-sheet port refers to the numbered process on its named sheet."
+      ]
+    },
+    {
+      "title": "Logical store catalog and scope",
+      "subtitle": "Physical implementation mapping for D1-D4; boxes define logical stores used on sheets 2-7.",
+      "sources": [
+        "database/pk_dts.sql:30-1150",
+        "database/migrations/20261013_user_role_assignments.sql:2-13",
+        "application/config/config.php:21-24",
+        "application/models/Permission_model.php:23-49",
+        "application/models/Notification_model.php:89-225",
+        "application/services/files/file_service.php:171-228",
+        "application/libraries/Audit_file.php:5-52",
+        "application/services/backup/backup_service.php:109-156,270-362"
+      ],
+      "notes": [
+        "Source-derived design snapshot of the Desktop checkout. Seed roles include Administrator, Document Control Officer, Plant Manager, Internal Auditor and Staff; permissions and workflow assignments remain configurable.",
+        "No operational SQL table for audit is used. The notifications table exists in the schema, but current inbox/pending logic reads requests + workflow_steps + task_notification_receipts; notifications appears only in draft cleanup.",
+        "revision_artifacts, settings and schema_migrations exist in the SQL snapshot; no active application read/write was found, so they are schema context rather than depicted business-flow stores.",
+        "Office/WPS review uses optional local protocol handlers and a signed content URL. CDN assets/ngrok tooling are deployment/client dependencies, not document-approval data services.",
+        "Backups contain a SQL dump plus application/private files, excluding transient sessions/cache and backup recursion. Web restore reapplies the database and private working data; application-code recovery is offline."
+      ],
+      "nodes": [
+        {
+          "id": "D1",
+          "label": "D1  Identity and configuration\nSQL: users, roles, user_roles, role_permissions, permissions,\nlogin_attempts; areas, specifics, assets, locations, categories;\nworkflows, workflow_versions\nPrivate session files: storage/sessions",
+          "kind": "store",
+          "x": 45,
+          "y": 135,
+          "w": 1100,
+          "h": 115
+        },
+        {
+          "id": "D2",
+          "label": "D2  Document, file and custody records\nSQL: hardcopy_documents, softcopy_documents, softcopy_revisions,\nstatus_history, disposals, files, assignments, access_grants, transfers\nControlled file bytes: storage/documents/<random storage_name>\nSoftcopy assignments use assignments; hardcopy assignments update holder_id.",
+          "kind": "store",
+          "x": 45,
+          "y": 275,
+          "w": 1100,
+          "h": 125
+        },
+        {
+          "id": "D3",
+          "label": "D3  Request and approval runtime\nSQL: requests, workflow_steps, workflow_history, task_notification_receipts\nStored data: proposal payload, pinned workflow/version, active assignments,\ndecision history and per-user task occurrence receipts",
+          "kind": "store",
+          "x": 45,
+          "y": 425,
+          "w": 1100,
+          "h": 105
+        },
+        {
+          "id": "D4",
+          "label": "D4  Audit and recovery files\nDaily audit JSON arrays: storage/audit/YYYY-MM-DD.json\nEncrypted AES-256 ZIP archives: storage/backups (or configured safe backup path)\nBackups carry a signed manifest, SQL snapshot and application/private files.\nRetention maintains managed backups, daily audit and application logs.",
+          "kind": "store",
+          "x": 45,
+          "y": 555,
+          "w": 1100,
+          "h": 125
+        }
+      ],
+      "edges": []
+    }
+  ]
+}
