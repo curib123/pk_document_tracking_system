@@ -35,20 +35,21 @@ VREL = "http://schemas.microsoft.com/visio/2010/relationships/"
 ET.register_namespace("", VISIO)
 ET.register_namespace("r", REL)
 
-INK = "#20334B"
-MUTED = "#53667B"
-LINE = "#526B88"
+INK = "#293346"
+MUTED = "#657084"
+LINE = "#627084"
+BURGUNDY = "#A80037"
 STYLES = {
-    "process": ("#E9F2FF", "#3569A0"),
-    "entity": ("#F2F5F9", "#5B6D82"),
-    "store": ("#ECF7F3", "#35745F"),
-    "decision": ("#FFF3DC", "#9C7227"),
-    "terminator": ("#E7F4EB", "#44825D"),
-    "data": ("#F1ECFA", "#786298"),
-    "document": ("#F1ECFA", "#786298"),
-    "note": ("#FFF9E9", "#AD9663"),
+    "process": ("#F9EEF2", "#A80037"),
+    "entity": ("#F2F5F8", "#657084"),
+    "store": ("#ECF6F6", "#087F87"),
+    "decision": ("#FFF7E8", "#A97724"),
+    "terminator": ("#ECF6F6", "#087F87"),
+    "data": ("#F2F5F8", "#657084"),
+    "document": ("#F2F5F8", "#657084"),
+    "note": ("#F8F9FB", "#9BA5B2"),
     "text": ("#FFFFFF", "#FFFFFF"),
-    "port": ("#F0F3F8", "#657A95"),
+    "port": ("#F2F5F8", "#657084"),
 }
 ALIASES = {"start": "terminator", "end": "terminator", "terminal": "terminator",
            "input": "data", "output": "data", "io": "data", "inputoutput": "data",
@@ -251,15 +252,17 @@ def orthogonal(start: tuple, end: tuple, nodes: list[dict], previous: list[list[
     return simplify(list(reversed(path)))
 
 
-def label_layout(text: str, path: list[tuple], node_rects: list[pdf.Rect], used: list[pdf.Rect]) -> dict | None:
+def label_layout(text: str, path: list[tuple], node_rects: list[pdf.Rect], used: list[pdf.Rect],
+                 specification: dict | None = None, paths: list[list[tuple]] | None = None) -> dict | None:
     if not text: return None
-    size = 8.2
+    specification = specification or {}
+    size = 9
     longest = max(FONT.text_length(s, fontsize=size) for s in clean(text).split("\n"))
     width = max(28, min(230, longest + 10))
     lines = wrap(text, width - 8, size)
     height = len(lines) * size * 1.18 + 6
     candidates = []
-    for a, b in zip(path, path[1:]):
+    for segment, (a, b) in enumerate(zip(path, path[1:])):
         length = math.dist(a, b)
         for fraction in (.5, .3, .7):
             x, y = a[0] + (b[0] - a[0]) * fraction, a[1] + (b[1] - a[1]) * fraction
@@ -271,13 +274,24 @@ def label_layout(text: str, path: list[tuple], node_rects: list[pdf.Rect], used:
                 inside = r.x0 >= 27 and r.x1 <= 1163 and r.y0 >= 111 and r.y1 <= 705
                 hits = sum(intersects(r, inflated(n, 2)) for n in node_rects)
                 overlaps = sum(intersects(r, inflated(u, 2)) for u in used)
-                score = hits * 10000 + overlaps * 1000 + (0 if inside else 50000) - min(length, 300) + abs(fraction-.5)*10
-                candidates.append((score, r, hits, overlaps, inside))
-    _, box, hits, overlaps, inside = min(candidates, key=lambda c: c[0])
+                crossings = sum(not segment_clear(c, d, [r]) for route in (paths or []) for c, d in zip(route, route[1:]))
+                branch = text in ("Yes", "No", "Approve", "Reject", "Return", "Submit", "Cancel")
+                # Decision labels belong near their outgoing branch. Long data
+                # descriptions favor an unobstructed segment with enough room.
+                score = hits * 10000 + overlaps * 1000 + crossings * 5000 + (0 if inside else 50000) - min(length, 300) + abs(fraction-.5)*10 + (segment * 24 if branch else 0)
+                candidates.append((score, r, hits, overlaps, crossings, inside))
+    if specification.get("labelRect"):
+        box = pdf.Rect(specification["labelRect"])
+        hits = sum(intersects(box, inflated(n, 2)) for n in node_rects)
+        overlaps = sum(intersects(box, inflated(u, 2)) for u in used)
+        crossings = sum(not segment_clear(c, d, [box]) for route in (paths or []) for c, d in zip(route, route[1:]))
+        inside = box.x0 >= 27 and box.x1 <= 1163 and box.y0 >= 111 and box.y1 <= 705
+    else:
+        _, box, hits, overlaps, crossings, inside = min(candidates, key=lambda c: c[0])
     used.append(box)
     layout = fitted(text, inflated(box, -3), size, size, align="center")
     layout["background"] = list(box)
-    layout["collision"] = bool(hits or overlaps or not inside)
+    layout["collision"] = bool(hits or overlaps or crossings or not inside or layout["overflow"])
     return layout
 
 
@@ -301,6 +315,10 @@ def prepare(page: dict) -> dict:
         text = fitted(n.get("label", ""), textrect, maximum, 7, kind(n) == "process", "left" if catalog or kind(n) == "note" else "center")
         if text["overflow"]: result["warnings"].append(f"Node {n['id']} text overflows")
         result["prepared_nodes"].append({**n, "kind": kind(n), "text_layout": text})
+    for index, a in enumerate(nodes):
+        for b in nodes[index+1:]:
+            if intersects(rect_of(a), rect_of(b)):
+                result["warnings"].append(f"Nodes {a['id']} and {b['id']} overlap")
     groups: dict = defaultdict(list)
     specifications = []
     for index, e in enumerate(page.get("edges", [])):
@@ -313,26 +331,38 @@ def prepare(page: dict) -> dict:
         specifications.append((e, a, b, sf, st))
     previous, labels = [], []
     for index, (e, a, b, sf, st) in enumerate(specifications):
-        def fraction(n, side):
+        def fraction(n, side, endpoint):
+            if endpoint in e:
+                value = float(e[endpoint])
+                if not 0 <= value <= 1:
+                    raise ValueError(f"Connector attachment {endpoint} is outside node {n['id']}")
+                return value
             group = groups[(str(n["id"]), side)]
             if e.get("via") or len(group) == 1: return .5
             position = group.index((index, str(n["id"])))
             return .24 + .52 * position / (len(group)-1)
-        start = tuple(round(v, 3) for v in point_on(a, sf, fraction(a, sf)))
-        end = tuple(round(v, 3) for v in point_on(b, st, fraction(b, st)))
+        start = tuple(round(v, 3) for v in point_on(a, sf, fraction(a, sf, "fractionFrom")))
+        end = tuple(round(v, 3) for v in point_on(b, st, fraction(b, st, "fractionTo")))
         if e.get("via"):
             path = simplify([start] + [tuple(map(float, p)) for p in e["via"]] + [end])
         else:
             first, last = outward(start, sf), outward(end, st)
             path = simplify([start] + orthogonal(first, last, nodes, previous) + [end])
         previous.append(path)
-        label = label_layout(clean(e.get("label", "")), path, [rect_of(n) for n in nodes], labels)
+        if any(not (20 <= x <= 1170 and 105 <= y <= 707) for x, y in path):
+            result["warnings"].append(f"Edge {index+1} is outside the diagram body")
+        for p, q in zip(path, path[1:]):
+            if p[0] != q[0] and p[1] != q[1]:
+                result["warnings"].append(f"Edge {index+1} has a diagonal segment")
+            if not segment_clear(p, q, [inflated(rect_of(n), -1) for n in nodes if str(n["id"]) not in (str(a["id"]), str(b["id"]))]):
+                result["warnings"].append(f"Edge {index+1} crosses an unrelated node")
+        result["prepared_edges"].append({**e, "path": path, "sideFrom": sf, "sideTo": st, "text_layout": None})
+    for index, e in enumerate(result["prepared_edges"]):
+        label = label_layout(clean(e.get("label", "")), e["path"], [rect_of(n) for n in nodes], labels, e, previous)
         if label and label["collision"]: result["warnings"].append(f"Edge {index+1} label needs layout review")
-        result["prepared_edges"].append({**e, "path": path, "sideFrom": sf, "sideTo": st, "text_layout": label})
-    result["notes_layout"] = fitted("\n".join("• " + clean(n) for n in page.get("notes", [])), pdf.Rect(47, 716, 1143, 790), 8.2, 6.5, align="left")
-    result["sources_layout"] = fitted("Source evidence: " + "  |  ".join(map(clean, page.get("sources", []))), pdf.Rect(47, 799, 1095, 829), 6.8, 5.5, align="left")
-    for item in ("notes_layout", "sources_layout"):
-        if result[item]["overflow"]: result["warnings"].append(f"{item} overflows")
+        e["text_layout"] = label
+    result["notes_layout"] = fitted("\n".join("\u2022 " + clean(n) for n in page.get("notes", [])), pdf.Rect(47, 720, 1143, 801), 10, 8.5, align="left")
+    if result["notes_layout"]["overflow"]: result["warnings"].append("Notes overflow")
     return result
 
 
@@ -377,7 +407,9 @@ def pdf_node(page: pdf.Page, node: dict, catalog: bool = False) -> None:
 def pdf_arrow(page: pdf.Page, edge: dict) -> None:
     pts = edge["path"]
     if len(pts) < 2: return
-    page.draw_polyline(pts, color=rgb(LINE), width=1.05)
+    # A white casing keeps unrelated crossing connectors visually separate.
+    page.draw_polyline(pts, color=(1, 1, 1), width=3.6)
+    page.draw_polyline(pts, color=rgb(LINE), width=1.15)
     a, b = pts[-2], pts[-1]
     angle = math.atan2(b[1]-a[1],b[0]-a[0])
     length, half = 6.5, 2.6
@@ -393,15 +425,15 @@ def render_pdf(model: dict, pages: list[dict], path: Path) -> None:
         page = document.new_page(width=WIDTH, height=HEIGHT)
         page.insert_font(fontname="pkregular",fontfile=str(REGULAR_PATH) if REGULAR_PATH else None,fontbuffer=None if REGULAR_PATH else FONT.buffer)
         page.insert_font(fontname="pkbold",fontfile=str(BOLD_PATH) if BOLD_PATH else None,fontbuffer=None if BOLD_PATH else BOLD.buffer)
-        page.draw_rect(pdf.Rect(0,0,WIDTH,7),color=None,fill=rgb("#2A5F94"))
-        draw_text(page,fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM  /  SYSTEM DOCUMENTATION"),pdf.Rect(45,19,1145,34),9,8,True,"left"),MUTED)
+        page.draw_rect(pdf.Rect(0,0,WIDTH,7),color=None,fill=rgb(BURGUNDY))
+        draw_text(page,fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM  /  PROPOSED SYSTEM DESIGN"),pdf.Rect(45,19,1145,34),9,8,True,"left"),MUTED)
         draw_text(page,fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left"))
         draw_text(page,fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left"),MUTED)
         present = []
         for node in data["prepared_nodes"]:
             if node["kind"] not in present and node["kind"] not in ("text","note"): present.append(node["kind"])
         names={"entity":"External participant","process":"Process / activity","store":"Data store","decision":"Decision","terminator":"Start / end","data":"Input / output","document":"Document","port":"Cross-sheet reference"}
-        draw_text(page,fitted("   •   ".join(names[k] for k in present) + ("   →   " + ("Data flow" if "dfd" in path.stem.lower() else "Directed connection") if data["prepared_edges"] else ""),pdf.Rect(45,92,1145,107),8,7,False,"left"),MUTED)
+        draw_text(page,fitted("   |   ".join(names[k] for k in present) + ("   |   Arrows: " + ("data flow" if "dfd" in path.stem.lower() else "direction of activity") if data["prepared_edges"] else ""),pdf.Rect(45,92,1145,107),8.5,8,False,"left"),MUTED)
         for edge in data["prepared_edges"]: pdf_arrow(page,edge)
         for edge in data["prepared_edges"]:
             if edge["text_layout"]:
@@ -410,9 +442,8 @@ def render_pdf(model: dict, pages: list[dict], path: Path) -> None:
         for node in data["prepared_nodes"]: pdf_node(page,node,data["catalog"])
         page.draw_line((45,709),(1145,709),color=rgb("#CDD8E3"),width=.7)
         draw_text(page,data["notes_layout"],MUTED)
-        draw_text(page,data["sources_layout"],MUTED)
         draw_text(page,fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"),MUTED)
-    document.set_metadata({"title":model.get("title",path.stem),"author":"PK DTS documentation","subject":"Source-based system diagrams","creator":"PK DTS diagram renderer"})
+    document.set_metadata({"title":model.get("title",path.stem),"author":"PK Document Tracking System","subject":"Proposed document control and system operations"})
     document.save(path,garbage=4,deflate=True)
     document.close()
 
@@ -541,9 +572,17 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
     style.remove(style.find(f"{{{VISIO}}}Text"))
     manifest=ET.Element(f"{{{CT}}}Types")
     for ext,mime in [("rels","application/vnd.openxmlformats-package.relationships+xml"),("xml","application/xml")]: ET.SubElement(manifest,f"{{{CT}}}Default",Extension=ext,ContentType=mime)
-    for part,mime in [("/visio/document.xml","application/vnd.ms-visio.drawing.main+xml"),("/visio/pages/pages.xml","application/vnd.ms-visio.pages+xml")]+[(f"/visio/pages/page{i}.xml","application/vnd.ms-visio.page+xml") for i in range(1,len(pages)+1)]: ET.SubElement(manifest,f"{{{CT}}}Override",PartName=part,ContentType=mime)
+    for part,mime in [("/visio/document.xml","application/vnd.ms-visio.drawing.main+xml"),("/visio/pages/pages.xml","application/vnd.ms-visio.pages+xml"),("/docProps/core.xml","application/vnd.openxmlformats-package.core-properties+xml"),("/docProps/app.xml","application/vnd.openxmlformats-officedocument.extended-properties+xml")]+[(f"/visio/pages/page{i}.xml","application/vnd.ms-visio.page+xml") for i in range(1,len(pages)+1)]: ET.SubElement(manifest,f"{{{CT}}}Override",PartName=part,ContentType=mime)
     page_list=ET.Element(f"{{{VISIO}}}Pages")
-    parts={"[Content_Types].xml":xmlbytes(manifest),"_rels/.rels":relationship([("rId1",VREL+"document","visio/document.xml")]),"visio/document.xml":xmlbytes(document),"visio/_rels/document.xml.rels":relationship([("rId1",VREL+"pages","pages/pages.xml")]),"visio/pages/_rels/pages.xml.rels":relationship([(f"rId{i}",VREL+"page",f"page{i}.xml") for i in range(1,len(pages)+1)])}
+    core_ns="http://schemas.openxmlformats.org/package/2006/metadata/core-properties"
+    dc_ns="http://purl.org/dc/elements/1.1/"
+    app_ns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"
+    core=ET.Element(f"{{{core_ns}}}coreProperties")
+    for name,value in [("title",model.get("title",path.stem)),("creator","PK Document Tracking System"),("subject","Proposed document control and system operations")]:
+        ET.SubElement(core,f"{{{dc_ns}}}{name}").text=value
+    app=ET.Element(f"{{{app_ns}}}Properties")
+    ET.SubElement(app,f"{{{app_ns}}}Company").text="PK Document Tracking System"
+    parts={"[Content_Types].xml":xmlbytes(manifest),"_rels/.rels":relationship([("rId1",VREL+"document","visio/document.xml"),("rId2",PKGREL+"metadata/core-properties","docProps/core.xml"),("rId3",REL+"extended-properties","docProps/app.xml")]),"docProps/core.xml":xmlbytes(core),"docProps/app.xml":xmlbytes(app),"visio/document.xml":xmlbytes(document),"visio/_rels/document.xml.rels":relationship([("rId1",VREL+"pages","pages/pages.xml")]),"visio/pages/_rels/pages.xml.rels":relationship([(f"rId{i}",VREL+"page",f"page{i}.xml") for i in range(1,len(pages)+1)])}
     total_nodes,total_edges=0,0
     for index,data in enumerate(pages,1):
         pname=re.sub(r"[\\/:*?\[\]]"," ",data["title"])[:60]
@@ -573,7 +612,7 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
         names={"entity":"External participant","process":"Process / activity","store":"Data store","decision":"Decision","terminator":"Start / end","data":"Input / output","document":"Document","port":"Cross-sheet reference"}
         present=list(dict.fromkeys(n["kind"] for n in nodes if n["kind"] not in ("text","note")))
         legend="   |   ".join(names[k] for k in present)+( "   >   Directed connection" if data["prepared_edges"] else "")
-        texts=[("Document title",fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM / SYSTEM DOCUMENTATION"),pdf.Rect(45,19,1145,34),9,8,True,"left")),("Page title",fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left")),("Subtitle",fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left")),("Legend",fitted(legend,pdf.Rect(45,92,1145,107),8,7,False,"left")),("Notes",data["notes_layout"]),("Evidence",data["sources_layout"]),("Page number",fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"))]
+        texts=[("Document title",fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM / PROPOSED SYSTEM DESIGN"),pdf.Rect(45,19,1145,34),9,8,True,"left")),("Page title",fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left")),("Subtitle",fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left")),("Legend",fitted(legend,pdf.Rect(45,92,1145,107),8.5,8,False,"left")),("Notes",data["notes_layout"]),("Page number",fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"))]
         for name,layout in texts:
             vshape(shapes,nextid,name,pdf.Rect(layout["rect"]),layout)
             nextid+=1

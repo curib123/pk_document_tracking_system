@@ -2,8 +2,8 @@
   "title": "PK DOCUMENT TRACKING SYSTEM / PROPOSED PROCESS FLOW",
   "pages": [
     {
-      "title": "1. Implemented document-control process",
-      "subtitle": "Proposed Process Flow - existing application behavior; functional actors may share the same account",
+      "title": "1. Proposed document-control process",
+      "subtitle": "Proposed responsibilities for request approval, direct actions and physical transfers",
       "nodes": [
         {
           "id": "user",
@@ -34,7 +34,7 @@
         },
         {
           "id": "submit",
-          "label": "Requester: Submit\nvalidated proposal + attachment",
+          "label": "Requester: Submit\nvalidated proposal and required file",
           "kind": "process",
           "x": 405,
           "y": 290,
@@ -52,7 +52,7 @@
         },
         {
           "id": "apply",
-          "label": "System: final approval\napplies the document operation",
+          "label": "System: apply the approved\noperation or prepare a transfer",
           "kind": "process",
           "x": 810,
           "y": 450,
@@ -88,7 +88,7 @@
         },
         {
           "id": "handoff",
-          "label": "Transfer exception:\nrequester dispatches;\nrecipient accepts",
+          "label": "Transfer exception:\nDispatch by requester;\nAccept by recipient",
           "kind": "process",
           "x": 405,
           "y": 610,
@@ -134,7 +134,7 @@
           "sideTo": "right",
           "via": [
             [
-              945,
+              945.0,
               255
             ],
             [
@@ -143,7 +143,7 @@
             ],
             [
               715,
-              330
+              330.0
             ]
           ]
         },
@@ -166,39 +166,47 @@
           "via": [
             [
               1115,
-              490
+              490.0
             ],
             [
               1115,
-              645
+              645.0
             ]
           ]
         },
         {
           "from": "apply",
           "to": "handoff",
-          "label": "transfer",
+          "label": "Transfer",
           "sideFrom": "bottom",
-          "sideTo": "right",
+          "sideTo": "top",
           "via": [
             [
-              945,
-              570
+              945.0,
+              565
             ],
             [
-              720,
-              570
-            ],
-            [
-              720,
-              650
+              537.5,
+              565
             ]
           ]
         },
         {
           "from": "handoff",
           "to": "complete",
-          "label": "received"
+          "label": "Accepted",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              740,
+              650.0
+            ],
+            [
+              740,
+              645.0
+            ]
+          ]
         },
         {
           "from": "direct",
@@ -207,9 +215,9 @@
         }
       ],
       "notes": [
-        "Review can also reject or return a request. See Flowchart page 3 for the exact reverse-step routing; final approval alone does not complete a physical transfer.",
-        "Direct Softcopy Create/Revise/Cancel, direct Hardcopy Create/Update/Dispose, and administrative assignments use explicit direct permissions. They do not run the request approval route.",
-        "Approver titles and number of steps are configured per request type. Do not assume a fixed leader, Document Control Officer, or Plant Manager sequence."
+        "Approvers will be able to approve, reject or return a request. Flowchart sheet 3 defines when Return will reopen a previous step or return the proposal to its requester.",
+        "Direct Softcopy Create/Revise/Cancel, Hardcopy Create/Update/Dispose and administrative assignments will require separate permissions.",
+        "Each request type will follow its configured approval sequence. Transfers will also require Dispatch by the requester and Accept by the designated recipient."
       ],
       "sources": [
         "application/config/routes.php:70-78,124-162,222-232",
@@ -220,7 +228,7 @@
     },
     {
       "title": "2. Softcopy creation, revision and cancellation",
-      "subtitle": "Requester supplies a proposal; the current controlled document changes only after final approval",
+      "subtitle": "The requester will submit a proposal; the controlled document will change only after final approval",
       "nodes": [
         {
           "id": "open",
@@ -260,7 +268,7 @@
         },
         {
           "id": "draft",
-          "label": "Save draft; review proposal\nand uploaded file; edit if needed",
+          "label": "Save draft; review proposal\nand required file; edit if needed",
           "kind": "process",
           "x": 450,
           "y": 370,
@@ -269,7 +277,7 @@
         },
         {
           "id": "route",
-          "label": "Submit -> configured ordered\napproval route",
+          "label": "Submit; configured ordered\napproval route",
           "kind": "process",
           "x": 450,
           "y": 475,
@@ -313,8 +321,8 @@
           "sideTo": "top",
           "via": [
             [
-              200,
-              157
+              200.0,
+              157.5
             ]
           ]
         },
@@ -331,8 +339,8 @@
           "sideTo": "top",
           "via": [
             [
-              980,
-              157
+              980.0,
+              157.5
             ]
           ]
         },
@@ -343,8 +351,8 @@
           "sideTo": "left",
           "via": [
             [
-              200,
-              402
+              200.0,
+              402.5
             ]
           ]
         },
@@ -359,8 +367,8 @@
           "sideTo": "right",
           "via": [
             [
-              980,
-              402
+              980.0,
+              402.5
             ]
           ]
         },
@@ -376,8 +384,8 @@
           "sideTo": "top",
           "via": [
             [
-              200,
-              507
+              200.0,
+              507.5
             ]
           ]
         },
@@ -394,16 +402,16 @@
           "sideTo": "top",
           "via": [
             [
-              980,
-              507
+              980.0,
+              507.5
             ]
           ]
         }
       ],
       "notes": [
-        "Create and Revise require a pending file uploaded by the requester before submission. Supported formats: PDF, TXT, PNG, JPG/JPEG, DOCX and XLSX; maximum 15 MB.",
-        "A revision level must be 1-30 characters and differ from the current revision. Blank effective date defaults to approval day. Historical revision rows remain after file retirement.",
-        "Cancel Softcopy is a business request to cancel an active document. Cancel draft only cancels an unsubmitted proposal and does not cancel the stored document."
+        "Create and Revise will require a Document File before submission: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB.",
+        "A revision level shall contain 1-30 characters and differ from the current revision. A blank revision Effective Date will default to the approval date.",
+        "Cancel Softcopy will cancel an active controlled document after approval. Cancel draft will cancel only an unsubmitted proposal."
       ],
       "sources": [
         "application/view/pages/request/softcopy_fields.php:7-80",
@@ -414,7 +422,7 @@
     },
     {
       "title": "3. Hardcopy registration, update and disposal",
-      "subtitle": "Physical document metadata, custody and retention are controlled through approved requests",
+      "subtitle": "Approved requests will control physical document metadata, custody and retention",
       "nodes": [
         {
           "id": "open",
@@ -463,7 +471,7 @@
         },
         {
           "id": "approval",
-          "label": "Configured approvers:\nreview in order; final approval\napplies the selected operation",
+          "label": "Ordered approver review;\napply the selected operation\non final approval",
           "kind": "process",
           "x": 450,
           "y": 480,
@@ -507,8 +515,8 @@
           "sideTo": "top",
           "via": [
             [
-              200,
-              157
+              200.0,
+              157.5
             ]
           ]
         },
@@ -525,8 +533,8 @@
           "sideTo": "top",
           "via": [
             [
-              980,
-              157
+              980.0,
+              157.5
             ]
           ]
         },
@@ -537,8 +545,8 @@
           "sideTo": "left",
           "via": [
             [
-              200,
-              402
+              200.0,
+              402.5
             ]
           ]
         },
@@ -553,8 +561,8 @@
           "sideTo": "right",
           "via": [
             [
-              980,
-              402
+              980.0,
+              402.5
             ]
           ]
         },
@@ -570,8 +578,8 @@
           "sideTo": "top",
           "via": [
             [
-              200,
-              517
+              200.0,
+              517.5
             ]
           ]
         },
@@ -588,16 +596,16 @@
           "sideTo": "top",
           "via": [
             [
-              980,
-              517
+              980.0,
+              517.5
             ]
           ]
         }
       ],
       "notes": [
-        "Non-administrative requests use the requester as holder; only the current holder can request an update. Global administrators may select an active holder.",
-        "Retention tracking stores ordered start/end dates and displays remaining/due/overdue days. Reaching the retention date never schedules or automatically executes disposal.",
-        "Other disposal requires explanatory text of up to 250 characters. Approval records the disposal; the software does not perform the physical destruction."
+        "The requester will become the hardcopy holder unless a global administrator selects an active holder. Update requests will be limited to the current holder or a global administrator.",
+        "Retention dates and the remaining/due/overdue countdown will support monitoring. Disposal will require a separate request or authorized direct action.",
+        "Other disposal shall include explanatory text of up to 250 characters. Approval will record disposal; physical destruction will remain an operational responsibility."
       ],
       "sources": [
         "application/view/pages/hardcopy_document/modal_action/upsert.php:10-100",
@@ -609,7 +617,7 @@
     },
     {
       "title": "4. Hardcopy transfer and physical receipt",
-      "subtitle": "Approval authorizes a handoff; custody and Location change only when the designated recipient accepts",
+      "subtitle": "Approval will authorize a handoff; custody and Location will change only after recipient acceptance",
       "nodes": [
         {
           "id": "request",
@@ -640,7 +648,7 @@
         },
         {
           "id": "approved",
-          "label": "System: final approval creates\ntransfer = for_transfer;\nrequest = approved",
+          "label": "On final approval:\nprepare transfer: For Transfer;\nrequest status: Approved",
           "kind": "process",
           "x": 855,
           "y": 325,
@@ -649,7 +657,7 @@
         },
         {
           "id": "dispatch",
-          "label": "Requester: Dispatch\nconfirms physical release",
+          "label": "Requester: Dispatch;\nconfirm physical release",
           "kind": "process",
           "x": 440,
           "y": 330,
@@ -658,7 +666,7 @@
         },
         {
           "id": "transit",
-          "label": "System: transfer = in_transit;\nrecord dispatcher and time",
+          "label": "System: transfer status: In Transit;\nrecord dispatcher and time",
           "kind": "process",
           "x": 55,
           "y": 330,
@@ -667,7 +675,7 @@
         },
         {
           "id": "accept",
-          "label": "Designated recipient: Accept\nconfirms physical receipt",
+          "label": "Designated recipient: Accept;\nconfirm physical receipt",
           "kind": "process",
           "x": 55,
           "y": 540,
@@ -731,9 +739,9 @@
         }
       ],
       "notes": [
-        "The dispatcher is the original transfer requester, who may differ from the current holder. Only the assigned recipient can accept an in-transit transfer.",
-        "An approved transfer remains incomplete until acceptance. Pending handoffs are shown under My Tasks > Hardcopy Transfer to the exact dispatcher or recipient.",
-        "If the document holder/status or approved destination hierarchy changes, acceptance fails and no custody change is saved. Approval does not move the document automatically."
+        "Only the original transfer requester will be allowed to Dispatch. Only the designated recipient will be allowed to Accept an in-transit transfer.",
+        "My Tasks > Hardcopy Transfer will show the pending Dispatch or Accept action to its assigned participant. The request will complete only after acceptance.",
+        "Acceptance will check the current holder, document status and approved active destination. A failed check will preserve custody and location."
       ],
       "sources": [
         "application/services/request/request_service.php:320-390,643-673,780-789",
@@ -744,7 +752,7 @@
     },
     {
       "title": "5. Assignment, access and administrative paths",
-      "subtitle": "Self-service approval requests and authorized direct maintenance are separate implemented actions",
+      "subtitle": "Proposed self-service requests, direct assignments and workflow administration",
       "nodes": [
         {
           "id": "self",
@@ -766,7 +774,7 @@
         },
         {
           "id": "review",
-          "label": "Save draft -> Submit ->\nconfigured approval steps",
+          "label": "Save draft; Submit;\nconfigured approval steps",
           "kind": "process",
           "x": 55,
           "y": 455,
@@ -820,7 +828,7 @@
         },
         {
           "id": "effect",
-          "label": "Direct assignment uses the same\nassignment effects immediately;\nno approval request is created",
+          "label": "Immediate direct assignment;\nno approval request",
           "kind": "terminal",
           "x": 805,
           "y": 610,
@@ -838,7 +846,7 @@
         },
         {
           "id": "version",
-          "label": "One published default per type;\nnew submissions capture version;\nreturned requests keep snapshot",
+          "label": "Published default per type;\ncapture version at submission;\nretain approval route after Return",
           "kind": "process",
           "x": 440,
           "y": 290,
@@ -868,10 +876,11 @@
           "sideTo": "top",
           "via": [
             [
-              595,
-              492
+              595.0,
+              511.25
             ]
-          ]
+          ],
+          "fractionFrom": 0.75
         },
         {
           "from": "admin",
@@ -891,11 +900,11 @@
           "via": [
             [
               1140,
-              327
+              327.5
             ],
             [
               1140,
-              650
+              650.0
             ]
           ]
         },
@@ -910,21 +919,36 @@
         {
           "from": "version",
           "to": "review",
-          "label": "selected route",
+          "label": "Published route",
           "sideFrom": "bottom",
           "sideTo": "right",
           "via": [
             [
-              595,
-              492
+              595.0,
+              420
+            ],
+            [
+              395,
+              420
+            ],
+            [
+              395,
+              473.75
             ]
+          ],
+          "fractionTo": 0.25,
+          "labelRect": [
+            403,
+            400,
+            545,
+            419
           ]
         }
       ],
       "notes": [
-        "Request recipients for assignment and access are forced to the requester on save and submit. An administrator assigns documents to other people through the direct administration screen.",
-        "Access grants are permission-scoped and cease to provide access after expiry or revocation. Catalog/metadata visibility does not grant the file bytes.",
-        "Bulk assignments are atomic and capped at 2,000 documents per operation. Direct hardcopy reassignment is blocked while an approved/in-transit transfer is open."
+        "Assignment and access requests will name the requester as recipient. Document Control > Document Assignments will support direct assignment to another active user.",
+        "An access grant will expire at 23:59:59 on the selected date. Expired or revoked grants will provide no access; catalog visibility alone will not grant file access.",
+        "Bulk assignment will support up to 2,000 documents per operation. An approved or in-transit transfer will block direct reassignment of that hardcopy."
       ],
       "sources": [
         "application/services/request/request_service.php:178-218,409-421,631-641",

@@ -1,9 +1,9 @@
 {
-  "title": "PK DOCUMENT TRACKING SYSTEM / SYSTEM FLOWCHART",
+  "title": "PK DOCUMENT TRACKING SYSTEM / PROPOSED SYSTEM FLOWCHART",
   "pages": [
     {
       "title": "1. Authentication and authorized entry",
-      "subtitle": "Flowchart - credentials, mandatory password setup and server-side permissions",
+      "subtitle": "Proposed authentication, required password setup and authorization checks",
       "nodes": [
         {
           "id": "start",
@@ -70,7 +70,7 @@
         },
         {
           "id": "password",
-          "label": "Set valid new password;\nverify current password;\nrenew session version",
+          "label": "Set a valid new password;\nverify the current password;\nrefresh the session",
           "kind": "process",
           "x": 855,
           "y": 460,
@@ -119,11 +119,11 @@
           "via": [
             [
               375,
-              302
+              302.5
             ],
             [
               375,
-              177
+              177.5
             ]
           ]
         },
@@ -140,11 +140,11 @@
           "via": [
             [
               800,
-              322
+              322.5
             ],
             [
               800,
-              177
+              177.5
             ]
           ]
         },
@@ -165,20 +165,22 @@
           "to": "setup",
           "label": "Yes",
           "sideFrom": "bottom",
-          "sideTo": "right",
+          "sideTo": "top",
           "via": [
             [
-              990,
-              420
+              990.0,
+              415
             ],
             [
-              790,
-              420
-            ],
-            [
-              790,
-              502
+              595.0,
+              415
             ]
+          ],
+          "labelRect": [
+            993,
+            381,
+            1036,
+            405
           ]
         },
         {
@@ -189,11 +191,11 @@
           "sideTo": "top",
           "via": [
             [
-              182,
+              182.5,
               400
             ],
             [
-              595,
+              595.0,
               400
             ]
           ]
@@ -211,11 +213,11 @@
           "sideTo": "bottom",
           "via": [
             [
-              990,
+              990.0,
               585
             ],
             [
-              595,
+              595.0,
               585
             ]
           ]
@@ -225,7 +227,27 @@
           "to": "permission",
           "label": "No",
           "sideFrom": "left",
-          "sideTo": "right"
+          "sideTo": "top",
+          "via": [
+            [
+              410,
+              502.5
+            ],
+            [
+              410,
+              435
+            ],
+            [
+              182.5,
+              435
+            ]
+          ],
+          "labelRect": [
+            335,
+            413,
+            380,
+            433
+          ]
         },
         {
           "from": "permission",
@@ -241,19 +263,19 @@
           "via": [
             [
               375,
-              507
+              507.5
             ],
             [
               375,
-              657
+              657.5
             ]
           ]
         }
       ],
       "notes": [
-        "Login checks an active account and password. The username/client attempt key is limited after 10 failures within 15 minutes; errors return to the login page.",
-        "A forced password change blocks ordinary protected pages until setup succeeds. Every protected operation still enforces its own permission or exact assignment/ownership rule.",
-        "Role names are configurable. Approval tasks use the assigned user or configured role membership, rather than requiring a broad management permission."
+        "Login will check an active account and password. Ten failed attempts within 15 minutes will temporarily block that username/client attempt key.",
+        "Required password setup will block ordinary protected pages until a valid change succeeds. Each action will then check its permissions and ownership or assignment rule.",
+        "Approval tasks will follow the assigned user or configured role membership. Role names and approval sequences will be configurable."
       ],
       "sources": [
         "application/controllers/Auth.php:24-62,85-137",
@@ -264,7 +286,7 @@
     },
     {
       "title": "2. Draft, validation, submission and removal",
-      "subtitle": "Flowchart - request ownership, proposal checks and immutable workflow routing",
+      "subtitle": "Proposed request ownership, validation and versioned approval routing",
       "nodes": [
         {
           "id": "start",
@@ -304,7 +326,7 @@
         },
         {
           "id": "submit",
-          "label": "Submit chosen?",
+          "label": "Next action?",
           "kind": "decision",
           "x": 440,
           "y": 440,
@@ -322,7 +344,7 @@
         },
         {
           "id": "route",
-          "label": "Capture ordered workflow snapshot;\nfirst step active; request submitted",
+          "label": "Capture approval route;\nactivate first step; mark Submitted",
           "kind": "terminal",
           "x": 805,
           "y": 620,
@@ -331,7 +353,7 @@
         },
         {
           "id": "cancel",
-          "label": "Cancel own draft",
+          "label": "Cancel own request\n(Draft status only)",
           "kind": "process",
           "x": 440,
           "y": 620,
@@ -349,7 +371,7 @@
         },
         {
           "id": "delete",
-          "label": "Optional Delete:\nonly own cancelled, never-submitted\nrequest with no workflow/result",
+          "label": "Optional Delete:\nown Cancelled draft; never submitted;\nno approval or completed result",
           "kind": "process",
           "x": 440,
           "y": 260,
@@ -380,14 +402,14 @@
           "via": [
             [
               385,
-              322
+              322.5
             ],
             [
               385,
               225
             ],
             [
-              590,
+              590.0,
               225
             ]
           ]
@@ -404,7 +426,7 @@
         {
           "from": "submit",
           "to": "checks",
-          "label": "Yes"
+          "label": "Submit"
         },
         {
           "from": "checks",
@@ -420,22 +442,28 @@
           "via": [
             [
               965,
-              235
+              390
             ],
             [
               790,
-              235
+              390
             ],
             [
               790,
-              167
+              167.5
             ]
+          ],
+          "labelRect": [
+            920,
+            395,
+            962,
+            417
           ]
         },
         {
           "from": "submit",
           "to": "cancel",
-          "label": "No: cancel draft"
+          "label": "Cancel"
         },
         {
           "from": "cancel",
@@ -452,7 +480,7 @@
           "via": [
             [
               35,
-              652
+              652.5
             ],
             [
               35,
@@ -464,7 +492,7 @@
             ],
             [
               405,
-              310
+              310.0
             ]
           ]
         },
@@ -480,13 +508,19 @@
           "to": "deleted",
           "label": "eligible",
           "sideFrom": "right",
-          "sideTo": "left"
+          "sideTo": "left",
+          "labelRect": [
+            743,
+            285,
+            787,
+            303
+          ]
         }
       ],
       "notes": [
-        "A draft or returned proposal is editable only by its requester. Required POST confirmation and request permissions are checked server-side; stale edited versions are rejected.",
-        "Before submission, the server checks active targets/recipients and proposal files; a submitted access/assignment/transfer for the same requester/document blocks another related pending request.",
-        "Successful deletion permanently removes only the cancelled unsubmitted draft and its request-only children. Delete is never a general document deletion or submitted-request removal action."
+        "Only the requester will be allowed to edit a draft or returned proposal. Saving and submission will validate permissions, confirmation and the current version.",
+        "Submit will check targets, recipients and required files. A conflicting pending access, assignment or transfer request will block another related submission for the same requester/document.",
+        "A saved proposal may remain open for editing. Cancel will be available only in Draft status. Delete will remove only the owner's eligible cancelled draft and its request-only data."
       ],
       "sources": [
         "application/services/request/request_service.php:40-79,116-315,393-547,849-907",
@@ -496,7 +530,7 @@
     },
     {
       "title": "3. Approval, rejection and reverse-step return",
-      "subtitle": "Flowchart - only the exact active approver may act on a submitted request",
+      "subtitle": "Only the assigned active approver will be allowed to decide a submitted request",
       "nodes": [
         {
           "id": "task",
@@ -554,21 +588,21 @@
         },
         {
           "id": "requester",
-          "label": "Yes: request returned to owner;\nedit and resubmit using same\nimmutable workflow snapshot",
+          "label": "Return to requester;\nedit and resubmit using the\ncaptured approval route",
           "kind": "terminal",
           "x": 55,
-          "y": 595,
+          "y": 600,
           "w": 285,
-          "h": 95
+          "h": 90
         },
         {
           "id": "previous",
-          "label": "No: reopen immediately\nprevious approved step;\nrequest remains submitted",
-          "kind": "process",
-          "x": 855,
-          "y": 465,
-          "w": 270,
-          "h": 105
+          "label": "Reopen previous approved step;\ncontinue review in My Tasks\nwith that step's assigned approver",
+          "kind": "port",
+          "x": 450,
+          "y": 610,
+          "w": 290,
+          "h": 80
         },
         {
           "id": "last",
@@ -581,20 +615,20 @@
         },
         {
           "id": "next",
-          "label": "No: activate next step;\nrequest remains submitted",
-          "kind": "process",
-          "x": 55,
-          "y": 455,
-          "w": 285,
+          "label": "Activate next step;\ncontinue review in My Tasks\nwith its assigned approver",
+          "kind": "port",
+          "x": 855,
+          "y": 450,
+          "w": 270,
           "h": 80
         },
         {
           "id": "apply",
-          "label": "Yes: apply domain action;\ncompleted, or approved transfer\nawaiting physical handoff",
+          "label": "Apply approved operation;\ncomplete request, or prepare\ntransfer for Dispatch and Accept",
           "kind": "terminal",
-          "x": 450,
+          "x": 855,
           "y": 610,
-          "w": 290,
+          "w": 270,
           "h": 85
         }
       ],
@@ -612,18 +646,40 @@
           "via": [
             [
               390,
-              327
+              327.5
             ],
             [
               390,
-              167
+              167.5
             ]
           ]
         },
         {
           "from": "auth",
           "to": "decision",
-          "label": "Yes"
+          "label": "Yes",
+          "sideFrom": "bottom",
+          "sideTo": "left",
+          "via": [
+            [
+              197.5,
+              420
+            ],
+            [
+              420,
+              420
+            ],
+            [
+              420,
+              327.5
+            ]
+          ],
+          "labelRect": [
+            230,
+            399,
+            275,
+            418
+          ]
         },
         {
           "from": "decision",
@@ -633,7 +689,7 @@
           "sideTo": "left",
           "via": [
             [
-              595,
+              595.0,
               230
             ],
             [
@@ -642,7 +698,7 @@
             ],
             [
               805,
-              187
+              187.5
             ]
           ]
         },
@@ -665,107 +721,58 @@
           "via": [
             [
               390,
-              522
+              522.5
             ],
             [
               390,
-              642
+              645.0
             ]
           ]
         },
         {
           "from": "first",
           "to": "previous",
-          "label": "No"
-        },
-        {
-          "from": "previous",
-          "to": "task",
-          "label": "review previous",
-          "sideFrom": "right",
+          "label": "No",
+          "sideFrom": "bottom",
           "sideTo": "top",
-          "via": [
-            [
-              1140,
-              517
-            ],
-            [
-              1140,
-              115
-            ],
-            [
-              197,
-              115
-            ]
-          ]
+          "via": []
         },
         {
           "from": "last",
           "to": "next",
           "label": "No",
-          "sideFrom": "top",
+          "sideFrom": "bottom",
           "sideTo": "top",
-          "via": [
-            [
-              990,
-              245
-            ],
-            [
-              775,
-              245
-            ],
-            [
-              775,
-              420
-            ],
-            [
-              197,
-              420
-            ]
-          ]
-        },
-        {
-          "from": "next",
-          "to": "task",
-          "sideFrom": "left",
-          "sideTo": "left",
-          "via": [
-            [
-              35,
-              495
-            ],
-            [
-              35,
-              167
-            ]
-          ]
+          "via": []
         },
         {
           "from": "last",
           "to": "apply",
           "label": "Yes",
-          "sideFrom": "bottom",
+          "sideFrom": "right",
           "sideTo": "right",
           "via": [
             [
-              990,
-              415
+              1140,
+              337.5
             ],
             [
-              780,
-              415
-            ],
-            [
-              780,
-              652
+              1140,
+              652.5
             ]
+          ],
+          "labelRect": [
+            1080,
+            393,
+            1138,
+            416
           ]
         }
       ],
       "notes": [
-        "Every decision records actor, position, timestamp and comments in workflow history inside the same transaction as the step/status change.",
-        "Return at step 2 or later reopens only the immediately preceding approved step. When that approver approves again, the returned step is revisited before later pending steps.",
-        "Return from the first step reaches the requester. Resubmission starts the ordered route again with new step rows; historical decisions are preserved. Rejection ends the request."
+        "Every valid decision will record the actor, position, date/time and comments together with the step and request status change.",
+        "Return after the first step will reopen the immediately preceding approved step. Its approver will review again before the returned and later pending steps continue.",
+        "Return from the first step will send the proposal to its requester. Resubmission will follow the captured route with new step records and preserve prior decision history."
       ],
       "sources": [
         "application/services/request/request_service.php:462-538,551-561,719-846",
@@ -775,11 +782,11 @@
     },
     {
       "title": "4. Transfer dispatch and acceptance decisions",
-      "subtitle": "Flowchart - physical handoff completes only after recipient acceptance passes all checks",
+      "subtitle": "A physical handoff will complete only after recipient acceptance passes all checks",
       "nodes": [
         {
           "id": "approved",
-          "label": "All transfer approvals complete;\nrequest approved;\ntransfer for_transfer",
+          "label": "All transfer approvals complete;\nrequest approved;\ntransfer status: For Transfer",
           "kind": "terminal",
           "x": 55,
           "y": 140,
@@ -788,7 +795,7 @@
         },
         {
           "id": "dispatcher",
-          "label": "Actor is original\nrequester and transfer\nfor_transfer?",
+          "label": "Actor is original\nrequester and transfer is\nFor Transfer?",
           "kind": "decision",
           "x": 55,
           "y": 315,
@@ -806,7 +813,7 @@
         },
         {
           "id": "dispatch",
-          "label": "Dispatch: mark in_transit;\nrecord dispatcher and time",
+          "label": "Dispatch: mark In Transit;\nrecord dispatcher and time",
           "kind": "process",
           "x": 55,
           "y": 595,
@@ -815,7 +822,7 @@
         },
         {
           "id": "recipient",
-          "label": "Actor is assigned\nrecipient and transfer\nin_transit?",
+          "label": "Actor is assigned\nrecipient and transfer is\nIn Transit?",
           "kind": "decision",
           "x": 440,
           "y": 575,
@@ -873,11 +880,11 @@
           "via": [
             [
               395,
-              377
+              377.5
             ],
             [
               395,
-              177
+              177.5
             ]
           ]
         },
@@ -906,16 +913,20 @@
           "from": "checks",
           "to": "fail2",
           "label": "No",
-          "sideFrom": "left",
+          "sideFrom": "top",
           "sideTo": "right",
           "via": [
             [
-              775,
-              630
+              965,
+              480
             ],
             [
               775,
-              362
+              480
+            ],
+            [
+              775,
+              362.5
             ]
           ]
         },
@@ -928,19 +939,19 @@
           "via": [
             [
               1140,
-              630
+              630.0
             ],
             [
               1140,
-              192
+              192.5
             ]
           ]
         }
       ],
       "notes": [
-        "Final approval creates the transfer record but does not change the document's holder or storage hierarchy. Dispatch and acceptance require separate confirmed actions.",
-        "The destination must differ from the original Location and must match active Area/Specific/optional Asset parents. Acceptance compares against the destination frozen at approval.",
-        "Any failed validation rolls back the handoff transaction. The code provides no general undo, auto-accept, or automatic transfer cancellation flow."
+        "Final approval will prepare a transfer without changing the holder or storage location. Dispatch and Accept will require separate confirmations.",
+        "The destination shall differ from the original Location and match the active Area/Specific/optional Asset hierarchy. Acceptance will use the destination captured at approval.",
+        "A failed check will preserve custody and transfer state. Approved and in-transit transfers will remain pending until the designated recipient accepts."
       ],
       "sources": [
         "application/services/request/request_service.php:320-390,643-673,784-789",
@@ -951,7 +962,7 @@
     },
     {
       "title": "5. Applying an operation and enforcing document access",
-      "subtitle": "Flowchart - final approval or an authorized direct action applies domain-specific effects",
+      "subtitle": "Final approval or an authorized direct action will apply the selected document operation",
       "nodes": [
         {
           "id": "trigger",
@@ -964,12 +975,12 @@
         },
         {
           "id": "kind",
-          "label": "Selected operation",
-          "kind": "decision",
-          "x": 450,
-          "y": 130,
-          "w": 290,
-          "h": 105
+          "label": "Apply selected operation",
+          "kind": "process",
+          "x": 440,
+          "y": 125,
+          "w": 280,
+          "h": 100
         },
         {
           "id": "softcopy",
@@ -984,23 +995,23 @@
           "id": "hardcopy",
           "label": "Hardcopy Create / Update:\nvalidate holder, active place\nand ordered retention dates",
           "kind": "process",
-          "x": 450,
+          "x": 440,
           "y": 320,
-          "w": 290,
+          "w": 280,
           "h": 105
         },
         {
           "id": "grant",
           "label": "Assignment / Access:\nactive document + active recipient;\nassignment or expiring personal grant",
           "kind": "process",
-          "x": 825,
+          "x": 805,
           "y": 320,
-          "w": 300,
+          "w": 320,
           "h": 105
         },
         {
           "id": "dispose",
-          "label": "Hardcopy Disposal request:\nrecord disposal method / previous\nstate; disposed; clear Location;\nrevoke grants",
+          "label": "Hardcopy Disposal:\nrecord method and previous state;\nmark Disposed; clear Location;\nrevoke personal grants",
           "kind": "process",
           "x": 55,
           "y": 555,
@@ -1011,34 +1022,47 @@
           "id": "transfer",
           "label": "Transfer approval:\ncreate approved handoff;\ndispatch / accept separately",
           "kind": "process",
-          "x": 450,
+          "x": 440,
           "y": 555,
-          "w": 290,
+          "w": 280,
           "h": 100
         },
         {
           "id": "view",
           "label": "Document/file requested:\npermission + current custody /\nassignment / valid grant checked",
           "kind": "process",
-          "x": 825,
+          "x": 805,
           "y": 555,
-          "w": 300,
+          "w": 320,
           "h": 100
         },
         {
           "id": "current",
-          "label": "Only active document's current\napproved file is served for\nnormal download / print",
+          "label": "Normal download / print:\nactive document; current\napproved file only",
           "kind": "note",
-          "x": 825,
+          "x": 805,
           "y": 135,
-          "w": 300,
+          "w": 320,
           "h": 100
         }
       ],
       "edges": [
         {
           "from": "trigger",
-          "to": "kind"
+          "to": "kind",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "fractionTo": 0.25,
+          "via": [
+            [
+              395,
+              170.0
+            ],
+            [
+              395,
+              150.0
+            ]
+          ]
         },
         {
           "from": "kind",
@@ -1048,23 +1072,28 @@
           "sideTo": "top",
           "via": [
             [
-              395,
-              182
+              365,
+              200
             ],
             [
-              395,
+              365,
               270
             ],
             [
               205,
               270
             ]
-          ]
+          ],
+          "fractionFrom": 0.75
         },
         {
           "from": "kind",
           "to": "hardcopy",
-          "label": "Hardcopy"
+          "label": "Hardcopy",
+          "sideFrom": "bottom",
+          "sideTo": "top",
+          "fractionFrom": 0.5,
+          "via": []
         },
         {
           "from": "kind",
@@ -1074,18 +1103,19 @@
           "sideTo": "top",
           "via": [
             [
-              780,
-              182
+              765,
+              200.0
             ],
             [
-              780,
+              765,
               270
             ],
             [
-              975,
+              965.0,
               270
             ]
-          ]
+          ],
+          "fractionFrom": 0.75
         },
         {
           "from": "kind",
@@ -1095,35 +1125,41 @@
           "sideTo": "right",
           "via": [
             [
-              595,
-              265
+              482.0,
+              250
             ],
             [
-              400,
-              265
+              395,
+              250
             ],
             [
-              400,
-              610
+              395,
+              610.0
             ]
-          ]
+          ],
+          "fractionFrom": 0.15
         },
         {
           "from": "kind",
           "to": "transfer",
           "label": "Transfer",
-          "sideFrom": "right",
+          "sideFrom": "bottom",
           "sideTo": "right",
           "via": [
             [
-              765,
-              182
+              678.0,
+              245
             ],
             [
-              765,
-              605
+              750,
+              245
+            ],
+            [
+              750,
+              605.0
             ]
-          ]
+          ],
+          "fractionFrom": 0.85
         },
         {
           "from": "softcopy",
@@ -1134,14 +1170,14 @@
           "via": [
             [
               35,
-              372
+              372.5
             ],
             [
               35,
               695
             ],
             [
-              975,
+              965.0,
               695
             ]
           ]
@@ -1154,16 +1190,16 @@
           "sideTo": "left",
           "via": [
             [
-              595,
+              580.0,
               490
             ],
             [
-              790,
+              780,
               490
             ],
             [
-              790,
-              605
+              780,
+              605.0
             ]
           ]
         },
@@ -1181,19 +1217,19 @@
           "via": [
             [
               1140,
-              605
+              605.0
             ],
             [
               1140,
-              185
+              185.0
             ]
           ]
         }
       ],
       "notes": [
-        "Each domain operation rechecks its relevant target state and applies within the caller's transaction. If final application fails, approval/status changes are rolled back.",
-        "Direct maintenance requires explicit direct permissions and document management scope. Approved request actions preserve source-request linkage; direct actions do not create request workflow rows.",
-        "Retention dates and countdown are informational; disposal remains a separate explicit operation. File catalog metadata never grants file bytes. Expired or revoked grants cease to satisfy access scope."
+        "Final approval will apply the operation together with the approval/status change. If the operation fails, both changes will be rolled back.",
+        "Direct maintenance will check its permission and document management scope. Approved requests will retain request linkage; direct actions will take effect immediately.",
+        "Retention dates will support monitoring; disposal will be explicit. File delivery will check permission, scope and the current approved file. Expired or revoked grants will provide no access."
       ],
       "sources": [
         "application/services/request/request_service.php:565-716,780-833",
