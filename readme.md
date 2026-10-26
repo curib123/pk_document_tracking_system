@@ -118,6 +118,40 @@ powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/sync_local_xampp.p
 
 The script defaults to `C:\xampp\htdocs\pk_document_tracking_system` and `http://localhost/pk_document_tracking_system/`. Both checkouts must have clean working trees, and the served checkout must be able to fast-forward to the development branch. The script updates tracked files and verifies HTTP asset hashes. It does not import database changes or replace private storage. Reload the browser after syncing.
 
+## Share the XAMPP site through ngrok
+
+Use this when a computer outside the local network needs access. Apache and
+MySQL must remain running on the host PC. The launcher uses XAMPP's existing
+HTTPS listener on port 443, so application links and secure cookies keep HTTPS.
+
+1. Install the Windows agent from [ngrok's official download page](https://ngrok.com/download/windows).
+   The launcher checks `%LOCALAPPDATA%\Programs\ngrok\ngrok.exe`, then `PATH`;
+   pass `-NgrokPath` if installed elsewhere.
+2. Sign into [your ngrok account](https://dashboard.ngrok.com/get-started/your-authtoken)
+   and configure its authtoken **locally**, using the installed executable:
+
+   ```powershell
+   & "$env:LOCALAPPDATA\Programs\ngrok\ngrok.exe" config add-authtoken "YOUR_AUTHTOKEN"
+   ```
+
+   Replace the placeholder with your own token. It belongs in ngrok's private
+   user configuration, outside the repository. Do not put it in chat or commit it.
+3. From this checkout, run:
+
+   ```powershell
+   powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/start_ngrok.ps1
+   ```
+
+4. Open the HTTPS **Forwarding** URL shown by ngrok. Its root redirects to
+   `/pk_document_tracking_system/`; sign in with an existing application account.
+   Keep the terminal open. Press **Ctrl+C** to stop the public endpoint.
+
+The checked-in traffic policy forwards only the PK DTS path and returns 404 for
+other XAMPP sites. Request inspection is disabled. The agent connects to
+`https://127.0.0.1:443` without checking XAMPP's self-signed certificate; public
+HTTPS remains provided by ngrok. Router forwarding and database port changes
+are unnecessary. Localhost and LAN URLs continue to work as before.
+
 ## Backups
 
 [tools/backup.php](tools/backup.php) provides CLI backup, listing, verification, retention, and restore commands. Configure `DB_*`, `PK_BACKUP_PASSWORD` (at least 12 characters), and `PK_BACKUP_SIGNING_KEY` (at least 32 characters) in the PHP process environment. `PK_MYSQL` and `PK_MYSQLDUMP` can override the database tool paths; `PK_BACKUP_DIR` can select a private backup directory.
