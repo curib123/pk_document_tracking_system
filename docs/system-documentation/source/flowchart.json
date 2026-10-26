@@ -1,0 +1,1208 @@
+{
+  "title": "PK DOCUMENT TRACKING SYSTEM / SYSTEM FLOWCHART",
+  "pages": [
+    {
+      "title": "1. Authentication and authorized entry",
+      "subtitle": "Flowchart - credentials, mandatory password setup and server-side permissions",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "Open system / protected page",
+          "kind": "terminal",
+          "x": 55,
+          "y": 140,
+          "w": 255,
+          "h": 55
+        },
+        {
+          "id": "session",
+          "label": "Authenticated\nsession?",
+          "kind": "decision",
+          "x": 55,
+          "y": 250,
+          "w": 255,
+          "h": 105
+        },
+        {
+          "id": "login",
+          "label": "Enter username and password",
+          "kind": "process",
+          "x": 450,
+          "y": 145,
+          "w": 290,
+          "h": 65
+        },
+        {
+          "id": "throttle",
+          "label": "Attempt limit\nreached?",
+          "kind": "decision",
+          "x": 450,
+          "y": 270,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "valid",
+          "label": "Active account +\nvalid password?",
+          "kind": "decision",
+          "x": 855,
+          "y": 270,
+          "w": 270,
+          "h": 105
+        },
+        {
+          "id": "retry",
+          "label": "Show login error;\nretry when permitted",
+          "kind": "terminal",
+          "x": 855,
+          "y": 145,
+          "w": 270,
+          "h": 65
+        },
+        {
+          "id": "setup",
+          "label": "Password change\nrequired?",
+          "kind": "decision",
+          "x": 450,
+          "y": 450,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "password",
+          "label": "Set valid new password;\nverify current password;\nrenew session version",
+          "kind": "process",
+          "x": 855,
+          "y": 460,
+          "w": 270,
+          "h": 85
+        },
+        {
+          "id": "permission",
+          "label": "Action permitted\nby role grants?",
+          "kind": "decision",
+          "x": 55,
+          "y": 455,
+          "w": 255,
+          "h": 105
+        },
+        {
+          "id": "denied",
+          "label": "Deny unauthorized action\nHTTP 403",
+          "kind": "terminal",
+          "x": 55,
+          "y": 625,
+          "w": 255,
+          "h": 55
+        },
+        {
+          "id": "allowed",
+          "label": "Dashboard / requested action;\nshow permission-scoped records",
+          "kind": "terminal",
+          "x": 450,
+          "y": 625,
+          "w": 290,
+          "h": 65
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "session"
+        },
+        {
+          "from": "session",
+          "to": "login",
+          "label": "No",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              375,
+              302
+            ],
+            [
+              375,
+              177
+            ]
+          ]
+        },
+        {
+          "from": "login",
+          "to": "throttle"
+        },
+        {
+          "from": "throttle",
+          "to": "retry",
+          "label": "Yes",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              800,
+              322
+            ],
+            [
+              800,
+              177
+            ]
+          ]
+        },
+        {
+          "from": "throttle",
+          "to": "valid",
+          "label": "No"
+        },
+        {
+          "from": "valid",
+          "to": "retry",
+          "label": "No",
+          "sideFrom": "top",
+          "sideTo": "bottom"
+        },
+        {
+          "from": "valid",
+          "to": "setup",
+          "label": "Yes",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              990,
+              420
+            ],
+            [
+              790,
+              420
+            ],
+            [
+              790,
+              502
+            ]
+          ]
+        },
+        {
+          "from": "session",
+          "to": "setup",
+          "label": "Yes",
+          "sideFrom": "bottom",
+          "sideTo": "top",
+          "via": [
+            [
+              182,
+              400
+            ],
+            [
+              595,
+              400
+            ]
+          ]
+        },
+        {
+          "from": "setup",
+          "to": "password",
+          "label": "Yes"
+        },
+        {
+          "from": "password",
+          "to": "setup",
+          "label": "saved",
+          "sideFrom": "bottom",
+          "sideTo": "bottom",
+          "via": [
+            [
+              990,
+              585
+            ],
+            [
+              595,
+              585
+            ]
+          ]
+        },
+        {
+          "from": "setup",
+          "to": "permission",
+          "label": "No",
+          "sideFrom": "left",
+          "sideTo": "right"
+        },
+        {
+          "from": "permission",
+          "to": "denied",
+          "label": "No"
+        },
+        {
+          "from": "permission",
+          "to": "allowed",
+          "label": "Yes",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              375,
+              507
+            ],
+            [
+              375,
+              657
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Login checks an active account and password. The username/client attempt key is limited after 10 failures within 15 minutes; errors return to the login page.",
+        "A forced password change blocks ordinary protected pages until setup succeeds. Every protected operation still enforces its own permission or exact assignment/ownership rule.",
+        "Role names are configurable. Approval tasks use the assigned user or configured role membership, rather than requiring a broad management permission."
+      ],
+      "sources": [
+        "application/controllers/Auth.php:24-62,85-137",
+        "application/models/Identity_model.php:6-28",
+        "application/core/MY_Controller.php:32-85",
+        "application/services/security/user_roles.php"
+      ]
+    },
+    {
+      "title": "2. Draft, validation, submission and removal",
+      "subtitle": "Flowchart - request ownership, proposal checks and immutable workflow routing",
+      "nodes": [
+        {
+          "id": "start",
+          "label": "My Requests: choose tab/action;\nenter proposal; Save draft",
+          "kind": "terminal",
+          "x": 55,
+          "y": 135,
+          "w": 300,
+          "h": 65
+        },
+        {
+          "id": "valid",
+          "label": "Owner / permission /\nfields / active targets\nvalid?",
+          "kind": "decision",
+          "x": 55,
+          "y": 260,
+          "w": 300,
+          "h": 125
+        },
+        {
+          "id": "error",
+          "label": "Show validation error;\nno partial request saved",
+          "kind": "terminal",
+          "x": 440,
+          "y": 135,
+          "w": 300,
+          "h": 65
+        },
+        {
+          "id": "draft",
+          "label": "Draft saved (or returned edited);\nreview / edit before submitting",
+          "kind": "process",
+          "x": 55,
+          "y": 455,
+          "w": 300,
+          "h": 75
+        },
+        {
+          "id": "submit",
+          "label": "Submit chosen?",
+          "kind": "decision",
+          "x": 440,
+          "y": 440,
+          "w": 300,
+          "h": 105
+        },
+        {
+          "id": "checks",
+          "label": "Revalidate target / recipient /\nfile; published route available?",
+          "kind": "decision",
+          "x": 805,
+          "y": 430,
+          "w": 320,
+          "h": 125
+        },
+        {
+          "id": "route",
+          "label": "Capture ordered workflow snapshot;\nfirst step active; request submitted",
+          "kind": "terminal",
+          "x": 805,
+          "y": 620,
+          "w": 320,
+          "h": 75
+        },
+        {
+          "id": "cancel",
+          "label": "Cancel own draft",
+          "kind": "process",
+          "x": 440,
+          "y": 620,
+          "w": 300,
+          "h": 65
+        },
+        {
+          "id": "cancelled",
+          "label": "Status cancelled;\nretire pending proposal file",
+          "kind": "process",
+          "x": 55,
+          "y": 620,
+          "w": 300,
+          "h": 65
+        },
+        {
+          "id": "delete",
+          "label": "Optional Delete:\nonly own cancelled, never-submitted\nrequest with no workflow/result",
+          "kind": "process",
+          "x": 440,
+          "y": 260,
+          "w": 300,
+          "h": 100
+        },
+        {
+          "id": "deleted",
+          "label": "Cancelled draft permanently deleted;\nrequest-only rows and pending\nproposal file cleaned up",
+          "kind": "terminal",
+          "x": 805,
+          "y": 260,
+          "w": 320,
+          "h": 90
+        }
+      ],
+      "edges": [
+        {
+          "from": "start",
+          "to": "valid"
+        },
+        {
+          "from": "valid",
+          "to": "error",
+          "label": "No",
+          "sideFrom": "right",
+          "sideTo": "bottom",
+          "via": [
+            [
+              385,
+              322
+            ],
+            [
+              385,
+              225
+            ],
+            [
+              590,
+              225
+            ]
+          ]
+        },
+        {
+          "from": "valid",
+          "to": "draft",
+          "label": "Yes"
+        },
+        {
+          "from": "draft",
+          "to": "submit"
+        },
+        {
+          "from": "submit",
+          "to": "checks",
+          "label": "Yes"
+        },
+        {
+          "from": "checks",
+          "to": "route",
+          "label": "Yes"
+        },
+        {
+          "from": "checks",
+          "to": "error",
+          "label": "No",
+          "sideFrom": "top",
+          "sideTo": "right",
+          "via": [
+            [
+              965,
+              235
+            ],
+            [
+              790,
+              235
+            ],
+            [
+              790,
+              167
+            ]
+          ]
+        },
+        {
+          "from": "submit",
+          "to": "cancel",
+          "label": "No: cancel draft"
+        },
+        {
+          "from": "cancel",
+          "to": "cancelled",
+          "sideFrom": "left",
+          "sideTo": "right"
+        },
+        {
+          "from": "cancelled",
+          "to": "delete",
+          "label": "Delete later",
+          "sideFrom": "left",
+          "sideTo": "left",
+          "via": [
+            [
+              35,
+              652
+            ],
+            [
+              35,
+              410
+            ],
+            [
+              405,
+              410
+            ],
+            [
+              405,
+              310
+            ]
+          ]
+        },
+        {
+          "from": "delete",
+          "to": "error",
+          "label": "invalid attempt",
+          "sideFrom": "top",
+          "sideTo": "bottom"
+        },
+        {
+          "from": "delete",
+          "to": "deleted",
+          "label": "eligible",
+          "sideFrom": "right",
+          "sideTo": "left"
+        }
+      ],
+      "notes": [
+        "A draft or returned proposal is editable only by its requester. Required POST confirmation and request permissions are checked server-side; stale edited versions are rejected.",
+        "Before submission, the server checks active targets/recipients and proposal files; a submitted access/assignment/transfer for the same requester/document blocks another related pending request.",
+        "Successful deletion permanently removes only the cancelled unsubmitted draft and its request-only children. Delete is never a general document deletion or submitted-request removal action."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:40-79,116-315,393-547,849-907",
+        "application/services/request/request_policy.php:4-9,30-40",
+        "application/controllers/Requests.php:114-164,194-224"
+      ]
+    },
+    {
+      "title": "3. Approval, rejection and reverse-step return",
+      "subtitle": "Flowchart - only the exact active approver may act on a submitted request",
+      "nodes": [
+        {
+          "id": "task",
+          "label": "My Tasks: open active request;\nreview proposal / pending file",
+          "kind": "terminal",
+          "x": 55,
+          "y": 135,
+          "w": 285,
+          "h": 65
+        },
+        {
+          "id": "auth",
+          "label": "Request submitted\nand actor assigned to\nactive step?",
+          "kind": "decision",
+          "x": 55,
+          "y": 265,
+          "w": 285,
+          "h": 125
+        },
+        {
+          "id": "deny",
+          "label": "Reject stale / unauthorized action;\nno decision saved",
+          "kind": "terminal",
+          "x": 450,
+          "y": 135,
+          "w": 290,
+          "h": 65
+        },
+        {
+          "id": "decision",
+          "label": "Choose decision",
+          "kind": "decision",
+          "x": 450,
+          "y": 275,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "reject",
+          "label": "Reject: request rejected;\nclose current node;\nretire pending proposal file",
+          "kind": "terminal",
+          "x": 855,
+          "y": 140,
+          "w": 270,
+          "h": 95
+        },
+        {
+          "id": "first",
+          "label": "Return from\nfirst step?",
+          "kind": "decision",
+          "x": 450,
+          "y": 470,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "requester",
+          "label": "Yes: request returned to owner;\nedit and resubmit using same\nimmutable workflow snapshot",
+          "kind": "terminal",
+          "x": 55,
+          "y": 595,
+          "w": 285,
+          "h": 95
+        },
+        {
+          "id": "previous",
+          "label": "No: reopen immediately\nprevious approved step;\nrequest remains submitted",
+          "kind": "process",
+          "x": 855,
+          "y": 465,
+          "w": 270,
+          "h": 105
+        },
+        {
+          "id": "last",
+          "label": "Approve: final\nworkflow step?",
+          "kind": "decision",
+          "x": 855,
+          "y": 285,
+          "w": 270,
+          "h": 105
+        },
+        {
+          "id": "next",
+          "label": "No: activate next step;\nrequest remains submitted",
+          "kind": "process",
+          "x": 55,
+          "y": 455,
+          "w": 285,
+          "h": 80
+        },
+        {
+          "id": "apply",
+          "label": "Yes: apply domain action;\ncompleted, or approved transfer\nawaiting physical handoff",
+          "kind": "terminal",
+          "x": 450,
+          "y": 610,
+          "w": 290,
+          "h": 85
+        }
+      ],
+      "edges": [
+        {
+          "from": "task",
+          "to": "auth"
+        },
+        {
+          "from": "auth",
+          "to": "deny",
+          "label": "No",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              390,
+              327
+            ],
+            [
+              390,
+              167
+            ]
+          ]
+        },
+        {
+          "from": "auth",
+          "to": "decision",
+          "label": "Yes"
+        },
+        {
+          "from": "decision",
+          "to": "reject",
+          "label": "Reject",
+          "sideFrom": "top",
+          "sideTo": "left",
+          "via": [
+            [
+              595,
+              230
+            ],
+            [
+              805,
+              230
+            ],
+            [
+              805,
+              187
+            ]
+          ]
+        },
+        {
+          "from": "decision",
+          "to": "first",
+          "label": "Return"
+        },
+        {
+          "from": "decision",
+          "to": "last",
+          "label": "Approve"
+        },
+        {
+          "from": "first",
+          "to": "requester",
+          "label": "Yes",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              390,
+              522
+            ],
+            [
+              390,
+              642
+            ]
+          ]
+        },
+        {
+          "from": "first",
+          "to": "previous",
+          "label": "No"
+        },
+        {
+          "from": "previous",
+          "to": "task",
+          "label": "review previous",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              1140,
+              517
+            ],
+            [
+              1140,
+              115
+            ],
+            [
+              197,
+              115
+            ]
+          ]
+        },
+        {
+          "from": "last",
+          "to": "next",
+          "label": "No",
+          "sideFrom": "top",
+          "sideTo": "top",
+          "via": [
+            [
+              990,
+              245
+            ],
+            [
+              775,
+              245
+            ],
+            [
+              775,
+              420
+            ],
+            [
+              197,
+              420
+            ]
+          ]
+        },
+        {
+          "from": "next",
+          "to": "task",
+          "sideFrom": "left",
+          "sideTo": "left",
+          "via": [
+            [
+              35,
+              495
+            ],
+            [
+              35,
+              167
+            ]
+          ]
+        },
+        {
+          "from": "last",
+          "to": "apply",
+          "label": "Yes",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              990,
+              415
+            ],
+            [
+              780,
+              415
+            ],
+            [
+              780,
+              652
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Every decision records actor, position, timestamp and comments in workflow history inside the same transaction as the step/status change.",
+        "Return at step 2 or later reopens only the immediately preceding approved step. When that approver approves again, the returned step is revisited before later pending steps.",
+        "Return from the first step reaches the requester. Resubmission starts the ordered route again with new step rows; historical decisions are preserved. Rejection ends the request."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:462-538,551-561,719-846",
+        "application/models/Request_model.php:24-40",
+        "application/models/File_model.php:7-44"
+      ]
+    },
+    {
+      "title": "4. Transfer dispatch and acceptance decisions",
+      "subtitle": "Flowchart - physical handoff completes only after recipient acceptance passes all checks",
+      "nodes": [
+        {
+          "id": "approved",
+          "label": "All transfer approvals complete;\nrequest approved;\ntransfer for_transfer",
+          "kind": "terminal",
+          "x": 55,
+          "y": 140,
+          "w": 300,
+          "h": 90
+        },
+        {
+          "id": "dispatcher",
+          "label": "Actor is original\nrequester and transfer\nfor_transfer?",
+          "kind": "decision",
+          "x": 55,
+          "y": 315,
+          "w": 300,
+          "h": 125
+        },
+        {
+          "id": "fail1",
+          "label": "Deny dispatch;\nkeep approved handoff unchanged",
+          "kind": "terminal",
+          "x": 440,
+          "y": 140,
+          "w": 300,
+          "h": 75
+        },
+        {
+          "id": "dispatch",
+          "label": "Dispatch: mark in_transit;\nrecord dispatcher and time",
+          "kind": "process",
+          "x": 55,
+          "y": 595,
+          "w": 300,
+          "h": 80
+        },
+        {
+          "id": "recipient",
+          "label": "Actor is assigned\nrecipient and transfer\nin_transit?",
+          "kind": "decision",
+          "x": 440,
+          "y": 575,
+          "w": 300,
+          "h": 125
+        },
+        {
+          "id": "fail2",
+          "label": "Deny acceptance;\nkeep custody unchanged",
+          "kind": "terminal",
+          "x": 440,
+          "y": 325,
+          "w": 300,
+          "h": 75
+        },
+        {
+          "id": "checks",
+          "label": "Document active; holder unchanged;\ndestination active; approved\nhierarchy unchanged?",
+          "kind": "decision",
+          "x": 805,
+          "y": 560,
+          "w": 320,
+          "h": 140
+        },
+        {
+          "id": "complete",
+          "label": "Accept: update holder and Location;\nrevoke previous holder grant;\ntransfer accepted; request completed",
+          "kind": "terminal",
+          "x": 805,
+          "y": 140,
+          "w": 320,
+          "h": 105
+        },
+        {
+          "id": "wait",
+          "label": "No automatic custody update\nwhile approved / in transit",
+          "kind": "note",
+          "x": 805,
+          "y": 335,
+          "w": 320,
+          "h": 80
+        }
+      ],
+      "edges": [
+        {
+          "from": "approved",
+          "to": "dispatcher"
+        },
+        {
+          "from": "dispatcher",
+          "to": "fail1",
+          "label": "No",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "via": [
+            [
+              395,
+              377
+            ],
+            [
+              395,
+              177
+            ]
+          ]
+        },
+        {
+          "from": "dispatcher",
+          "to": "dispatch",
+          "label": "Yes"
+        },
+        {
+          "from": "dispatch",
+          "to": "recipient"
+        },
+        {
+          "from": "recipient",
+          "to": "fail2",
+          "label": "No",
+          "sideFrom": "top",
+          "sideTo": "bottom"
+        },
+        {
+          "from": "recipient",
+          "to": "checks",
+          "label": "Yes"
+        },
+        {
+          "from": "checks",
+          "to": "fail2",
+          "label": "No",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              775,
+              630
+            ],
+            [
+              775,
+              362
+            ]
+          ]
+        },
+        {
+          "from": "checks",
+          "to": "complete",
+          "label": "Yes",
+          "sideFrom": "right",
+          "sideTo": "right",
+          "via": [
+            [
+              1140,
+              630
+            ],
+            [
+              1140,
+              192
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Final approval creates the transfer record but does not change the document's holder or storage hierarchy. Dispatch and acceptance require separate confirmed actions.",
+        "The destination must differ from the original Location and must match active Area/Specific/optional Asset parents. Acceptance compares against the destination frozen at approval.",
+        "Any failed validation rolls back the handoff transaction. The code provides no general undo, auto-accept, or automatic transfer cancellation flow."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:320-390,643-673,784-789",
+        "application/services/transfer/transfer_service.php:13-142",
+        "application/services/transfer/transfer_destination_policy.php",
+        "application/models/Transfer_model.php:6-34"
+      ]
+    },
+    {
+      "title": "5. Applying an operation and enforcing document access",
+      "subtitle": "Flowchart - final approval or an authorized direct action applies domain-specific effects",
+      "nodes": [
+        {
+          "id": "trigger",
+          "label": "Final request approval\nor authorized direct action",
+          "kind": "terminal",
+          "x": 55,
+          "y": 135,
+          "w": 300,
+          "h": 70
+        },
+        {
+          "id": "kind",
+          "label": "Selected operation",
+          "kind": "decision",
+          "x": 450,
+          "y": 130,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "softcopy",
+          "label": "Softcopy Create / Revise / Cancel:\nvalidate file + metadata;\ncreate revision or retire document",
+          "kind": "process",
+          "x": 55,
+          "y": 320,
+          "w": 300,
+          "h": 105
+        },
+        {
+          "id": "hardcopy",
+          "label": "Hardcopy Create / Update:\nvalidate holder, active place\nand ordered retention dates",
+          "kind": "process",
+          "x": 450,
+          "y": 320,
+          "w": 290,
+          "h": 105
+        },
+        {
+          "id": "grant",
+          "label": "Assignment / Access:\nactive document + active recipient;\nassignment or expiring personal grant",
+          "kind": "process",
+          "x": 825,
+          "y": 320,
+          "w": 300,
+          "h": 105
+        },
+        {
+          "id": "dispose",
+          "label": "Hardcopy Disposal request:\nrecord disposal method / previous\nstate; disposed; clear Location;\nrevoke grants",
+          "kind": "process",
+          "x": 55,
+          "y": 555,
+          "w": 300,
+          "h": 110
+        },
+        {
+          "id": "transfer",
+          "label": "Transfer approval:\ncreate approved handoff;\ndispatch / accept separately",
+          "kind": "process",
+          "x": 450,
+          "y": 555,
+          "w": 290,
+          "h": 100
+        },
+        {
+          "id": "view",
+          "label": "Document/file requested:\npermission + current custody /\nassignment / valid grant checked",
+          "kind": "process",
+          "x": 825,
+          "y": 555,
+          "w": 300,
+          "h": 100
+        },
+        {
+          "id": "current",
+          "label": "Only active document's current\napproved file is served for\nnormal download / print",
+          "kind": "note",
+          "x": 825,
+          "y": 135,
+          "w": 300,
+          "h": 100
+        }
+      ],
+      "edges": [
+        {
+          "from": "trigger",
+          "to": "kind"
+        },
+        {
+          "from": "kind",
+          "to": "softcopy",
+          "label": "Softcopy",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              395,
+              182
+            ],
+            [
+              395,
+              270
+            ],
+            [
+              205,
+              270
+            ]
+          ]
+        },
+        {
+          "from": "kind",
+          "to": "hardcopy",
+          "label": "Hardcopy"
+        },
+        {
+          "from": "kind",
+          "to": "grant",
+          "label": "Assign / Access",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              780,
+              182
+            ],
+            [
+              780,
+              270
+            ],
+            [
+              975,
+              270
+            ]
+          ]
+        },
+        {
+          "from": "kind",
+          "to": "dispose",
+          "label": "Disposal",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              595,
+              265
+            ],
+            [
+              400,
+              265
+            ],
+            [
+              400,
+              610
+            ]
+          ]
+        },
+        {
+          "from": "kind",
+          "to": "transfer",
+          "label": "Transfer",
+          "sideFrom": "right",
+          "sideTo": "right",
+          "via": [
+            [
+              765,
+              182
+            ],
+            [
+              765,
+              605
+            ]
+          ]
+        },
+        {
+          "from": "softcopy",
+          "to": "view",
+          "label": "read later",
+          "sideFrom": "left",
+          "sideTo": "bottom",
+          "via": [
+            [
+              35,
+              372
+            ],
+            [
+              35,
+              695
+            ],
+            [
+              975,
+              695
+            ]
+          ]
+        },
+        {
+          "from": "hardcopy",
+          "to": "view",
+          "label": "read later",
+          "sideFrom": "bottom",
+          "sideTo": "left",
+          "via": [
+            [
+              595,
+              490
+            ],
+            [
+              790,
+              490
+            ],
+            [
+              790,
+              605
+            ]
+          ]
+        },
+        {
+          "from": "grant",
+          "to": "view",
+          "label": "read later"
+        },
+        {
+          "from": "view",
+          "to": "current",
+          "label": "file access",
+          "sideFrom": "right",
+          "sideTo": "right",
+          "via": [
+            [
+              1140,
+              605
+            ],
+            [
+              1140,
+              185
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Each domain operation rechecks its relevant target state and applies within the caller's transaction. If final application fails, approval/status changes are rolled back.",
+        "Direct maintenance requires explicit direct permissions and document management scope. Approved request actions preserve source-request linkage; direct actions do not create request workflow rows.",
+        "Retention dates and countdown are informational; disposal remains a separate explicit operation. File catalog metadata never grants file bytes. Expired or revoked grants cease to satisfy access scope."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:565-716,780-833",
+        "application/services/softcopy/softcopy_operation_service.php",
+        "application/services/documents/document_service.php:67-136,224-276",
+        "application/services/documents/document_access_service.php",
+        "application/services/security/document_scope.php:22-74",
+        "application/models/File_model.php:47-67"
+      ]
+    }
+  ]
+}
