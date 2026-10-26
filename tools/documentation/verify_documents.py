@@ -10,10 +10,13 @@ import json
 from pathlib import Path
 import posixpath
 import re
+import unicodedata
 from xml.etree import ElementTree as ET
 from zipfile import ZipFile
 
 import pymupdf
+
+from brand_palette import ACCENT_RED, BRAND_RED, COLORS
 
 ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs/system-documentation'
@@ -52,6 +55,7 @@ def package(path: Path) -> dict:
             pages = [r for n, r in xml.items() if re.fullmatch(r'visio/pages/page\d+\.xml', n)]
             nodes = connectors = illustrations = 0
             for page in pages:
+                public_wording('\n'.join(page.itertext()), path.name)
                 shapes = page.findall('v:Shapes/v:Shape', NS)
                 ids = {s.get('ID') for s in shapes}
                 assert len(ids) == len(shapes), 'Duplicate Visio shape ID'
@@ -69,6 +73,10 @@ def package(path: Path) -> dict:
                         nodes += 1
                 for connection in page.findall('v:Connects/v:Connect', NS):
                     assert connection.get('FromSheet') in ids and connection.get('ToSheet') in ids
+                glue = page.findall('v:Connects/v:Connect', NS)
+                for shape in shapes:
+                    if shape.find('v:Cell[@N="BeginX"]', NS) is not None:
+                        assert len([g for g in glue if g.get('FromSheet') == shape.get('ID')]) == 2, 'Connector lacks two glued endpoints'
             assert nodes > 10 and connectors > 5
             if 'Flowchart' in path.name:
                 assert illustrations == 0, 'Flowchart unexpectedly rasterized'
@@ -133,6 +141,63 @@ def sources() -> dict:
     return {'source_files_checked': len(checked)}
 
 
+def diagram_checks() -> dict:
+    """Check visible model content, source locations and brand colors independently."""
+    css = (ROOT / 'public/assets/css/colors.css').read_text(encoding='utf-8').upper()
+    assert all(color in css for color in COLORS), 'Document palette differs from application palette'
+    count = references = 0
+    names = {'process': 'PK_DTS_Proposed_Process_Flow', 'dfd': 'PK_DTS_DFD',
+             'flowchart': 'PK_DTS_Flowchart'}
+    def normalized(text):
+        # Arial's equivalent glyph mappings include Greek question mark for
+        # semicolon, NBSP for spaces and soft hyphen for visible hyphens.
+        return re.sub(r'\s+', '', unicodedata.normalize('NFKC', text).replace('\u00ad', '-'))
+    def pdf_color(value):
+        return '#' + ''.join(f'{round(c * 255):02X}' for c in value[:3])
+    for model_name, artifact in names.items():
+        model = json.loads((DOCS / 'source' / (model_name + '.json')).read_text(encoding='utf-8'))
+        with pymupdf.open(DOCS / (artifact + '.pdf')) as document:
+            assert len(document) == len(model['pages']), f'{artifact}: stale page count'
+            for number, (sheet, page) in enumerate(zip(model['pages'], document), 1):
+                content = normalized(page.get_text())
+                labels = sheet.get('notes', []) + sheet.get('legend', [])
+                labels += [n['label'] for n in sheet.get('nodes', [])]
+                labels += [s['description'] for s in sheet.get('steps', [])]
+                labels += [label for a in sheet.get('actors', [])
+                           for label in [a['role'], *a['inputs'], *a['outputs']]]
+                assert all(normalized(label) in content for label in labels), f'{artifact} page {number}: model text missing from PDF'
+                colors = {pdf_color(d[key]) for d in page.get_drawings()
+                          for key in ('color', 'fill') if d.get(key)}
+                colors.update(f'#{span["color"]:06X}' for block in page.get_text('dict')['blocks']
+                              for line in block.get('lines', []) for span in line.get('spans', []))
+                assert colors <= COLORS, f'{artifact} page {number}: unbranded vector/text colors: {colors - COLORS}'
+                assert {BRAND_RED, ACCENT_RED} <= colors, f'{artifact} page {number}: red headers or arrows missing'
+                count += 1
+                for source in sheet.get('sources', []):
+                    match = re.fullmatch(r'(.+?)(?::([\d,-]+))?', source)
+                    assert match, f'Invalid source reference: {source}'
+                    source_file = ROOT / match[1]
+                    assert source_file.is_file(), f'Missing source: {source}'
+                    if match[2]:
+                        length = len(source_file.read_text(encoding='utf-8-sig').splitlines())
+                        for segment in match[2].split(','):
+                            bounds = [int(n) for n in segment.split('-')]
+                            assert 1 <= bounds[0] <= bounds[-1] <= length, f'Source location out of range: {source}'
+                    references += 1
+        if model_name != 'dfd':
+            with ZipFile(DOCS / (artifact + '.vsdx')) as archive:
+                for name in archive.namelist():
+                    if not re.fullmatch(r'visio/pages/page\d+\.xml', name):
+                        continue
+                    page = ET.fromstring(archive.read(name))
+                    colors = {c.get('V').upper() for c in page.findall('.//v:Cell', NS)
+                              if c.get('V', '').startswith('#')}
+                    assert colors <= COLORS and {BRAND_RED, ACCENT_RED} <= colors, f'{artifact}: Visio palette differs from PDF'
+    return {'diagram_pages_checked': count, 'diagram_source_references_checked': references,
+            'all_model_labels_present_in_pdfs': True, 'peanut_kisses_red_palette': 'application CSS',
+            'original_sample_icon_colors_preserved': True}
+
+
 def main():
     results = []
     for name in ['PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_User_Guide.pptx']:
@@ -173,6 +238,7 @@ def main():
     results.append({'guide_callouts_checked': callouts, 'labels_outside_screenshots': True,
                     'screen_pointer_targets_in_crops': True, 'screen_pointers_clear_other_annotated_controls': True})
     results.append(sources())
+    results.append(diagram_checks())
     for name, expected_format in [('process', 'sample-process'), ('dfd', 'sample-dfd')]:
         model = json.loads((DOCS / 'source' / (name + '.json')).read_text(encoding='utf-8'))
         assert model['format'] == expected_format

@@ -8,6 +8,8 @@ Content models and original screenshots are in `docs/system-documentation/source
 
 Process Flow follows the illustrated responsibility-map format in the supplied `SA Documents/RMS/process flow old.vsdx`. DFD follows the two-sheet participant/system format in `SA Documents/From Alyn/Healthcare Benefits_DFD.pdf`. Their source models select `render_sample_diagrams.py` through the existing diagram command. Original sample illustrations are retained unchanged in `source/icons`, with their source mapping recorded beside them. The separate Flowchart retains its detailed decision notation.
 
+Diagram headers, cards, arrows and notes use the Peanut Kisses red palette from `public/assets/css/colors.css`, shared through `brand_palette.py`. Original sample illustrations retain their supplied colors. The Flowchart covers authentication, proposals, approvals, physical handoffs, document operations, file access, administration and recovery across six sheets.
+
 From the repository root:
 
 ```powershell
@@ -21,6 +23,8 @@ python tools/documentation/verify_documents.py
 ```
 
 The PowerPoint verification/export command requires installed Microsoft PowerPoint on Windows. Other generation commands use Python. Read `source/verification.json` for the delivered snapshot's checks.
+
+Document checks compare every diagram description, note and node label with its PDF, validate cited source-line ranges, confirm the application red palette in PDF and native Visio elements, and require two glued endpoints per Visio connector. These checks verify the documentation; application behavior still requires its own runtime validation.
 
 Native Visio files contain editable shapes, text and glued connectors. Their ZIP/XML structure, relationships and connections were checked, and matching PDF pages were visually inspected. Opening and editing in the Visio desktop application remains unverified because Visio is unavailable in this workspace.
 
