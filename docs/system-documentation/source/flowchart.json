@@ -79,7 +79,7 @@
         },
         {
           "id": "permission",
-          "label": "Action permitted\nby role grants?",
+          "label": "Permission and scope\nOR assigned task\nallow this action?",
           "kind": "decision",
           "x": 55,
           "y": 455,
@@ -88,7 +88,7 @@
         },
         {
           "id": "denied",
-          "label": "Deny unauthorized action\nHTTP 403",
+          "label": "Deny action or show\nits authorization error",
           "kind": "terminal",
           "x": 55,
           "y": 625,
@@ -151,7 +151,29 @@
         {
           "from": "throttle",
           "to": "valid",
-          "label": "No"
+          "label": "No",
+          "sideFrom": "bottom",
+          "sideTo": "left",
+          "via": [
+            [
+              595,
+              390
+            ],
+            [
+              820,
+              390
+            ],
+            [
+              820,
+              322.5
+            ]
+          ],
+          "labelRect": [
+            650,
+            393,
+            700,
+            412
+          ]
         },
         {
           "from": "valid",
@@ -274,14 +296,17 @@
       ],
       "notes": [
         "Login will check an active account and password. Ten failed attempts within 15 minutes will temporarily block that username/client attempt key.",
-        "Required password setup will block ordinary protected pages until a valid change succeeds. Each action will then check its permissions and ownership or assignment rule.",
-        "Approval tasks will follow the assigned user or configured role membership. Role names and approval sequences will be configurable."
+        "Required password setup will block ordinary protected pages until a valid change succeeds. A failed change will keep setup incomplete.",
+        "Ordinary actions will require their permission and record scope. Approval, Dispatch and Accept will follow the active approver, original requester or designated recipient rule."
       ],
       "sources": [
         "application/controllers/Auth.php:24-62,85-137",
         "application/models/Identity_model.php:6-28",
         "application/core/MY_Controller.php:32-85",
-        "application/services/security/user_roles.php"
+        "application/services/security/user_roles.php",
+        "application/controllers/Requests.php:146-191",
+        "application/services/request/request_service.php:719-846",
+        "application/services/transfer/transfer_service.php:13-85"
       ]
     },
     {
@@ -308,7 +333,7 @@
         },
         {
           "id": "error",
-          "label": "Show validation error;\nno partial request saved",
+          "label": "Show validation error;\nleave the stored request unchanged",
           "kind": "terminal",
           "x": 440,
           "y": 135,
@@ -344,7 +369,7 @@
         },
         {
           "id": "route",
-          "label": "Capture approval route;\nactivate first step; mark Submitted",
+          "label": "Capture or reuse published route;\nactivate first step; mark Submitted",
           "kind": "terminal",
           "x": 805,
           "y": 620,
@@ -518,14 +543,14 @@
         }
       ],
       "notes": [
-        "Only the requester will be allowed to edit a draft or returned proposal. Saving and submission will validate permissions, confirmation and the current version.",
+        "Only the requester will be allowed to edit a draft or returned proposal. Saving will reject stale edited versions; submission will revalidate the current saved proposal and permissions.",
         "Submit will check targets, recipients and required files. A conflicting pending access, assignment or transfer request will block another related submission for the same requester/document.",
-        "A saved proposal may remain open for editing. Cancel will be available only in Draft status. Delete will remove only the owner's eligible cancelled draft and its request-only data."
+        "A saved proposal may remain open for editing. Request cancellation will be available only in Draft status. Delete will remove only the owner's eligible cancelled draft and its request-only data."
       ],
       "sources": [
         "application/services/request/request_service.php:40-79,116-315,393-547,849-907",
         "application/services/request/request_policy.php:4-9,30-40",
-        "application/controllers/Requests.php:114-164,194-224"
+        "application/controllers/Requests.php:114-164,194-221"
       ]
     },
     {
@@ -849,7 +874,7 @@
         },
         {
           "id": "complete",
-          "label": "Accept: update holder and Location;\nrevoke previous holder grant;\ntransfer accepted; request completed",
+          "label": "Accept: update holder and Location;\nrevoke prior grants if holder changes;\ntransfer accepted; request completed",
           "kind": "terminal",
           "x": 805,
           "y": 140,
@@ -951,7 +976,7 @@
       "notes": [
         "Final approval will prepare a transfer without changing the holder or storage location. Dispatch and Accept will require separate confirmations.",
         "The destination shall differ from the original Location and match the active Area/Specific/optional Asset hierarchy. Acceptance will use the destination captured at approval.",
-        "A failed check will preserve custody and transfer state. Approved and in-transit transfers will remain pending until the designated recipient accepts."
+        "A failed check will preserve custody and transfer state. When custody changes to another user, acceptance will revoke the previous holder’s personal hardcopy grants."
       ],
       "sources": [
         "application/services/request/request_service.php:320-390,643-673,784-789",
@@ -961,8 +986,8 @@
       ]
     },
     {
-      "title": "5. Applying an operation and enforcing document access",
-      "subtitle": "Final approval or an authorized direct action will apply the selected document operation",
+      "title": "5. Applying operations and authorized file access",
+      "subtitle": "Proposed approved operations, separate direct disposal and controlled softcopy file delivery",
       "nodes": [
         {
           "id": "trigger",
@@ -984,7 +1009,7 @@
         },
         {
           "id": "softcopy",
-          "label": "Softcopy Create / Revise / Cancel:\nvalidate file + metadata;\ncreate revision or retire document",
+          "label": "Softcopy Create / Revise / Cancel:\nrequire a file for Create / Revise only;\ncreate revision or retire document",
           "kind": "process",
           "x": 55,
           "y": 320,
@@ -1011,7 +1036,7 @@
         },
         {
           "id": "dispose",
-          "label": "Hardcopy Disposal:\nrecord method and previous state;\nmark Disposed; clear Location;\nrevoke personal grants",
+          "label": "Approved Hardcopy Disposal:\nrecord method and history; Disposed;\nclear Location; revoke personal grants",
           "kind": "process",
           "x": 55,
           "y": 555,
@@ -1028,22 +1053,49 @@
           "h": 100
         },
         {
-          "id": "view",
-          "label": "Document/file requested:\npermission + current custody /\nassignment / valid grant checked",
+          "id": "direct_dispose",
+          "label": "Direct Softcopy Dispose:\nmark Disposed; record history;\nretire controlled files",
           "kind": "process",
-          "x": 805,
-          "y": 555,
-          "w": 320,
-          "h": 100
-        },
-        {
-          "id": "current",
-          "label": "Normal download / print:\nactive document; current\napproved file only",
-          "kind": "note",
           "x": 805,
           "y": 135,
           "w": 320,
           "h": 100
+        },
+        {
+          "id": "file_request",
+          "label": "Open / download / print\na softcopy file",
+          "kind": "terminal",
+          "x": 805,
+          "y": 455,
+          "w": 320,
+          "h": 55
+        },
+        {
+          "id": "file_check",
+          "label": "Operation permission +\nfile scope + active current\napproved file valid?",
+          "kind": "decision",
+          "x": 805,
+          "y": 545,
+          "w": 320,
+          "h": 95
+        },
+        {
+          "id": "file_allowed",
+          "label": "Serve approved file",
+          "kind": "terminal",
+          "x": 805,
+          "y": 665,
+          "w": 145,
+          "h": 40
+        },
+        {
+          "id": "file_denied",
+          "label": "Deny file access",
+          "kind": "terminal",
+          "x": 980,
+          "y": 665,
+          "w": 145,
+          "h": 40
         }
       ],
       "edges": [
@@ -1162,74 +1214,92 @@
           "fractionFrom": 0.85
         },
         {
-          "from": "softcopy",
-          "to": "view",
-          "label": "read later",
-          "sideFrom": "left",
-          "sideTo": "bottom",
-          "via": [
-            [
-              35,
-              372.5
-            ],
-            [
-              35,
-              695
-            ],
-            [
-              965.0,
-              695
-            ]
-          ]
-        },
-        {
-          "from": "hardcopy",
-          "to": "view",
-          "label": "read later",
-          "sideFrom": "bottom",
-          "sideTo": "left",
-          "via": [
-            [
-              580.0,
-              490
-            ],
-            [
-              780,
-              490
-            ],
-            [
-              780,
-              605.0
-            ]
-          ]
-        },
-        {
-          "from": "grant",
-          "to": "view",
-          "label": "read later"
-        },
-        {
-          "from": "view",
-          "to": "current",
-          "label": "file access",
+          "from": "kind",
+          "to": "direct_dispose",
+          "label": "Direct only",
           "sideFrom": "right",
-          "sideTo": "right",
+          "sideTo": "left",
+          "fractionFrom": 0.25,
           "via": [
             [
-              1140,
-              605.0
+              765,
+              150
             ],
             [
-              1140,
-              185.0
+              765,
+              185
             ]
+          ],
+          "labelRect": [
+            723,
+            112,
+            802,
+            132
+          ]
+        },
+        {
+          "from": "file_request",
+          "to": "file_check"
+        },
+        {
+          "from": "file_check",
+          "to": "file_allowed",
+          "label": "Yes",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              780,
+              592.5
+            ],
+            [
+              780,
+              652
+            ],
+            [
+              877.5,
+              652
+            ]
+          ],
+          "labelRect": [
+            734,
+            611,
+            776,
+            632
+          ]
+        },
+        {
+          "from": "file_check",
+          "to": "file_denied",
+          "label": "No",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              1160,
+              592.5
+            ],
+            [
+              1160,
+              652
+            ],
+            [
+              1052.5,
+              652
+            ]
+          ],
+          "labelRect": [
+            1129,
+            610,
+            1157,
+            631
           ]
         }
       ],
       "notes": [
-        "Final approval will apply the operation together with the approval/status change. If the operation fails, both changes will be rolled back.",
-        "Direct maintenance will check its permission and document management scope. Approved requests will retain request linkage; direct actions will take effect immediately.",
-        "Retention dates will support monitoring; disposal will be explicit. File delivery will check permission, scope and the current approved file. Expired or revoked grants will provide no access."
+        "Final approval will apply the operation with the approval/status change; failure will roll both back. The nine request actions will use approval. Direct Softcopy Dispose will be a separate action.",
+        "Direct actions will check permission and document management scope. Direct hardcopy disposal will record Disposed and history while retaining Location and grant records.",
+        "File delivery will require its operation permission and allowed file scope. Metadata/catalog visibility will not grant files; expired or revoked grants will provide no access. Retention dates will support monitoring; disposal will be explicit."
       ],
       "sources": [
         "application/services/request/request_service.php:565-716,780-833",
@@ -1237,7 +1307,272 @@
         "application/services/documents/document_service.php:67-136,224-276",
         "application/services/documents/document_access_service.php",
         "application/services/security/document_scope.php:22-74",
-        "application/models/File_model.php:47-67"
+        "application/models/File_model.php:47-67",
+        "application/controllers/Documents.php:165-194",
+        "application/controllers/Files.php:148-239",
+        "application/services/softcopy/softcopy_direct_service.php:19-112"
+      ]
+    },
+    {
+      "title": "6. Administration, workflow publication and recovery",
+      "subtitle": "Proposed permission checks, controlled configuration changes and conditional backup restoration",
+      "nodes": [
+        {
+          "id": "entry",
+          "label": "Open an administration page",
+          "kind": "terminal",
+          "x": 55,
+          "y": 135,
+          "w": 300,
+          "h": 60
+        },
+        {
+          "id": "access",
+          "label": "Relevant page viewing\npermission granted?",
+          "kind": "decision",
+          "x": 55,
+          "y": 290,
+          "w": 300,
+          "h": 120
+        },
+        {
+          "id": "denied",
+          "label": "Deny unauthorized page access",
+          "kind": "terminal",
+          "x": 440,
+          "y": 135,
+          "w": 280,
+          "h": 60
+        },
+        {
+          "id": "area",
+          "label": "Choose administration\narea",
+          "kind": "process",
+          "x": 440,
+          "y": 300,
+          "w": 280,
+          "h": 100
+        },
+        {
+          "id": "records",
+          "label": "Users / Roles / Places:\ncheck action permission;\nvalidate and confirm each change",
+          "kind": "process",
+          "x": 805,
+          "y": 125,
+          "w": 320,
+          "h": 100
+        },
+        {
+          "id": "workflow",
+          "label": "Workflows: edit a draft route;\nPublish will validate the route\nand active approvers",
+          "kind": "process",
+          "x": 805,
+          "y": 300,
+          "w": 320,
+          "h": 100
+        },
+        {
+          "id": "audit",
+          "label": "Audit Trail:\nview and filter recorded events",
+          "kind": "terminal",
+          "x": 55,
+          "y": 515,
+          "w": 300,
+          "h": 80
+        },
+        {
+          "id": "backup_gate",
+          "label": "Backup action:\nEdit permission and its\nconfirmation / operation\nchecks satisfied?",
+          "kind": "decision",
+          "x": 440,
+          "y": 545,
+          "w": 280,
+          "h": 135
+        },
+        {
+          "id": "backup_denied",
+          "label": "Block the backup action;\nshow the failed check",
+          "kind": "terminal",
+          "x": 55,
+          "y": 635,
+          "w": 300,
+          "h": 55
+        },
+        {
+          "id": "backup_apply",
+          "label": "Create / Import / Cleanup / Download;\nfor Restore: verify archive and back up;\nrestore database and private data;\nrequire sign-in again",
+          "kind": "process",
+          "x": 805,
+          "y": 560,
+          "w": 320,
+          "h": 105
+        }
+      ],
+      "edges": [
+        {
+          "from": "entry",
+          "to": "access"
+        },
+        {
+          "from": "access",
+          "to": "denied",
+          "label": "No",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              35,
+              350
+            ],
+            [
+              35,
+              115
+            ],
+            [
+              580,
+              115
+            ]
+          ],
+          "labelRect": [
+            40,
+            225,
+            77,
+            245
+          ]
+        },
+        {
+          "from": "access",
+          "to": "area",
+          "label": "Yes",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "fractionTo": 0.25,
+          "via": [
+            [
+              375,
+              350
+            ],
+            [
+              375,
+              325
+            ]
+          ]
+        },
+        {
+          "from": "area",
+          "to": "records",
+          "label": "Records",
+          "sideFrom": "top",
+          "sideTo": "left",
+          "via": [
+            [
+              580,
+              245
+            ],
+            [
+              765,
+              245
+            ],
+            [
+              765,
+              175
+            ]
+          ],
+          "labelRect": [
+            615,
+            222,
+            685,
+            242
+          ]
+        },
+        {
+          "from": "area",
+          "to": "workflow",
+          "label": "Workflow",
+          "sideFrom": "right",
+          "sideTo": "left",
+          "labelRect": [
+            723,
+            328,
+            800,
+            348
+          ]
+        },
+        {
+          "from": "area",
+          "to": "audit",
+          "label": "Audit",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              410,
+              375
+            ],
+            [
+              410,
+              555
+            ]
+          ],
+          "labelRect": [
+            361,
+            449,
+            403,
+            470
+          ],
+          "fractionFrom": 0.75
+        },
+        {
+          "from": "area",
+          "to": "backup_gate",
+          "label": "Backup",
+          "sideFrom": "bottom",
+          "sideTo": "top"
+        },
+        {
+          "from": "backup_gate",
+          "to": "backup_denied",
+          "label": "No",
+          "sideFrom": "left",
+          "sideTo": "right",
+          "via": [
+            [
+              395,
+              612.5
+            ],
+            [
+              395,
+              662.5
+            ]
+          ],
+          "labelRect": [
+            355,
+            611,
+            395,
+            631
+          ]
+        },
+        {
+          "from": "backup_gate",
+          "to": "backup_apply",
+          "label": "Yes",
+          "sideFrom": "right",
+          "sideTo": "left"
+        }
+      ],
+      "notes": [
+        "Configuration changes will require the corresponding action permission and confirmation. Only draft workflow versions will be editable; publishing will set the default without changing routes captured by existing requests.",
+        "Backup actions will require viewing and editing permissions. Create, Import, Cleanup and Restore will require confirmation. Create, Import and Restore controls will additionally require configured ZIP, encryption/signing and database tools.",
+        "Restore will require the current password, RESTORE confirmation and a verified archive, then create a recovery backup before restoring database/private data. Code recovery will be offline. Failure during data replacement will attempt recovery; incomplete recovery will retain maintenance mode for offline repair."
+      ],
+      "sources": [
+        "application/controllers/Administration.php:11-38,353-448",
+        "application/controllers/Places.php:31-79",
+        "application/services/workflow/workflow_builder_service.php:19-60,146-202",
+        "application/controllers/Audit.php:6-30",
+        "application/controllers/Backups.php:6-16,55-159",
+        "application/services/backup/backup_service.php:47-53,197-244,267-310,454-470",
+        "application/view/pages/administration/backups.php:5-8,46-52,90,133"
       ]
     }
   ]
