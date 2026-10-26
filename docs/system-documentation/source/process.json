@@ -11,19 +11,19 @@
           "id": "choose",
           "actor": "Requester",
           "icon": "person",
-          "description": "Choose a request action and enter the proposed document or action details."
+          "description": "Choose a request action, enter its details and select Save Draft."
         },
         {
           "id": "validate",
           "actor": "PK DTS",
           "icon": "computer",
-          "description": "Check required fields, permission, request ownership and active targets."
+          "description": "Validate fields, permission, ownership and active targets; save a valid draft."
         },
         {
           "id": "draft",
           "actor": "Requester",
           "icon": "person",
-          "description": "Save the draft; review the proposal and any required Document File."
+          "description": "Reopen the saved draft; review the proposal and required Document File."
         },
         {
           "id": "submit",
@@ -159,7 +159,7 @@
         "Only the original transfer requester will be allowed to Dispatch; this account may differ from the current holder. Only the designated recipient will be allowed to Accept.",
         "Approval will prepare the handoff without moving custody. Dispatch will mark it In Transit; recipient acceptance will complete it.",
         "Acceptance will require the active document, unchanged holder and approved active destination hierarchy. A failed check will preserve custody and location.",
-        "Acceptance will revoke the previous holder's personal hardcopy grant and retain the handoff history."
+        "When custody changes to another user, acceptance will revoke the previous holder's personal hardcopy grants."
       ],
       "legend": [
         "For Transfer: approved handoff awaiting Dispatch.",
@@ -193,7 +193,7 @@
           "id": "use",
           "actor": "Registered user",
           "icon": "document",
-          "description": "Inspect a permitted record; open, download or print its controlled file when authorized."
+          "description": "For a softcopy, open, download or print its current controlled file when authorized."
         },
         {
           "id": "direct",
@@ -232,7 +232,8 @@
         "application/services/softcopy/softcopy_direct_service.php:4-8",
         "application/services/documents/document_access_service.php:18-84",
         "application/services/security/document_scope.php:22-74"
-      ]
+      ],
+      "layout": "independent-paths"
     },
     {
       "title": "Proposed administration, audit and recovery",
@@ -278,7 +279,7 @@
       "notes": [
         "Administration activities will be available independently under their respective permissions. Active role grants will determine the available pages and actions.",
         "Publishing a workflow will affect new submissions. Submitted and Returned requests will retain their captured route and version.",
-        "Audit events will use private daily files. Backups will include a SQL dump and application and private files, excluding sessions, cache and backup recursion; encryption and a signed manifest will protect them.",
+        "Backup and restore will require an encryption password, signing key, AES-256 ZIP support and database tools. Signed backups will include database, application and private files, excluding sessions, cache and backup recursion.",
         "Restore will recover the database and private working data after a recovery snapshot. Maintenance will block ordinary requests during restore; application-code recovery will be performed offline."
       ],
       "legend": [
@@ -293,8 +294,9 @@
         "application/libraries/Audit_file.php:5-52",
         "application/controllers/Audit.php:6-30",
         "application/controllers/Backups.php:6-155",
-        "application/services/backup/backup_service.php:109-362"
-      ]
+        "application/services/backup/backup_service.php:47-53,109-362,454-470"
+      ],
+      "layout": "administration-options"
     }
   ]
 }
