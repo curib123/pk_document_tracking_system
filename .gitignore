@@ -16,3 +16,6 @@ __pycache__/
 *.bak.sql
 .env
 .env.*
+
+# Office temporary owner files beside the documentation deliverables.
+/docs/system-documentation/~$*.pptx
