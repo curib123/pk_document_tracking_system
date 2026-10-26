@@ -1,0 +1,907 @@
+{
+  "slides": [
+    {
+      "title": "PK Document Control \u2014 User Guide",
+      "chapter": ""
+    },
+    {
+      "title": "Your route through the workspace",
+      "chapter": "HOW TO USE THIS GUIDE"
+    },
+    {
+      "title": "System access and responsibilities",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "login.png",
+      "crop": [
+        790,
+        135,
+        548,
+        694
+      ],
+      "annotation_count": 3,
+      "route": "login",
+      "sources": [
+        "application/view/layout/sidebar_top_nav.php:4",
+        "application/controllers/Documents.php:17",
+        "application/controllers/Requests.php:18",
+        "application/view/pages/authentication/index.php:156"
+      ]
+    },
+    {
+      "title": "Sign in and change your password",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "login.png",
+      "crop": [
+        790,
+        135,
+        548,
+        694
+      ],
+      "annotation_count": 3,
+      "route": "login / change-password",
+      "sources": [
+        "application/view/pages/authentication/index.php:116",
+        "application/view/pages/authentication/first_login.php:8",
+        "application/view/pages/authentication/password_fields.php:3",
+        "application/view/layout/sidebar_top_nav.php:323",
+        "application/view/layout/footer.php:183",
+        "application/controllers/Auth.php:32"
+      ]
+    },
+    {
+      "title": "Overview and main navigation",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "overview.png",
+      "crop": [
+        0,
+        0,
+        1440,
+        960
+      ],
+      "annotation_count": 3,
+      "route": "dashboard",
+      "sources": [
+        "application/view/pages/dashboard/index.php:39",
+        "application/view/pages/dashboard/index.php:62",
+        "application/view/pages/dashboard/index.php:97",
+        "application/view/layout/sidebar_top_nav.php:63",
+        "application/view/layout/sidebar_top_nav.php:259"
+      ]
+    },
+    {
+      "title": "Find and inspect document records",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "hardcopy.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 3,
+      "route": "documents/hardcopy / documents/softcopy",
+      "sources": [
+        "application/view/pages/documents/shared_index.php:11",
+        "application/view/pages/documents/shared_index.php:124",
+        "application/view/pages/documents/shared_index.php:149",
+        "application/view/reusable_components/reusable_datatable.php:31",
+        "application/view/reusable_components/document_folder_list.php:167",
+        "application/models/Document_detail_model.php:124"
+      ]
+    },
+    {
+      "title": "Open, download and print controlled files",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "softcopy_files.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 3,
+      "route": "",
+      "sources": [
+        "application/models/File_model.php:7",
+        "application/view/reusable_components/record_actions.php:63"
+      ]
+    },
+    {
+      "title": "Inspect Document File History",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "file_history.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 2,
+      "route": "",
+      "sources": [
+        "application/view/pages/documents/shared_index.php:238",
+        "application/models/File_model.php:7"
+      ]
+    },
+    {
+      "title": "Use the controlled print preview",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "print_file.png",
+      "crop": [
+        0,
+        0,
+        1440.0,
+        940.0
+      ],
+      "annotation_count": 3,
+      "route": "",
+      "sources": [
+        "application/view/pages/files/print.php:15",
+        "application/controllers/Files.php:80"
+      ]
+    },
+    {
+      "title": "Save, submit, and track requests",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "draft_softcopy_create.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:4",
+        "application/view/pages/request/shared_index.php:206",
+        "application/view/pages/request/shared_index.php:285",
+        "application/services/request/request_policy.php:4",
+        "application/services/request/request_service.php:462"
+      ]
+    },
+    {
+      "title": "Submit a checked draft",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "submit_confirmation.png",
+      "crop": [
+        473.0,
+        301.0,
+        494.0,
+        370.0
+      ],
+      "annotation_count": 2,
+      "route": "",
+      "sources": [
+        "public/assets/js/row-actions.js:19",
+        "application/controllers/Requests.php:134"
+      ]
+    },
+    {
+      "title": "Sample 01 \u00b7 Create Softcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_softcopy_create.png",
+      "crop": [
+        293.0,
+        128.0,
+        854.0,
+        704.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:8",
+        "application/view/pages/request/softcopy_fields.php:31",
+        "application/view/pages/request/softcopy_fields.php:68",
+        "public/assets/js/app.js:661",
+        "application/view/pages/request/shared_index.php:337"
+      ]
+    },
+    {
+      "title": "Sample 01 \u00b7 Create Softcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_softcopy_create.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:8",
+        "application/view/pages/request/softcopy_fields.php:31",
+        "application/view/pages/request/softcopy_fields.php:68",
+        "public/assets/js/app.js:661",
+        "application/view/pages/request/shared_index.php:337"
+      ]
+    },
+    {
+      "title": "Sample 02 \u00b7 Revise Softcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_softcopy_revise.png",
+      "crop": [
+        293.0,
+        75.0,
+        854.0,
+        809.0
+      ],
+      "annotation_count": 4,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:10",
+        "application/view/pages/request/softcopy_fields.php:52",
+        "public/assets/js/app.js:720",
+        "application/view/pages/documents/shared_index.php:62",
+        "application/view/pages/files/print.php:17"
+      ]
+    },
+    {
+      "title": "Sample 02 \u00b7 Revise Softcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_softcopy_revise.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:10",
+        "application/view/pages/request/softcopy_fields.php:52",
+        "public/assets/js/app.js:720",
+        "application/view/pages/documents/shared_index.php:62",
+        "application/view/pages/files/print.php:17"
+      ]
+    },
+    {
+      "title": "Sample 03 \u00b7 Cancel Softcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_softcopy_cancel.png",
+      "crop": [
+        293.0,
+        223.0,
+        854.0,
+        515.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:10",
+        "application/view/pages/request/softcopy_fields.php:52",
+        "public/assets/js/app.js:720",
+        "application/view/pages/documents/shared_index.php:62",
+        "application/view/pages/files/print.php:17"
+      ]
+    },
+    {
+      "title": "Sample 03 \u00b7 Cancel Softcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_softcopy_cancel.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "my-requests/softcopy",
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:10",
+        "application/view/pages/request/softcopy_fields.php:52",
+        "public/assets/js/app.js:720",
+        "application/view/pages/documents/shared_index.php:62",
+        "application/view/pages/files/print.php:17"
+      ]
+    },
+    {
+      "title": "Sample 04 \u00b7 Create Hardcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_hardcopy_create.png",
+      "crop": [
+        293.0,
+        108.0,
+        854.0,
+        744.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/hardcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:351",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:11",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:65",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:134"
+      ]
+    },
+    {
+      "title": "Sample 04 \u00b7 Create Hardcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_hardcopy_create.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/hardcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:351",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:11",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:65",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:134"
+      ]
+    },
+    {
+      "title": "Sample 05 \u00b7 Update Hardcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_hardcopy_update.png",
+      "crop": [
+        293.0,
+        67.0,
+        854.0,
+        827.0
+      ],
+      "annotation_count": 4,
+      "route": "my-requests/hardcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:351",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:11",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:65",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:134"
+      ]
+    },
+    {
+      "title": "Sample 05 \u00b7 Update Hardcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_hardcopy_update.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/hardcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:351",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:11",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:65",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:134"
+      ]
+    },
+    {
+      "title": "Sample 06 \u00b7 Grant Access",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_access.png",
+      "crop": [
+        293.0,
+        181.0,
+        854.0,
+        598.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/access-grant",
+      "sources": [
+        "application/view/pages/request/shared_index.php:420",
+        "application/view/pages/request/shared_index.php:430",
+        "application/view/pages/request/shared_index.php:472",
+        "application/view/pages/request/shared_index.php:487",
+        "public/assets/js/app.js:678"
+      ]
+    },
+    {
+      "title": "Sample 06 \u00b7 Grant Access \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_access.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/access-grant",
+      "sources": [
+        "application/view/pages/request/shared_index.php:420",
+        "application/view/pages/request/shared_index.php:430",
+        "application/view/pages/request/shared_index.php:472",
+        "application/view/pages/request/shared_index.php:487",
+        "public/assets/js/app.js:678"
+      ]
+    },
+    {
+      "title": "Sample 07 \u00b7 Assign Document",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_assignment.png",
+      "crop": [
+        293.0,
+        181.0,
+        854.0,
+        598.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/document-assign",
+      "sources": [
+        "application/view/pages/request/shared_index.php:420",
+        "application/view/pages/request/shared_index.php:430",
+        "application/view/pages/request/shared_index.php:472",
+        "application/view/pages/request/shared_index.php:487",
+        "public/assets/js/app.js:678"
+      ]
+    },
+    {
+      "title": "Sample 07 \u00b7 Assign Document \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_assignment.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/document-assign",
+      "sources": [
+        "application/view/pages/request/shared_index.php:420",
+        "application/view/pages/request/shared_index.php:430",
+        "application/view/pages/request/shared_index.php:472",
+        "application/view/pages/request/shared_index.php:487",
+        "public/assets/js/app.js:678"
+      ]
+    },
+    {
+      "title": "Sample 08 \u00b7 Transfer Hardcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_transfer.png",
+      "crop": [
+        293.0,
+        34.0,
+        854.0,
+        891.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/hardcopy-transfer",
+      "sources": [
+        "application/view/pages/request/hardcopy_transfer_fields.php:5",
+        "application/view/pages/request/hardcopy_transfer_fields.php:17",
+        "application/view/pages/request/hardcopy_transfer_fields.php:30",
+        "application/view/pages/request/hardcopy_transfer_fields.php:54",
+        "application/controllers/Requests.php:87"
+      ]
+    },
+    {
+      "title": "Sample 08 \u00b7 Transfer Hardcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_transfer.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "my-requests/hardcopy-transfer",
+      "sources": [
+        "application/view/pages/request/hardcopy_transfer_fields.php:5",
+        "application/view/pages/request/hardcopy_transfer_fields.php:17",
+        "application/view/pages/request/hardcopy_transfer_fields.php:30",
+        "application/view/pages/request/hardcopy_transfer_fields.php:54",
+        "application/controllers/Requests.php:87"
+      ]
+    },
+    {
+      "title": "Sample 09 \u00b7 Dispose Hardcopy",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 INPUT",
+      "screenshot": "flow_disposal.png",
+      "crop": [
+        293.0,
+        169.0,
+        854.0,
+        622.0
+      ],
+      "annotation_count": 3,
+      "route": "my-requests/hardcopy-disposal",
+      "sources": [
+        "application/view/pages/request/shared_index.php:389",
+        "application/view/pages/request/disposal_fields.php:6",
+        "public/assets/js/app.js:774",
+        "application/view/pages/documents/shared_index.php:84",
+        "application/models/Document_detail_model.php:200"
+      ]
+    },
+    {
+      "title": "Sample 09 \u00b7 Dispose Hardcopy \u2014 result",
+      "chapter": "ALL NINE REQUEST FLOWS \u00b7 OUTCOME",
+      "screenshot": "result_disposal.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "my-requests/hardcopy-disposal",
+      "sources": [
+        "application/view/pages/request/shared_index.php:389",
+        "application/view/pages/request/disposal_fields.php:6",
+        "public/assets/js/app.js:774",
+        "application/view/pages/documents/shared_index.php:84",
+        "application/models/Document_detail_model.php:200"
+      ]
+    },
+    {
+      "title": "Review and decide approval tasks",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "approval_task.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 4,
+      "route": "my-tasks/softcopy",
+      "sources": [
+        "application/view/pages/request/shared_index.php:235",
+        "application/view/layout/footer.php:118",
+        "application/view/pages/files/review.php:11",
+        "application/services/request/request_service.php:739",
+        "application/services/request/request_service.php:792",
+        "public/assets/js/row-actions.js:19"
+      ]
+    },
+    {
+      "title": "Approve the active workflow step",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "approval_confirmation.png",
+      "crop": [
+        473.0,
+        301.0,
+        494.0,
+        370.0
+      ],
+      "annotation_count": 2,
+      "route": "",
+      "sources": [
+        "public/assets/js/row-actions.js:19",
+        "application/services/request/request_service.php:764"
+      ]
+    },
+    {
+      "title": "Return from the first approval step",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "request_returned.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 2,
+      "route": "",
+      "sources": [
+        "public/assets/js/row-actions.js:42",
+        "application/services/request/request_service.php:792"
+      ]
+    },
+    {
+      "title": "Return from a later approval step",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "return_previous_approver.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 2,
+      "route": "",
+      "sources": [
+        "application/services/request/request_service.php:799"
+      ]
+    },
+    {
+      "title": "Reject a proposal",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "request_rejected.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "",
+      "sources": [
+        "public/assets/js/row-actions.js:19",
+        "application/services/request/request_service.php:820"
+      ]
+    },
+    {
+      "title": "Cancel and, when eligible, remove a draft",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "cancelled_draft.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "",
+      "sources": [
+        "application/services/request/request_policy.php:4"
+      ]
+    },
+    {
+      "title": "Dispatch and accept the physical hardcopy",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "transfer_accept.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "my-tasks/hardcopy-transfer",
+      "sources": [
+        "application/view/pages/request/shared_index.php:519",
+        "application/view/pages/request/shared_index.php:556",
+        "application/controllers/Requests.php:169",
+        "application/controllers/Requests.php:184",
+        "application/models/Document_detail_model.php:223"
+      ]
+    },
+    {
+      "title": "Record physical dispatch",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "transfer_dispatch.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "",
+      "sources": [
+        "application/controllers/Requests.php:169"
+      ]
+    },
+    {
+      "title": "Verify the received hardcopy",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "transfer_received.png",
+      "crop": [
+        278.0,
+        82.0,
+        1150.0,
+        790.0
+      ],
+      "annotation_count": 1,
+      "route": "",
+      "sources": [
+        "application/controllers/Requests.php:184",
+        "application/models/Document_detail_model.php:223"
+      ]
+    },
+    {
+      "title": "Read notifications and approval reminders",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "notifications.png",
+      "crop": [
+        0,
+        0,
+        1440,
+        960
+      ],
+      "annotation_count": 1,
+      "route": "top navigation / my-tasks/softcopy",
+      "sources": [
+        "application/view/layout/sidebar_top_nav.php:294",
+        "public/assets/js/notification-inbox.js:61",
+        "public/assets/js/notification-inbox.js:85",
+        "application/controllers/Notifications.php:14",
+        "application/view/layout/footer.php:55"
+      ]
+    },
+    {
+      "title": "Apply authorized direct document actions",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "direct_hardcopy.png",
+      "crop": [
+        293.0,
+        150.0,
+        854.0,
+        661.0
+      ],
+      "annotation_count": 3,
+      "route": "documents/hardcopy / documents/softcopy",
+      "sources": [
+        "application/view/pages/documents/shared_index.php:5",
+        "application/view/pages/documents/shared_index.php:45",
+        "application/view/pages/documents/shared_index.php:134",
+        "application/view/pages/documents/shared_index.php:200",
+        "application/view/pages/documents/shared_index.php:227",
+        "application/controllers/Documents.php:125"
+      ]
+    },
+    {
+      "title": "Apply a direct softcopy action",
+      "chapter": "WORKED EXAMPLES",
+      "screenshot": "direct_softcopy.png",
+      "crop": [
+        293.0,
+        128.0,
+        854.0,
+        704.0
+      ],
+      "annotation_count": 4,
+      "route": "",
+      "sources": [
+        "application/controllers/Documents.php:125",
+        "application/view/pages/documents/shared_index.php:227"
+      ]
+    },
+    {
+      "title": "Assign documents directly to users",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "assign_user.png",
+      "crop": [
+        373.0,
+        307.0,
+        694.0,
+        346.0
+      ],
+      "annotation_count": 3,
+      "route": "admin/document-assignments",
+      "sources": [
+        "application/view/pages/administration/document_assignments.php:11",
+        "application/view/pages/administration/document_assignments.php:28",
+        "application/view/pages/administration/document_assignments.php:66",
+        "application/view/pages/administration/document_assignments.php:171",
+        "application/view/pages/user/index.php:49"
+      ]
+    },
+    {
+      "title": "Maintain places and softcopy categories",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "places.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "places",
+      "sources": [
+        "application/view/pages/places/shared_index.php:95",
+        "application/models/Place_model.php:5",
+        "application/view/pages/places/location/modal_action/upsert.php:10",
+        "application/view/pages/places/shared_index.php:137",
+        "application/view/pages/places/shared_index.php:54"
+      ]
+    },
+    {
+      "title": "Create and maintain user accounts",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "new_user.png",
+      "crop": [
+        293.0,
+        75.0,
+        854.0,
+        810.0
+      ],
+      "annotation_count": 3,
+      "route": "admin/users",
+      "sources": [
+        "application/view/pages/user/index.php:5",
+        "application/view/pages/user/index.php:108",
+        "application/view/pages/user/index.php:149",
+        "application/view/pages/user/temporary_credentials.php:2",
+        "application/services/request/request_service.php:501"
+      ]
+    },
+    {
+      "title": "Maintain roles and permissions",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "roles.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 2,
+      "route": "admin/roles",
+      "sources": [
+        "application/view/pages/roles_and_permission/index.php:4",
+        "application/view/pages/roles_and_permission/index.php:15",
+        "application/view/pages/roles_and_permission/index.php:87",
+        "application/view/pages/roles_and_permission/index.php:102",
+        "application/view/pages/user/index.php:122"
+      ]
+    },
+    {
+      "title": "Configure and publish approval workflows",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "workflow_steps.png",
+      "crop": [
+        143.0,
+        64.0,
+        1154.0,
+        828.0
+      ],
+      "annotation_count": 2,
+      "route": "admin/workflows",
+      "sources": [
+        "application/view/pages/workflow_builder/index.php:5",
+        "application/view/pages/workflow_builder/index.php:108",
+        "application/view/pages/workflow_builder/index.php:118",
+        "application/view/pages/workflow_builder/index.php:227",
+        "application/view/pages/workflow_builder/index.php:275",
+        "application/services/request/request_service.php:462"
+      ]
+    },
+    {
+      "title": "Inspect the Internal Audit Trail",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "audit.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "admin/audit",
+      "sources": [
+        "application/view/pages/administration/audit.php:3",
+        "application/view/pages/administration/audit.php:17",
+        "application/view/pages/administration/audit.php:40",
+        "application/view/pages/administration/audit.php:50",
+        "application/models/Document_detail_model.php:207",
+        "application/view/layout/sidebar_top_nav.php:220"
+      ]
+    },
+    {
+      "title": "Back up, import, and restore system data",
+      "chapter": "SYSTEM MODULES",
+      "screenshot": "backups.png",
+      "crop": [
+        278.0,
+        83.0,
+        1150.0,
+        845.0
+      ],
+      "annotation_count": 1,
+      "route": "admin/backups",
+      "sources": [
+        "application/view/pages/administration/backups.php:5",
+        "application/view/pages/administration/backups.php:19",
+        "application/view/pages/administration/backups.php:25",
+        "application/view/pages/administration/backups.php:77",
+        "application/view/pages/administration/backups.php:101"
+      ]
+    },
+    {
+      "title": "Interface evidence and source references",
+      "chapter": "REFERENCE APPENDIX"
+    },
+    {
+      "title": "Interface evidence and source references",
+      "chapter": "REFERENCE APPENDIX"
+    }
+  ],
+  "missing_screenshots": []
+}

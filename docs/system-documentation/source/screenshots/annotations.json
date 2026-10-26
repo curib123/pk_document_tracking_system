@@ -1,0 +1,1585 @@
+{
+  "overview": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 12,
+        "y": 184.75,
+        "width": 240,
+        "height": 40.75,
+        "label": "Open physical documents"
+      },
+      {
+        "x": 12,
+        "y": 317.25,
+        "width": 240,
+        "height": 44,
+        "label": "Start and track requests"
+      },
+      {
+        "x": 12,
+        "y": 364.25,
+        "width": 240,
+        "height": 44,
+        "label": "Review assigned work"
+      }
+    ],
+    "route": "dashboard"
+  },
+  "hardcopy": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 317,
+        "y": 242,
+        "width": 897.4375,
+        "height": 40,
+        "label": "Search by document details"
+      },
+      {
+        "x": 1226.4375,
+        "y": 242,
+        "width": 160.5625,
+        "height": 40,
+        "label": "Authorized direct entry"
+      },
+      {
+        "x": 1171.203125,
+        "y": 405.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "Open document details"
+      }
+    ],
+    "route": "documents/hardcopy"
+  },
+  "softcopy": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 317,
+        "y": 242,
+        "width": 903.90625,
+        "height": 40,
+        "label": "Search controlled records"
+      },
+      {
+        "x": 1232.90625,
+        "y": 242,
+        "width": 154.09375,
+        "height": 40,
+        "label": "Authorized softcopy actions"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "requests": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1248.0625,
+        "y": 193,
+        "width": 138.9375,
+        "height": 40,
+        "label": "Start a draft"
+      },
+      {
+        "x": 317,
+        "y": 245,
+        "width": 180,
+        "height": 40,
+        "label": "Filter by request status"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "tasks": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 683.921875,
+        "y": 105,
+        "width": 187.203125,
+        "height": 46,
+        "label": "Physical handoff tasks"
+      },
+      {
+        "x": 317,
+        "y": 193,
+        "width": 1070,
+        "height": 40,
+        "label": "Find assigned approval work"
+      }
+    ],
+    "route": "my-tasks/softcopy"
+  },
+  "assignments": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 313,
+        "y": 359.5,
+        "width": 827.3125,
+        "height": 38,
+        "label": "Find document assignments"
+      }
+    ],
+    "route": "admin/document-assignments"
+  },
+  "places": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 298,
+        "y": 80,
+        "width": 1080,
+        "height": 500,
+        "label": "Review this screen"
+      }
+    ],
+    "route": "places/area"
+  },
+  "users": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1274.171875,
+        "y": 126,
+        "width": 112.828125,
+        "height": 40,
+        "label": "Create an account"
+      },
+      {
+        "x": 1274.171875,
+        "y": 126,
+        "width": 112.828125,
+        "height": 40,
+        "label": "Edit user details"
+      }
+    ],
+    "route": "admin/users"
+  },
+  "roles": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1275.328125,
+        "y": 126,
+        "width": 111.671875,
+        "height": 40,
+        "label": "Create a role"
+      },
+      {
+        "x": 1275.328125,
+        "y": 126,
+        "width": 111.671875,
+        "height": 40,
+        "label": "Review role permissions"
+      }
+    ],
+    "route": "admin/roles"
+  },
+  "workflows": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1280.046875,
+        "y": 295.5,
+        "width": 109.953125,
+        "height": 34,
+        "label": "Inspect ordered approval steps"
+      }
+    ],
+    "route": "admin/workflows"
+  },
+  "flow_softcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 270,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Create Softcopy"
+      },
+      {
+        "x": 728,
+        "y": 270,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 352.796875,
+        "width": 367,
+        "height": 40,
+        "label": "Enter the sample title"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "flow_softcopy_create_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 518.390625,
+        "width": 750,
+        "height": 40,
+        "label": "Attach the sample document"
+      },
+      {
+        "x": 991.4375,
+        "y": 744.78125,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "draft_softcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1137.953125,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1318.828125,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "submit_confirmation": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 529,
+        "y": 464.3975524902344,
+        "width": 382,
+        "height": 83.00003051757812,
+        "label": "Review the submission"
+      },
+      {
+        "x": 725,
+        "y": 569.671875,
+        "width": 186,
+        "height": 46,
+        "label": "Confirm to start approval"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "approval_task": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 961.296875,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "Read request details"
+      },
+      {
+        "x": 1142.171875,
+        "y": 384.5,
+        "width": 86.140625,
+        "height": 34,
+        "label": "Approve this step"
+      },
+      {
+        "x": 1312.890625,
+        "y": 384.5,
+        "width": 77.09375,
+        "height": 34,
+        "label": "Return for correction"
+      },
+      {
+        "x": 1233.3125,
+        "y": 384.5,
+        "width": 74.578125,
+        "height": 34,
+        "label": "Reject this request"
+      }
+    ],
+    "route": "my-tasks/softcopy"
+  },
+  "approval_confirmation": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 529,
+        "y": 464.3999938964844,
+        "width": 382,
+        "height": 82.99996948242188,
+        "label": "Check the approval action"
+      },
+      {
+        "x": 725,
+        "y": 569.671875,
+        "width": 186,
+        "height": 46,
+        "label": "Confirm this step approval"
+      }
+    ],
+    "route": "my-tasks/softcopy"
+  },
+  "result_softcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 131.734375,
+        "width": 315.1875,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 240.671875,
+        "width": 1098,
+        "height": 532.265625,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/softcopy?q=REQ-20261026-3B31F41430"
+  },
+  "flow_softcopy_revise": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 217.0625,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Revise Softcopy"
+      },
+      {
+        "x": 728,
+        "y": 217.0625,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 728,
+        "y": 299.859375,
+        "width": 367,
+        "height": 40,
+        "label": "Enter the sample title"
+      },
+      {
+        "x": 345,
+        "y": 299.859375,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "flow_softcopy_revise_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 571.34375,
+        "width": 750,
+        "height": 40,
+        "label": "Attach the sample document"
+      },
+      {
+        "x": 991.4375,
+        "y": 797.734375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "draft_softcopy_revise": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1169.828125,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1350.703125,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "result_softcopy_revise": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 170.703125,
+        "width": 428.828125,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 279.640625,
+        "width": 1098,
+        "height": 454.328125,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/softcopy?q=REQ-20261026-29F0BF478E"
+  },
+  "flow_softcopy_cancel": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 364.34375,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Cancel Softcopy"
+      },
+      {
+        "x": 728,
+        "y": 364.34375,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 447.140625,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "flow_softcopy_cancel_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 991.4375,
+        "y": 650.4375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "draft_softcopy_cancel": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1169.828125,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1308.921875,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1243.28125,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "result_softcopy_cancel": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 181.421875,
+        "width": 428.828125,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 290.359375,
+        "width": 1098,
+        "height": 432.890625,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/softcopy?q=REQ-20261026-0EF591FAD9"
+  },
+  "flow_hardcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 249.90625,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Create Hardcopy"
+      },
+      {
+        "x": 728,
+        "y": 249.90625,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 332.703125,
+        "width": 750,
+        "height": 40,
+        "label": "Enter the sample title"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "flow_hardcopy_create_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 991.4375,
+        "y": 764.890625,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "draft_hardcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1144.4375,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1283.53125,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1217.890625,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "result_hardcopy_create": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 56.9375,
+        "width": 249.578125,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 147.125,
+        "width": 1098,
+        "height": 702.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/hardcopy?q=REQ-20261026-D4AEF75C6E"
+  },
+  "flow_hardcopy_update": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 208.5,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Update Hardcopy"
+      },
+      {
+        "x": 728,
+        "y": 208.5,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 374.09375,
+        "width": 750,
+        "height": 40,
+        "label": "Enter the sample title"
+      },
+      {
+        "x": 345,
+        "y": 291.296875,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "flow_hardcopy_update_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 991.4375,
+        "y": 806.28125,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "draft_hardcopy_update": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1176.296875,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1315.390625,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1249.75,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "result_hardcopy_update": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 56.9375,
+        "width": 363.234375,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 147.125,
+        "width": 1098,
+        "height": 702.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/hardcopy?q=REQ-20261026-38AF894B34"
+  },
+  "flow_access": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 322.953125,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Grant Access"
+      },
+      {
+        "x": 728,
+        "y": 322.953125,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 728,
+        "y": 405.75,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/access-grant"
+  },
+  "flow_access_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 728,
+        "y": 488.546875,
+        "width": 367,
+        "height": 40,
+        "label": "Choose a future expiry"
+      },
+      {
+        "x": 991.4375,
+        "y": 691.84375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/access-grant"
+  },
+  "draft_access": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1145.515625,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1284.609375,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1218.96875,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/access-grant"
+  },
+  "result_access": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 56.9375,
+        "width": 434.578125,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 147.125,
+        "width": 1098,
+        "height": 702.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/access-grant?q=REQ-20261026-F54537393F"
+  },
+  "flow_assignment": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 322.953125,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Assign Document"
+      },
+      {
+        "x": 728,
+        "y": 322.953125,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 728,
+        "y": 405.75,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/document-assign"
+  },
+  "flow_assignment_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 991.4375,
+        "y": 691.84375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/document-assign"
+  },
+  "draft_assignment": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1171.125,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1310.21875,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1244.578125,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/document-assign"
+  },
+  "result_assignment": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 56.9375,
+        "width": 434.578125,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 147.125,
+        "width": 1098,
+        "height": 702.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/document-assign?q=REQ-20261026-2D8BFFD37F"
+  },
+  "flow_transfer": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 728,
+        "y": 906.5625,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 176.203125,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/hardcopy-transfer"
+  },
+  "flow_transfer_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 906.5625,
+        "width": 2,
+        "height": 2,
+        "label": "Verify recipient"
+      },
+      {
+        "x": 991.4375,
+        "y": 838.59375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/hardcopy-transfer"
+  },
+  "draft_transfer": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1133.65625,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1272.75,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1207.109375,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/hardcopy-transfer"
+  },
+  "result_transfer": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 56.9375,
+        "width": 363.234375,
+        "height": 27.5,
+        "label": "Review approved transfer proposal"
+      },
+      {
+        "x": 171,
+        "y": 147.125,
+        "width": 1098,
+        "height": 702.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/hardcopy-transfer?q=REQ-20261026-665E3F3EC0"
+  },
+  "transfer_dispatch": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1308.875,
+        "y": 729.875,
+        "width": 81.125,
+        "height": 34.1875,
+        "label": "Requester dispatches after physical release"
+      }
+    ],
+    "route": "my-tasks/hardcopy-transfer"
+  },
+  "transfer_accept": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1321.15625,
+        "y": 729.875,
+        "width": 68.84375,
+        "height": 34.1875,
+        "label": "Recipient confirms physical receipt"
+      }
+    ],
+    "route": "my-tasks/hardcopy-transfer"
+  },
+  "transfer_received": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 264,
+        "y": 0,
+        "width": 1176,
+        "height": 960,
+        "label": "Verify document custody"
+      }
+    ],
+    "route": "documents/hardcopy"
+  },
+  "flow_disposal": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 310.84375,
+        "width": 367,
+        "height": 40,
+        "label": "Choose Dispose Hardcopy"
+      },
+      {
+        "x": 728,
+        "y": 310.84375,
+        "width": 367,
+        "height": 40,
+        "label": "State the reason"
+      },
+      {
+        "x": 345,
+        "y": 393.640625,
+        "width": 2,
+        "height": 2,
+        "label": "Select the existing record"
+      }
+    ],
+    "route": "my-requests/hardcopy-disposal"
+  },
+  "flow_disposal_save": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 476.4375,
+        "width": 367,
+        "height": 40,
+        "label": "Choose disposal method"
+      },
+      {
+        "x": 991.4375,
+        "y": 703.9375,
+        "width": 100.5625,
+        "height": 40,
+        "label": "Save Draft"
+      }
+    ],
+    "route": "my-requests/hardcopy-disposal"
+  },
+  "draft_disposal": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1149.046875,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "View draft details"
+      },
+      {
+        "x": 1288.140625,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Submit for approval"
+      },
+      {
+        "x": 1222.5,
+        "y": 384.5,
+        "width": 60.640625,
+        "height": 34,
+        "label": "Edit before submitting"
+      }
+    ],
+    "route": "my-requests/hardcopy-disposal"
+  },
+  "result_disposal": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 230,
+        "y": 190.4375,
+        "width": 445.546875,
+        "height": 27.5,
+        "label": "Review this completed proposal"
+      },
+      {
+        "x": 171,
+        "y": 280.625,
+        "width": 1098,
+        "height": 435.875,
+        "label": "Check status and approval history"
+      }
+    ],
+    "route": "my-requests/hardcopy-disposal?q=REQ-20261026-A8A8A44478"
+  },
+  "request_returned": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1248.0625,
+        "y": 193,
+        "width": 138.9375,
+        "height": 40,
+        "label": "Edit your returned proposal"
+      },
+      {
+        "x": 1315.796875,
+        "y": 384.5,
+        "width": 80.296875,
+        "height": 34,
+        "label": "Resubmit after correction"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "return_previous_approver": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1246.640625,
+        "y": 384.5,
+        "width": 86.140625,
+        "height": 34,
+        "label": "Previous approver receives reopened step"
+      },
+      {
+        "x": 1173.1875,
+        "y": 384.5,
+        "width": 68.453125,
+        "height": 34,
+        "label": "Read the return remark and history"
+      }
+    ],
+    "route": "my-tasks/hardcopy"
+  },
+  "request_rejected": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1321.546875,
+        "y": 374.75,
+        "width": 68.453125,
+        "height": 34,
+        "label": "Rejected request remains in history"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "cancelled_draft": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1315.921875,
+        "y": 374.75,
+        "width": 74.078125,
+        "height": 34,
+        "label": "Only an unsubmitted cancelled draft can be deleted"
+      }
+    ],
+    "route": "my-requests/hardcopy"
+  },
+  "new_user": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 728,
+        "y": 299.5,
+        "width": 367,
+        "height": 40,
+        "label": "Choose a unique username"
+      },
+      {
+        "x": 321,
+        "y": 167.90625,
+        "width": 798,
+        "height": 610.171875,
+        "label": "Choose active roles and leader"
+      },
+      {
+        "x": 994.9375,
+        "y": 798.078125,
+        "width": 97.0625,
+        "height": 40,
+        "label": "Save account; keep generated password private"
+      }
+    ],
+    "route": "admin/users"
+  },
+  "assign_user": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 421,
+        "y": 349.078125,
+        "width": 141.28125,
+        "height": 24,
+        "label": "Choose direct assignment"
+      },
+      {
+        "x": 401,
+        "y": 388.078125,
+        "width": 638,
+        "height": 159.828125,
+        "label": "Select active user and records"
+      },
+      {
+        "x": 867.578125,
+        "y": 566.90625,
+        "width": 147.421875,
+        "height": 40,
+        "label": "Apply the assignment and confirm"
+      }
+    ],
+    "route": "admin/document-assignments"
+  },
+  "workflow_steps": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 199,
+        "y": 273.53125,
+        "width": 360,
+        "height": 40,
+        "label": "Select workflow version"
+      },
+      {
+        "x": 171,
+        "y": 223.734375,
+        "width": 1098,
+        "height": 558.71875,
+        "label": "Review ordered approval steps"
+      }
+    ],
+    "route": "admin/workflows"
+  },
+  "audit": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 317,
+        "y": 144,
+        "width": 1070,
+        "height": 40,
+        "label": "Search audit events"
+      }
+    ],
+    "route": "admin/audit"
+  },
+  "backups": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 264,
+        "y": 0,
+        "width": 1176,
+        "height": 960,
+        "label": "Backup and restore controls"
+      }
+    ],
+    "route": "admin/backups"
+  },
+  "notifications": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 298,
+        "y": 80,
+        "width": 1080,
+        "height": 500,
+        "label": "Review this screen"
+      }
+    ],
+    "route": "notifications/inbox"
+  },
+  "direct_hardcopy": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 291.296875,
+        "width": 750,
+        "height": 40,
+        "label": "Enter the sample title"
+      },
+      {
+        "x": 345,
+        "y": 539.6875,
+        "width": 2,
+        "height": 2,
+        "label": "Confirm the responsible holder"
+      },
+      {
+        "x": 955.046875,
+        "y": 723.484375,
+        "width": 136.953125,
+        "height": 40,
+        "label": "Save Document and confirm"
+      }
+    ],
+    "route": "documents/hardcopy"
+  },
+  "direct_softcopy": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 270,
+        "width": 367,
+        "height": 40,
+        "label": "Create, Revise or Cancel directly"
+      },
+      {
+        "x": 728,
+        "y": 352.796875,
+        "width": 367,
+        "height": 40,
+        "label": "Use a unique document number"
+      },
+      {
+        "x": 345,
+        "y": 518.390625,
+        "width": 750,
+        "height": 40,
+        "label": "Attach the controlled file"
+      },
+      {
+        "x": 950.046875,
+        "y": 744.78125,
+        "width": 141.953125,
+        "height": 40,
+        "label": "Approve Directly and confirm"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "role_edit": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 232,
+        "y": 89.65625,
+        "width": 134.875,
+        "height": 28.5,
+        "label": "Review role and permission settings"
+      },
+      {
+        "x": 151,
+        "y": 139.15625,
+        "width": 1138,
+        "height": 691.1875,
+        "label": "Select allowed module actions"
+      },
+      {
+        "x": 1166.09375,
+        "y": 850.34375,
+        "width": 95.90625,
+        "height": 40,
+        "label": "Save and confirm"
+      }
+    ],
+    "route": "admin/roles"
+  },
+  "location_edit": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 345,
+        "y": 174.796875,
+        "width": 112.515625,
+        "height": 24,
+        "label": "Create a Location"
+      },
+      {
+        "x": 321,
+        "y": 219.796875,
+        "width": 798,
+        "height": 506.390625,
+        "label": "Choose its existing parent hierarchy"
+      },
+      {
+        "x": 977.8125,
+        "y": 746.1875,
+        "width": 114.1875,
+        "height": 40,
+        "label": "Save and confirm"
+      }
+    ],
+    "route": "places/location"
+  },
+  "change_password": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 471,
+        "y": 312.59375,
+        "width": 498,
+        "height": 320.796875,
+        "label": "Enter current password and matching new passwords"
+      },
+      {
+        "x": 794.109375,
+        "y": 653.390625,
+        "width": 147.890625,
+        "height": 40,
+        "label": "Update Password and confirm"
+      }
+    ],
+    "route": "my-requests/softcopy"
+  },
+  "softcopy_files": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1032.421875,
+        "y": 408,
+        "width": 100.6875,
+        "height": 34,
+        "label": "Open Document File History"
+      },
+      {
+        "x": 1208.84375,
+        "y": 408,
+        "width": 96.453125,
+        "height": 34,
+        "label": "Download the current approved file"
+      },
+      {
+        "x": 1138.109375,
+        "y": 408,
+        "width": 65.734375,
+        "height": 34,
+        "label": "Open the protected print view"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "file_history": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 257,
+        "y": 355.796875,
+        "width": 236.21875,
+        "height": 30.796875,
+        "label": "Read the document file history"
+      },
+      {
+        "x": 199,
+        "y": 471.796875,
+        "width": 1042,
+        "height": 65.390625,
+        "label": "Check current and historical revisions"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "print_file": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1217.4,
+        "y": 23,
+        "width": 72.6,
+        "height": 47,
+        "label": "Print this controlled file",
+        "label_y": 1.0
+      },
+      {
+        "x": 1300,
+        "y": 23,
+        "width": 112,
+        "height": 47,
+        "label": "Download the approved file",
+        "label_y": 1.5
+      },
+      {
+        "x": 53,
+        "y": 174,
+        "width": 1334,
+        "height": 720,
+        "label": "Review the file preview"
+      }
+    ],
+    "route": "files/print/3",
+    "crop": [
+      0,
+      0,
+      1440,
+      940
+    ]
+  }
+}
