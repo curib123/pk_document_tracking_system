@@ -13,9 +13,9 @@
     },
     {
       "file": "PK_DTS_Flowchart.vsdx",
-      "pages": 5,
-      "native_shapes": 81,
-      "native_connectors": 53,
+      "pages": 6,
+      "native_shapes": 112,
+      "native_connectors": 62,
       "sample_illustrations": 0,
       "relationships": "valid"
     },
@@ -38,7 +38,7 @@
     },
     {
       "file": "PK_DTS_Flowchart.pdf",
-      "pages": 5,
+      "pages": 6,
       "page_text_bounds": "valid"
     },
     {
@@ -74,15 +74,15 @@
   },
   "screenshots": "Current application code with synthetic data, isolated databases removed after capture.",
   "source_checks": {
-    "source_files_checked": 58
+    "source_files_checked": 62
   },
   "sha256": {
-    "PK_DTS_DFD.pdf": "d44cedde2292e5af77807b1142b0c47a4b55c754ee5ad7bdf09bef1c81f8f3a4",
-    "PK_DTS_Documentation.zip": "934cae450843de90491fc3df6e07c641a3078d9d017eee91077c52a8872d3a59",
-    "PK_DTS_Flowchart.pdf": "69737450a5b1b29b92e564a241766ec803299d19901596814ffd8c678a440007",
-    "PK_DTS_Flowchart.vsdx": "b2d3705f18b8c8ec9e841f56b746a8959968314cc8bde228f0abf3c99fd6e66a",
-    "PK_DTS_Proposed_Process_Flow.pdf": "6aa1c81a459969052c73697e7796bd0004437695792ca762c2e63792a48a0937",
-    "PK_DTS_Proposed_Process_Flow.vsdx": "60fc65c1b579c2a2000b7742f2fcddef65740444afc428b440b02c1ad21548c0",
+    "PK_DTS_DFD.pdf": "10d8979ff2fa40fbd994ad95e690185855b2be152e51751012bac5a871ebbdcb",
+    "PK_DTS_Documentation.zip": "e0f004a46de75548cbc40120fe1e7d25e9ccd675082881711e6967c314824479",
+    "PK_DTS_Flowchart.pdf": "c931fb1d0afe503d6fdbb21e12329e6b6e840e76ba38ba3b8dbbae617a79da67",
+    "PK_DTS_Flowchart.vsdx": "52007623a10441659a1a23474c7b2a81587aa9fdc8d4a26de907c92cad589fee",
+    "PK_DTS_Proposed_Process_Flow.pdf": "a1ecfd91aa27ba6e7d7078a61291e06eb16f17f7d88bf89a29812ce8e4ae5bd8",
+    "PK_DTS_Proposed_Process_Flow.vsdx": "666dd55f3bd677e2ebbf12e599aefb32a425d70a9a2ebf86ebfc30ff97230513",
     "PK_DTS_User_Guide.pdf": "0fde0939063b0b670046257980ccd7b527d4c7e680cfc861b66c8e2dba93d5a4",
     "PK_DTS_User_Guide.pptx": "9f28f0eef9e469c1164d651a59efeb634c0b56ad367b9fd804a810dca48aa76f"
   },
@@ -112,8 +112,69 @@
     "dfd_pages": 2,
     "sample_illustrations": "Four embedded assets verified byte-identical to supplied RMS sample; no page rasterization",
     "native_process_connectors": 26,
-    "pdf_visual_review": "All seven pages reviewed against the samples",
-    "flowchart_regression": "All five pages render identically to the prior delivered Flowchart",
-    "user_guide": "Unchanged; existing native PowerPoint verification retained"
+    "pdf_visual_review": "All five process and two DFD pages reviewed in Peanut Kisses red; original sample structure retained",
+    "user_guide": "Unchanged; existing native PowerPoint verification retained",
+    "flowchart_revision": "Six red decision-flow sheets reviewed, with separate denied-file branch and administration/recovery coverage"
+  },
+  "diagram_checks": {
+    "diagram_pages_checked": 13,
+    "diagram_source_references_checked": 97,
+    "all_model_labels_present_in_pdfs": true,
+    "peanut_kisses_red_palette": "application CSS",
+    "original_sample_icon_colors_preserved": true
+  },
+  "diagram_layout": {
+    "process": {
+      "pages": 5,
+      "warnings": {}
+    },
+    "dfd": {
+      "pages": 2,
+      "warnings": {}
+    },
+    "flowchart": {
+      "pages": 6,
+      "warnings": {}
+    }
+  },
+  "native_visio_structure": {
+    "PK_DTS_Proposed_Process_Flow.vsdx": {
+      "package_parts": 22,
+      "pages": 5,
+      "checked_glued_connectors": 26,
+      "package_graph_valid": true,
+      "native_application_open_verified": false
+    },
+    "PK_DTS_Flowchart.vsdx": {
+      "package_parts": 14,
+      "pages": 6,
+      "checked_glued_connectors": 62,
+      "package_graph_valid": true,
+      "native_application_open_verified": false
+    }
+  },
+  "current_diagram_audit": {
+    "date": "2026-10-26",
+    "basis": "Current controllers, policies, services and view actions; model references retain file and line locations",
+    "application_baseline_unchanged": true,
+    "coverage": [
+      "sign-in, temporary password, personal dashboard and alerts",
+      "all nine approval request types and final effects",
+      "draft validation, submission, cancellation and eligible deletion",
+      "user, role, requester and requester-leader approvers; returns and rejection",
+      "direct maintenance, softcopy disposal and individual/bulk assignments",
+      "access expiry, document scope and approved current-file delivery",
+      "transfer approval, original-requester dispatch and recipient acceptance",
+      "accounts, roles, place hierarchy, workflow publication, audit, backups and restore"
+    ],
+    "material_corrections": [
+      "direct Softcopy Dispose distinct from nine approval requests",
+      "hardcopy immediate holder change and additive softcopy assignment",
+      "previous-holder grant revocation conditional on holder change",
+      "separate Cancel validation and explicit denied-file-access branch",
+      "authorization by permission/scope or the required active actor",
+      "administration and conditional recovery decision sheet"
+    ],
+    "runtime_scope": "Documentation revision only. No new application end-to-end run; prior scenario and native PowerPoint evidence retained for unchanged tracked application source and byte-identical guide files."
   }
 }
