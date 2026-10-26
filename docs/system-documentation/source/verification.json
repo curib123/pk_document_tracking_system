@@ -6,8 +6,22 @@
     {
       "file": "PK_DTS_Proposed_Process_Flow.vsdx",
       "pages": 5,
-      "native_shapes": 84,
+      "native_shapes": 79,
       "native_connectors": 49,
+      "relationships": "valid"
+    },
+    {
+      "file": "PK_DTS_Flowchart.vsdx",
+      "pages": 5,
+      "native_shapes": 81,
+      "native_connectors": 53,
+      "relationships": "valid"
+    },
+    {
+      "file": "PK_DTS_User_Guide.pptx",
+      "slides": 50,
+      "pictures": 49,
+      "editable_arrow_elements": 133,
       "relationships": "valid"
     },
     {
@@ -21,23 +35,9 @@
       "page_text_bounds": "valid"
     },
     {
-      "file": "PK_DTS_Flowchart.vsdx",
-      "pages": 5,
-      "native_shapes": 86,
-      "native_connectors": 55,
-      "relationships": "valid"
-    },
-    {
       "file": "PK_DTS_Flowchart.pdf",
       "pages": 5,
       "page_text_bounds": "valid"
-    },
-    {
-      "file": "PK_DTS_User_Guide.pptx",
-      "slides": 50,
-      "pictures": 47,
-      "editable_arrow_elements": 100,
-      "relationships": "valid"
     },
     {
       "file": "PK_DTS_User_Guide.pdf",
@@ -50,7 +50,8 @@
     "slides": 50,
     "text_overflows": 0,
     "shapes_outside_slides": 0,
-    "pdf_exported": true
+    "pdf_exported": true,
+    "horizontal_and_vertical_text_fit_checked": true
   },
   "native_visio_open_verified": false,
   "visio_limit": "Visio is unavailable; package structure, native shapes, glued connections and corresponding PDF pages were checked.",
@@ -74,12 +75,31 @@
     "source_files_checked": 70
   },
   "sha256": {
-    "PK_DTS_Proposed_Process_Flow.vsdx": "1da9d7b2b351b79a77fd126b63f6ce481cb051dceb1e5255d4dcc18c35475d14",
-    "PK_DTS_Proposed_Process_Flow.pdf": "fb45c52051b926a6794f1948b60d616b2babff2596629fefa01b10e690bafd22",
-    "PK_DTS_DFD.pdf": "86c7082c677d12de10999f0f93b167bba5e66d93edadae2f0b84b5fdd98a1b80",
-    "PK_DTS_Flowchart.vsdx": "1638816e9902c7a92d5417e605abb5d433a08c1eef136ad08ee309b66b984209",
-    "PK_DTS_Flowchart.pdf": "354d547f7b94d8fb0b29922cf8e7d0dc4927e40720bde8563a5ad5173ad358f7",
-    "PK_DTS_User_Guide.pptx": "ad75a528a69a66ab77d6fa9ba159f5d79ad8ef2e30c311e5e3b7d556f10bbc05",
-    "PK_DTS_User_Guide.pdf": "c0722347e038dcb26f176a408933abb14fcb3e20b47c92ac1aa127a4d3a88189"
+    "PK_DTS_DFD.pdf": "cb445dc20ac7a272f528d1ea79709e05ba85166d714bce44f148743fb673fcc5",
+    "PK_DTS_Documentation.zip": "3ede970bc17d1daa2722b87d0c14eefe8407a62811344e572b0fc60e65028d5c",
+    "PK_DTS_Flowchart.pdf": "69737450a5b1b29b92e564a241766ec803299d19901596814ffd8c678a440007",
+    "PK_DTS_Flowchart.vsdx": "b2d3705f18b8c8ec9e841f56b746a8959968314cc8bde228f0abf3c99fd6e66a",
+    "PK_DTS_Proposed_Process_Flow.pdf": "69bfeb4a6ba3eeb0d4916e5a024f9d0e854e5de7b4dd69c61118722c1227507a",
+    "PK_DTS_Proposed_Process_Flow.vsdx": "527ce6e83dbe90c429be166e85185e6e5336a86dad8e7500e64a5da950357d4d",
+    "PK_DTS_User_Guide.pdf": "0fde0939063b0b670046257980ccd7b527d4c7e680cfc861b66c8e2dba93d5a4",
+    "PK_DTS_User_Guide.pptx": "9f28f0eef9e469c1164d651a59efeb634c0b56ad367b9fd804a810dca48aa76f"
+  },
+  "revision": "02",
+  "publication_perspective": "Proposed system processes and intended operating procedures",
+  "guide_layout": {
+    "guide_callouts_checked": 133,
+    "labels_outside_screenshots": true,
+    "screen_pointer_targets_in_crops": true,
+    "screen_pointers_clear_other_annotated_controls": true
+  },
+  "bundle": {
+    "bundle_members": 7,
+    "bundle_matches_delivered_documents": true
+  },
+  "public_editorial_checks": {
+    "planning_perspective": true,
+    "user_facing_source_appendices_removed": true,
+    "inherited_template_identity_removed": true,
+    "attribution_scan": "passed"
   }
 }
