@@ -6,8 +6,9 @@
     {
       "file": "PK_DTS_Proposed_Process_Flow.vsdx",
       "pages": 5,
-      "native_shapes": 79,
-      "native_connectors": 49,
+      "native_shapes": 209,
+      "native_connectors": 26,
+      "sample_illustrations": 29,
       "relationships": "valid"
     },
     {
@@ -15,6 +16,7 @@
       "pages": 5,
       "native_shapes": 81,
       "native_connectors": 53,
+      "sample_illustrations": 0,
       "relationships": "valid"
     },
     {
@@ -31,7 +33,7 @@
     },
     {
       "file": "PK_DTS_DFD.pdf",
-      "pages": 8,
+      "pages": 2,
       "page_text_bounds": "valid"
     },
     {
@@ -72,15 +74,15 @@
   },
   "screenshots": "Current application code with synthetic data, isolated databases removed after capture.",
   "source_checks": {
-    "source_files_checked": 70
+    "source_files_checked": 58
   },
   "sha256": {
-    "PK_DTS_DFD.pdf": "cb445dc20ac7a272f528d1ea79709e05ba85166d714bce44f148743fb673fcc5",
-    "PK_DTS_Documentation.zip": "3ede970bc17d1daa2722b87d0c14eefe8407a62811344e572b0fc60e65028d5c",
+    "PK_DTS_DFD.pdf": "d44cedde2292e5af77807b1142b0c47a4b55c754ee5ad7bdf09bef1c81f8f3a4",
+    "PK_DTS_Documentation.zip": "934cae450843de90491fc3df6e07c641a3078d9d017eee91077c52a8872d3a59",
     "PK_DTS_Flowchart.pdf": "69737450a5b1b29b92e564a241766ec803299d19901596814ffd8c678a440007",
     "PK_DTS_Flowchart.vsdx": "b2d3705f18b8c8ec9e841f56b746a8959968314cc8bde228f0abf3c99fd6e66a",
-    "PK_DTS_Proposed_Process_Flow.pdf": "69bfeb4a6ba3eeb0d4916e5a024f9d0e854e5de7b4dd69c61118722c1227507a",
-    "PK_DTS_Proposed_Process_Flow.vsdx": "527ce6e83dbe90c429be166e85185e6e5336a86dad8e7500e64a5da950357d4d",
+    "PK_DTS_Proposed_Process_Flow.pdf": "6aa1c81a459969052c73697e7796bd0004437695792ca762c2e63792a48a0937",
+    "PK_DTS_Proposed_Process_Flow.vsdx": "60fc65c1b579c2a2000b7742f2fcddef65740444afc428b440b02c1ad21548c0",
     "PK_DTS_User_Guide.pdf": "0fde0939063b0b670046257980ccd7b527d4c7e680cfc861b66c8e2dba93d5a4",
     "PK_DTS_User_Guide.pptx": "9f28f0eef9e469c1164d651a59efeb634c0b56ad367b9fd804a810dca48aa76f"
   },
@@ -101,5 +103,17 @@
     "user_facing_source_appendices_removed": true,
     "inherited_template_identity_removed": true,
     "attribution_scan": "passed"
+  },
+  "sample_alignment": {
+    "reference_zip_sha256": "6d08f29a4c813366b39fc05131dac3969a29fac6df4b04cec4374e5312d5964e",
+    "process_reference": "SA Documents/RMS/process flow old.vsdx",
+    "dfd_reference": "SA Documents/From Alyn/Healthcare Benefits_DFD.pdf",
+    "process_pages": 5,
+    "dfd_pages": 2,
+    "sample_illustrations": "Four embedded assets verified byte-identical to supplied RMS sample; no page rasterization",
+    "native_process_connectors": 26,
+    "pdf_visual_review": "All seven pages reviewed against the samples",
+    "flowchart_regression": "All five pages render identically to the prior delivered Flowchart",
+    "user_guide": "Unchanged; existing native PowerPoint verification retained"
   }
 }

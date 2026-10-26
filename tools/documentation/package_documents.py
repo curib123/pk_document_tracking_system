@@ -22,7 +22,7 @@ def main():
             'PK DOCUMENT TRACKING SYSTEM - PROPOSED DOCUMENTATION\n'
             '26 OCTOBER 2026 | REVISION 02 | PROPOSAL\n\n'
             'Proposed Process Flow: editable Visio (.vsdx) and PDF.\n'
-            'Data Flow Diagram: PDF, eight coordinated sheets.\n'
+            'Data Flow Diagram: PDF, two participant and system sheets.\n'
             'Flowchart: editable Visio (.vsdx) and PDF.\n'
             'Proposed User Guide: PowerPoint (.pptx) and PDF, with screen\n'
             'illustrations, sample data and nine request scenarios.\n\n'
