@@ -25,6 +25,9 @@ try {
                 if ($shape.TextFrame.TextRange.BoundHeight -gt ($shape.Height + 2)) {
                     $overflows += "Slide $($slide.SlideIndex): $($shape.Name)"
                 }
+                if ($shape.TextFrame.TextRange.BoundWidth -gt ($shape.Width + 2)) {
+                    $overflows += "Slide $($slide.SlideIndex): $($shape.Name) (width)"
+                }
             }
             if ($shape.Left -lt -2 -or $shape.Top -lt -2 -or
                 ($shape.Left + $shape.Width) -gt ($deck.PageSetup.SlideWidth + 2) -or
