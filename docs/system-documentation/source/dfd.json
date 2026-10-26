@@ -12,10 +12,12 @@
           "role": "REQUESTER",
           "icon": "person",
           "inputs": [
+            "SIGN-IN AND PASSWORD DATA",
             "DOCUMENT QUERIES",
             "REQUEST DETAILS AND PROPOSAL FILES"
           ],
           "outputs": [
+            "SESSION AND PERSONAL DASHBOARD",
             "AUTHORIZED RECORDS AND FILES",
             "REQUEST STATUS AND HISTORY"
           ]
@@ -28,7 +30,7 @@
             "DECISION AND OPTIONAL REMARKS"
           ],
           "outputs": [
-            "ASSIGNED TASKS",
+            "ASSIGNED TASKS AND ALERTS",
             "PROPOSAL DETAILS AND FILES"
           ]
         },
@@ -58,9 +60,9 @@
         "DISPOSE HARDCOPY"
       ],
       "notes": [
-        "Arrows show data exchanged with PK DTS. Roles describe responsibilities; an authorized user may hold several responsibilities.",
+        "Roles describe responsibilities and may overlap. Sign-in and any required temporary-password setup will precede protected modules; access will follow permissions.",
         "Access and assignment requests will apply to the requester. Direct document changes and assignments will require separate permissions.",
-        "The published route will select approvers. Return will reopen the previous approval step; first-step Return will send the request to its requester."
+        "The published route will select approvers. Return will reopen the previous approval step; first-step Return will send the request to its requester. Reading an alert will not record a decision."
       ],
       "sources": [
         "application/controllers/Documents.php:17",
@@ -74,7 +76,12 @@
         "application/services/request/request_service.php:179",
         "application/services/request/request_service.php:393",
         "application/services/request/request_service.php:719",
-        "application/services/documents/document_access_service.php:34"
+        "application/services/documents/document_access_service.php:34",
+        "application/controllers/Auth.php:24-62",
+        "application/core/MY_Controller.php:48-60",
+        "application/controllers/Dashboard.php:5-13",
+        "application/models/Dashboard_model.php:24-84",
+        "application/controllers/Notifications.php:27-73"
       ]
     },
     {
