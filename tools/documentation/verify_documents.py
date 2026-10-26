@@ -184,15 +184,14 @@ def diagram_checks() -> dict:
                             bounds = [int(n) for n in segment.split('-')]
                             assert 1 <= bounds[0] <= bounds[-1] <= length, f'Source location out of range: {source}'
                     references += 1
-        if model_name != 'dfd':
-            with ZipFile(DOCS / (artifact + '.vsdx')) as archive:
-                for name in archive.namelist():
-                    if not re.fullmatch(r'visio/pages/page\d+\.xml', name):
-                        continue
-                    page = ET.fromstring(archive.read(name))
-                    colors = {c.get('V').upper() for c in page.findall('.//v:Cell', NS)
-                              if c.get('V', '').startswith('#')}
-                    assert colors <= COLORS and {BRAND_RED, ACCENT_RED} <= colors, f'{artifact}: Visio palette differs from PDF'
+        with ZipFile(DOCS / (artifact + '.vsdx')) as archive:
+            page_names = [name for name in archive.namelist() if re.fullmatch(r'visio/pages/page\d+\.xml', name)]
+            assert len(page_names) == len(model['pages']), f'{artifact}: stale editable page count'
+            for name in page_names:
+                page = ET.fromstring(archive.read(name))
+                colors = {c.get('V').upper() for c in page.findall('.//v:Cell', NS)
+                          if c.get('V', '').startswith('#')}
+                assert colors <= COLORS and {BRAND_RED, ACCENT_RED} <= colors, f'{artifact}: Visio palette differs from PDF'
     return {'diagram_pages_checked': count, 'diagram_source_references_checked': references,
             'all_model_labels_present_in_pdfs': True, 'peanut_kisses_red_palette': 'application CSS',
             'original_sample_icon_colors_preserved': True}
@@ -200,7 +199,7 @@ def diagram_checks() -> dict:
 
 def main():
     results = []
-    for name in ['PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_User_Guide.pptx']:
+    for name in ['PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_DFD.vsdx', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_User_Guide.pptx']:
         path = DOCS / name
         assert path.is_file(), f'Missing deliverable: {name}'
         results.append(package(path))
@@ -273,7 +272,7 @@ def main():
                     'transfer_approval_and_receipt_stages': 'distinct'})
     bundle = DOCS / 'PK_DTS_Documentation.zip'
     expected_files = ['PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_Proposed_Process_Flow.pdf',
-                      'PK_DTS_DFD.pdf', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_Flowchart.pdf',
+                      'PK_DTS_DFD.vsdx', 'PK_DTS_DFD.pdf', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_Flowchart.pdf',
                       'PK_DTS_User_Guide.pptx', 'PK_DTS_User_Guide.pdf']
     with ZipFile(bundle) as archive:
         assert archive.testzip() is None

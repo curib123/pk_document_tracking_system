@@ -7,11 +7,13 @@ This documentation defines the proposed processes, information flows and operati
 | Document | Editable document | Reading copy |
 | --- | --- | --- |
 | Proposed Process Flow | [Visio](PK_DTS_Proposed_Process_Flow.vsdx) | [PDF](PK_DTS_Proposed_Process_Flow.pdf) |
-| Proposed Data Flow Diagram | - | [PDF - two sheets](PK_DTS_DFD.pdf) |
+| Proposed Data Flow Diagram | [Visio](PK_DTS_DFD.vsdx) | [PDF - two sheets](PK_DTS_DFD.pdf) |
 | Proposed Flowchart | [Visio](PK_DTS_Flowchart.vsdx) | [PDF](PK_DTS_Flowchart.pdf) |
 | Proposed User Guide | [PowerPoint](PK_DTS_User_Guide.pptx) | [PDF](PK_DTS_User_Guide.pdf) |
 
 [Download the complete documentation package](PK_DTS_Documentation.zip).
+
+Each document has an editable original. Visio diagrams contain separate text, shapes and connected arrows. PowerPoint contains editable slide text, layouts and arrow annotations; screen illustrations remain image objects.
 
 The proposed operation will cover controlled hardcopy and softcopy records, configurable approvals, document access, assignments, physical transfers, disposal, administrative controls, audit and recovery.
 

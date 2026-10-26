@@ -12,6 +12,14 @@
       "relationships": "valid"
     },
     {
+      "file": "PK_DTS_DFD.vsdx",
+      "pages": 2,
+      "native_shapes": 66,
+      "native_connectors": 12,
+      "sample_illustrations": 6,
+      "relationships": "valid"
+    },
+    {
       "file": "PK_DTS_Flowchart.vsdx",
       "pages": 6,
       "native_shapes": 112,
@@ -78,7 +86,8 @@
   },
   "sha256": {
     "PK_DTS_DFD.pdf": "10d8979ff2fa40fbd994ad95e690185855b2be152e51751012bac5a871ebbdcb",
-    "PK_DTS_Documentation.zip": "e0f004a46de75548cbc40120fe1e7d25e9ccd675082881711e6967c314824479",
+    "PK_DTS_DFD.vsdx": "718c1fc0600d6eef4e317f130d979b1d80bf3d9a2f5ae98ea068029143c8f544",
+    "PK_DTS_Documentation.zip": "93050415d4b505b221a2df1bc5ccea7a5ac73db8195628061ddd224b6e2b19a9",
     "PK_DTS_Flowchart.pdf": "c931fb1d0afe503d6fdbb21e12329e6b6e840e76ba38ba3b8dbbae617a79da67",
     "PK_DTS_Flowchart.vsdx": "52007623a10441659a1a23474c7b2a81587aa9fdc8d4a26de907c92cad589fee",
     "PK_DTS_Proposed_Process_Flow.pdf": "a1ecfd91aa27ba6e7d7078a61291e06eb16f17f7d88bf89a29812ce8e4ae5bd8",
@@ -95,7 +104,7 @@
     "screen_pointers_clear_other_annotated_controls": true
   },
   "bundle": {
-    "bundle_members": 7,
+    "bundle_members": 8,
     "bundle_matches_delivered_documents": true
   },
   "public_editorial_checks": {
@@ -145,6 +154,13 @@
       "package_graph_valid": true,
       "native_application_open_verified": false
     },
+    "PK_DTS_DFD.vsdx": {
+      "package_parts": 15,
+      "pages": 2,
+      "checked_glued_connectors": 12,
+      "package_graph_valid": true,
+      "native_application_open_verified": false
+    },
     "PK_DTS_Flowchart.vsdx": {
       "package_parts": 14,
       "pages": 6,
@@ -175,6 +191,13 @@
       "authorization by permission/scope or the required active actor",
       "administration and conditional recovery decision sheet"
     ],
-    "runtime_scope": "Documentation revision only. No new application end-to-end run; prior scenario and native PowerPoint evidence retained for unchanged tracked application source and byte-identical guide files."
+    "runtime_scope": "Documentation revision only. No new application end-to-end run; prior scenario and native PowerPoint evidence retained for byte-identical application and guide artifacts."
+  },
+  "editable_originals": {
+    "documents": 4,
+    "visio_drawings": 3,
+    "powerpoint_presentations": 1,
+    "native_text_and_connectors_checked": true,
+    "bitmap_scope": "Sample icons and UI screenshots remain image objects; diagram text/shapes and slide text/annotations remain editable."
   }
 }

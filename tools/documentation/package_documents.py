@@ -6,7 +6,7 @@ ROOT = Path(__file__).resolve().parents[2]
 DOCS = ROOT / 'docs/system-documentation'
 FILES = [
     'PK_DTS_Proposed_Process_Flow.vsdx', 'PK_DTS_Proposed_Process_Flow.pdf',
-    'PK_DTS_DFD.pdf', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_Flowchart.pdf',
+    'PK_DTS_DFD.vsdx', 'PK_DTS_DFD.pdf', 'PK_DTS_Flowchart.vsdx', 'PK_DTS_Flowchart.pdf',
     'PK_DTS_User_Guide.pptx', 'PK_DTS_User_Guide.pdf',
 ]
 
@@ -22,7 +22,7 @@ def main():
             'PK DOCUMENT TRACKING SYSTEM - PROPOSED DOCUMENTATION\n'
             '26 OCTOBER 2026 | REVISION 02 | PROPOSAL\n\n'
             'Proposed Process Flow: editable Visio (.vsdx) and PDF, five sheets.\n'
-            'Data Flow Diagram: PDF, two participant and system sheets.\n'
+            'Data Flow Diagram: editable Visio (.vsdx) and PDF, two sheets.\n'
             'Flowchart: editable Visio (.vsdx) and PDF, six sheets.\n'
             'Proposed User Guide: PowerPoint (.pptx) and PDF, with screen\n'
             'illustrations, sample data and nine request scenarios.\n\n'
