@@ -290,11 +290,10 @@
         }
       ],
       "notes": [
-        "Administration areas are independent and permission-scoped.",
-        "Workflow publication affects new submissions; Submitted/Returned requests retain their saved route.",
-        "Backup/restore need an encryption password, signing key, AES-256 ZIP and database tools. Archives include database, application and private files; exclude sessions, cache and backup recursion.",
-        "Restore verifies a compatible archive, creates a recovery snapshot, restores database/private data under maintenance, then signs out. Application-code recovery stays offline.",
-        "Clean up removes eligible backup, audit and log archives older than three months."
+        "Separate admin permissions; workflow changes preserve Submitted/Returned routes.",
+        "Backup needs encryption password, signing key, AES-256 ZIP and DB tools. Includes DB/code/private data; excludes sessions/cache/backups.",
+        "Restore checks archive/password/RESTORE, makes a recovery backup, restores DB/private data in maintenance, then signs out. Code recovery is offline.",
+        "Cleanup: eligible backup/audit/log archives older than 3 months."
       ],
       "legend": [
         "Places: Area > Specific > optional Asset > Location.",
