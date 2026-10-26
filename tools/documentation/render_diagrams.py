@@ -25,6 +25,8 @@ from zipfile import ZIP_DEFLATED, ZipFile
 
 import pymupdf as pdf
 
+from brand_palette import ACCENT_RED, BORDER, BRAND_RED, DARK_RED, INK, MUTED, PALE, SOFT, WHITE
+
 
 WIDTH, HEIGHT = 1190.0, 842.0
 VISIO = "http://schemas.microsoft.com/office/visio/2012/main"
@@ -35,21 +37,18 @@ VREL = "http://schemas.microsoft.com/visio/2010/relationships/"
 ET.register_namespace("", VISIO)
 ET.register_namespace("r", REL)
 
-INK = "#293346"
-MUTED = "#657084"
-LINE = "#627084"
-BURGUNDY = "#A80037"
+LINE = ACCENT_RED
 STYLES = {
-    "process": ("#F9EEF2", "#A80037"),
-    "entity": ("#F2F5F8", "#657084"),
-    "store": ("#ECF6F6", "#087F87"),
-    "decision": ("#FFF7E8", "#A97724"),
-    "terminator": ("#ECF6F6", "#087F87"),
-    "data": ("#F2F5F8", "#657084"),
-    "document": ("#F2F5F8", "#657084"),
-    "note": ("#F8F9FB", "#9BA5B2"),
-    "text": ("#FFFFFF", "#FFFFFF"),
-    "port": ("#F2F5F8", "#657084"),
+    "process": (PALE, BRAND_RED),
+    "entity": (WHITE, DARK_RED),
+    "store": (SOFT, BRAND_RED),
+    "decision": (SOFT, ACCENT_RED),
+    "terminator": (PALE, DARK_RED),
+    "data": (PALE, BRAND_RED),
+    "document": (PALE, BRAND_RED),
+    "note": (WHITE, BORDER),
+    "text": (WHITE, WHITE),
+    "port": (SOFT, DARK_RED),
 }
 ALIASES = {"start": "terminator", "end": "terminator", "terminal": "terminator",
            "input": "data", "output": "data", "io": "data", "inputoutput": "data",
@@ -425,7 +424,7 @@ def render_pdf(model: dict, pages: list[dict], path: Path) -> None:
         page = document.new_page(width=WIDTH, height=HEIGHT)
         page.insert_font(fontname="pkregular",fontfile=str(REGULAR_PATH) if REGULAR_PATH else None,fontbuffer=None if REGULAR_PATH else FONT.buffer)
         page.insert_font(fontname="pkbold",fontfile=str(BOLD_PATH) if BOLD_PATH else None,fontbuffer=None if BOLD_PATH else BOLD.buffer)
-        page.draw_rect(pdf.Rect(0,0,WIDTH,7),color=None,fill=rgb(BURGUNDY))
+        page.draw_rect(pdf.Rect(0,0,WIDTH,7),color=None,fill=rgb(BRAND_RED))
         draw_text(page,fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM  /  PROPOSED SYSTEM DESIGN"),pdf.Rect(45,19,1145,34),9,8,True,"left"),MUTED)
         draw_text(page,fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left"))
         draw_text(page,fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left"),MUTED)
@@ -440,7 +439,7 @@ def render_pdf(model: dict, pages: list[dict], path: Path) -> None:
                 page.draw_rect(pdf.Rect(edge["text_layout"]["background"]),color=None,fill=(1,1,1))
                 draw_text(page,edge["text_layout"],MUTED)
         for node in data["prepared_nodes"]: pdf_node(page,node,data["catalog"])
-        page.draw_line((45,709),(1145,709),color=rgb("#CDD8E3"),width=.7)
+        page.draw_line((45,709),(1145,709),color=rgb(BORDER),width=.7)
         draw_text(page,data["notes_layout"],MUTED)
         draw_text(page,fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"),MUTED)
     document.set_metadata({"title":model.get("title",path.stem),"author":"PK Document Tracking System","subject":"Proposed document control and system operations"})
@@ -491,7 +490,7 @@ def vshape(parent: ET.Element, sid: int, name: str, r: pdf.Rect, layout: dict,
     style = style or {}
     default_fill, default_line = STYLES[nodekind]
     fill, line = style.get('fill', default_fill), style.get('line', default_line)
-    for n,v in [("LineColor",line),("LineWeight",1.3/72),("LinePattern",0 if nodekind=="text" else (2 if nodekind=="note" else 1)),("FillForegnd",fill),("FillPattern",0 if nodekind=="text" else 1),("ShdwPattern",0),("BeginArrow",0),("EndArrow",0)]: cell(shape,n,v)
+    for n,v in [("LineColor",line),("LineWeight",style.get('line_width',1.3)/72),("LinePattern",0 if nodekind=="text" else (2 if nodekind=="note" else 1)),("FillForegnd",fill),("FillPattern",0 if nodekind=="text" else 1),("ShdwPattern",0),("BeginArrow",0),("EndArrow",0)]: cell(shape,n,v)
     if nodekind in ("process","terminator"): cell(shape,"Rounding",min(h/2,.15 if nodekind=="process" else h/2))
     if nodekind=="decision": points=[(.5,0),(1,.5),(.5,1),(0,.5),(.5,0)]
     elif nodekind=="data": points=[(0,0),(.88,0),(1,1),(.12,1),(0,0)]
@@ -630,10 +629,18 @@ def render_visio(model: dict, pages: list[dict], path: Path) -> dict:
         nextid=len(nodes)+len(data["prepared_edges"])+1
         names={"entity":"External participant","process":"Process / activity","store":"Data store","decision":"Decision","terminator":"Start / end","data":"Input / output","document":"Document","port":"Cross-sheet reference"}
         present=list(dict.fromkeys(n["kind"] for n in nodes if n["kind"] not in ("text","note")))
-        legend="   |   ".join(names[k] for k in present)+( "   >   Directed connection" if data["prepared_edges"] else "")
+        legend="   |   ".join(names[k] for k in present)+( "   |   Arrows: direction of activity" if data["prepared_edges"] else "")
+        if not model.get('custom_canvas'):
+            for name, bounds, color in [('Brand header', (0,0,WIDTH,7), BRAND_RED),
+                                         ('Footer rule', (45,708.65,1145,709.35), BORDER)]:
+                rect = pdf.Rect(bounds)
+                vshape(shapes,nextid,name,rect,fitted('',rect),'entity',
+                       style={'fill':color,'line':color,'line_width':0})
+                nextid+=1
         texts=[("Document title",fitted(model.get("title","PK DOCUMENT TRACKING SYSTEM / PROPOSED SYSTEM DESIGN"),pdf.Rect(45,19,1145,34),9,8,True,"left")),("Page title",fitted(data["title"],pdf.Rect(45,39,1145,69),24,16,True,"left")),("Subtitle",fitted(data.get("subtitle",""),pdf.Rect(45,70,1145,90),10,8,False,"left")),("Legend",fitted(legend,pdf.Rect(45,92,1145,107),8.5,8,False,"left")),("Notes",data["notes_layout"]),("Page number",fitted(f"{index} / {len(pages)}",pdf.Rect(1103,807,1145,828),8,7,False,"center"))]
         for name,layout in ([] if model.get('custom_canvas') else texts):
-            vshape(shapes,nextid,name,pdf.Rect(layout["rect"]),layout)
+            vshape(shapes,nextid,name,pdf.Rect(layout["rect"]),layout,
+                   style={'text_color':INK if name=='Page title' else MUTED})
             nextid+=1
         parts[f"visio/pages/page{index}.xml"]=xmlbytes(contents)
         total_nodes+=len(nodes); total_edges+=len(data["prepared_edges"])

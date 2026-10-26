@@ -14,12 +14,12 @@ import pymupdf as pdf
 from PIL import Image
 
 import render_diagrams as drawing
+from brand_palette import ACCENT_RED, BORDER, BRAND_RED, DARK_RED, INK, PALE, SOFT, WHITE
 
 ROOT = Path(__file__).resolve().parents[2]
 ICONS = ROOT / 'docs/system-documentation/source/icons'
 WIDTH, HEIGHT = 792, 612
-BLUE, DARK, PALE = '#548ABE', '#285578', '#DCE8F4'
-INK, WHITE, ARROW = '#172C3D', '#FFFFFF', '#578FC8'
+DARK, ARROW = DARK_RED, ACCENT_RED
 ICON_FILES = {'person': 'person.png', 'computer': 'account.png',
               'reviewer': 'review.png', 'document': 'review.png',
               'database': 'database.jpeg', 'admin': 'account.png',
@@ -49,7 +49,7 @@ class Canvas:
             self.warnings.append(f'Element outside page: {name}')
         self.nodes.append({'id': name, 'x': x, 'y': y, 'w': w, 'h': h,
                            'kind': kind, 'text_layout': layout,
-                           'style': {'fill': fill, 'line': line, 'text_color': color}})
+                           'style': {'fill': fill, 'line': line, 'text_color': color, 'line_width': .7}})
         return name
 
     def image(self, name, icon, x, y, w, h):
@@ -107,11 +107,11 @@ class Canvas:
 
 def illustrated_card(c, ident, role, icon, x, y, w=88, h=94, dfd=False):
     if dfd:
-        c.box('shadow-'+ident, x+5, y+5, w, h, '#DCE4F1', '#DCE4F1')
-        c.box(ident, x, y, w, h, '#E5EBF5', '#E5EBF5')
+        c.box('shadow-'+ident, x+5, y+5, w, h, SOFT, SOFT)
+        c.box(ident, x, y, w, h, PALE, PALE)
         c.image(ident+'-icon', icon, x+22, y+7, w-44, h-43)
-        c.box(ident+'-role-bg', x+7, y+h-35, w-14, 33, '#9DC0DC', '#9DC0DC')
-        c.text(ident+'-role', x+10, y+h-34, w-20, 32, role, 9.0, color='#102333', align='center')
+        c.box(ident+'-role-bg', x+7, y+h-35, w-14, 33, BRAND_RED, BRAND_RED)
+        c.text(ident+'-role', x+10, y+h-34, w-20, 32, role, 9.0, color=WHITE, align='center')
     else:
         c.box(ident, x, y, w, h, DARK, DARK)
         c.image(ident+'-icon', icon, x+10, y+6, w-20, h-35)
@@ -134,7 +134,7 @@ def process_page(data, index, total):
         y = 88 + (i % 3)*145
         illustrated_card(c, step['id'], step['actor'], step['icon'], x, y)
         dx, dw = (20, 102) if i < 3 else (519, 139)
-        c.box(f'description-box-{i}', dx, y, dw, 94, PALE, '#BDCFDF')
+        c.box(f'description-box-{i}', dx, y, dw, 94, PALE, BORDER)
         c.text(f'step-number-{i}', dx+7, y+5, dw-14, 14, f'STEP {i+1}', 8, True, DARK)
         c.text(f'description-{i}', dx+7, y+25, dw-14, 62, step['description'], 8.1, valign='top')
     for i in range(len(steps)-1):
@@ -152,22 +152,22 @@ def process_page(data, index, total):
         c.text('path-a', 20, 76, 200, 10, 'A. DOCUMENT USE', 7.2, True, DARK)
         c.text('path-b', 421, 76, 237, 10, 'B. PERMITTED DIRECT ACTIONS', 7.2, True, DARK)
     if index == 2:
-        c.box('return-outcome', 305, 335, 100, 44, PALE, '#BDCFDF')
+        c.box('return-outcome', 305, 335, 100, 44, PALE, BORDER)
         c.text('return-outcome-label', 310, 339, 90, 36, 'RETURN\nPrevious approver;\nrequester at first step', 7.5, color=DARK, align='center')
         c.anchor('return-outcome')
-        c.box('reject-outcome', 305, 410, 100, 35, PALE, '#BDCFDF')
+        c.box('reject-outcome', 305, 410, 100, 35, PALE, BORDER)
         c.text('reject-outcome-label', 310, 414, 90, 27, 'REJECT\nRequest stops', 7.5, color=DARK, align='center')
         c.anchor('reject-outcome')
         c.arrow(steps[4]['id'], steps[1]['id'], [(485, 327), (485, 354), (665, 354), (665, 79), (245, 79), (245, 280), (220, 280)], width=1.6)
-        c.text('more-approvals', 526, 335, 132, 13, 'MORE APPROVALS', 7.4, True, BLUE)
-        c.text('final-only', 479, 358, 179, 13, 'FINAL APPROVAL ONLY', 7.4, True, BLUE)
+        c.text('more-approvals', 526, 335, 132, 13, 'MORE APPROVALS', 7.4, True, BRAND_RED)
+        c.text('final-only', 479, 358, 179, 13, 'FINAL APPROVAL ONLY', 7.4, True, BRAND_RED)
         c.arrow(steps[4]['id'], 'return-outcome', [(421, 288), (410, 288), (410, 357), (405, 357)], width=1.5)
         c.arrow(steps[4]['id'], 'reject-outcome', [(421, 305), (416, 305), (416, 427.5), (405, 427.5)], width=1.5)
-    c.box('notes-panel', 674, 88, 98, 386, '#D0E0EF', '#A1BDD6')
-    c.box('notes-heading', 674, 88, 98, 24, BLUE, BLUE)
+    c.box('notes-panel', 674, 88, 98, 386, PALE, BORDER)
+    c.box('notes-heading', 674, 88, 98, 24, BRAND_RED, BRAND_RED)
     c.text('notes-label', 681, 92, 84, 16, 'NOTES', 9, True, WHITE)
     c.text('notes-body', 681, 119, 84, 347, '\n\n'.join(data['notes']), 7.65, valign='top')
-    c.box('legend-panel', 20, 501, 752, 83, '#E4EDF5', '#BDCFDF')
+    c.box('legend-panel', 20, 501, 752, 83, PALE, BORDER)
     c.text('legend-heading', 29, 507, 734, 14, 'LEGEND / REQUEST COVERAGE', 8.2, True, DARK)
     c.text('legend-body', 29, 525, 734, 52, '\n'.join(data.get('legend', [])), 8.3, valign='top')
     c.text('page-number', 695, 591, 77, 11, f'Page {index} of {total}', 7.5, color=DARK, align='center')
@@ -182,15 +182,15 @@ def administration_page(data, index, total):
     steps = data['steps']
     first = steps[0]
     illustrated_card(c, first['id'], first['actor'], first['icon'], 352, 88)
-    c.box('description-box-entry', 456, 88, 316, 94, PALE, '#BDCFDF')
+    c.box('description-box-entry', 456, 88, 316, 94, PALE, BORDER)
     c.text('entry-heading', 464, 95, 300, 14, 'OPEN A PERMITTED ADMINISTRATION AREA', 8.1, True, DARK)
     c.text('entry-body', 464, 119, 300, 53, first['description']+' The options below will be independent; permissions will determine access.', 8.3, valign='top')
-    c.box('legend-panel', 20, 88, 311, 94, '#E4EDF5', '#BDCFDF')
+    c.box('legend-panel', 20, 88, 311, 94, PALE, BORDER)
     c.text('legend-heading', 28, 95, 295, 14, 'LEGEND / ADMINISTRATION SCOPE', 8.1, True, DARK)
     c.text('legend-body', 28, 117, 295, 58, '\n'.join(data.get('legend', [])), 8.0, valign='top')
     for i, (step, x) in enumerate(zip(steps[1:5], [25, 205, 385, 565]), 1):
         illustrated_card(c, step['id'], step['actor'], step['icon'], x, 252)
-        c.box(f'description-box-option-{i}', x, 356, 160, 81, PALE, '#BDCFDF')
+        c.box(f'description-box-option-{i}', x, 356, 160, 81, PALE, BORDER)
         c.text(f'option-heading-{i}', x+7, 361, 146, 14, ['ACCOUNTS AND ROLES', 'PLACES AND CATEGORIES', 'APPROVAL WORKFLOWS', 'AUDIT AND BACKUPS'][i-1], 7.9, True, DARK)
         c.text(f'option-description-{i}', x+7, 380, 146, 50, step['description'], 8.2, valign='top')
         # A shared authorization hub represents choices, not a dependency
@@ -198,15 +198,15 @@ def administration_page(data, index, total):
         c.arrow(first['id'], step['id'], [(396, 182), (396, 213), (x+44, 213), (x+44, 252)], width=1.7)
     last = steps[5]
     illustrated_card(c, last['id'], last['actor'], last['icon'], 565, 484)
-    c.box('description-box-restore', 663, 484, 109, 94, PALE, '#BDCFDF')
+    c.box('description-box-restore', 663, 484, 109, 94, PALE, BORDER)
     c.text('restore-heading', 670, 489, 95, 14, 'AUTHORIZED RESTORE', 7.8, True, DARK)
     c.text('restore-description', 670, 510, 95, 61, last['description'], 8.0, valign='top')
     # The backup operation is an explicit optional continuation of the audit /
     # backup area; audit inspection alone does not trigger restoration.
     c.arrow(steps[4]['id'], last['id'], [(653, 299), (759, 299), (759, 458), (609, 458), (609, 484)], width=1.6)
-    c.text('restore-condition', 566, 441, 174, 13, 'ONLY WHEN RESTORE IS SELECTED', 7.0, True, BLUE)
-    c.box('notes-panel', 20, 459, 524, 127, '#D0E0EF', '#A1BDD6')
-    c.box('notes-heading', 20, 459, 524, 22, BLUE, BLUE)
+    c.text('restore-condition', 566, 441, 174, 13, 'ONLY WHEN RESTORE IS SELECTED', 7.0, True, BRAND_RED)
+    c.box('notes-panel', 20, 459, 524, 127, PALE, BORDER)
+    c.box('notes-heading', 20, 459, 524, 22, BRAND_RED, BRAND_RED)
     c.text('notes-label', 28, 462, 508, 15, 'NOTES / CONFIGURATION AND RECOVERY RULES', 8.4, True, WHITE)
     c.text('notes-body', 28, 487, 508, 91, '\n\n'.join(data['notes']), 8.0, valign='top')
     c.text('page-number', 695, 591, 77, 11, f'Page {index} of {total}', 7.5, color=DARK, align='center')
@@ -215,19 +215,19 @@ def administration_page(data, index, total):
 
 def dfd_page(data, index, total):
     c = Canvas(data['title'])
-    c.box('header-title-panel', 22, 18, 520, 43, BLUE, BLUE)
+    c.box('header-title-panel', 22, 18, 520, 43, BRAND_RED, BRAND_RED)
     c.text('header-title', 33, 22, 498, 35, 'PK DOCUMENT TRACKING SYSTEM - PROPOSED DATA FLOW DIAGRAM\n'+data['title'], 10.1, True, WHITE, 'center')
-    c.box('header-page-panel', 611, 18, 159, 43, BLUE, BLUE)
+    c.box('header-page-panel', 611, 18, 159, 43, BRAND_RED, BRAND_RED)
     c.text('header-page', 618, 25, 145, 29, f'Page {index} of {total}', 11, True, WHITE, 'center')
     actors = data['actors']
     positions = [(333, 80), (35, 274), (629, 274)]
     for actor, (x, y) in zip(actors, positions):
         illustrated_card(c, actor['id'], actor['role'], actor['icon'], x, y, 128, 114, True)
-    c.box('system', 305, 270, 182, 119, '#C3D3E2', '#18232D')
+    c.box('system', 305, 270, 182, 119, SOFT, DARK_RED)
     c.anchor('system')
-    c.box('system-heading', 305, 270, 182, 35, '#F2CAA7', '#18232D')
-    c.text('system-title', 312, 277, 168, 21, 'IN-HOUSE SYSTEM', 10.5, True, INK, 'center')
-    c.text('system-module', 315, 314, 162, 63, 'PK DTS\n'+data['module'], 9.5, color='#6F1E24', align='center')
+    c.box('system-heading', 305, 270, 182, 35, BRAND_RED, DARK_RED)
+    c.text('system-title', 312, 277, 168, 21, 'IN-HOUSE SYSTEM', 10.5, True, WHITE, 'center')
+    c.text('system-module', 315, 314, 162, 63, 'PK DTS\n'+data['module'], 9.5, color=DARK_RED, align='center')
     for i, actor in enumerate(actors):
         incoming, outgoing = '\n'.join(actor['inputs']), '\n'.join(actor['outputs'])
         if i == 0:
@@ -239,11 +239,11 @@ def dfd_page(data, index, total):
         else:
             c.arrow(actor['id'], 'system', [(629, 299), (487, 299)], label=incoming, label_box=(494, 257, 128, 39), label_size=6.9)
             c.arrow('system', actor['id'], [(487, 364), (629, 364)], label=outgoing, label_box=(494, 322, 128, 39), label_size=6.9)
-    c.box('legend-panel', 22, 420, 255, 171, '#E2EDF6', '#C4D6E7')
-    c.box('legend-heading', 22, 420, 255, 23, BLUE, BLUE)
+    c.box('legend-panel', 22, 420, 255, 171, PALE, BORDER)
+    c.box('legend-heading', 22, 420, 255, 23, BRAND_RED, BRAND_RED)
     c.text('legend-title', 30, 424, 239, 15, 'LEGEND / REQUEST ACTIONS' if index == 1 else 'LEGEND', 8.6, True, WHITE)
     c.text('legend-body', 31, 451, 237, 130, '\n'.join(data.get('legend', [])), 8.2, valign='top')
-    c.box('notes-heading', 299, 420, 471, 23, BLUE, BLUE)
+    c.box('notes-heading', 299, 420, 471, 23, BRAND_RED, BRAND_RED)
     c.text('notes-title', 307, 424, 455, 15, 'OPERATING RULES', 8.6, True, WHITE)
     c.text('notes-body', 307, 451, 455, 130, '\n\n'.join(data['notes']), 8.8, valign='top')
     return c
