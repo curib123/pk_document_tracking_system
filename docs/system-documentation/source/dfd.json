@@ -1200,7 +1200,7 @@
       ],
       "notes": [
         "Audit events will be stored in private daily JSON files. Audit listing, backup creation and restore will require their respective permissions.",
-        "Backups will contain a SQL dump plus application/private files, excluding sessions, cache and backup recursion. AES-256 will encrypt entries; a signed manifest will verify contents.",
+        "Backups will contain a SQL dump plus application and private files, excluding sessions, cache and backup recursion. AES-256 will encrypt entries; a signed manifest will verify contents.",
         "Restore will first create a recovery snapshot, then reapply database and private working data. Maintenance will block ordinary requests during restore. Application-code recovery will be offline.",
         "Retention will manage stored archives and daily audit/application logs. D1-D4 are specified on sheet 8."
       ]
@@ -1221,7 +1221,7 @@
       "notes": [
         "D1-D4 specify related persistent data for the processes on sheets 2-7. SQL table names and private storage locations define the proposed physical structures.",
         "Roles, permissions and approval assignments will be configurable. The task inbox will use request state, active steps and per-user occurrence receipts.",
-        "Audit will use private daily files. Backups will combine a database snapshot with application/private files; web restore will recover database and private working data.",
+        "Audit will use private daily files. Backups will combine a database snapshot with application and private files; web restore will recover database and private working data.",
         "Optional Office/WPS review will open the local editor through a signed content link."
       ],
       "nodes": [
@@ -1254,7 +1254,7 @@
         },
         {
           "id": "D4",
-          "label": "D4  Audit and recovery files\nDaily audit JSON arrays: storage/audit/YYYY-MM-DD.json\nEncrypted AES-256 ZIP archives: storage/backups (or configured safe backup path)\nBackup contents: signed manifest, SQL snapshot and application/private files.\nRetention scope: managed backups, daily audit and application logs.",
+          "label": "D4  Audit and recovery files\nDaily audit JSON arrays: storage/audit/YYYY-MM-DD.json\nEncrypted AES-256 ZIP archives: storage/backups (or configured safe backup path)\nBackup contents: signed manifest, SQL snapshot and application and private files.\nRetention scope: managed backups, daily audit and application logs.",
           "kind": "store",
           "x": 45,
           "y": 555,
