@@ -1,0 +1,938 @@
+{
+  "title": "PK DOCUMENT TRACKING SYSTEM / PROPOSED PROCESS FLOW",
+  "pages": [
+    {
+      "title": "1. Implemented document-control process",
+      "subtitle": "Proposed Process Flow - existing application behavior; functional actors may share the same account",
+      "nodes": [
+        {
+          "id": "user",
+          "label": "Registered user\nsign in / password setup",
+          "kind": "entity",
+          "x": 55,
+          "y": 140,
+          "w": 230,
+          "h": 70
+        },
+        {
+          "id": "browse",
+          "label": "User: browse permitted\nSoftcopy / Hardcopy records",
+          "kind": "process",
+          "x": 55,
+          "y": 290,
+          "w": 230,
+          "h": 80
+        },
+        {
+          "id": "draft",
+          "label": "Requester: choose one of\nnine request actions; save draft",
+          "kind": "process",
+          "x": 405,
+          "y": 140,
+          "w": 265,
+          "h": 80
+        },
+        {
+          "id": "submit",
+          "label": "Requester: Submit\nvalidated proposal + attachment",
+          "kind": "process",
+          "x": 405,
+          "y": 290,
+          "w": 265,
+          "h": 80
+        },
+        {
+          "id": "review",
+          "label": "Configured approvers:\nreview each active step in order",
+          "kind": "process",
+          "x": 405,
+          "y": 450,
+          "w": 265,
+          "h": 80
+        },
+        {
+          "id": "apply",
+          "label": "System: final approval\napplies the document operation",
+          "kind": "process",
+          "x": 810,
+          "y": 450,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "complete",
+          "label": "System: request completed\nrecord / history available",
+          "kind": "terminal",
+          "x": 810,
+          "y": 610,
+          "w": 270,
+          "h": 70
+        },
+        {
+          "id": "direct",
+          "label": "Authorized operator:\napply permitted direct action",
+          "kind": "process",
+          "x": 55,
+          "y": 450,
+          "w": 230,
+          "h": 80
+        },
+        {
+          "id": "admin",
+          "label": "Workflow administrator:\nclone draft, configure, publish",
+          "kind": "process",
+          "x": 810,
+          "y": 140,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "handoff",
+          "label": "Transfer exception:\nrequester dispatches;\nrecipient accepts",
+          "kind": "process",
+          "x": 405,
+          "y": 610,
+          "w": 265,
+          "h": 80
+        },
+        {
+          "id": "directResult",
+          "label": "Document operation applied;\nrecord / history available",
+          "kind": "terminal",
+          "x": 55,
+          "y": 610,
+          "w": 230,
+          "h": 70
+        }
+      ],
+      "edges": [
+        {
+          "from": "user",
+          "to": "browse",
+          "label": "view"
+        },
+        {
+          "from": "user",
+          "to": "draft",
+          "label": "request"
+        },
+        {
+          "from": "draft",
+          "to": "submit",
+          "label": "save first"
+        },
+        {
+          "from": "submit",
+          "to": "review",
+          "label": "published route"
+        },
+        {
+          "from": "admin",
+          "to": "submit",
+          "label": "default version",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              945,
+              255
+            ],
+            [
+              715,
+              255
+            ],
+            [
+              715,
+              330
+            ]
+          ]
+        },
+        {
+          "from": "browse",
+          "to": "direct",
+          "label": "direct permission"
+        },
+        {
+          "from": "review",
+          "to": "apply",
+          "label": "all steps approved"
+        },
+        {
+          "from": "apply",
+          "to": "complete",
+          "label": "non-transfer",
+          "sideFrom": "right",
+          "sideTo": "right",
+          "via": [
+            [
+              1115,
+              490
+            ],
+            [
+              1115,
+              645
+            ]
+          ]
+        },
+        {
+          "from": "apply",
+          "to": "handoff",
+          "label": "transfer",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              945,
+              570
+            ],
+            [
+              720,
+              570
+            ],
+            [
+              720,
+              650
+            ]
+          ]
+        },
+        {
+          "from": "handoff",
+          "to": "complete",
+          "label": "received"
+        },
+        {
+          "from": "direct",
+          "to": "directResult",
+          "label": "direct result"
+        }
+      ],
+      "notes": [
+        "Review can also reject or return a request. See Flowchart page 3 for the exact reverse-step routing; final approval alone does not complete a physical transfer.",
+        "Direct Softcopy Create/Revise/Cancel, direct Hardcopy Create/Update/Dispose, and administrative assignments use explicit direct permissions. They do not run the request approval route.",
+        "Approver titles and number of steps are configured per request type. Do not assume a fixed leader, Document Control Officer, or Plant Manager sequence."
+      ],
+      "sources": [
+        "application/config/routes.php:70-78,124-162,222-232",
+        "application/services/request/request_service.php:393-547,565-846",
+        "application/services/softcopy/softcopy_direct_service.php:4-8",
+        "application/services/transfer/transfer_service.php:13-131"
+      ]
+    },
+    {
+      "title": "2. Softcopy creation, revision and cancellation",
+      "subtitle": "Requester supplies a proposal; the current controlled document changes only after final approval",
+      "nodes": [
+        {
+          "id": "open",
+          "label": "Requester: My Requests\nSoftcopy Requests / New Request",
+          "kind": "entity",
+          "x": 450,
+          "y": 125,
+          "w": 280,
+          "h": 65
+        },
+        {
+          "id": "create",
+          "label": "Create: subject, title, number,\ncategory, optional series\nand Document File",
+          "kind": "process",
+          "x": 55,
+          "y": 235,
+          "w": 290,
+          "h": 90
+        },
+        {
+          "id": "revise",
+          "label": "Revise: select active softcopy;\nnew revision level / pages;\nreplacement Document File",
+          "kind": "process",
+          "x": 450,
+          "y": 235,
+          "w": 280,
+          "h": 90
+        },
+        {
+          "id": "cancel",
+          "label": "Cancel Softcopy:\nselect active document;\nsubject / reason and remarks",
+          "kind": "process",
+          "x": 835,
+          "y": 235,
+          "w": 290,
+          "h": 90
+        },
+        {
+          "id": "draft",
+          "label": "Save draft; review proposal\nand uploaded file; edit if needed",
+          "kind": "process",
+          "x": 450,
+          "y": 370,
+          "w": 280,
+          "h": 65
+        },
+        {
+          "id": "route",
+          "label": "Submit -> configured ordered\napproval route",
+          "kind": "process",
+          "x": 450,
+          "y": 475,
+          "w": 280,
+          "h": 65
+        },
+        {
+          "id": "new",
+          "label": "Create approved:\nregister document + initial revision;\napprove file and link request",
+          "kind": "terminal",
+          "x": 55,
+          "y": 600,
+          "w": 290,
+          "h": 90
+        },
+        {
+          "id": "replacement",
+          "label": "Revision approved:\nappend revision; replace current file;\nretire superseded file bytes",
+          "kind": "terminal",
+          "x": 450,
+          "y": 600,
+          "w": 280,
+          "h": 90
+        },
+        {
+          "id": "retired",
+          "label": "Cancellation approved:\nset softcopy to cancelled;\nretire controlled document files",
+          "kind": "terminal",
+          "x": 835,
+          "y": 600,
+          "w": 290,
+          "h": 90
+        }
+      ],
+      "edges": [
+        {
+          "from": "open",
+          "to": "create",
+          "label": "Create",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              200,
+              157
+            ]
+          ]
+        },
+        {
+          "from": "open",
+          "to": "revise",
+          "label": "Revise"
+        },
+        {
+          "from": "open",
+          "to": "cancel",
+          "label": "Cancel",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              980,
+              157
+            ]
+          ]
+        },
+        {
+          "from": "create",
+          "to": "draft",
+          "sideFrom": "bottom",
+          "sideTo": "left",
+          "via": [
+            [
+              200,
+              402
+            ]
+          ]
+        },
+        {
+          "from": "revise",
+          "to": "draft"
+        },
+        {
+          "from": "cancel",
+          "to": "draft",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              980,
+              402
+            ]
+          ]
+        },
+        {
+          "from": "draft",
+          "to": "route"
+        },
+        {
+          "from": "route",
+          "to": "new",
+          "label": "Create",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              200,
+              507
+            ]
+          ]
+        },
+        {
+          "from": "route",
+          "to": "replacement",
+          "label": "Revise"
+        },
+        {
+          "from": "route",
+          "to": "retired",
+          "label": "Cancel",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              980,
+              507
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Create and Revise require a pending file uploaded by the requester before submission. Supported formats: PDF, TXT, PNG, JPG/JPEG, DOCX and XLSX; maximum 15 MB.",
+        "A revision level must be 1-30 characters and differ from the current revision. Blank effective date defaults to approval day. Historical revision rows remain after file retirement.",
+        "Cancel Softcopy is a business request to cancel an active document. Cancel draft only cancels an unsubmitted proposal and does not cancel the stored document."
+      ],
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:7-80",
+        "application/services/request/request_service.php:234-270,440-453,576-629",
+        "application/services/softcopy/softcopy_operation_service.php:25-229",
+        "application/services/files/file_service.php:39-108,171-231"
+      ]
+    },
+    {
+      "title": "3. Hardcopy registration, update and disposal",
+      "subtitle": "Physical document metadata, custody and retention are controlled through approved requests",
+      "nodes": [
+        {
+          "id": "open",
+          "label": "Requester: choose Hardcopy\nRequests or Hardcopy Disposal",
+          "kind": "entity",
+          "x": 450,
+          "y": 125,
+          "w": 280,
+          "h": 65
+        },
+        {
+          "id": "create",
+          "label": "Create Hardcopy:\ntitle; Area > Specific >\noptional Asset > Location",
+          "kind": "process",
+          "x": 55,
+          "y": 235,
+          "w": 290,
+          "h": 85
+        },
+        {
+          "id": "update",
+          "label": "Update Hardcopy:\nselect active document;\npropose metadata / retention",
+          "kind": "process",
+          "x": 450,
+          "y": 235,
+          "w": 280,
+          "h": 85
+        },
+        {
+          "id": "dispose",
+          "label": "Dispose Hardcopy:\nselect active document;\nShred / Scratch / Other reason",
+          "kind": "process",
+          "x": 835,
+          "y": 235,
+          "w": 290,
+          "h": 85
+        },
+        {
+          "id": "draft",
+          "label": "Save draft; inspect proposal;\nSubmit for configured approvals",
+          "kind": "process",
+          "x": 450,
+          "y": 365,
+          "w": 280,
+          "h": 75
+        },
+        {
+          "id": "approval",
+          "label": "Configured approvers:\nreview in order; final approval\napplies the selected operation",
+          "kind": "process",
+          "x": 450,
+          "y": 480,
+          "w": 280,
+          "h": 75
+        },
+        {
+          "id": "registered",
+          "label": "Create approved:\nnew active hardcopy with\nholder and storage hierarchy",
+          "kind": "terminal",
+          "x": 55,
+          "y": 605,
+          "w": 290,
+          "h": 85
+        },
+        {
+          "id": "updated",
+          "label": "Update approved:\napply validated metadata;\nincrement document version",
+          "kind": "terminal",
+          "x": 450,
+          "y": 605,
+          "w": 280,
+          "h": 85
+        },
+        {
+          "id": "disposed",
+          "label": "Disposal approved:\nrecord prior state / method;\nset disposed; clear Location;\nrevoke personal grants",
+          "kind": "terminal",
+          "x": 835,
+          "y": 600,
+          "w": 290,
+          "h": 95
+        }
+      ],
+      "edges": [
+        {
+          "from": "open",
+          "to": "create",
+          "label": "Create",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              200,
+              157
+            ]
+          ]
+        },
+        {
+          "from": "open",
+          "to": "update",
+          "label": "Update"
+        },
+        {
+          "from": "open",
+          "to": "dispose",
+          "label": "Dispose",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              980,
+              157
+            ]
+          ]
+        },
+        {
+          "from": "create",
+          "to": "draft",
+          "sideFrom": "bottom",
+          "sideTo": "left",
+          "via": [
+            [
+              200,
+              402
+            ]
+          ]
+        },
+        {
+          "from": "update",
+          "to": "draft"
+        },
+        {
+          "from": "dispose",
+          "to": "draft",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              980,
+              402
+            ]
+          ]
+        },
+        {
+          "from": "draft",
+          "to": "approval"
+        },
+        {
+          "from": "approval",
+          "to": "registered",
+          "label": "Create",
+          "sideFrom": "left",
+          "sideTo": "top",
+          "via": [
+            [
+              200,
+              517
+            ]
+          ]
+        },
+        {
+          "from": "approval",
+          "to": "updated",
+          "label": "Update"
+        },
+        {
+          "from": "approval",
+          "to": "disposed",
+          "label": "Dispose",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              980,
+              517
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Non-administrative requests use the requester as holder; only the current holder can request an update. Global administrators may select an active holder.",
+        "Retention tracking stores ordered start/end dates and displays remaining/due/overdue days. Reaching the retention date never schedules or automatically executes disposal.",
+        "Other disposal requires explanatory text of up to 250 characters. Approval records the disposal; the software does not perform the physical destruction."
+      ],
+      "sources": [
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:10-100",
+        "application/services/request/request_service.php:220-225,272-280,587-618,675-714",
+        "application/services/documents/document_service.php:67-136",
+        "application/services/documents/disposal_service.php:7-24",
+        "application/services/documents/retention_countdown.php:4-7"
+      ]
+    },
+    {
+      "title": "4. Hardcopy transfer and physical receipt",
+      "subtitle": "Approval authorizes a handoff; custody and Location change only when the designated recipient accepts",
+      "nodes": [
+        {
+          "id": "request",
+          "label": "Requester: select active hardcopy;\ninspect original location / holder",
+          "kind": "entity",
+          "x": 55,
+          "y": 140,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "destination",
+          "label": "Requester: choose active receiving\nuser and a different destination\nArea / Specific / Asset / Location",
+          "kind": "process",
+          "x": 440,
+          "y": 140,
+          "w": 300,
+          "h": 85
+        },
+        {
+          "id": "draft",
+          "label": "Save transfer draft;\nSubmit for configured approvals",
+          "kind": "process",
+          "x": 855,
+          "y": 140,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "approved",
+          "label": "System: final approval creates\ntransfer = for_transfer;\nrequest = approved",
+          "kind": "process",
+          "x": 855,
+          "y": 325,
+          "w": 270,
+          "h": 90
+        },
+        {
+          "id": "dispatch",
+          "label": "Requester: Dispatch\nconfirms physical release",
+          "kind": "process",
+          "x": 440,
+          "y": 330,
+          "w": 300,
+          "h": 80
+        },
+        {
+          "id": "transit",
+          "label": "System: transfer = in_transit;\nrecord dispatcher and time",
+          "kind": "process",
+          "x": 55,
+          "y": 330,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "accept",
+          "label": "Designated recipient: Accept\nconfirms physical receipt",
+          "kind": "process",
+          "x": 55,
+          "y": 540,
+          "w": 270,
+          "h": 80
+        },
+        {
+          "id": "validate",
+          "label": "System: check active document,\nunchanged holder and approved\nactive destination hierarchy",
+          "kind": "process",
+          "x": 440,
+          "y": 535,
+          "w": 300,
+          "h": 90
+        },
+        {
+          "id": "complete",
+          "label": "System: update holder / place;\nrevoke prior holder's grant;\ntransfer accepted; request completed",
+          "kind": "terminal",
+          "x": 855,
+          "y": 530,
+          "w": 270,
+          "h": 100
+        }
+      ],
+      "edges": [
+        {
+          "from": "request",
+          "to": "destination"
+        },
+        {
+          "from": "destination",
+          "to": "draft"
+        },
+        {
+          "from": "draft",
+          "to": "approved"
+        },
+        {
+          "from": "approved",
+          "to": "dispatch",
+          "label": "authorized handoff",
+          "sideFrom": "left",
+          "sideTo": "right"
+        },
+        {
+          "from": "dispatch",
+          "to": "transit"
+        },
+        {
+          "from": "transit",
+          "to": "accept"
+        },
+        {
+          "from": "accept",
+          "to": "validate"
+        },
+        {
+          "from": "validate",
+          "to": "complete"
+        }
+      ],
+      "notes": [
+        "The dispatcher is the original transfer requester, who may differ from the current holder. Only the assigned recipient can accept an in-transit transfer.",
+        "An approved transfer remains incomplete until acceptance. Pending handoffs are shown under My Tasks > Hardcopy Transfer to the exact dispatcher or recipient.",
+        "If the document holder/status or approved destination hierarchy changes, acceptance fails and no custody change is saved. Approval does not move the document automatically."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:320-390,643-673,780-789",
+        "application/services/transfer/transfer_service.php:13-142",
+        "application/models/Transfer_model.php:6-34",
+        "application/view/pages/request/shared_index.php:519-574"
+      ]
+    },
+    {
+      "title": "5. Assignment, access and administrative paths",
+      "subtitle": "Self-service approval requests and authorized direct maintenance are separate implemented actions",
+      "nodes": [
+        {
+          "id": "self",
+          "label": "Requester: My Requests\nDocument Assignments / Access Grants",
+          "kind": "entity",
+          "x": 55,
+          "y": 135,
+          "w": 310,
+          "h": 80
+        },
+        {
+          "id": "scope",
+          "label": "Choose Softcopy or Hardcopy;\nselect active catalog document;\nrecipient is the requester",
+          "kind": "process",
+          "x": 55,
+          "y": 290,
+          "w": 310,
+          "h": 85
+        },
+        {
+          "id": "review",
+          "label": "Save draft -> Submit ->\nconfigured approval steps",
+          "kind": "process",
+          "x": 55,
+          "y": 455,
+          "w": 310,
+          "h": 75
+        },
+        {
+          "id": "assignment",
+          "label": "Assignment approved:\nSoftcopy assignment activated;\nHardcopy holder changed",
+          "kind": "terminal",
+          "x": 55,
+          "y": 610,
+          "w": 310,
+          "h": 80
+        },
+        {
+          "id": "access",
+          "label": "Access approved:\ncreate personal grant until\nexpiry date at 23:59:59",
+          "kind": "terminal",
+          "x": 440,
+          "y": 610,
+          "w": 310,
+          "h": 80
+        },
+        {
+          "id": "admin",
+          "label": "Authorized maintainer:\nDocument Control > Document Assignments",
+          "kind": "entity",
+          "x": 805,
+          "y": 135,
+          "w": 320,
+          "h": 80
+        },
+        {
+          "id": "single",
+          "label": "Assign one active document\nto selected active user",
+          "kind": "process",
+          "x": 805,
+          "y": 290,
+          "w": 320,
+          "h": 75
+        },
+        {
+          "id": "bulk",
+          "label": "Or assign all active Hardcopies\nat one Location / Softcopies in\ncategory and its subcategories",
+          "kind": "process",
+          "x": 805,
+          "y": 445,
+          "w": 320,
+          "h": 85
+        },
+        {
+          "id": "effect",
+          "label": "Direct assignment uses the same\nassignment effects immediately;\nno approval request is created",
+          "kind": "terminal",
+          "x": 805,
+          "y": 610,
+          "w": 320,
+          "h": 80
+        },
+        {
+          "id": "workflow",
+          "label": "Workflow administrator:\nclone editable draft; add / edit /\nmove / remove steps; publish",
+          "kind": "process",
+          "x": 440,
+          "y": 135,
+          "w": 310,
+          "h": 95
+        },
+        {
+          "id": "version",
+          "label": "One published default per type;\nnew submissions capture version;\nreturned requests keep snapshot",
+          "kind": "process",
+          "x": 440,
+          "y": 290,
+          "w": 310,
+          "h": 90
+        }
+      ],
+      "edges": [
+        {
+          "from": "self",
+          "to": "scope"
+        },
+        {
+          "from": "scope",
+          "to": "review"
+        },
+        {
+          "from": "review",
+          "to": "assignment",
+          "label": "Assignment"
+        },
+        {
+          "from": "review",
+          "to": "access",
+          "label": "Access",
+          "sideFrom": "right",
+          "sideTo": "top",
+          "via": [
+            [
+              595,
+              492
+            ]
+          ]
+        },
+        {
+          "from": "admin",
+          "to": "single"
+        },
+        {
+          "from": "single",
+          "to": "bulk",
+          "label": "bulk option"
+        },
+        {
+          "from": "single",
+          "to": "effect",
+          "label": "single",
+          "sideFrom": "right",
+          "sideTo": "right",
+          "via": [
+            [
+              1140,
+              327
+            ],
+            [
+              1140,
+              650
+            ]
+          ]
+        },
+        {
+          "from": "bulk",
+          "to": "effect"
+        },
+        {
+          "from": "workflow",
+          "to": "version"
+        },
+        {
+          "from": "version",
+          "to": "review",
+          "label": "selected route",
+          "sideFrom": "bottom",
+          "sideTo": "right",
+          "via": [
+            [
+              595,
+              492
+            ]
+          ]
+        }
+      ],
+      "notes": [
+        "Request recipients for assignment and access are forced to the requester on save and submit. An administrator assigns documents to other people through the direct administration screen.",
+        "Access grants are permission-scoped and cease to provide access after expiry or revocation. Catalog/metadata visibility does not grant the file bytes.",
+        "Bulk assignments are atomic and capped at 2,000 documents per operation. Direct hardcopy reassignment is blocked while an approved/in-transit transfer is open."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:178-218,409-421,631-641",
+        "application/services/documents/document_access_service.php:18-84",
+        "application/controllers/Administration.php:130-337",
+        "application/services/workflow/workflow_builder_service.php:87-202",
+        "application/services/security/document_scope.php:35-74"
+      ]
+    }
+  ]
+}
