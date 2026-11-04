@@ -5,8 +5,8 @@ A PHP application for managing physical and digital documents, custody, assignme
 ## Features
 
 - Hardcopy documents organized by Area, Specific, Asset, and Location, with holder and retention information.
-- Softcopy documents with controlled files, revisions, file history, authorized downloads, and printing.
-- External documents with independent hierarchical categories, table and folder views, created-date and status filters, reusable status badges, private attachments, create/revision approval requests, and automatic revision levels.
+- Softcopy documents with controlled files, revisions, file history, authorized downloads, printing, and category filters.
+- External documents with independent hierarchical categories, table and folder views, category, owner, status, and created-date filters, reusable status badges, private attachments, direct create/revise/dispose actions, approval requests, and automatic revision levels. Attachments are downloaded through the row action; filenames are not displayed in the register.
 - Requests for document creation, updates, cancellation, transfers, disposal, access, and assignments.
 - Approval tasks, workflow history, and notifications.
 - Individual document assignments and bulk assignment by Location or Category, including subcategories.

@@ -78,7 +78,7 @@
         "Read Accessible documents for the number of records you are authorized to see, and Created by you for records you created within that access.",
         "Read Pending approvals for work assigned to you or your role, and Outstanding handoffs for your physical dispatch or receipt tasks.",
         "Use Your document register to compare accessible Hardcopy and Softcopy counts. Use My request status to see the status distribution of your own requests.",
-        "Open Hardcopy Documents or Softcopy Documents under Document Management to browse records.",
+        "Open Hardcopy Documents, Softcopy Documents, or External Documents under Document Management to browse records.",
         "Open My Requests or My Tasks under Document Requests. Their badges indicate draft or returned requests and pending tasks respectively.",
         "On a narrow screen, use the Toggle navigation menu button to show the navigation. Open your name at the top right for account actions, and use the bell to open Notifications."
       ],
@@ -98,7 +98,7 @@
         "Check Accessible documents and Created by you for counts within your document access.",
         "Check Pending approvals and Outstanding handoffs for work assigned to you or your roles.",
         "Read Your document register and My request status to see document and request distributions.",
-        "Use the left navigation for documents, My Requests, My Tasks, and permitted management pages; use the bell for Notifications."
+        "Use the left navigation for Hardcopy, Softcopy, and External Documents, My Requests, My Tasks, and permitted management pages; use the bell for Notifications."
       ],
       "slide_notes": [
         "Dashboard numbers will reflect the signed-in user's authorized records and assigned work."
@@ -106,20 +106,20 @@
     },
     {
       "title": "4. Find and inspect document records",
-      "route": "documents/hardcopy / documents/softcopy",
+      "route": "documents/hardcopy / documents/softcopy / documents/external",
       "steps": [
-        "Open Hardcopy Documents or Softcopy Documents, then choose Table or Folder in the Document Browser.",
-        "In Table view, enter text in Search records. Narrow the results with All Statuses, All Owners, and the date-period control when needed.",
+        "Open Hardcopy Documents, Softcopy Documents, or External Documents, then choose Table or Folder in the Document Browser.",
+        "In Table view, enter text in Search records. Filter by status and date range as needed. Softcopy and External registers also let you filter by category; owner filters are available when permitted.",
         "For dates, choose All time, Today, This week, This month, This year, or Custom range. Custom range provides Start date and End date. Select Clear to remove filters.",
-        "In Folder view, open folders to follow the hierarchy. Hardcopy folders follow Area, Specific, optional Asset, and Location; softcopy folders follow categories and subcategories.",
+        "In Folder view, open folders to follow the hierarchy. Hardcopy folders follow Area, Specific, optional Asset, and Location; Softcopy and External folders follow their separate category hierarchies.",
         "Use the folder breadcrumbs to return to a parent. Use Recent, A\u2013Z, or Z\u2013A to change document ordering, and All Documents when you need the full authorized register.",
         "Select the document title or View action to open its details. Hardcopy records show storage, custody, retention, related requests, approval history, and transfer history where recorded.",
-        "For softcopy details, inspect Revision & Classification, Document Files, Related Requests, and Approval History. Select Close when finished.",
+        "For Softcopy details, inspect Revision & Classification, Document Files, Related Requests, and Approval History. For External Documents, use the Download row action when available; the register does not display attachment filenames.",
         "Use Rows per page and the previous or next page controls for longer lists."
       ],
       "notes": [
-        "The proposed hardcopy register will show Document Title, Location, Holder, and Status. The softcopy register will show Document Title, Document Number, Category, and Status.",
-        "Only authorized folders and records will be available. The status filters will include Active, Disposed, and Cancelled."
+        "The Hardcopy register shows Document Title, Location, Holder, and Status. The Softcopy register shows Document Title, Document Number, Category, and Status. The External register includes Category, Revision Level, Created Date, and Status.",
+        "Only authorized folders and records will be available. Hardcopy and Softcopy status filters include Active, Disposed, and Cancelled; External status filters include Active and Disposed."
       ],
       "sources": [
         "application/view/pages/documents/shared_index.php:11",
@@ -130,14 +130,14 @@
         "application/models/Document_detail_model.php:124"
       ],
       "slide_steps": [
-        "Open Hardcopy Documents or Softcopy Documents and choose Table or Folder.",
-        "Use Search records, status, owner, and date filters. Select Clear to remove filters.",
-        "Expand hardcopy Area \u2192 Specific \u2192 optional Asset \u2192 Location, or softcopy category folders. Use breadcrumbs and All Documents to change scope.",
-        "Open a document title or View action for full details, related requests, approval history, and applicable file or transfer history.",
+        "Open Hardcopy, Softcopy, or External Documents and choose Table or Folder.",
+        "Use Search records and the available status, category, owner, and date filters. Select Clear to remove filters.",
+        "Expand hardcopy Area \u2192 Specific \u2192 optional Asset \u2192 Location, or the separate Softcopy and External category folders. Use breadcrumbs and All Documents to change scope.",
+        "Open a document title or View action for full details; use Download when an authorized current file is available.",
         "Use Rows per page, page arrows, and Recent / A\u2013Z / Z\u2013A ordering to browse long lists."
       ],
       "slide_notes": [
-        "The proposed hardcopy register will show Document Title, Location, Holder, and Status. The softcopy register will show Document Title, Document Number, Category, and Status."
+        "Hardcopy shows Document Title, Location, Holder, and Status; Softcopy shows Document Title, Document Number, Category, and Status; External includes Category, Revision Level, Created Date, and Status."
       ]
     },
     {
