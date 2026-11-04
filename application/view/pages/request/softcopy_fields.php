@@ -76,14 +76,14 @@ $numbering_options = $numbering_options ?? [];
     <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1" autocomplete="off">
 </div>
 
-<div class="col-md-6">
-    <label class="form-label" for="revisionEffective">Effective Date<?php if ($softcopyDirect): ?>
-        <span class="optional-label">(optional)</span><?php endif; ?></label>
-    <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
-    <?php if ($softcopyDirect): ?>
+<?php if ($softcopyDirect): ?>
+    <div class="col-md-6">
+        <label class="form-label" for="revisionEffective">Effective Date
+            <span class="optional-label">(optional)</span></label>
+        <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
         <small class="form-text">If blank, effective date defaults to approval day.</small>
-    <?php endif; ?>
-</div>
+    </div>
+<?php endif; ?>
 
 <div class="col-12">
     <label class="form-label" for="revisionFile">Document File<span class="optional-label">(required for Create and
