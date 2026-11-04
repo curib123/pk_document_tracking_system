@@ -118,6 +118,7 @@ class Documents extends MY_Controller
                 'to' => $state['to'],
                 'period' => $state['period'],
                 'owner' => $state['owner'],
+                'category' => $state['category'],
                 'retention' => $state['retention'],
                 'layout' => $state['layout']
             ],

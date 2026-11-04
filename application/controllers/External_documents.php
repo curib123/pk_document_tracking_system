@@ -51,6 +51,9 @@ class External_documents extends MY_Controller
             if ($state['status'] !== 'all') {
                 $this->db->where('d.status', $state['status']);
             }
+            if ($state['category'] > 0) {
+                $this->db->where('d.category_id', $state['category']);
+            }
             if (!$canViewAll) {
                 $this->db->where('d.created_by', (int) $this->user['id']);
             } elseif ($state['owner'] > 0) {
@@ -122,6 +125,7 @@ class External_documents extends MY_Controller
                 'to' => $state['to'],
                 'period' => $state['period'],
                 'owner' => $state['owner'],
+                'category' => $state['category'],
                 'layout' => $state['layout']
             ],
             'folder_value' => $browser['folder'],

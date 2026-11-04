@@ -130,10 +130,14 @@ if ($cfg['domain'] === 'hardcopy')
         'week' => 'Due in the Next 7 Days',
         'month' => 'Due in 8-30 Days'
     ];
+if ($cfg['domain'] === 'softcopy')
+    $dt_filters['category'] = ['' => 'All Categories'] + array_column($category_options, 'name', 'id');
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,
     'owner' => $table['owner'],
+    'category' => $cfg['domain'] === 'softcopy' && !empty($table['category'])
+        ? $table['category'] : '',
     'period' => $table['period'] ?? 'all',
     'from' => $table['from'],
     'to' => $table['to']

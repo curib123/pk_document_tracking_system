@@ -91,6 +91,8 @@ class Document_model extends CI_Model
         }
         if (!empty($filters['owner']))
             $this->db->where('d.created_by', (int) $filters['owner']);
+        if ($domain === 'softcopy' && !empty($filters['category']))
+            $this->db->where('d.category_id', (int) $filters['category']);
         $retentionFilter = $filters['retention'] ?? '';
         if ($domain === 'hardcopy' && $retentionFilter !== '') {
             $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));

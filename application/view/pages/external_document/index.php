@@ -82,13 +82,15 @@ $dt_dir = strtolower($table['dir'] ?? 'desc');
 $dt_sortable = ['title', 'category_name', 'description', 'revision_level', 'created_at', 'updated_at'];
 $dt_date_filters = TRUE;
 $dt_filters = [
-    'status' => ['all' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed']
+    'status' => ['all' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed'],
+    'category' => ['' => 'All Categories'] + array_column($external_category_options, 'name', 'id')
 ];
 if (!empty($owner_options)) {
     $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 }
 $dt_filter_values = [
     'status' => $table['status'] ?? 'active',
+    'category' => !empty($table['category']) ? $table['category'] : '',
     'owner' => $table['owner'] ?? '',
     'period' => $table['period'] ?? 'all',
     'from' => $table['from'] ?? '',

@@ -63,6 +63,7 @@ class Query_state
             'dir' => strtolower($text('dir', str_ends_with($defaultSort, '_at') ? 'desc' : 'asc')) === 'desc' ? 'DESC' : 'ASC',
             'layout' => in_array($text('layout'), ['table', 'grid', 'folder'], TRUE) ? $text('layout') : 'table',
             'owner' => $number('owner'),
+            'category' => $number('category'),
             'role' => $number('role'),
             'parent' => $number('parent'),
             'type' => mb_substr($text('type'), 0, 50),
