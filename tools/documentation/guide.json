@@ -707,7 +707,8 @@
       "notes": [
         "A workflow will support up to 30 approval steps and will require an approval route before publication.",
         "The system will resolve Requester and Requester's leader at submission. Ensure the relevant accounts, roles, and leaders are active.",
-        "Publishing will set the route for future requests. Previously submitted requests, including returned requests that are resubmitted, will retain their original approval timeline."
+        "Default routes in the supplied database: Softcopy Create/Revise/Cancel and External Create/Revise: Requester's leader → Plant Manager → Document Control Officer; Hardcopy Create/Update: Plant Manager → Document Control Officer; Transfer and Access: Plant Manager → Document Control Officer → Requester confirmation; Assignment: Plant Manager → Document Control Officer → Requester's leader; Disposal: Requester's leader → Plant Manager → Document Control Officer.",
+        "These are initial defaults only. Publishing a new default changes the route for future requests. Previously submitted requests, including returned requests that are resubmitted, will retain their original approval timeline. Check Workflow Builder for the current published route."
       ],
       "sources": [
         "application/view/pages/workflow_builder/index.php:5",
@@ -725,7 +726,7 @@
         "Check the published default. Future requests will use it; previously submitted requests will retain their original approval timeline."
       ],
       "slide_notes": [
-        "A workflow will support up to 30 approval steps and will require an approval route before publication."
+        "Initial routes: Softcopy and External Create/Revise (and Softcopy Cancel): Requester's leader → Plant Manager → Document Control Officer; Hardcopy Create/Update: Plant Manager → Document Control Officer; Transfer/Access: Plant Manager → Document Control Officer → Requester confirmation; Assignment: Plant Manager → Document Control Officer → Requester's leader; Disposal: Requester's leader → Plant Manager → Document Control Officer. Check Workflow Builder because published defaults can change."
       ]
     },
     {

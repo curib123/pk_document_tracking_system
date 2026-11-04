@@ -109,7 +109,9 @@
         "Only the active step's assigned user or role member may decide. Types: user, role, Requester's leader or requester; resolved accounts must be active at submission.",
         "Return after the first step will reopen the immediately preceding approved step. Return from the first step will send the proposal to its requester.",
         "Resubmission will retain the captured approval route and preserve previous decision history. Rejection will end the request.",
-        "Final approval applies the operation atomically; failed checks save no decision. A transfer remains Approved until Dispatch and Accept complete."
+        "Final approval applies the operation atomically; failed checks save no decision. A transfer remains Approved until Dispatch and Accept complete.",
+        "Default routes in the supplied database: Softcopy Create/Revise/Cancel and External Create/Revise: Requester's leader → Plant Manager → Document Control Officer; Hardcopy Create/Update: Plant Manager → Document Control Officer; Transfer and Access: Plant Manager → Document Control Officer → Requester confirmation; Assignment: Plant Manager → Document Control Officer → Requester's leader; Disposal: Requester's leader → Plant Manager → Document Control Officer.",
+        "These are initial published defaults. An authorized administrator can publish new defaults for future requests; submitted requests keep their captured route."
       ],
       "legend": [
         "Approve: continue the configured route or apply the final operation.",

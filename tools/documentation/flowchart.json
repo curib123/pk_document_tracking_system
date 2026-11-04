@@ -797,7 +797,9 @@
       "notes": [
         "Every valid decision will record the actor, position, date/time and comments together with the step and request status change.",
         "Return after the first step will reopen the immediately preceding approved step. Its approver will review again before the returned and later pending steps continue.",
-        "Return from the first step will send the proposal to its requester. Resubmission will follow the captured route with new step records and preserve prior decision history."
+        "Return from the first step will send the proposal to its requester. Resubmission will follow the captured route with new step records and preserve prior decision history.",
+        "Initial published routes: Softcopy Create/Revise/Cancel and External Create/Revise: Requester's leader → Plant Manager → Document Control Officer; Hardcopy Create/Update: Plant Manager → Document Control Officer.",
+        "Initial published routes: Transfer and Access: Plant Manager → Document Control Officer → Requester confirmation; Assignment: Plant Manager → Document Control Officer → Requester's leader; Disposal: Requester's leader → Plant Manager → Document Control Officer. Administrators may publish different routes for future requests."
       ],
       "sources": [
         "application/services/request/request_service.php:462-538,551-561,719-846",
