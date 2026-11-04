@@ -122,6 +122,8 @@ $dt_sortable = $cfg['domain'] === 'hardcopy'
     ? ['title', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filters['retention'] = ['' => 'All Retention', 'hits' => 'Retention Hits'];
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,
@@ -130,6 +132,8 @@ $dt_filter_values = [
     'from' => $table['from'],
     'to' => $table['to']
 ];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filter_values['retention'] = $table['retention'] ?? '';
 $dt_badges = ['status'];
 $dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Add New Softcopy Document' : 'Add New Hardcopy Document') : '';
 $dt_folder_browser = $folder_browser;

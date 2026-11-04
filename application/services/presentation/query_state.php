@@ -50,6 +50,9 @@ class Query_state
             $period = 'all';
         }
         $limit = $number('limit');
+        $retention = $text('retention');
+        if (!in_array($retention, ['', 'hits'], TRUE))
+            throw new DomainException('Invalid retention filter.');
         return $dates + [
             'period' => $period,
             'q' => mb_substr($text('q'), 0, 100),
@@ -63,7 +66,8 @@ class Query_state
             'role' => $number('role'),
             'parent' => $number('parent'),
             'type' => mb_substr($text('type'), 0, 50),
-            'publication' => mb_substr($text('publication'), 0, 20)
+            'publication' => mb_substr($text('publication'), 0, 20),
+            'retention' => $retention
         ];
     }
 }

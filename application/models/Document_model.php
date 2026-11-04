@@ -91,6 +91,12 @@ class Document_model extends CI_Model
         }
         if (!empty($filters['owner']))
             $this->db->where('d.created_by', (int) $filters['owner']);
+        if ($domain === 'hardcopy' && ($filters['retention'] ?? '') === 'hits') {
+            $today = (new DateTimeImmutable('today', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+            $this->db->where('d.status', 'active')
+                ->where('d.retention_enabled', 1)
+                ->where('d.retention_end_date <=', $today);
+        }
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search);
             if ($domain === 'softcopy')
