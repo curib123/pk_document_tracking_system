@@ -159,6 +159,7 @@ class Request_service
             'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
+            'external_category_id' => (int) ($post['external_category_id'] ?? 0),
             'external_document_id' => (int) ($post['external_document_id'] ?? 0),
             'recipient_id' => (int) ($post['recipient_id'] ?? 0),
             'expires_at' => trim((string) ($post['expires_at'] ?? '')),
@@ -303,6 +304,9 @@ class Request_service
                 $externalService->validate_metadata(
                     $payload['title'],
                     $payload['description']
+                );
+                $payload['external_category_id'] = $externalService->validate_category(
+                    (int) $payload['external_category_id']
                 );
                 if ($type === 'external_revise' && !$externalService->manageable($payload['external_document_id'], $user)) {
                     throw new DomainException('Choose an active external document to revise.');

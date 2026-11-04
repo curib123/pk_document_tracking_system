@@ -771,6 +771,13 @@
       field.required = false;
       if (!externalAction) field.value = "";
     });
+    form.querySelectorAll("[data-external-category]").forEach(function (parent) {
+      var externalAction = ["external_create", "external_revise"].includes(action.value);
+      parent.hidden = !externalAction;
+      parent.querySelectorAll("select").forEach(function (field) {
+        field.disabled = !externalAction;
+      });
+    });
     var attachment = form.querySelector('[name="external_attachment"]');
     if (attachment) {
       attachment.required = !form.querySelector('[name="id"]')?.value;
@@ -973,6 +980,8 @@
       var field = form.querySelector('[name="' + name + '"]');
       if (field) field.value = record[name] || "";
     });
+    var category = form.querySelector('[name="external_category_id"]');
+    if (category && record.category_id) category.value = record.category_id;
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
       var isDisposal = form.querySelector('[name="type"]')?.value === "disposal";

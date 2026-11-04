@@ -7,6 +7,8 @@ class External_documents extends MY_Controller
     {
         $this->require_permission('external_documents', 'view');
         $this->load->model('Permission_model');
+        $this->load->model('Folder_model');
+        $this->load->model('Place_model');
         $state = $this->table_state('updated_at');
         if ($state['status'] === '') {
             $state['status'] = 'active';
@@ -22,7 +24,30 @@ class External_documents extends MY_Controller
             $this->load->model('Document_model');
             $ownerOptions = $this->Document_model->active_users();
         }
-        $applyFilters = function () use ($state, $canViewAll) {
+        $folder = trim((string) $this->input->get('folder', TRUE));
+        if (strlen($folder) > 100) {
+            show_404();
+            return;
+        }
+        $tree = $this->Folder_model->tree('external');
+        $restricted = !$canViewAll;
+        if ($restricted) {
+            $paths = $this->db->distinct()->select('category_id')->from('external_documents')
+                ->where('created_by', (int) $this->user['id'])->get()->result_array();
+            require_once APPPATH . 'services/presentation/folder_visibility.php';
+            $allowed = Folder_visibility::allowed_nodes($tree, $paths, 'external');
+            if ($folder !== '' && $folder !== 'all' && !isset($allowed[$folder])) {
+                show_error('This folder is outside your document access.', 403);
+                return;
+            }
+            $tree = Folder_visibility::restrict($tree, $paths, 'external');
+        }
+        $browser = $this->Folder_model->browse('external', $folder, $tree);
+        if ($state['layout'] === 'folder' && $state['q'] !== '') {
+            require_once APPPATH . 'services/presentation/folder_search.php';
+            $browser['search'] = Folder_search::for_browser($browser, $state['q'], 'external');
+        }
+        $applyFilters = function () use ($state, $canViewAll, $browser) {
             if ($state['status'] !== 'all') {
                 $this->db->where('d.status', $state['status']);
             }
@@ -43,13 +68,19 @@ class External_documents extends MY_Controller
                     ->or_like('d.description', $state['q'])
                     ->or_like('r.revision_level', $state['q'])
                     ->or_like('f.original_name', $state['q'])
-                    ->group_end();
+                    ;
+                if (!empty($browser['search']['categories'])) {
+                    $this->db->or_where_in('d.category_id', $browser['search']['categories']);
+                }
+                $this->db->group_end();
             }
+            $this->Folder_model->scope_documents('external', $browser, 'd');
         };
         $joinCurrent = function () {
             $this->db->from('external_documents d')
                 ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
-                ->join('files f', 'f.id=r.file_id AND f.domain="external" AND f.status="approved"', 'left');
+                ->join('files f', 'f.id=r.file_id AND f.domain="external" AND f.status="approved"', 'left')
+                ->join('external_categories c', 'c.id=d.category_id', 'left');
         };
         $joinCurrent();
         $applyFilters();
@@ -58,6 +89,7 @@ class External_documents extends MY_Controller
 
         $sortColumns = [
             'title' => 'd.title',
+            'category_name' => 'c.name',
             'description' => 'd.description',
             'revision_level' => 'r.revision_level',
             'created_at' => 'd.created_at',
@@ -67,7 +99,7 @@ class External_documents extends MY_Controller
         $joinCurrent();
         $applyFilters();
         $rows = $this->db->select('d.id,d.title,d.description,d.status,
-                d.created_by,d.created_at,d.updated_at,
+                d.category_id,d.created_by,d.created_at,d.updated_at,c.name AS category_name,
                 r.revision_level,f.id AS file_id,f.original_name', FALSE)
             ->order_by($sort, $state['dir'])
             ->limit($state['limit'], ($state['page'] - 1) * $state['limit'])
@@ -78,6 +110,21 @@ class External_documents extends MY_Controller
             'table' => $state,
             'total' => $total,
             'owner_options' => $ownerOptions,
+            'external_category_options' => $this->Place_model->options('external_categories'),
+            'folder_browser' => $browser,
+            'folder_params' => [
+                'q' => $state['q'],
+                'status' => $state['status'],
+                'limit' => $state['limit'],
+                'sort' => $state['sort'],
+                'dir' => strtolower($state['dir']),
+                'from' => $state['from'],
+                'to' => $state['to'],
+                'period' => $state['period'],
+                'owner' => $state['owner'],
+                'layout' => $state['layout']
+            ],
+            'folder_value' => $browser['folder'],
             'can_direct' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct'),
             'can_dispose' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct') &&
                 $this->Permission_model->allowed($this->user, 'disposal', 'direct'),

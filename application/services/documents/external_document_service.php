@@ -65,6 +65,7 @@ class External_document_service
             $payload = [
                 'title' => $title,
                 'description' => $description,
+                'external_category_id' => (int) ($post['external_category_id'] ?? 0),
                 ($type === 'external_create' ? 'controlled_file_id' : 'revision_file_id') => $fileId
             ];
             $result = $this->apply($type, $payload, $documentId, $actorId, $actorId, NULL);
@@ -81,12 +82,25 @@ class External_document_service
                     @unlink($path);
                 }
             }
+
             if ($error instanceof DomainException) {
                 throw $error;
             }
             log_message('error', 'Direct external document action failed: ' . $error->getMessage());
             throw new DomainException('Unable to save the external document action.');
         }
+    }
+
+    public function validate_category(int $categoryId): int
+    {
+        $categoryId = $categoryId ?: 1;
+        if (!$this->ci->db->get_where('external_categories', [
+            'id' => $categoryId,
+            'active' => 1
+        ])->row_array()) {
+            throw new DomainException('Choose an active external category.');
+        }
+        return $categoryId;
     }
 
     public function dispose_direct(int $documentId, int $actorId, string $reason, string $action): void
@@ -155,6 +169,7 @@ class External_document_service
         $title = trim((string) ($payload['title'] ?? ''));
         $this->validate_metadata($title, $description);
         $creation = $type === 'external_create';
+        $categoryId = (int) ($payload['external_category_id'] ?? 0);
         $fileId = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
         $file = $this->ci->db->get_where('files', [
             'id' => $fileId,
@@ -171,9 +186,11 @@ class External_document_service
         (new File_service())->require_stored_file($file);
 
         if ($creation) {
+            $categoryId = $this->validate_category($categoryId);
             if (!$this->ci->db->insert('external_documents', [
                 'title' => $title,
                 'description' => $description,
+                'category_id' => $categoryId,
                 'created_by' => $ownerId
             ])) {
                 throw new DomainException('Unable to create the external document.');
@@ -189,6 +206,7 @@ class External_document_service
             if (!$document || $document['status'] !== 'active') {
                 throw new DomainException('Select an active external document to revise.');
             }
+            $categoryId = $this->validate_category($categoryId ?: (int) $document['category_id']);
             $previous = $document['current_revision_id']
                 ? $this->ci->db->get_where('external_revisions', [
                     'id' => (int) $document['current_revision_id'],
@@ -204,6 +222,7 @@ class External_document_service
             $this->ci->db->where('id', $documentId)->update('external_documents', [
                 'title' => $title,
                 'description' => $description,
+                'category_id' => $categoryId,
                 'version' => (int) $document['version'] + 1
             ]);
             if ($previous) {

@@ -48,7 +48,7 @@ final class Folder_search
         foreach ($tree['document_paths'] ?? [] as $path)
             if (isset($matched[$path['folder']]))
                 $result['paths'][] = $path['fields'];
-        if ($domain === 'softcopy') {
+        if (in_array($domain, ['softcopy', 'external'], TRUE)) {
             foreach (array_keys($matched) as $key)
                 if ($nodes[$key]['kind'] === 'category')
                     $result['categories'][] = (int) explode(':', $key)[1];

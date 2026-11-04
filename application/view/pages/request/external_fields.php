@@ -26,6 +26,16 @@
     <label class="form-label" for="externalRequestTitle">Document Title</label>
     <input class="form-control" id="externalRequestTitle" name="title" maxlength="255" required autocomplete="off">
 </div>
+<div class="col-md-6" data-external-category>
+    <label class="form-label" for="externalRequestCategory">External Category</label>
+    <select class="form-select" id="externalRequestCategory" name="external_category_id" data-searchable autocomplete="off">
+        <?php foreach ($external_category_options as $category): ?>
+            <option value="<?= (int) $category['id'] ?>" <?= (int) $category['id'] === 1 ? 'selected' : '' ?>>
+                <?= html_escape($category['name']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
 <div class="col-12">
     <label class="form-label" for="externalRequestDescription">Description</label>
     <textarea class="form-control" id="externalRequestDescription" name="description" maxlength="2000"

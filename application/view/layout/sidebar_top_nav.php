@@ -14,7 +14,7 @@ $active = function ($prefix) use ($path) {
 // Show Setup Places only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'categories'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;
@@ -180,7 +180,11 @@ $navPage = end($navParts);
                     </a>
                 <?php endif; ?>
 
-                <?php if ($anyPlace): ?>
+                <?php if ($anyPlace && (
+                    $visible('assignment', 'direct') ||
+                    $visible('categories') ||
+                    $visible('external_categories')
+                )): ?>
                     <a
                         class="side-link<?= $active('places') ?>"
                         <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>

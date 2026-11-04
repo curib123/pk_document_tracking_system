@@ -398,7 +398,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
               <?php elseif ($tab === 'external'): ?>
                 <?php $this->load->view('pages/request/external_fields', [
-                  'external_options' => $external_options
+                  'external_options' => $external_options,
+                  'external_category_options' => $external_category_options
                 ]); ?>
               <?php elseif ($tab === 'hardcopy-transfer'): ?>
                 <?php $this->load->view('pages/request/hardcopy_transfer_fields', [

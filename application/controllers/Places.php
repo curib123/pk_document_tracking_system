@@ -18,7 +18,8 @@ class Places extends MY_Controller
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'softcopy-categories' => 'categories'
+            'softcopy-categories' => 'categories',
+            'external-categories' => 'external_categories'
         ] as $slug => $module) {
             if ($this->can($module, 'view')) {
                 redirect("places/{$slug}");
@@ -42,7 +43,7 @@ class Places extends MY_Controller
             $state
         );
         $options = [];
-        foreach (['areas', 'specifics', 'assets', 'categories'] as $source) {
+        foreach (['areas', 'specifics', 'assets', 'categories', 'external_categories'] as $source) {
             $options[$source] = $this->Place_model->options($source);
         }
         $views = [
@@ -50,7 +51,8 @@ class Places extends MY_Controller
             'specific' => 'specific',
             'asset' => 'asset_number',
             'location' => 'location',
-            'softcopy-categories' => 'softcopy_category'
+            'softcopy-categories' => 'softcopy_category',
+            'external-categories' => 'external_category'
         ];
         $this->render(
             "Places · {$cfg['label']}",

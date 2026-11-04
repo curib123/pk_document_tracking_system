@@ -140,6 +140,32 @@ INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `code_patter
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `external_categories`
+--
+
+CREATE TABLE `external_categories` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `name` varchar(150) NOT NULL,
+  `folder_name` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `external_categories`
+--
+
+INSERT INTO `external_categories` (`id`, `parent_id`, `name`, `folder_name`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'Uncategorized external documents', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `disposals`
 --
 
@@ -409,7 +435,11 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1),
 (89, 'External Documents: View', 'external_documents', 'External Documents', 'view', 'View', 'Allows view operations for external documents.', 1),
 (90, 'External Documents: Request', 'external_documents', 'External Documents', 'request', 'Request', 'Allows create and revision request operations for external documents.', 1),
-(91, 'External Documents: Direct', 'external_documents', 'External Documents', 'direct', 'Direct', 'Allows direct registration operations for external documents.', 1);
+(91, 'External Documents: Direct', 'external_documents', 'External Documents', 'direct', 'Direct', 'Allows direct registration operations for external documents.', 1),
+(92, 'External Categories: View', 'external_categories', 'External Categories', 'view', 'View', 'Allows view operations for external categories.', 1),
+(93, 'External Categories: Add', 'external_categories', 'External Categories', 'add', 'Add', 'Allows add operations for external categories.', 1),
+(94, 'External Categories: Edit', 'external_categories', 'External Categories', 'edit', 'Edit', 'Allows edit operations for external categories.', 1),
+(95, 'External Categories: Delete', 'external_categories', 'External Categories', 'delete', 'Delete', 'Allows delete operations for external categories.', 1);
 
 -- --------------------------------------------------------
 
@@ -752,6 +782,15 @@ JOIN `permissions` external_permission
 WHERE softcopy_permission.`module_key`='softcopy'
   AND softcopy_permission.`action_key` IN ('view','request','direct');
 
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, external_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` category_permission ON category_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` external_permission
+  ON external_permission.`module_key`='external_categories'
+  AND external_permission.`action_key`=category_permission.`action_key`
+WHERE category_permission.`module_key`='categories';
+
 -- --------------------------------------------------------
 
 --
@@ -855,6 +894,7 @@ CREATE TABLE `external_documents` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `title` varchar(255) NOT NULL,
   `description` varchar(2000) NOT NULL DEFAULT '',
+  `category_id` bigint(20) UNSIGNED NOT NULL DEFAULT 1,
   `current_revision_id` bigint(20) UNSIGNED DEFAULT NULL,
   `status` varchar(30) NOT NULL DEFAULT 'active',
   `created_by` bigint(20) UNSIGNED NOT NULL,
@@ -1262,10 +1302,19 @@ ALTER TABLE `categories`
   ADD KEY `created_by` (`created_by`);
 
 --
+-- Indexes for table `external_categories`
+--
+ALTER TABLE `external_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `external_categories_parent` (`parent_id`),
+  ADD KEY `external_categories_active_name` (`active`,`name`);
+
+--
 -- Indexes for table `external_documents`
 --
 ALTER TABLE `external_documents`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `external_documents_category` (`category_id`),
   ADD KEY `external_documents_creator_status` (`created_by`,`status`),
   ADD KEY `external_documents_current_revision` (`current_revision_id`);
 
@@ -1416,6 +1465,12 @@ ALTER TABLE `softcopy_revisions`
 -- AUTO_INCREMENT for table `external_documents`
 --
 ALTER TABLE `external_documents`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `external_categories`
+--
+ALTER TABLE `external_categories`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -1576,7 +1631,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
 
 --
 -- AUTO_INCREMENT for table `requests`
@@ -1697,6 +1752,13 @@ ALTER TABLE `categories`
   ADD CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
 
 --
+-- Constraints for table `external_categories`
+--
+ALTER TABLE `external_categories`
+  ADD CONSTRAINT `external_categories_parent_fk` FOREIGN KEY (`parent_id`) REFERENCES `external_categories` (`id`),
+  ADD CONSTRAINT `external_categories_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+
+--
 -- Constraints for table `disposals`
 --
 ALTER TABLE `disposals`
@@ -1735,6 +1797,7 @@ ALTER TABLE `locations`
 --
 ALTER TABLE `external_documents`
   ADD CONSTRAINT `external_documents_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `external_documents_category_fk` FOREIGN KEY (`category_id`) REFERENCES `external_categories` (`id`),
   ADD CONSTRAINT `external_documents_current_revision_fk` FOREIGN KEY (`current_revision_id`) REFERENCES `external_revisions` (`id`);
 
 --

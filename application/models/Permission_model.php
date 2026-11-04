@@ -11,6 +11,7 @@ class Permission_model extends CI_Model
         // Admin sidebar alias: these actions have their own module in pk_dts.sql.
         $module = [
             'softcopy-categories' => 'categories',
+            'external-categories' => 'external_categories',
             'area' => 'areas',
             'specific' => 'specifics',
             'asset' => 'assets',
