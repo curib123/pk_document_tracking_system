@@ -86,7 +86,7 @@ $dt_filter_values = [
     'from' => $table['from'] ?? '',
     'to' => $table['to'] ?? ''
 ];
-$dt_badges = [];
+$dt_badges = ['status'];
 $dt_create = $can_direct ? 'Add New External Document' : '';
 ?>
 
