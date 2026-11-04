@@ -56,6 +56,15 @@ class Requests extends MY_Controller
         }
         $history = $this->Request_model->histories(array_column($rows, 'id'));
         $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
+        $tabLabels = [
+            'softcopy' => 'Softcopy Request',
+            'external' => 'External Document Request',
+            'hardcopy' => 'Hardcopy Request',
+            'hardcopy-transfer' => 'Hardcopy Transfer Request',
+            'hardcopy-disposal' => 'Disposal Request',
+            'access-grant' => 'Document Access Request',
+            'document-assign' => 'Document Assignment Request'
+        ];
         $handoffs = [];
         $handoffPage = 1;
         $handoffTotal = 0;
@@ -67,7 +76,7 @@ class Requests extends MY_Controller
             );
         }
         $this->render(
-            ($task ? 'My Tasks' : 'My Requests') . ' · ' . ucwords(str_replace('-', ' ', $tab)),
+            ($task ? 'My Tasks' : 'My Requests') . ' · ' . ($tabLabels[$tab] ?? ucwords(str_replace('-', ' ', $tab))),
             $task ? 'pages/request/approving_assign_request/index' : 'pages/request/user_own_all_request/index',
             [
                 'tab' => $tab,
@@ -97,7 +106,8 @@ class Requests extends MY_Controller
                 'numbering_options' => $tab === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [],
                 'number_previews' => $tab === 'softcopy'
                     ? $this->Document_model->softcopy_number_previews($this->Place_model->options('categories')) : [],
-                'external_options' => $tab === 'external' && !$task ? $this->external_document_options() : [],
+                'external_options' => in_array($tab, ['external', 'hardcopy-disposal'], TRUE) && !$task
+                    ? $this->external_document_options() : [],
                 'location_options' => $this->Place_model->options('locations'),
                 'hardcopy_form_options' => [
                     'areas' => $this->Place_model->options('areas'),

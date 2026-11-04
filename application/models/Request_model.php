@@ -69,7 +69,17 @@ class Request_model extends CI_Model
         )->join('users u', 'u.id=r.requested_by')
             ->join('softcopy_documents sd', 'sd.id=r.softcopy_id', 'left')
             ->join('hardcopy_documents hd', 'hd.id=r.hardcopy_id', 'left')
-            ->select('COALESCE(sd.title,hd.title) AS source_title,COALESCE(sd.document_number,hd.sequence_number) AS source_reference', FALSE);
+            ->join(
+                'external_documents ed',
+                "ed.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)",
+                'left',
+                FALSE
+            )
+            ->select(
+                'COALESCE(sd.title,hd.title,ed.title) AS source_title,' .
+                'COALESCE(sd.document_number,hd.sequence_number,ed.title) AS source_reference',
+                FALSE
+            );
         if ($task)
             $this->db->select('ws.label AS step_label,ws.id AS step_id');
         $sorts = [
@@ -128,9 +138,12 @@ class Request_model extends CI_Model
                 SELECT p.request_id,p.document_id,p.disposal_action,p.remarks,p.previous_status,p.disposed_at,
                     CONCAT_WS(' ',actor.first_name,actor.last_name) AS disposed_by_name,
                     ROW_NUMBER() OVER (PARTITION BY p.request_id ORDER BY p.id DESC) AS disposal_rank
-                FROM disposals p JOIN requests r ON r.id=p.request_id AND r.hardcopy_id=p.document_id
+                FROM disposals p JOIN requests r ON r.id=p.request_id
                 LEFT JOIN users actor ON actor.id=p.disposed_by
-                WHERE p.domain='hardcopy' AND r.type='disposal' AND p.request_id IN ($slots)
+                WHERE r.type='disposal' AND p.request_id IN ($slots) AND (
+                    (p.domain='hardcopy' AND r.hardcopy_id=p.document_id) OR
+                    (p.domain='external' AND CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)=p.document_id)
+                )
                 ) recent WHERE disposal_rank=1", $disposalIds)->result_array();
             foreach ($records as $record)
                 $disposals[$record['request_id']] = $record;
@@ -140,7 +153,11 @@ class Request_model extends CI_Model
             $details = [];
             if (!empty($row['source_title']))
                 $details['Selected Document'] = $row['source_title'];
-            if (empty($row['hardcopy_id']) && !empty($row['source_reference']))
+            if (
+                empty($row['hardcopy_id']) &&
+                empty($payload['external_document_id']) &&
+                !empty($row['source_reference'])
+            )
                 $details['Document Number'] = $row['source_reference'];
             foreach ([
                 'title' => 'Proposed Title',

@@ -2,13 +2,13 @@
 require_once APPPATH . 'services/presentation/request_title.php';
 require_once APPPATH . 'services/request/request_policy.php';
 $tabs = [
-  'softcopy' => 'Softcopy Requests',
-  'external' => 'External Document Requests',
-  'hardcopy' => 'Hardcopy Requests',
-  'hardcopy-transfer' => 'Hardcopy Transfer',
-  'hardcopy-disposal' => 'Hardcopy Disposal',
-  'access-grant' => 'Document Access Grants',
-  'document-assign' => 'Document Assignments'
+  'softcopy' => 'Softcopy Request',
+  'external' => 'External Document Request',
+  'hardcopy' => 'Hardcopy Request',
+  'hardcopy-transfer' => 'Hardcopy Transfer Request',
+  'hardcopy-disposal' => 'Disposal Request',
+  'access-grant' => 'Document Access Request',
+  'document-assign' => 'Document Assignment Request'
 ];
 if (!$task) {
   unset($tabs['hardcopy']);
@@ -18,7 +18,7 @@ $typeMap = [
   'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],
   'hardcopy' => [],
   'hardcopy-transfer' => ['transfer' => 'Transfer'],
-  'hardcopy-disposal' => ['disposal' => 'Dispose'],
+  'hardcopy-disposal' => ['disposal' => 'Disposal Request'],
   'access-grant' => ['access' => 'Grant Access'],
   'document-assign' => ['assignment' => 'Assign']
 ];
@@ -86,7 +86,8 @@ foreach ($rows as $row) {
   // Never pretend an unapproved proposal is already the stored document.
   $isDocumentRequest = in_array($tab, ['softcopy', 'external', 'hardcopy', 'hardcopy-disposal'], TRUE);
   $documentDomain = $tab === 'softcopy' ? 'softcopy' : ($tab === 'external' ? 'external' :
-    (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record'));
+    ($tab === 'hardcopy-disposal' && ($payload['document_domain'] ?? '') === 'external'
+      ? 'external' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record')));
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
   $headerTitle = Request_title::resolve(
     (string) $row['type'],
@@ -407,21 +408,41 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 <div class="col-md-6">
                   <label class="form-label" for="reqType">Request Action</label>
                   <select class="form-select" name="type" id="reqType" required autocomplete="off">
-                    <option value="disposal">Dispose Hardcopy</option>
+                    <option value="disposal">Disposal Request</option>
                   </select>
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="reqSubject">Subject / Reason</label>
                   <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
                 </div>
-                <div class="col-12">
+                <div class="col-md-6" data-domain-picker>
+                  <label class="form-label" for="disposalDocumentDomain">Document Type</label>
+                  <select class="form-select" id="disposalDocumentDomain" name="document_domain" required autocomplete="off">
+                    <option value="hardcopy">Hardcopy</option>
+                    <option value="external">External Document</option>
+                  </select>
+                </div>
+                <div class="col-12" data-document-domain="hardcopy">
                   <label class="form-label" for="reqHardcopy">Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required
+                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable
                     autocomplete="off">
                     <option value="">Choose an active document</option>
                     <?php foreach ($hardcopy_options as $item): ?>
                       <option value="<?= (int) $item['id'] ?>">
                         <?= html_escape($item['title']) ?>
+                      </option>
+                    <?php endforeach; ?>
+                  </select>
+                </div>
+                <div class="col-12" data-document-domain="external" hidden>
+                  <label class="form-label" for="reqExternal">External Document</label>
+                  <select class="form-select" name="external_document_id" id="reqExternal" data-searchable disabled
+                    autocomplete="off">
+                    <option value="">Choose an active document</option>
+                    <?php foreach ($external_options as $item): ?>
+                      <option value="<?= (int) $item['id'] ?>"
+                        data-external-record="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
+                        <?= html_escape($item['title'] . ' · Revision ' . ($item['revision_level'] ?? '00')) ?>
                       </option>
                     <?php endforeach; ?>
                   </select>

@@ -31,6 +31,14 @@ class Request_service
             }
             return;
         }
+        if ($type === 'disposal' && ($payload['document_domain'] ?? '') === 'external') {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $externalId = (int) ($payload['external_document_id'] ?? 0);
+            if (!(new External_document_service())->manageable($externalId, $user)) {
+                throw new DomainException('The selected external document is unavailable or outside your authorized scope.');
+            }
+            return;
+        }
         $catalog = in_array($type, ['access', 'assignment'], TRUE);
         $domain = $catalog ? ($payload['document_domain'] ?? 'softcopy') :
             (str_starts_with($type, 'softcopy_') ? 'softcopy' : 'hardcopy');
@@ -191,11 +199,20 @@ class Request_service
         if (str_starts_with($type, 'external_')) {
             $softcopyId = 0;
             $hardcopyId = 0;
+        } elseif ($type === 'disposal') {
+            if (!in_array($domain, ['hardcopy', 'external'], TRUE)) {
+                throw new DomainException('Choose whether this disposal request applies to a hardcopy or external document.');
+            }
+            $softcopyId = 0;
+            if ($domain === 'external')
+                $hardcopyId = 0;
+            else
+                $payload['external_document_id'] = 0;
         } elseif (str_starts_with($type, 'softcopy_')) {
             $hardcopyId = 0;
             if ($type === 'softcopy_create')
                 $softcopyId = 0;
-        } elseif (in_array($type, ['hardcopy_create', 'hardcopy_update', 'transfer', 'disposal'], TRUE)) {
+        } elseif (in_array($type, ['hardcopy_create', 'hardcopy_update', 'transfer'], TRUE)) {
             $softcopyId = 0;
             if ($type === 'hardcopy_create')
                 $hardcopyId = 0;
@@ -224,11 +241,14 @@ class Request_service
             !$softcopyId
         )
             throw new DomainException('Select a softcopy document.');
-        if (
-            in_array($type, ['hardcopy_update', 'transfer', 'disposal'], TRUE) &&
-            !$hardcopyId
-        )
+        if (in_array($type, ['hardcopy_update', 'transfer'], TRUE) && !$hardcopyId)
             throw new DomainException('Select a hardcopy document.');
+        if ($type === 'disposal') {
+            if ($domain === 'hardcopy' && !$hardcopyId)
+                throw new DomainException('Select a hardcopy document.');
+            if ($domain === 'external' && !(int) ($payload['external_document_id'] ?? 0))
+                throw new DomainException('Select an external document.');
+        }
         if (in_array($type, ['assignment', 'access', 'transfer'], TRUE) && !$payload['recipient_id'])
             throw new DomainException('Select a recipient or assigned user.');
         if (
@@ -738,39 +758,60 @@ class Request_service
             return ['transfer_id' => $this->ci->db->insert_id()];
         }
         if ($type === 'disposal') {
-            $doc = $this->ci->db->query('SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE', [$hard])->row_array();
-            if (!$doc || $doc['status'] !== 'active')
-                throw new DomainException(
-                    'This hardcopy is no longer available for disposal. It may have already been disposed of or deactivated.'
-                );
+            $documentDomain = $payload['document_domain'] ?? 'hardcopy';
+            if ($documentDomain === 'external') {
+                $documentId = (int) ($payload['external_document_id'] ?? 0);
+                $doc = $this->ci->db->query(
+                    'SELECT * FROM external_documents WHERE id=? FOR UPDATE',
+                    [$documentId]
+                )->row_array();
+                if (!$doc || $doc['status'] !== 'active')
+                    throw new DomainException('This external document is no longer available for disposal.');
+                $table = 'external_documents';
+            } else {
+                $doc = $this->ci->db->query(
+                    'SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE',
+                    [$hard]
+                )->row_array();
+                if (!$doc || $doc['status'] !== 'active')
+                    throw new DomainException(
+                        'This hardcopy is no longer available for disposal. It may have already been disposed of or deactivated.'
+                    );
+                $documentId = $hard;
+                $table = 'hardcopy_documents';
+            }
             require_once APPPATH . 'services/documents/disposal_service.php';
             $description = (new Disposal_service())->reason($payload);
-            $this->ci->db->insert('disposals', [
+            if (!$this->ci->db->insert('disposals', [
                 'request_id' => $id,
-                'domain' => 'hardcopy',
-                'document_id' => $hard,
+                'domain' => $documentDomain,
+                'document_id' => $documentId,
                 'previous_status' => $doc['status'],
                 'previous_state' => json_encode($doc),
                 'disposal_action' => $payload['disposal_reason'],
                 'remarks' => $description,
                 'disposed_by' => $actor
-            ]);
-            $this->ci->db->where('id', $hard)->update('hardcopy_documents', [
+            ]))
+                throw new DomainException('Unable to record the disposal request.');
+            $documentUpdate = [
                 'previous_status' => $doc['status'],
                 'status' => 'disposed',
-                'location_id' => NULL,
                 'version' => (int) $doc['version'] + 1
-            ]);
-            $this->ci->db->insert('status_history', [
-                'domain' => 'hardcopy',
-                'document_id' => $hard,
+            ];
+            if ($documentDomain === 'hardcopy')
+                $documentUpdate['location_id'] = NULL;
+            $this->ci->db->where('id', $documentId)->update($table, $documentUpdate);
+            if (!$this->ci->db->insert('status_history', [
+                'domain' => $documentDomain,
+                'document_id' => $documentId,
                 'previous_status' => $doc['status'],
                 'new_status' => 'disposed',
                 'action' => 'disposed',
                 'user_id' => $actor,
                 'remarks' => $description
-            ]);
-            $this->ci->db->where('domain', 'hardcopy')->where('document_id', $hard)
+            ]))
+                throw new DomainException('Unable to record the disposal history.');
+            $this->ci->db->where('domain', $documentDomain)->where('document_id', $documentId)
                 ->where('revoked_at IS NULL', NULL, FALSE)->update('access_grants', [
                         'revoked_at' => date('Y-m-d H:i:s'),
                         'revoked_by' => $actor,

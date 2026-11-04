@@ -672,6 +672,8 @@
         "access",
       ],
       hardcopy_id: ["hardcopy_update", "disposal", "transfer"],
+      external_document_id: ["external_revise", "disposal"],
+      document_domain: ["disposal"],
       title: [
         "softcopy_create",
         "hardcopy_create",
@@ -682,7 +684,6 @@
       ],
       generated_document_number: ["softcopy_create"],
       category_id: ["softcopy_create"],
-      external_document_id: ["external_revise"],
       recipient_id: ["assignment", "access", "transfer"],
       expires_at: ["access"],
       destination_location_id: ["transfer"],
@@ -699,9 +700,10 @@
       var selectedDomain = select.form.querySelector(
         '[name="document_domain"]',
       )?.value;
-      if (selectedDomain && ["assignment", "access"].includes(operation)) {
+      if (selectedDomain && ["assignment", "access", "disposal"].includes(operation)) {
         if (name === "softcopy_id") show = selectedDomain === "softcopy";
         if (name === "hardcopy_id") show = selectedDomain === "hardcopy";
+        if (name === "external_document_id") show = selectedDomain === "external";
       }
       var parent =
         field.closest("[data-document-domain]") ||
@@ -973,7 +975,11 @@
     });
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
-      subject.value = select.value ? "External revision: " + (record.title || "Selected document") : "";
+      var isDisposal = form.querySelector('[name="type"]')?.value === "disposal";
+      subject.value = select.value
+        ? (isDisposal ? "Disposal request: " : "External revision: ") +
+          (record.title || "Selected document")
+        : "";
       subject.dataset.autoSubject = subject.value;
     }
   });
