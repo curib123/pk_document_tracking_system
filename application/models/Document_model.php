@@ -152,6 +152,39 @@ class Document_model extends CI_Model
         $c = $this->config($domain);
         return $this->db->get_where($c['table'], ['id' => (int) $id])->row_array();
     }
+
+    public function retention_alerts($viewer)
+    {
+        require_once APPPATH . 'services/documents/retention_countdown.php';
+        $timezone = new DateTimeZone('Asia/Manila');
+        $today = new DateTimeImmutable('today', $timezone);
+        $todayText = $today->format('Y-m-d');
+        $scope = $this->scope('hardcopy', $viewer, 'd');
+        $rows = $this->db->select('d.id,d.title,d.sequence_number,d.retention_end_date')
+            ->from('hardcopy_documents d')
+            ->where('d.status', 'active')
+            ->where('d.retention_enabled', 1)
+            ->where('d.retention_end_date <=', $todayText)
+            ->where($scope, NULL, FALSE)
+            ->order_by('d.retention_end_date', 'ASC')
+            ->order_by('d.title', 'ASC')
+            ->get()->result_array();
+
+        foreach ($rows as &$row) {
+            $row = [
+                'key' => (int) $row['id'] . ':' . $row['retention_end_date'],
+                'title' => (string) $row['title'],
+                'reference' => (string) ($row['sequence_number'] ?: $row['title']),
+                'label' => Retention_countdown::label(1, $row['retention_end_date'], $today),
+                'url' => site_url('documents/hardcopy') . '?' . http_build_query([
+                    'q' => (string) ($row['sequence_number'] ?: $row['title'])
+                ])
+            ];
+        }
+        unset($row);
+        return $rows;
+    }
+
     public function owner_options($domain, $viewer)
     {
         $scope = $this->scope($domain, $viewer);

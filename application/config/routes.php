@@ -55,6 +55,7 @@ $route['dashboard']['GET'] = 'Dashboard/index';
 // View pending tasks and the notification inbox.
 $route['notifications/tasks']['GET'] = 'Notifications/pending';
 $route['notifications/inbox']['GET'] = 'Notifications/inbox';
+$route['notifications/retention']['GET'] = 'Notifications/retention';
 
 // Claim a task or mark a notification as read.
 $route['notifications/tasks/claim']['POST'] = 'Notifications/claim';
