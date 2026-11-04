@@ -2067,6 +2067,21 @@ a {
   white-space: nowrap;
 }
 
+.nav-count:not(.is-zero),
+.tab-count:not(.is-zero) {
+  transform-origin: center;
+  animation: notification-count-shake 3s ease-in-out infinite;
+}
+
+@keyframes notification-count-shake {
+  0%, 88%, 100% { transform: rotate(0); }
+  90% { transform: rotate(9deg); }
+  92% { transform: rotate(-9deg); }
+  94% { transform: rotate(7deg); }
+  96% { transform: rotate(-5deg); }
+  98% { transform: rotate(0); }
+}
+
 .nav-count {
   margin-left: auto;
   color: var(--ui-on-accent);
@@ -2088,6 +2103,13 @@ a {
 .tab-link.active .tab-count {
   background: var(--ui-brand-50);
   color: var(--ui-brand-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-count:not(.is-zero),
+  .tab-count:not(.is-zero) {
+    animation: none;
+  }
 }
 
 .document-detail-section {
