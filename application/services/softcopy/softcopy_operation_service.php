@@ -82,8 +82,23 @@ class Softcopy_operation_service
                     'creation_reason' => $reason ?: trim((string) ($payload['subject'] ?? '')),
                     'source_request_id' => $requestId
                 ])
-            )
+            ) {
+                $databaseError = $db->error();
+                if ((int) ($databaseError['code'] ?? 0) === 1062) {
+                    log_message(
+                        'error',
+                        'Softcopy creation duplicate index error: ' . ($databaseError['message'] ?? 'unknown database error')
+                    );
+                    throw new DomainException(
+                        'This document number and series number are already in use. If you are reusing an existing document number, apply the softcopy series-number index migration.'
+                    );
+                }
+                log_message(
+                    'error',
+                    'Softcopy document insert failed: ' . ($databaseError['message'] ?? 'unknown database error')
+                );
                 throw new DomainException('Unable to create the softcopy document.');
+            }
             $newId = (int) $db->insert_id();
             $fileId = (int) ($payload['controlled_file_id'] ?? 0);
             $file = $db->get_where('files', [
