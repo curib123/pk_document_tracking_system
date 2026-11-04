@@ -131,7 +131,7 @@ $dt_filter_values = [
     'to' => $table['to']
 ];
 $dt_badges = ['status'];
-$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Hardcopy Direct') : '';
+$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Add New Physical Document') : '';
 $dt_folder_browser = $folder_browser;
 $dt_folder_domain = $cfg['domain'];
 $activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';

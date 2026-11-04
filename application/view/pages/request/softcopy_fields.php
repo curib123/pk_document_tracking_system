@@ -83,7 +83,9 @@ $numbering_options = $numbering_options ?? [];
     <label class="form-label" for="revisionEffective">Effective Date
         <span class="optional-label">(optional)</span></label>
     <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
-    <small class="form-text">If blank, effective date defaults to approval day.</small>
+    <?php if ($softcopyDirect): ?>
+        <small class="form-text">If blank, effective date defaults to approval day.</small>
+    <?php endif; ?>
 </div>
 
 <div class="col-12">
