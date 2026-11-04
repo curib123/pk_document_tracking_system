@@ -57,7 +57,7 @@ class Requests extends MY_Controller
         $history = $this->Request_model->histories(array_column($rows, 'id'));
         $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
         $tabLabels = [
-            'softcopy' => 'Softcopy Request',
+            'softcopy' => 'Softcopy Document Request',
             'external' => 'External Document Request',
             'hardcopy' => 'Hardcopy Request',
             'hardcopy-transfer' => 'Hardcopy Transfer Request',
