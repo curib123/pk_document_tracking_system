@@ -8,6 +8,12 @@ class External_documents extends MY_Controller
         $this->require_permission('external_documents', 'view');
         $this->load->model('Permission_model');
         $state = $this->table_state('updated_at');
+        if ($state['status'] === '') {
+            $state['status'] = 'active';
+        } elseif (!in_array($state['status'], ['active', 'disposed', 'all'], TRUE)) {
+            show_error('Invalid external document status filter.', 400);
+            return;
+        }
         $canViewAll = $this->Permission_model->allowed($this->user, '*', '*') ||
             $this->Permission_model->allowed($this->user, 'documents', 'access_all') ||
             $this->Permission_model->allowed($this->user, 'documents', 'view_all');
@@ -17,7 +23,9 @@ class External_documents extends MY_Controller
             $ownerOptions = $this->Document_model->active_users();
         }
         $applyFilters = function () use ($state, $canViewAll) {
-            $this->db->where('d.status', 'active');
+            if ($state['status'] !== 'all') {
+                $this->db->where('d.status', $state['status']);
+            }
             if (!$canViewAll) {
                 $this->db->where('d.created_by', (int) $this->user['id']);
             } elseif ($state['owner'] > 0) {
@@ -58,7 +66,7 @@ class External_documents extends MY_Controller
         $sort = isset($sortColumns[$state['sort']]) ? $sortColumns[$state['sort']] : 'd.updated_at';
         $joinCurrent();
         $applyFilters();
-        $rows = $this->db->select('d.id,d.title,d.description,
+        $rows = $this->db->select('d.id,d.title,d.description,d.status,
                 d.created_by,d.created_at,d.updated_at,
                 r.revision_level,f.id AS file_id,f.original_name', FALSE)
             ->order_by($sort, $state['dir'])

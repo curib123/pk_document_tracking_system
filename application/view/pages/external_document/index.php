@@ -3,6 +3,7 @@ $table = $table ?? [];
 $dt_path = 'documents/external';
 $dt_columns = [
     'title' => 'Document Title',
+    'status' => 'Status',
     'description' => 'Description',
     'revision_level' => 'Revision Level',
     'created_at' => 'Created Date',
@@ -14,6 +15,7 @@ foreach ($rows as $row) {
     $fileName = !empty($row['file_id']) ? (string) ($row['original_name'] ?: 'Download') : '';
     $display = [
         'Document Title' => $row['title'],
+        'Status' => ucfirst($row['status']),
         'Description' => $row['description'] ?? '',
         'Revision Level' => $row['revision_level'] ?? '00',
         'Created Date' => $row['created_at'],
@@ -21,17 +23,17 @@ foreach ($rows as $row) {
         'Attach File' => $fileName ?: 'Unavailable'
     ];
     $buttons = [['type' => 'view']];
-    if ($can_download && !empty($row['file_id'])) {
+    if ($can_download && $row['status'] === 'active' && !empty($row['file_id'])) {
         $buttons[] = [
             'type' => 'download',
             'url' => 'files/download/' . (int) $row['file_id'],
             'label' => $fileName
         ];
     }
-    if ($can_direct) {
+    if ($can_direct && $row['status'] === 'active') {
         $buttons[] = ['type' => 'edit', 'label' => 'Edit'];
     }
-    if ($can_dispose) {
+    if ($can_dispose && $row['status'] === 'active') {
         $buttons[] = [
             'type' => 'action',
             'url' => 'documents/external/dispose',
@@ -45,6 +47,7 @@ foreach ($rows as $row) {
         'id' => (int) $row['id'],
         'cells' => [
             'title' => $row['title'],
+            'status' => ucfirst($row['status']),
             'description' => $row['description'] ?? '',
             'revision_level' => $row['revision_level'] ?? '00',
             'created_at' => $row['created_at'],
@@ -70,10 +73,14 @@ $dt_sort = $table['sort'] ?? 'updated_at';
 $dt_dir = strtolower($table['dir'] ?? 'desc');
 $dt_sortable = ['title', 'description', 'revision_level', 'created_at', 'updated_at'];
 $dt_date_filters = TRUE;
-$dt_filters = !empty($owner_options)
-    ? ['owner' => ['' => 'All Owners'] + array_column($owner_options, 'name', 'id')]
-    : [];
+$dt_filters = [
+    'status' => ['all' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed']
+];
+if (!empty($owner_options)) {
+    $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
+}
 $dt_filter_values = [
+    'status' => $table['status'] ?? 'active',
     'owner' => $table['owner'] ?? '',
     'period' => $table['period'] ?? 'all',
     'from' => $table['from'] ?? '',
