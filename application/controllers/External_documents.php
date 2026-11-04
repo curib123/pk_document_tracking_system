@@ -100,7 +100,7 @@ class External_documents extends MY_Controller
         $applyFilters();
         $rows = $this->db->select('d.id,d.title,d.description,d.status,
                 d.category_id,d.created_by,d.created_at,d.updated_at,c.name AS category_name,
-                r.revision_level,f.id AS file_id,f.original_name', FALSE)
+                r.revision_level,f.id AS file_id', FALSE)
             ->order_by($sort, $state['dir'])
             ->limit($state['limit'], ($state['page'] - 1) * $state['limit'])
             ->get()->result_array();

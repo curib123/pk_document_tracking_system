@@ -10,12 +10,10 @@ $dt_columns = [
     'description' => 'Description',
     'revision_level' => 'Revision Level',
     'created_at' => 'Created Date',
-    'updated_at' => 'Updated',
-    'attachment' => 'Attach File'
+    'updated_at' => 'Updated'
 ];
 $dt_rows = [];
 foreach ($rows as $row) {
-    $fileName = !empty($row['file_id']) ? (string) ($row['original_name'] ?: 'Download') : '';
     $display = [
         'Document Title' => $row['title'],
         'Category' => $row['category_name'] ?? 'Uncategorized',
@@ -23,15 +21,14 @@ foreach ($rows as $row) {
         'Description' => $row['description'] ?? '',
         'Revision Level' => $row['revision_level'] ?? '00',
         'Created Date' => $row['created_at'],
-        'Updated' => $row['updated_at'],
-        'Attach File' => $fileName ?: 'Unavailable'
+        'Updated' => $row['updated_at']
     ];
     $buttons = [['type' => 'view']];
     if ($can_download && $row['status'] === 'active' && !empty($row['file_id'])) {
         $buttons[] = [
             'type' => 'download',
             'url' => 'files/download/' . (int) $row['file_id'],
-            'label' => $fileName
+            'label' => 'Download'
         ];
     }
     if ($can_direct && $row['status'] === 'active') {
@@ -56,8 +53,7 @@ foreach ($rows as $row) {
             'description' => $row['description'] ?? '',
             'revision_level' => $row['revision_level'] ?? '00',
             'created_at' => $row['created_at'],
-            'updated_at' => $row['updated_at'],
-            'attachment' => $fileName ?: 'Unavailable'
+            'updated_at' => $row['updated_at']
         ],
         'record' => [
             'type' => 'external_revise',
@@ -73,8 +69,7 @@ foreach ($rows as $row) {
             ['category_id' => (int) $row['category_id']],
             $folderNodes,
             'external'
-        ),
-        'file_name' => $fileName
+        )
     ];
 }
 $dt_q = $table['q'] ?? '';
