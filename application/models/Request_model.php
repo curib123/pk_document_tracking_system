@@ -160,6 +160,12 @@ class Request_model extends CI_Model
                 'disposal_reason' => 'Disposal Reason',
                 'disposal_other' => 'Other Disposal Details'
             ] as $key => $label) {
+                if (
+                    str_starts_with($row['type'], 'external_') &&
+                    in_array($key, ['retention_period', 'retention_start_date', 'retention_end_date'], TRUE)
+                ) {
+                    continue;
+                }
                 if (isset($payload[$key]) && is_scalar($payload[$key]) && (string) $payload[$key] !== '')
                     $details[$label] = $key === 'disposal_reason' ? Disposal_details::reason($payload[$key]) : $payload[$key];
             }

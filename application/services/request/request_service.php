@@ -152,7 +152,6 @@ class Request_service
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
             'external_document_id' => (int) ($post['external_document_id'] ?? 0),
-            'retention_period' => trim((string) ($post['retention_period'] ?? '')),
             'recipient_id' => (int) ($post['recipient_id'] ?? 0),
             'expires_at' => trim((string) ($post['expires_at'] ?? '')),
             'destination_location_id' => (int) ($post['destination_location_id'] ?? 0),
@@ -177,6 +176,14 @@ class Request_service
             'retention_end_date' => trim((string) ($post['retention_end_date'] ?? '')),
             'creation_reason' => trim((string) ($post['creation_reason'] ?? ''))
         ];
+        if (str_starts_with($type, 'external_')) {
+            unset(
+                $payload['retention_enabled'],
+                $payload['retention_period'],
+                $payload['retention_start_date'],
+                $payload['retention_end_date']
+            );
+        }
         $softcopyId = (int) ($post['softcopy_id'] ?? 0);
         $hardcopyId = (int) ($post['hardcopy_id'] ?? 0);
         $domain = $payload['document_domain'];
@@ -273,11 +280,9 @@ class Request_service
             if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
                 require_once APPPATH . 'services/documents/external_document_service.php';
                 $externalService = new External_document_service();
-                $payload['retention_period'] = $externalService->validate_metadata(
+                $externalService->validate_metadata(
                     $payload['title'],
-                    $payload['description'],
-                    $payload['retention_start_date'],
-                    $payload['retention_end_date']
+                    $payload['description']
                 );
                 if ($type === 'external_revise' && !$externalService->manageable($payload['external_document_id'], $user)) {
                     throw new DomainException('Choose an active external document to revise.');

@@ -20,9 +20,6 @@ class External_documents extends MY_Controller
                 $this->db->group_start()
                     ->like('d.title', $state['q'])
                     ->or_like('d.description', $state['q'])
-                    ->or_like('d.retention_period', $state['q'])
-                    ->or_like('d.retention_start_date', $state['q'])
-                    ->or_like('d.retention_end_date', $state['q'])
                     ->or_like('r.revision_level', $state['q'])
                     ->or_like('f.original_name', $state['q'])
                     ->group_end();
@@ -41,16 +38,13 @@ class External_documents extends MY_Controller
         $sortColumns = [
             'title' => 'd.title',
             'description' => 'd.description',
-            'retention_period' => 'd.retention_period',
-            'retention_start_date' => 'd.retention_start_date',
-            'retention_end_date' => 'd.retention_end_date',
             'revision_level' => 'r.revision_level',
             'updated_at' => 'd.updated_at'
         ];
         $sort = isset($sortColumns[$state['sort']]) ? $sortColumns[$state['sort']] : 'd.updated_at';
         $joinCurrent();
         $applyFilters();
-        $rows = $this->db->select('d.id,d.title,d.description,d.retention_period,d.retention_start_date,d.retention_end_date,
+        $rows = $this->db->select('d.id,d.title,d.description,
                 d.created_by,d.created_at,d.updated_at,
                 r.revision_level,f.id AS file_id,f.original_name', FALSE)
             ->order_by($sort, $state['dir'])

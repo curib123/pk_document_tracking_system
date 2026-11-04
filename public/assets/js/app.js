@@ -682,7 +682,6 @@
       ],
       generated_document_number: ["softcopy_create"],
       category_id: ["softcopy_create"],
-      retention_period: ["external_create", "external_revise"],
       external_document_id: ["external_revise"],
       recipient_id: ["assignment", "access", "transfer"],
       expires_at: ["access"],
@@ -761,12 +760,6 @@
       field.disabled = !revise;
       field.required = revise;
       if (!revise) field.value = "";
-    });
-    form.querySelectorAll("[data-external-retention-field]").forEach(function (field) {
-      var externalAction = ["external_create", "external_revise"].includes(action.value);
-      field.disabled = !externalAction;
-      field.required = externalAction;
-      if (field.disabled) field.value = "";
     });
     form.querySelectorAll("[data-external-description]").forEach(function (field) {
       var externalAction = ["external_create", "external_revise"].includes(action.value);
@@ -974,11 +967,10 @@
       record = {};
     }
     var form = select.form;
-    ["title", "description", "retention_start_date", "retention_end_date"].forEach(function (name) {
+    ["title", "description"].forEach(function (name) {
       var field = form.querySelector('[name="' + name + '"]');
       if (field) field.value = record[name] || "";
     });
-    updateRetentionPeriod(form);
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
       subject.value = select.value ? "External revision: " + (record.title || "Selected document") : "";

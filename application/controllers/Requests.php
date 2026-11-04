@@ -116,7 +116,7 @@ class Requests extends MY_Controller
         $canViewAll = $this->can('*', '*') || $this->can('documents', 'access_all') ||
             $this->can('documents', 'view_all');
         $this->db->select(
-            'd.id,d.title,d.description,d.retention_period,d.retention_start_date,d.retention_end_date,r.revision_level'
+            'd.id,d.title,d.description,r.revision_level'
         )
             ->from('external_documents d')
             ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
