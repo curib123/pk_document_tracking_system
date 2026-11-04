@@ -763,10 +763,77 @@
       field.required = revise;
       if (!revise) field.value = "";
     });
+    form.querySelectorAll("[data-external-retention-field]").forEach(function (field) {
+      var externalAction = ["external_create", "external_revise"].includes(action.value);
+      field.disabled = !externalAction;
+      field.required = externalAction;
+      if (field.disabled) field.value = "";
+    });
+    form.querySelectorAll("[data-external-description]").forEach(function (field) {
+      var externalAction = ["external_create", "external_revise"].includes(action.value);
+      var parent = field.closest(".col-md-6, .col-12");
+      if (parent) parent.hidden = !externalAction;
+      field.disabled = !externalAction;
+      field.required = false;
+      if (!externalAction) field.value = "";
+    });
     var attachment = form.querySelector('[name="external_attachment"]');
     if (attachment) {
       attachment.required = !form.querySelector('[name="id"]')?.value;
     }
+  }
+
+  function updateRetentionPeriod(form) {
+    var startField = form.querySelector('[name="retention_start_date"]');
+    var endField = form.querySelector('[name="retention_end_date"]');
+    var periodField = form.querySelector("[data-retention-period]");
+    if (!startField || !endField || !periodField) return;
+    if (!startField.value || !endField.value || endField.value < startField.value) {
+      periodField.value = "";
+      endField.setCustomValidity(
+        startField.value && endField.value && endField.value < startField.value
+          ? "Retention end date must be on or after the start date."
+          : "",
+      );
+      return;
+    }
+    endField.setCustomValidity("");
+
+    var startParts = startField.value.split("-").map(Number);
+    var endParts = endField.value.split("-").map(Number);
+    var startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+    var endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+    function afterMonths(date, count) {
+      var monthIndex = date.getUTCFullYear() * 12 + date.getUTCMonth() + count;
+      var year = Math.floor(monthIndex / 12);
+      var month = monthIndex % 12;
+      var lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      return new Date(Date.UTC(year, month, Math.min(date.getUTCDate(), lastDay)));
+    }
+    function dateValue(date) {
+      return date.getTime();
+    }
+    var years = endDate.getUTCFullYear() - startDate.getUTCFullYear();
+    var cursor = afterMonths(startDate, years * 12);
+    if (dateValue(cursor) > dateValue(endDate)) {
+      years -= 1;
+      cursor = afterMonths(startDate, years * 12);
+    }
+    var months =
+      (endDate.getUTCFullYear() - cursor.getUTCFullYear()) * 12 +
+      endDate.getUTCMonth() -
+      cursor.getUTCMonth();
+    cursor = afterMonths(cursor, months);
+    if (dateValue(cursor) > dateValue(endDate)) {
+      months -= 1;
+      cursor = afterMonths(afterMonths(startDate, years * 12), months);
+    }
+    var days = Math.round((dateValue(endDate) - dateValue(cursor)) / 86400000);
+    var parts = [];
+    [[years, "year"], [months, "month"], [days, "day"]].forEach(function (part) {
+      if (part[0] > 0) parts.push(part[0] + " " + part[1] + (part[0] === 1 ? "" : "s"));
+    });
+    periodField.value = parts.join(", ") || "0 days";
   }
 
   function updateSoftcopyNumberFields(form) {
@@ -893,6 +960,11 @@
       subject.dataset.autoSubject = subject.value;
     }
   });
+  document.addEventListener("input", function (event) {
+    if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
+      updateRetentionPeriod(event.target.form);
+    }
+  });
   document.addEventListener("change", function (event) {
     if (event.target?.id !== "reqExternal") return;
     var select = event.target;
@@ -903,10 +975,11 @@
       record = {};
     }
     var form = select.form;
-    ["title", "retention_period"].forEach(function (name) {
+    ["title", "description", "retention_start_date", "retention_end_date"].forEach(function (name) {
       var field = form.querySelector('[name="' + name + '"]');
       if (field) field.value = record[name] || "";
     });
+    updateRetentionPeriod(form);
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
       subject.value = select.value ? "External revision: " + (record.title || "Selected document") : "";
@@ -950,6 +1023,9 @@
       });
   }
   document.addEventListener("change", function (event) {
+    if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
+      updateRetentionPeriod(event.target.form);
+    }
     if (event.target?.id === "reqType") updateRequestActionFields();
     if (event.target?.id === "reqCategory" ||
         event.target?.matches("[data-series-number-checker]") ||
@@ -966,6 +1042,7 @@
   updateDocumentDomain();
   updateDisposalReason();
   updateRequestActionFields();
+  document.querySelectorAll("form").forEach(updateRetentionPeriod);
 
   function updateStepApprover() {
     var type = document.getElementById("stepApproverType");

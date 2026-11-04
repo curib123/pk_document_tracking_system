@@ -144,9 +144,12 @@ class Request_model extends CI_Model
                 $details['Document Number'] = $row['source_reference'];
             foreach ([
                 'title' => 'Proposed Title',
+                'description' => 'Description',
                 'document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
                 'retention_period' => 'Retention Period',
+                'retention_start_date' => 'Retention Start Date',
+                'retention_end_date' => 'Retention End Date',
                 'revision_level' => 'Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',

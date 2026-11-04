@@ -167,6 +167,7 @@ foreach ($rows as $row) {
     'subject' => $payload['subject'] ?? '',
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',
+    'description' => $payload['description'] ?? '',
     'series_number_manual' => $payload['series_number'] ?? '',
     'series_number_checker' => !empty($payload['series_number_checker']) ? 1 : 0,
     'document_number' => $payload['document_number'] ?? '',

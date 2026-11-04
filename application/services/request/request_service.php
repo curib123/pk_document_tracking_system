@@ -142,6 +142,7 @@ class Request_service
             'subject' => $subject,
             'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')),
+            'description' => trim((string) ($post['description'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
             'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
@@ -266,7 +267,12 @@ class Request_service
             if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
                 require_once APPPATH . 'services/documents/external_document_service.php';
                 $externalService = new External_document_service();
-                $externalService->validate_metadata($payload['title'], $payload['retention_period']);
+                $payload['retention_period'] = $externalService->validate_metadata(
+                    $payload['title'],
+                    $payload['description'],
+                    $payload['retention_start_date'],
+                    $payload['retention_end_date']
+                );
                 if ($type === 'external_revise' && !$externalService->manageable($payload['external_document_id'], $user)) {
                     throw new DomainException('Choose an active external document to revise.');
                 }

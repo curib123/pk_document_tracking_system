@@ -42,9 +42,11 @@ class External_document_service
         ) {
             throw new DomainException('Direct External permission is required.');
         }
+        $description = trim((string) ($post['description'] ?? ''));
         $title = trim((string) ($post['title'] ?? ''));
-        $retention = trim((string) ($post['retention_period'] ?? ''));
-        $this->validate_metadata($title, $retention);
+        $retentionStart = trim((string) ($post['retention_start_date'] ?? ''));
+        $retentionEnd = trim((string) ($post['retention_end_date'] ?? ''));
+        $retention = $this->validate_metadata($title, $description, $retentionStart, $retentionEnd);
         require_once APPPATH . 'services/files/file_service.php';
         $files = new File_service();
         $fileId = $files->stage_external_creation($actorId, $attachment);
@@ -54,7 +56,10 @@ class External_document_service
         try {
             $result = $this->apply('external_create', [
                 'title' => $title,
+                'description' => $description,
                 'retention_period' => $retention,
+                'retention_start_date' => $retentionStart,
+                'retention_end_date' => $retentionEnd,
                 'controlled_file_id' => $fileId
             ], 0, $actorId, $actorId, NULL);
             if ($this->ci->db->trans_status() === FALSE || $this->ci->db->trans_commit() === FALSE) {
@@ -83,9 +88,11 @@ class External_document_service
         if (!in_array($type, ['external_create', 'external_revise'], TRUE)) {
             throw new DomainException('Choose External Create or External Revise.');
         }
+        $description = trim((string) ($payload['description'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
-        $retention = trim((string) ($payload['retention_period'] ?? ''));
-        $this->validate_metadata($title, $retention);
+        $retentionStart = trim((string) ($payload['retention_start_date'] ?? ''));
+        $retentionEnd = trim((string) ($payload['retention_end_date'] ?? ''));
+        $retention = $this->validate_metadata($title, $description, $retentionStart, $retentionEnd);
         $creation = $type === 'external_create';
         $fileId = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
         $file = $this->ci->db->get_where('files', [
@@ -105,7 +112,10 @@ class External_document_service
         if ($creation) {
             if (!$this->ci->db->insert('external_documents', [
                 'title' => $title,
+                'description' => $description,
                 'retention_period' => $retention,
+                'retention_start_date' => $retentionStart,
+                'retention_end_date' => $retentionEnd,
                 'created_by' => $ownerId
             ])) {
                 throw new DomainException('Unable to create the external document.');
@@ -135,7 +145,10 @@ class External_document_service
             $revisionLevel = str_pad((string) max(0, $revisionNumber - 1), 2, '0', STR_PAD_LEFT);
             $this->ci->db->where('id', $documentId)->update('external_documents', [
                 'title' => $title,
+                'description' => $description,
                 'retention_period' => $retention,
+                'retention_start_date' => $retentionStart,
+                'retention_end_date' => $retentionEnd,
                 'version' => (int) $document['version'] + 1
             ]);
             if ($previous) {
@@ -149,7 +162,10 @@ class External_document_service
             'document_id' => $documentId,
             'revision_number' => $revisionNumber,
             'revision_level' => $revisionLevel,
+            'description' => $description,
             'retention_period' => $retention,
+            'retention_start_date' => $retentionStart,
+            'retention_end_date' => $retentionEnd,
             'file_id' => $fileId,
             'uploaded_by' => $ownerId,
             'approved_by' => $actorId
@@ -175,14 +191,65 @@ class External_document_service
         ];
     }
 
-    public function validate_metadata(string $title, string $retention): void
+    public function validate_metadata(
+        string $title,
+        string $description,
+        string $retentionStart,
+        string $retentionEnd
+    ): string
     {
         if ($title === '' || mb_strlen($title) > 255) {
             throw new DomainException('External document title is required (maximum 255 characters).');
         }
-        if ($retention === '' || mb_strlen($retention) > 100) {
-            throw new DomainException('Retention period is required (maximum 100 characters).');
+        if (mb_strlen($description) > 2000) {
+            throw new DomainException('External document description must be 2000 characters or fewer.');
         }
+        $start = DateTimeImmutable::createFromFormat('!Y-m-d', $retentionStart);
+        $end = DateTimeImmutable::createFromFormat('!Y-m-d', $retentionEnd);
+        if (
+            !$start || $start->format('Y-m-d') !== $retentionStart ||
+            !$end || $end->format('Y-m-d') !== $retentionEnd ||
+            $retentionEnd < $retentionStart
+        ) {
+            throw new DomainException('Enter valid retention start and end dates, with the end date on or after the start date.');
+        }
+        $years = (int) $end->format('Y') - (int) $start->format('Y');
+        $cursor = $this->retention_date_after_months($start, $years * 12);
+        if ($cursor > $end) {
+            $years--;
+            $cursor = $this->retention_date_after_months($start, $years * 12);
+        }
+        $months = ((int) $end->format('Y') - (int) $cursor->format('Y')) * 12 +
+            (int) $end->format('n') - (int) $cursor->format('n');
+        $cursor = $this->retention_date_after_months($cursor, $months);
+        if ($cursor > $end) {
+            $months--;
+            $cursor = $this->retention_date_after_months(
+                $this->retention_date_after_months($start, $years * 12),
+                $months
+            );
+        }
+        $days = (int) $cursor->diff($end)->days;
+        $parts = [];
+        foreach ([[$years, 'year'], [$months, 'month'], [$days, 'day']] as [$value, $label]) {
+            if ($value > 0) {
+                $parts[] = $value . ' ' . $label . ($value === 1 ? '' : 's');
+            }
+        }
+        return $parts ? implode(', ', $parts) : '0 days';
+    }
+
+    private function retention_date_after_months(DateTimeImmutable $date, int $months): DateTimeImmutable
+    {
+        $monthIndex = (int) $date->format('Y') * 12 + (int) $date->format('n') - 1 + $months;
+        $year = intdiv($monthIndex, 12);
+        $month = $monthIndex % 12 + 1;
+        $firstOfMonth = $date->setDate($year, $month, 1);
+        return $firstOfMonth->setDate(
+            $year,
+            $month,
+            min((int) $date->format('j'), (int) $firstOfMonth->format('t'))
+        );
     }
 
 }

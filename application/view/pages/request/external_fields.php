@@ -25,10 +25,25 @@
     <label class="form-label" for="externalRequestTitle">Document Title</label>
     <input class="form-control" id="externalRequestTitle" name="title" maxlength="255" required autocomplete="off">
 </div>
+<div class="col-12">
+    <label class="form-label" for="externalRequestDescription">Description</label>
+    <textarea class="form-control" id="externalRequestDescription" name="description" maxlength="2000"
+        data-external-description rows="3" autocomplete="off"></textarea>
+</div>
 <div class="col-md-6">
-    <label class="form-label" for="externalRequestRetention">Retention Period</label>
-    <input class="form-control" id="externalRequestRetention" name="retention_period" maxlength="100" required
-        autocomplete="off" placeholder="For example: 5 years">
+    <label class="form-label" for="externalRequestRetentionStart">Retention Start Date</label>
+    <input class="form-control" type="date" id="externalRequestRetentionStart" name="retention_start_date"
+        data-external-retention-field required autocomplete="off">
+</div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestRetentionEnd">Retention End Date</label>
+    <input class="form-control" type="date" id="externalRequestRetentionEnd" name="retention_end_date"
+        data-external-retention-field required autocomplete="off">
+</div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestRetention">Calculated Retention Period</label>
+    <input class="form-control" id="externalRequestRetention" name="retention_period" readonly
+        data-retention-period autocomplete="off">
 </div>
 <div class="col-12">
     <label class="form-label" for="externalRequestAttachment">Attach File <span class="optional-label">(maximum 15 MB)</span></label>
