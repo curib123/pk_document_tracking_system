@@ -22,7 +22,7 @@ class Softcopy_operation_service
         }
     }
 
-    public function validate_revision($payload)
+    public function validate_effective_date($payload)
     {
         $effective = (string) ($payload['effective_date'] ?? '');
         if ($effective !== '') {
@@ -30,6 +30,11 @@ class Softcopy_operation_service
             if (!$parsed || $parsed->format('Y-m-d') !== $effective)
                 throw new DomainException('Effective date must be valid when provided.');
         }
+    }
+
+    public function validate_revision($payload)
+    {
+        $this->validate_effective_date($payload);
         if ((int) ($payload['page_number'] ?? 0) < 1) {
             throw new DomainException('Number of pages must be at least one.');
         }
@@ -42,6 +47,7 @@ class Softcopy_operation_service
         $reason = trim((string) ($payload['remarks'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
         if ($type === 'softcopy_create') {
+            $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
             require_once APPPATH . 'services/softcopy/document_number_generator.php';
             $manualNumber = !empty($payload['series_number_checker']);
@@ -107,7 +113,7 @@ class Softcopy_operation_service
             ])->row_array();
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
-            $today = date('Y-m-d');
+            $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
             $revisionLevel = '00';
             $effective = (string) ($payload['effective_date'] ?? '');
             $received = (string) ($payload['date_received'] ?? '');

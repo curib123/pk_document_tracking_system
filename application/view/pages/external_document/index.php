@@ -59,7 +59,7 @@ $dt_sortable = ['title', 'description', 'retention_start_date', 'retention_end_d
 $dt_filters = [];
 $dt_filter_values = [];
 $dt_badges = [];
-$dt_create = $can_direct ? 'Direct External' : '';
+$dt_create = $can_direct ? 'Add New External Document' : '';
 ?>
 
 <?php $this->load->view('reusable_components/reusable_datatable', compact(

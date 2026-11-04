@@ -668,7 +668,6 @@
     var required = {
       softcopy_id: [
         "softcopy_revise",
-        "softcopy_cancel",
         "assignment",
         "access",
       ],
@@ -688,7 +687,7 @@
       recipient_id: ["assignment", "access", "transfer"],
       expires_at: ["access"],
       destination_location_id: ["transfer"],
-      effective_date: ["softcopy_revise"],
+      effective_date: ["softcopy_create", "softcopy_revise"],
       // Received and released dates are recorded by PHP, not user inputs.
       page_number: ["softcopy_revise"],
       revision_attachment: ["softcopy_create", "softcopy_revise"],

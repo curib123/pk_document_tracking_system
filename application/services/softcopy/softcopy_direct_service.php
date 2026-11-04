@@ -21,6 +21,9 @@ class Softcopy_direct_service
         $service = new Softcopy_operation_service();
         $type = trim((string) ($post['type'] ?? ''));
         $service->validate_type($type);
+        if ($type === 'softcopy_cancel') {
+            throw new DomainException('Direct softcopy cancellation is not available.');
+        }
         $subject = trim((string) ($post['subject'] ?? ''));
         if ($subject === '' || mb_strlen($subject) > 255) {
             throw new DomainException('Subject / reason is required (maximum 255 characters).');
@@ -68,7 +71,9 @@ class Softcopy_direct_service
             ) {
                 throw new DomainException('Proposed document title is required for a revision.');
             }
-            if ($type === 'softcopy_revise')
+            if ($type === 'softcopy_create')
+                $service->validate_effective_date($payload);
+            elseif ($type === 'softcopy_revise')
                 $service->validate_revision($payload);
             require_once APPPATH . 'services/files/file_service.php';
             $files = new File_service();
@@ -108,8 +113,6 @@ class Softcopy_direct_service
         }
         if ($type === 'softcopy_revise') {
             (new File_service())->cleanup_superseded($docId);
-        } elseif ($type === 'softcopy_cancel') {
-            (new File_service())->cleanup_retired($docId);
         }
         return $result;
     }

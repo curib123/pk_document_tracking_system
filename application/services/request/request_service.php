@@ -266,6 +266,9 @@ class Request_service
                     throw new DomainException('Choose an active softcopy to revise.');
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_revision($payload);
+            } elseif ($type === 'softcopy_create') {
+                require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
+                (new Softcopy_operation_service())->validate_effective_date($payload);
             }
             if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
                 require_once APPPATH . 'services/documents/external_document_service.php';

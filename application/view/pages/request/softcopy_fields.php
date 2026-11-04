@@ -10,9 +10,6 @@ $numbering_options = $numbering_options ?? [];
     <select class="form-select" name="type" id="reqType" required autocomplete="off">
         <option value="softcopy_create">Create Softcopy</option>
         <option value="softcopy_revise">Revise Softcopy</option>
-        <?php if ($softcopyDirect): ?>
-            <option value="softcopy_cancel">Cancel Softcopy</option>
-        <?php endif; ?>
     </select>
 </div>
 <div class="col-md-6">
