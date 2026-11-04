@@ -51,7 +51,7 @@ class Query_state
         }
         $limit = $number('limit');
         $retention = $text('retention');
-        if (!in_array($retention, ['', 'hits'], TRUE))
+        if (!in_array($retention, ['', 'hits', 'today', 'overdue', 'week', 'month'], TRUE))
             throw new DomainException('Invalid retention filter.');
         return $dates + [
             'period' => $period,

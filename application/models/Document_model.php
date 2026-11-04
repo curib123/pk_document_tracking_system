@@ -91,11 +91,26 @@ class Document_model extends CI_Model
         }
         if (!empty($filters['owner']))
             $this->db->where('d.created_by', (int) $filters['owner']);
-        if ($domain === 'hardcopy' && ($filters['retention'] ?? '') === 'hits') {
-            $today = (new DateTimeImmutable('today', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+        $retentionFilter = $filters['retention'] ?? '';
+        if ($domain === 'hardcopy' && $retentionFilter !== '') {
+            $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));
+            $todayText = $today->format('Y-m-d');
             $this->db->where('d.status', 'active')
                 ->where('d.retention_enabled', 1)
-                ->where('d.retention_end_date <=', $today);
+                ->where('d.retention_end_date IS NOT NULL', NULL, FALSE);
+            if ($retentionFilter === 'today') {
+                $this->db->where('d.retention_end_date', $todayText);
+            } elseif ($retentionFilter === 'overdue') {
+                $this->db->where('d.retention_end_date <', $todayText);
+            } elseif ($retentionFilter === 'hits') {
+                $this->db->where('d.retention_end_date <=', $todayText);
+            } elseif ($retentionFilter === 'week') {
+                $this->db->where('d.retention_end_date >', $todayText)
+                    ->where('d.retention_end_date <=', $today->modify('+7 days')->format('Y-m-d'));
+            } elseif ($retentionFilter === 'month') {
+                $this->db->where('d.retention_end_date >', $today->modify('+7 days')->format('Y-m-d'))
+                    ->where('d.retention_end_date <=', $today->modify('+30 days')->format('Y-m-d'));
+            }
         }
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search);

@@ -123,7 +123,13 @@ $dt_sortable = $cfg['domain'] === 'hardcopy'
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
 if ($cfg['domain'] === 'hardcopy')
-    $dt_filters['retention'] = ['' => 'All Retention', 'hits' => 'Retention Hits'];
+    $dt_filters['retention'] = [
+        '' => 'All Retention',
+        'today' => 'Due Today',
+        'overdue' => 'Overdue',
+        'week' => 'Due in the Next 7 Days',
+        'month' => 'Due in 8-30 Days'
+    ];
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,
