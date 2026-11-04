@@ -39,6 +39,7 @@ class External_documents extends MY_Controller
             'title' => 'd.title',
             'description' => 'd.description',
             'revision_level' => 'r.revision_level',
+            'created_at' => 'd.created_at',
             'updated_at' => 'd.updated_at'
         ];
         $sort = isset($sortColumns[$state['sort']]) ? $sortColumns[$state['sort']] : 'd.updated_at';
@@ -56,6 +57,8 @@ class External_documents extends MY_Controller
             'table' => $state,
             'total' => $total,
             'can_direct' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct'),
+            'can_dispose' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct') &&
+                $this->Permission_model->allowed($this->user, 'disposal', 'direct'),
             'can_request' => $this->Permission_model->allowed($this->user, 'requests', 'view') &&
                 $this->Permission_model->allowed($this->user, 'requests', 'add') &&
                 $this->Permission_model->allowed($this->user, 'external_documents', 'request'),
@@ -75,7 +78,37 @@ class External_documents extends MY_Controller
                 $_FILES['external_attachment'] ?? NULL
             );
             $this->audit_created('external_documents', $result['document_id']);
-            $this->notice('External document saved directly.');
+            $this->notice(
+                ($this->input->post('type') === 'external_revise'
+                    ? 'External document revised directly.'
+                    : 'External document saved directly.')
+            );
+        } catch (Throwable $error) {
+            $this->error_notice($error);
+        }
+        redirect('documents/external');
+    }
+
+    public function dispose()
+    {
+        $this->require_permission('external_documents', 'direct');
+        $this->require_permission('disposal', 'direct');
+        $this->confirmed();
+        try {
+            require_once APPPATH . 'services/documents/disposal_service.php';
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $payload = [
+                'disposal_reason' => $this->input->post('disposal_reason', TRUE),
+                'disposal_other' => $this->input->post('disposal_other', TRUE)
+            ];
+            $reason = (new Disposal_service())->reason($payload);
+            (new External_document_service())->dispose_direct(
+                (int) $this->input->post('id'),
+                (int) $this->user['id'],
+                $reason,
+                $payload['disposal_reason']
+            );
+            $this->notice('External document disposed and history recorded.');
         } catch (Throwable $error) {
             $this->error_notice($error);
         }

@@ -5,6 +5,7 @@ $dt_columns = [
     'title' => 'Document Title',
     'description' => 'Description',
     'revision_level' => 'Revision Level',
+    'created_at' => 'Created Date',
     'updated_at' => 'Updated',
     'attachment' => 'Attach File'
 ];
@@ -15,6 +16,7 @@ foreach ($rows as $row) {
         'Document Title' => $row['title'],
         'Description' => $row['description'] ?? '',
         'Revision Level' => $row['revision_level'] ?? '00',
+        'Created Date' => $row['created_at'],
         'Updated' => $row['updated_at'],
         'Attach File' => $fileName ?: 'Unavailable'
     ];
@@ -26,14 +28,34 @@ foreach ($rows as $row) {
             'label' => $fileName
         ];
     }
+    if ($can_direct) {
+        $buttons[] = ['type' => 'edit', 'label' => 'Edit'];
+    }
+    if ($can_dispose) {
+        $buttons[] = [
+            'type' => 'action',
+            'url' => 'documents/external/dispose',
+            'label' => 'Dispose',
+            'disposal' => TRUE,
+            'description' => 'Choose a disposal reason and confirm this action.',
+            'icon' => 'fa-solid fa-trash-can'
+        ];
+    }
     $dt_rows[] = [
         'id' => (int) $row['id'],
         'cells' => [
             'title' => $row['title'],
             'description' => $row['description'] ?? '',
             'revision_level' => $row['revision_level'] ?? '00',
+            'created_at' => $row['created_at'],
             'updated_at' => $row['updated_at'],
             'attachment' => $fileName ?: 'Unavailable'
+        ],
+        'record' => [
+            'type' => 'external_revise',
+            'external_document_id' => (int) $row['id'],
+            'title' => $row['title'],
+            'description' => $row['description'] ?? ''
         ],
         'display' => $display,
         'buttons' => $buttons
@@ -46,7 +68,7 @@ $dt_limit = $table['limit'] ?? 10;
 $dt_total = $total ?? count($rows);
 $dt_sort = $table['sort'] ?? 'updated_at';
 $dt_dir = strtolower($table['dir'] ?? 'desc');
-$dt_sortable = ['title', 'description', 'revision_level', 'updated_at'];
+$dt_sortable = ['title', 'description', 'revision_level', 'created_at', 'updated_at'];
 $dt_filters = [];
 $dt_filter_values = [];
 $dt_badges = [];
@@ -101,6 +123,8 @@ $dt_create = $can_direct ? 'Add New External Document' : '';
                             </div>
                         </div>
                     </div>
+                    <input type="hidden" name="type" value="external_create">
+                    <input type="hidden" name="external_document_id" value="">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
                         value="<?= $this->security->get_csrf_hash() ?>">

@@ -42,21 +42,32 @@ class External_document_service
         ) {
             throw new DomainException('Direct External permission is required.');
         }
+        $type = trim((string) ($post['type'] ?? 'external_create'));
+        if (!in_array($type, ['external_create', 'external_revise'], TRUE)) {
+            throw new DomainException('Choose External Create or External Revise.');
+        }
+        $documentId = (int) ($post['external_document_id'] ?? 0);
+        if ($type === 'external_revise' && !$this->manageable($documentId, $actor)) {
+            throw new DomainException('External document is not available for direct revision.');
+        }
         $description = trim((string) ($post['description'] ?? ''));
         $title = trim((string) ($post['title'] ?? ''));
         $this->validate_metadata($title, $description);
         require_once APPPATH . 'services/files/file_service.php';
         $files = new File_service();
-        $fileId = $files->stage_external_creation($actorId, $attachment);
+        $fileId = $type === 'external_create'
+            ? $files->stage_external_creation($actorId, $attachment)
+            : $files->stage_external_revision($documentId, $actorId, $attachment);
         $file = $this->ci->db->get_where('files', ['id' => $fileId])->row_array();
 
         $this->ci->db->trans_begin();
         try {
-            $result = $this->apply('external_create', [
+            $payload = [
                 'title' => $title,
                 'description' => $description,
-                'controlled_file_id' => $fileId
-            ], 0, $actorId, $actorId, NULL);
+                ($type === 'external_create' ? 'controlled_file_id' : 'revision_file_id') => $fileId
+            ];
+            $result = $this->apply($type, $payload, $documentId, $actorId, $actorId, NULL);
             if ($this->ci->db->trans_status() === FALSE || $this->ci->db->trans_commit() === FALSE) {
                 throw new DomainException('External document could not be saved.');
             }
@@ -73,8 +84,65 @@ class External_document_service
             if ($error instanceof DomainException) {
                 throw $error;
             }
-            log_message('error', 'Direct external document creation failed: ' . $error->getMessage());
-            throw new DomainException('Unable to create the external document.');
+            log_message('error', 'Direct external document action failed: ' . $error->getMessage());
+            throw new DomainException('Unable to save the external document action.');
+        }
+    }
+
+    public function dispose_direct(int $documentId, int $actorId, string $reason, string $action): void
+    {
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $actor = $this->ci->Identity_model->active_user($actorId);
+        if (
+            !$actor || !empty($actor['require_password_change']) ||
+            !$this->ci->Permission_model->allowed($actor, 'external_documents', 'direct') ||
+            !$this->ci->Permission_model->allowed($actor, 'disposal', 'direct')
+        ) {
+            throw new DomainException('Direct external document disposal permission is required.');
+        }
+
+        $this->ci->db->trans_begin();
+        try {
+            $document = $this->ci->db->query(
+                'SELECT * FROM external_documents WHERE id=? FOR UPDATE',
+                [$documentId]
+            )->row_array();
+            if (!$document || $document['status'] !== 'active' || !$this->manageable($documentId, $actor)) {
+                throw new DomainException('Active external document is not available for disposal.');
+            }
+            $this->ci->db->where('id', $documentId)->update('external_documents', [
+                'status' => 'disposed',
+                'version' => (int) $document['version'] + 1
+            ]);
+            $this->ci->db->insert('disposals', [
+                'domain' => 'external',
+                'document_id' => $documentId,
+                'previous_status' => $document['status'],
+                'previous_state' => json_encode($document, JSON_UNESCAPED_UNICODE),
+                'disposal_action' => $action,
+                'remarks' => trim($reason),
+                'disposed_by' => $actorId
+            ]);
+            $this->ci->db->insert('status_history', [
+                'domain' => 'external',
+                'document_id' => $documentId,
+                'previous_status' => $document['status'],
+                'new_status' => 'disposed',
+                'action' => 'direct_dispose',
+                'user_id' => $actorId,
+                'remarks' => trim($reason)
+            ]);
+            if ($this->ci->db->trans_status() === FALSE || $this->ci->db->trans_commit() === FALSE) {
+                throw new DomainException('External document disposal could not be recorded.');
+            }
+        } catch (Throwable $error) {
+            $this->ci->db->trans_rollback();
+            if ($error instanceof DomainException) {
+                throw $error;
+            }
+            log_message('error', 'Direct external document disposal failed: ' . $error->getMessage());
+            throw new DomainException('External document disposal could not be recorded. Refresh and try again.');
         }
     }
 
