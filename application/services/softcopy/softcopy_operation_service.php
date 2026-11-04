@@ -46,17 +46,30 @@ class Softcopy_operation_service
         $reason = trim((string) ($payload['remarks'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
         if ($type === 'softcopy_create') {
-            $number = trim((string) ($payload['document_number'] ?? ''));
             $categoryId = (int) ($payload['category_id'] ?? 0);
-            $series = trim((string) ($payload['series_number'] ?? ''));
+            require_once APPPATH . 'services/softcopy/document_number_generator.php';
+            $manualNumber = !empty($payload['series_number_checker']);
+            $number = $manualNumber
+                ? trim((string) ($payload['document_number'] ?? ''))
+                : Document_number_generator::next($db, $categoryId);
+            $series = $manualNumber ? trim((string) ($payload['series_number'] ?? '')) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId
             ) {
-                throw new DomainException('Document title, number and category are required.');
+                throw new DomainException('Document title and category are required.');
             }
-            if (!$db->get_where('categories', ['id' => $categoryId, 'active' => 1])->row_array()) {
-                throw new DomainException('Choose an active softcopy category.');
+            if ($manualNumber) {
+                if ($series === '') {
+                    throw new DomainException('Enter the series number for the selected document number.');
+                }
+                Document_number_generator::require_existing($db, $categoryId, $number);
+                if ($db->get_where('softcopy_documents', [
+                    'document_number' => $number,
+                    'series_number' => $series
+                ])->row_array()) {
+                    throw new DomainException('That document number and series number are already in use.');
+                }
             }
             if (
                 !$db->insert('softcopy_documents', [
@@ -131,7 +144,12 @@ class Softcopy_operation_service
             } else {
                 $this->audit($newId, 'new', 'active', 'direct_create', $actorId, $reason);
             }
-            return ['document_id' => $newId, 'file_id' => $fileId, 'revision_id' => $revisionId];
+            return [
+                'document_id' => $newId,
+                'document_number' => $number,
+                'file_id' => $fileId,
+                'revision_id' => $revisionId
+            ];
         }
 
         $rows = $db->query('SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE', [(int) $softcopyId])

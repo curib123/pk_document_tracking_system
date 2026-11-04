@@ -16,7 +16,7 @@ class Place_model extends CI_Model
             'table' => 'categories',
             'label' => 'Softcopy Categories',
             'key' => 'name',
-            'fields' => ['name', 'folder_name', 'description', 'parent_id']
+            'fields' => ['name', 'folder_name', 'code_pattern', 'description', 'parent_id']
         ],
     ];
     public function config($slug)
@@ -108,6 +108,10 @@ class Place_model extends CI_Model
                 ->join('areas a', 'a.id=s.area_id')
                 ->where('b.active', 1)->where('s.active', 1)->where('a.active', 1)
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
+        }
+        if ($table === 'categories') {
+            return $this->db->select('id,name,code_pattern')->from('categories')
+                ->where('active', 1)->order_by('name')->get()->result_array();
         }
         return $this->db->select('id,' . $defs[$table] . ' AS name')->from($table)
             ->where('active', 1)->order_by($defs[$table])->get()->result_array();

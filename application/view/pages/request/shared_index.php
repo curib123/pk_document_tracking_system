@@ -3,6 +3,7 @@ require_once APPPATH . 'services/presentation/request_title.php';
 require_once APPPATH . 'services/request/request_policy.php';
 $tabs = [
   'softcopy' => 'Softcopy Requests',
+  'external' => 'External Document Requests',
   'hardcopy' => 'Hardcopy Requests',
   'hardcopy-transfer' => 'Hardcopy Transfer',
   'hardcopy-disposal' => 'Hardcopy Disposal',
@@ -11,7 +12,8 @@ $tabs = [
 ];
 $typeMap = [
   'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise', 'softcopy_cancel' => 'Cancel'],
-  'hardcopy' => ['hardcopy_create' => 'Create', 'hardcopy_update' => 'Update'],
+  'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],
+  'hardcopy' => [],
   'hardcopy-transfer' => ['transfer' => 'Transfer'],
   'hardcopy-disposal' => ['disposal' => 'Dispose'],
   'access-grant' => ['access' => 'Grant Access'],
@@ -79,8 +81,9 @@ foreach ($rows as $row) {
   // The request viewer uses the same document renderer as System Documents,
   // but presents only submitted proposal metadata and visible approval history.
   // Never pretend an unapproved proposal is already the stored document.
-  $isDocumentRequest = in_array($tab, ['softcopy', 'hardcopy', 'hardcopy-disposal'], TRUE);
-  $documentDomain = $tab === 'softcopy' ? 'softcopy' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record');
+  $isDocumentRequest = in_array($tab, ['softcopy', 'external', 'hardcopy', 'hardcopy-disposal'], TRUE);
+  $documentDomain = $tab === 'softcopy' ? 'softcopy' : ($tab === 'external' ? 'external' :
+    (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record'));
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
   $headerTitle = Request_title::resolve(
     (string) $row['type'],
@@ -103,7 +106,8 @@ foreach ($rows as $row) {
     ['key' => 'overview', 'title' => 'Request & Ownership', 'fields' => $requestOverview],
     [
       'key' => $documentDomain === 'hardcopy' ? 'storage' : 'revision',
-      'title' => $documentDomain === 'hardcopy' ? 'Proposed Storage & Custody' : 'Proposed Classification & Revision',
+      'title' => $documentDomain === 'hardcopy' ? 'Proposed Storage & Custody' :
+        ($documentDomain === 'external' ? 'Proposed External Document' : 'Proposed Classification & Revision'),
       'fields' => $detail,
       'empty' => 'No additional proposed metadata recorded.'
     ],
@@ -131,7 +135,7 @@ foreach ($rows as $row) {
       'title' => 'Disposal Details',
       'fields' => $detail
     ];
-  if ($documentDomain === 'softcopy') {
+  if (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
     array_splice($requestSections, 2, 0, [
       [
         'key' => 'files',
@@ -163,14 +167,18 @@ foreach ($rows as $row) {
     'subject' => $payload['subject'] ?? '',
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',
-    'series_number' => $payload['series_number'] ?? '',
+    'series_number_manual' => $payload['series_number'] ?? '',
+    'series_number_checker' => !empty($payload['series_number_checker']) ? 1 : 0,
     'document_number' => $payload['document_number'] ?? '',
     'category_id' => $payload['category_id'] ?? '',
     'softcopy_id' => $row['softcopy_id'] ?? '',
+    'external_document_id' => $payload['external_document_id'] ?? '',
+    'retention_period' => $payload['retention_period'] ?? '',
     'hardcopy_id' => $row['hardcopy_id'] ?? '',
     'recipient_id' => $payload['recipient_id'] ?? '',
     'expires_at' => $payload['expires_at'] ?? '',
-    'document_domain' => $payload['document_domain'] ?? ($row['hardcopy_id'] ? 'hardcopy' : 'softcopy'),
+    'document_domain' => $payload['document_domain'] ?? ($tab === 'external'
+      ? 'external' : ($row['hardcopy_id'] ? 'hardcopy' : 'softcopy')),
     'disposal_reason' => $payload['disposal_reason'] ?? '',
     'disposal_other' => $payload['disposal_other'] ?? '',
     'new_revision_level' => $payload['new_revision_level'] ?? '',
@@ -196,8 +204,8 @@ foreach ($rows as $row) {
   ];
   $buttons = [['type' => 'view']];
   if (
-    in_array($row['type'], ['softcopy_create', 'softcopy_revise'], TRUE) &&
-    !empty($payload[$row['type'] === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id']) &&
+    in_array($row['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE) &&
+    !empty($payload[in_array($row['type'], ['softcopy_create', 'external_create'], TRUE) ? 'controlled_file_id' : 'revision_file_id']) &&
     in_array($row['status'], ['draft', 'returned', 'submitted'], TRUE)
   ) {
     $buttons[] = ['type' => 'review', 'url' => 'files/review/' . $row['id']];
@@ -326,7 +334,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
   'dt_columns',
   'dt_rows'
 )); ?>
-<?php if (!$task): ?>
+<?php if (!$task && $allowed_request_types): ?>
   <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
     aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -346,6 +354,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 <?php $this->load->view('pages/request/softcopy_fields', [
                   'softcopy_options' => $softcopy_options,
                   'category_options' => $category_options,
+                  'numbering_options' => $numbering_options,
+                  'number_previews' => $number_previews,
                   'softcopyDirect' => FALSE
                 ]); ?>
               <?php elseif ($tab === 'hardcopy'): ?>
@@ -381,6 +391,10 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                     ]); ?>
                   </div>
                 </div>
+              <?php elseif ($tab === 'external'): ?>
+                <?php $this->load->view('pages/request/external_fields', [
+                  'external_options' => $external_options
+                ]); ?>
               <?php elseif ($tab === 'hardcopy-transfer'): ?>
                 <?php $this->load->view('pages/request/hardcopy_transfer_fields', [
                   'transfer_sources' => $transfer_sources,

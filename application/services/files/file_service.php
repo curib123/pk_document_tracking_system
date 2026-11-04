@@ -57,9 +57,10 @@ class File_service
     public function retire_request_attachment(array $request, int $actorId = 0, string $reason = ''): int
     {
         if (!in_array($request['status'], ['rejected', 'cancelled'], TRUE)) return 0;
-        if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) return 0;
+        if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) return 0;
         $payload = json_decode($request['payload'] ?? '{}', TRUE) ?: [];
-        $creation = $request['type'] === 'softcopy_create';
+        $creation = in_array($request['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($request['type'], 'external_');
         $id = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
         if (!$id) return 0;
         $data = ['status' => $request['status'] === 'rejected' ? 'rejected' : 'deleted'];
@@ -67,22 +68,23 @@ class File_service
             $data += ['rejected_by' => $actorId, 'rejected_at' => date('Y-m-d H:i:s'), 'rejection_reason' => $reason];
         }
         $this->ci->db->where([
-            'id' => $id, 'domain' => 'softcopy', 'status' => 'pending',
-            'document_id' => $creation ? NULL : (int) $request['softcopy_id'],
+            'id' => $id, 'domain' => $external ? 'external' : 'softcopy', 'status' => 'pending',
+            'document_id' => $creation ? NULL : (int) ($external
+                ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
             'uploaded_by' => (int) $request['requested_by'], 'purpose' => $creation ? 'creation' : 'revision'
         ])->set('version', 'version + 1', FALSE)->update('files', $data);
         return $id;
     }
 
     /** Called after commit; historical rows and revision links remain available. */
-    public function cleanup_retired(int $documentId = 0, int $fileId = 0, array $statuses = ['superseded', 'deleted', 'rejected']): int
+    public function cleanup_retired(int $documentId = 0, int $fileId = 0, array $statuses = ['superseded', 'deleted', 'rejected'], string $domain = 'softcopy'): int
     {
         $db = $this->ci->db;
         if ($db->trans_active())
             return 0;
         $removed = 0;
         try {
-            $db->where('domain', 'softcopy')->where_in('status', $statuses);
+            $db->where('domain', $domain)->where_in('status', $statuses);
             if ($documentId > 0) $db->where('document_id', $documentId);
             if ($fileId > 0) $db->where('id', $fileId);
             $files = $db->get('files')->result_array();
@@ -144,10 +146,11 @@ class File_service
             WHERE f.domain="softcopy" AND f.document_id IS NOT NULL
             AND (d.id IS NULL OR d.status IN ("disposed","cancelled"))')->result_array();
         foreach ($documents as $document) $this->retire_document((int) $document['document_id']);
-        $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise'])
+        $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'])
             ->where_in('status', ['rejected', 'cancelled'])->get('requests')->result_array();
         foreach ($requests as $request) $this->retire_request_attachment($request);
-        return $this->cleanup_retired();
+        $this->cleanup_retired();
+        return $this->cleanup_retired(0, 0, ['deleted', 'rejected'], 'external');
     }
 
     // Document Files are private while awaiting approval.
@@ -155,6 +158,11 @@ class File_service
     public function stage_creation($actorId, $upload)
     {
         return $this->stage_controlled(NULL, $actorId, $upload, 'creation');
+    }
+
+    public function stage_external_creation($actorId, $upload)
+    {
+        return $this->stage_controlled(NULL, $actorId, $upload, 'creation', 'external');
     }
 
     public function stage_revision($docId, $actorId, $upload)
@@ -168,7 +176,18 @@ class File_service
         return $this->stage_controlled((int) $docId, $actorId, $upload, 'revision');
     }
 
-    private function stage_controlled($docId, $actorId, $upload, $purpose)
+    public function stage_external_revision($docId, $actorId, $upload)
+    {
+        $document = $this->ci->db->get_where('external_documents', [
+            'id' => (int) $docId,
+            'status' => 'active'
+        ])->row_array();
+        if (!$document)
+            throw new DomainException('Select an active external document.');
+        return $this->stage_controlled((int) $docId, $actorId, $upload, 'revision', 'external');
+    }
+
+    private function stage_controlled($docId, $actorId, $upload, $purpose, $domain = 'softcopy')
     {
         if (
             !is_array($upload) || (int) ($upload['error'] ?? -1) !== UPLOAD_ERR_OK ||
@@ -220,7 +239,7 @@ class File_service
             'fingerprint' => hash_file('sha256', $path),
             'extension' => $ext,
             'purpose' => $purpose,
-            'domain' => 'softcopy',
+            'domain' => $domain,
             'document_id' => $docId,
             'uploaded_by' => (int) $actorId,
             'status' => 'pending'

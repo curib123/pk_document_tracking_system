@@ -8,7 +8,7 @@ class File_model extends CI_Model
     public function review_file($requestId, $viewer)
     {
         $r = $this->db->get_where('requests', ['id' => (int) $requestId])->row_array();
-        if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE))
+        if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
             return NULL;
         $allowed = (int) $r['requested_by'] === (int) $viewer['id'];
         if (!$allowed && $r['status'] === 'submitted') {
@@ -31,7 +31,8 @@ class File_model extends CI_Model
         if (!$allowed)
             return NULL;
         $data = json_decode($r['payload'], TRUE) ?: [];
-        $create = $r['type'] === 'softcopy_create';
+        $create = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($r['type'], 'external_');
         $fileId = (int) ($data[$create ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
         if (!$fileId)
             return NULL;
@@ -39,20 +40,29 @@ class File_model extends CI_Model
             'id' => $fileId,
             'uploaded_by' => (int) $r['requested_by'],
             'purpose' => $create ? 'creation' : 'revision',
-            'domain' => 'softcopy',
-            'document_id' => $create ? NULL : (int) $r['softcopy_id'],
+            'domain' => $external ? 'external' : 'softcopy',
+            'document_id' => $create ? NULL : (int) ($external
+                ? ($data['external_document_id'] ?? 0) : $r['softcopy_id']),
             'status' => 'pending'
         ])->row_array();
     }
 
     public function approved_file($id)
     {
-        return $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')
+        $file = $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')
             ->from('files f')
             ->join('softcopy_documents s', 's.id = f.document_id AND f.domain = "softcopy"')
             ->join('softcopy_revisions current', 'current.id=s.current_revision_id AND current.file_id=f.id')
             ->where('f.id', (int) $id)
             ->where('f.status', 'approved')
+            ->limit(1)->get()->row_array();
+        if ($file)
+            return $file;
+        return $this->db->select('f.*,e.created_by AS owner_id,e.status AS document_status')
+            ->from('files f')
+            ->join('external_documents e', 'e.id=f.document_id AND f.domain="external"')
+            ->join('external_revisions current', 'current.id=e.current_revision_id AND current.file_id=f.id')
+            ->where('f.id', (int) $id)->where('f.status', 'approved')
             ->limit(1)->get()->row_array();
     }
 
@@ -60,6 +70,14 @@ class File_model extends CI_Model
     {
         if (!$user || !$file || $file['document_status'] !== 'active')
             return FALSE;
+        if (($file['domain'] ?? '') === 'external') {
+            if ((int) $file['owner_id'] === (int) $user['id'])
+                return TRUE;
+            $this->load->model('Permission_model');
+            $permissions = $this->Permission_model->for_user($user);
+            return isset($permissions['*']) || !empty($permissions['files']['view_all']) ||
+                !empty($permissions['documents']['access_all']) || !empty($permissions['documents']['view_all']);
+        }
         $scope = $this->file_scope($user);
         return $this->db->from('softcopy_documents d')
             ->where('d.id', (int) $file['document_id'])->where('d.status', 'active')

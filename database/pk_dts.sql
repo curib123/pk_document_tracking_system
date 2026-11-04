@@ -121,6 +121,7 @@ CREATE TABLE `categories` (
   `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `folder_name` varchar(150) NOT NULL,
+  `code_pattern` varchar(150) NOT NULL DEFAULT 'DOC-001',
   `description` text DEFAULT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `created_by` bigint(20) UNSIGNED NOT NULL,
@@ -133,8 +134,8 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Uncategorized', 'Uncategorized', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'DOC-1-001', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
 
 -- --------------------------------------------------------
 
@@ -405,7 +406,10 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1),
 (86, 'Files: History', 'files', 'Files', 'history', 'File History', 'View Document Filerevision history within authorized documents.', 1),
 (87, 'Files: Print', 'files', 'Files', 'print', 'Print', 'Print the current approved file within authorized documents.', 1),
-(88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1);
+(88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1),
+(89, 'External Documents: View', 'external_documents', 'External Documents', 'view', 'View', 'Allows view operations for external documents.', 1),
+(90, 'External Documents: Request', 'external_documents', 'External Documents', 'request', 'Request', 'Allows create and revision request operations for external documents.', 1),
+(91, 'External Documents: Direct', 'external_documents', 'External Documents', 'direct', 'Direct', 'Allows direct registration operations for external documents.', 1);
 
 -- --------------------------------------------------------
 
@@ -738,6 +742,16 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (5, 87),
 (5, 88);
 
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, external_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` softcopy_permission ON softcopy_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` external_permission
+  ON external_permission.`module_key`='external_documents'
+  AND external_permission.`action_key`=softcopy_permission.`action_key`
+WHERE softcopy_permission.`module_key`='softcopy'
+  AND softcopy_permission.`action_key` IN ('view','request','direct');
+
 -- --------------------------------------------------------
 
 --
@@ -824,6 +838,43 @@ CREATE TABLE `softcopy_revisions` (
   `date_received` date NOT NULL,
   `date_released` date NOT NULL,
   `approval_date` date NOT NULL,
+  `file_id` bigint(20) UNSIGNED NOT NULL,
+  `uploaded_by` bigint(20) UNSIGNED NOT NULL,
+  `approved_by` bigint(20) UNSIGNED NOT NULL,
+  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_documents`
+--
+
+CREATE TABLE `external_documents` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `retention_period` varchar(100) NOT NULL,
+  `current_revision_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_revisions`
+--
+
+CREATE TABLE `external_revisions` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `document_id` bigint(20) UNSIGNED NOT NULL,
+  `revision_number` int(10) UNSIGNED NOT NULL,
+  `revision_level` varchar(30) NOT NULL,
+  `retention_period` varchar(100) NOT NULL,
   `file_id` bigint(20) UNSIGNED NOT NULL,
   `uploaded_by` bigint(20) UNSIGNED NOT NULL,
   `approved_by` bigint(20) UNSIGNED NOT NULL,
@@ -1028,7 +1079,9 @@ INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_t
 (15, 'transfer', 'Transfer approval', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
 (16, 'assignment', 'Assignment approval', NULL, 'assignment', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
 (17, 'access', 'Access approval', NULL, 'access', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(18, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41');
+(18, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(19, 'external_create', 'External Create approval', NULL, 'external_create', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00'),
+(20, 'external_revise', 'External Revise approval', NULL, 'external_revise', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -1155,7 +1208,9 @@ INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`
 (16, 12, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:02:24', 1, '2026-10-16 06:01:14'),
 (17, 10, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:04:34', 1, '2026-10-16 06:03:41'),
 (18, 11, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:05:56', 1, '2026-10-16 06:04:49'),
-(19, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager  Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-16 08:07:49', 1, '2026-10-16 06:06:08');
+(19, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager  Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-16 08:07:49', 1, '2026-10-16 06:06:08'),
+(20, 19, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00'),
+(21, 20, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00');
 
 --
 -- Indexes for dumped tables
@@ -1202,8 +1257,27 @@ ALTER TABLE `assignments`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_code_pattern` (`code_pattern`),
   ADD KEY `parent_id` (`parent_id`),
   ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `external_documents_creator_status` (`created_by`,`status`),
+  ADD KEY `external_documents_current_revision` (`current_revision_id`);
+
+--
+-- Indexes for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `external_revision_number` (`document_id`,`revision_number`),
+  ADD UNIQUE KEY `external_revision_file` (`file_id`),
+  ADD KEY `external_revision_uploaded_by` (`uploaded_by`),
+  ADD KEY `external_revision_approved_by` (`approved_by`);
 
 --
 -- Indexes for table `disposals`
@@ -1321,7 +1395,8 @@ ALTER TABLE `settings`
 --
 ALTER TABLE `softcopy_documents`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `document_number` (`document_number`),
+  ADD KEY `document_number` (`document_number`),
+  ADD UNIQUE KEY `document_series` (`document_number`,`series_number`),
   ADD KEY `category_id` (`category_id`),
   ADD KEY `created_by` (`created_by`),
   ADD KEY `softcopy_status` (`status`,`title`),
@@ -1336,6 +1411,18 @@ ALTER TABLE `softcopy_revisions`
   ADD UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
   ADD KEY `uploaded_by` (`uploaded_by`),
   ADD KEY `approved_by` (`approved_by`);
+
+--
+-- AUTO_INCREMENT for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- Indexes for table `specifics`
@@ -1489,7 +1576,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=92;
 
 --
 -- AUTO_INCREMENT for table `requests`
@@ -1573,7 +1660,7 @@ ALTER TABLE `workflow_steps`
 -- AUTO_INCREMENT for table `workflow_versions`
 --
 ALTER TABLE `workflow_versions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Constraints for dumped tables
@@ -1642,6 +1729,22 @@ ALTER TABLE `locations`
   ADD CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
   ADD CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
   ADD CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`);
+
+--
+-- Constraints for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  ADD CONSTRAINT `external_documents_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `external_documents_current_revision_fk` FOREIGN KEY (`current_revision_id`) REFERENCES `external_revisions` (`id`);
+
+--
+-- Constraints for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  ADD CONSTRAINT `external_revisions_document_fk` FOREIGN KEY (`document_id`) REFERENCES `external_documents` (`id`),
+  ADD CONSTRAINT `external_revisions_file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`),
+  ADD CONSTRAINT `external_revisions_uploaded_by_fk` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `external_revisions_approved_by_fk` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `notifications`

@@ -73,7 +73,7 @@ $navPage = end($navParts);
             <?php endif; ?>
 
             <!-- Document Management -->
-            <?php if ($visible('hardcopy') || $visible('softcopy')): ?>
+            <?php if ($visible('hardcopy') || $visible('softcopy') || $visible('external_documents')): ?>
                 <div class="side-heading">Document Management</div>
 
                 <?php if ($visible('hardcopy')): ?>
@@ -95,6 +95,16 @@ $navPage = end($navParts);
                     >
                         <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
                         Softcopy Documents
+                    </a>
+                <?php endif; ?>
+                <?php if ($visible('external_documents')): ?>
+                    <a
+                        class="side-link<?= $active('documents/external') ?>"
+                        <?= $active('documents/external') === ' active' ? 'aria-current="page"' : '' ?>
+                        href="<?= site_url('documents/external') ?>"
+                    >
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        External Documents
                     </a>
                 <?php endif; ?>
             <?php endif; ?>

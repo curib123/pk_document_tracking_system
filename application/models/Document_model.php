@@ -177,6 +177,42 @@ class Document_model extends CI_Model
             ->order_by('title')->get()->result_array();
     }
 
+    public function softcopy_numbering_catalog($viewer)
+    {
+        $scope = $this->scope('softcopy', $viewer, 'd');
+        $rows = $this->db->select('d.category_id,d.document_number,d.series_number')
+            ->from('softcopy_documents d')->where($scope, NULL, FALSE)->order_by('d.category_id')->order_by('d.document_number')
+            ->order_by('series_number')->get()->result_array();
+        $catalog = [];
+        foreach ($rows as $row) {
+            $categoryId = (int) $row['category_id'];
+            $number = (string) $row['document_number'];
+            if (!isset($catalog[$categoryId][$number])) {
+                $catalog[$categoryId][$number] = [];
+            }
+            if ($row['series_number'] !== NULL && $row['series_number'] !== '') {
+                $series = (string) $row['series_number'];
+                if (!in_array($series, $catalog[$categoryId][$number], TRUE)) {
+                    $catalog[$categoryId][$number][] = $series;
+                }
+            }
+        }
+        return $catalog;
+    }
+
+    public function softcopy_number_previews($categories)
+    {
+        require_once APPPATH . 'services/softcopy/document_number_generator.php';
+        $numbers = [];
+        foreach ($categories as $category) {
+            $numbers[(int) $category['id']] = Document_number_generator::preview(
+                $this->db,
+                (int) $category['id']
+            );
+        }
+        return $numbers;
+    }
+
     // Admin assignment choices are constrained to the currently open folder.
     public function options_in_folder($domain, $browser, $q = '', $selectedIds = [])
     {

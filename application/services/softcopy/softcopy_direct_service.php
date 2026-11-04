@@ -32,7 +32,9 @@ class Softcopy_direct_service
             'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number'] ?? '')),
+            'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
+            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
             'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
@@ -40,6 +42,9 @@ class Softcopy_direct_service
             'date_released' => '',
             'page_number' => (int) ($post['page_number'] ?? 0)
         ];
+        if (!$payload['series_number_checker']) {
+            $payload['document_number'] = '';
+        }
         $this->ci->load->model('Identity_model');
         $this->ci->load->model('Permission_model');
         $this->ci->load->model('Document_model');

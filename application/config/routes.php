@@ -68,6 +68,8 @@ $route['notifications/inbox/read']['POST'] = 'Notifications/mark_read';
 */
 
 // Display a document section or category.
+$route['documents/external']['GET'] = 'External_documents/index';
+$route['documents/external/direct']['POST'] = 'External_documents/direct';
 $route['documents/(:any)']['GET'] = 'Documents/index/$1';
 
 // Add a softcopy document directly.

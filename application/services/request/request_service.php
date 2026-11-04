@@ -21,8 +21,16 @@ class Request_service
             throw new DomainException(
                 'You don’t have permission to perform this action on the selected document.'
             );
-        if (in_array($type, ['softcopy_create', 'hardcopy_create'], TRUE))
+        if (in_array($type, ['softcopy_create', 'hardcopy_create', 'external_create'], TRUE))
             return;
+        if ($type === 'external_revise') {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $externalId = (int) ($payload['external_document_id'] ?? 0);
+            if (!(new External_document_service())->manageable($externalId, $user)) {
+                throw new DomainException('The selected external document is unavailable or outside your authorized scope.');
+            }
+            return;
+        }
         $catalog = in_array($type, ['access', 'assignment'], TRUE);
         $domain = $catalog ? ($payload['document_domain'] ?? 'softcopy') :
             (str_starts_with($type, 'softcopy_') ? 'softcopy' : 'hardcopy');
@@ -40,6 +48,9 @@ class Request_service
     public function save($tab, $post, $user, $attachment = NULL)
     {
         $type = (string) ($post['type'] ?? '');
+        if (in_array($type, ['hardcopy_create', 'hardcopy_update'], TRUE)) {
+            throw new DomainException('Hardcopy create and update requests are no longer available.');
+        }
         if (!in_array($type, $this->ci->Request_model->types($tab), TRUE))
             throw new DomainException(
                 'This request type is not valid for the selected tab. Please select the correct tab and try again.'
@@ -132,8 +143,12 @@ class Request_service
             'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number'] ?? '')),
+            'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
+            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
+            'external_document_id' => (int) ($post['external_document_id'] ?? 0),
+            'retention_period' => trim((string) ($post['retention_period'] ?? '')),
             'recipient_id' => (int) ($post['recipient_id'] ?? 0),
             'expires_at' => trim((string) ($post['expires_at'] ?? '')),
             'destination_location_id' => (int) ($post['destination_location_id'] ?? 0),
@@ -163,7 +178,10 @@ class Request_service
         $hardcopyId = (int) ($post['hardcopy_id'] ?? 0);
         $domain = $payload['document_domain'];
         // Unrelated posted IDs must never attach a request to another document.
-        if (str_starts_with($type, 'softcopy_')) {
+        if (str_starts_with($type, 'external_')) {
+            $softcopyId = 0;
+            $hardcopyId = 0;
+        } elseif (str_starts_with($type, 'softcopy_')) {
             $hardcopyId = 0;
             if ($type === 'softcopy_create')
                 $softcopyId = 0;
@@ -231,8 +249,10 @@ class Request_service
             $id ?: NULL
         );
         $fileId = NULL;
-        $fileField = $type === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id';
-        if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+        $creation = in_array($type, ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($type, 'external_');
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        if (in_array($type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) {
             if ($type === 'softcopy_revise') {
                 if (
                     !$this->ci->db->get_where('softcopy_documents', [
@@ -244,12 +264,26 @@ class Request_service
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_revision($payload);
             }
+            if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
+                require_once APPPATH . 'services/documents/external_document_service.php';
+                $externalService = new External_document_service();
+                $externalService->validate_metadata($payload['title'], $payload['retention_period']);
+                if ($type === 'external_revise' && !$externalService->manageable($payload['external_document_id'], $user)) {
+                    throw new DomainException('Choose an active external document to revise.');
+                }
+            }
             if (!empty($attachment['name'])) {
                 require_once APPPATH . 'services/files/file_service.php';
                 $files = new File_service();
-                $fileId = $type === 'softcopy_create'
-                    ? $files->stage_creation((int) $user['id'], $attachment)
-                    : $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
+                if ($external) {
+                    $fileId = $type === 'external_create'
+                        ? $files->stage_external_creation((int) $user['id'], $attachment)
+                        : $files->stage_external_revision((int) $payload['external_document_id'], (int) $user['id'], $attachment);
+                } else {
+                    $fileId = $type === 'softcopy_create'
+                        ? $files->stage_creation((int) $user['id'], $attachment)
+                        : $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
+                }
                 $staged = $this->ci->db->select('storage_name')->get_where('files', ['id' => $fileId])->row_array();
                 if ($staged && preg_match('/^[a-f0-9]{64}$/', $staged['storage_name']))
                     $this->stagedPaths[] = PK_ROOT . '/storage/documents/' . $staged['storage_name'];
@@ -402,6 +436,8 @@ class Request_service
                 !in_array($r['type'], $this->ci->Request_model->types($tab), TRUE)
             )
                 throw new DomainException('Request cannot be submitted.');
+            if (in_array($r['type'], ['hardcopy_create', 'hardcopy_update'], TRUE))
+                throw new DomainException('Hardcopy create and update requests are no longer available.');
             if (!$this->ci->Permission_model->allowed($user, 'requests', 'submit'))
                 throw new DomainException('Request submission permission is required.');
             $currentPayload = json_decode($r['payload'], TRUE) ?: [];
@@ -437,15 +473,17 @@ class Request_service
                 !$this->ci->Identity_model->active_user((int) ($currentPayload['recipient_id'] ?? 0))
             )
                 throw new DomainException('The recipient is no longer active.');
-            if (in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            if (in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) {
                 $payload = json_decode($r['payload'], TRUE) ?: [];
-                $creation = $r['type'] === 'softcopy_create';
+                $creation = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
+                $external = str_starts_with($r['type'], 'external_');
                 $file = $this->ci->db->get_where('files', [
                     'id' => (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0),
-                    'document_id' => $creation ? NULL : (int) $r['softcopy_id'],
+                    'document_id' => $creation ? NULL : (int) ($external
+                        ? ($payload['external_document_id'] ?? 0) : $r['softcopy_id']),
                     'uploaded_by' => (int) $r['requested_by'],
                     'status' => 'pending',
-                    'domain' => 'softcopy',
+                    'domain' => $external ? 'external' : 'softcopy',
                     'purpose' => $creation ? 'creation' : 'revision'
                 ])->row_array();
                 if (!$file)
@@ -579,6 +617,17 @@ class Request_service
                 $type,
                 $payload,
                 $soft,
+                $actor,
+                $owner,
+                $id
+            );
+        }
+        if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            return (new External_document_service())->apply(
+                $type,
+                $payload,
+                (int) ($payload['external_document_id'] ?? 0),
                 $actor,
                 $owner,
                 $id
@@ -843,7 +892,7 @@ class Request_service
             (new File_service())->cleanup_retired($cleanupDocumentId);
         }
         if ($cleanupFileId)
-            (new File_service())->cleanup_retired(0, $cleanupFileId);
+            (new File_service())->cleanup_retired(0, $cleanupFileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
     }
 
     public function delete($tab, $id, $user)
@@ -874,7 +923,7 @@ class Request_service
             throw new DomainException('Request could not be deleted. Refresh and try again.');
         }
         if ($fileId)
-            (new File_service())->cleanup_retired(0, $fileId);
+            (new File_service())->cleanup_retired(0, $fileId, ['deleted', 'rejected'], str_starts_with($request['type'], 'external_') ? 'external' : 'softcopy');
     }
 
     public function cancel($tab, $id, $user)
@@ -904,6 +953,6 @@ class Request_service
             throw new DomainException('Request could not be cancelled. Refresh and try again.');
         }
         if ($fileId)
-            (new File_service())->cleanup_retired(0, $fileId);
+            (new File_service())->cleanup_retired(0, $fileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
     }
 }

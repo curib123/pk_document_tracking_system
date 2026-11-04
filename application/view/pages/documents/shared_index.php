@@ -210,6 +210,8 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                             <?php $this->load->view('pages/request/softcopy_fields', [
                                 'softcopy_options' => $softcopy_options,
                                 'category_options' => $category_options,
+                                'numbering_options' => $numbering_options,
+                                'number_previews' => $number_previews,
                                 'softcopyDirect' => TRUE
                             ]); ?>
                         <?php else: ?>

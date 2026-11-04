@@ -5,6 +5,7 @@ class Request_model extends CI_Model
 {
     private $groups = [
         'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
+        'external' => ['external_create', 'external_revise'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'hardcopy-disposal' => ['disposal'],
@@ -94,6 +95,7 @@ class Request_model extends CI_Model
         require_once APPPATH . 'services/presentation/disposal_details.php';
         $references = [
             'categories' => ['name', ['category_id' => 'Proposed Category']],
+            'external_documents' => ['title', ['external_document_id' => 'Selected External Document']],
             'areas' => ['name', ['area_id' => 'Proposed Area', 'destination_area_id' => 'Destination Area']],
             'specifics' => ['name', ['specific_id' => 'Proposed Specific', 'destination_specific_id' => 'Destination Specific']],
             'assets' => ['asset_number', ['asset_id' => 'Proposed Asset', 'destination_asset_id' => 'Destination Asset']],
@@ -144,6 +146,8 @@ class Request_model extends CI_Model
                 'title' => 'Proposed Title',
                 'document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
+                'retention_period' => 'Retention Period',
+                'revision_level' => 'Revision Level',
                 'new_revision_level' => 'Proposed Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',

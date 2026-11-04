@@ -72,6 +72,8 @@ class Documents extends MY_Controller
         }
         $softcopy_options = $domain === 'softcopy' ? $this->Document_model->options('softcopy', $this->user, FALSE, TRUE) : [];
         $category_options = $domain === 'softcopy' ? $options['categories'] : [];
+        $numbering_options = $domain === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [];
+        $number_previews = $domain === 'softcopy' ? $this->Document_model->softcopy_number_previews($category_options) : [];
         $latest = [];
         $accessible = [];
         $filesByDocument = [];
@@ -102,6 +104,8 @@ class Documents extends MY_Controller
             'file_histories' => $filesByDocument,
             'softcopy_options' => $softcopy_options,
             'category_options' => $category_options,
+            'numbering_options' => $numbering_options,
+            'number_previews' => $number_previews,
             'folder_browser' => $browser,
             'folder_base' => "documents/{$domain}",
             'folder_params' => [
@@ -139,7 +143,10 @@ class Documents extends MY_Controller
                 $_FILES['revision_attachment'] ?? NULL
             );
             $this->audit_created('softcopy_documents', $result['document_id']);
-            $this->notice('Softcopy action approved and applied directly.');
+            $message = 'Softcopy action approved and applied directly.';
+            if (($this->input->post('type') ?? '') === 'softcopy_create' && !empty($result['document_number']))
+                $message .= ' Generated document number: ' . $result['document_number'] . '.';
+            $this->notice($message);
         } catch (Throwable $e) {
             $this->error_notice($e);
         }

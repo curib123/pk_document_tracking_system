@@ -15,6 +15,8 @@ final class Request_policy
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
             'softcopy_cancel' => 'softcopy',
+            'external_create' => 'external_documents',
+            'external_revise' => 'external_documents',
             'hardcopy_create' => 'hardcopy',
             'hardcopy_update' => 'hardcopy',
             'transfer' => 'transfer',
