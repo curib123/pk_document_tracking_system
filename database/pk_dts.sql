@@ -1072,16 +1072,16 @@ CREATE TABLE `workflows` (
 --
 
 INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_type`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(10, 'softcopy_create', 'Softcopy Create approval', NULL, 'softcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(11, 'softcopy_revise', 'Softcopy Revise approval', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(13, 'hardcopy_create', 'Hardcopy Create approval', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(14, 'hardcopy_update', 'Hardcopy Update approval', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(15, 'transfer', 'Transfer approval', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(16, 'assignment', 'Assignment approval', NULL, 'assignment', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(17, 'access', 'Access approval', NULL, 'access', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(18, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(19, 'external_create', 'External Create approval', NULL, 'external_create', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00'),
-(20, 'external_revise', 'External Revise approval', NULL, 'external_revise', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00');
+(10, 'softcopy_create', 'Softcopy Request', NULL, 'softcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(11, 'softcopy_revise', 'Softcopy Request', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(13, 'hardcopy_create', 'Hardcopy Request', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(14, 'hardcopy_update', 'Hardcopy Request', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(15, 'transfer', 'Hardcopy Transfer Request', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(16, 'assignment', 'Document Assignment Request', NULL, 'assignment', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(17, 'access', 'Document Access Request', NULL, 'access', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(18, 'disposal', 'Disposal Request', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(19, 'external_create', 'External Document Request', NULL, 'external_create', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00'),
+(20, 'external_revise', 'External Document Request', NULL, 'external_revise', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00');
 
 -- --------------------------------------------------------
 
