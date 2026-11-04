@@ -688,7 +688,6 @@
       recipient_id: ["assignment", "access", "transfer"],
       expires_at: ["access"],
       destination_location_id: ["transfer"],
-      new_revision_level: ["softcopy_revise"],
       effective_date: ["softcopy_revise"],
       // Received and released dates are recorded by PHP, not user inputs.
       page_number: ["softcopy_revise"],
@@ -727,8 +726,30 @@
         field.required = show;
       }
     });
+    updateRevisionLevelPreview(select.form, operation);
     updateSoftcopyNumberFields(select.form);
     updateExternalRequestFields(select.form);
+  }
+
+  function updateRevisionLevelPreview(form, operation) {
+    var wrap = form.querySelector("[data-auto-revision-level-wrap]");
+    var preview = form.querySelector("[data-auto-revision-level]");
+    if (!wrap || !preview) return;
+    var revise = operation === "softcopy_revise";
+    wrap.hidden = !revise;
+    if (!revise) {
+      preview.value = "";
+      return;
+    }
+    var source = form.querySelector("#reqSoftcopy");
+    var record = {};
+    try {
+      record = JSON.parse(source?.selectedOptions[0]?.dataset.softcopyRecord || "{}");
+    } catch (error) {
+      record = {};
+    }
+    var currentNumber = Number(record.revision_number || 0);
+    preview.value = String(Math.max(0, currentNumber)).padStart(2, "0");
   }
 
   function updateExternalRequestFields(form) {
@@ -854,12 +875,13 @@
         if (field) field.value = record[name] ?? "";
       },
     );
-    ["new_revision_level", "effective_date", "revision_attachment"].forEach(
+    ["effective_date", "revision_attachment"].forEach(
       function (name) {
         var field = form.querySelector('[name="' + name + '"]');
         if (field) field.value = "";
       },
     );
+    updateRevisionLevelPreview(form, form.querySelector('[name="type"]')?.value);
     var subject = form.querySelector('[name="subject"]');
     if (
       subject &&

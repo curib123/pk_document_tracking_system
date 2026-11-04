@@ -270,7 +270,6 @@ class File_service
             'document_number' => $document['document_number'],
             'series_number' => $document['series_number'],
             'category_id' => $document['category_id'],
-            'new_revision_level' => $post['new_revision_level'] ?? '',
             'page_number' => $post['page_number'] ?? 1,
             'effective_date' => $post['effective_date'] ?? ''
         ], (int) $actorId, $upload);

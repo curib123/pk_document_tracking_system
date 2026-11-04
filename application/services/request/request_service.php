@@ -155,7 +155,6 @@ class Request_service
             'destination_area_id' => (int) ($post['destination_area_id'] ?? 0),
             'destination_specific_id' => (int) ($post['destination_specific_id'] ?? 0),
             'destination_asset_id' => (int) ($post['destination_asset_id'] ?? 0),
-            'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
             'date_received' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
             'date_released' => '',

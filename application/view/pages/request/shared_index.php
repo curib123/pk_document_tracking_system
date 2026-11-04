@@ -181,7 +181,6 @@ foreach ($rows as $row) {
       ? 'external' : ($row['hardcopy_id'] ? 'hardcopy' : 'softcopy')),
     'disposal_reason' => $payload['disposal_reason'] ?? '',
     'disposal_other' => $payload['disposal_other'] ?? '',
-    'new_revision_level' => $payload['new_revision_level'] ?? '',
     'effective_date' => $payload['effective_date'] ?? '',
     'date_received' => $payload['date_received'] ?? '',
     'date_released' => $payload['date_released'] ?? '',

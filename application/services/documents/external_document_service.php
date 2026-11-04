@@ -132,9 +132,7 @@ class External_document_service
                 ['document_id' => $documentId]
             )->row_array();
             $revisionNumber = (int) ($maximum['revision_number'] ?? 0) + 1;
-            $revisionLevel = $previous
-                ? $this->next_revision_level((string) $previous['revision_level'])
-                : '00';
+            $revisionLevel = str_pad((string) max(0, $revisionNumber - 1), 2, '0', STR_PAD_LEFT);
             $this->ci->db->where('id', $documentId)->update('external_documents', [
                 'title' => $title,
                 'retention_period' => $retention,
@@ -187,12 +185,4 @@ class External_document_service
         }
     }
 
-    private function next_revision_level(string $previous): string
-    {
-        if (!ctype_digit($previous)) {
-            throw new DomainException('The previous external revision level is not numeric; contact an administrator.');
-        }
-        $next = (string) ((int) $previous + 1);
-        return str_pad($next, max(strlen($previous), strlen($next)), '0', STR_PAD_LEFT);
-    }
 }

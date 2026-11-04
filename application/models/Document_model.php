@@ -170,11 +170,17 @@ class Document_model extends CI_Model
             return $this->db->select($domain === 'softcopy'
                 ? 'd.id,d.document_number,d.title' : 'd.id,d.title,d.sequence_number')
                 ->order_by('d.title')->get()->result_array();
-        return $this->db->select($domain === 'softcopy'
-            ? 'id,document_number,title,series_number,category_id,version' :
+        if ($domain === 'softcopy') {
+            return $this->db->select(
+                'd.id,d.document_number,d.title,d.series_number,d.category_id,d.version,
+                 cr.revision_number,cr.new_revision_level'
+            )->join('softcopy_revisions cr', 'cr.id=d.current_revision_id', 'left')
+                ->order_by('title')->get()->result_array();
+        }
+        return $this->db->select(
             'id,title,area_id,specific_id,asset_id,location_id,sequence_number,
-               retention_enabled,retention_start_date,retention_end_date,holder_id')
-            ->order_by('title')->get()->result_array();
+             retention_enabled,retention_start_date,retention_end_date,holder_id'
+        )->order_by('title')->get()->result_array();
     }
 
     public function softcopy_numbering_catalog($viewer)

@@ -24,10 +24,6 @@ class Softcopy_operation_service
 
     public function validate_revision($payload)
     {
-        $level = trim((string) ($payload['new_revision_level'] ?? ''));
-        if ($level === '' || mb_strlen($level) > 30) {
-            throw new DomainException('New revision level must contain 1 to 30 characters.');
-        }
         $effective = (string) ($payload['effective_date'] ?? '');
         if ($effective !== '') {
             $parsed = DateTime::createFromFormat('!Y-m-d', $effective);
@@ -112,7 +108,7 @@ class Softcopy_operation_service
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
             $today = date('Y-m-d');
-            $revisionLevel = trim((string) ($payload['new_revision_level'] ?? '')) ?: '00';
+            $revisionLevel = '00';
             $effective = (string) ($payload['effective_date'] ?? '');
             $received = (string) ($payload['date_received'] ?? '');
             $released = (string) ($payload['date_released'] ?? '');
@@ -193,10 +189,8 @@ class Softcopy_operation_service
                 ->get_where('softcopy_revisions', ['document_id' => $softcopyId])->row_array();
             $previous = $doc['current_revision_id'] ?
                 $db->get_where('softcopy_revisions', ['id' => $doc['current_revision_id']])->row_array() : NULL;
-            $level = trim((string) $payload['new_revision_level']);
-            if ($previous && $level === $previous['new_revision_level']) {
-                throw new DomainException('New revision level must differ from the current revision.');
-            }
+            $nextRevisionNumber = (int) ($max['revision_number'] ?? 0) + 1;
+            $level = str_pad((string) max(0, $nextRevisionNumber - 1), 2, '0', STR_PAD_LEFT);
             if ($title !== '' && mb_strlen($title) > 255) {
                 throw new DomainException('Document title is too long.');
             }
@@ -206,7 +200,7 @@ class Softcopy_operation_service
             if (
                 !$db->insert('softcopy_revisions', [
                     'document_id' => (int) $softcopyId,
-                    'revision_number' => (int) ($max['revision_number'] ?? 0) + 1,
+                    'revision_number' => $nextRevisionNumber,
                     'reason' => $reason,
                     'effective_date' => $effective,
                     'page_number' => (int) $payload['page_number'],

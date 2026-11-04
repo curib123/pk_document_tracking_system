@@ -148,7 +148,6 @@ class Request_model extends CI_Model
                 'series_number' => 'Series',
                 'retention_period' => 'Retention Period',
                 'revision_level' => 'Revision Level',
-                'new_revision_level' => 'Proposed Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',
                 'date_released' => 'Released Date',

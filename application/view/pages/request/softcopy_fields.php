@@ -49,7 +49,7 @@ $numbering_options = $numbering_options ?? [];
     <label class="form-check mt-4">
         <input class="form-check-input" type="checkbox" name="series_number_checker" value="1"
             data-series-number-checker autocomplete="off">
-        Series Number Checker
+        Need Series Number?
     </label>
 </div>
 <div class="col-md-6" data-document-number-auto hidden>
@@ -68,9 +68,9 @@ $numbering_options = $numbering_options ?? [];
     <input class="form-control" name="series_number_manual" id="reqSeries" maxlength="100" disabled autocomplete="off">
     <small class="form-text" data-series-number-guide hidden></small>
 </div>
-<div class="col-md-6">
-    <label class="form-label" for="newRevisionLevel">New Revision Level</label>
-    <input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30" autocomplete="off">
+<div class="col-md-6" data-auto-revision-level-wrap hidden>
+    <label class="form-label" for="nextRevisionLevel">Next Revision Level (automatic)</label>
+    <input class="form-control" id="nextRevisionLevel" data-auto-revision-level readonly autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="revisionPages">Number of Pages</label>
