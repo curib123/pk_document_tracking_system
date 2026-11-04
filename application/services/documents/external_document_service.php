@@ -193,6 +193,22 @@ class External_document_service
                 'category_id' => $categoryId,
                 'created_by' => $ownerId
             ])) {
+                $databaseError = $this->ci->db->error();
+                $message = (string) ($databaseError['message'] ?? 'unknown database error');
+                log_message(
+                    'error',
+                    'External document insert failed (' . (int) ($databaseError['code'] ?? 0) . '): ' . $message
+                );
+                if (stripos($message, 'retention_') !== FALSE) {
+                    throw new DomainException(
+                        'The External Documents database still has obsolete retention fields. Apply 20261104_remove_external_retention.sql, then retry.'
+                    );
+                }
+                if (stripos($message, 'category_id') !== FALSE) {
+                    throw new DomainException(
+                        'External Categories database setup is incomplete. Apply 20261104_external_categories.sql, then retry.'
+                    );
+                }
                 throw new DomainException('Unable to create the external document.');
             }
             $documentId = (int) $this->ci->db->insert_id();
