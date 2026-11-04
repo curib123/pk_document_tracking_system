@@ -79,7 +79,7 @@
         "Read Pending approvals for work assigned to you or your role, and Outstanding handoffs for your physical dispatch or receipt tasks.",
         "Use Your document register to compare accessible Hardcopy and Softcopy counts. Use My request status to see the status distribution of your own requests.",
         "Open Hardcopy Documents, Softcopy Documents, or External Documents under Document Management to browse records.",
-        "Open My Requests or My Tasks under Document Requests. Their badges indicate draft or returned requests and pending tasks respectively.",
+        "Open My Requests or My Tasks under Document Requests. Their badges indicate draft or returned requests and pending tasks respectively; nonzero counts are animated, with reduced-motion settings respected.",
         "On a narrow screen, use the Toggle navigation menu button to show the navigation. Open your name at the top right for account actions, and use the bell to open Notifications."
       ],
       "notes": [
@@ -502,20 +502,23 @@
     },
     {
       "title": "15. Apply authorized direct document actions",
-      "route": "documents/hardcopy / documents/softcopy",
+      "route": "documents/hardcopy / documents/softcopy / documents/external",
       "steps": [
         "Open the relevant document register. Direct-action buttons appear only to users who have the required direct permission.",
         "To add a hardcopy directly, select Hardcopy Direct, enter Document Title, Area, Specific, optional Asset, Location, and Current Holder, and complete optional retention information or Reason / Notes.",
         "Select Save Document, review the confirmation, and continue. Check the saved record in the register.",
         "To create, revise, or cancel a softcopy directly, select Softcopy Direct and choose the Softcopy Action. Complete the same action-specific information used in a softcopy request.",
         "Attach a Document File for direct Create or Revise. Select Approve Directly, check the confirmation, and continue to apply the action.",
+        "To create or revise an External Document directly, open External Documents and use Add or Edit. Choose an External Category and attach the file; each revision automatically advances the revision level.",
+        "An authorized External Document row shows Download without exposing the attachment filename. Use Dispose on an active record, choose the disposal reason, and confirm when both required direct permissions are available.",
         "Use Edit on an active, manageable hardcopy to change its metadata. On softcopies, Edit opens a direct revision action.",
         "If Dispose is available and appropriate, choose the disposal reason, complete Other Reason when required, and confirm. Inspect the resulting status and record details."
       ],
       "notes": [
         "An authorized direct softcopy action will be approved and applied immediately. Use My Requests when approval through the workflow is required.",
         "Edit and Dispose require an active record within the operator's permitted scope. Dispose also requires direct disposal permission.",
-        "The hardcopy holder will be fixed to an ordinary user's account; administrators will be able to select a holder."
+        "External Document Dispose requires both External Documents direct permission and disposal direct permission. Disposal records the previous state and status history.",
+        "The hardcopy holder is fixed to an ordinary user's account; administrators can select a holder."
       ],
       "sources": [
         "application/view/pages/documents/shared_index.php:5",
@@ -530,6 +533,8 @@
         "For a hardcopy, select Hardcopy Direct and complete title, storage hierarchy, holder, and optional retention or notes.",
         "Select Save Document \u2192 Confirm, then inspect the saved record.",
         "For a softcopy, choose Softcopy Direct, select the action, and complete the visible fields; Create and Revise require a file.",
+        "For an External Document, Add or Edit opens direct create/revision; choose its independent category and attach a file. Revision levels advance automatically.",
+        "Use Download without a displayed filename, or Dispose with a reason when authorized.",
         "Select Approve Directly \u2192 Confirm. Edit an active record or use Dispose with a disposal reason only when those actions are permitted."
       ],
       "slide_notes": [
@@ -579,15 +584,16 @@
       ]
     },
     {
-      "title": "17. Maintain places and softcopy categories",
+      "title": "17. Maintain places and document categories",
       "route": "places",
       "steps": [
-        "Open Setup Places and choose the permitted tab: Area, Specific, Asset, Location, or Softcopy Categories.",
+        "Open Setup Places and choose the permitted tab: Area, Specific, Asset, Location, Softcopy Categories, or External Categories.",
         "Use the Add button for the selected tab to create reference data, or Edit to update an existing item.",
         "Create an Area by name; create a Specific under its Area; create an Asset Number under its Specific. These relationships support hardcopy storage choices.",
         "For a Location, enter Location Name and select Area and Specific. Asset Number is optional. Enter Sequence if a particular order is required, or leave it empty for automatic ordering.",
         "Check the location sequence guidance: it is unique within the Specific, with A = 1, B = 2, and C = 3. Complete optional Archive Date where used.",
         "For Softcopy Categories, complete Name, Folder, optional Description, and the Parent when making a subcategory.",
+        "For External Categories, complete Name, Folder, optional Description, and Parent when making an External subcategory. External Categories are separate from Softcopy Categories.",
         "Check the Active option, select Save Record, and confirm. Use status and parent filters to find saved items.",
         "Use Deactivate when a reference item should no longer be active; historical links are preserved."
       ],
@@ -604,10 +610,11 @@
         "application/view/pages/places/shared_index.php:54"
       ],
       "slide_steps": [
-        "Open Setup Places and choose Area, Specific, Asset, Location, or Softcopy Categories.",
+        "Open Setup Places and choose Area, Specific, Asset, Location, Softcopy Categories, or External Categories.",
         "Use Add or Edit. Maintain Area \u2192 Specific \u2192 optional Asset before selecting Location.",
         "For Location, enter Location Name, Area, Specific, optional Asset Number, and optional Sequence or Archive Date.",
         "For Softcopy Categories, enter Name, Folder, optional Description, and Parent for a subcategory.",
+        "For External Categories, enter Name, Folder, optional Description, and Parent; these folders organize External Documents only.",
         "Check Active, then Save Record \u2192 Confirm. Deactivate an unused reference item to preserve its historical links."
       ],
       "slide_notes": [
@@ -794,7 +801,7 @@
       ]
     }
   ],
-  "format": "PowerPoint 16:9; proposed interface illustrations with navigation callouts",
-  "demonstration_notice": "Proposed screens and example workflows using sample records.",
-  "planning_notice": "This proposed user guide describes the intended operation of PK Document Control before deployment. The following instructions set out how users will work with the proposed screens, permissions, approval routes, and document controls. Illustrations and worked examples use sample records to explain the planned procedures."
+  "format": "PowerPoint 16:9; user-guide content with illustrative interface callouts",
+  "demonstration_notice": "Screenshots and sample records are illustrative; menu items and actions depend on current permissions and document scope.",
+  "planning_notice": "This guide describes current PK Document Tracking System behavior. Check the current application and the as-built PK_DTS_System_Reference.md for the latest register features, permissions, and migration details."
 }

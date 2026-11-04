@@ -74,6 +74,7 @@ Set environment variables for the process that runs PHP. Variables set in a Powe
 | `application/view/` | Page templates and shared UI components |
 | `public/assets/` | Styles, JavaScript, fonts, and images |
 | `database/` | Database export and incremental SQL migrations |
+| `docs/system-documentation/` | Current as-built system reference and exported user/process diagrams |
 | `storage/` | Private files, sessions, logs, audits, and generated artifacts |
 | `tests/` | Focused browser and HTTP regression checks |
 | `tools/` | Administrator, backup, asset, and local synchronization utilities |
