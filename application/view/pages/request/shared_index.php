@@ -14,7 +14,7 @@ if (!$task) {
   unset($tabs['hardcopy']);
 }
 $typeMap = [
-  'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise', 'softcopy_cancel' => 'Cancel'],
+  'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise'],
   'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],
   'hardcopy' => [],
   'hardcopy-transfer' => ['transfer' => 'Transfer'],

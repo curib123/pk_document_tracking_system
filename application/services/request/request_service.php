@@ -128,6 +128,9 @@ class Request_service
     {
         $allowed = $this->ci->Request_model->types($tab);
         $type = trim((string) ($post['type'] ?? $allowed[0]));
+        if ($tab === 'softcopy' && $type === 'softcopy_cancel') {
+            throw new DomainException('Softcopy cancellation requests are no longer available.');
+        }
         if (!in_array($type, $allowed, TRUE))
             throw new DomainException(
                 'This request type is not valid for the selected tab. Please select the correct tab and try again.'

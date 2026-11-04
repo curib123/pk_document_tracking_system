@@ -42,7 +42,6 @@ class Requests extends MY_Controller
         $actionModules = [
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
-            'softcopy_cancel' => 'softcopy',
             'external_create' => 'external_documents',
             'external_revise' => 'external_documents',
             'transfer' => 'transfer',
