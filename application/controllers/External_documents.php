@@ -11,10 +11,23 @@ class External_documents extends MY_Controller
         $canViewAll = $this->Permission_model->allowed($this->user, '*', '*') ||
             $this->Permission_model->allowed($this->user, 'documents', 'access_all') ||
             $this->Permission_model->allowed($this->user, 'documents', 'view_all');
+        $ownerOptions = [];
+        if ($canViewAll) {
+            $this->load->model('Document_model');
+            $ownerOptions = $this->Document_model->active_users();
+        }
         $applyFilters = function () use ($state, $canViewAll) {
             $this->db->where('d.status', 'active');
             if (!$canViewAll) {
                 $this->db->where('d.created_by', (int) $this->user['id']);
+            } elseif ($state['owner'] > 0) {
+                $this->db->where('d.created_by', $state['owner']);
+            }
+            if ($state['from'] !== '') {
+                $this->db->where('d.created_at >=', $state['from'] . ' 00:00:00');
+            }
+            if ($state['to'] !== '') {
+                $this->db->where('d.created_at <=', $state['to'] . ' 23:59:59');
             }
             if ($state['q'] !== '') {
                 $this->db->group_start()
@@ -56,6 +69,7 @@ class External_documents extends MY_Controller
             'rows' => $rows,
             'table' => $state,
             'total' => $total,
+            'owner_options' => $ownerOptions,
             'can_direct' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct'),
             'can_dispose' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct') &&
                 $this->Permission_model->allowed($this->user, 'disposal', 'direct'),

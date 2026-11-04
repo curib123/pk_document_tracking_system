@@ -69,8 +69,16 @@ $dt_total = $total ?? count($rows);
 $dt_sort = $table['sort'] ?? 'updated_at';
 $dt_dir = strtolower($table['dir'] ?? 'desc');
 $dt_sortable = ['title', 'description', 'revision_level', 'created_at', 'updated_at'];
-$dt_filters = [];
-$dt_filter_values = [];
+$dt_date_filters = TRUE;
+$dt_filters = !empty($owner_options)
+    ? ['owner' => ['' => 'All Owners'] + array_column($owner_options, 'name', 'id')]
+    : [];
+$dt_filter_values = [
+    'owner' => $table['owner'] ?? '',
+    'period' => $table['period'] ?? 'all',
+    'from' => $table['from'] ?? '',
+    'to' => $table['to'] ?? ''
+];
 $dt_badges = [];
 $dt_create = $can_direct ? 'Add New External Document' : '';
 ?>
@@ -89,6 +97,7 @@ $dt_create = $can_direct ? 'Add New External Document' : '';
     'dt_sortable',
     'dt_filters',
     'dt_filter_values',
+    'dt_date_filters',
     'dt_badges',
     'dt_create'
 )); ?>
