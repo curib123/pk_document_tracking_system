@@ -372,7 +372,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
+                  <textarea class="form-control" id="reqSubject" name="subject" rows="1" maxlength="255" required
+                    autocomplete="off"></textarea>
                 </div>
                 <div class="col-12" data-hardcopy-existing>
                   <label class="form-label" for="reqHardcopy">Existing Hardcopy Document</label>
@@ -413,7 +414,8 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
                 </div>
                 <div class="col-md-6">
                   <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
+                  <textarea class="form-control" id="reqSubject" name="subject" rows="1" maxlength="255" required
+                    autocomplete="off"></textarea>
                 </div>
                 <div class="col-md-6" data-domain-picker>
                   <label class="form-label" for="disposalDocumentDomain">Document Type</label>

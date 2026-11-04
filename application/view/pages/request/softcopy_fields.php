@@ -14,7 +14,8 @@ $numbering_options = $numbering_options ?? [];
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSubject">Subject / Reason</label>
-    <input class="form-control" name="subject" id="reqSubject" maxlength="255" required autocomplete="off">
+    <textarea class="form-control" name="subject" id="reqSubject" rows="1" maxlength="255" required
+        autocomplete="off"></textarea>
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSoftcopy">Existing Softcopy Document</label>
