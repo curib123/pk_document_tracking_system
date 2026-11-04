@@ -10,6 +10,9 @@ $tabs = [
   'access-grant' => 'Document Access Grants',
   'document-assign' => 'Document Assignments'
 ];
+if (!$task) {
+  unset($tabs['hardcopy']);
+}
 $typeMap = [
   'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise', 'softcopy_cancel' => 'Cancel'],
   'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],

@@ -14,6 +14,10 @@ class Requests extends MY_Controller
     }
     private function listing($tab, $task)
     {
+        if (!$task && $tab === 'hardcopy') {
+            redirect('my-requests/softcopy');
+            return;
+        }
         $this->Request_model->types($tab);
         // Physical handoff tasks are visible to authorized recipients
         // even when they cannot approve other workflow requests.
