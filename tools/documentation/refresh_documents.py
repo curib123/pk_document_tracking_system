@@ -288,21 +288,57 @@ def notes(page, values, rect, title='Remember'):
 
 
 def process_page(doc, item, number, total):
-    page = header(doc, 'Process Flow', item['title'], number, total, item['summary'], chapter('process', item['id']))
+    page = header(doc, 'Process Flow', item['title'], number, total,
+                  item['summary'], chapter('process', item['id']))
     steps = item['steps']
-    gap = 18
-    height = min(101, (584-gap*(len(steps)-1))/len(steps))
-    y = 176
-    for index, step in enumerate(steps, 1):
-        panel(page, (42, y, 830, y+height), WHITE)
-        panel(page, (42, y, 97, y+height), PALE)
-        text(page, (54, y+13, 88, y+height-10), f'{index:02}', 19, True, ACCENT)
-        text(page, (115, y+10, 810, y+33), step['actor'], 11, True, ACCENT, minimum=11)
-        text(page, (115, y+34, 810, y+height-7), step['text'], 16, minimum=13)
-        if index != len(steps):
-            arrow(page, [(436, y+height), (436, y+height+gap)])
-        y += height+gap
-    notes(page, item['notes'], (858, 176, 1148, 760))
+    left_count = (len(steps)+1)//2
+    positions = []
+    for index in range(len(steps)):
+        column = 0 if index < left_count else 1
+        row = index if column == 0 else index-left_count
+        # Read down the first column, then across to the second column.
+        y = 176+row*210
+        actor_x, action_x = (268, 42) if column == 0 else (506, 659)
+        positions.append((actor_x, action_x, y))
+
+    for (x, _, y), (next_x, _, next_y) in zip(positions, positions[1:]):
+        if next_x == x:
+            arrow(page, [(x+68, y+164), (next_x+68, next_y)])
+        else:
+            arrow(page, [(x+136, y+82), (455, y+82),
+                         (455, next_y+82), (next_x, next_y+82)])
+
+    for index, (step, (actor_x, action_x, y)) in enumerate(zip(steps, positions), 1):
+        panel(page, (action_x, y, action_x+209, y+164), PALE)
+        text(page, (action_x+13, y+13, action_x+196, y+37),
+             'STEP '+str(index), 12, True, ACCENT, minimum=12)
+        text(page, (action_x+13, y+45, action_x+196, y+152),
+             step['text'], 15, minimum=14)
+
+        panel(page, (actor_x, y, actor_x+136, y+164), WHITE)
+        actor = step['actor']
+        if actor == 'PK DTS':
+            kind = 'database' if any(word in step['text'].lower() for word in
+                ['save', 'record', 'store', 'capture', 'restore', 'backup']) else 'account'
+        elif 'approver' in actor.lower() or actor == 'Auditor':
+            kind = 'review'
+        else:
+            kind = 'person'
+        diagram_icon(page, (actor_x+22, y+13, actor_x+114, y+105), kind)
+        panel(page, (actor_x, y+116, actor_x+136, y+164), ACCENT, ACCENT)
+        text(page, (actor_x+8, y+125, actor_x+128, y+160),
+             actor, 11, True, WHITE, align=1, minimum=10.5)
+
+    panel(page, (890, 176, 1148, 760), PALE)
+    panel(page, (890, 176, 1148, 211), ACCENT, ACCENT)
+    text(page, (904, 184, 1134, 208), 'NOTES / CHECKS', 12, True, WHITE, minimum=12)
+    y = 227
+    height = (744-y)/len(item['notes'])
+    for index, value in enumerate(item['notes']):
+        text(page, (904, y, 1134, y+height-16), value, 14, minimum=12.5)
+        if index < len(item['notes'])-1:
+            page.draw_line((904, y+height-11), (1134, y+height-11), color=RULE, width=.5)
+        y += height
 
 
 def flowchart_page(doc, item, number, total):
@@ -854,6 +890,8 @@ def verify(content, pending=False):
                     if key == 'dfd':
                         expected_icons = 6 if item.get('kind') == 'context' else 3*len(item['flows'])
                         assert len(page.get_image_info()) == expected_icons, f'Missing DFD illustrations: {item["id"]}'
+                    if key == 'process':
+                        assert len(page.get_image_info()) == len(item['steps']), f'Missing process illustrations: {item["id"]}'
                     if key == 'guide':
                         screen = guide_screens()[item['id']]
                         assert normalized(screen['caption']) in page_text, f'Missing screen caption: {item["id"]}'
