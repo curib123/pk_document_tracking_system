@@ -6,7 +6,8 @@
       "title": "Start here",
       "audience": "All users",
       "steps": [
-        "Use Hardcopy Documents for physical records, Softcopy Documents for controlled electronic records, and External Documents for records received from outside the organization.",
+        "Use Hardcopy Documents for physical records and Softcopy Documents for controlled electronic records.",
+        "Use External Documents for records received from outside the organization.",
         "Use My Requests to ask for an approved change. Use My Tasks to complete assigned approval steps and physical transfer handoffs.",
         "Authorized staff can register documents or apply changes directly from the document registers.",
         "Read the result after each action. Select Got it to close a notice; check the record or request status before continuing."
@@ -41,14 +42,15 @@
       "steps": [
         "Enter Username and Password, then select Sign In.",
         "If Change your temporary password appears, enter Current or temporary password, New password, and Confirm new password.",
-        "Use more than 8 characters, up to 72 bytes, and a different password. Select Set permanent password.",
+        "Use a different password with at least 9 characters, then select Set permanent password.",
         "Later, open your account name, choose Change Password, complete the same fields, then select Update Password and Confirm.",
         "To leave, open your account name, select Sign Out, and confirm."
       ],
       "result": "Your permanent password gives access to the menus allowed for your account.",
       "notes": [
         "For a forgotten password or disabled account, contact the Administrator.",
-        "After repeated failed sign-ins, wait before trying again or ask the Administrator for help."
+        "After repeated failed sign-ins, wait before trying again or ask the Administrator for help.",
+        "If the system reports that your password is too long, shorten it and try again."
       ]
     },
     {
@@ -59,7 +61,8 @@
         "Open Overview for the totals and recent activity available to your account.",
         "Under Document Management, choose Hardcopy Documents, Softcopy Documents, or External Documents.",
         "Open My Requests and choose the tab for the action you need. Open My Tasks for work assigned to you.",
-        "Authorized controllers use Document Assignments and Setup Places. Administrators also use User Management, Roles & Permissions, Workflow Builder, and Backup & Restore."
+        "Authorized controllers use Document Assignments and Setup Places.",
+        "Administrators also use User Management, Roles & Permissions, Workflow Builder, and Backup & Restore."
       ],
       "result": "You reach the page that matches the work you are authorized to perform.",
       "notes": [
@@ -74,7 +77,7 @@
       "steps": [
         "Open the appropriate document register and choose Table or Folder.",
         "Search for the title or reference. Apply the available status, category, owner, date, or retention filters.",
-        "In Folder view, expand the storage or category tree. Use the folder links and breadcrumbs to change the selection.",
+        "In Folder view, expand the storage or category tree. Use folder links or the path above the list to change folders.",
         "Select a title or View to inspect the full record. Use Previous, Next, or the page controls to browse more records."
       ],
       "result": "You see the documents and details available within your access.",
@@ -110,16 +113,16 @@
         "Check Current Holder and any retention dates before saving.",
         "Select Save Document and Confirm. Reopen View Details to check the result."
       ],
-      "result": "The permitted metadata changes take effect immediately.",
+      "result": "The document details you are allowed to change are saved immediately.",
       "notes": [
         "Use a Hardcopy Transfer Request when an approved physical handoff is required.",
         "New hardcopy update requests are unavailable. If the record changed while you were editing, refresh and recheck it.",
-        "Reason / Notes is captured at registration; changing that field during Edit does not update the saved notes."
+        "Reason / Notes is saved when you register the document; changes to this field during Edit are not saved."
       ]
     },
     {
       "id": "hardcopy-track",
-      "title": "Track custody and storage",
+      "title": "Check the holder and storage location",
       "audience": "Hardcopy users and document controllers",
       "steps": [
         "Find the hardcopy in Hardcopy Documents and open View Details.",
@@ -130,7 +133,7 @@
       "result": "You know where the physical record should be and who currently holds it.",
       "notes": [
         "A transfer approval does not by itself change the stored holder or location; the recipient must Accept the handoff.",
-        "An assignment changes custody without recording a physical transfer handoff."
+        "An assignment changes the holder without recording a physical transfer handoff."
       ]
     },
     {
@@ -246,10 +249,10 @@
         "Select Save Directly and Confirm.",
         "Check the new revision level and use Download to inspect the current file if permitted."
       ],
-      "result": "The metadata and attachment are updated immediately, and the revision level increases automatically.",
+      "result": "The document details and attachment update immediately; the revision level increases automatically.",
       "notes": [
-        "You can revise only an Active external document within your authorized scope.",
-        "The previous attachment is superseded and is no longer the current downloadable file.",
+        "You can revise only an Active external document that you have permission to manage.",
+        "The previous attachment is replaced; Download gives you the current approved file.",
         "Earlier external revision records and files remain stored; the register does not provide a separate File History action."
       ]
     },
@@ -283,8 +286,8 @@
       ],
       "result": "Final approval updates the external document and makes the next automatic revision current.",
       "notes": [
-        "The existing external document must be Active and within your authorized scope.",
-        "Editing a draft can retain its attachment; upload another file when the proposal needs replacing."
+        "The existing external document must be Active and accessible to your account.",
+        "When editing your draft, keep the attachment or upload a replacement."
       ]
     },
     {
@@ -332,7 +335,7 @@
         "Use View Details to check the proposal. Edit is available for your Draft or Returned request.",
         "Select Submit, Continue, and Confirm to send the request to its published approval process.",
         "Follow Status, Approval Process Timeline, and Workflow Activity Log. Edit and resubmit a Returned request after addressing the feedback.",
-        "Cancel an unwanted Draft. If Delete is offered on its Cancelled record, confirm only when you want to remove that never-submitted draft permanently."
+        "Cancel an unwanted Draft. If Delete appears on its Cancelled record, confirm only to permanently remove that never-submitted draft."
       ],
       "result": "The request records its progress from Draft to Submitted and the final outcome.",
       "notes": [
@@ -368,7 +371,7 @@
         "Hardcopy Transfer and Document Access: Plant Manager, then Document Control Officer, then Requester confirmation.",
         "Document Assignment: Plant Manager, then Document Control Officer, then Requester's leader.",
         "Disposal: Plant Manager, then Document Control Officer, then Requester confirmation.",
-        "Check your request's Approval Process Timeline for its next reviewer. Authorized workflow administrators can inspect the published route in Workflow Builder."
+        "Use Approval Process Timeline to find the next reviewer. Workflow administrators can check the published route in Workflow Builder."
       ],
       "result": "You can identify the next review or confirmation needed before the request can finish.",
       "notes": [
@@ -438,7 +441,7 @@
         "Choose Document Type: Softcopy or Hardcopy. Select the document and enter Subject.",
         "Check Recipient / Assigned User; it is your own account. Choose Access Expires At after today.",
         "Add optional Remarks, then select Save Draft and Confirm. Submit the saved request with Continue and Confirm.",
-        "After completion, reopen the register. To extend access, submit another permitted access request with the required later expiry."
+        "After completion, reopen the register. To extend access, submit a new access request with a later expiry date."
       ],
       "result": "Final approval grants your account access through the selected expiry date.",
       "notes": [
@@ -539,19 +542,19 @@
     },
     {
       "id": "places",
-      "title": "Set up physical storage references",
+      "title": "Set up physical storage locations",
       "audience": "Administrator or authorized reference-data controller",
       "steps": [
         "Open Setup Places and use the Area, Specific, Asset, and Location tabs.",
         "Add an Area, then a Specific linked to its Area. Add an Asset Number under its Specific when needed.",
         "Add a Location with Location Name, Sequence, Area, Specific, optional Asset Number, and optional Archive Date.",
         "Select Save Record and Confirm. Use Edit to correct a reference record.",
-        "Use Deactivate for a reference no longer available for new selections, then check the Active or Inactive filter."
+        "Use Deactivate when a storage entry should no longer appear in new selections. Check the Active or Inactive filter."
       ],
-      "result": "Document forms can use the active storage hierarchy you have configured.",
+      "result": "Document forms show the active storage choices you have set up.",
       "notes": [
-        "Sequence is unique within the Specific and is automatic if left blank. Keep each storage record under the correct parent.",
-        "Deactivation preserves historical links; resolve any dependency message before trying again."
+        "Sequence is unique within each Specific. Leave it blank for an automatic number; keep each storage entry under the correct parent.",
+        "Deactivation keeps historical links. Resolve any warning about linked records before trying again."
       ]
     },
     {
@@ -568,7 +571,7 @@
       "result": "Softcopies and external documents use their own category folders; softcopy numbering follows its category's Code Pattern.",
       "notes": [
         "External Categories do not use a Code Pattern.",
-        "Choose the intended parent carefully and avoid circular category relationships."
+        "Choose the parent carefully. A category cannot be its own parent or sit below one of its own subcategories."
       ]
     },
     {
@@ -580,9 +583,9 @@
         "Enter the person's name, Username, Position Title, Primary role, Assigned roles, and Leader as needed. Check Active account.",
         "Select Save User and Confirm. Give the generated temporary password to the intended user through your approved channel.",
         "To reset a password, Edit the account, select Generate a new temporary password for this existing account, then Save User and Confirm.",
-        "Use Assigned Documents to inspect custody when available. Use Deactivate on an eligible account that must stop signing in."
+        "Use Assigned Documents to review the user's documents, when available. Select Deactivate when an eligible account must stop signing in."
       ],
-      "result": "The account receives its configured access and must replace a generated temporary password before using protected pages.",
+      "result": "The account receives its selected access. The user must replace a generated temporary password before continuing into the system.",
       "notes": [
         "Temporary passwords are shown once. Use a reset if the user no longer has that password.",
         "You cannot deactivate yourself or remove the last active Administrator.",
@@ -603,7 +606,7 @@
       "result": "Active assigned roles combine to determine the account's permitted menus and actions.",
       "notes": [
         "The Administrator role is protected.",
-        "A role referenced by users, relevant workflows, or unfinished requests cannot be removed while still in use.",
+        "A role used by users, approval processes, or unfinished requests cannot be removed until those links are resolved.",
         "A role name alone does not assign an approval task; the published process must route the task to it."
       ]
     },
@@ -621,7 +624,7 @@
       "result": "New submissions use the published default approval process.",
       "notes": [
         "Approver types are Any active member of role, Specific user, Requester's leader, or Requester account.",
-        "Publishing needs 1 to 30 valid steps and active role members or specific approvers. Submission must also resolve the requester's active leader when required.",
+        "Publish 1 to 30 valid steps with active approvers. If a step uses Requester's leader, that leader must be active when submitting.",
         "Submitted and Returned requests keep their original approval process."
       ]
     },
@@ -671,7 +674,7 @@
         "To add an existing archive, select Import backup, choose Backup ZIP, then Import backup and Confirm.",
         "Use Clean up and Confirm to remove eligible backup, audit, and log archives older than three months."
       ],
-      "result": "A successful backup is listed for later download or restoration; imported archives are checked before storage.",
+      "result": "A successful backup is listed for later download or restore; imported archives are checked before storage.",
       "notes": [
         "Backup actions need the appropriate view and edit permissions.",
         "The page displays a daily 5:00 PM Asia/Manila schedule; check Last automatic backup to confirm a recent run.",
@@ -703,7 +706,7 @@
       "steps": [
         "If a menu, record, or action is missing, clear filters and check the document status; ask the Administrator to check your roles and access.",
         "If a file upload fails, check the allowed type and 15 MB size limit, then attach the correct file again.",
-        "If a request cannot submit, check required fields and attachment. Ask the Administrator to check the published process and active approvers.",
+        "If Submit fails, check required fields and the attachment. Ask the Administrator to check the published process and active approvers.",
         "If a record changed in another session, refresh the page, inspect its latest details, and repeat only the changes still needed.",
         "If an action fails, read Action could not be completed and give the controller the request reference, action, time, and message."
       ],

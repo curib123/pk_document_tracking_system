@@ -3,8 +3,8 @@
   "pages": [
     {
       "id": "sign-in-and-find-documents",
-      "title": "Sign in and find a document",
-      "summary": "A staff member signs in, finds an allowed record and uses its available actions.",
+      "title": "Sign in and find documents",
+      "summary": "Sign in, find the document you need and use the actions available to your account.",
       "steps": [
         {
           "actor": "Staff member",
@@ -20,7 +20,7 @@
         },
         {
           "actor": "Staff member",
-          "text": "Use folders, Search and filters; open View Details to check the full record."
+          "text": "Use folders, Search and filters; choose View Details to read the full record."
         },
         {
           "actor": "PK DTS",
@@ -28,18 +28,18 @@
         },
         {
           "actor": "Staff member",
-          "text": "For an allowed current file, choose Download or Print when available; External Documents offer Download."
+          "text": "Choose Download or Print when available for the current file; External Documents offer Download."
         }
       ],
       "notes": [
-        "Seeing a document title does not by itself allow editing, approval, download or printing.",
+        "Document visibility, editing, approval and file use depend on separate permissions.",
         "Hardcopy records track physical documents. Softcopy and External Documents can include controlled files."
       ]
     },
     {
       "id": "hardcopy-direct-registration",
-      "title": "Register or update a physical document",
-      "summary": "An authorized document holder records a hardcopy directly. Saving changes the live record immediately.",
+      "title": "Register or edit a hardcopy",
+      "summary": "An authorized holder records a physical document. Saving applies the change immediately.",
       "steps": [
         {
           "actor": "Document holder",
@@ -51,7 +51,7 @@
         },
         {
           "actor": "Document holder",
-          "text": "Check Current Holder and retention dates; enter optional Reason / Notes when registering a new document."
+          "text": "Check Current Holder and retention dates; add optional Reason / Notes for a new document."
         },
         {
           "actor": "Document holder",
@@ -59,23 +59,23 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check the active storage path, holder and dates; save the active document and its history."
+          "text": "Validate storage, holder and dates; save the active record and its history."
         }
       ],
       "notes": [
         "Only the current holder with direct hardcopy permission, or an Administrator, can edit an active hardcopy.",
-        "Administrators may select another active holder. Other users are recorded as their own holder.",
-        "Hardcopy creation and updates use this direct process. New Hardcopy Create and Update requests are unavailable."
+        "Administrators may select another active holder. Other users register themselves as holder.",
+        "Register and edit hardcopies directly. New Hardcopy Create and Update requests are unavailable."
       ]
     },
     {
       "id": "hardcopy-retention-monitoring",
       "title": "Monitor hardcopy storage and retention",
-      "summary": "The holder checks physical storage and retention dates, then chooses any required follow-up action.",
+      "summary": "Check the storage place and retention dates, then arrange any required follow-up.",
       "steps": [
         {
           "actor": "Document holder",
-          "text": "Open Hardcopy Documents and use folders or Search to find the physical document."
+          "text": "Open Hardcopy Documents; use folders or Search to find the document."
         },
         {
           "actor": "Document holder",
@@ -87,7 +87,7 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Show the remaining days, Due today or an overdue message using office dates."
+          "text": "Show the days remaining, Due today or an overdue message using office dates."
         },
         {
           "actor": "Document holder",
@@ -95,23 +95,23 @@
         },
         {
           "actor": "Document holder",
-          "text": "Arrange a permitted update, transfer or disposal after reviewing the physical document."
+          "text": "Review the physical document, then arrange a permitted update, transfer or disposal."
         }
       ],
       "notes": [
         "Both retention dates are required when tracking is enabled. Retention End must be on or after Retention Start.",
-        "Retention reminders cover allowed active hardcopies whose end date has arrived. Retention never disposes of documents automatically.",
+        "Reminders cover visible active hardcopies whose retention end date has arrived. Retention never triggers automatic disposal.",
         "Several hardcopy documents may share one Location. The displayed Location sequence belongs to that storage place."
       ]
     },
     {
       "id": "softcopy-direct-maintenance",
       "title": "Create or revise a softcopy directly",
-      "summary": "An authorized document controller publishes a new softcopy or replacement file without an approval request.",
+      "summary": "An authorized controller creates a softcopy or publishes a revision without an approval request.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open Softcopy Documents; choose Add New Softcopy Document, or Edit a permitted active record."
+          "text": "Open Softcopy Documents; choose Add New Softcopy Document, or Edit an active record."
         },
         {
           "actor": "Document controller",
@@ -131,23 +131,23 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Create the active document or publish its next revision; make the approved replacement file current."
+          "text": "Create the active document or publish its next revision with the replacement file."
         }
       ],
       "notes": [
         "The system generates a new document number. Need Series Number? allows an existing category number with a unique series.",
         "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
-        "Revision preserves the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
+        "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
       ]
     },
     {
       "id": "external-direct-maintenance",
       "title": "Create or revise an external document directly",
-      "summary": "An authorized document controller records a document received from outside the company and keeps its latest file.",
+      "summary": "An authorized controller records a document from outside the company and publishes its current file.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open External Documents and choose Add New External Document, or Edit a permitted active record."
+          "text": "Open External Documents; choose Add New External Document, or Edit an active record."
         },
         {
           "actor": "Document controller",
@@ -155,7 +155,7 @@
         },
         {
           "actor": "Document controller",
-          "text": "Choose Attach File; editing also requires a replacement attachment."
+          "text": "Choose Attach File. A revision also requires a replacement file."
         },
         {
           "actor": "Document controller",
@@ -163,19 +163,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Save an active document at revision 00, or publish the next revision and its replacement file."
+          "text": "Create an active record at revision 00, or publish the next revision and its replacement file."
         }
       ],
       "notes": [
         "External Documents use External Categories and do not use retention dates.",
         "Attach PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. Description may contain up to 2,000 characters.",
-        "Viewing a record does not automatically allow its revision or file use. Those actions need the appropriate permission and access."
+        "Revising a record or using its file requires the appropriate permission and document access."
       ]
     },
     {
       "id": "document-create-revise-request",
-      "title": "Request a softcopy or external document change",
-      "summary": "A requester prepares a proposed creation or revision. The live document changes only after final approval.",
+      "title": "Request a new document or revision",
+      "summary": "Submit a proposed softcopy or external document change. Final approval applies it to the live register.",
       "steps": [
         {
           "actor": "Requester",
@@ -183,39 +183,39 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Create or Revise for the selected document type and enter Subject / Reason."
+          "text": "Choose Create or Revise for the document type; enter Subject / Reason."
         },
         {
           "actor": "Requester",
-          "text": "For a revision, choose the existing document; enter its proposed title and other displayed details."
+          "text": "For a revision, select the existing document; enter the proposed title and other displayed details."
         },
         {
           "actor": "Requester",
-          "text": "Choose the creation category or External Category; attach the required file and add optional Remarks."
+          "text": "For creation, choose its category; attach the required file and add optional Remarks."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft, confirm, review the draft, then choose Submit and confirm."
+          "text": "Choose Save Draft and confirm. Review the draft, then choose Submit and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Send the proposal through its published approval route; apply creation or revision after final approval."
+          "text": "Follow the published approval route; create the document or publish the revision after final approval."
         }
       ],
       "notes": [
         "Softcopy creation also asks for Number of Pages and supports optional series. Its number and revision are assigned when approved.",
-        "External requests use External Create Request or External Revised Request; include the proposed Description and required Attach File.",
+        "External requests use External Create Request or External Revised Request. Enter Description and upload the required Attach File.",
         "Uploads accept PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A pending attachment is not the current approved file."
       ]
     },
     {
       "id": "request-draft-submit",
       "title": "Save, submit or remove your draft",
-      "summary": "A requester reviews a saved proposal before submitting it, and can cancel an unsubmitted draft.",
+      "summary": "Save a proposal, review it and submit it for approval. An unsubmitted draft can be cancelled.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Choose New Request in the appropriate My Requests tab and complete the displayed form."
+          "text": "Open the relevant My Requests tab, choose New Request and complete the form."
         },
         {
           "actor": "Requester",
@@ -231,59 +231,51 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check permissions, active choices and required files; mark Submitted and notify the first approver."
-        },
-        {
-          "actor": "Requester",
-          "text": "To stop an unsubmitted draft, choose Cancel; use Delete only when offered for an eligible Cancelled draft."
+          "text": "Validate permissions, active choices and files; mark Submitted and notify the first approver."
         }
       ],
       "notes": [
-        "Only the requester can edit their Draft or Returned proposal. Submitted requests keep the approval route captured at submission.",
+        "Only the requester can edit their Draft or Returned request. Submitted requests keep the route recorded at submission.",
         "An existing Submitted Access, Assignment or Transfer request blocks another of these for the same requester and document.",
-        "Cancel applies to Drafts. Delete permanently removes only eligible Cancelled drafts that have never entered an approval route."
+        "Only the requester can Cancel a Draft. Delete permanently removes an eligible Cancelled draft only if it was never submitted."
       ]
     },
     {
       "id": "approval-return-reject",
       "title": "Review, approve, return or reject",
-      "summary": "Each assigned approver decides in order. The final approval applies the requested change or prepares a transfer.",
+      "summary": "Assigned approvers decide in order. Final approval applies the change or prepares a physical transfer.",
       "steps": [
         {
           "actor": "Assigned approver",
-          "text": "Open My Tasks, select the request tab and review View Details and the Approval Process Timeline."
+          "text": "Open My Tasks; select the request and review View Details and the Approval Process Timeline."
         },
         {
           "actor": "Assigned approver",
-          "text": "Use Review File when offered; choose Approve, Return or Reject and confirm the decision."
+          "text": "Use Review File when available; check the proposal, attachments and earlier decisions."
+        },
+        {
+          "actor": "Assigned approver",
+          "text": "Choose one decision: Approve, Return or Reject. Add optional remarks and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Approve sends the request to the next approver; final approval applies the change."
+          "text": "Record the decision and history; update the status and route work to the responsible person."
         },
         {
-          "actor": "PK DTS",
-          "text": "Return sends work to the preceding approver, or to the requester when returned from the first step."
-        },
-        {
-          "actor": "Requester or prior approver",
-          "text": "Review the return remarks; correct and resubmit the proposal, or decide the reopened approval step."
-        },
-        {
-          "actor": "PK DTS",
-          "text": "Keep the decision history. Mark a rejected request Rejected and end its approval route."
+          "actor": "Requester or assigned approver",
+          "text": "Open the updated request; check its status, remarks and next required action."
         }
       ],
       "notes": [
-        "Only the active step's assigned person or matching role member can decide; an administrator does not bypass that assignment.",
-        "Return and Reject allow optional remarks. Resubmission keeps the original approval route and earlier decision history.",
-        "Most final approvals mark Completed. A transfer remains Approved until its physical Dispatch and Accept steps finish."
+        "Approve advances the route. Final approval usually marks Completed; a transfer stays Approved until Dispatch and Accept finish.",
+        "Later Return reopens the previous approver and stays Submitted. First-step Return marks Returned; requester edits and resubmits on the original route.",
+        "Reject marks Rejected and ends the route. Only the assigned user or matching role member can decide; Administrator status gives no bypass."
       ]
     },
     {
       "id": "hardcopy-transfer-request",
-      "title": "Request and approve a physical transfer",
-      "summary": "A requester proposes the receiving person and new storage place before the physical document is released.",
+      "title": "Request and approve a hardcopy transfer",
+      "summary": "Approve the receiving user and destination before the physical document is released.",
       "steps": [
         {
           "actor": "Requester",
@@ -291,7 +283,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Hardcopy Document; check Original Places and Holder loaded from its current record."
+          "text": "Choose Hardcopy Document; check Original Places and Holder from its current record."
         },
         {
           "actor": "Requester",
@@ -307,19 +299,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Create a For Transfer handoff; keep the existing holder and storage place until receipt is accepted."
+          "text": "Create a For Transfer handoff; retain the current holder and storage place until acceptance."
         }
       ],
       "notes": [
         "Source and destination choices must be active and allowed. The destination needs Area, Specific and Location; Asset is optional.",
-        "The transfer requester may differ from the Current Holder. Only that original requester can later choose Dispatch.",
-        "The initial transfer route is Plant Manager, Document Control Officer, then requester confirmation. Check the published route for changes."
+        "The requester may differ from the Current Holder. Only the original requester can later choose Dispatch.",
+        "Default route: Plant Manager, Document Control Officer, then Requester confirmation. Check the published route for changes."
       ]
     },
     {
       "id": "hardcopy-dispatch-accept",
       "title": "Dispatch and accept the physical document",
-      "summary": "The original requester releases the approved hardcopy. The named recipient confirms receipt and becomes its holder.",
+      "summary": "The original requester dispatches the approved hardcopy. The named recipient accepts it after physical receipt.",
       "steps": [
         {
           "actor": "Original requester",
@@ -327,7 +319,7 @@
         },
         {
           "actor": "Original requester",
-          "text": "For a For Transfer handoff, release the physical document, choose Dispatch and confirm."
+          "text": "For a For Transfer handoff, release the document, choose Dispatch and confirm."
         },
         {
           "actor": "PK DTS",
@@ -335,7 +327,7 @@
         },
         {
           "actor": "Receiving user",
-          "text": "After physical receipt, open the same handoff area, choose Accept and confirm."
+          "text": "After physical receipt, open Physical Transfer Handoffs, choose Accept and confirm."
         },
         {
           "actor": "PK DTS",
@@ -343,19 +335,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Set the receiver as holder, move the storage place, mark Accepted and complete the request."
+          "text": "Set the recipient as holder, update the storage place, mark Accepted and complete the request."
         }
       ],
       "notes": [
         "Only the original requester can Dispatch. Only the named receiving user can Accept an In Transit handoff.",
-        "Changed custody, an unavailable Location or changed approved parent places blocks acceptance and leaves the handoff unchanged.",
+        "A changed holder, unavailable Location or changed approved storage path blocks acceptance and leaves the handoff unchanged.",
         "When the holder changes, acceptance revokes the previous holder's personal hardcopy access grants. Global permissions still apply."
       ]
     },
     {
       "id": "request-temporary-access",
       "title": "Request temporary document access",
-      "summary": "A requester asks for time-limited access to a softcopy or hardcopy without changing its holder or assignment.",
+      "summary": "Request access to a softcopy or hardcopy until a chosen expiry date. Holder and assignments stay unchanged.",
       "steps": [
         {
           "actor": "Requester",
@@ -363,7 +355,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Softcopy or Hardcopy and the document; check your name under Recipient / Assigned User."
+          "text": "Choose Softcopy or Hardcopy and its document; check your name under Recipient / Assigned User."
         },
         {
           "actor": "Requester",
@@ -379,19 +371,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Grant access through the approved expiry date; keep the document's holder and assignments unchanged."
+          "text": "Grant access through the approved expiry date; retain the current holder and assignments."
         }
       ],
       "notes": [
-        "Access requests are for the requester. The recipient cannot be changed to another person in this self-service form.",
+        "This request is for you. Recipient / Assigned User cannot be changed to another person.",
         "Expiry must still be valid at final approval. Access ends at the end of the selected date, or earlier if revoked.",
-        "An access grant still works with account permissions. Seeing a catalog record alone does not grant download, print or edit rights."
+        "The account's document and file permissions still apply. Catalog visibility alone does not grant download, print or edit rights."
       ]
     },
     {
       "id": "request-document-assignment",
       "title": "Request a document assignment",
-      "summary": "A requester asks to be assigned an active softcopy or to become the holder of an active hardcopy.",
+      "summary": "Ask to become a softcopy assignee or the recorded holder of an active hardcopy.",
       "steps": [
         {
           "actor": "Requester",
@@ -399,7 +391,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Softcopy or Hardcopy, select its document and check your fixed Recipient / Assigned User name."
+          "text": "Choose Softcopy or Hardcopy and its document; check your name under Recipient / Assigned User."
         },
         {
           "actor": "Requester",
@@ -415,19 +407,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "For a hardcopy, make the requester its Current Holder without changing the storage place."
+          "text": "For a hardcopy, set the requester as Current Holder; retain its storage place."
         }
       ],
       "notes": [
         "This request is for the requester. An authorized document controller uses Document Assignments to assign another person.",
-        "Hardcopy assignment changes custody immediately after final approval. It does not use Dispatch or Accept.",
+        "Hardcopy assignment changes the recorded holder after final approval. It does not move the document or use Dispatch and Accept.",
         "Assignment does not create a temporary access grant. The account's document and file permissions still apply."
       ]
     },
     {
       "id": "direct-document-assignments",
-      "title": "Assign one document or a whole storage group",
-      "summary": "An authorized document controller assigns a person directly, either to one document or to an entire allowed group.",
+      "title": "Assign one document directly",
+      "summary": "An authorized controller assigns a softcopy or changes the recorded holder of a hardcopy immediately.",
       "steps": [
         {
           "actor": "Document controller",
@@ -435,71 +427,163 @@
         },
         {
           "actor": "Document controller",
-          "text": "For one record, choose Assign Document, select the document and Assigned User, then Save Assignment."
+          "text": "Choose Assign Document; select the active document and Assigned User."
         },
         {
           "actor": "Document controller",
-          "text": "For hardcopy bulk assignment, choose Location and Assigned User, then Assign All."
-        },
-        {
-          "actor": "Document controller",
-          "text": "For softcopy bulk assignment, choose Category / Subcategory and Assigned User, then Assign All."
+          "text": "Choose Save Assignment and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Check the active documents and user, the bulk limit and any active hardcopy handoffs."
+          "text": "Validate the active document and user; check for an active hardcopy handoff."
         },
         {
           "actor": "PK DTS",
-          "text": "Apply the whole assignment: replace hardcopy holders or add softcopy assignees; keep storage places."
+          "text": "Change the hardcopy holder or add the softcopy assignee; retain the storage place."
         }
       ],
       "notes": [
-        "The required direct assignment permission is separate from permission to request an assignment.",
-        "Bulk assignment covers all active records at the Location or in the category and its subcategories, up to 2,000 records.",
-        "For Transfer or In Transit handoffs block direct hardcopy reassignment. This direct process does not use Dispatch or Accept."
+        "Direct assignment requires its own permission and takes effect immediately. It needs no approval, Dispatch or Accept.",
+        "Hardcopy assignment changes the recorded holder and keeps the storage place. It does not physically move the document.",
+        "Softcopy assignment keeps existing assignees. An active Hardcopy transfer blocks reassignment. File permissions still apply."
+      ]
+    },
+    {
+      "id": "bulk-hardcopy-assignment",
+      "title": "Assign all hardcopies at a Location",
+      "summary": "An authorized controller changes the recorded holder of every active hardcopy at one Location.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Document Assignments and choose Hardcopy / Places."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Location and Assigned User; review the active records at that Location."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Assign All and confirm."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Validate the user and active records, the 2,000-document limit and any active handoffs."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Change the holder for the whole selection; keep each document at its recorded storage place."
+        }
+      ],
+      "notes": [
+        "Bulk assignment includes all active hardcopies at the selected Location, up to 2,000 documents.",
+        "For Transfer or In Transit handoffs block hardcopy reassignment. Resolve the active transfer before retrying.",
+        "Direct assignment needs its own permission and no approval, Dispatch or Accept. It changes records without physically moving documents."
+      ]
+    },
+    {
+      "id": "bulk-softcopy-assignment",
+      "title": "Assign a softcopy category branch",
+      "summary": "An authorized controller assigns a user to every active softcopy in a category and its subcategories.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Document Assignments and choose Softcopy / Categories."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Category / Subcategory and Assigned User; review the selected category branch."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Assign All and confirm."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Validate the active user, selected records and 2,000-document bulk limit."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Add the user as an assignee for the whole selection; keep existing assignees."
+        }
+      ],
+      "notes": [
+        "The selected category and all its subcategories are included. Only active softcopies are assigned, up to 2,000 documents.",
+        "Direct assignment requires its own permission and takes effect immediately, without an approval request.",
+        "Assignment does not create a temporary personal access grant. The account's document and file permissions still apply."
       ]
     },
     {
       "id": "document-disposal",
-      "title": "Dispose of a document directly or by request",
-      "summary": "An authorized person records a disposal method. A request waits for approval; a permitted direct action applies immediately.",
+      "title": "Dispose of a document directly",
+      "summary": "An authorized holder or controller records the disposal method and applies disposal immediately.",
       "steps": [
         {
           "actor": "Document holder or controller",
-          "text": "For a permitted direct action, open the document register and choose Dispose on an active record."
+          "text": "Open the permitted document register and choose Dispose on an active record."
         },
         {
-          "actor": "Requester",
-          "text": "For approval, open My Requests > Disposal Request, choose New Request, then Hardcopy or External."
+          "actor": "Document holder or controller",
+          "text": "Choose Shred, Scratch or Other; describe the method when choosing Other."
         },
         {
-          "actor": "Document holder or requester",
-          "text": "Choose the document and Shred, Scratch or Other; describe Other and complete the displayed request details."
-        },
-        {
-          "actor": "Document holder or requester",
-          "text": "Confirm direct disposal, or Save Draft and Submit the disposal request."
-        },
-        {
-          "actor": "Assigned approvers",
-          "text": "For a request, review the disposal and complete its approval route."
+          "actor": "Document holder or controller",
+          "text": "Confirm the direct disposal."
         },
         {
           "actor": "PK DTS",
-          "text": "Mark the document Disposed and record the disposal method, responsible person and history."
+          "text": "Check both direct permissions, the disposal reason and document eligibility."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Mark Disposed and record the method, responsible person and disposal history."
         }
       ],
       "notes": [
-        "Direct disposal needs both the document's direct permission and direct disposal permission. Other needs a description of up to 250 characters.",
-        "Approved hardcopy disposal requests clear Location and revoke access grants. Direct hardcopy disposal retains those records.",
-        "Softcopy disposal is direct only and retires its controlled files. Retention dates never trigger automatic disposal."
+        "Direct disposal supports all three registers and needs both direct permissions. Other requires a description of up to 250 characters.",
+        "Direct Hardcopy disposal retains Location and personal grants. Softcopy disposal retires its controlled files.",
+        "External disposal keeps stored files and revision records but blocks normal download. Retention never triggers automatic disposal."
+      ]
+    },
+    {
+      "id": "document-disposal-request",
+      "title": "Request hardcopy or external disposal",
+      "summary": "Submit a proposed disposal for approval. The document changes only after final approval.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests > Disposal Request and choose New Request."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Hardcopy or External and its active document; complete the displayed request details."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Shred, Scratch or Other; describe Other and add optional Remarks."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Save Draft, review the proposal, then Submit; confirm each action."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Review the proposal and decide through the request's approval route."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "After final approval, mark Disposed and retain the approval and disposal history."
+        }
+      ],
+      "notes": [
+        "Disposal requests support Hardcopy and External Documents only. Softcopy disposal is available as a permitted direct action.",
+        "Other requires a description of up to 250 characters. A Return or Reject leaves the proposed disposal unapplied.",
+        "Approved Hardcopy disposal clears Location and personal grants. External disposal keeps stored files and revision records."
       ]
     },
     {
       "id": "maintain-places-categories",
       "title": "Maintain places and document categories",
-      "summary": "An authorized maintainer prepares active storage places and categories used by document forms.",
+      "summary": "Prepare the active storage places and category folders used in document forms.",
       "steps": [
         {
           "actor": "Places maintainer",
@@ -507,15 +591,15 @@
         },
         {
           "actor": "Places maintainer",
-          "text": "Create Area first, link Specific to Area, and add optional Asset Numbers under Specific."
+          "text": "Create Area, link Specific to Area, then add optional Asset Numbers under Specific."
         },
         {
           "actor": "Places maintainer",
-          "text": "For Location, enter Location Name, Area and Specific; choose optional Asset Number and Archive Date."
+          "text": "For Location, enter Location Name, Area and Specific; add optional Asset Number and Archive Date."
         },
         {
           "actor": "Places maintainer",
-          "text": "For categories, enter the name and folder name; choose an optional parent and the softcopy code pattern."
+          "text": "For a category, enter its name and folder name; select an optional parent and softcopy code pattern."
         },
         {
           "actor": "Places maintainer",
@@ -523,7 +607,7 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check matching parents, category nesting and unique sequence or code rules; update future choices."
+          "text": "Validate parents, category nesting and unique sequence or code rules; update the available choices."
         }
       ],
       "notes": [
@@ -535,7 +619,7 @@
     {
       "id": "manage-users-roles",
       "title": "Manage users, roles and permissions",
-      "summary": "An account administrator prepares staff accounts and limits what each role can see and do.",
+      "summary": "Create staff accounts, assign roles and control which pages and actions each user can access.",
       "steps": [
         {
           "actor": "Account administrator",
@@ -551,7 +635,7 @@
         },
         {
           "actor": "Account administrator",
-          "text": "Give the temporary credentials to the staff member; generate a replacement temporary password when needed."
+          "text": "Give temporary credentials to the intended staff member; reset the temporary password when needed."
         },
         {
           "actor": "Staff member",
@@ -559,19 +643,19 @@
         },
         {
           "actor": "Account administrator",
-          "text": "Review Assigned Documents; deactivate users or unused roles, or Remove an eligible unused role."
+          "text": "Review Assigned Documents; deactivate a user or unused role, or Remove an eligible role."
         }
       ],
       "notes": [
-        "Additional roles combine the permissions available to a user. The Leader is used by approval routes that name the requester's leader.",
+        "Active roles combine a user's permissions. The Leader receives approval steps configured as Requester's leader.",
         "A delegated administrator cannot grant permissions they do not hold or create an Administrator role assignment.",
         "Roles still used by accounts or approval routes cannot be removed. Account and role actions each require their own permission."
       ]
     },
     {
       "id": "publish-approval-workflow",
-      "title": "Publish approval routes for future requests",
-      "summary": "A workflow administrator changes the ordered approval steps without changing routes already captured by requests.",
+      "title": "Publish an approval route",
+      "summary": "Set the ordered approval steps for future submissions. Existing requests keep their recorded route.",
       "steps": [
         {
           "actor": "Workflow administrator",
@@ -587,7 +671,7 @@
         },
         {
           "actor": "Workflow administrator",
-          "text": "Choose Save Step; edit, reorder or Remove steps until the route matches the business process."
+          "text": "Choose Save Step; edit, reorder or Remove steps to match the business process."
         },
         {
           "actor": "Workflow administrator",
@@ -595,19 +679,19 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Make the valid route the published default for future submissions; retain existing requests' captured routes."
+          "text": "Publish the valid route for future submissions; retain the route already recorded by existing requests."
         }
       ],
       "notes": [
         "Published versions are read-only. Create a draft to change future approvals.",
         "Submission must resolve active approvers. A route that needs a requester's leader cannot start without an active assigned leader.",
-        "The active published route determines who acts next; default approval examples are not a permanent company-wide rule."
+        "Check the published route for the actual approval order. Default route examples may change."
       ]
     },
     {
       "id": "notifications-and-audit",
-      "title": "Follow reminders and review recorded actions",
-      "summary": "Staff use reminders to find work needing attention. An authorized auditor reviews the recorded system actions.",
+      "title": "Follow notices and review the audit trail",
+      "summary": "Use notices to find work needing attention. Authorized auditors can trace recorded system actions.",
       "steps": [
         {
           "actor": "Staff member",
@@ -615,7 +699,7 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Highlight the staff member's Draft or Returned requests, assigned approvals and physical handoff tasks."
+          "text": "Highlight the user's Draft or Returned requests, assigned approvals and physical handoff tasks."
         },
         {
           "actor": "Staff member",
@@ -623,7 +707,7 @@
         },
         {
           "actor": "Document holder",
-          "text": "When a retention reminder appears, open the hardcopy record and review the due or overdue date."
+          "text": "Open a retention reminder and review the hardcopy's due or overdue date."
         },
         {
           "actor": "Auditor",
@@ -643,7 +727,7 @@
     {
       "id": "backup-and-archive-cleanup",
       "title": "Create, download and import a backup",
-      "summary": "An authorized backup operator keeps protected recovery copies and manages older archive files.",
+      "summary": "Create protected recovery copies, download or import an archive, and clean up eligible older files.",
       "steps": [
         {
           "actor": "Backup operator",
@@ -659,7 +743,7 @@
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Download to keep an approved backup in a secure location."
+          "text": "Choose Download and store the backup in a secure location."
         },
         {
           "actor": "Backup operator",
@@ -667,19 +751,19 @@
         },
         {
           "actor": "Backup operator",
-          "text": "When appropriate, choose Clean up and confirm removal of eligible archives older than three months."
+          "text": "Choose Clean up when appropriate; confirm removal of eligible archives older than three months."
         }
       ],
       "notes": [
         "A backup contains system records, application code and private files. Routine temporary files and existing backup archives are excluded.",
-        "The daily automatic backup is scheduled for 5:00 PM, Asia/Manila, and needs the server scheduler configured.",
+        "The daily backup target is 5:00 PM, Asia/Manila. Automatic runs require the server scheduler to be configured and verified.",
         "Import verifies and stores a backup; it does not restore live data. Clean up applies to eligible backup, audit and log archives."
       ]
     },
     {
       "id": "restore-system-data",
       "title": "Restore system data from a backup",
-      "summary": "An authorized backup operator replaces live records and private files with a verified backup, then signs in again.",
+      "summary": "Replace live records and private files with a verified backup, then sign in and check the restored system.",
       "steps": [
         {
           "actor": "Backup operator",
@@ -695,11 +779,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check the archive and authorization, then create a recovery backup before changing live data."
+          "text": "Validate the archive and authorization; create a recovery backup before replacing live data."
         },
         {
           "actor": "PK DTS",
-          "text": "Block normal use during restoration; restore records and private files, then sign the restoring operator out."
+          "text": "Pause normal use, restore records and private files, then sign out the restoring operator."
         },
         {
           "actor": "Backup operator",
@@ -708,7 +792,7 @@
       ],
       "notes": [
         "Plan a maintenance period: restoration replaces current records and private files with the selected backup's contents.",
-        "The restore screen uses the operator's account password. The server must also be configured to open and verify the protected archive.",
+        "Enter the operator's account password. The server must also be configured to open and verify the protected archive.",
         "The web restore does not replace application code. A system maintainer handles code recovery separately when needed."
       ]
     }

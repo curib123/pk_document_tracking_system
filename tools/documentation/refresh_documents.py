@@ -32,11 +32,13 @@ PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CT = 'http://schemas.openxmlformats.org/package/2006/content-types'
 ET.register_namespace('', NS)
 ET.register_namespace('r', REL)
-INK = (.10, .18, .22)
-TEAL = (.04, .36, .39)
-PALE = (.92, .97, .97)
-GOLD = (.99, .95, .85)
-GREY = (.43, .49, .53)
+INK = (.09, .16, .25)
+TEAL = (.00, .43, .43)
+PALE = (.94, .98, .98)
+GOLD = (.96, .97, .99)
+GREY = (.36, .43, .51)
+RULE = (.82, .87, .91)
+WHITE = (1, 1, 1)
 
 # Implementation identifiers stay here, outside the reader's documents. New
 # endpoints require an explicit review and a link to a user-guide procedure.
@@ -89,6 +91,55 @@ SPECS = [
  ('process', 'PK_DTS_Process_Flow', 'Process Flow'),
  ('guide', 'PK_DTS_User_Guide', 'User Guide'),
 ]
+BOOKS = {
+ 'dfd': ('See the whole system', 'Roles, information and records',
+         'Understand who provides information, how it moves through each activity, and where the result is recorded.',
+         ['All five roles', 'Document information', 'Approvals and tracking']),
+ 'flowchart': ('Choose the next step', 'Decisions made clear',
+               'Follow one activity at a time. Each question shows the next action and what happens when a check fails.',
+               ['Clear decisions', 'Yes and No paths', 'Practical outcomes']),
+ 'process': ('Understand the journey', 'People, actions and outcomes',
+             'Explain each procedure from start to finish: who acts, what they do, and what happens next.',
+             ['Direct document actions', 'Requests and approvals', 'Physical handoffs']),
+ 'guide': ('Complete everyday tasks', 'A practical guide for every role',
+           'Find the task you need, follow the numbered instructions, and check the result before continuing.',
+           ['Find and manage documents', 'Request, review and receive', 'Set up and maintain PK DTS']),
+}
+
+
+def chapter(key, identifier):
+    if identifier in {'account-entry', 'sign-in-and-find-documents', 'context-all-roles', 'overview'}:
+        return 'Getting started'
+    if identifier == 'help':
+        return 'Help and reference'
+    if key == 'guide' and identifier in {'roles', 'welcome', 'navigation', 'sign-in', 'help'}:
+        return 'Getting started'
+    if any(word in identifier for word in ['backup', 'restore', 'audit', 'account', 'users', 'permissions', 'roles', 'workflows', 'places', 'categories', 'setup']):
+        return 'Setup and administration'
+    if 'softcopy' in identifier or identifier == 'electronic-direct':
+        return 'Softcopy documents'
+    if 'external' in identifier:
+        return 'External documents'
+    if any(word in identifier for word in ['transfer', 'handoff', 'dispatch', 'accept', 'access', 'assignment', 'disposal', 'request', 'approval', 'approve', 'return', 'decisions', 'draft']):
+        return 'Requests and tracking'
+    if 'hardcopy' in identifier or 'retention' in identifier:
+        return 'Hardcopy documents'
+    if any(word in identifier for word in ['file', 'browse', 'find']):
+        return 'Finding documents and files'
+    return 'Getting started'
+
+
+def document_items(key, data):
+    body = entries(key, data)
+    contents_count = math.ceil(len(body)/24)
+    offset = 1+contents_count
+    front = [{'id': 'book-cover', 'kind': 'cover', 'title': dict((k, title) for k, _, title in SPECS)[key]}]
+    for index in range(contents_count):
+        listing = [{'title': item['title'], 'page': position+offset+1}
+                   for position, item in enumerate(body) if index*24 <= position < (index+1)*24]
+        front.append({'id': f'contents-{index+1}', 'kind': 'contents',
+                      'title': 'Contents' if index == 0 else 'Contents - continued', 'listing': listing})
+    return front+body
 
 
 def plain(value):
@@ -160,8 +211,8 @@ def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12)
     raise AssertionError(f'Text overflow on {page.number+1}: {value[:120]}')
 
 
-def panel(page, rect, fill=PALE, border=TEAL):
-    page.draw_rect(rect, color=border, fill=fill, width=.8)
+def panel(page, rect, fill=PALE, border=RULE):
+    page.draw_rect(rect, color=border, fill=fill, width=.65)
 
 
 def arrow(page, points, label=None, label_rect=None):
@@ -174,47 +225,57 @@ def arrow(page, points, label=None, label_rect=None):
         text(page, label_rect, label, 12, color=TEAL, align=1, minimum=11)
 
 
-def header(doc, kind, title, number, total, subtitle=''):
+def header(doc, kind, title, number, total, subtitle='', section=''):
     page = doc.new_page(width=W, height=H)
-    page.draw_rect((0, 0, W, 17), fill=TEAL, color=TEAL)
-    text(page, (42, 33, 1148, 55), 'PK DOCUMENT TRACKING SYSTEM  /  ' + kind.upper(), 12, True, TEAL)
-    text(page, (42, 69, 1148, 111), title, 26, True, minimum=19)
+    page.draw_rect((0, 0, W, 5), fill=TEAL, color=TEAL)
+    panel(page, (42, 24, 85, 61), INK, INK)
+    text(page, (48, 32, 80, 56), 'PK', 17, True, WHITE, align=1)
+    text(page, (101, 25, 795, 45), 'DOCUMENT CONTROL', 11, True, GREY, minimum=11)
+    text(page, (101, 43, 795, 64), kind.upper(), 11, True, TEAL, minimum=11)
+    if section:
+        text(page, (800, 36, 1148, 62), section.upper(), 10, True, GREY, align=2, minimum=10)
+    text(page, (42, 79, 1148, 119), title, 27, True, minimum=20)
     if subtitle:
-        text(page, (42, 116, 1148, 157), subtitle, 14, color=GREY, minimum=12)
-    page.draw_line((42, 787), (1148, 787), color=(.80, .86, .87), width=.7)
+        text(page, (42, 124, 1148, 163), subtitle, 14, color=GREY, minimum=12)
+    page.draw_line((42, 787), (1148, 787), color=RULE, width=.7)
     text(page, (42, 802, 980, 825), MARKER, 10, color=GREY, minimum=10)
+    text(page, (903, 802, 980, 825), 'Contents', 10, True, TEAL, align=2, minimum=10)
     text(page, (1020, 802, 1148, 825), f'{number} / {total}', 10, color=GREY, align=2, minimum=10)
     return page
 
 
 def notes(page, values, rect, title='Remember'):
     rect = pdf.Rect(rect)
-    panel(page, rect, GOLD, (.84, .72, .43))
+    panel(page, rect, GOLD)
     if rect.height < 150:
         width = (rect.width-20) / len(values)
         for index, value in enumerate(values):
             x = rect.x0+10+index*width
             text(page, (x+7, rect.y0+9, x+width-7, rect.y1-6), value, 13, minimum=12)
         return
-    text(page, (rect.x0+17, rect.y0+15, rect.x1-17, rect.y0+42), title, 15, True)
+    page.draw_rect((rect.x0, rect.y0, rect.x0+3, rect.y1), color=TEAL, fill=TEAL)
+    text(page, (rect.x0+17, rect.y0+15, rect.x1-17, rect.y0+42), title, 15, True, TEAL)
     y = rect.y0 + 53
     height = (rect.y1-y-10) / max(1, len(values))
-    for value in values:
+    for index, value in enumerate(values):
         text(page, (rect.x0+17, y, rect.x1-17, y+height-9), value, 14, minimum=12)
+        if index < len(values)-1:
+            page.draw_line((rect.x0+17, y+height-14), (rect.x1-17, y+height-14), color=RULE, width=.5)
         y += height
 
 
 def process_page(doc, item, number, total):
-    page = header(doc, 'Process Flow', item['title'], number, total, item['summary'])
+    page = header(doc, 'Process Flow', item['title'], number, total, item['summary'], chapter('process', item['id']))
     steps = item['steps']
     gap = 18
     height = min(101, (584-gap*(len(steps)-1))/len(steps))
     y = 176
     for index, step in enumerate(steps, 1):
-        panel(page, (42, y, 830, y+height))
-        text(page, (58, y+13, 96, y+height-10), str(index), 24, True, TEAL)
-        text(page, (110, y+11, 325, y+height-9), step['actor'], 15, True, TEAL)
-        text(page, (345, y+11, 810, y+height-9), step['text'], 17, minimum=14)
+        panel(page, (42, y, 830, y+height), WHITE)
+        panel(page, (42, y, 97, y+height), PALE)
+        text(page, (54, y+13, 88, y+height-10), f'{index:02}', 19, True, TEAL)
+        text(page, (115, y+10, 810, y+33), step['actor'], 11, True, TEAL, minimum=11)
+        text(page, (115, y+34, 810, y+height-7), step['text'], 16, minimum=13)
         if index != len(steps):
             arrow(page, [(436, y+height), (436, y+height+gap)])
         y += height+gap
@@ -223,7 +284,7 @@ def process_page(doc, item, number, total):
 
 def flowchart_page(doc, item, number, total):
     page = header(doc, 'Flowchart', item['title'], number, total,
-                  'Follow the arrows. At the question, choose the path that matches your situation.')
+                  'Start at the top. Follow Yes or No at the question to see what happens next.', chapter('flowchart', item['id']))
     for rect, label, fill in [
         ((268, 168, 750, 234), item['start'], PALE),
         ((268, 251, 750, 317), item['action'], PALE),
@@ -231,7 +292,7 @@ def flowchart_page(doc, item, number, total):
         ((855, 355, 1148, 478), item['no'], GOLD),
         ((268, 609, 750, 677), item['result'], PALE),
     ]:
-        panel(page, rect, fill)
+        panel(page, rect, fill, TEAL if label == item['result'] else RULE)
         r = pdf.Rect(rect)
         text(page, r+(14, 10, -14, -7), label, 16, align=1, minimum=13)
     diamond = [(509, 345), (710, 410), (509, 475), (308, 410), (509, 345)]
@@ -246,18 +307,18 @@ def flowchart_page(doc, item, number, total):
 
 
 def guide_page(doc, item, number, total):
-    page = header(doc, 'User Guide', item['title'], number, total, 'Who uses this: ' + item['audience'])
+    page = header(doc, 'User Guide', item['title'], number, total, 'For: ' + item['audience'], chapter('guide', item['id']))
     y = 178
     height = min(103, 526/len(item['steps']))
     for index, value in enumerate(item['steps'], 1):
-        panel(page, (42, y, 97, y+49), TEAL)
-        text(page, (49, y+10, 90, y+43), str(index), 22, True, (1, 1, 1), align=1)
+        panel(page, (42, y, 97, y+49), PALE)
+        text(page, (49, y+10, 90, y+43), f'{index:02}', 19, True, TEAL, align=1)
         text(page, (117, y+4, 808, y+height-13), value, 18, minimum=15)
         if index < len(item['steps']):
             page.draw_line((117, y+height-10), (808, y+height-10), color=(.86, .90, .91), width=.5)
         y += height
-    panel(page, (847, 176, 1148, 371))
-    text(page, (864, 194, 1130, 224), 'What happens next', 16, True, TEAL)
+    panel(page, (847, 176, 1148, 371), PALE)
+    text(page, (864, 194, 1130, 224), 'Expected result', 16, True, TEAL)
     text(page, (864, 239, 1130, 352), item['result'], 16, minimum=14)
     if item.get('notes'):
         notes(page, item['notes'], (847, 392, 1148, 759))
@@ -265,7 +326,7 @@ def guide_page(doc, item, number, total):
 
 
 def dfd_page(doc, item, number, total):
-    page = header(doc, 'Data Flow Diagram', item['title'], number, total, item['summary'])
+    page = header(doc, 'Data Flow Diagram', item['title'], number, total, item['summary'], chapter('dfd', item['id']))
     if item.get('kind') == 'context':
         # External actors exchange named information with the single system.
         # Internal records belong on the following detail pages, not Level 0.
@@ -275,7 +336,7 @@ def dfd_page(doc, item, number, total):
         positions = [(42, 177, 308, 310), (42, 365, 308, 498), (42, 553, 308, 686),
                      (882, 235, 1148, 368), (882, 501, 1148, 634)]
         for actor, rect in zip(item['actors'], positions):
-            panel(page, rect, GOLD, (.70, .62, .43))
+            panel(page, rect, GOLD, RULE)
             r = pdf.Rect(rect)
             text(page, r+(12, 13, -12, -72), actor['role'], 17, True, align=1)
             text(page, (r.x0+12, r.y0+64, r.x1-12, r.y1-9), actor['responsibility'], 13, align=1)
@@ -310,6 +371,42 @@ def dfd_page(doc, item, number, total):
             arrow(page, [(x0, y+50), (x1, y+50)])
             text(page, (x0+5, y-3, x1-5, y+43), row[field], 12, align=1, minimum=11)
     text(page, (42, 735, 1148, 776), item['note'], 13, minimum=12)
+
+
+def cover_page(doc, key, item, number, total):
+    page = header(doc, item['title'], '', number, total, section='Everyday procedures')
+    lead, subtitle, description, topics = BOOKS[key]
+    text(page, (42, 174, 775, 211), lead.upper(), 13, True, TEAL)
+    text(page, (42, 228, 790, 372), item['title'], 56, True, minimum=43)
+    text(page, (42, 390, 785, 439), subtitle, 24, True, minimum=20)
+    text(page, (42, 460, 770, 576), description, 21, minimum=18)
+    panel(page, (42, 655, 783, 750), PALE)
+    text(page, (62, 672, 763, 730), 'Start with the contents page. Choose a topic, follow its explanation, and check the result.', 19, minimum=16)
+    panel(page, (835, 174, 1148, 750), INK, INK)
+    text(page, (859, 201, 1124, 243), 'INSIDE THIS DOCUMENT', 13, True, WHITE)
+    for index, topic in enumerate(topics):
+        y = 285+index*139
+        text(page, (859, y, 1124, y+31), f'0{index+1}', 17, True, (.37, .86, .80))
+        text(page, (859, y+40, 1124, y+116), topic, 22, True, WHITE, minimum=18)
+        if index < len(topics)-1:
+            page.draw_line((859, y+124), (1124, y+124), color=(.28, .37, .46), width=.6)
+
+
+def contents_rows(item):
+    for index, entry in enumerate(item['listing']):
+        column, row = divmod(index, 12)
+        x, y = 42+column*568, 190+row*46
+        yield entry, pdf.Rect(x, y, x+538, y+40)
+
+
+def contents_page(doc, key, item, number, total):
+    kind = next(title for value, _, title in SPECS if value == key)
+    page = header(doc, kind, item['title'], number, total,
+                  'Choose a topic to jump to its page in the PDF. Page numbers also help you find it in the editable copy.', 'Find your task')
+    for entry, rect in contents_rows(item):
+        page.draw_line((rect.x0, rect.y1), (rect.x1, rect.y1), color=RULE, width=.5)
+        text(page, (rect.x0+1, rect.y0+3, rect.x1-58, rect.y1-2), entry['title'], 14, minimum=12)
+        text(page, (rect.x1-47, rect.y0+3, rect.x1-2, rect.y1-2), str(entry['page']), 15, True, TEAL, align=2)
 
 
 def rgb(value):
@@ -478,9 +575,19 @@ def refresh(content):
     try:
         for key, base, kind in SPECS:
             doc = pdf.open()
-            items = entries(key, content[key])
+            items = document_items(key, content[key])
             for index, item in enumerate(items, 1):
-                renderers[key](doc, item, index, len(items))
+                if item.get('kind') == 'cover':
+                    cover_page(doc, key, item, index, len(items))
+                elif item.get('kind') == 'contents':
+                    contents_page(doc, key, item, index, len(items))
+                else:
+                    renderers[key](doc, item, index, len(items))
+            for index, item in enumerate(items):
+                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(903, 800, 985, 828), 'page': 1})
+                if item.get('kind') == 'contents':
+                    for entry, rect in contents_rows(item):
+                        doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': rect, 'page': entry['page']-1})
             doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
             doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Current plain-language procedures, 5 November 2026', 'author': 'PK Document Tracking System'})
             pdf_path = DOCS / (base+'.pdf.pending')
@@ -554,15 +661,23 @@ def verify(content, pending=False):
     suffix = '.pending' if pending else ''
     for key, base, _ in SPECS:
         path = DOCS / (base+'.pdf'+suffix)
-        items = entries(key, content[key])
+        items = document_items(key, content[key])
         with pdf.open(path) as doc:
             assert len(doc) == len(items), f'Page count mismatch: {path}'
             all_text = []
             for page, item in zip(doc, items):
                 page_text = normalized(page.get_text())
                 assert MARKER in page_text
-                for value in source_strings(item):
-                    assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
+                if item.get('kind') in {'cover', 'contents'}:
+                    assert normalized(item['title']) in page_text
+                    if item['kind'] == 'contents':
+                        assert len(page.get_links()) == len(item['listing'])+1, f'Missing PDF contents links: {path}'
+                        assert {link['page'] for link in page.get_links()} == {1} | {entry['page']-1 for entry in item['listing']}, f'Incorrect PDF contents destinations: {path}'
+                        for entry in item['listing']:
+                            assert normalized(entry['title']) in page_text
+                else:
+                    for value in source_strings(item):
+                        assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
                 for word in ['workflow_steps', 'payload', 'my-requests/', 'softcopy_create', 'external_create']:
                     assert word not in page_text, f'Technical content in {path}: {word}'
                 for block in page.get_text('dict')['blocks']:

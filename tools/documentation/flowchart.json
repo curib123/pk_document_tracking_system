@@ -3,7 +3,7 @@
   "pages": [
     {
       "id": "account-entry",
-      "title": "1. Sign in and set your password",
+      "title": "Sign in and set your password",
       "start": "User opens the system",
       "action": "Enter username and password; change the temporary password when prompted",
       "question": "Account and password accepted?",
@@ -18,7 +18,7 @@
     },
     {
       "id": "browse-and-files",
-      "title": "2. Find a document and open its current file",
+      "title": "Find a document and open its current file",
       "start": "User needs a document or its approved file",
       "action": "Open the register; search or filter; choose Table or Folder; open the document",
       "question": "Document and file action available to this user?",
@@ -33,9 +33,9 @@
     },
     {
       "id": "hardcopy-direct",
-      "title": "3. Register, edit and track a Hardcopy",
+      "title": "Register, edit and track a Hardcopy",
       "start": "Document controller opens Hardcopy Documents",
-      "action": "Add or edit the physical record, storage place and any retention dates; confirm Save",
+      "action": "Add or edit the record, storage place and retention dates; choose Save Document and confirm",
       "question": "Permission, record details and storage valid?",
       "yes": "Save the Hardcopy record and show its holder, location, status and retention countdown",
       "no": "Correct the stated problem and retry; the unsuccessful change is not applied",
@@ -48,9 +48,9 @@
     },
     {
       "id": "electronic-direct",
-      "title": "4. Add or revise a Softcopy or External Document directly",
+      "title": "Add or revise a Softcopy or External Document directly",
       "start": "Authorized document controller opens the electronic register",
-      "action": "Choose Add or Edit; enter details and the register's category; upload the file; confirm Save",
+      "action": "Enter details and attach a file; confirm Approve Directly (Softcopy) or Save Directly (External)",
       "question": "Direct permission and document file valid?",
       "yes": "Register the document or publish its replacement revision immediately",
       "no": "Correct the details or upload problem and retry; keep the existing approved record",
@@ -63,7 +63,7 @@
     },
     {
       "id": "electronic-request",
-      "title": "5. Prepare a Softcopy or External Document request",
+      "title": "Prepare a Softcopy or External Document request",
       "start": "Requester needs a new electronic document or a revision",
       "action": "Choose the Softcopy or External request tab; select create or revise; enter details and upload the file",
       "question": "Request details, file and selected document valid?",
@@ -78,8 +78,8 @@
     },
     {
       "id": "request-submission",
-      "title": "6. Save and submit a request",
-      "start": "Requester opens an own draft or returned request",
+      "title": "Save and submit a request",
+      "start": "Requester opens their own draft or returned request",
       "action": "Check the proposal, selected document, attachments and remarks; save changes; choose Submit",
       "question": "Request valid and published approvers available?",
       "yes": "Submit the request and send the first approval task to the assigned user or role",
@@ -87,16 +87,16 @@
       "result": "My Requests shows Submitted and its approval progress",
       "notes": [
         "A returned request keeps its original approval route when resubmitted, even after an administrator publishes a newer route.",
-        "Cancel is available only for an own draft. Delete is limited to an own cancelled draft that was never submitted.",
+        "Cancel is available only for your own Draft. Delete is limited to your own Cancelled draft that was never submitted.",
         "New Hardcopy create/update and Softcopy cancellation requests are unavailable; their past records remain readable."
       ]
     },
     {
       "id": "approval",
-      "title": "7. Approve an assigned request",
+      "title": "Approve an assigned request",
       "start": "Assigned approver opens a request in My Tasks",
       "action": "Review the proposal, permitted files, approval history and remarks; choose Approve and confirm",
-      "question": "This is the final approval step?",
+      "question": "Is this the final approval step?",
       "yes": "Apply the approved document change, access, assignment, disposal or transfer preparation",
       "no": "Activate the next approval step; the next assigned approver reviews the request",
       "result": "Record the decision and show updated progress; continue until final approval",
@@ -108,9 +108,9 @@
     },
     {
       "id": "return-or-reject",
-      "title": "8. Return or reject a request",
+      "title": "Return or reject a request",
       "start": "Assigned approver finds a problem during review",
-      "action": "Review the issue, enter clear remarks and choose Return or Reject",
+      "action": "Review the issue; choose Return or Reject, add optional remarks and confirm",
       "question": "Return for another review?",
       "yes": "Reopen the immediately previous approval step; a return from the first step goes to the requester",
       "no": "Reject and close the request; retain the decision history without applying the proposed change",
@@ -123,7 +123,7 @@
     },
     {
       "id": "transfer-approval",
-      "title": "9. Request approval to transfer a Hardcopy",
+      "title": "Request approval to transfer a Hardcopy",
       "start": "Requester needs to transfer an active Hardcopy",
       "action": "Select the document, receiving user, destination storage and remarks; save and submit the transfer request",
       "question": "Request receives every required approval?",
@@ -138,7 +138,7 @@
     },
     {
       "id": "transfer-handoff",
-      "title": "10. Dispatch and accept the physical document",
+      "title": "Dispatch and accept the physical document",
       "start": "Approved Hardcopy transfer is For Transfer",
       "action": "Requester confirms Dispatch; receiving user opens the handoff task after the document arrives",
       "question": "Receiving user confirms Accept?",
@@ -153,7 +153,7 @@
     },
     {
       "id": "access-assignment-request",
-      "title": "11. Request personal access or document assignment",
+      "title": "Request personal access or document assignment",
       "start": "Requester chooses Document Access or Document Assignment",
       "action": "Select an active Softcopy or Hardcopy; enter the reason and, for access, a future expiry; save and submit",
       "question": "Request receives every required approval?",
@@ -168,7 +168,7 @@
     },
     {
       "id": "direct-disposal",
-      "title": "12. Dispose a document directly",
+      "title": "Dispose of a document directly",
       "start": "Authorized controller selects an active document in its register",
       "action": "Choose Dispose; select Shred, Scratch or Other; describe Other when used; confirm disposal",
       "question": "Required direct permissions and reason valid?",
@@ -183,7 +183,7 @@
     },
     {
       "id": "disposal-request",
-      "title": "13. Request Hardcopy or External Document disposal",
+      "title": "Request Hardcopy or External Document disposal",
       "start": "Requester needs approval to dispose an active document",
       "action": "Choose Disposal Request; select Hardcopy or External, the document and disposal reason; save and submit",
       "question": "Every required approver approves disposal?",
@@ -198,7 +198,7 @@
     },
     {
       "id": "direct-assignment",
-      "title": "14. Assign documents directly",
+      "title": "Assign documents directly",
       "start": "Authorized controller opens Document Assignments",
       "action": "Choose a document, Hardcopy location or Softcopy category branch; select the receiving user and confirm",
       "question": "Active documents and user eligible for assignment?",
@@ -208,12 +208,12 @@
       "notes": [
         "Softcopy category assignment includes its subcategories. Location assignment includes all active Hardcopies stored there.",
         "Bulk assignment supports up to 2,000 active documents. An active Hardcopy transfer blocks reassignment.",
-        "Direct assignment needs no approval or Dispatch/Accept. It does not create a separate personal access grant."
+        "Direct assignment needs no approval, Dispatch or Accept. It changes records without moving documents or granting personal access."
       ]
     },
     {
       "id": "places-categories",
-      "title": "15. Maintain places and category folders",
+      "title": "Maintain places and category folders",
       "start": "Authorized maintainer opens Setup Places",
       "action": "Choose the place or category tab; add or edit its name, folder and parent details; confirm Save",
       "question": "Details, parent relationships and permission valid?",
@@ -228,7 +228,7 @@
     },
     {
       "id": "accounts",
-      "title": "16. Create, update or deactivate a user account",
+      "title": "Create, update or deactivate a user account",
       "start": "Authorized account administrator opens User Management",
       "action": "Enter user details, Primary role, Assigned roles and leader; save, reset the password or choose Deactivate",
       "question": "Roles, reporting line and account changes allowed?",
@@ -243,7 +243,7 @@
     },
     {
       "id": "roles",
-      "title": "17. Maintain roles and permissions",
+      "title": "Maintain roles and permissions",
       "start": "Authorized role administrator opens Roles & Permissions",
       "action": "Add or edit a role name and allowed actions; save, deactivate or remove the selected role",
       "question": "Role change permitted and required references clear?",
@@ -258,7 +258,7 @@
     },
     {
       "id": "workflows",
-      "title": "18. Publish an approval route",
+      "title": "Publish an approval route",
       "start": "Authorized workflow administrator opens Workflow Builder",
       "action": "Create Next Draft; add or edit approvers; move or remove steps; choose Validate & Publish",
       "question": "Route has 1-30 valid ordered approval steps?",
@@ -273,7 +273,7 @@
     },
     {
       "id": "notifications-retention",
-      "title": "19. Respond to task and retention notices",
+      "title": "Respond to task and retention notices",
       "start": "User sees a task notice, unread bell entry or retention reminder",
       "action": "Open the notice; inspect the linked request, handoff or Hardcopy record",
       "question": "Further action required and permitted?",
@@ -288,7 +288,7 @@
     },
     {
       "id": "audit-trail",
-      "title": "20. Review the Internal Audit Trail",
+      "title": "Review the Internal Audit Trail",
       "start": "Administrator, Document Control Officer or Internal Auditor needs to trace a recorded action",
       "action": "Open Internal Audit Trail; search and filter by date or outcome; review the actor, action and details",
       "question": "Required action found in the audit records?",
@@ -303,7 +303,7 @@
     },
     {
       "id": "backup-management",
-      "title": "21. Create and manage backup archives",
+      "title": "Create and manage backup archives",
       "start": "Authorized backup operator opens Backup & Restore",
       "action": "Choose Backup now, Import backup, Download or Clean up; confirm the selected operation",
       "question": "Backup setup and selected archive valid?",
@@ -318,7 +318,7 @@
     },
     {
       "id": "restore",
-      "title": "22. Restore system records and private files",
+      "title": "Restore system records and private files",
       "start": "Authorized backup operator chooses Restore system data",
       "action": "Select Backup to restore; enter Your password; type RESTORE; confirm Restore selected backup",
       "question": "Password, confirmation and backup checks pass?",
