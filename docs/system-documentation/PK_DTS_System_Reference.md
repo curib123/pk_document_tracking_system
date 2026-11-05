@@ -6,6 +6,19 @@ PK DTS helps people find documents, track physical custody, control current
 files, request changes and review decisions. Use your own account so the
 history shows who performed each action.
 
+## Find the right document
+
+| When you need to... | Open |
+| --- | --- |
+| Explain a procedure from start to finish | [Process Flow](PK_DTS_Process_Flow.pdf) |
+| Decide which action comes next | [Flowchart](PK_DTS_Flowchart.pdf) |
+| Explain the roles and information exchanged | [Data Flow Diagram](PK_DTS_DFD.pdf) |
+| Follow instructions for a specific task | [User Guide](PK_DTS_User_Guide.pdf) |
+
+Each document begins with a cover and contents. Select a contents entry in
+the PDF to open that topic. Section labels and page numbers help you find
+the same topic in the editable files.
+
 ## Choose the right path
 
 | What you need | Where to start | When the record changes |
@@ -262,16 +275,16 @@ first and normal use is temporarily blocked. After success the restoring
 operator is signed out. Sign in again and check the recovered records and
 attachments.
 
-## Documentation files
+## Open an editable copy
 
-- [Process Flow](PK_DTS_Process_Flow.pdf): who acts, what they do and what
-  happens next. The matching Visio file is editable.
-- [Flowchart](PK_DTS_Flowchart.pdf): decisions and paths to follow. The
-  matching Visio file is editable.
-- [DFD](PK_DTS_DFD.pdf): roles and the information exchanged between people,
-  activities and saved business records. The matching Visio file is editable.
-- [User Guide](PK_DTS_User_Guide.pdf): step-by-step directions. The matching
-  PowerPoint file is editable.
+The [User Guide PowerPoint](PK_DTS_User_Guide.pptx) is editable. For diagrams,
+choose the matching Visio copy:
+
+| Diagram | VSDX | VDX |
+| --- | --- | --- |
+| Data Flow Diagram | [Open](PK_DTS_DFD.vsdx) | [Open](PK_DTS_DFD.vdx) |
+| Process Flow | [Open](PK_DTS_Process_Flow.vsdx) | [Open](PK_DTS_Process_Flow.vdx) |
+| Flowchart | [Open](PK_DTS_Flowchart.vsdx) | [Open](PK_DTS_Flowchart.vdx) |
 
 If Visio reports an unsupported file, open the matching **VDX** copy:
 [DFD](PK_DTS_DFD.vdx), [Process Flow](PK_DTS_Process_Flow.vdx), or
