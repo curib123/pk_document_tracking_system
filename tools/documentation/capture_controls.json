@@ -1,0 +1,207 @@
+{
+  "welcome": [
+    "Hardcopy Documents",
+    "Softcopy Documents",
+    "External Documents"
+  ],
+  "roles": [
+    "Role Name",
+    "Module Permissions",
+    "Save Role"
+  ],
+  "sign-in": [
+    "Username",
+    "Password",
+    "Sign In"
+  ],
+  "navigation": [
+    "Overview",
+    "My Requests",
+    "My Tasks"
+  ],
+  "find-documents": [
+    "Table",
+    "Folder",
+    "Search records"
+  ],
+  "hardcopy-create": [
+    "Document Title",
+    "Current Holder",
+    "Save Document"
+  ],
+  "hardcopy-edit": [
+    "Document Title",
+    "Location",
+    "Save Document"
+  ],
+  "hardcopy-track": [
+    "Current Holder",
+    "Days until disposal",
+    "Transfer History"
+  ],
+  "softcopy-direct-create": [
+    "Softcopy Action",
+    "Generated Document Number",
+    "Approve Directly"
+  ],
+  "softcopy-direct-revise": [
+    "Existing Softcopy Document",
+    "Next Revision Level (automatic)",
+    "Document File"
+  ],
+  "softcopy-request-create": [
+    "Softcopy Action",
+    "Document File",
+    "Save Draft"
+  ],
+  "softcopy-request-revise": [
+    "Existing Softcopy Document",
+    "Number of Pages",
+    "Document File"
+  ],
+  "softcopy-numbering": [
+    "Need Series Number?",
+    "Document Number",
+    "Series Number"
+  ],
+  "external-direct-create": [
+    "Document Title",
+    "Attach File",
+    "Save Directly"
+  ],
+  "external-direct-revise": [
+    "Category",
+    "Attach File",
+    "Save Directly"
+  ],
+  "external-request-create": [
+    "External Document Action",
+    "External Category",
+    "Attach File"
+  ],
+  "external-request-revise": [
+    "External Document Action",
+    "Existing External Document",
+    "Attach File"
+  ],
+  "files": [
+    "Download",
+    "Print",
+    "File History"
+  ],
+  "review-file": [
+    "Review File",
+    "Open in Word",
+    "Download"
+  ],
+  "request-lifecycle": [
+    "New Request",
+    "Submit",
+    "Status"
+  ],
+  "approvals": [
+    "Approve",
+    "Return",
+    "Reject"
+  ],
+  "approval-routes": [
+    "Approval Process Timeline",
+    "Workflow Version",
+    "Workflow Activity Log"
+  ],
+  "transfer-request": [
+    "Hardcopy Document",
+    "Destination Location",
+    "Receiving User"
+  ],
+  "transfer-dispatch": [
+    "Physical Transfer Handoffs",
+    "For Transfer",
+    "Dispatch"
+  ],
+  "transfer-accept": [
+    "Physical Transfer Handoffs",
+    "In Transit",
+    "Accept"
+  ],
+  "access-request": [
+    "Document Type",
+    "Recipient / Assigned User",
+    "Access Expires At"
+  ],
+  "assignment-request": [
+    "Document Type",
+    "Recipient / Assigned User",
+    "Save Draft"
+  ],
+  "disposal-request": [
+    "Document Type",
+    "Disposal Reason",
+    "Other Reason"
+  ],
+  "disposal-direct": [
+    "Dispose",
+    "Disposal Reason",
+    "Continue"
+  ],
+  "direct-assignments": [
+    "Assign Document",
+    "Assigned User",
+    "Save Assignment"
+  ],
+  "retention": [
+    "Track retention period",
+    "Retention Start",
+    "Retention End"
+  ],
+  "places": [
+    "Location Name",
+    "Sequence",
+    "Save Record"
+  ],
+  "categories": [
+    "Folder",
+    "Code Pattern",
+    "Parent Id"
+  ],
+  "users": [
+    "Primary role",
+    "Leader",
+    "Save User"
+  ],
+  "permissions": [
+    "Role Name",
+    "Module Permissions",
+    "Save Role"
+  ],
+  "workflows": [
+    "Workflow Version",
+    "Add Approval Step",
+    "Validate & Publish"
+  ],
+  "notifications": [
+    "Notifications",
+    "My Tasks",
+    "Approval needed"
+  ],
+  "audit": [
+    "All Results",
+    "Recorded At",
+    "View"
+  ],
+  "backups": [
+    "Backup now",
+    "Import backup",
+    "Clean up"
+  ],
+  "restore": [
+    "Backup to restore",
+    "Your password",
+    "Type RESTORE to confirm"
+  ],
+  "help": [
+    "Action could not be completed",
+    "Got it",
+    "My Requests"
+  ]
+}

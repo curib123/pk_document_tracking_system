@@ -1,0 +1,1078 @@
+{
+  "sign-in": {
+    "file": "sign-in.png",
+    "route": "login",
+    "caption": "Sign in using your own account.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Username",
+        "x": 838.7,
+        "y": 498.8,
+        "width": 450.3,
+        "height": 48
+      },
+      {
+        "label": "Password",
+        "x": 838.7,
+        "y": 591.8,
+        "width": 450.3,
+        "height": 48
+      },
+      {
+        "label": "Sign In",
+        "x": 838.7,
+        "y": 658.8,
+        "width": 450.3,
+        "height": 48
+      }
+    ]
+  },
+  "welcome": {
+    "file": "welcome.png",
+    "route": "dashboard",
+    "caption": "Overview and the role-based navigation menu.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Document workspaces",
+        "x": 0,
+        "y": 0,
+        "width": 264,
+        "height": 900
+      },
+      {
+        "label": "Account menu",
+        "x": 1192.5,
+        "y": 13,
+        "width": 213.5,
+        "height": 50
+      },
+      {
+        "label": "Hardcopy Documents",
+        "x": 12,
+        "y": 184.8,
+        "width": 240,
+        "height": 40.8
+      }
+    ]
+  },
+  "navigation": {
+    "file": "navigation.png",
+    "route": "dashboard",
+    "caption": "Overview and the role-based navigation menu.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Document workspaces",
+        "x": 0,
+        "y": 0,
+        "width": 264,
+        "height": 900
+      },
+      {
+        "label": "Account menu",
+        "x": 1192.5,
+        "y": 13,
+        "width": 213.5,
+        "height": 50
+      },
+      {
+        "label": "Overview",
+        "x": 12,
+        "y": 96,
+        "width": 240,
+        "height": 40.8
+      }
+    ]
+  },
+  "help": {
+    "file": "help.png",
+    "route": "dashboard",
+    "caption": "Overview and the role-based navigation menu.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Document workspaces",
+        "x": 0,
+        "y": 0,
+        "width": 264,
+        "height": 900
+      },
+      {
+        "label": "Account menu",
+        "x": 1192.5,
+        "y": 13,
+        "width": 213.5,
+        "height": 50
+      }
+    ]
+  },
+  "roles": {
+    "file": "roles.png",
+    "route": "admin/roles",
+    "caption": "The five standard roles and their permissions.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Administrator",
+        "x": 297,
+        "y": 281,
+        "width": 511.9,
+        "height": 63
+      }
+    ]
+  },
+  "permissions": {
+    "file": "permissions.png",
+    "route": "admin/roles",
+    "caption": "Review the permissions assigned to a role.",
+    "width": 1140,
+    "height": 818,
+    "controls": [
+      {
+        "label": "Role Name",
+        "x": 46,
+        "y": 130.7,
+        "width": 693.3,
+        "height": 19.8
+      },
+      {
+        "label": "Module Permissions",
+        "x": 25,
+        "y": 238.5,
+        "width": 1090,
+        "height": 19.2
+      },
+      {
+        "label": "Save Role",
+        "x": 1016.1,
+        "y": 759.7,
+        "width": 95.9,
+        "height": 40
+      }
+    ]
+  },
+  "find-documents": {
+    "file": "find-documents.png",
+    "route": "documents/hardcopy?layout=table&folder=all&period=all",
+    "caption": "Search, filter, and inspect records in the document register.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Table",
+        "x": 1209,
+        "y": 155,
+        "width": 34.7,
+        "height": 15
+      },
+      {
+        "label": "Folder",
+        "x": 1321,
+        "y": 155,
+        "width": 39.0,
+        "height": 15
+      }
+    ]
+  },
+  "hardcopy-track": {
+    "file": "hardcopy-track.png",
+    "route": "documents/hardcopy?layout=table&folder=all&period=all",
+    "caption": "Inspect storage, custody, and history in View Details.",
+    "width": 1100,
+    "height": 592,
+    "controls": [
+      {
+        "label": "Current Holder",
+        "x": 748.0,
+        "y": 80.6,
+        "width": 152,
+        "height": 13.5
+      },
+      {
+        "label": "Days until disposal",
+        "x": 927.0,
+        "y": 83.3,
+        "width": 152,
+        "height": 13.5
+      },
+      {
+        "label": "Transfer History",
+        "x": 372.9,
+        "y": 310.1,
+        "width": 96.5,
+        "height": 19.8
+      }
+    ]
+  },
+  "hardcopy-create": {
+    "file": "hardcopy-create.png",
+    "route": "documents/hardcopy?layout=table&folder=all",
+    "caption": "Register a hardcopy directly.",
+    "width": 800,
+    "height": 608,
+    "controls": [
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 114.8,
+        "width": 750,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 635.0,
+        "y": 547.0,
+        "width": 137.0,
+        "height": 40
+      }
+    ]
+  },
+  "retention": {
+    "file": "retention.png",
+    "route": "documents/hardcopy?layout=table&folder=all",
+    "caption": "Enable retention tracking and specify the storage period.",
+    "width": 800,
+    "height": 690,
+    "controls": [
+      {
+        "label": "Track retention period",
+        "x": 408,
+        "y": 360.4,
+        "width": 367,
+        "height": 24
+      }
+    ]
+  },
+  "hardcopy-edit": {
+    "file": "hardcopy-edit.png",
+    "route": "documents/hardcopy?layout=table&folder=all",
+    "caption": "Update an existing hardcopy record.",
+    "width": 800,
+    "height": 690,
+    "controls": [
+      {
+        "label": "Document Title",
+        "x": 25,
+        "y": 88.0,
+        "width": 750,
+        "height": 19.8
+      },
+      {
+        "label": "Location",
+        "x": 408,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      },
+      {
+        "label": "Save Document",
+        "x": 635.0,
+        "y": 629.8,
+        "width": 137.0,
+        "height": 40
+      }
+    ]
+  },
+  "softcopy-direct-create": {
+    "file": "softcopy-direct-create.png",
+    "route": "documents/softcopy?layout=table&folder=all",
+    "caption": "Create a controlled softcopy directly.",
+    "width": 800,
+    "height": 756,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 197.6,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 630.0,
+        "y": 695.5,
+        "width": 142.0,
+        "height": 40
+      }
+    ]
+  },
+  "softcopy-numbering": {
+    "file": "softcopy-numbering.png",
+    "route": "documents/softcopy?layout=table&folder=all",
+    "caption": "The selected category controls the generated document number.",
+    "width": 800,
+    "height": 756,
+    "controls": [
+      {
+        "label": "Need Series Number?",
+        "x": 25,
+        "y": 277.6,
+        "width": 367,
+        "height": 24
+      },
+      {
+        "label": "Document Number",
+        "x": 408,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      },
+      {
+        "label": "Series Number",
+        "x": 25,
+        "y": 336.4,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "softcopy-direct-revise": {
+    "file": "softcopy-direct-revise.png",
+    "route": "documents/softcopy?layout=table&folder=all",
+    "caption": "Create a direct revision of the selected softcopy.",
+    "width": 800,
+    "height": 756,
+    "controls": [
+      {
+        "label": "Existing Softcopy Document",
+        "x": 25,
+        "y": 170.8,
+        "width": 367,
+        "height": 19.8
+      },
+      {
+        "label": "Next Revision Level (automatic)",
+        "x": 25,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "softcopy-request-create": {
+    "file": "softcopy-request-create.png",
+    "route": "my-requests/softcopy",
+    "caption": "Prepare a softcopy create request.",
+    "width": 800,
+    "height": 650,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 197.6,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 589.6,
+        "width": 100.6,
+        "height": 40
+      }
+    ]
+  },
+  "softcopy-request-revise": {
+    "file": "softcopy-request-revise.png",
+    "route": "my-requests/softcopy",
+    "caption": "Prepare a softcopy revise request.",
+    "width": 800,
+    "height": 650,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 408,
+        "y": 197.6,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 589.6,
+        "width": 100.6,
+        "height": 40
+      }
+    ]
+  },
+  "external-direct-create": {
+    "file": "external-direct-create.png",
+    "route": "documents/external?layout=table&folder=all",
+    "caption": "Register an external document directly.",
+    "width": 800,
+    "height": 568,
+    "controls": [
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 114.8,
+        "width": 750,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 653.8,
+        "y": 506.8,
+        "width": 118.2,
+        "height": 40
+      }
+    ]
+  },
+  "external-direct-revise": {
+    "file": "external-direct-revise.png",
+    "route": "documents/external?layout=table&folder=all",
+    "caption": "Revise an existing external document.",
+    "width": 800,
+    "height": 568,
+    "controls": [
+      {
+        "label": "Category",
+        "x": 25,
+        "y": 292.1,
+        "width": 750,
+        "height": 19.8
+      },
+      {
+        "label": "Attach File",
+        "x": 25,
+        "y": 374.9,
+        "width": 750,
+        "height": 19.8
+      },
+      {
+        "label": "Save Directly",
+        "x": 653.8,
+        "y": 506.8,
+        "width": 118.2,
+        "height": 40
+      }
+    ]
+  },
+  "external-request-create": {
+    "file": "external-request-create.png",
+    "route": "my-requests/external",
+    "caption": "Prepare an external document create request.",
+    "width": 800,
+    "height": 706,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 197.6,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 644.1,
+        "width": 100.6,
+        "height": 40
+      }
+    ]
+  },
+  "external-request-revise": {
+    "file": "external-request-revise.png",
+    "route": "my-requests/external",
+    "caption": "Prepare an external document revise request.",
+    "width": 800,
+    "height": 788,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 280.4,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 726.9,
+        "width": 100.6,
+        "height": 40
+      }
+    ]
+  },
+  "files": {
+    "file": "files.png",
+    "route": "documents/softcopy?layout=table&folder=all",
+    "caption": "Review the current controlled file and its file history.",
+    "width": 1100,
+    "height": 344,
+    "controls": [
+      {
+        "label": "Download",
+        "x": 891.3,
+        "y": 186.7,
+        "width": 99.6,
+        "height": 44
+      },
+      {
+        "label": "Print",
+        "x": 1004.9,
+        "y": 186.7,
+        "width": 66.1,
+        "height": 44
+      }
+    ]
+  },
+  "review-file": {
+    "file": "review-file.png",
+    "route": "my-tasks/softcopy?period=all",
+    "caption": "Select Review File to inspect the proposed attachment before deciding.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Review File",
+        "x": 1208.3,
+        "y": 394.1,
+        "width": 60.9,
+        "height": 14.8
+      }
+    ]
+  },
+  "request-lifecycle": {
+    "file": "request-lifecycle.png",
+    "route": "my-requests/softcopy?period=all",
+    "caption": "A saved draft remains in My Requests until submitted.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "New Request",
+        "x": 1248.1,
+        "y": 193,
+        "width": 138.9,
+        "height": 40
+      },
+      {
+        "label": "Submit",
+        "x": 1367.3,
+        "y": 394.1,
+        "width": 40.3,
+        "height": 14.8
+      },
+      {
+        "label": "Status",
+        "x": 908.2,
+        "y": 317,
+        "width": 51.4,
+        "height": 16.5
+      }
+    ]
+  },
+  "approvals": {
+    "file": "approvals.png",
+    "route": "my-tasks/softcopy?period=all",
+    "caption": "Review the selected approval decision before confirming.",
+    "width": 440,
+    "height": 330,
+    "controls": [
+      {
+        "label": "Approval decision",
+        "x": 29,
+        "y": 149.3,
+        "width": 382,
+        "height": 83
+      },
+      {
+        "label": "Confirm",
+        "x": 225,
+        "y": 254.3,
+        "width": 186,
+        "height": 46
+      }
+    ]
+  },
+  "approval-routes": {
+    "file": "approval-routes.png",
+    "route": "my-tasks/softcopy?period=all",
+    "caption": "Inspect the assigned route and the status of each approval step.",
+    "width": 1100,
+    "height": 852,
+    "controls": [
+      {
+        "label": "Approval Process Timeline",
+        "x": 167.7,
+        "y": 370.4,
+        "width": 210.8,
+        "height": 40
+      },
+      {
+        "label": "Approval steps",
+        "x": 29,
+        "y": 453.8,
+        "width": 147.8,
+        "height": 19.2
+      }
+    ]
+  },
+  "transfer-request": {
+    "file": "transfer-request.png",
+    "route": "my-requests/hardcopy-transfer",
+    "caption": "Choose the destination, receiving user and request subject before saving the draft.",
+    "width": 800,
+    "height": 794,
+    "controls": [
+      {
+        "label": "Destination Location",
+        "x": 408.0,
+        "y": 404.5,
+        "width": 367.0,
+        "height": 19.8
+      },
+      {
+        "label": "Receiving User",
+        "x": 25.0,
+        "y": 490.0,
+        "width": 367.0,
+        "height": 19.8
+      },
+      {
+        "label": "Request Subject",
+        "x": 408.0,
+        "y": 516.8,
+        "width": 367.0,
+        "height": 40.0
+      }
+    ]
+  },
+  "access-request": {
+    "file": "access-request.png",
+    "route": "my-requests/access-grant",
+    "caption": "Prepare the request and save it as a draft.",
+    "width": 800,
+    "height": 544,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 483.7,
+        "width": 100.6,
+        "height": 40
+      },
+      {
+        "label": "Recipient / Assigned User",
+        "x": 25,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "assignment-request": {
+    "file": "assignment-request.png",
+    "route": "my-requests/document-assign",
+    "caption": "Prepare the request and save it as a draft.",
+    "width": 800,
+    "height": 544,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 483.7,
+        "width": 100.6,
+        "height": 40
+      },
+      {
+        "label": "Recipient / Assigned User",
+        "x": 25,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "disposal-request": {
+    "file": "disposal-request.png",
+    "route": "my-requests/hardcopy-disposal",
+    "caption": "Prepare the request and save it as a draft.",
+    "width": 800,
+    "height": 652,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 115.1,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Save",
+        "x": 671.4,
+        "y": 590.9,
+        "width": 100.6,
+        "height": 40
+      },
+      {
+        "label": "Document Type",
+        "x": 25,
+        "y": 171.1,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "transfer-dispatch": {
+    "file": "transfer-dispatch.png",
+    "route": "my-tasks/hardcopy-transfer?period=all",
+    "caption": "The requester dispatches an approved physical transfer.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Physical Transfer Handoffs",
+        "x": 319,
+        "y": 614,
+        "width": 193.2,
+        "height": 20
+      },
+      {
+        "label": "For Transfer",
+        "x": 1121.0,
+        "y": 796.9,
+        "width": 87.8,
+        "height": 26.5
+      },
+      {
+        "label": "Dispatch",
+        "x": 1308.9,
+        "y": 793.1,
+        "width": 81.1,
+        "height": 34.2
+      }
+    ]
+  },
+  "transfer-accept": {
+    "file": "transfer-accept.png",
+    "route": "my-tasks/hardcopy-transfer?period=all",
+    "caption": "The destination recipient accepts the received hardcopy.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Physical Transfer Handoffs",
+        "x": 319,
+        "y": 614,
+        "width": 193.2,
+        "height": 20
+      },
+      {
+        "label": "In Transit",
+        "x": 1121.0,
+        "y": 733.7,
+        "width": 72.9,
+        "height": 26.5
+      },
+      {
+        "label": "Accept",
+        "x": 1321.2,
+        "y": 729.9,
+        "width": 68.8,
+        "height": 34.2
+      }
+    ]
+  },
+  "disposal-direct": {
+    "file": "disposal-direct.png",
+    "route": "documents/hardcopy?layout=table&folder=all",
+    "caption": "Choose the disposal reason before confirming.",
+    "width": 560,
+    "height": 528,
+    "controls": [
+      {
+        "label": "Dispose",
+        "x": 87,
+        "y": 36.8,
+        "width": 82.7,
+        "height": 28.3
+      },
+      {
+        "label": "Disposal Reason",
+        "x": 29,
+        "y": 355.9,
+        "width": 243,
+        "height": 21.4
+      },
+      {
+        "label": "Continue",
+        "x": 285,
+        "y": 451.4,
+        "width": 246,
+        "height": 46
+      }
+    ]
+  },
+  "direct-assignments": {
+    "file": "direct-assignments.png",
+    "route": "admin/document-assignments?domain=softcopy&folder=all",
+    "caption": "Manage direct document assignments.",
+    "width": 640,
+    "height": 292,
+    "controls": [
+      {
+        "label": "Assign Document",
+        "x": 21,
+        "y": 15.0,
+        "width": 141.3,
+        "height": 24
+      },
+      {
+        "label": "Assigned User",
+        "x": 328,
+        "y": 74.0,
+        "width": 291,
+        "height": 18.1
+      },
+      {
+        "label": "Save Assignment",
+        "x": 467.6,
+        "y": 232.8,
+        "width": 147.4,
+        "height": 40
+      }
+    ]
+  },
+  "places": {
+    "file": "places.png",
+    "route": "places/location",
+    "caption": "Maintain the places used by hardcopy storage.",
+    "width": 800,
+    "height": 654,
+    "controls": [
+      {
+        "label": "Location Name",
+        "x": 25,
+        "y": 147.4,
+        "width": 430.8,
+        "height": 19.8
+      },
+      {
+        "label": "Save Record",
+        "x": 657.8,
+        "y": 592.4,
+        "width": 114.2,
+        "height": 40
+      }
+    ]
+  },
+  "categories": {
+    "file": "categories.png",
+    "route": "places/softcopy-categories",
+    "caption": "Maintain controlled softcopy categories and numbering patterns.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Folder",
+        "x": 504.8,
+        "y": 314.5,
+        "width": 50.0,
+        "height": 16.5
+      },
+      {
+        "label": "Code Pattern",
+        "x": 678.7,
+        "y": 300.5,
+        "width": 134.1,
+        "height": 45
+      }
+    ]
+  },
+  "users": {
+    "file": "users.png",
+    "route": "admin/users",
+    "caption": "Manage individual user accounts and assigned roles.",
+    "width": 800,
+    "height": 758,
+    "controls": [
+      {
+        "label": "Primary role",
+        "x": 408,
+        "y": 253.6,
+        "width": 367,
+        "height": 19.8
+      },
+      {
+        "label": "Save User",
+        "x": 674.9,
+        "y": 696.2,
+        "width": 97.1,
+        "height": 40
+      }
+    ]
+  },
+  "workflows": {
+    "file": "workflows.png",
+    "route": "admin/workflows",
+    "caption": "Maintain published approval routes in Workflow Builder.",
+    "width": 1100,
+    "height": 840,
+    "controls": [
+      {
+        "label": "Workflow Version",
+        "x": 29,
+        "y": 162.4,
+        "width": 360,
+        "height": 19.8
+      }
+    ]
+  },
+  "audit": {
+    "file": "audit.png",
+    "route": "admin/audit",
+    "caption": "Review recorded system actions.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Recorded At",
+        "x": 314,
+        "y": 268,
+        "width": 84.9,
+        "height": 16.5
+      },
+      {
+        "label": "View",
+        "x": 1352.0,
+        "y": 323.1,
+        "width": 27.0,
+        "height": 14.8
+      }
+    ]
+  },
+  "backups": {
+    "file": "backups.png",
+    "route": "admin/backups",
+    "caption": "Manage encrypted backup archives.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Backup now",
+        "x": 1277.7,
+        "y": 110.2,
+        "width": 130.3,
+        "height": 40
+      },
+      {
+        "label": "Import backup",
+        "x": 819.5,
+        "y": 110.2,
+        "width": 149.2,
+        "height": 40
+      },
+      {
+        "label": "Clean up",
+        "x": 1176.1,
+        "y": 110.2,
+        "width": 91.5,
+        "height": 40
+      }
+    ]
+  },
+  "restore": {
+    "file": "restore.png",
+    "route": "admin/backups",
+    "caption": "Choose the archive and enter the required password and confirmation.",
+    "width": 800,
+    "height": 410,
+    "controls": [
+      {
+        "label": "Backup to restore",
+        "x": 25,
+        "y": 157.5,
+        "width": 750,
+        "height": 19.8
+      },
+      {
+        "label": "Your password",
+        "x": 25,
+        "y": 240.3,
+        "width": 367,
+        "height": 19.8
+      },
+      {
+        "label": "Type RESTORE to confirm",
+        "x": 408,
+        "y": 240.3,
+        "width": 367,
+        "height": 19.8
+      }
+    ]
+  },
+  "notifications": {
+    "file": "notifications.png",
+    "route": "dashboard",
+    "caption": "Open the bell to inspect your notification inbox.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Notifications",
+        "x": 817.5,
+        "y": 90.1,
+        "width": 94.0,
+        "height": 16.8
+      }
+    ]
+  }
+}
