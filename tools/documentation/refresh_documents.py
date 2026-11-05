@@ -32,12 +32,12 @@ PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CT = 'http://schemas.openxmlformats.org/package/2006/content-types'
 ET.register_namespace('', NS)
 ET.register_namespace('r', REL)
-INK = (.09, .16, .25)
-TEAL = (.00, .43, .43)
-PALE = (.94, .98, .98)
-GOLD = (.96, .97, .99)
-GREY = (.36, .43, .51)
-RULE = (.82, .87, .91)
+INK = (35/255, 50/255, 71/255)
+ACCENT = (146/255, 40/255, 74/255)
+PALE = (246/255, 248/255, 251/255)
+GOLD = (1, .973, .917)
+GREY = (92/255, 112/255, 140/255)
+RULE = (213/255, 222/255, 232/255)
 WHITE = (1, 1, 1)
 
 # Implementation identifiers stay here, outside the reader's documents. New
@@ -216,45 +216,42 @@ def panel(page, rect, fill=PALE, border=RULE):
 
 
 def arrow(page, points, label=None, label_rect=None):
-    page.draw_polyline(points, color=TEAL, width=1.4)
+    page.draw_polyline(points, color=ACCENT, width=1.4)
     end, previous = pdf.Point(points[-1]), pdf.Point(points[-2])
     angle = math.atan2(end.y-previous.y, end.x-previous.x)
     wings = [pdf.Point(end.x-8*math.cos(angle+offset), end.y-8*math.sin(angle+offset)) for offset in (-.45, .45)]
-    page.draw_polyline([wings[0], end, wings[1]], color=TEAL, width=1.4)
+    page.draw_polyline([wings[0], end, wings[1]], color=ACCENT, width=1.4)
     if label:
-        text(page, label_rect, label, 12, color=TEAL, align=1, minimum=11)
+        text(page, label_rect, label, 12, color=ACCENT, align=1, minimum=11)
 
 
 def header(doc, kind, title, number, total, subtitle='', section=''):
     page = doc.new_page(width=W, height=H)
-    page.draw_rect((0, 0, W, 5), fill=TEAL, color=TEAL)
-    panel(page, (42, 24, 85, 61), INK, INK)
-    text(page, (48, 32, 80, 56), 'PK', 17, True, WHITE, align=1)
-    text(page, (101, 25, 795, 45), 'DOCUMENT CONTROL', 11, True, GREY, minimum=11)
-    text(page, (101, 43, 795, 64), kind.upper(), 11, True, TEAL, minimum=11)
+    page.draw_rect((0, 0, W, 7), fill=ACCENT, color=ACCENT)
+    text(page, (42, 25, 795, 48), 'PK DOCUMENT TRACKING SYSTEM / ' + kind.upper(), 11, True, ACCENT, minimum=11)
     if section:
         text(page, (800, 36, 1148, 62), section.upper(), 10, True, GREY, align=2, minimum=10)
-    text(page, (42, 79, 1148, 119), title, 27, True, minimum=20)
+    text(page, (42, 66, 1148, 110), title, 27, True, minimum=20)
     if subtitle:
-        text(page, (42, 124, 1148, 163), subtitle, 14, color=GREY, minimum=12)
+        text(page, (42, 118, 1148, 157), subtitle, 14, color=GREY, minimum=12)
     page.draw_line((42, 787), (1148, 787), color=RULE, width=.7)
     text(page, (42, 802, 980, 825), MARKER, 10, color=GREY, minimum=10)
-    text(page, (903, 802, 980, 825), 'Contents', 10, True, TEAL, align=2, minimum=10)
+    text(page, (903, 802, 980, 825), 'Contents', 10, True, ACCENT, align=2, minimum=10)
     text(page, (1020, 802, 1148, 825), f'{number} / {total}', 10, color=GREY, align=2, minimum=10)
     return page
 
 
 def notes(page, values, rect, title='Remember'):
     rect = pdf.Rect(rect)
-    panel(page, rect, GOLD)
+    panel(page, rect, PALE)
     if rect.height < 150:
         width = (rect.width-20) / len(values)
         for index, value in enumerate(values):
             x = rect.x0+10+index*width
             text(page, (x+7, rect.y0+9, x+width-7, rect.y1-6), value, 13, minimum=12)
         return
-    page.draw_rect((rect.x0, rect.y0, rect.x0+3, rect.y1), color=TEAL, fill=TEAL)
-    text(page, (rect.x0+17, rect.y0+15, rect.x1-17, rect.y0+42), title, 15, True, TEAL)
+    page.draw_rect((rect.x0, rect.y0, rect.x0+3, rect.y1), color=ACCENT, fill=ACCENT)
+    text(page, (rect.x0+17, rect.y0+15, rect.x1-17, rect.y0+42), title, 15, True, ACCENT)
     y = rect.y0 + 53
     height = (rect.y1-y-10) / max(1, len(values))
     for index, value in enumerate(values):
@@ -273,8 +270,8 @@ def process_page(doc, item, number, total):
     for index, step in enumerate(steps, 1):
         panel(page, (42, y, 830, y+height), WHITE)
         panel(page, (42, y, 97, y+height), PALE)
-        text(page, (54, y+13, 88, y+height-10), f'{index:02}', 19, True, TEAL)
-        text(page, (115, y+10, 810, y+33), step['actor'], 11, True, TEAL, minimum=11)
+        text(page, (54, y+13, 88, y+height-10), f'{index:02}', 19, True, ACCENT)
+        text(page, (115, y+10, 810, y+33), step['actor'], 11, True, ACCENT, minimum=11)
         text(page, (115, y+34, 810, y+height-7), step['text'], 16, minimum=13)
         if index != len(steps):
             arrow(page, [(436, y+height), (436, y+height+gap)])
@@ -292,11 +289,11 @@ def flowchart_page(doc, item, number, total):
         ((855, 355, 1148, 478), item['no'], GOLD),
         ((268, 609, 750, 677), item['result'], PALE),
     ]:
-        panel(page, rect, fill, TEAL if label == item['result'] else RULE)
+        panel(page, rect, fill, ACCENT if label == item['result'] else RULE)
         r = pdf.Rect(rect)
         text(page, r+(14, 10, -14, -7), label, 16, align=1, minimum=13)
     diamond = [(509, 345), (710, 410), (509, 475), (308, 410), (509, 345)]
-    page.draw_polyline(diamond, color=TEAL, fill=GOLD, width=1)
+    page.draw_polyline(diamond, color=ACCENT, fill=GOLD, width=1)
     text(page, (396, 381, 622, 442), item['question'], 16, True, align=1, minimum=13)
     arrow(page, [(509, 234), (509, 251)])
     arrow(page, [(509, 317), (509, 345)])
@@ -312,13 +309,13 @@ def guide_page(doc, item, number, total):
     height = min(103, 526/len(item['steps']))
     for index, value in enumerate(item['steps'], 1):
         panel(page, (42, y, 97, y+49), PALE)
-        text(page, (49, y+10, 90, y+43), f'{index:02}', 19, True, TEAL, align=1)
+        text(page, (49, y+10, 90, y+43), f'{index:02}', 19, True, ACCENT, align=1)
         text(page, (117, y+4, 808, y+height-13), value, 18, minimum=15)
         if index < len(item['steps']):
             page.draw_line((117, y+height-10), (808, y+height-10), color=(.86, .90, .91), width=.5)
         y += height
     panel(page, (847, 176, 1148, 371), PALE)
-    text(page, (864, 194, 1130, 224), 'Expected result', 16, True, TEAL)
+    text(page, (864, 194, 1130, 224), 'Expected result', 16, True, ACCENT)
     text(page, (864, 239, 1130, 352), item['result'], 16, minimum=14)
     if item.get('notes'):
         notes(page, item['notes'], (847, 392, 1148, 759))
@@ -331,7 +328,7 @@ def dfd_page(doc, item, number, total):
         # External actors exchange named information with the single system.
         # Internal records belong on the following detail pages, not Level 0.
         panel(page, (435, 177, 755, 686), PALE)
-        text(page, (455, 307, 735, 350), '0. PK DTS', 27, True, TEAL, align=1)
+        text(page, (455, 307, 735, 350), '0. PK DTS', 27, True, ACCENT, align=1)
         text(page, (455, 367, 735, 501), 'Find and track documents\nManage requests and approvals\nRecord handoffs and history', 18, align=1)
         positions = [(42, 177, 308, 310), (42, 365, 308, 498), (42, 553, 308, 686),
                      (882, 235, 1148, 368), (882, 501, 1148, 634)]
@@ -363,7 +360,7 @@ def dfd_page(doc, item, number, total):
         for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
             if kind == 'store':
                 # Open-ended record symbol; readable business record names.
-                page.draw_polyline([(x1, y), (x0, y), (x0, y+78), (x1, y+78)], color=TEAL, width=1)
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+78), (x1, y+78)], color=ACCENT, width=1)
             else:
                 panel(page, (x0, y, x1, y+78), PALE if kind == 'process' else GOLD)
             text(page, (x0+12, y+12, x1-12, y+69), row[field], 15, bold=kind == 'process', align=1, minimum=12)
@@ -376,7 +373,7 @@ def dfd_page(doc, item, number, total):
 def cover_page(doc, key, item, number, total):
     page = header(doc, item['title'], '', number, total, section='Everyday procedures')
     lead, subtitle, description, topics = BOOKS[key]
-    text(page, (42, 174, 775, 211), lead.upper(), 13, True, TEAL)
+    text(page, (42, 174, 775, 211), lead.upper(), 13, True, ACCENT)
     text(page, (42, 228, 790, 372), item['title'], 56, True, minimum=43)
     text(page, (42, 390, 785, 439), subtitle, 24, True, minimum=20)
     text(page, (42, 460, 770, 576), description, 21, minimum=18)
@@ -406,7 +403,7 @@ def contents_page(doc, key, item, number, total):
     for entry, rect in contents_rows(item):
         page.draw_line((rect.x0, rect.y1), (rect.x1, rect.y1), color=RULE, width=.5)
         text(page, (rect.x0+1, rect.y0+3, rect.x1-58, rect.y1-2), entry['title'], 14, minimum=12)
-        text(page, (rect.x1-47, rect.y0+3, rect.x1-2, rect.y1-2), str(entry['page']), 15, True, TEAL, align=2)
+        text(page, (rect.x1-47, rect.y0+3, rect.x1-2, rect.y1-2), str(entry['page']), 15, True, ACCENT, align=2)
 
 
 def rgb(value):
