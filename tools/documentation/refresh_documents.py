@@ -343,36 +343,60 @@ def process_page(doc, item, number, total):
 
 def flowchart_page(doc, item, number, total):
     page = header(doc, 'Flowchart', item['title'], number, total,
-                  'Start at the top. Follow Yes or No at the question to see what happens next.', chapter('flowchart', item['id']))
-    for rect, label, fill in [
-        ((268, 168, 750, 234), item['start'], INK),
-        ((268, 251, 750, 317), item['action'], PALE),
-        ((268, 506, 750, 578), item['yes'], PALE),
-        ((855, 355, 1148, 478), item['no'], GOLD),
-        ((268, 609, 750, 677), item['result'], INK),
-    ]:
+                  'Start at the upper left. Follow the arrows and the Yes or No answer at the question.',
+                  chapter('flowchart', item['id']))
+
+    def label(rect, value, terminal=False, bold=False):
+        inset, size = pdf.Rect(rect)+(25, 12, -25, -12), 16
+        while size >= 14:
+            spare = page.new_shape().insert_textbox(inset, plain(value), fontsize=size,
+                                                    fontname='hebo' if bold else 'helv', align=1)
+            if spare >= 0:
+                text(page, inset+(0, spare/2, 0, 0), value, size, bold,
+                     color=WHITE if terminal else INK, align=1, minimum=size)
+                return
+            size -= .5
+        raise AssertionError('Flowchart node overflow: '+value)
+
+    def node(rect, value, terminal=False):
         r = pdf.Rect(rect)
-        if fill == INK:
-            # Straight segments retain editable geometry in both Visio formats.
+        if terminal:
+            # Polygonal semicircles remain native editable geometry in both Visio formats.
             radius = r.height/2
             points = []
             for center, first in [(pdf.Point(r.x1-radius, r.y0+radius), -90),
                                   (pdf.Point(r.x0+radius, r.y0+radius), 90)]:
-                for angle in range(first, first+181, 15):
+                for angle in range(first, first+181, 5):
                     a = math.radians(angle)
                     points.append((center.x+radius*math.cos(a), center.y+radius*math.sin(a)))
             page.draw_polyline(points+[points[0]], color=INK, fill=INK, width=.7)
         else:
-            panel(page, rect, fill, RULE)
-        text(page, r+(25, 10, -25, -7), label, 16, color=WHITE if fill == INK else INK, align=1, minimum=13)
-    diamond = [(509, 345), (710, 410), (509, 475), (308, 410), (509, 345)]
+            panel(page, r, PALE, RULE)
+        label(r, value, terminal)
+
+    # A failed validation returns to the action. Other No outcomes stop here;
+    # joining them to the successful result would imply an unapplied change took effect.
+    retry = any(term in item['no'].lower()
+                for term in ('retry', 'again', 'repeating', 'adjust the search'))
+    next_review = item['id'] == 'approval'
+    node((42, 196, 334, 306), item['start'], terminal=True)
+    node((408, 196, 802, 306), item['action'])
+    node((42, 358, 334, 506), item['no'], terminal=not (retry or next_review))
+    node((856, 358, 1148, 506), item['yes'])
+    node((408, 586, 802, 683), item['result'], terminal=True)
+
+    diamond = [(605, 334), (785, 425), (605, 516), (425, 425), (605, 334)]
     page.draw_polyline(diamond, color=(.70, .42, .08), fill=GOLD, width=1)
-    text(page, (396, 381, 622, 442), item['question'], 16, True, align=1, minimum=13)
-    arrow(page, [(509, 234), (509, 251)], color=GREY)
-    arrow(page, [(509, 317), (509, 345)], color=GREY)
-    arrow(page, [(509, 475), (509, 506)], 'Yes', (524, 478, 569, 501), color=GREY)
-    arrow(page, [(710, 410), (855, 410)], 'No', (753, 381, 805, 404), color=GREY)
-    arrow(page, [(509, 578), (509, 609)], color=GREY)
+    label((467, 358, 743, 492), item['question'], bold=True)
+    arrow(page, [(334, 251), (408, 251)], color=GREY)
+    arrow(page, [(605, 306), (605, 334)], color=GREY)
+    arrow(page, [(785, 425), (856, 425)], 'Yes', (793, 393, 848, 418), color=GREY)
+    arrow(page, [(425, 425), (334, 425)], 'No', (347, 393, 411, 418), color=GREY)
+    arrow(page, [(1002, 506), (1002, 635), (802, 635)], color=GREY)
+    if retry or next_review:
+        arrow(page, [(42, 432), (22, 432), (22, 174), (605, 174), (605, 196)], color=GREY)
+        text(page, (34, 316, 182, 343), 'Next review' if next_review else 'Try again',
+             12, color=GREY, minimum=12)
     notes(page, item['notes'], (42, 701, 1148, 774), 'Keep in mind')
 
 
