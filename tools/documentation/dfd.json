@@ -1,0 +1,149 @@
+{
+  "title": "PK DTS - Data Flow Diagram",
+  "pages": [
+    {
+      "id": "context-all-roles",
+      "kind": "context",
+      "title": "Who exchanges information with PK DTS?",
+      "summary": "Context diagram: all five supplied account roles and the information each sends and receives.",
+      "actors": [
+        {"role": "Staff", "responsibility": "Requester; holder; receiving user when named", "sends": "Searches; requests; receipt", "receives": "Records; status; tasks"},
+        {"role": "Document Control Officer", "responsibility": "Document controller; assigned approver", "sends": "Record changes; decisions", "receives": "Documents; approval work"},
+        {"role": "Plant Manager", "responsibility": "Assigned approver; requester when permitted", "sends": "Decisions; requests", "receives": "Proposals; records; status"},
+        {"role": "Administrator", "responsibility": "Accounts, setup, approval routes and recovery", "sends": "Setup; changes; recovery choice", "receives": "Results; records; archives"},
+        {"role": "Internal Auditor", "responsibility": "Read permitted documents and audit evidence", "sends": "Searches; audit filters", "receives": "Records; histories; audit"}
+      ],
+      "note": "These are supplied roles, not a live account list. Roles can overlap and custom roles can be added. Requester's leader, requester confirmation and receiving user are assigned responsibilities, not additional fixed role names."
+    },
+    {
+      "id": "overview",
+      "title": "Main information flows",
+      "summary": "Overview: people provide information, the system carries out an activity, and records or results are returned.",
+      "flows": [
+        {"from": "All signed-in roles", "from_kind": "actor", "input": "Sign-in and document searches", "process": "1. Sign in and find records", "output": "Allowed records and account result", "to": "Signed-in user", "to_kind": "actor"},
+        {"from": "Document Control Officer / authorized controller", "from_kind": "actor", "input": "Document details and files", "process": "2-4. Maintain document registers", "output": "Current records, files and history", "to": "Document registers", "to_kind": "store"},
+        {"from": "Requester and assigned approvers", "from_kind": "actor", "input": "Proposal, file and decisions", "process": "5. Route and decide requests", "output": "Progress and decision history", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Requester, holder and receiving user", "from_kind": "actor", "input": "Handoff, access or disposal details", "process": "6-8. Track custody and document use", "output": "Custody, access and disposal results", "to": "Tracking and document records", "to_kind": "store"},
+        {"from": "Administrator / authorized maintainer", "from_kind": "actor", "input": "Setup choices and recovery actions", "process": "9-11. Maintain setup, notices and recovery", "output": "Settings, notices, audit and archives", "to": "Setup and operating records", "to_kind": "store"}
+      ],
+      "note": "Reading key: boxes are people or activities; open-ended boxes are saved business records. Arrow labels name the information passed. Detailed pages separate each main activity."
+    },
+    {
+      "id": "hardcopy-tracking",
+      "title": "2. Hardcopy records, holders and storage",
+      "summary": "Hardcopy registration and editing are direct actions. Physical transfers and other requests have separate flows.",
+      "flows": [
+        {"from": "Authorized holder / Administrator", "from_kind": "actor", "input": "Title, holder and storage choices", "process": "2.1 Register or edit hardcopy", "output": "Active record and change history", "to": "Hardcopy register", "to_kind": "store"},
+        {"from": "Places and user records", "from_kind": "store", "input": "Active storage path and holder", "process": "2.1 Check hardcopy details", "output": "Saved result or correction message", "to": "Authorized holder / Administrator", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Current holder, place and status", "process": "2.2 Show permitted hardcopy details", "output": "Custody and physical storage details", "to": "Allowed document user", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Retention start and end dates", "process": "2.3 Show retention countdown", "output": "Days remaining, due or overdue", "to": "Allowed holder / controller", "to_kind": "actor"},
+        {"from": "Requests and handoff history", "from_kind": "store", "input": "Approved move and receipt history", "process": "2.2 Show tracking history", "output": "Who released and received the record", "to": "Allowed reviewer / Internal Auditor", "to_kind": "actor"}
+      ],
+      "note": "Storage follows Area > Specific > optional Asset > Location. Retention reminds people to review a record; it never disposes of a document automatically. New hardcopy create or update requests are unavailable."
+    },
+    {
+      "id": "softcopy-files",
+      "title": "3. Softcopy creation, revision and file use",
+      "summary": "A direct action publishes immediately. A proposed creation or revision waits for its final approval.",
+      "flows": [
+        {"from": "Authorized document controller", "from_kind": "actor", "input": "Title, category, pages and file", "process": "3.1 Create or revise directly", "output": "Active document and current file", "to": "Softcopy register and files", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Proposed details and attachment", "process": "5. Save and route request", "output": "Draft or submitted proposal", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Requests and approval history", "from_kind": "store", "input": "Finally approved creation or revision", "process": "3.2 Publish approved softcopy", "output": "Current revision and approved file", "to": "Softcopy register and files", "to_kind": "store"},
+        {"from": "Softcopy register and files", "from_kind": "store", "input": "Current approved file and access", "process": "3.3 Check file use permission", "output": "Download or print the current file", "to": "Allowed file user", "to_kind": "actor"},
+        {"from": "Softcopy revision history", "from_kind": "store", "input": "Revision details and recorded changes", "process": "3.4 Show available file history", "output": "Permitted revision information", "to": "Allowed reviewer / Internal Auditor", "to_kind": "actor"}
+      ],
+      "note": "Creation uses Softcopy Categories and automatic document numbering, with optional series. Revision keeps the document identity and advances its revision. New softcopy cancellation is unavailable; permitted direct disposal is separate."
+    },
+    {
+      "id": "external-documents",
+      "title": "4. External document registration and revision",
+      "summary": "External Documents have their own categories. Both direct and approval-based creation and revision are available.",
+      "flows": [
+        {"from": "Authorized document controller", "from_kind": "actor", "input": "Title, category, description and file", "process": "4.1 Register or revise directly", "output": "Active record and current revision", "to": "External register and files", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "External creation or revision proposal", "process": "5. Save and route request", "output": "Proposal and attachment for review", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Requests and approval history", "from_kind": "store", "input": "Finally approved external proposal", "process": "4.2 Publish approved external change", "output": "Current record and approved file", "to": "External register and files", "to_kind": "store"},
+        {"from": "External Categories", "from_kind": "store", "input": "Category and parent folder", "process": "4.3 Browse external folders", "output": "Allowed external document list", "to": "Allowed document user", "to_kind": "actor"},
+        {"from": "External register and files", "from_kind": "store", "input": "Current active file and user access", "process": "4.4 Check external file permission", "output": "Current document download", "to": "Allowed file user", "to_kind": "actor"}
+      ],
+      "note": "A new attachment is required for creation and revision. Revisions advance automatically. External Documents do not use retention dates, and their register offers Download for the current file."
+    },
+    {
+      "id": "requests-approvals",
+      "title": "5. Requests, approval decisions and corrections",
+      "summary": "The published route assigns each review in order. Decisions and proposal changes remain traceable.",
+      "flows": [
+        {"from": "Requester", "from_kind": "actor", "input": "Draft details, attachment and Submit", "process": "5.1 Check and submit proposal", "output": "Submitted request and chosen route", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Published approval routes", "from_kind": "store", "input": "Ordered approvers and account leader", "process": "5.2 Assign the active review", "output": "Proposal, task and review file", "to": "Plant Manager / DCO / other assigned approver", "to_kind": "actor"},
+        {"from": "Assigned approver", "from_kind": "actor", "input": "Approve, Return or Reject; remarks", "process": "5.3 Record the decision", "output": "Decision and current review stage", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Requests and approval history", "from_kind": "store", "input": "First-step Return and correction notes", "process": "5.4 Show work needing correction", "output": "Returned proposal for editing", "to": "Requester", "to_kind": "actor"},
+        {"from": "Requests and approval history", "from_kind": "store", "input": "Final approval and approved details", "process": "5.5 Apply approved action", "output": "Document change or handoff to finish", "to": "Document, access or transfer records", "to_kind": "store"}
+      ],
+      "note": "A later-step Return reopens the preceding approver's task. Reject ends the request. The requester may correct and resubmit a Returned proposal; its original route is retained. Opening a notification is not a decision."
+    },
+    {
+      "id": "physical-handoffs",
+      "title": "6. Approved physical transfer and receipt",
+      "summary": "The transfer records physical release and receipt. Custody and storage change when the receiving user accepts.",
+      "flows": [
+        {"from": "Finally approved transfer request", "from_kind": "store", "input": "Current holder, recipient and destination", "process": "6.1 Prepare physical handoff", "output": "For Transfer handoff", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Original requester", "from_kind": "actor", "input": "Dispatch confirmation", "process": "6.2 Record physical release", "output": "In Transit; dispatcher and time", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Named receiving user", "from_kind": "actor", "input": "Accept confirmation after receipt", "process": "6.3 Check and record receipt", "output": "Accepted handoff; receiver and time", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Accepted transfer details", "from_kind": "store", "input": "Receiving user and approved place", "process": "6.4 Update custody and storage", "output": "New holder and location", "to": "Hardcopy register and access records", "to_kind": "store"},
+        {"from": "Transfer tracking records", "from_kind": "store", "input": "Accepted receipt and completed request", "process": "6.5 Show handoff outcome", "output": "Receipt and updated tracking details", "to": "Requester / recipient / allowed reviewer", "to_kind": "actor"}
+      ],
+      "note": "Only the original requester can Dispatch; only the named recipient can Accept. Acceptance checks the document, holder and approved place. It also revokes the previous holder's personal hardcopy grants when custody changes."
+    },
+    {
+      "id": "access-assignment",
+      "title": "7. Temporary access and document assignment",
+      "summary": "Access grants, assignments and physical transfers are different actions with different results.",
+      "flows": [
+        {"from": "Requester", "from_kind": "actor", "input": "Own access need and expiry date", "process": "5. Review access request", "output": "Approved personal access request", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Approved access request", "from_kind": "store", "input": "Requester, document and valid expiry", "process": "7.1 Grant temporary access", "output": "Personal access through expiry", "to": "Document access records", "to_kind": "store"},
+        {"from": "Approved assignment request", "from_kind": "store", "input": "Requester and selected document", "process": "7.2 Apply requested assignment", "output": "Softcopy assignee or hardcopy holder", "to": "Assignments and document register", "to_kind": "store"},
+        {"from": "Authorized assignment controller", "from_kind": "actor", "input": "Document, Location or category; user", "process": "7.3 Assign documents directly", "output": "Updated assignees or holders", "to": "Assignments and document register", "to_kind": "store"},
+        {"from": "Document access and assignment records", "from_kind": "store", "input": "Current user access and permissions", "process": "7.4 Show permitted documents", "output": "Allowed records and actions", "to": "Document user", "to_kind": "actor"}
+      ],
+      "note": "Requests for access or assignment are for the requester and support Hardcopy or Softcopy. Hardcopy assignment changes the holder without moving storage or using Dispatch/Accept. Direct hardcopy assignment checks for active handoffs."
+    },
+    {
+      "id": "disposal",
+      "title": "8. Direct disposal and disposal requests",
+      "summary": "Disposal records why a document is no longer active. The available path depends on the register and permissions.",
+      "flows": [
+        {"from": "Authorized document controller / holder", "from_kind": "actor", "input": "Document and confirmed disposal reason", "process": "8.1 Apply direct disposal", "output": "Disposed status and disposal history", "to": "Hardcopy, Softcopy or External register", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Hardcopy or External disposal proposal", "process": "5. Review disposal request", "output": "Approved disposal details", "to": "Requests and approval history", "to_kind": "store"},
+        {"from": "Approved disposal request", "from_kind": "store", "input": "Hardcopy and disposal method", "process": "8.2 Apply approved hardcopy disposal", "output": "Disposed; Location cleared; grants revoked", "to": "Hardcopy and access records", "to_kind": "store"},
+        {"from": "Approved disposal request", "from_kind": "store", "input": "External document and disposal method", "process": "8.3 Apply approved external disposal", "output": "Disposed status and disposal history", "to": "External register", "to_kind": "store"},
+        {"from": "Disposal and document history", "from_kind": "store", "input": "Method, responsible person and date", "process": "8.4 Show disposal outcome", "output": "Traceable disposal result", "to": "Allowed reviewer / Internal Auditor", "to_kind": "actor"}
+      ],
+      "note": "Direct hardcopy disposal retains its stored place and grant records; requested hardcopy disposal clears Location and revokes grants. Disposed status restricts use. Recording disposal does not perform the organization's physical disposal procedure."
+    },
+    {
+      "id": "setup-roles-workflows",
+      "title": "9. Accounts, roles, places and approval routes",
+      "summary": "Authorized maintainers provide the reference information used by document entry and request reviews.",
+      "flows": [
+        {"from": "Administrator / account administrator", "from_kind": "actor", "input": "Account, roles, leader or password reset", "process": "9.1 Maintain user access", "output": "Account and role membership", "to": "User accounts and permissions", "to_kind": "store"},
+        {"from": "Administrator / role administrator", "from_kind": "actor", "input": "Role name and permitted actions", "process": "9.2 Maintain roles and permissions", "output": "Allowed actions for each active role", "to": "User accounts and permissions", "to_kind": "store"},
+        {"from": "Document Control Officer / places maintainer", "from_kind": "actor", "input": "Place hierarchy and category folders", "process": "9.3 Maintain storage and categories", "output": "Physical places; two category trees", "to": "Places, Softcopy and External Categories", "to_kind": "store"},
+        {"from": "Administrator / workflow administrator", "from_kind": "actor", "input": "Ordered review steps and approvers", "process": "9.4 Check and publish approval route", "output": "Default route for future submissions", "to": "Published approval routes", "to_kind": "store"},
+        {"from": "User accounts and permissions", "from_kind": "store", "input": "Active role membership and user leader", "process": "9.5 Resolve assigned responsibility", "output": "Account, role or leader's review task", "to": "Assigned approver / requester's leader", "to_kind": "actor"}
+      ],
+      "note": "Primary and assigned active roles combine permissions. The supplied DCO does not automatically administer users, roles, workflows or backups. Account leadership and receiving-user duties can belong to people holding any permitted role."
+    },
+    {
+      "id": "notices-audit-recovery",
+      "title": "10-11. Notices, audit and system recovery",
+      "summary": "Users receive notices; reviewers inspect recorded actions; authorized backup operators preserve or restore records.",
+      "flows": [
+        {"from": "Requests and transfer records", "from_kind": "store", "input": "Assigned work and request progress", "process": "10.1 Present task notices", "output": "Task notice and work link", "to": "Assigned user", "to_kind": "actor"},
+        {"from": "Hardcopy retention dates", "from_kind": "store", "input": "Due or overdue visible hardcopy", "process": "10.2 Present retention reminder", "output": "Reminder to review the document", "to": "Allowed document user", "to_kind": "actor"},
+        {"from": "Recorded user actions", "from_kind": "store", "input": "Actor, action, date and outcome", "process": "10.3 Present audit evidence", "output": "Searchable audit results", "to": "Internal Auditor / DCO / Administrator", "to_kind": "actor"},
+        {"from": "Authorized backup operator", "from_kind": "actor", "input": "Create, import or cleanup choice", "process": "11.1 Check and manage backups", "output": "Verified backup and operation result", "to": "Backup archives", "to_kind": "store"},
+        {"from": "Authorized backup operator", "from_kind": "actor", "input": "Archive choice, password and confirmation", "process": "11.2 Preserve recovery copy and restore", "output": "Restored records and private files", "to": "System records and recovery archive", "to_kind": "store"}
+      ],
+      "note": "Opening an alert does not complete the linked work. Automatic backups need administrator setup and evidence of a recent run. Restore replaces live records and files, temporarily blocks use, and signs the operator out after success."
+    }
+  ]
+}

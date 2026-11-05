@@ -1,388 +1,584 @@
-"""Refresh the eight canonical documents; verify with --verify. Requires pymupdf/python-pptx.
+"""Build the current plain-language PDF, Visio and PowerPoint documentation.
 
-Existing diagram layouts and guide illustrations are retained. Added pages are native
-Visio shapes / PowerPoint text, with matching vector PDF pages. No Office automation.
+Content lives in the four adjacent JSON files. --verify checks existing exports;
+--check-source checks the route, request and content inventory without exporting.
+Requires the existing pymupdf and python-pptx packages. No application data is read.
 """
 from pathlib import Path
-import io
+import argparse
+import json
+import math
+import posixpath
 import re
-import sys
 import zipfile
 import xml.etree.ElementTree as ET
-from copy import deepcopy
 
 import pymupdf as pdf
 from pptx import Presentation
-from pptx.util import Pt
+from pptx.dml.color import RGBColor
+from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
+from pptx.util import Inches, Pt
 
 ROOT = Path(__file__).resolve().parents[2]
+SOURCE = Path(__file__).resolve().parent
 DOCS = ROOT / 'docs/system-documentation'
+W, H = 1190, 842
+MARKER = 'CURRENT USER PROCEDURES | 05 NOVEMBER 2026'
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
+CT = 'http://schemas.openxmlformats.org/package/2006/content-types'
 ET.register_namespace('', NS)
 ET.register_namespace('r', REL)
-MARKER = 'CURRENT SYSTEM COVERAGE / 29 OCTOBER 2026'
+INK = (.10, .18, .22)
+TEAL = (.04, .36, .39)
+PALE = (.92, .97, .97)
+GOLD = (.99, .95, .85)
+GREY = (.43, .49, .53)
 
-# Explicit route inventory: a new route must be reviewed and mapped, never silently accepted.
+# Implementation identifiers stay here, outside the reader's documents. New
+# endpoints require an explicit review and a link to a user-guide procedure.
 GROUPS = [
- ('Account and dashboard', 'Guide 1-3; Flowchart 1', ['login', 'logout', 'change-password', 'dashboard']),
- ('Notifications', 'Guide 14 and supplement; Flowchart supplement', ['notifications/tasks', 'notifications/inbox', 'notifications/tasks/claim', 'notifications/inbox/read']),
- ('Documents and files', 'Guide 4, 7, 15; Flowchart 5', ['documents/(:any)', 'documents/softcopy/direct', 'documents/(:any)/save', 'documents/(:any)/dispose', 'files/upload', 'files/download/(:num)', 'files/print/(:num)', 'files/print-content/(:num)', 'files/review/(:num)', 'files/review-content/(:num)/(:any)/(:any)', 'files/office-setup']),
- ('Places and categories', 'Guide 17; Process Flow 5', ['places', 'places/(:any)', 'places/(:any)/save', 'places/(:any)/deactivate']),
- ('Request lifecycle', 'Guide 5-10, 12; Flowchart 2-3', ['my-requests/(:any)', 'my-requests/(:any)/save', 'my-requests/(:any)/submit', 'my-requests/(:any)/cancel', 'my-requests/(:any)/delete']),
- ('Decisions and handoffs', 'Guide 11, 13; Flowchart 3-4', ['my-tasks/(:any)', 'my-tasks/(:any)/decide', 'my-tasks/hardcopy-transfer/dispatch', 'my-tasks/hardcopy-transfer/accept']),
- ('Direct assignments', 'Guide 16, 18; Process Flow 4', ['admin/document-assignments', 'admin/document-assignments/save', 'admin/document-assignments/location', 'admin/document-assignments/category', 'admin/users/(:num)/assigned-documents']),
- ('Audit and recovery', 'Guide 21-22; Flowchart 6', ['admin/audit', 'admin/backups', 'admin/backups/create', 'admin/backups/cleanup', 'admin/backups/import', 'admin/backups/restore', 'admin/backups/download/(:any)']),
- ('Users and roles', 'Guide 18-19; Flowchart 6', ['admin/users', 'admin/users/save', 'admin/users/deactivate', 'admin/roles', 'admin/roles/save', 'admin/roles/deactivate', 'admin/roles/remove']),
- ('Workflow versions', 'Guide 20; Flowchart 6', ['admin/workflows', 'admin/workflows/step/save', 'admin/workflows/step/remove', 'admin/workflows/step/move', 'admin/workflows/publish', 'admin/workflows/clone']),
+ ('sign-in', ['login', 'logout', 'change-password']),
+ ('navigation', ['dashboard']),
+ ('notifications', ['notifications/tasks', 'notifications/inbox', 'notifications/tasks/claim', 'notifications/inbox/read', 'notifications/retention']),
+ ('find-documents', ['documents/(:any)', 'files/download/(:num)', 'files/print/(:num)', 'files/print-content/(:num)', 'files/review/(:num)', 'files/review-content/(:num)/(:any)/(:any)', 'files/office-setup']),
+ ('hardcopy-create', ['documents/(:any)/save']),
+ ('disposal-direct', ['documents/(:any)/dispose', 'documents/external/dispose']),
+ ('softcopy-direct-create', ['documents/softcopy/direct']),
+ ('external-direct-create', ['documents/external', 'documents/external/direct']),
+ ('request-lifecycle', ['my-requests/(:any)', 'my-requests/(:any)/save', 'my-requests/(:any)/submit', 'my-requests/(:any)/cancel', 'my-requests/(:any)/delete', 'files/upload']),
+ ('approvals', ['my-tasks/(:any)', 'my-tasks/(:any)/decide']),
+ ('transfer-dispatch', ['my-tasks/hardcopy-transfer/dispatch']),
+ ('transfer-accept', ['my-tasks/hardcopy-transfer/accept']),
+ ('direct-assignments', ['admin/document-assignments', 'admin/document-assignments/save', 'admin/document-assignments/location', 'admin/document-assignments/category', 'admin/users/(:num)/assigned-documents']),
+ ('places', ['places', 'places/(:any)', 'places/(:any)/save', 'places/(:any)/deactivate']),
+ ('users', ['admin/users', 'admin/users/save', 'admin/users/deactivate']),
+ ('permissions', ['admin/roles', 'admin/roles/save', 'admin/roles/deactivate', 'admin/roles/remove']),
+ ('workflows', ['admin/workflows', 'admin/workflows/step/save', 'admin/workflows/step/remove', 'admin/workflows/step/move', 'admin/workflows/publish', 'admin/workflows/clone']),
+ ('audit', ['admin/audit']),
+ ('backups', ['admin/backups', 'admin/backups/create', 'admin/backups/cleanup', 'admin/backups/import', 'admin/backups/download/(:any)']),
+ ('restore', ['admin/backups/restore']),
 ]
 REQUESTS = {
- 'softcopy_create': 'Create controlled softcopy and its approved file.',
- 'softcopy_revise': 'Publish replacement revision; retain history; retire superseded file bytes after commit.',
- 'softcopy_cancel': 'Mark controlled document Cancelled and retire its files; separate from cancelling a draft.',
- 'hardcopy_create': 'Register physical document, holder, place hierarchy and optional retention dates.',
- 'hardcopy_update': 'Apply approved metadata and retention changes to the active hardcopy.',
- 'access': 'Grant personal access to the requester until expiry; role permissions still govern file actions.',
- 'assignment': 'Assign to requester: add/reactivate softcopy assignment or replace hardcopy holder.',
- 'transfer': 'Approve handoff, then requester Dispatch and recipient Accept; acceptance updates custody/location.',
- 'disposal': 'Dispose hardcopy, preserve history, clear Location and revoke personal grants.',
+ 'softcopy_create': 'softcopy-request-create',
+ 'softcopy_revise': 'softcopy-request-revise',
+ 'external_create': 'external-request-create',
+ 'external_revise': 'external-request-revise',
+ 'transfer': 'transfer-request',
+ 'access': 'access-request',
+ 'assignment': 'assignment-request',
+ 'disposal': 'disposal-request',
 }
-NOTES = [
- ('23. Display, installation and connection', [
-  'Use the theme button to select light or dark mode. The preference is saved in this browser; without one, the system follows the device theme.',
-  'Use Toggle navigation on a narrow screen. Table and Folder views, filters, breadcrumbs and paging operate within your document permissions.',
-  'Use Install app when the browser offers it. Confirm the browser prompt. After installation the install control is hidden; eligibility depends on browser support and a secure context.',
-  'Open the installed app to use the same server and account. Installation does not provide offline document editing or approval. Reconnect before performing server actions.',
-  'Opening the notification panel does not mark everything read. Selecting an entry acknowledges that entry; dismissing a reminder does not decide a task.',
- ]),
- ('24. Current behavior and recovery prerequisites', [
-  'These documents describe the checked-out application source on 29 October 2026. Screenshots are illustrative examples from the retained guide; names, counts and visual arrangement can differ.',
-  'Direct hardcopy disposal preserves its Location and grant rows. Approval-based hardcopy disposal clears Location and revokes grants. Both record disposal history; disposed status still restricts actions.',
-  'Hardcopy assignment immediately changes Current Holder without Dispatch/Accept. Single and bulk direct assignments block records with active transfers. Bulk assignment is limited to 2,000 active records.',
-  'Only the current approved controlled file is available for normal delivery. Revision metadata remains, but retired/rejected file bytes may be cleaned up. Editing a review copy does not replace the stored proposal.',
-  'Automatic backups require an administrator to install tools/install_backup_schedule.ps1 on a UTC+08:00 host. It schedules 5:00 PM local time under SYSTEM; this document does not verify an installed task or successful run.',
-  'Configure backup encryption/signing and database tools for the service account. Check readiness and a resulting archive. Restore requires your password and RESTORE, creates recovery backup, restores database/private data and signs out; code recovery is offline.',
- ]),
+LEGACY = {'hardcopy_create', 'hardcopy_update', 'softcopy_cancel'}
+ROLES = {'Administrator', 'Document Control Officer', 'Plant Manager', 'Internal Auditor', 'Staff'}
+REQUIRED_GUIDE = {
+ 'welcome', 'roles', 'sign-in', 'navigation', 'find-documents',
+ 'hardcopy-create', 'hardcopy-edit', 'hardcopy-track',
+ 'softcopy-direct-create', 'softcopy-direct-revise',
+ 'external-direct-create', 'external-direct-revise', 'request-lifecycle',
+ 'approvals', 'transfer-dispatch', 'transfer-accept', 'disposal-direct',
+ 'direct-assignments', 'places', 'categories', 'users', 'permissions',
+ 'workflows', 'notifications', 'audit', 'backups', 'restore', 'help',
+} | set(REQUESTS.values())
+SPECS = [
+ ('dfd', 'PK_DTS_DFD', 'Data Flow Diagram'),
+ ('flowchart', 'PK_DTS_Flowchart', 'Flowchart'),
+ ('process', 'PK_DTS_Process_Flow', 'Process Flow'),
+ ('guide', 'PK_DTS_User_Guide', 'User Guide'),
 ]
 
-# Row tuples: source -> numbered process -> destination, with named data on both arrows.
-DFD = [
- ('Level 1 / identity, catalog and controlled files', [
- ('User', 'Credentials / password', '1. Authenticate / change password', 'Session / account outcome', 'User'),
- ('D1 users, roles, role_permissions, permissions; login_attempts', 'Account / permission data', '1. Authenticate / authorize', 'Session data', 'Private session storage'),
- ('D2 document registers, assignments, access_grants, places, categories', 'Scoped records', '2. Browse / inspect documents', 'Catalog / details', 'Authorized user'),
- ('Requester / direct operator', 'Attachment bytes', '3. Validate / store file', 'File metadata and bytes', 'D3 files, revisions, artifacts; private documents'),
- ('D3 files and private documents; D1/D2 scope', 'Current file / access data', '3. Review / download / print', 'Authorized proposal or current file', 'Authorized reviewer / user'),
- ('3. Apply revision / cancellation / disposal', 'Retired file identity', '3. Clean retired bytes after commit', 'Metadata retained; bytes removed', 'D3 revision history / private documents'),
- ]),
- ('Level 1 / requests, approvals and custody', [
- ('Requester', 'Draft proposal / submit', '4. Validate / save / route request', 'Payload / captured route', 'D4 requests, workflow_steps; D3 pending files'),
- ('D5 workflows, workflow_versions; D1 users/roles', 'Published route / active approvers', '4. Resolve approval route', 'Assigned step / task', 'D4 workflow_steps; notifications'),
- ('Active assigned approver', 'Approve / Return / Reject', '5. Decide and preserve history', 'Decision / active stage', 'D4 requests, workflow_history, workflow_steps'),
- ('5. Final approval', 'Approved payload', '6. Apply document operation', 'Record / grant / disposal changes', 'D2 registers, assignments, access_grants, disposals, status_history; D3'),
- ('5. Approved transfer', 'Approved destination / parties', '7. Prepare physical handoff', 'For Transfer record', 'D6 transfers; D4 approved request'),
- ('Requester Dispatch / recipient Accept', 'Release / receipt confirmation', '7. Validate handoff and custody', 'Transfer state; accepted custody', 'D6 transfers; D2 holder/location/grants; D4 history'),
- ]),
- ('Level 1 / administration, notifications and recovery', [
- ('Authorized maintainer', 'Accounts / roles / hierarchy / route draft', '8. Validate configuration / publish', 'Saved definitions / version', 'D1 identity; D2 places/categories; D5 workflows'),
- ('Authorized controller', 'Document / location / category and user', '6. Apply direct assignment', 'Holder / assignment changes', 'D2 hardcopy_documents / assignments'),
- ('D4 active steps; notifications / receipts', 'Assigned tasks / unread entries', '9. Present / acknowledge alerts', 'Task links / unread count', 'User; task_notification_receipts'),
- ('Application operations', 'Actor / action / outcome', '10. Record audit event', 'Audit entry / daily log', 'Private audit and log files'),
- ('Backup operator / installed scheduled task', 'Create / import / download / cleanup', '11. Verify and manage archives', 'Signed encrypted archive / result', 'Private backup archives; operator'),
- ('Verified archive + authorized restore user', 'Archive / password / RESTORE', '11. Snapshot / restore / recover', 'Database/private data; sign-out', 'Database; private data; recovery archive'),
- ]),
-]
 
-def current(text):
-    for before, after in [
-        ('PROPOSED', 'CURRENT'), ('Proposed authentication', 'Current authentication'),
-        ('Proposed request', 'Current request'), ('Proposed permission', 'Current permission'),
-        ('Proposed approved', 'Current approved'), ('PROPOSAL  ·  REVISION 02', 'CURRENT  ·  REVISION 03'),
-        ('26 OCTOBER 2026', '29 OCTOBER 2026'),
-        ('Planned user procedures', 'Current user procedures'), ('expected outcomes', 'operation outcomes'),
-        ('The proposed', 'The current'), ('The planned', 'The current'),
-        ('The planned daily schedule', 'The configured schedule target'),
-        ('planned daily schedule', 'schedule target after installation'),
-        ('proposed sign-in screen', 'current sign-in screen'),
-        ('proposed navigation', 'current navigation'), ('planned screens', 'current screens'),
-    ]:
-        text = text.replace(before, after)
-    return text
+def plain(value):
+    return value.translate(str.maketrans({
+        '\u2019': "'", '\u2018': "'", '\u201c': '"', '\u201d': '"',
+        '\u2013': '-', '\u2014': '-', '\u2192': ' > ', '\u2022': '-',
+        '\u00a0': ' ', '\u2264': '<=', '\u2265': '>=',
+    }))
 
-def check_source():
-    routes = set(re.findall(r"\$route\['([^']+)'\]", (ROOT/'application/config/routes.php').read_text()))
+
+def normalized(value):
+    return ' '.join(plain(value).split())
+
+
+def load_content():
+    return {key: json.loads((SOURCE / (key + '.json')).read_text(encoding='utf-8'))
+            for key, _, _ in SPECS}
+
+
+def entries(key, data):
+    return data['sections' if key == 'guide' else 'pages']
+
+
+def check_source(content):
+    routes = set(re.findall(r"\$route\['([^']+)'\]", (ROOT / 'application/config/routes.php').read_text()))
     routes -= {'default_controller', '404_override', 'translate_uri_dashes'}
-    mapped = {r for _, _, values in GROUPS for r in values}
+    mapped = {route for _, values in GROUPS for route in values}
     assert routes == mapped, f'Route coverage drift: missing={routes-mapped}, stale={mapped-routes}'
-    policy = (ROOT/'application/services/request/request_policy.php').read_text()
+    policy = (ROOT / 'application/services/request/request_policy.php').read_text()
     types = set(re.findall(r"'([^']+)'\s*=>", policy))
-    assert types == set(REQUESTS), f'Request coverage drift: {types ^ set(REQUESTS)}'
-    print(f'Source coverage: {len(routes)} route patterns; {len(types)} request types')
+    assert types == set(REQUESTS) | LEGACY, f'Request coverage drift: {types ^ (set(REQUESTS) | LEGACY)}'
+    service = (ROOT / 'application/services/request/request_service.php').read_text()
+    assert 'Hardcopy create and update requests are no longer available.' in service
+    assert 'Softcopy cancellation requests are no longer available.' in service
+    sections = {section['id'] for section in content['guide']['sections']}
+    assert REQUIRED_GUIDE <= sections, f'Missing user procedures: {REQUIRED_GUIDE-sections}'
+    assert all(section in sections for section, _ in GROUPS)
+    dfd_text = json.dumps(content['dfd'])
+    assert all(role in dfd_text for role in ROLES), 'DFD must name every supplied role'
+    for key, _, _ in SPECS:
+        items = entries(key, content[key])
+        ids = [item['id'] for item in items]
+        assert len(ids) == len(set(ids)), f'Duplicate {key} page identifiers'
+        for item in items:
+            assert item['title'] and item['id']
+            assert 'proposed' not in item['title'].lower(), item['title']
+            if key == 'process':
+                assert 3 <= len(item['steps']) <= 6, item['id']
+            if key == 'guide':
+                assert 1 <= len(item['steps']) <= 5, item['id']
+            if key == 'flowchart':
+                assert all(item.get(field) for field in ['start', 'action', 'question', 'yes', 'no', 'result']), item['id']
+    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions; {len(LEGACY)} historical actions distinguished.')
 
-def box(page, rect, text, size=13, fill=None, align=0):
+
+def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12):
+    """Fail on overflow; never silently omit instructions or shrink to tiny type."""
     rect = pdf.Rect(rect)
-    if fill:
-        page.draw_rect(rect, color=(.35,.45,.55), fill=fill, width=.7)
-    inner = rect + (9, 7, -9, -7) if fill else rect
-    result = -1
-    while result < 0 and size >= 9:
-        result = page.insert_textbox(inner, text, fontsize=size, fontname='helv', color=(.12,.18,.25), align=align)
+    value = plain(value)
+    font = 'hebo' if bold else 'helv'
+    while size >= minimum:
+        # A Shape lets us discard an overflowing attempt before committing it.
+        shape = page.new_shape()
+        if shape.insert_textbox(rect, value, fontsize=size, fontname=font,
+                                color=color, align=align) >= 0:
+            shape.commit()
+            return
         size -= .5
-    assert result >= 0, f'Text overflow: {text[:90]}'
+    raise AssertionError(f'Text overflow on {page.number+1}: {value[:120]}')
 
-def page_header(doc, title, subtitle):
-    page = doc.new_page(width=1190, height=842)
-    box(page, (40,25,1150,55), 'PK DOCUMENT TRACKING SYSTEM', 19)
-    box(page, (40,67,1150,108), title, 22)
-    box(page, (40,112,1150,140), subtitle, 11)
-    box(page, (40,805,1150,830), MARKER, 10)
+
+def panel(page, rect, fill=PALE, border=TEAL):
+    page.draw_rect(rect, color=border, fill=fill, width=.8)
+
+
+def arrow(page, points, label=None, label_rect=None):
+    page.draw_polyline(points, color=TEAL, width=1.4)
+    end, previous = pdf.Point(points[-1]), pdf.Point(points[-2])
+    angle = math.atan2(end.y-previous.y, end.x-previous.x)
+    wings = [pdf.Point(end.x-8*math.cos(angle+offset), end.y-8*math.sin(angle+offset)) for offset in (-.45, .45)]
+    page.draw_polyline([wings[0], end, wings[1]], color=TEAL, width=1.4)
+    if label:
+        text(page, label_rect, label, 12, color=TEAL, align=1, minimum=11)
+
+
+def header(doc, kind, title, number, total, subtitle=''):
+    page = doc.new_page(width=W, height=H)
+    page.draw_rect((0, 0, W, 17), fill=TEAL, color=TEAL)
+    text(page, (42, 33, 1148, 55), 'PK DOCUMENT TRACKING SYSTEM  /  ' + kind.upper(), 12, True, TEAL)
+    text(page, (42, 69, 1148, 111), title, 26, True, minimum=19)
+    if subtitle:
+        text(page, (42, 116, 1148, 157), subtitle, 14, color=GREY, minimum=12)
+    page.draw_line((42, 787), (1148, 787), color=(.80, .86, .87), width=.7)
+    text(page, (42, 802, 980, 825), MARKER, 10, color=GREY, minimum=10)
+    text(page, (1020, 802, 1148, 825), f'{number} / {total}', 10, color=GREY, align=2, minimum=10)
     return page
 
-def text_page(doc, title, lines):
-    page = page_header(doc, title, 'Current source behavior; permissions and record scope apply to each operation.')
-    y=160
-    for line in lines:
-        height = 72 if len(lines) <= 7 else 53
-        box(page, (45,y,1140,y+height), line, 15)
-        y += height+12
-    return page
 
-def flow_page(doc, title, rows):
-    page = page_header(doc, title, 'Arrows name data passed between external actors, numbered processes and data stores (D1-D6).')
-    for i,(left,a,mid,b,right) in enumerate(rows):
-        y = 160+i*103
-        box(page,(40,y,270,y+77),left,12,(.92,.96,.99),1)
-        box(page,(450,y,730,y+77),mid,13,(.91,.96,.92),1)
-        box(page,(910,y,1150,y+77),right,12,(.96,.94,.89),1)
-        for start,end,label in [(270,450,a),(730,910,b)]:
-            cy=y+49
-            page.draw_line((start,cy),(end,cy),color=(.25,.35,.45))
-            page.draw_polyline([(end-8,cy-4),(end,cy),(end-8,cy+4)],color=(.25,.35,.45))
-            box(page,(start+5,y+2,end-5,y+43),label,10,align=1)
-    return page
+def notes(page, values, rect, title='Remember'):
+    rect = pdf.Rect(rect)
+    panel(page, rect, GOLD, (.84, .72, .43))
+    if rect.height < 150:
+        width = (rect.width-20) / len(values)
+        for index, value in enumerate(values):
+            x = rect.x0+10+index*width
+            text(page, (x+7, rect.y0+9, x+width-7, rect.y1-6), value, 13, minimum=12)
+        return
+    text(page, (rect.x0+17, rect.y0+15, rect.x1-17, rect.y0+42), title, 15, True)
+    y = rect.y0 + 53
+    height = (rect.y1-y-10) / max(1, len(values))
+    for value in values:
+        text(page, (rect.x0+17, y, rect.x1-17, y+height-9), value, 14, minimum=12)
+        y += height
 
-def pagination(text, total):
-    text = re.sub(r'Page (\d+) of \d+', lambda m: f'Page {m[1]} of {total}', text)
-    return re.sub(r'\b(\d+) / \d+\b', lambda m: f'{m[1]} / {total}', text)
 
-def clean_pdf(path, total):
-    doc=pdf.open(path)
-    # Remove earlier generated supplements so a refresh is repeatable.
-    while len(doc) and MARKER in doc[-1].get_text():
-        doc.delete_page(len(doc)-1)
-    for page in doc:
-        replacements=[]
-        for block in page.get_text('dict')['blocks']:
-            for line in block.get('lines',[]):
-                for span in line['spans']:
-                    new=pagination(current(span['text']), total)
-                    if new != span['text']:
-                        replacements.append((span,new))
-                        page.add_redact_annot(pdf.Rect(span['bbox']), fill=False)
-        if replacements:
-            page.apply_redactions(images=0,graphics=0)
-            for span,new in replacements:
-                font='hebo' if 'bold' in span['font'].lower() else 'helv'
-                size=span['size']
-                limit=page.rect.width-span['origin'][0]-15
-                while pdf.get_text_length(new,fontname=font,fontsize=size)>limit: size-=.25
-                color=tuple(((span['color']>>shift)&255)/255 for shift in (16,8,0))
-                page.insert_text(span['origin'],new,fontname=font,fontsize=size,color=color)
-    return doc
+def process_page(doc, item, number, total):
+    page = header(doc, 'Process Flow', item['title'], number, total, item['summary'])
+    steps = item['steps']
+    gap = 18
+    height = min(101, (584-gap*(len(steps)-1))/len(steps))
+    y = 176
+    for index, step in enumerate(steps, 1):
+        panel(page, (42, y, 830, y+height))
+        text(page, (58, y+13, 96, y+height-10), str(index), 24, True, TEAL)
+        text(page, (110, y+11, 325, y+height-9), step['actor'], 15, True, TEAL)
+        text(page, (345, y+11, 810, y+height-9), step['text'], 17, minimum=14)
+        if index != len(steps):
+            arrow(page, [(436, y+height), (436, y+height+gap)])
+        y += height+gap
+    notes(page, item['notes'], (858, 176, 1148, 760))
 
-def save_pdf(doc,path):
-    data=doc.tobytes(garbage=4,deflate=True)
-    doc.close()
-    path.write_bytes(data)
+
+def flowchart_page(doc, item, number, total):
+    page = header(doc, 'Flowchart', item['title'], number, total,
+                  'Follow the arrows. At the question, choose the path that matches your situation.')
+    for rect, label, fill in [
+        ((268, 168, 750, 234), item['start'], PALE),
+        ((268, 251, 750, 317), item['action'], PALE),
+        ((268, 506, 750, 578), item['yes'], PALE),
+        ((855, 355, 1148, 478), item['no'], GOLD),
+        ((268, 609, 750, 677), item['result'], PALE),
+    ]:
+        panel(page, rect, fill)
+        r = pdf.Rect(rect)
+        text(page, r+(14, 10, -14, -7), label, 16, align=1, minimum=13)
+    diamond = [(509, 345), (710, 410), (509, 475), (308, 410), (509, 345)]
+    page.draw_polyline(diamond, color=TEAL, fill=GOLD, width=1)
+    text(page, (396, 381, 622, 442), item['question'], 16, True, align=1, minimum=13)
+    arrow(page, [(509, 234), (509, 251)])
+    arrow(page, [(509, 317), (509, 345)])
+    arrow(page, [(509, 475), (509, 506)], 'Yes', (524, 478, 569, 501))
+    arrow(page, [(710, 410), (855, 410)], 'No', (753, 381, 805, 404))
+    arrow(page, [(509, 578), (509, 609)])
+    notes(page, item['notes'], (42, 701, 1148, 774), 'Keep in mind')
+
+
+def guide_page(doc, item, number, total):
+    page = header(doc, 'User Guide', item['title'], number, total, 'Who uses this: ' + item['audience'])
+    y = 178
+    height = min(103, 526/len(item['steps']))
+    for index, value in enumerate(item['steps'], 1):
+        panel(page, (42, y, 97, y+49), TEAL)
+        text(page, (49, y+10, 90, y+43), str(index), 22, True, (1, 1, 1), align=1)
+        text(page, (117, y+4, 808, y+height-13), value, 18, minimum=15)
+        if index < len(item['steps']):
+            page.draw_line((117, y+height-10), (808, y+height-10), color=(.86, .90, .91), width=.5)
+        y += height
+    panel(page, (847, 176, 1148, 371))
+    text(page, (864, 194, 1130, 224), 'What happens next', 16, True, TEAL)
+    text(page, (864, 239, 1130, 352), item['result'], 16, minimum=14)
+    if item.get('notes'):
+        notes(page, item['notes'], (847, 392, 1148, 759))
+    text(page, (42, 731, 810, 769), 'Use your own account. Available actions depend on your permissions and document access.', 12, color=GREY)
+
+
+def dfd_page(doc, item, number, total):
+    page = header(doc, 'Data Flow Diagram', item['title'], number, total, item['summary'])
+    if item.get('kind') == 'context':
+        # External actors exchange named information with the single system.
+        # Internal records belong on the following detail pages, not Level 0.
+        panel(page, (435, 177, 755, 686), PALE)
+        text(page, (455, 307, 735, 350), '0. PK DTS', 27, True, TEAL, align=1)
+        text(page, (455, 367, 735, 501), 'Find and track documents\nManage requests and approvals\nRecord handoffs and history', 18, align=1)
+        positions = [(42, 177, 308, 310), (42, 365, 308, 498), (42, 553, 308, 686),
+                     (882, 235, 1148, 368), (882, 501, 1148, 634)]
+        for actor, rect in zip(item['actors'], positions):
+            panel(page, rect, GOLD, (.70, .62, .43))
+            r = pdf.Rect(rect)
+            text(page, r+(12, 13, -12, -72), actor['role'], 17, True, align=1)
+            text(page, (r.x0+12, r.y0+64, r.x1-12, r.y1-9), actor['responsibility'], 13, align=1)
+            cy = (r.y0+r.y1)/2
+            if r.x0 < 400:
+                left, right = r.x1, 435
+                endy = cy
+                arrow(page, [(left, cy-16), (right, endy-16)])
+                arrow(page, [(right, endy+17), (left, cy+17)])
+                text(page, (left+4, cy-60, right-4, cy-19), actor['sends'], 11, align=1, minimum=10)
+                text(page, (left+4, cy+23, right-4, cy+66), actor['receives'], 11, align=1, minimum=10)
+            else:
+                left, right = 755, r.x0
+                endy = cy
+                arrow(page, [(right, cy-16), (left, endy-16)])
+                arrow(page, [(left, endy+17), (right, cy+17)])
+                text(page, (left+4, cy-60, right-4, cy-19), actor['sends'], 11, align=1, minimum=10)
+                text(page, (left+4, cy+23, right-4, cy+66), actor['receives'], 11, align=1, minimum=10)
+        text(page, (42, 723, 1148, 773), item['note'], 14)
+        return
+    rows = item['flows']
+    for index, row in enumerate(rows):
+        y = 181+index*108
+        for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
+            if kind == 'store':
+                # Open-ended record symbol; readable business record names.
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+78), (x1, y+78)], color=TEAL, width=1)
+            else:
+                panel(page, (x0, y, x1, y+78), PALE if kind == 'process' else GOLD)
+            text(page, (x0+12, y+12, x1-12, y+69), row[field], 15, bold=kind == 'process', align=1, minimum=12)
+        for x0, x1, field in [(286, 467, 'input'), (735, 918, 'output')]:
+            arrow(page, [(x0, y+50), (x1, y+50)])
+            text(page, (x0+5, y-3, x1-5, y+43), row[field], 12, align=1, minimum=11)
+    text(page, (42, 735, 1148, 776), item['note'], 13, minimum=12)
+
+
+def rgb(value):
+    return '#' + ''.join(f'{round(v*255):02X}' for v in value)
+
+
+def xml(element):
+    return ET.tostring(element, encoding='utf-8', xml_declaration=True)
+
+
+def cell(parent, name, value):
+    return ET.SubElement(parent, '{'+NS+'}Cell', N=name, V=str(value))
+
 
 def native_page(page):
-    """Convert the supplement's vector boxes/text/arrows to editable Visio objects."""
-    def tag(name): return '{'+NS+'}'+name
-    root=ET.Element(tag('PageContents'))
-    shapes=ET.SubElement(root,tag('Shapes'))
-    count=0
-    def shape(x,y,w,h):
-        nonlocal count
-        count+=1
-        s=ET.SubElement(shapes,tag('Shape'),ID=str(count),NameU=f'Shape.{count}',Type='Shape')
-        for n,v in [('PinX',(x+w/2)/72),('PinY',(842-y-h/2)/72),('Width',w/72),('Height',h/72),('LocPinX',w/144),('LocPinY',h/144),('FillPattern',0),('LinePattern',0)]:
-            ET.SubElement(s,tag('Cell'),N=n,V=str(v))
-        return s
+    """Native vector geometry and editable text, matching every PDF page."""
+    tag = lambda name: '{'+NS+'}'+name
+    root = ET.Element(tag('PageContents'))
+    shapes = ET.SubElement(root, tag('Shapes'))
+    def shape(rect):
+        r = pdf.Rect(rect)
+        width, height = max(r.width, .01), max(r.height, .01)
+        node = ET.SubElement(shapes, tag('Shape'), ID=str(len(shapes)+1), Type='Shape', LineStyle='0', FillStyle='0', TextStyle='0')
+        for name, value in [('PinX', (r.x0+width/2)/72), ('PinY', (H-r.y0-height/2)/72), ('Width', width/72), ('Height', height/72), ('LocPinX', width/144), ('LocPinY', height/144), ('FillPattern', 0), ('LinePattern', 0)]:
+            cell(node, name, value)
+        return node
     for drawing in page.get_drawings():
-        r=drawing['rect']; s=shape(r.x0,r.y0,max(r.width,.01),max(r.height,.01))
-        ET.SubElement(s,tag('Cell'),N='LinePattern',V='1')
-        ET.SubElement(s,tag('Cell'),N='LineColor',V='#64748B')
+        r = drawing['rect']
+        node = shape(r)
+        if drawing['color']:
+            node.find(tag('Cell')+"[@N='LinePattern']").set('V', '1')
+            cell(node, 'LineColor', rgb(drawing['color']))
+            cell(node, 'LineWeight', drawing['width']/72)
         if drawing['fill']:
-            s.find(tag('Cell')+"[@N='FillPattern']").set('V','1')
-            ET.SubElement(s,tag('Cell'),N='FillForegnd',V='#'+''.join(f'{round(v*255):02X}' for v in drawing['fill']))
-        section=ET.SubElement(s,tag('Section'),N='Geometry',IX='0')
-        points=[]
-        for item in drawing['items']:
-            if item[0]=='re':
-                q=item[1]; points=[q.tl,q.tr,q.br,q.bl,q.tl]
-            elif item[0]=='l':
-                if not points: points.append(item[1])
-                points.append(item[2])
-        for ix,p in enumerate(points):
-            row=ET.SubElement(section,tag('Row'),T='MoveTo' if ix==0 else 'LineTo',IX=str(ix+1))
-            ET.SubElement(row,tag('Cell'),N='X',V=str((p.x-r.x0)/72))
-            ET.SubElement(row,tag('Cell'),N='Y',V=str((r.y1-p.y)/72))
+            node.find(tag('Cell')+"[@N='FillPattern']").set('V', '1')
+            cell(node, 'FillForegnd', rgb(drawing['fill']))
+        geometry = ET.SubElement(node, tag('Section'), N='Geometry', IX='0')
+        points = []
+        for part in drawing['items']:
+            if part[0] == 're':
+                q = part[1]
+                points = [q.tl, q.tr, q.br, q.bl, q.tl]
+            elif part[0] == 'qu':
+                q = part[1]
+                points = [q.ul, q.ll, q.lr, q.ur, q.ul]
+            elif part[0] == 'l':
+                if not points:
+                    points.append(part[1])
+                points.append(part[2])
+            else:
+                raise AssertionError(f'Unsupported editable geometry: {part[0]}')
+        for index, point in enumerate(points):
+            row = ET.SubElement(geometry, tag('Row'), T='MoveTo' if index == 0 else 'LineTo', IX=str(index+1))
+            cell(row, 'X', (point.x-r.x0)/72)
+            cell(row, 'Y', (r.y1-point.y)/72)
     for block in page.get_text('dict')['blocks']:
-        for line in block.get('lines',[]):
+        for line in block.get('lines', []):
             for span in line['spans']:
-                r=pdf.Rect(span['bbox']); s=shape(r.x0,r.y0-1,r.width+6,r.height+5)
-                for n in ['LeftMargin','RightMargin','TopMargin','BottomMargin']:
-                    ET.SubElement(s,tag('Cell'),N=n,V='0')
-                sec=ET.SubElement(s,tag('Section'),N='Character'); row=ET.SubElement(sec,tag('Row'),IX='0')
-                ET.SubElement(row,tag('Cell'),N='Font',V='Arial')
-                ET.SubElement(row,tag('Cell'),N='Size',V=str(span['size']/72))
-                ET.SubElement(s,tag('Text')).text=span['text']
-    return ET.tostring(root,encoding='utf-8',xml_declaration=True)
+                r = pdf.Rect(span['bbox'])
+                node = shape((r.x0, r.y0-1, r.x1+4, r.y1+4))
+                for name in ['LeftMargin', 'RightMargin', 'TopMargin', 'BottomMargin']:
+                    cell(node, name, 0)
+                cell(node, 'VerticalAlign', 0)
+                section = ET.SubElement(node, tag('Section'), N='Character')
+                row = ET.SubElement(section, tag('Row'), IX='0')
+                cell(row, 'Font', 0)
+                cell(row, 'Size', span['size']/72)
+                cell(row, 'Style', 1 if 'bold' in span['font'].lower() else 0)
+                cell(row, 'Color', f'#{span["color"]:06X}')
+                paragraph = ET.SubElement(node, tag('Section'), N='Paragraph')
+                cell(ET.SubElement(paragraph, tag('Row'), IX='0'), 'HorzAlign', 0)
+                ET.SubElement(node, tag('Text')).text = span['text']
+    return xml(root)
 
-def update_visio(path, supplements):
-    with zipfile.ZipFile(path) as z: parts={n:z.read(n) for n in z.namelist()}
-    pages=ET.fromstring(parts['visio/pages/pages.xml'])
-    rels=ET.fromstring(parts['visio/pages/_rels/pages.xml.rels'])
-    content=ET.fromstring(parts['[Content_Types].xml'])
-    # Generated page names provide a stable boundary for subsequent refreshes.
-    for p in list(pages):
-        if p.get('Name','').startswith('Current coverage /'):
-            rid=p.find('{'+NS+'}Rel').get('{'+REL+'}id')
-            rel=next(r for r in rels if r.get('Id')==rid)
-            name='visio/pages/'+rel.get('Target')
-            parts.pop(name,None); rels.remove(rel); pages.remove(p)
-            for item in list(content):
-                if item.get('PartName')=='/'+name: content.remove(item)
-    for name,data in list(parts.items()):
-        if name.endswith('.xml'):
-            parts[name]=pagination(current(data.decode('utf-8')),len(pages)+len(supplements)).encode('utf-8')
-    for page in supplements:
-        index=len(pages)+1; name=f'page{index}.xml'; rid=f'rId{index}'
-        p=deepcopy(pages[0]); p.set('ID',str(index-1)); p.set('NameU',f'Page-{index}')
-        p.set('Name',f'Current coverage / {index}'); p.find('{'+NS+'}Rel').set('{'+REL+'}id',rid)
-        for cell in p.iter('{'+NS+'}Cell'):
-            if cell.get('N')=='PageWidth': cell.set('V',str(1190/72))
-            if cell.get('N')=='PageHeight': cell.set('V',str(842/72))
-        pages.append(p)
-        ET.SubElement(rels,'{'+PKG+'}Relationship',Id=rid,Type=REL+'/page',Target=name)
-        ET.SubElement(content,'{http://schemas.openxmlformats.org/package/2006/content-types}Override',PartName='/visio/pages/'+name,ContentType='application/vnd.ms-visio.page+xml')
-        parts['visio/pages/'+name]=native_page(page)
-    parts['visio/pages/pages.xml']=ET.tostring(pages,encoding='utf-8',xml_declaration=True)
-    parts['visio/pages/_rels/pages.xml.rels']=ET.tostring(rels,encoding='utf-8',xml_declaration=True)
-    parts['[Content_Types].xml']=ET.tostring(content,encoding='utf-8',xml_declaration=True)
-    result=io.BytesIO()
-    with zipfile.ZipFile(result,'w',zipfile.ZIP_DEFLATED) as z:
-        for name,data in parts.items(): z.writestr(name,data)
-    path.write_bytes(result.getvalue())
 
-def update_guide(supplements):
-    path=DOCS/'PK_DTS_User_Guide.pptx'; prs=Presentation(path)
-    while prs.slides and any(MARKER in s.text for s in prs.slides[-1].shapes if s.has_text_frame):
-        slide_id=prs.slides._sldIdLst[-1]
-        prs.part.drop_rel(slide_id.rId); prs.slides._sldIdLst.remove(slide_id)
-    for slide in prs.slides:
-        for shape in slide.shapes:
-            if shape.has_text_frame:
-                for paragraph in shape.text_frame.paragraphs:
-                    for run in paragraph.runs: run.text=current(run.text)
-    # Supplement text is editable, placed identically to its PDF counterpart.
-    sx=prs.slide_width/1190; sy=prs.slide_height/842
-    for page in supplements:
-        slide=prs.slides.add_slide(prs.slide_layouts[6])
+def visio(doc, items, title):
+    # Self-contained OPC package: rebuilding does not retain obsolete pages,
+    # illustrations or supplement text from a previous export.
+    tag = lambda name: '{'+NS+'}'+name
+    document = ET.Element(tag('VisioDocument'))
+    ET.SubElement(document, tag('DocumentSettings'), TopPage='0', DefaultTextStyle='0', DefaultLineStyle='0', DefaultFillStyle='0')
+    faces = ET.SubElement(document, tag('FaceNames'))
+    ET.SubElement(faces, tag('FaceName'), ID='0', NameU='Arial')
+    style = ET.SubElement(ET.SubElement(document, tag('StyleSheets')), tag('StyleSheet'), ID='0', NameU='No Style')
+    for name, value in [('EnableLineProps', 1), ('EnableFillProps', 1), ('EnableTextProps', 1), ('ShdwPattern', 0)]:
+        cell(style, name, value)
+    pages, relationships = ET.Element(tag('Pages')), ET.Element('{'+PKG+'}Relationships')
+    content = ET.Element('{'+CT+'}Types')
+    ET.SubElement(content, '{'+CT+'}Default', Extension='rels', ContentType='application/vnd.openxmlformats-package.relationships+xml')
+    ET.SubElement(content, '{'+CT+'}Default', Extension='xml', ContentType='application/xml')
+    parts = {'visio/document.xml': xml(document)}
+    overrides = [('visio/document.xml', 'application/vnd.ms-visio.drawing.main+xml'), ('visio/pages/pages.xml', 'application/vnd.ms-visio.pages+xml')]
+    for index, (page, item) in enumerate(zip(doc, items), 1):
+        node = ET.SubElement(pages, tag('Page'), ID=str(index-1), NameU=f'Page-{index}', Name=plain(item['title']), IsCustomName='1')
+        sheet = ET.SubElement(node, tag('PageSheet'), LineStyle='0', FillStyle='0', TextStyle='0')
+        for name, value in [('PageWidth', W/72), ('PageHeight', H/72), ('PageScale', 1), ('DrawingScale', 1), ('PrintPageOrientation', 2)]:
+            cell(sheet, name, value)
+        ET.SubElement(node, tag('Rel'), {'{'+REL+'}id': f'rId{index}'})
+        ET.SubElement(relationships, '{'+PKG+'}Relationship', Id=f'rId{index}', Type='http://schemas.microsoft.com/visio/2010/relationships/page', Target=f'page{index}.xml')
+        name = f'visio/pages/page{index}.xml'
+        parts[name] = native_page(page)
+        overrides.append((name, 'application/vnd.ms-visio.page+xml'))
+    parts['visio/pages/pages.xml'] = xml(pages)
+    parts['visio/pages/_rels/pages.xml.rels'] = xml(relationships)
+    for name, value in overrides:
+        ET.SubElement(content, '{'+CT+'}Override', PartName='/'+name, ContentType=value)
+    parts['[Content_Types].xml'] = xml(content)
+    for filename, relationships_ in [('_rels/.rels', [('http://schemas.microsoft.com/visio/2010/relationships/document', 'visio/document.xml')]), ('visio/_rels/document.xml.rels', [('http://schemas.microsoft.com/visio/2010/relationships/pages', 'pages/pages.xml')])]:
+        root = ET.Element('{'+PKG+'}Relationships')
+        for index, (type_, target) in enumerate(relationships_, 1):
+            ET.SubElement(root, '{'+PKG+'}Relationship', Id=f'rId{index}', Type=type_, Target=target)
+        parts[filename] = xml(root)
+    return parts
+
+
+def powerpoint(doc):
+    prs = Presentation()
+    prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
+    prs.core_properties.title = 'PK DTS - User Guide'
+    prs.core_properties.subject = 'Current plain-language user procedures, 5 November 2026'
+    for page in doc:
+        slide = prs.slides.add_slide(prs.slide_layouts[6])
+        for drawing in page.get_drawings():
+            parts = drawing['items']
+            if len(parts) == 1 and parts[0][0] == 're':
+                r = parts[0][1]
+                node = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
+            else:
+                assert not drawing['fill'], 'Filled PowerPoint polygon needs explicit support'
+                for part in parts:
+                    assert part[0] == 'l', part[0]
+                    node = slide.shapes.add_connector(MSO_CONNECTOR.STRAIGHT, Pt(part[1].x), Pt(part[1].y), Pt(part[2].x), Pt(part[2].y))
+                    node.line.color.rgb = RGBColor.from_string(rgb(drawing['color'])[1:])
+                    node.line.width = Pt(drawing['width'])
+                continue
+            if drawing['fill']:
+                node.fill.solid()
+                node.fill.fore_color.rgb = RGBColor.from_string(rgb(drawing['fill'])[1:])
+            else:
+                node.fill.background()
+            if drawing['color']:
+                node.line.color.rgb = RGBColor.from_string(rgb(drawing['color'])[1:])
+                node.line.width = Pt(drawing['width'])
+            else:
+                node.line.fill.background()
         for block in page.get_text('dict')['blocks']:
-            for line in block.get('lines',[]):
+            for line in block.get('lines', []):
                 for span in line['spans']:
-                    r=pdf.Rect(span['bbox'])
-                    box_=slide.shapes.add_textbox(int(r.x0*sx),int((r.y0-2)*sy),int((r.width+15)*sx),int((r.height+9)*sy))
-                    tf=box_.text_frame; tf.margin_left=tf.margin_right=tf.margin_top=tf.margin_bottom=0
-                    run=tf.paragraphs[0].add_run(); run.text=span['text']; run.font.name='Arial'
-                    run.font.size=Pt(span['size']*prs.slide_height/914400/ (842/72))
-    prs.save(path)
+                    r = pdf.Rect(span['bbox'])
+                    node = slide.shapes.add_textbox(Pt(r.x0), Pt(r.y0-1), Pt(r.width+5), Pt(r.height+5))
+                    frame = node.text_frame
+                    frame.margin_left = frame.margin_right = frame.margin_top = frame.margin_bottom = 0
+                    frame.word_wrap = False
+                    run = frame.paragraphs[0].add_run()
+                    run.text, run.font.name, run.font.size = span['text'], 'Arial', Pt(span['size'])
+                    run.font.bold = 'bold' in span['font'].lower()
+                    run.font.color.rgb = RGBColor.from_string(f'{span["color"]:06X}')
+    return prs
 
-def refresh():
-    for base,kind in [('PK_DTS_DFD','dfd'),('PK_DTS_Flowchart','flow'),('PK_DTS_Process_Flow','process'),('PK_DTS_User_Guide','guide')]:
-        total={'dfd':5,'flow':7,'process':8,'guide':64}[kind]
-        path=DOCS/(base+'.pdf'); doc=clean_pdf(path,total); first=len(doc)
-        if kind=='dfd':
-            for title,rows in DFD: flow_page(doc,title,rows)
-        elif kind=='flow':
-            flow_page(doc,'Supporting operations / scoped decisions',[
-             ('User opens notification / reminder','Selected entry','Check session and task ownership','Acknowledge entry only','Inbox receipt; open My Tasks to decide'),
-             ('Authorized controller','Document or location/category + user','Check scope, active recipient and transfer conflicts','Valid selection <= 2,000','Apply assignment; otherwise show error'),
-             ('Maintainer edits configuration','Draft steps / active approvers','Validate ordered route (1-30 steps)','Publish valid version','Future submissions use version; existing routes retained'),
-             ('User selects Install app','Browser eligibility / secure context','Offer browser install prompt','Accepted installation','Remember installed state; use server for actions'),
-             ('User changes theme','Light / dark selection','Save browser preference','Next render','Apply preference or device theme'),
-             ('Installed backup scheduler','5 PM UTC+08:00 host trigger','Check readiness / acquire operation lock','Successful backup','Archive and run result; failed readiness reports error'),
-            ])
-        elif kind=='process':
-            for offset in (0,5):
-                text_page(doc,'Request outcomes / '+('1-5' if offset==0 else '6-9'),[key+' - '+value for key,value in list(REQUESTS.items())[offset:offset+5]])
-            text_page(doc,'Supporting work and operating boundaries',[line for _,lines in NOTES for line in lines][:5]+[
-                'Accounts, roles, places/categories, workflow drafts/publication, audit inspection and backup recovery follow Process Flow sheet 5 and User Guide sections 17-22.',
-                'A scheduler is installed separately for automatic backups. Review readiness and a resulting archive; a documented schedule does not prove a completed backup.',
-            ])
-        else:
-            for title,lines in NOTES: text_page(doc,title,lines)
-            for offset in (0,5):
-                text_page(doc,'Nine supported request actions / '+str(offset//5+1),[k+' - '+v for k,v in list(REQUESTS.items())[offset:offset+5]])
-            for title,reference,routes in GROUPS:
-                text_page(doc,'Coverage / '+title,[reference]+[' / '.join(routes[i:i+2]) for i in range(0,len(routes),2)])
-        for number in range(first,len(doc)):
-            box(doc[number],(1040,805,1150,830),f'Page {number+1} of {len(doc)}',10)
-        supplements=[doc[i] for i in range(first,len(doc))]
-        if kind=='guide': update_guide(supplements)
-        else: update_visio(DOCS/(base+'.vsdx'),supplements)
-        save_pdf(doc,path)
 
-def verify():
-    expected={base+ext for base in ['PK_DTS_DFD','PK_DTS_Flowchart','PK_DTS_Process_Flow'] for ext in ['.pdf','.vsdx']}
-    expected.update({'PK_DTS_User_Guide.pdf','PK_DTS_User_Guide.pptx'})
-    assert {p.name for p in DOCS.iterdir()}==expected
-    assert {p.name for p in DOCS.parent.iterdir()}=={'system-documentation'}, 'Redundant docs remain'
-    all_text=''
-    for path in sorted(DOCS.glob('*.pdf')):
+def refresh(content):
+    renderers = {'process': process_page, 'guide': guide_page, 'flowchart': flowchart_page, 'dfd': dfd_page}
+    # Render and validate the complete set before replacing any published file.
+    pending = []
+    try:
+        for key, base, kind in SPECS:
+            doc = pdf.open()
+            items = entries(key, content[key])
+            for index, item in enumerate(items, 1):
+                renderers[key](doc, item, index, len(items))
+            doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
+            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Current plain-language procedures, 5 November 2026', 'author': 'PK Document Tracking System'})
+            pdf_path = DOCS / (base+'.pdf.pending')
+            pending.append((pdf_path, DOCS/(base+'.pdf')))
+            doc.save(pdf_path, garbage=4, deflate=True)
+            extension = '.pptx' if key == 'guide' else '.vsdx'
+            editable_path = DOCS / (base+extension+'.pending')
+            pending.append((editable_path, DOCS/(base+extension)))
+            if key == 'guide':
+                powerpoint(doc).save(editable_path)
+            else:
+                with zipfile.ZipFile(editable_path, 'w', zipfile.ZIP_DEFLATED) as archive:
+                    for name, data in visio(doc, items, kind).items():
+                        archive.writestr(name, data)
+            doc.close()
+        verify(content, pending=True)
+        for temporary, destination in pending:
+            temporary.replace(destination)
+    finally:
+        for temporary, _ in pending:
+            temporary.unlink(missing_ok=True)
+
+
+def check_package(path):
+    with zipfile.ZipFile(path) as archive:
+        assert archive.testzip() is None, path
+        assert len(archive.namelist()) == len(set(archive.namelist())), f'Duplicate parts: {path}'
+        for name in archive.namelist():
+            if name.endswith(('.xml', '.rels')):
+                root = ET.fromstring(archive.read(name))
+                if name.endswith('.rels'):
+                    base = '' if name == '_rels/.rels' else posixpath.dirname(posixpath.dirname(name))
+                    for relationship in root:
+                        if relationship.get('TargetMode') == 'External':
+                            continue
+                        target = relationship.get('Target')
+                        resolved = posixpath.normpath(posixpath.join(base, target)) if not target.startswith('/') else target.lstrip('/')
+                        assert resolved in archive.namelist(), f'Broken relationship in {path}: {name} -> {resolved}'
+
+
+def source_strings(item):
+    # Include every reader-facing value, excluding identifiers and symbol types.
+    if isinstance(item, str):
+        yield item
+    elif isinstance(item, list):
+        for value in item:
+            yield from source_strings(value)
+    elif isinstance(item, dict):
+        for key, value in item.items():
+            if key not in {'id', 'kind', 'from_kind', 'to_kind'}:
+                yield from source_strings(value)
+
+
+def verify(content, pending=False):
+    suffix = '.pending' if pending else ''
+    for key, base, _ in SPECS:
+        path = DOCS / (base+'.pdf'+suffix)
+        items = entries(key, content[key])
         with pdf.open(path) as doc:
-            text='\n'.join(p.get_text() for p in doc); all_text+=text
-            assert MARKER in text
-            assert 'PROPOSED' not in text and 'PROPOSAL  ·  REVISION 02' not in text
-            print(path.name, len(doc),'pages')
-            for p in doc:
-                assert len(p.get_text().strip())>30, f'Empty page in {path}'
-                for block in p.get_text('dict')['blocks']:
-                    for line in block.get('lines',[]):
+            assert len(doc) == len(items), f'Page count mismatch: {path}'
+            all_text = []
+            for page, item in zip(doc, items):
+                page_text = normalized(page.get_text())
+                assert MARKER in page_text
+                for value in source_strings(item):
+                    assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
+                for word in ['workflow_steps', 'payload', 'my-requests/', 'softcopy_create', 'external_create']:
+                    assert word not in page_text, f'Technical content in {path}: {word}'
+                for block in page.get_text('dict')['blocks']:
+                    for line in block.get('lines', []):
                         for span in line['spans']:
-                            assert p.rect.contains(pdf.Rect(span['bbox'])), f'Text outside page in {path}: {span["text"]}'
-    for path in DOCS.glob('*.vsdx'):
-        with zipfile.ZipFile(path) as z:
-            assert z.testzip() is None
-            for name in z.namelist():
-                if name.endswith('.xml'): ET.fromstring(z.read(name))
-            pages=ET.fromstring(z.read('visio/pages/pages.xml'))
-            with pdf.open(path.with_suffix('.pdf')) as doc:
-                assert len(pages)==len(doc)
-                for index,page in enumerate(doc):
-                    if MARKER not in page.get_text(): continue
-                    native=ET.fromstring(z.read(f'visio/pages/page{index+1}.xml'))
-                    native_text='\n'.join(''.join(t.itertext()) for t in native.iter('{'+NS+'}Text'))
-                    assert page.get_text().split()==native_text.split(), f'Visio/PDF supplement mismatch: {path} page {index+1}'
-            assert any(MARKER.encode() in z.read(n) for n in z.namelist() if n.startswith('visio/pages/page'))
-            print(path.name,len(pages),'editable pages')
-    prs=Presentation(DOCS/'PK_DTS_User_Guide.pptx')
-    with pdf.open(DOCS/'PK_DTS_User_Guide.pdf') as doc:
-        assert len(prs.slides)==len(doc)
-        for i,page in enumerate(doc):
-            if MARKER not in page.get_text(): continue
-            native_text='\n'.join(s.text for s in prs.slides[i].shapes if s.has_text_frame)
-            assert page.get_text().split()==native_text.split(), f'PowerPoint/PDF supplement mismatch on page {i+1}'
-    ppt_text='\n'.join(s.text for slide in prs.slides for s in slide.shapes if s.has_text_frame)
-    assert MARKER in ppt_text and 'PROPOSED' not in ppt_text
-    for _,_,routes in GROUPS:
-        for route in routes: assert route in all_text and route in ppt_text, route
-    for key in REQUESTS: assert key in all_text and key in ppt_text, key
-    print('Verified: exactly 8 deliverables, matching editable/PDF page counts, full route/request inventory.')
+                            assert page.rect.contains(pdf.Rect(span['bbox'])), f'Text outside page: {path}: {span["text"]}'
+                all_text.append(page_text)
+            editable = DOCS / (base+('.pptx' if key == 'guide' else '.vsdx')+suffix)
+            check_package(editable)
+            if key == 'guide':
+                prs = Presentation(editable)
+                assert len(prs.slides) == len(doc)
+                native_text = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in prs.slides]
+            else:
+                with zipfile.ZipFile(editable) as archive:
+                    pages = ET.fromstring(archive.read('visio/pages/pages.xml'))
+                    assert len(pages) == len(doc)
+                    native_text = ['\n'.join(''.join(t.itertext()) for t in ET.fromstring(archive.read(f'visio/pages/page{i+1}.xml')).iter('{'+NS+'}Text')) for i in range(len(pages))]
+            assert [normalized(t) for t in native_text] == all_text, f'Editable/PDF text mismatch: {base}'
+        print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid.')
+    if not pending:
+        expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
+        actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx'} and not path.name.startswith('~$')}
+        assert actual == expected, f'Unexpected exports: {actual ^ expected}'
+        print('Verified all 8 PDF/editable exports. Reference notes and Office lock files are not treated as exports.')
 
-if __name__=='__main__':
-    check_source()
-    if '--verify' not in sys.argv: refresh()
-    verify()
+
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--verify', action='store_true')
+    parser.add_argument('--check-source', action='store_true')
+    args = parser.parse_args()
+    content = load_content()
+    check_source(content)
+    if not args.check_source:
+        if not args.verify:
+            refresh(content)
+        verify(content)

@@ -1,1580 +1,334 @@
 {
-  "title": "PK DOCUMENT TRACKING SYSTEM / PROPOSED SYSTEM FLOWCHART",
+  "title": "PK DOCUMENT TRACKING SYSTEM / SYSTEM FLOWCHART",
   "pages": [
     {
-      "title": "1. Authentication and authorized entry",
-      "subtitle": "Proposed authentication, required password setup and authorization checks",
-      "nodes": [
-        {
-          "id": "start",
-          "label": "Open system / protected page",
-          "kind": "terminal",
-          "x": 55,
-          "y": 140,
-          "w": 255,
-          "h": 55
-        },
-        {
-          "id": "session",
-          "label": "Authenticated\nsession?",
-          "kind": "decision",
-          "x": 55,
-          "y": 250,
-          "w": 255,
-          "h": 105
-        },
-        {
-          "id": "login",
-          "label": "Enter username and password",
-          "kind": "process",
-          "x": 450,
-          "y": 145,
-          "w": 290,
-          "h": 65
-        },
-        {
-          "id": "throttle",
-          "label": "Attempt limit\nreached?",
-          "kind": "decision",
-          "x": 450,
-          "y": 270,
-          "w": 290,
-          "h": 105
-        },
-        {
-          "id": "valid",
-          "label": "Active account +\nvalid password?",
-          "kind": "decision",
-          "x": 855,
-          "y": 270,
-          "w": 270,
-          "h": 105
-        },
-        {
-          "id": "retry",
-          "label": "Show login error;\nretry when permitted",
-          "kind": "terminal",
-          "x": 855,
-          "y": 145,
-          "w": 270,
-          "h": 65
-        },
-        {
-          "id": "setup",
-          "label": "Password change\nrequired?",
-          "kind": "decision",
-          "x": 450,
-          "y": 450,
-          "w": 290,
-          "h": 105
-        },
-        {
-          "id": "password",
-          "label": "Set a valid new password;\nverify the current password;\nrefresh the session",
-          "kind": "process",
-          "x": 855,
-          "y": 460,
-          "w": 270,
-          "h": 85
-        },
-        {
-          "id": "permission",
-          "label": "Permission and scope\nOR assigned task\nallow this action?",
-          "kind": "decision",
-          "x": 55,
-          "y": 455,
-          "w": 255,
-          "h": 105
-        },
-        {
-          "id": "denied",
-          "label": "Deny action or show\nits authorization error",
-          "kind": "terminal",
-          "x": 55,
-          "y": 625,
-          "w": 255,
-          "h": 55
-        },
-        {
-          "id": "allowed",
-          "label": "Dashboard / requested action;\nshow permission-scoped records",
-          "kind": "terminal",
-          "x": 450,
-          "y": 625,
-          "w": 290,
-          "h": 65
-        }
-      ],
-      "edges": [
-        {
-          "from": "start",
-          "to": "session"
-        },
-        {
-          "from": "session",
-          "to": "login",
-          "label": "No",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "via": [
-            [
-              375,
-              302.5
-            ],
-            [
-              375,
-              177.5
-            ]
-          ]
-        },
-        {
-          "from": "login",
-          "to": "throttle"
-        },
-        {
-          "from": "throttle",
-          "to": "retry",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "via": [
-            [
-              800,
-              322.5
-            ],
-            [
-              800,
-              177.5
-            ]
-          ]
-        },
-        {
-          "from": "throttle",
-          "to": "valid",
-          "label": "No",
-          "sideFrom": "bottom",
-          "sideTo": "left",
-          "via": [
-            [
-              595,
-              390
-            ],
-            [
-              820,
-              390
-            ],
-            [
-              820,
-              322.5
-            ]
-          ],
-          "labelRect": [
-            650,
-            393,
-            700,
-            412
-          ]
-        },
-        {
-          "from": "valid",
-          "to": "retry",
-          "label": "No",
-          "sideFrom": "top",
-          "sideTo": "bottom"
-        },
-        {
-          "from": "valid",
-          "to": "setup",
-          "label": "Yes",
-          "sideFrom": "bottom",
-          "sideTo": "top",
-          "via": [
-            [
-              990.0,
-              415
-            ],
-            [
-              595.0,
-              415
-            ]
-          ],
-          "labelRect": [
-            993,
-            381,
-            1036,
-            405
-          ]
-        },
-        {
-          "from": "session",
-          "to": "setup",
-          "label": "Yes",
-          "sideFrom": "bottom",
-          "sideTo": "top",
-          "via": [
-            [
-              182.5,
-              400
-            ],
-            [
-              595.0,
-              400
-            ]
-          ]
-        },
-        {
-          "from": "setup",
-          "to": "password",
-          "label": "Yes"
-        },
-        {
-          "from": "password",
-          "to": "setup",
-          "label": "saved",
-          "sideFrom": "bottom",
-          "sideTo": "bottom",
-          "via": [
-            [
-              990.0,
-              585
-            ],
-            [
-              595.0,
-              585
-            ]
-          ]
-        },
-        {
-          "from": "setup",
-          "to": "permission",
-          "label": "No",
-          "sideFrom": "left",
-          "sideTo": "top",
-          "via": [
-            [
-              410,
-              502.5
-            ],
-            [
-              410,
-              435
-            ],
-            [
-              182.5,
-              435
-            ]
-          ],
-          "labelRect": [
-            335,
-            413,
-            380,
-            433
-          ]
-        },
-        {
-          "from": "permission",
-          "to": "denied",
-          "label": "No"
-        },
-        {
-          "from": "permission",
-          "to": "allowed",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "via": [
-            [
-              375,
-              507.5
-            ],
-            [
-              375,
-              657.5
-            ]
-          ]
-        }
-      ],
+      "id": "account-entry",
+      "title": "1. Sign in and set your password",
+      "start": "User opens the system",
+      "action": "Enter username and password; change the temporary password when prompted",
+      "question": "Account and password accepted?",
+      "yes": "Open Overview and the pages available to the user's roles",
+      "no": "Read the error; correct the details or contact an administrator, then retry",
+      "result": "User can work within the account's permissions",
       "notes": [
-        "Login will check an active account and password. Ten failed attempts within 15 minutes will temporarily block that username/client attempt key.",
-        "Required password setup will block ordinary protected pages until a valid change succeeds. A failed change will keep setup incomplete.",
-        "Ordinary actions will require their permission and record scope. Approval, Dispatch and Accept will follow the active approver, original requester or designated recipient rule."
-      ],
-      "sources": [
-        "application/controllers/Auth.php:24-62,85-137",
-        "application/models/Identity_model.php:6-28",
-        "application/core/MY_Controller.php:32-85",
-        "application/services/security/user_roles.php",
-        "application/controllers/Requests.php:146-191",
-        "application/services/request/request_service.php:719-846",
-        "application/services/transfer/transfer_service.php:13-85"
+        "New and reset accounts must change their temporary password before using protected pages.",
+        "Choose a different password of at least 9 characters; enter the same new password twice.",
+        "Primary and assigned active roles combine permissions. Sign out after work on a shared device."
       ]
     },
     {
-      "title": "2. Draft, validation, submission and removal",
-      "subtitle": "Proposed request ownership, validation and versioned approval routing",
-      "nodes": [
-        {
-          "id": "start",
-          "label": "My Requests: choose tab/action;\nenter proposal; Save draft",
-          "kind": "terminal",
-          "x": 55,
-          "y": 135,
-          "w": 300,
-          "h": 65
-        },
-        {
-          "id": "valid",
-          "label": "Owner / permission /\nfields / active targets\nvalid?",
-          "kind": "decision",
-          "x": 55,
-          "y": 260,
-          "w": 300,
-          "h": 125
-        },
-        {
-          "id": "error",
-          "label": "Show validation error;\nleave the stored request unchanged",
-          "kind": "terminal",
-          "x": 440,
-          "y": 135,
-          "w": 300,
-          "h": 65
-        },
-        {
-          "id": "draft",
-          "label": "Draft saved (or returned edited);\nreview / edit before submitting",
-          "kind": "process",
-          "x": 55,
-          "y": 455,
-          "w": 300,
-          "h": 75
-        },
-        {
-          "id": "submit",
-          "label": "Next action?",
-          "kind": "decision",
-          "x": 440,
-          "y": 440,
-          "w": 300,
-          "h": 105
-        },
-        {
-          "id": "checks",
-          "label": "Revalidate target / recipient /\nfile; published route available?",
-          "kind": "decision",
-          "x": 805,
-          "y": 430,
-          "w": 320,
-          "h": 125
-        },
-        {
-          "id": "route",
-          "label": "Capture or reuse published route;\nactivate first step; mark Submitted",
-          "kind": "terminal",
-          "x": 805,
-          "y": 620,
-          "w": 320,
-          "h": 75
-        },
-        {
-          "id": "cancel",
-          "label": "Cancel own request\n(Draft status only)",
-          "kind": "process",
-          "x": 440,
-          "y": 620,
-          "w": 300,
-          "h": 65
-        },
-        {
-          "id": "cancelled",
-          "label": "Status cancelled;\nretire pending proposal file",
-          "kind": "process",
-          "x": 55,
-          "y": 620,
-          "w": 300,
-          "h": 65
-        },
-        {
-          "id": "delete",
-          "label": "Optional Delete:\nown Cancelled draft; never submitted;\nno approval or completed result",
-          "kind": "process",
-          "x": 440,
-          "y": 260,
-          "w": 300,
-          "h": 100
-        },
-        {
-          "id": "deleted",
-          "label": "Cancelled draft permanently deleted;\nrequest-only rows and pending\nproposal file cleaned up",
-          "kind": "terminal",
-          "x": 805,
-          "y": 260,
-          "w": 320,
-          "h": 90
-        }
-      ],
-      "edges": [
-        {
-          "from": "start",
-          "to": "valid"
-        },
-        {
-          "from": "valid",
-          "to": "error",
-          "label": "No",
-          "sideFrom": "right",
-          "sideTo": "bottom",
-          "via": [
-            [
-              385,
-              322.5
-            ],
-            [
-              385,
-              225
-            ],
-            [
-              590.0,
-              225
-            ]
-          ]
-        },
-        {
-          "from": "valid",
-          "to": "draft",
-          "label": "Yes"
-        },
-        {
-          "from": "draft",
-          "to": "submit"
-        },
-        {
-          "from": "submit",
-          "to": "checks",
-          "label": "Submit"
-        },
-        {
-          "from": "checks",
-          "to": "route",
-          "label": "Yes"
-        },
-        {
-          "from": "checks",
-          "to": "error",
-          "label": "No",
-          "sideFrom": "top",
-          "sideTo": "right",
-          "via": [
-            [
-              965,
-              390
-            ],
-            [
-              790,
-              390
-            ],
-            [
-              790,
-              167.5
-            ]
-          ],
-          "labelRect": [
-            920,
-            395,
-            962,
-            417
-          ]
-        },
-        {
-          "from": "submit",
-          "to": "cancel",
-          "label": "Cancel"
-        },
-        {
-          "from": "cancel",
-          "to": "cancelled",
-          "sideFrom": "left",
-          "sideTo": "right"
-        },
-        {
-          "from": "cancelled",
-          "to": "delete",
-          "label": "Delete later",
-          "sideFrom": "left",
-          "sideTo": "left",
-          "via": [
-            [
-              35,
-              652.5
-            ],
-            [
-              35,
-              410
-            ],
-            [
-              405,
-              410
-            ],
-            [
-              405,
-              310.0
-            ]
-          ]
-        },
-        {
-          "from": "delete",
-          "to": "error",
-          "label": "invalid attempt",
-          "sideFrom": "top",
-          "sideTo": "bottom"
-        },
-        {
-          "from": "delete",
-          "to": "deleted",
-          "label": "eligible",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "labelRect": [
-            743,
-            285,
-            787,
-            303
-          ]
-        }
-      ],
+      "id": "browse-and-files",
+      "title": "2. Find a document and open its current file",
+      "start": "User needs a document or its approved file",
+      "action": "Open the register; search or filter; choose Table or Folder; open the document",
+      "question": "Document and file action available to this user?",
+      "yes": "Review document details; use Download or Print when offered, or Softcopy File History",
+      "no": "Request access for a Softcopy or Hardcopy when offered, or contact document control",
+      "result": "User receives the authorized information or current approved file",
       "notes": [
-        "Only the requester will be allowed to edit a draft or returned proposal. Saving will reject stale edited versions; submission will revalidate the current saved proposal and permissions.",
-        "Submit will check targets, recipients and required files. A conflicting pending access, assignment or transfer request will block another related submission for the same requester/document.",
-        "A saved proposal may remain open for editing. Request cancellation will be available only in Draft status. Delete will remove only the owner's eligible cancelled draft and its request-only data."
-      ],
-      "sources": [
-        "application/services/request/request_service.php:40-79,116-315,393-547,849-907",
-        "application/services/request/request_policy.php:4-9,30-40",
-        "application/controllers/Requests.php:114-164,194-221"
+        "Page access, document access and file actions are separate permissions. Pending proposal files are for authorized review.",
+        "External Documents use a separate category list and a Download action for the current file.",
+        "Softcopy shows permitted revision history. External revision records remain stored but have no separate File History action."
       ]
     },
     {
-      "title": "3. Approval, rejection and reverse-step return",
-      "subtitle": "Only the assigned active approver will be allowed to decide a submitted request",
-      "nodes": [
-        {
-          "id": "task",
-          "label": "My Tasks: open active request;\nreview proposal / pending file",
-          "kind": "terminal",
-          "x": 55,
-          "y": 135,
-          "w": 285,
-          "h": 65
-        },
-        {
-          "id": "auth",
-          "label": "Request submitted\nand actor assigned to\nactive step?",
-          "kind": "decision",
-          "x": 55,
-          "y": 265,
-          "w": 285,
-          "h": 125
-        },
-        {
-          "id": "deny",
-          "label": "Reject stale / unauthorized action;\nno decision saved",
-          "kind": "terminal",
-          "x": 450,
-          "y": 135,
-          "w": 290,
-          "h": 65
-        },
-        {
-          "id": "decision",
-          "label": "Choose decision",
-          "kind": "decision",
-          "x": 450,
-          "y": 275,
-          "w": 290,
-          "h": 105
-        },
-        {
-          "id": "reject",
-          "label": "Reject: request rejected;\nclose current node;\nretire pending proposal file",
-          "kind": "terminal",
-          "x": 855,
-          "y": 140,
-          "w": 270,
-          "h": 95
-        },
-        {
-          "id": "first",
-          "label": "Return from\nfirst step?",
-          "kind": "decision",
-          "x": 450,
-          "y": 470,
-          "w": 290,
-          "h": 105
-        },
-        {
-          "id": "requester",
-          "label": "Return to requester;\nedit and resubmit using the\ncaptured approval route",
-          "kind": "terminal",
-          "x": 55,
-          "y": 600,
-          "w": 285,
-          "h": 90
-        },
-        {
-          "id": "previous",
-          "label": "Reopen previous approved step;\ncontinue review in My Tasks\nwith that step's assigned approver",
-          "kind": "port",
-          "x": 450,
-          "y": 610,
-          "w": 290,
-          "h": 80
-        },
-        {
-          "id": "last",
-          "label": "Approve: final\nworkflow step?",
-          "kind": "decision",
-          "x": 855,
-          "y": 285,
-          "w": 270,
-          "h": 105
-        },
-        {
-          "id": "next",
-          "label": "Activate next step;\ncontinue review in My Tasks\nwith its assigned approver",
-          "kind": "port",
-          "x": 855,
-          "y": 450,
-          "w": 270,
-          "h": 80
-        },
-        {
-          "id": "apply",
-          "label": "Apply approved operation;\ncomplete request, or prepare\ntransfer for Dispatch and Accept",
-          "kind": "terminal",
-          "x": 855,
-          "y": 610,
-          "w": 270,
-          "h": 85
-        }
-      ],
-      "edges": [
-        {
-          "from": "task",
-          "to": "auth"
-        },
-        {
-          "from": "auth",
-          "to": "deny",
-          "label": "No",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "via": [
-            [
-              390,
-              327.5
-            ],
-            [
-              390,
-              167.5
-            ]
-          ]
-        },
-        {
-          "from": "auth",
-          "to": "decision",
-          "label": "Yes",
-          "sideFrom": "bottom",
-          "sideTo": "left",
-          "via": [
-            [
-              197.5,
-              420
-            ],
-            [
-              420,
-              420
-            ],
-            [
-              420,
-              327.5
-            ]
-          ],
-          "labelRect": [
-            230,
-            399,
-            275,
-            418
-          ]
-        },
-        {
-          "from": "decision",
-          "to": "reject",
-          "label": "Reject",
-          "sideFrom": "top",
-          "sideTo": "left",
-          "via": [
-            [
-              595.0,
-              230
-            ],
-            [
-              805,
-              230
-            ],
-            [
-              805,
-              187.5
-            ]
-          ]
-        },
-        {
-          "from": "decision",
-          "to": "first",
-          "label": "Return"
-        },
-        {
-          "from": "decision",
-          "to": "last",
-          "label": "Approve"
-        },
-        {
-          "from": "first",
-          "to": "requester",
-          "label": "Yes",
-          "sideFrom": "left",
-          "sideTo": "right",
-          "via": [
-            [
-              390,
-              522.5
-            ],
-            [
-              390,
-              645.0
-            ]
-          ]
-        },
-        {
-          "from": "first",
-          "to": "previous",
-          "label": "No",
-          "sideFrom": "bottom",
-          "sideTo": "top",
-          "via": []
-        },
-        {
-          "from": "last",
-          "to": "next",
-          "label": "No",
-          "sideFrom": "bottom",
-          "sideTo": "top",
-          "via": []
-        },
-        {
-          "from": "last",
-          "to": "apply",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "right",
-          "via": [
-            [
-              1140,
-              337.5
-            ],
-            [
-              1140,
-              652.5
-            ]
-          ],
-          "labelRect": [
-            1080,
-            393,
-            1138,
-            416
-          ]
-        }
-      ],
+      "id": "hardcopy-direct",
+      "title": "3. Register, edit and track a Hardcopy",
+      "start": "Document controller opens Hardcopy Documents",
+      "action": "Add or edit the physical record, storage place and any retention dates; confirm Save",
+      "question": "Permission, record details and storage valid?",
+      "yes": "Save the Hardcopy record and show its holder, location, status and retention countdown",
+      "no": "Correct the stated problem and retry; the unsuccessful change is not applied",
+      "result": "The register identifies the physical document and where it is held",
       "notes": [
-        "Every valid decision will record the actor, position, date/time and comments together with the step and request status change.",
-        "Return after the first step will reopen the immediately preceding approved step. Its approver will review again before the returned and later pending steps continue.",
-        "Return from the first step will send the proposal to its requester. Resubmission will follow the captured route with new step records and preserve prior decision history.",
-        "Initial published routes: Softcopy Create/Revise/Cancel and External Create/Revise: Requester's leader → Plant Manager → Document Control Officer; Hardcopy Create/Update: Plant Manager → Document Control Officer.",
-        "Initial published routes: Transfer and Access: Plant Manager → Document Control Officer → Requester confirmation; Assignment: Plant Manager → Document Control Officer → Requester's leader; Disposal: Requester's leader → Plant Manager → Document Control Officer. Administrators may publish different routes for future requests."
-      ],
-      "sources": [
-        "application/services/request/request_service.php:462-538,551-561,719-846",
-        "application/models/Request_model.php:24-40",
-        "application/models/File_model.php:7-44"
+        "Only an Administrator or the current holder with direct permission can edit. Only an Administrator can select a different holder.",
+        "New Hardcopy creation and update requests are unavailable; authorized users maintain records directly.",
+        "Choose matching Area, Specific, optional Asset and Location. Tracking retention requires both dates in order."
       ]
     },
     {
-      "title": "4. Transfer dispatch and acceptance decisions",
-      "subtitle": "A physical handoff will complete only after recipient acceptance passes all checks",
-      "nodes": [
-        {
-          "id": "approved",
-          "label": "All transfer approvals complete;\nrequest approved;\ntransfer status: For Transfer",
-          "kind": "terminal",
-          "x": 55,
-          "y": 140,
-          "w": 300,
-          "h": 90
-        },
-        {
-          "id": "dispatcher",
-          "label": "Actor is original\nrequester and transfer is\nFor Transfer?",
-          "kind": "decision",
-          "x": 55,
-          "y": 315,
-          "w": 300,
-          "h": 125
-        },
-        {
-          "id": "fail1",
-          "label": "Deny dispatch;\nkeep approved handoff unchanged",
-          "kind": "terminal",
-          "x": 440,
-          "y": 140,
-          "w": 300,
-          "h": 75
-        },
-        {
-          "id": "dispatch",
-          "label": "Dispatch: mark In Transit;\nrecord dispatcher and time",
-          "kind": "process",
-          "x": 55,
-          "y": 595,
-          "w": 300,
-          "h": 80
-        },
-        {
-          "id": "recipient",
-          "label": "Actor is assigned\nrecipient and transfer is\nIn Transit?",
-          "kind": "decision",
-          "x": 440,
-          "y": 575,
-          "w": 300,
-          "h": 125
-        },
-        {
-          "id": "fail2",
-          "label": "Deny acceptance;\nkeep custody unchanged",
-          "kind": "terminal",
-          "x": 440,
-          "y": 325,
-          "w": 300,
-          "h": 75
-        },
-        {
-          "id": "checks",
-          "label": "Document active; holder unchanged;\ndestination active; approved\nhierarchy unchanged?",
-          "kind": "decision",
-          "x": 805,
-          "y": 560,
-          "w": 320,
-          "h": 140
-        },
-        {
-          "id": "complete",
-          "label": "Accept: update holder and Location;\nrevoke prior grants if holder changes;\ntransfer accepted; request completed",
-          "kind": "terminal",
-          "x": 805,
-          "y": 140,
-          "w": 320,
-          "h": 105
-        },
-        {
-          "id": "wait",
-          "label": "No automatic custody update\nwhile approved / in transit",
-          "kind": "note",
-          "x": 805,
-          "y": 335,
-          "w": 320,
-          "h": 80
-        }
-      ],
-      "edges": [
-        {
-          "from": "approved",
-          "to": "dispatcher"
-        },
-        {
-          "from": "dispatcher",
-          "to": "fail1",
-          "label": "No",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "via": [
-            [
-              395,
-              377.5
-            ],
-            [
-              395,
-              177.5
-            ]
-          ]
-        },
-        {
-          "from": "dispatcher",
-          "to": "dispatch",
-          "label": "Yes"
-        },
-        {
-          "from": "dispatch",
-          "to": "recipient"
-        },
-        {
-          "from": "recipient",
-          "to": "fail2",
-          "label": "No",
-          "sideFrom": "top",
-          "sideTo": "bottom"
-        },
-        {
-          "from": "recipient",
-          "to": "checks",
-          "label": "Yes"
-        },
-        {
-          "from": "checks",
-          "to": "fail2",
-          "label": "No",
-          "sideFrom": "top",
-          "sideTo": "right",
-          "via": [
-            [
-              965,
-              480
-            ],
-            [
-              775,
-              480
-            ],
-            [
-              775,
-              362.5
-            ]
-          ]
-        },
-        {
-          "from": "checks",
-          "to": "complete",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "right",
-          "via": [
-            [
-              1140,
-              630.0
-            ],
-            [
-              1140,
-              192.5
-            ]
-          ]
-        }
-      ],
+      "id": "electronic-direct",
+      "title": "4. Add or revise a Softcopy or External Document directly",
+      "start": "Authorized document controller opens the electronic register",
+      "action": "Choose Add or Edit; enter details and the register's category; upload the file; confirm Save",
+      "question": "Direct permission and document file valid?",
+      "yes": "Register the document or publish its replacement revision immediately",
+      "no": "Correct the details or upload problem and retry; keep the existing approved record",
+      "result": "The current approved file is available; permitted Softcopy history shows earlier revisions",
       "notes": [
-        "Final approval will prepare a transfer without changing the holder or storage location. Dispatch and Accept will require separate confirmations.",
-        "The destination shall differ from the original Location and match the active Area/Specific/optional Asset hierarchy. Acceptance will use the destination captured at approval.",
-        "A failed check will preserve custody and transfer state. When custody changes to another user, acceptance will revoke the previous holder’s personal hardcopy grants."
-      ],
-      "sources": [
-        "application/services/request/request_service.php:320-390,643-673,784-789",
-        "application/services/transfer/transfer_service.php:13-142",
-        "application/services/transfer/transfer_destination_policy.php",
-        "application/models/Transfer_model.php:6-34"
+        "Softcopy Categories and External Categories are separate. Files must pass upload checks and be no larger than 15 MB.",
+        "A new registration and a revision both require a document file. Revision numbers and levels advance automatically.",
+        "Direct actions apply immediately. External revision records remain stored; a File History action is not provided."
       ]
     },
     {
-      "title": "5. Applying operations and authorized file access",
-      "subtitle": "Proposed approved operations, separate direct disposal and controlled softcopy file delivery",
-      "nodes": [
-        {
-          "id": "trigger",
-          "label": "Final request approval\nor authorized direct action",
-          "kind": "terminal",
-          "x": 55,
-          "y": 135,
-          "w": 300,
-          "h": 70
-        },
-        {
-          "id": "kind",
-          "label": "Apply selected operation",
-          "kind": "process",
-          "x": 440,
-          "y": 125,
-          "w": 280,
-          "h": 100
-        },
-        {
-          "id": "softcopy",
-          "label": "Softcopy Create / Revise / Cancel:\nrequire a file for Create / Revise only;\ncreate revision or retire document",
-          "kind": "process",
-          "x": 55,
-          "y": 320,
-          "w": 300,
-          "h": 105
-        },
-        {
-          "id": "hardcopy",
-          "label": "Hardcopy Create / Update:\nvalidate holder, active place\nand ordered retention dates",
-          "kind": "process",
-          "x": 440,
-          "y": 320,
-          "w": 280,
-          "h": 105
-        },
-        {
-          "id": "grant",
-          "label": "Assignment / Access:\nactive document + active recipient;\nassignment or expiring personal grant",
-          "kind": "process",
-          "x": 805,
-          "y": 320,
-          "w": 320,
-          "h": 105
-        },
-        {
-          "id": "dispose",
-          "label": "Approved Hardcopy Disposal:\nrecord method and history; Disposed;\nclear Location; revoke personal grants",
-          "kind": "process",
-          "x": 55,
-          "y": 555,
-          "w": 300,
-          "h": 110
-        },
-        {
-          "id": "transfer",
-          "label": "Transfer approval:\ncreate approved handoff;\ndispatch / accept separately",
-          "kind": "process",
-          "x": 440,
-          "y": 555,
-          "w": 280,
-          "h": 100
-        },
-        {
-          "id": "direct_dispose",
-          "label": "Direct Softcopy Dispose:\nmark Disposed; record history;\nretire controlled files",
-          "kind": "process",
-          "x": 805,
-          "y": 135,
-          "w": 320,
-          "h": 100
-        },
-        {
-          "id": "file_request",
-          "label": "Open / download / print\na softcopy file",
-          "kind": "terminal",
-          "x": 805,
-          "y": 455,
-          "w": 320,
-          "h": 55
-        },
-        {
-          "id": "file_check",
-          "label": "Operation permission +\nfile scope + active current\napproved file valid?",
-          "kind": "decision",
-          "x": 805,
-          "y": 545,
-          "w": 320,
-          "h": 95
-        },
-        {
-          "id": "file_allowed",
-          "label": "Serve approved file",
-          "kind": "terminal",
-          "x": 805,
-          "y": 665,
-          "w": 145,
-          "h": 40
-        },
-        {
-          "id": "file_denied",
-          "label": "Deny file access",
-          "kind": "terminal",
-          "x": 980,
-          "y": 665,
-          "w": 145,
-          "h": 40
-        }
-      ],
-      "edges": [
-        {
-          "from": "trigger",
-          "to": "kind",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "fractionTo": 0.25,
-          "via": [
-            [
-              395,
-              170.0
-            ],
-            [
-              395,
-              150.0
-            ]
-          ]
-        },
-        {
-          "from": "kind",
-          "to": "softcopy",
-          "label": "Softcopy",
-          "sideFrom": "left",
-          "sideTo": "top",
-          "via": [
-            [
-              365,
-              200
-            ],
-            [
-              365,
-              270
-            ],
-            [
-              205,
-              270
-            ]
-          ],
-          "fractionFrom": 0.75
-        },
-        {
-          "from": "kind",
-          "to": "hardcopy",
-          "label": "Hardcopy",
-          "sideFrom": "bottom",
-          "sideTo": "top",
-          "fractionFrom": 0.5,
-          "via": []
-        },
-        {
-          "from": "kind",
-          "to": "grant",
-          "label": "Assign / Access",
-          "sideFrom": "right",
-          "sideTo": "top",
-          "via": [
-            [
-              765,
-              200.0
-            ],
-            [
-              765,
-              270
-            ],
-            [
-              965.0,
-              270
-            ]
-          ],
-          "fractionFrom": 0.75
-        },
-        {
-          "from": "kind",
-          "to": "dispose",
-          "label": "Disposal",
-          "sideFrom": "bottom",
-          "sideTo": "right",
-          "via": [
-            [
-              482.0,
-              250
-            ],
-            [
-              395,
-              250
-            ],
-            [
-              395,
-              610.0
-            ]
-          ],
-          "fractionFrom": 0.15
-        },
-        {
-          "from": "kind",
-          "to": "transfer",
-          "label": "Transfer",
-          "sideFrom": "bottom",
-          "sideTo": "right",
-          "via": [
-            [
-              678.0,
-              245
-            ],
-            [
-              750,
-              245
-            ],
-            [
-              750,
-              605.0
-            ]
-          ],
-          "fractionFrom": 0.85
-        },
-        {
-          "from": "kind",
-          "to": "direct_dispose",
-          "label": "Direct only",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "fractionFrom": 0.25,
-          "via": [
-            [
-              765,
-              150
-            ],
-            [
-              765,
-              185
-            ]
-          ],
-          "labelRect": [
-            723,
-            112,
-            802,
-            132
-          ]
-        },
-        {
-          "from": "file_request",
-          "to": "file_check"
-        },
-        {
-          "from": "file_check",
-          "to": "file_allowed",
-          "label": "Yes",
-          "sideFrom": "left",
-          "sideTo": "top",
-          "via": [
-            [
-              780,
-              592.5
-            ],
-            [
-              780,
-              652
-            ],
-            [
-              877.5,
-              652
-            ]
-          ],
-          "labelRect": [
-            734,
-            611,
-            776,
-            632
-          ]
-        },
-        {
-          "from": "file_check",
-          "to": "file_denied",
-          "label": "No",
-          "sideFrom": "right",
-          "sideTo": "top",
-          "via": [
-            [
-              1160,
-              592.5
-            ],
-            [
-              1160,
-              652
-            ],
-            [
-              1052.5,
-              652
-            ]
-          ],
-          "labelRect": [
-            1129,
-            610,
-            1157,
-            631
-          ]
-        }
-      ],
+      "id": "electronic-request",
+      "title": "5. Prepare a Softcopy or External Document request",
+      "start": "Requester needs a new electronic document or a revision",
+      "action": "Choose the Softcopy or External request tab; select create or revise; enter details and upload the file",
+      "question": "Request details, file and selected document valid?",
+      "yes": "Save the draft; review the proposal and submit through My Requests",
+      "no": "Correct the reported problem and save again before submitting",
+      "result": "The proposed document waits for approval; its file is not yet the current approved file",
       "notes": [
-        "Final approval will apply the operation with the approval/status change; failure will roll both back. The nine request actions will use approval. Direct Softcopy Dispose will be a separate action.",
-        "Direct actions will check permission and document management scope. Direct hardcopy disposal will record Disposed and history while retaining Location and grant records.",
-        "File delivery will require its operation permission and allowed file scope. Metadata/catalog visibility will not grant files; expired or revoked grants will provide no access. Retention dates will support monitoring; disposal will be explicit."
-      ],
-      "sources": [
-        "application/services/request/request_service.php:565-716,780-833",
-        "application/services/softcopy/softcopy_operation_service.php",
-        "application/services/documents/document_service.php:67-136,224-276",
-        "application/services/documents/document_access_service.php",
-        "application/services/security/document_scope.php:22-74",
-        "application/models/File_model.php:47-67",
-        "application/controllers/Documents.php:165-194",
-        "application/controllers/Files.php:148-239",
-        "application/services/softcopy/softcopy_direct_service.php:19-112"
+        "Default route: Requester's leader, then Plant Manager, then Document Control Officer. Published routes can be changed.",
+        "Revision requests select an active document in the correct register. The existing approved file remains current during review.",
+        "New Softcopy cancellation requests are unavailable. Retained historical requests may still appear."
       ]
     },
     {
-      "title": "6. Administration, workflow publication and recovery",
-      "subtitle": "Proposed permission checks, controlled configuration changes and conditional backup restoration",
-      "nodes": [
-        {
-          "id": "entry",
-          "label": "Open an administration page",
-          "kind": "terminal",
-          "x": 55,
-          "y": 135,
-          "w": 300,
-          "h": 60
-        },
-        {
-          "id": "access",
-          "label": "Relevant page viewing\npermission granted?",
-          "kind": "decision",
-          "x": 55,
-          "y": 290,
-          "w": 300,
-          "h": 120
-        },
-        {
-          "id": "denied",
-          "label": "Deny unauthorized page access",
-          "kind": "terminal",
-          "x": 440,
-          "y": 135,
-          "w": 280,
-          "h": 60
-        },
-        {
-          "id": "area",
-          "label": "Choose administration\narea",
-          "kind": "process",
-          "x": 440,
-          "y": 300,
-          "w": 280,
-          "h": 100
-        },
-        {
-          "id": "records",
-          "label": "Users / Roles / Places:\ncheck action permission;\nvalidate and confirm each change",
-          "kind": "process",
-          "x": 805,
-          "y": 125,
-          "w": 320,
-          "h": 100
-        },
-        {
-          "id": "workflow",
-          "label": "Workflows: edit a draft route;\nPublish will validate the route\nand active approvers",
-          "kind": "process",
-          "x": 805,
-          "y": 300,
-          "w": 320,
-          "h": 100
-        },
-        {
-          "id": "audit",
-          "label": "Audit Trail:\nview and filter recorded events",
-          "kind": "terminal",
-          "x": 55,
-          "y": 515,
-          "w": 300,
-          "h": 80
-        },
-        {
-          "id": "backup_gate",
-          "label": "Backup action:\nEdit permission and its\nconfirmation / operation\nchecks satisfied?",
-          "kind": "decision",
-          "x": 440,
-          "y": 545,
-          "w": 280,
-          "h": 135
-        },
-        {
-          "id": "backup_denied",
-          "label": "Block the backup action;\nshow the failed check",
-          "kind": "terminal",
-          "x": 55,
-          "y": 635,
-          "w": 300,
-          "h": 55
-        },
-        {
-          "id": "backup_apply",
-          "label": "Create / Import / Cleanup / Download;\nfor Restore: verify archive and back up;\nrestore database and private data;\nrequire sign-in again",
-          "kind": "process",
-          "x": 805,
-          "y": 560,
-          "w": 320,
-          "h": 105
-        }
-      ],
-      "edges": [
-        {
-          "from": "entry",
-          "to": "access"
-        },
-        {
-          "from": "access",
-          "to": "denied",
-          "label": "No",
-          "sideFrom": "left",
-          "sideTo": "top",
-          "via": [
-            [
-              35,
-              350
-            ],
-            [
-              35,
-              115
-            ],
-            [
-              580,
-              115
-            ]
-          ],
-          "labelRect": [
-            40,
-            225,
-            77,
-            245
-          ]
-        },
-        {
-          "from": "access",
-          "to": "area",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "fractionTo": 0.25,
-          "via": [
-            [
-              375,
-              350
-            ],
-            [
-              375,
-              325
-            ]
-          ]
-        },
-        {
-          "from": "area",
-          "to": "records",
-          "label": "Records",
-          "sideFrom": "top",
-          "sideTo": "left",
-          "via": [
-            [
-              580,
-              245
-            ],
-            [
-              765,
-              245
-            ],
-            [
-              765,
-              175
-            ]
-          ],
-          "labelRect": [
-            615,
-            222,
-            685,
-            242
-          ]
-        },
-        {
-          "from": "area",
-          "to": "workflow",
-          "label": "Workflow",
-          "sideFrom": "right",
-          "sideTo": "left",
-          "labelRect": [
-            723,
-            328,
-            800,
-            348
-          ]
-        },
-        {
-          "from": "area",
-          "to": "audit",
-          "label": "Audit",
-          "sideFrom": "left",
-          "sideTo": "right",
-          "via": [
-            [
-              410,
-              375
-            ],
-            [
-              410,
-              555
-            ]
-          ],
-          "labelRect": [
-            361,
-            449,
-            403,
-            470
-          ],
-          "fractionFrom": 0.75
-        },
-        {
-          "from": "area",
-          "to": "backup_gate",
-          "label": "Backup",
-          "sideFrom": "bottom",
-          "sideTo": "top"
-        },
-        {
-          "from": "backup_gate",
-          "to": "backup_denied",
-          "label": "No",
-          "sideFrom": "left",
-          "sideTo": "right",
-          "via": [
-            [
-              395,
-              612.5
-            ],
-            [
-              395,
-              662.5
-            ]
-          ],
-          "labelRect": [
-            355,
-            611,
-            395,
-            631
-          ]
-        },
-        {
-          "from": "backup_gate",
-          "to": "backup_apply",
-          "label": "Yes",
-          "sideFrom": "right",
-          "sideTo": "left"
-        }
-      ],
+      "id": "request-submission",
+      "title": "6. Save and submit a request",
+      "start": "Requester opens an own draft or returned request",
+      "action": "Check the proposal, selected document, attachments and remarks; save changes; choose Submit",
+      "question": "Request valid and published approvers available?",
+      "yes": "Submit the request and send the first approval task to the assigned user or role",
+      "no": "Read the error; fix the proposal or ask an administrator to fix the route, then retry",
+      "result": "My Requests shows Submitted and its approval progress",
       "notes": [
-        "Configuration changes will require the corresponding action permission and confirmation. Only draft workflow versions will be editable; publishing will set the default without changing routes captured by existing requests.",
-        "Backup actions will require viewing and editing permissions. Create, Import, Cleanup and Restore will require confirmation. Create, Import and Restore controls will additionally require configured ZIP, encryption/signing and database tools.",
-        "Restore will require the current password, RESTORE confirmation and a verified archive, then create a recovery backup before restoring database/private data. Code recovery will be offline. Failure during data replacement will attempt recovery; incomplete recovery will retain maintenance mode for offline repair."
-      ],
-      "sources": [
-        "application/controllers/Administration.php:11-38,353-448",
-        "application/controllers/Places.php:31-79",
-        "application/services/workflow/workflow_builder_service.php:19-60,146-202",
-        "application/controllers/Audit.php:6-30",
-        "application/controllers/Backups.php:6-16,55-159",
-        "application/services/backup/backup_service.php:47-53,197-244,267-310,454-470",
-        "application/view/pages/administration/backups.php:5-8,46-52,90,133"
+        "A returned request keeps its original approval route when resubmitted, even after an administrator publishes a newer route.",
+        "Cancel is available only for an own draft. Delete is limited to an own cancelled draft that was never submitted.",
+        "New Hardcopy create/update and Softcopy cancellation requests are unavailable; their past records remain readable."
+      ]
+    },
+    {
+      "id": "approval",
+      "title": "7. Approve an assigned request",
+      "start": "Assigned approver opens a request in My Tasks",
+      "action": "Review the proposal, permitted files, approval history and remarks; choose Approve and confirm",
+      "question": "This is the final approval step?",
+      "yes": "Apply the approved document change, access, assignment, disposal or transfer preparation",
+      "no": "Activate the next approval step; the next assigned approver reviews the request",
+      "result": "Record the decision and show updated progress; continue until final approval",
+      "notes": [
+        "Only the currently assigned user or an active member of the assigned role can decide that step.",
+        "The approved operation takes effect at final approval. An approved transfer still requires Dispatch and Accept.",
+        "If a decision cannot be saved or applied, read the error and refresh before retrying."
+      ]
+    },
+    {
+      "id": "return-or-reject",
+      "title": "8. Return or reject a request",
+      "start": "Assigned approver finds a problem during review",
+      "action": "Review the issue, enter clear remarks and choose Return or Reject",
+      "question": "Return for another review?",
+      "yes": "Reopen the immediately previous approval step; a return from the first step goes to the requester",
+      "no": "Reject and close the request; retain the decision history without applying the proposed change",
+      "result": "Review resumes at the proper point; the requester edits and resubmits only after a first-step return",
+      "notes": [
+        "A return from a later step leaves the request Submitted and gives the task back to the previous approver.",
+        "After that approver approves again, the returned step must review again before approval can advance.",
+        "A first-step return marks the request Returned. The requester corrects it and resubmits using the original route."
+      ]
+    },
+    {
+      "id": "transfer-approval",
+      "title": "9. Request approval to transfer a Hardcopy",
+      "start": "Requester needs to transfer an active Hardcopy",
+      "action": "Select the document, receiving user, destination storage and remarks; save and submit the transfer request",
+      "question": "Request receives every required approval?",
+      "yes": "Prepare the approved handoff and show the transfer as For Transfer",
+      "no": "Follow Return or Reject instructions; dispatch is unavailable until final approval",
+      "result": "Requester can dispatch the approved physical document",
+      "notes": [
+        "Default route: Plant Manager, then Document Control Officer, then Requester confirmation.",
+        "The source and destination must be valid and the receiving account active; conflicting pending requests or transfers can block it.",
+        "Approval alone does not change the current holder or complete physical receipt."
+      ]
+    },
+    {
+      "id": "transfer-handoff",
+      "title": "10. Dispatch and accept the physical document",
+      "start": "Approved Hardcopy transfer is For Transfer",
+      "action": "Requester confirms Dispatch; receiving user opens the handoff task after the document arrives",
+      "question": "Receiving user confirms Accept?",
+      "yes": "Complete the transfer and update the Hardcopy holder and destination location",
+      "no": "Keep the transfer In Transit; the receiving user accepts only after confirming receipt",
+      "result": "The register records accepted custody and the handoff history",
+      "notes": [
+        "Only the requester dispatches. Only the named receiving user accepts that transfer.",
+        "Dispatch marks In Transit. Custody and location change after acceptance.",
+        "Direct reassignment is a separate immediate action and is blocked while a transfer is active."
+      ]
+    },
+    {
+      "id": "access-assignment-request",
+      "title": "11. Request personal access or document assignment",
+      "start": "Requester chooses Document Access or Document Assignment",
+      "action": "Select an active Softcopy or Hardcopy; enter the reason and, for access, a future expiry; save and submit",
+      "question": "Request receives every required approval?",
+      "yes": "Grant access until expiry, or assign the Softcopy to the requester or make the requester the Hardcopy holder",
+      "no": "Follow the return or rejection outcome; no new access or assignment takes effect",
+      "result": "The requester receives the approved personal access or assignment",
+      "notes": [
+        "Access default: Plant Manager, Document Control Officer, Requester confirmation. Assignment ends with Requester's leader instead.",
+        "These requests are for the requester; they do not select another recipient. External Documents are not supported here.",
+        "Access expires at the end of the chosen day. Assignment is separate from an access grant; file permissions still apply."
+      ]
+    },
+    {
+      "id": "direct-disposal",
+      "title": "12. Dispose a document directly",
+      "start": "Authorized controller selects an active document in its register",
+      "action": "Choose Dispose; select Shred, Scratch or Other; describe Other when used; confirm disposal",
+      "question": "Required direct permissions and reason valid?",
+      "yes": "Mark the document Disposed and record the reason, actor, date and previous state",
+      "no": "Read the error and correct the reason or permissions before retrying",
+      "result": "Disposed status and disposal history appear in the register",
+      "notes": [
+        "Direct disposal supports Hardcopy, Softcopy and External Documents; both register direct and disposal direct permission are required.",
+        "Softcopy disposal retires its files. External disposal keeps stored files and revision records but blocks normal download.",
+        "Direct Hardcopy disposal keeps its recorded location. Approval-based Hardcopy disposal clears the location and personal grants."
+      ]
+    },
+    {
+      "id": "disposal-request",
+      "title": "13. Request Hardcopy or External Document disposal",
+      "start": "Requester needs approval to dispose an active document",
+      "action": "Choose Disposal Request; select Hardcopy or External, the document and disposal reason; save and submit",
+      "question": "Every required approver approves disposal?",
+      "yes": "Dispose the selected document and preserve its approval and disposal history",
+      "no": "Follow Return or Reject instructions; the proposed disposal is not applied",
+      "result": "The completed request identifies the disposed document and approved reason",
+      "notes": [
+        "Local route checked 5 Nov 2026: Plant Manager, Document Control Officer, Requester confirms. Softcopy disposal requests are unavailable.",
+        "Choose Shred, Scratch or Other. Other requires a description of up to 250 characters.",
+        "Approved Hardcopy disposal clears Location and personal grants. External disposal records status and history; stored files remain."
+      ]
+    },
+    {
+      "id": "direct-assignment",
+      "title": "14. Assign documents directly",
+      "start": "Authorized controller opens Document Assignments",
+      "action": "Choose a document, Hardcopy location or Softcopy category branch; select the receiving user and confirm",
+      "question": "Active documents and user eligible for assignment?",
+      "yes": "Assign Softcopies to the user, or immediately change the Hardcopy current holder",
+      "no": "Resolve active transfers, choose valid records or reduce the selection, then retry",
+      "result": "The assignment list and document details show the new assignment or holder",
+      "notes": [
+        "Softcopy category assignment includes its subcategories. Location assignment includes all active Hardcopies stored there.",
+        "Bulk assignment supports up to 2,000 active documents. An active Hardcopy transfer blocks reassignment.",
+        "Direct assignment needs no approval or Dispatch/Accept. It does not create a separate personal access grant."
+      ]
+    },
+    {
+      "id": "places-categories",
+      "title": "15. Maintain places and category folders",
+      "start": "Authorized maintainer opens Setup Places",
+      "action": "Choose the place or category tab; add or edit its name, folder and parent details; confirm Save",
+      "question": "Details, parent relationships and permission valid?",
+      "yes": "Save the reference entry and make it available to the appropriate document register",
+      "no": "Correct the reported name, parent or relationship problem and retry",
+      "result": "Document entry and Folder browsing use the maintained references",
+      "notes": [
+        "Areas, Specifics, optional Assets and Locations describe Hardcopy storage. Maintain their valid parent relationships.",
+        "Softcopy Categories and External Categories are separate trees. Categories can contain subcategories.",
+        "Deactivate an entry to stop new selection while retaining historical links; existing relationships can restrict changes."
+      ]
+    },
+    {
+      "id": "accounts",
+      "title": "16. Create, update or deactivate a user account",
+      "start": "Authorized account administrator opens User Management",
+      "action": "Enter user details, Primary role, Assigned roles and leader; save, reset the password or choose Deactivate",
+      "question": "Roles, reporting line and account changes allowed?",
+      "yes": "Save the account; securely provide any generated temporary password to the intended user",
+      "no": "Correct the invalid role, reporting line or protected account change and retry",
+      "result": "The account has the selected access and leader; new or reset users change password at next sign-in",
+      "notes": [
+        "Primary and assigned active roles combine permissions. The leader receives steps configured as Requester's leader.",
+        "Users cannot deactivate themselves or change their own roles. The final active Administrator cannot be removed.",
+        "Account and role changes can require a fresh sign-in. Assigned Documents requires both user-view and direct-assignment permission."
+      ]
+    },
+    {
+      "id": "roles",
+      "title": "17. Maintain roles and permissions",
+      "start": "Authorized role administrator opens Roles & Permissions",
+      "action": "Add or edit a role name and allowed actions; save, deactivate or remove the selected role",
+      "question": "Role change permitted and required references clear?",
+      "yes": "Save the permitted actions or deactivate/remove the unused role",
+      "no": "Reassign affected users or workflow steps, finish dependent requests, or correct permissions; retry",
+      "result": "Assigned active roles determine which pages and actions users can use",
+      "notes": [
+        "Supplied roles: Administrator, Document Control Officer, Plant Manager, Internal Auditor and Staff. Custom roles can be added.",
+        "Administrator privileges are fixed. Other roles can be configured; an administrator cannot delegate actions they lack.",
+        "A role cannot be deactivated or removed while assigned to users, used by current workflows or needed by unfinished requests."
+      ]
+    },
+    {
+      "id": "workflows",
+      "title": "18. Publish an approval route",
+      "start": "Authorized workflow administrator opens Workflow Builder",
+      "action": "Create Next Draft; add or edit approvers; move or remove steps; choose Validate & Publish",
+      "question": "Route has 1-30 valid ordered approval steps?",
+      "yes": "Publish the draft as the default for future submissions of that request type",
+      "no": "Correct missing steps or unavailable users and roles, then validate again",
+      "result": "Future requests follow the new route; submitted requests retain their original route",
+      "notes": [
+        "Approvers can be a specific user, any active member of a role, the Requester's leader or the Requester account.",
+        "Published versions are read-only. Use Create Next Draft, or Start First Draft when no version exists.",
+        "Only one draft per workflow is available. The request types are predefined; configuring a route does not enable retired request types."
+      ]
+    },
+    {
+      "id": "notifications-retention",
+      "title": "19. Respond to task and retention notices",
+      "start": "User sees a task notice, unread bell entry or retention reminder",
+      "action": "Open the notice; inspect the linked request, handoff or Hardcopy record",
+      "question": "Further action required and permitted?",
+      "yes": "Complete the assigned task, or arrange the appropriate Hardcopy review or disposal process",
+      "no": "Close the notice; acknowledging or dismissing it does not approve, transfer or dispose a document",
+      "result": "The user reaches the relevant work and follows its separate action process",
+      "notes": [
+        "Selecting an unread bell entry acknowledges that entry. Opening the panel does not mark every entry read.",
+        "Retention reminders concern visible active Hardcopies with retention enabled and an end date today or earlier, using Manila dates.",
+        "Retention reminders are shown once per document and end date in the browser session; dismissing one leaves the record unchanged."
+      ]
+    },
+    {
+      "id": "audit-trail",
+      "title": "20. Review the Internal Audit Trail",
+      "start": "Administrator, Document Control Officer or Internal Auditor needs to trace a recorded action",
+      "action": "Open Internal Audit Trail; search and filter by date or outcome; review the actor, action and details",
+      "question": "Required action found in the audit records?",
+      "yes": "Read its timestamp, user, outcome and recorded details; compare with the document or request history",
+      "no": "Adjust the search or dates; ask the system administrator to investigate missing or unavailable records",
+      "result": "The reviewer can trace the recorded action and identify any follow-up work",
+      "notes": [
+        "The supplied Administrator, Document Control Officer and Internal Auditor roles can view the audit trail; custom grants may differ.",
+        "Use success or failed outcomes to narrow the list. Audit review does not change a document or reverse an approval.",
+        "Document details and request approval history provide related context for the recorded action."
+      ]
+    },
+    {
+      "id": "backup-management",
+      "title": "21. Create and manage backup archives",
+      "start": "Authorized backup operator opens Backup & Restore",
+      "action": "Choose Backup now, Import backup, Download or Clean up; confirm the selected operation",
+      "question": "Backup setup and selected archive valid?",
+      "yes": "Create or import a verified encrypted archive, download it, or remove expired archives",
+      "no": "Read the setup or archive error; correct it before repeating the operation",
+      "result": "The archive list and operation message show the backup outcome",
+      "notes": [
+        "Viewing backups and managing or downloading them require different permissions. Check the success message and resulting archive.",
+        "The displayed daily target is 5:00 PM Asia/Manila. Automatic backup runs require separate administrator setup and verification.",
+        "Clean up removes expired backup and log archives under the configured retention rules. Import verifies the supplied backup ZIP."
+      ]
+    },
+    {
+      "id": "restore",
+      "title": "22. Restore system records and private files",
+      "start": "Authorized backup operator chooses Restore system data",
+      "action": "Select Backup to restore; enter Your password; type RESTORE; confirm Restore selected backup",
+      "question": "Password, confirmation and backup checks pass?",
+      "yes": "Create a recovery backup; restore the selected records and private files; sign out the operator",
+      "no": "Read the failure message; correct the credentials, confirmation or archive before retrying",
+      "result": "Sign in again and verify the restored records, users and files",
+      "notes": [
+        "Restore replaces live records and private files. Normal use is temporarily blocked during the maintenance operation.",
+        "A recovery backup is created before replacement. Keep the selected backup and recovery archive available for follow-up checks.",
+        "Application code recovery is an offline maintenance task; it is not performed by the Restore system data button."
       ]
     }
   ]
