@@ -9,7 +9,7 @@ final class Request_title
         $proposed = trim((string) ($payload['title'] ?? ''));
         $existing = trim($sourceTitle);
         $proposesTitle = in_array(
-            $type, ['softcopy_create', 'softcopy_revise', 'hardcopy_create', 'hardcopy_update'], TRUE
+            $type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise', 'hardcopy_create', 'hardcopy_update'], TRUE
         );
         $primary = $proposesTitle ? $proposed : $existing;
         $secondary = $proposesTitle ? $existing : $proposed;

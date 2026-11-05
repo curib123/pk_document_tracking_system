@@ -13,6 +13,7 @@ $labels = [
     'sequence_number' => 'Sequence',
     'description' => 'Description',
     'folder_name' => 'Folder',
+    'code_pattern' => 'Code Pattern',
     'area_name' => 'Area',
     'specific_name' => 'Specific',
     'asset_name' => 'Asset',
@@ -75,7 +76,13 @@ $dt_page = $table['page'];
 $dt_limit = $table['limit'];
 $dt_total = $total;
 $dt_filters = $cfg['active'] ? ['status' => ['' => 'All Statuses', '1' => 'Active', '0' => 'Inactive']] : [];
-$parentSources = ['specific' => 'areas', 'asset' => 'specifics', 'location' => 'areas', 'softcopy-categories' => 'categories'];
+$parentSources = [
+    'specific' => 'areas',
+    'asset' => 'specifics',
+    'location' => 'areas',
+    'softcopy-categories' => 'categories',
+    'external-categories' => 'external_categories'
+];
 if (isset($parentSources[$cfg['slug']])) {
     $dt_filters['parent'] = ['' => 'All Parent Folders'];
     foreach ($options[$parentSources[$cfg['slug']]] as $option)
@@ -98,14 +105,16 @@ $dt_sortable = array_values(array_intersect(
         'specific' => 'Specific',
         'asset' => 'Asset',
         'location' => 'Location',
-        'softcopy-categories' => 'Softcopy Categories'
+        'softcopy-categories' => 'Softcopy Categories',
+        'external-categories' => 'External Categories'
     ] as $slug => $label):
         $perm = [
             'area' => 'areas',
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'softcopy-categories' => 'categories'
+            'softcopy-categories' => 'categories',
+            'external-categories' => 'external_categories'
         ][$slug];
         if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
             <a href="<?= site_url('places/' . $slug) ?>" class="tab-link <?= $cfg['slug'] === $slug ? 'active' : '' ?>">
@@ -146,7 +155,14 @@ $dt_sortable = array_values(array_intersect(
                             <?php $this->load->view('pages/places/location/modal_action/upsert', ['options' => $options]); ?>
                         <?php else: ?>
                             <?php foreach ($cfg['fields'] as $field):
-                                $references = ['area_id' => 'areas', 'specific_id' => 'specifics', 'asset_id' => 'assets', 'parent_id' => 'categories'];
+                                $references = [
+                                    'area_id' => 'areas',
+                                    'specific_id' => 'specifics',
+                                    'asset_id' => 'assets',
+                                    'parent_id' => $cfg['slug'] === 'external-categories'
+                                        ? 'external_categories'
+                                        : 'categories'
+                                ];
                                 if (isset($references[$field])):
                                     $optName = $references[$field]; ?>
                                     <div class="col-md-6">
@@ -169,7 +185,11 @@ $dt_sortable = array_values(array_intersect(
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' ? 'required' : '' ?>                 maxlength="150" autocomplete="off">
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= $field === 'code_pattern' ? '100' : '150' ?>" autocomplete="off"
+                                                <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : '' ?>>
+                                            <?php if ($field === 'code_pattern'): ?>
+                                                <small class="form-text">Enter the initial document number, including its starting sequence. New documents continue from this number, for example PPM-001, PPM-01, or PPM-0001.</small>
+                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>

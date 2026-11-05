@@ -165,7 +165,6 @@ class Document_detail_model extends CI_Model
                     'fields' => [
                         'Category / Folder' => $document['category_name'] ?? '',
                         'Series' => $document['series_number'] ?? '',
-                        'Revision Number' => $document['revision_number'] ?? '',
                         'Revision Level' => $document['new_revision_level'] ?? '',
                         'Effective Date' => $document['new_effective_date'] ?? '',
                         'Pages' => $document['page_number'] ?? '',

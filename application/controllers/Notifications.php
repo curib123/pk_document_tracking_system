@@ -76,6 +76,18 @@ class Notifications extends MY_Controller
         return $this->response($this->Notification_model->pending_approvals($this->user));
     }
 
+    public function retention()
+    {
+        if (!$this->user || !empty($this->user['require_password_change']))
+            return $this->output->set_status_header(401)->set_header('Cache-Control', 'no-store, private')
+                ->set_content_type('application/json')->set_output('{"items":[]}');
+        $this->load->model('Document_model');
+        $items = $this->Document_model->retention_alerts($this->user);
+        return $this->output->set_header('Cache-Control', 'no-store, private')
+            ->set_content_type('application/json')
+            ->set_output(json_encode(['items' => $items]));
+    }
+
     public function claim()
     {
         if (!$this->user || !empty($this->user['require_password_change']))

@@ -55,6 +55,7 @@ $route['dashboard']['GET'] = 'Dashboard/index';
 // View pending tasks and the notification inbox.
 $route['notifications/tasks']['GET'] = 'Notifications/pending';
 $route['notifications/inbox']['GET'] = 'Notifications/inbox';
+$route['notifications/retention']['GET'] = 'Notifications/retention';
 
 // Claim a task or mark a notification as read.
 $route['notifications/tasks/claim']['POST'] = 'Notifications/claim';
@@ -68,6 +69,9 @@ $route['notifications/inbox/read']['POST'] = 'Notifications/mark_read';
 */
 
 // Display a document section or category.
+$route['documents/external']['GET'] = 'External_documents/index';
+$route['documents/external/direct']['POST'] = 'External_documents/direct';
+$route['documents/external/dispose']['POST'] = 'External_documents/dispose';
 $route['documents/(:any)']['GET'] = 'Documents/index/$1';
 
 // Add a softcopy document directly.

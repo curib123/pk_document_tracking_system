@@ -62,6 +62,31 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     </div>
 </div>
 
+<div class="modal fade app-alert-modal" data-bs-backdrop="static" data-bs-keyboard="false"
+    id="retentionNotificationModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-hidden="true"
+    aria-labelledby="retentionNotificationTitle" aria-describedby="retentionNotificationMessage"
+    data-list-url="<?= html_escape(site_url('notifications/retention')) ?>"
+    data-user-id="<?= (int) ($user['id'] ?? 0) ?>">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-alert-content app-alert-warning">
+            <div class="modal-header border-0">
+                <div class="app-alert-symbol" aria-hidden="true">
+                    <?php $this->load->view('reusable_components/alert_icon', ['alert_kind' => 'warning']); ?></div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal"
+                    aria-label="Close retention notification"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <h2 class="h5 fw-bold mb-2" id="retentionNotificationTitle">Retention period reached</h2>
+                <p class="text-secondary">These active hardcopy records have reached their retention end date.</p>
+                <ol class="task-notification-list" id="retentionNotificationList"></ol>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Waiting feedback is a live status; native forms and returned results stay authoritative. -->
 <div class="action-feedback" id="appActionFeedback" hidden role="status" aria-live="polite" aria-atomic="true">
     <div class="action-feedback-card">
@@ -208,6 +233,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
 <script src="<?= base_url('assets/js/app.js') ?>"></script>
 <script src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
+<script src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
 <script src="<?= base_url('assets/js/row-actions.js') ?>"></script>
 <script src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
 <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>

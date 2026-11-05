@@ -5,6 +5,7 @@ class Request_model extends CI_Model
 {
     private $groups = [
         'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
+        'external' => ['external_create', 'external_revise'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'hardcopy-disposal' => ['disposal'],
@@ -68,7 +69,17 @@ class Request_model extends CI_Model
         )->join('users u', 'u.id=r.requested_by')
             ->join('softcopy_documents sd', 'sd.id=r.softcopy_id', 'left')
             ->join('hardcopy_documents hd', 'hd.id=r.hardcopy_id', 'left')
-            ->select('COALESCE(sd.title,hd.title) AS source_title,COALESCE(sd.document_number,hd.sequence_number) AS source_reference', FALSE);
+            ->join(
+                'external_documents ed',
+                "ed.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)",
+                'left',
+                FALSE
+            )
+            ->select(
+                'COALESCE(sd.title,hd.title,ed.title) AS source_title,' .
+                'COALESCE(sd.document_number,hd.sequence_number,ed.title) AS source_reference',
+                FALSE
+            );
         if ($task)
             $this->db->select('ws.label AS step_label,ws.id AS step_id');
         $sorts = [
@@ -94,6 +105,7 @@ class Request_model extends CI_Model
         require_once APPPATH . 'services/presentation/disposal_details.php';
         $references = [
             'categories' => ['name', ['category_id' => 'Proposed Category']],
+            'external_documents' => ['title', ['external_document_id' => 'Selected External Document']],
             'areas' => ['name', ['area_id' => 'Proposed Area', 'destination_area_id' => 'Destination Area']],
             'specifics' => ['name', ['specific_id' => 'Proposed Specific', 'destination_specific_id' => 'Destination Specific']],
             'assets' => ['asset_number', ['asset_id' => 'Proposed Asset', 'destination_asset_id' => 'Destination Asset']],
@@ -126,9 +138,12 @@ class Request_model extends CI_Model
                 SELECT p.request_id,p.document_id,p.disposal_action,p.remarks,p.previous_status,p.disposed_at,
                     CONCAT_WS(' ',actor.first_name,actor.last_name) AS disposed_by_name,
                     ROW_NUMBER() OVER (PARTITION BY p.request_id ORDER BY p.id DESC) AS disposal_rank
-                FROM disposals p JOIN requests r ON r.id=p.request_id AND r.hardcopy_id=p.document_id
+                FROM disposals p JOIN requests r ON r.id=p.request_id
                 LEFT JOIN users actor ON actor.id=p.disposed_by
-                WHERE p.domain='hardcopy' AND r.type='disposal' AND p.request_id IN ($slots)
+                WHERE r.type='disposal' AND p.request_id IN ($slots) AND (
+                    (p.domain='hardcopy' AND r.hardcopy_id=p.document_id) OR
+                    (p.domain='external' AND CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)=p.document_id)
+                )
                 ) recent WHERE disposal_rank=1", $disposalIds)->result_array();
             foreach ($records as $record)
                 $disposals[$record['request_id']] = $record;
@@ -138,13 +153,21 @@ class Request_model extends CI_Model
             $details = [];
             if (!empty($row['source_title']))
                 $details['Selected Document'] = $row['source_title'];
-            if (empty($row['hardcopy_id']) && !empty($row['source_reference']))
+            if (
+                empty($row['hardcopy_id']) &&
+                empty($payload['external_document_id']) &&
+                !empty($row['source_reference'])
+            )
                 $details['Document Number'] = $row['source_reference'];
             foreach ([
                 'title' => 'Proposed Title',
+                'description' => 'Description',
                 'document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
-                'new_revision_level' => 'Proposed Revision Level',
+                'retention_period' => 'Retention Period',
+                'retention_start_date' => 'Retention Start Date',
+                'retention_end_date' => 'Retention End Date',
+                'revision_level' => 'Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',
                 'date_released' => 'Released Date',
@@ -154,6 +177,12 @@ class Request_model extends CI_Model
                 'disposal_reason' => 'Disposal Reason',
                 'disposal_other' => 'Other Disposal Details'
             ] as $key => $label) {
+                if (
+                    str_starts_with($row['type'], 'external_') &&
+                    in_array($key, ['retention_period', 'retention_start_date', 'retention_end_date'], TRUE)
+                ) {
+                    continue;
+                }
                 if (isset($payload[$key]) && is_scalar($payload[$key]) && (string) $payload[$key] !== '')
                     $details[$label] = $key === 'disposal_reason' ? Disposal_details::reason($payload[$key]) : $payload[$key];
             }

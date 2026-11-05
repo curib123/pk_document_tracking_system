@@ -14,6 +14,10 @@ class Requests extends MY_Controller
     }
     private function listing($tab, $task)
     {
+        if (!$task && $tab === 'hardcopy') {
+            redirect('my-requests/softcopy');
+            return;
+        }
         $this->Request_model->types($tab);
         // Physical handoff tasks are visible to authorized recipients
         // even when they cannot approve other workflow requests.
@@ -38,9 +42,8 @@ class Requests extends MY_Controller
         $actionModules = [
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
-            'softcopy_cancel' => 'softcopy',
-            'hardcopy_create' => 'hardcopy',
-            'hardcopy_update' => 'hardcopy',
+            'external_create' => 'external_documents',
+            'external_revise' => 'external_documents',
             'transfer' => 'transfer',
             'disposal' => 'disposal',
             'assignment' => 'assignment',
@@ -53,6 +56,15 @@ class Requests extends MY_Controller
         }
         $history = $this->Request_model->histories(array_column($rows, 'id'));
         $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
+        $tabLabels = [
+            'softcopy' => 'Softcopy Document Request',
+            'external' => 'External Document Request',
+            'hardcopy' => 'Hardcopy Request',
+            'hardcopy-transfer' => 'Hardcopy Transfer Request',
+            'hardcopy-disposal' => 'Disposal Request',
+            'access-grant' => 'Document Access Request',
+            'document-assign' => 'Document Assignment Request'
+        ];
         $handoffs = [];
         $handoffPage = 1;
         $handoffTotal = 0;
@@ -64,7 +76,7 @@ class Requests extends MY_Controller
             );
         }
         $this->render(
-            ($task ? 'My Tasks' : 'My Requests') . ' · ' . ucwords(str_replace('-', ' ', $tab)),
+            ($task ? 'My Tasks' : 'My Requests') . ' · ' . ($tabLabels[$tab] ?? ucwords(str_replace('-', ' ', $tab))),
             $task ? 'pages/request/approving_assign_request/index' : 'pages/request/user_own_all_request/index',
             [
                 'tab' => $tab,
@@ -91,6 +103,13 @@ class Requests extends MY_Controller
                     'users' => $this->Document_model->active_users()
                 ] : [],
                 'category_options' => $this->Place_model->options('categories'),
+                'external_category_options' => $tab === 'external'
+                    ? $this->Place_model->options('external_categories') : [],
+                'numbering_options' => $tab === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [],
+                'number_previews' => $tab === 'softcopy'
+                    ? $this->Document_model->softcopy_number_previews($this->Place_model->options('categories')) : [],
+                'external_options' => in_array($tab, ['external', 'hardcopy-disposal'], TRUE) && !$task
+                    ? $this->external_document_options() : [],
                 'location_options' => $this->Place_model->options('locations'),
                 'hardcopy_form_options' => [
                     'areas' => $this->Place_model->options('areas'),
@@ -103,6 +122,22 @@ class Requests extends MY_Controller
             ]
         );
     }
+
+    private function external_document_options()
+    {
+        $canViewAll = $this->can('*', '*') || $this->can('documents', 'access_all') ||
+            $this->can('documents', 'view_all');
+        $this->db->select(
+            'd.id,d.title,d.description,d.category_id,r.revision_level'
+        )
+            ->from('external_documents d')
+            ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
+            ->where('d.status', 'active');
+        if (!$canViewAll)
+            $this->db->where('d.created_by', (int) $this->user['id']);
+        return $this->db->order_by('d.title')->get()->result_array();
+    }
+
     public function mine($tab)
     {
         $this->listing($tab, FALSE);
@@ -117,11 +152,14 @@ class Requests extends MY_Controller
         $this->require_permission('requests', (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {
+            if (in_array((string) $this->input->post('type'), ['hardcopy_create', 'hardcopy_update'], TRUE)) {
+                throw new DomainException('Hardcopy create and update requests are no longer available. Use Direct Hardcopy for document management.');
+            }
             $savedId = (new Request_service())->save(
                 $tab,
                 $this->input->post(),
                 $this->user,
-                $_FILES['revision_attachment'] ?? NULL
+                $_FILES['external_attachment'] ?? ($_FILES['revision_attachment'] ?? NULL)
             );
             $this->audit_created('requests', $savedId);
             $this->notice('Request draft saved.');

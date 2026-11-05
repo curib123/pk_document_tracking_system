@@ -50,6 +50,9 @@ class Query_state
             $period = 'all';
         }
         $limit = $number('limit');
+        $retention = $text('retention');
+        if (!in_array($retention, ['', 'hits', 'today', 'overdue', 'week', 'month'], TRUE))
+            throw new DomainException('Invalid retention filter.');
         return $dates + [
             'period' => $period,
             'q' => mb_substr($text('q'), 0, 100),
@@ -60,10 +63,12 @@ class Query_state
             'dir' => strtolower($text('dir', str_ends_with($defaultSort, '_at') ? 'desc' : 'asc')) === 'desc' ? 'DESC' : 'ASC',
             'layout' => in_array($text('layout'), ['table', 'grid', 'folder'], TRUE) ? $text('layout') : 'table',
             'owner' => $number('owner'),
+            'category' => $number('category'),
             'role' => $number('role'),
             'parent' => $number('parent'),
             'type' => mb_substr($text('type'), 0, 50),
-            'publication' => mb_substr($text('publication'), 0, 20)
+            'publication' => mb_substr($text('publication'), 0, 20),
+            'retention' => $retention
         ];
     }
 }

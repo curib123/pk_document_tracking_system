@@ -176,7 +176,6 @@ $dt_create = '';
                     <li class="workflow-step-row <?= $i === count($steps) - 1 ? 'is-final-step' : '' ?>"
                       style="--workflow-step-index: <?= min($i, 8) ?>">
                       <div class="workflow-step-content flex-grow-1">
-                        <span class="workflow-step-stage"><?= $i === count($steps) - 1 ? 'Final approval' : 'Approval step' ?></span>
                         <strong class="workflow-step-name d-block"><?= $esc($step['name'] ?? 'Unnamed Step') ?></strong>
                         <span class="workflow-step-assignee">
                           <span class="workflow-step-assignee-type"><?= $esc(ucwords(str_replace('_', ' ', $type))) ?></span>

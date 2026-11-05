@@ -22,18 +22,19 @@ class Softcopy_operation_service
         }
     }
 
-    public function validate_revision($payload)
+    public function validate_effective_date($payload)
     {
-        $level = trim((string) ($payload['new_revision_level'] ?? ''));
-        if ($level === '' || mb_strlen($level) > 30) {
-            throw new DomainException('New revision level must contain 1 to 30 characters.');
-        }
         $effective = (string) ($payload['effective_date'] ?? '');
         if ($effective !== '') {
             $parsed = DateTime::createFromFormat('!Y-m-d', $effective);
             if (!$parsed || $parsed->format('Y-m-d') !== $effective)
                 throw new DomainException('Effective date must be valid when provided.');
         }
+    }
+
+    public function validate_revision($payload)
+    {
+        $this->validate_effective_date($payload);
         if ((int) ($payload['page_number'] ?? 0) < 1) {
             throw new DomainException('Number of pages must be at least one.');
         }
@@ -46,17 +47,31 @@ class Softcopy_operation_service
         $reason = trim((string) ($payload['remarks'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
         if ($type === 'softcopy_create') {
-            $number = trim((string) ($payload['document_number'] ?? ''));
+            $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
-            $series = trim((string) ($payload['series_number'] ?? ''));
+            require_once APPPATH . 'services/softcopy/document_number_generator.php';
+            $manualNumber = !empty($payload['series_number_checker']);
+            $number = $manualNumber
+                ? trim((string) ($payload['document_number'] ?? ''))
+                : Document_number_generator::next($db, $categoryId);
+            $series = $manualNumber ? trim((string) ($payload['series_number'] ?? '')) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId
             ) {
-                throw new DomainException('Document title, number and category are required.');
+                throw new DomainException('Document title and category are required.');
             }
-            if (!$db->get_where('categories', ['id' => $categoryId, 'active' => 1])->row_array()) {
-                throw new DomainException('Choose an active softcopy category.');
+            if ($manualNumber) {
+                if ($series === '') {
+                    throw new DomainException('Enter the series number for the selected document number.');
+                }
+                Document_number_generator::require_existing($db, $categoryId, $number);
+                if ($db->get_where('softcopy_documents', [
+                    'document_number' => $number,
+                    'series_number' => $series
+                ])->row_array()) {
+                    throw new DomainException('That document number and series number are already in use.');
+                }
             }
             if (
                 !$db->insert('softcopy_documents', [
@@ -69,8 +84,23 @@ class Softcopy_operation_service
                     'creation_reason' => $reason ?: trim((string) ($payload['subject'] ?? '')),
                     'source_request_id' => $requestId
                 ])
-            )
+            ) {
+                $databaseError = $db->error();
+                if ((int) ($databaseError['code'] ?? 0) === 1062) {
+                    log_message(
+                        'error',
+                        'Softcopy creation duplicate index error: ' . ($databaseError['message'] ?? 'unknown database error')
+                    );
+                    throw new DomainException(
+                        'This document number and series number are already in use. If you are reusing an existing document number, apply the softcopy series-number index migration.'
+                    );
+                }
+                log_message(
+                    'error',
+                    'Softcopy document insert failed: ' . ($databaseError['message'] ?? 'unknown database error')
+                );
                 throw new DomainException('Unable to create the softcopy document.');
+            }
             $newId = (int) $db->insert_id();
             $fileId = (int) ($payload['controlled_file_id'] ?? 0);
             $file = $db->get_where('files', [
@@ -83,8 +113,8 @@ class Softcopy_operation_service
             ])->row_array();
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
-            $today = date('Y-m-d');
-            $revisionLevel = trim((string) ($payload['new_revision_level'] ?? '')) ?: '00';
+            $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+            $revisionLevel = '00';
             $effective = (string) ($payload['effective_date'] ?? '');
             $received = (string) ($payload['date_received'] ?? '');
             $released = (string) ($payload['date_released'] ?? '');
@@ -131,7 +161,12 @@ class Softcopy_operation_service
             } else {
                 $this->audit($newId, 'new', 'active', 'direct_create', $actorId, $reason);
             }
-            return ['document_id' => $newId, 'file_id' => $fileId, 'revision_id' => $revisionId];
+            return [
+                'document_id' => $newId,
+                'document_number' => $number,
+                'file_id' => $fileId,
+                'revision_id' => $revisionId
+            ];
         }
 
         $rows = $db->query('SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE', [(int) $softcopyId])
@@ -160,10 +195,8 @@ class Softcopy_operation_service
                 ->get_where('softcopy_revisions', ['document_id' => $softcopyId])->row_array();
             $previous = $doc['current_revision_id'] ?
                 $db->get_where('softcopy_revisions', ['id' => $doc['current_revision_id']])->row_array() : NULL;
-            $level = trim((string) $payload['new_revision_level']);
-            if ($previous && $level === $previous['new_revision_level']) {
-                throw new DomainException('New revision level must differ from the current revision.');
-            }
+            $nextRevisionNumber = (int) ($max['revision_number'] ?? 0) + 1;
+            $level = str_pad((string) max(0, $nextRevisionNumber - 1), 2, '0', STR_PAD_LEFT);
             if ($title !== '' && mb_strlen($title) > 255) {
                 throw new DomainException('Document title is too long.');
             }
@@ -173,7 +206,7 @@ class Softcopy_operation_service
             if (
                 !$db->insert('softcopy_revisions', [
                     'document_id' => (int) $softcopyId,
-                    'revision_number' => (int) ($max['revision_number'] ?? 0) + 1,
+                    'revision_number' => $nextRevisionNumber,
                     'reason' => $reason,
                     'effective_date' => $effective,
                     'page_number' => (int) $payload['page_number'],

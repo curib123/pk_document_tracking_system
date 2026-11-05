@@ -16,6 +16,12 @@ class Place_model extends CI_Model
             'table' => 'categories',
             'label' => 'Softcopy Categories',
             'key' => 'name',
+            'fields' => ['name', 'folder_name', 'code_pattern', 'description', 'parent_id']
+        ],
+        'external-categories' => [
+            'table' => 'external_categories',
+            'label' => 'External Categories',
+            'key' => 'name',
             'fields' => ['name', 'folder_name', 'description', 'parent_id']
         ],
     ];
@@ -44,7 +50,8 @@ class Place_model extends CI_Model
             'specific' => 'area_id',
             'asset' => 'specific_id',
             'location' => 'area_id',
-            'softcopy-categories' => 'parent_id'
+            'softcopy-categories' => 'parent_id',
+            'external-categories' => 'parent_id'
         ];
         if (!empty($state['parent']) && isset($parents[$c['slug']]))
             $this->db->where('p.' . $parents[$c['slug']], (int) $state['parent']);
@@ -67,7 +74,8 @@ class Place_model extends CI_Model
                 ['specifics s', 's.id=p.specific_id', 's.name AS specific_name'],
                 ['assets b', 'b.id=p.asset_id', 'b.asset_number AS asset_name']
             ],
-            'softcopy-categories' => [['categories par', 'par.id=p.parent_id', 'par.name AS parent_name']]
+            'softcopy-categories' => [['categories par', 'par.id=p.parent_id', 'par.name AS parent_name']],
+            'external-categories' => [['external_categories par', 'par.id=p.parent_id', 'par.name AS parent_name']]
         ];
         foreach ($joins[$c['slug']] ?? [] as $join) {
             $this->db->join($join[0], $join[1], 'left')->select($join[2]);
@@ -88,7 +96,8 @@ class Place_model extends CI_Model
             'specifics' => 'name',
             'assets' => 'asset_number',
             'locations' => 'name',
-            'categories' => 'name'
+            'categories' => 'name',
+            'external_categories' => 'name'
         ];
         if (!isset($defs[$table]))
             throw new DomainException('Unknown option list.');
@@ -108,6 +117,14 @@ class Place_model extends CI_Model
                 ->join('areas a', 'a.id=s.area_id')
                 ->where('b.active', 1)->where('s.active', 1)->where('a.active', 1)
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
+        }
+        if ($table === 'categories') {
+            return $this->db->select('id,name,code_pattern')->from('categories')
+                ->where('active', 1)->order_by('name')->get()->result_array();
+        }
+        if ($table === 'external_categories') {
+            return $this->db->select('id,name')->from('external_categories')
+                ->where('active', 1)->order_by('name')->get()->result_array();
         }
         return $this->db->select('id,' . $defs[$table] . ' AS name')->from($table)
             ->where('active', 1)->order_by($defs[$table])->get()->result_array();

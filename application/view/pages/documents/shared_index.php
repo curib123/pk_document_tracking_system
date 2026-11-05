@@ -122,16 +122,30 @@ $dt_sortable = $cfg['domain'] === 'hardcopy'
     ? ['title', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filters['retention'] = [
+        '' => 'All Retention',
+        'today' => 'Due Today',
+        'overdue' => 'Overdue',
+        'week' => 'Due in the Next 7 Days',
+        'month' => 'Due in 8-30 Days'
+    ];
+if ($cfg['domain'] === 'softcopy')
+    $dt_filters['category'] = ['' => 'All Categories'] + array_column($category_options, 'name', 'id');
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,
     'owner' => $table['owner'],
+    'category' => $cfg['domain'] === 'softcopy' && !empty($table['category'])
+        ? $table['category'] : '',
     'period' => $table['period'] ?? 'all',
     'from' => $table['from'],
     'to' => $table['to']
 ];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filter_values['retention'] = $table['retention'] ?? '';
 $dt_badges = ['status'];
-$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Hardcopy Direct') : '';
+$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Add New Softcopy Document' : 'Add New Hardcopy Document') : '';
 $dt_folder_browser = $folder_browser;
 $dt_folder_domain = $cfg['domain'];
 $activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
@@ -210,6 +224,8 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                             <?php $this->load->view('pages/request/softcopy_fields', [
                                 'softcopy_options' => $softcopy_options,
                                 'category_options' => $category_options,
+                                'numbering_options' => $numbering_options,
+                                'number_previews' => $number_previews,
                                 'softcopyDirect' => TRUE
                             ]); ?>
                         <?php else: ?>

@@ -24,7 +24,7 @@ class Place_service
         }
         if ($data[$c['key']] === '')
             throw new DomainException('Name is required.');
-        foreach (['name', 'asset_number', 'folder_name'] as $key) {
+        foreach (['name', 'asset_number', 'folder_name', 'code_pattern'] as $key) {
             if (isset($data[$key]) && mb_strlen((string) $data[$key]) > 150)
                 throw new DomainException('Value is too long.');
         }
@@ -34,9 +34,17 @@ class Place_service
             throw new DomainException('Choose a specific.');
         if ($c['slug'] === 'location')
             $this->prepare_location($data);
-        if ($c['slug'] === 'softcopy-categories') {
+        $categorySlugs = ['softcopy-categories', 'external-categories'];
+        if (in_array($c['slug'], $categorySlugs, TRUE)) {
             if (!$data['folder_name'])
                 throw new DomainException('Folder name is required.');
+            if ($c['slug'] === 'softcopy-categories' && (
+                !preg_match('/^.*[^0-9][0-9]+$/D', $data['code_pattern']) ||
+                preg_match('/[\r\n]/', $data['code_pattern'])
+            ))
+                throw new DomainException('Document code pattern must include a prefix and an initial sequence number, such as PPM-001.');
+            if ($c['slug'] === 'softcopy-categories' && mb_strlen($data['code_pattern']) > 100)
+                throw new DomainException('Document code pattern must not exceed 100 characters.');
             if (!$id)
                 $data['created_by'] = $actorId;
             if ($id && $id === $data['parent_id'])
@@ -46,10 +54,24 @@ class Place_service
             $data['active'] = !empty($post['active']) ? 1 : 0;
         $this->ci->db->trans_begin();
         try {
-            if ($c['slug'] === 'softcopy-categories') {
+            if (in_array($c['slug'], $categorySlugs, TRUE)) {
                 require_once APPPATH . 'services/places/category_parent_policy.php';
-                $categories = $this->ci->db->query('SELECT id,parent_id,active FROM categories ORDER BY id FOR UPDATE')->result_array();
+                $categories = $this->ci->db->query(
+                    'SELECT id,parent_id,active FROM ' . $c['table'] . ' ORDER BY id FOR UPDATE'
+                )->result_array();
                 Category_parent_policy::validate($categories, $id, (int) $data['parent_id']);
+            }
+            if ($c['slug'] === 'softcopy-categories') {
+                $patternPrefix = preg_replace('/[0-9]+$/', '', $data['code_pattern']);
+                $patterns = $this->ci->db->query(
+                    'SELECT id,code_pattern FROM categories WHERE id<>? FOR UPDATE',
+                    [$id]
+                )->result_array();
+                foreach ($patterns as $category) {
+                    $existingPrefix = preg_replace('/[0-9]+$/', '', (string) $category['code_pattern']);
+                    if (strcasecmp($existingPrefix, $patternPrefix) === 0)
+                        throw new DomainException('Each category must have a unique document code prefix.');
+                }
             }
             if (
                 $c['slug'] === 'specific' && !$this->ci->db->get_where('areas', [

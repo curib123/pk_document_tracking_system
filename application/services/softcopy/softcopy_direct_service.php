@@ -21,6 +21,9 @@ class Softcopy_direct_service
         $service = new Softcopy_operation_service();
         $type = trim((string) ($post['type'] ?? ''));
         $service->validate_type($type);
+        if ($type === 'softcopy_cancel') {
+            throw new DomainException('Direct softcopy cancellation is not available.');
+        }
         $subject = trim((string) ($post['subject'] ?? ''));
         if ($subject === '' || mb_strlen($subject) > 255) {
             throw new DomainException('Subject / reason is required (maximum 255 characters).');
@@ -32,14 +35,18 @@ class Softcopy_direct_service
             'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number'] ?? '')),
+            'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
+            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
-            'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
             'date_received' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
             'date_released' => '',
             'page_number' => (int) ($post['page_number'] ?? 0)
         ];
+        if (!$payload['series_number_checker']) {
+            $payload['document_number'] = '';
+        }
         $this->ci->load->model('Identity_model');
         $this->ci->load->model('Permission_model');
         $this->ci->load->model('Document_model');
@@ -64,7 +71,9 @@ class Softcopy_direct_service
             ) {
                 throw new DomainException('Proposed document title is required for a revision.');
             }
-            if ($type === 'softcopy_revise')
+            if ($type === 'softcopy_create')
+                $service->validate_effective_date($payload);
+            elseif ($type === 'softcopy_revise')
                 $service->validate_revision($payload);
             require_once APPPATH . 'services/files/file_service.php';
             $files = new File_service();
@@ -104,8 +113,6 @@ class Softcopy_direct_service
         }
         if ($type === 'softcopy_revise') {
             (new File_service())->cleanup_superseded($docId);
-        } elseif ($type === 'softcopy_cancel') {
-            (new File_service())->cleanup_retired($docId);
         }
         return $result;
     }

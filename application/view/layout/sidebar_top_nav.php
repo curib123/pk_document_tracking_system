@@ -14,7 +14,7 @@ $active = function ($prefix) use ($path) {
 // Show Setup Places only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'categories'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;
@@ -73,7 +73,7 @@ $navPage = end($navParts);
             <?php endif; ?>
 
             <!-- Document Management -->
-            <?php if ($visible('hardcopy') || $visible('softcopy')): ?>
+            <?php if ($visible('hardcopy') || $visible('softcopy') || $visible('external_documents')): ?>
                 <div class="side-heading">Document Management</div>
 
                 <?php if ($visible('hardcopy')): ?>
@@ -95,6 +95,16 @@ $navPage = end($navParts);
                     >
                         <i class="fa-regular fa-file-lines" aria-hidden="true"></i>
                         Softcopy Documents
+                    </a>
+                <?php endif; ?>
+                <?php if ($visible('external_documents')): ?>
+                    <a
+                        class="side-link<?= $active('documents/external') ?>"
+                        <?= $active('documents/external') === ' active' ? 'aria-current="page"' : '' ?>
+                        href="<?= site_url('documents/external') ?>"
+                    >
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        External Documents
                     </a>
                 <?php endif; ?>
             <?php endif; ?>
@@ -170,7 +180,11 @@ $navPage = end($navParts);
                     </a>
                 <?php endif; ?>
 
-                <?php if ($anyPlace): ?>
+                <?php if ($anyPlace && (
+                    $visible('assignment', 'direct') ||
+                    $visible('categories') ||
+                    $visible('external_categories')
+                )): ?>
                     <a
                         class="side-link<?= $active('places') ?>"
                         <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>

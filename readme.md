@@ -5,7 +5,8 @@ A PHP application for managing physical and digital documents, custody, assignme
 ## Features
 
 - Hardcopy documents organized by Area, Specific, Asset, and Location, with holder and retention information.
-- Softcopy documents with controlled files, revisions, file history, authorized downloads, and printing.
+- Softcopy documents with controlled files, revisions, file history, authorized downloads, printing, and category filters.
+- External documents with independent hierarchical categories, table and folder views, category, owner, status, and created-date filters, reusable status badges, private attachments, direct create/revise/dispose actions, approval requests, and automatic revision levels. Attachments are downloaded through the row action; filenames are not displayed in the register.
 - Requests for document creation, updates, cancellation, transfers, disposal, access, and assignments.
 - Approval tasks, workflow history, and notifications.
 - Individual document assignments and bulk assignment by Location or Category, including subcategories.
@@ -33,7 +34,7 @@ XAMPP is the local Windows setup used by the included helper scripts. Frontend C
    composer install
    ```
 
-4. Create an empty `pk_dts` database using `utf8mb4`. Import [database/pk_dts.sql](database/pk_dts.sql) into that database using phpMyAdmin or the MySQL client. This file contains schema **and existing data**; review it before importing and do not import it over an existing installation. Review [database/migrations](database/migrations) against the installed schema when upgrading; there is no automatic migration runner.
+4. Create an empty `pk_dts` database using `utf8mb4`. Import [database/pk_dts.sql](database/pk_dts.sql) into that database using phpMyAdmin or the MySQL client. This file contains schema **and existing data**; review it before importing and do not import it over an existing installation. Review [database/migrations](database/migrations) against the installed schema when upgrading; there is no automatic migration runner. For an installation without category numbering, apply [20261104_category_code_pattern.sql](database/migrations/20261104_category_code_pattern.sql) and [20261104_external_document_permissions.sql](database/migrations/20261104_external_document_permissions.sql). Existing installations with External Documents tables should apply [20261104_external_retention_dates_description.sql](database/migrations/20261104_external_retention_dates_description.sql) if needed to add descriptions, then apply [20261104_remove_external_retention.sql](database/migrations/20261104_remove_external_retention.sql) to remove unused External Documents retention fields, followed by [20261104_external_categories.sql](database/migrations/20261104_external_categories.sql) to add dedicated External Categories. To rename the default approval workflows to match the My Requests tab labels, apply [20261104_request_workflow_names.sql](database/migrations/20261104_request_workflow_names.sql). If the category-pattern migration is already applied and reusing a document number with a new series fails, apply [20261104_softcopy_series_number_index.sql](database/migrations/20261104_softcopy_series_number_index.sql) to ensure the database permits the same document number with distinct series numbers. Existing installations with prefix-only category patterns can continue using them; new category patterns should include an initial sequence, such as `PPM-001`.
 5. Configure the database environment variables described below if your connection differs from the local defaults.
 6. Create your own administrator account if needed:
 
@@ -73,6 +74,7 @@ Set environment variables for the process that runs PHP. Variables set in a Powe
 | `application/view/` | Page templates and shared UI components |
 | `public/assets/` | Styles, JavaScript, fonts, and images |
 | `database/` | Database export and incremental SQL migrations |
+| `docs/system-documentation/` | Current as-built system reference and exported user/process diagrams |
 | `storage/` | Private files, sessions, logs, audits, and generated artifacts |
 | `tests/` | Focused browser and HTTP regression checks |
 | `tools/` | Administrator, backup, asset, and local synchronization utilities |

@@ -91,6 +91,29 @@ class Document_model extends CI_Model
         }
         if (!empty($filters['owner']))
             $this->db->where('d.created_by', (int) $filters['owner']);
+        if ($domain === 'softcopy' && !empty($filters['category']))
+            $this->db->where('d.category_id', (int) $filters['category']);
+        $retentionFilter = $filters['retention'] ?? '';
+        if ($domain === 'hardcopy' && $retentionFilter !== '') {
+            $today = new DateTimeImmutable('today', new DateTimeZone('Asia/Manila'));
+            $todayText = $today->format('Y-m-d');
+            $this->db->where('d.status', 'active')
+                ->where('d.retention_enabled', 1)
+                ->where('d.retention_end_date IS NOT NULL', NULL, FALSE);
+            if ($retentionFilter === 'today') {
+                $this->db->where('d.retention_end_date', $todayText);
+            } elseif ($retentionFilter === 'overdue') {
+                $this->db->where('d.retention_end_date <', $todayText);
+            } elseif ($retentionFilter === 'hits') {
+                $this->db->where('d.retention_end_date <=', $todayText);
+            } elseif ($retentionFilter === 'week') {
+                $this->db->where('d.retention_end_date >', $todayText)
+                    ->where('d.retention_end_date <=', $today->modify('+7 days')->format('Y-m-d'));
+            } elseif ($retentionFilter === 'month') {
+                $this->db->where('d.retention_end_date >', $today->modify('+7 days')->format('Y-m-d'))
+                    ->where('d.retention_end_date <=', $today->modify('+30 days')->format('Y-m-d'));
+            }
+        }
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search);
             if ($domain === 'softcopy')
@@ -152,6 +175,39 @@ class Document_model extends CI_Model
         $c = $this->config($domain);
         return $this->db->get_where($c['table'], ['id' => (int) $id])->row_array();
     }
+
+    public function retention_alerts($viewer)
+    {
+        require_once APPPATH . 'services/documents/retention_countdown.php';
+        $timezone = new DateTimeZone('Asia/Manila');
+        $today = new DateTimeImmutable('today', $timezone);
+        $todayText = $today->format('Y-m-d');
+        $scope = $this->scope('hardcopy', $viewer, 'd');
+        $rows = $this->db->select('d.id,d.title,d.sequence_number,d.retention_end_date')
+            ->from('hardcopy_documents d')
+            ->where('d.status', 'active')
+            ->where('d.retention_enabled', 1)
+            ->where('d.retention_end_date <=', $todayText)
+            ->where($scope, NULL, FALSE)
+            ->order_by('d.retention_end_date', 'ASC')
+            ->order_by('d.title', 'ASC')
+            ->get()->result_array();
+
+        foreach ($rows as &$row) {
+            $row = [
+                'key' => (int) $row['id'] . ':' . $row['retention_end_date'],
+                'title' => (string) $row['title'],
+                'reference' => (string) ($row['sequence_number'] ?: $row['title']),
+                'label' => Retention_countdown::label(1, $row['retention_end_date'], $today),
+                'url' => site_url('documents/hardcopy') . '?' . http_build_query([
+                    'q' => (string) ($row['sequence_number'] ?: $row['title'])
+                ])
+            ];
+        }
+        unset($row);
+        return $rows;
+    }
+
     public function owner_options($domain, $viewer)
     {
         $scope = $this->scope($domain, $viewer);
@@ -170,11 +226,53 @@ class Document_model extends CI_Model
             return $this->db->select($domain === 'softcopy'
                 ? 'd.id,d.document_number,d.title' : 'd.id,d.title,d.sequence_number')
                 ->order_by('d.title')->get()->result_array();
-        return $this->db->select($domain === 'softcopy'
-            ? 'id,document_number,title,series_number,category_id,version' :
+        if ($domain === 'softcopy') {
+            return $this->db->select(
+                'd.id,d.document_number,d.title,d.series_number,d.category_id,d.version,
+                 cr.revision_number,cr.new_revision_level'
+            )->join('softcopy_revisions cr', 'cr.id=d.current_revision_id', 'left')
+                ->order_by('title')->get()->result_array();
+        }
+        return $this->db->select(
             'id,title,area_id,specific_id,asset_id,location_id,sequence_number,
-               retention_enabled,retention_start_date,retention_end_date,holder_id')
-            ->order_by('title')->get()->result_array();
+             retention_enabled,retention_start_date,retention_end_date,holder_id'
+        )->order_by('title')->get()->result_array();
+    }
+
+    public function softcopy_numbering_catalog($viewer)
+    {
+        $scope = $this->scope('softcopy', $viewer, 'd');
+        $rows = $this->db->select('d.category_id,d.document_number,d.series_number')
+            ->from('softcopy_documents d')->where($scope, NULL, FALSE)->order_by('d.category_id')->order_by('d.document_number')
+            ->order_by('series_number')->get()->result_array();
+        $catalog = [];
+        foreach ($rows as $row) {
+            $categoryId = (int) $row['category_id'];
+            $number = (string) $row['document_number'];
+            if (!isset($catalog[$categoryId][$number])) {
+                $catalog[$categoryId][$number] = [];
+            }
+            if ($row['series_number'] !== NULL && $row['series_number'] !== '') {
+                $series = (string) $row['series_number'];
+                if (!in_array($series, $catalog[$categoryId][$number], TRUE)) {
+                    $catalog[$categoryId][$number][] = $series;
+                }
+            }
+        }
+        return $catalog;
+    }
+
+    public function softcopy_number_previews($categories)
+    {
+        require_once APPPATH . 'services/softcopy/document_number_generator.php';
+        $numbers = [];
+        foreach ($categories as $category) {
+            $numbers[(int) $category['id']] = Document_number_generator::preview(
+                $this->db,
+                (int) $category['id']
+            );
+        }
+        return $numbers;
     }
 
     // Admin assignment choices are constrained to the currently open folder.

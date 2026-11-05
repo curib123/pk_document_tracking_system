@@ -35,12 +35,16 @@ class Audit_context
         $id = (int) ($post['id'] ?? 0);
         $table = NULL;
         if ($route === 'change-password') $table = 'users';
-        if (($parts[0] ?? '') === 'documents') $table = ($parts[1] ?? '') === 'hardcopy' ? 'hardcopy_documents' : 'softcopy_documents';
+        if (($parts[0] ?? '') === 'documents') $table = ($parts[1] ?? '') === 'hardcopy'
+            ? 'hardcopy_documents'
+            : (($parts[1] ?? '') === 'external' ? 'external_documents' : 'softcopy_documents');
         if (in_array($parts[0] ?? '', ['my-requests','my-tasks'], TRUE))
             $table = in_array($parts[2] ?? '', ['accept','dispatch'], TRUE) ? 'transfers' : 'requests';
-        if (($parts[0] ?? '') === 'places') $table = ['area'=>'areas','specific'=>'specifics','asset'=>'assets','location'=>'locations','softcopy-categories'=>'categories'][$parts[1] ?? ''] ?? NULL;
+        if (($parts[0] ?? '') === 'places') $table = ['area'=>'areas','specific'=>'specifics','asset'=>'assets','location'=>'locations','softcopy-categories'=>'categories','external-categories'=>'external_categories'][$parts[1] ?? ''] ?? NULL;
         if (($parts[0] ?? '') === 'admin') $table = ['users'=>'users','roles'=>'roles','workflows'=>'workflow_versions'][$parts[1] ?? ''] ?? NULL;
         if ($table && $id) $this->add($table, $id);
+        if (($parts[0] ?? '') === 'documents' && ($parts[1] ?? '') === 'external' && !empty($post['external_document_id']))
+            $this->add('external_documents', (int) $post['external_document_id']);
         foreach (['hardcopy_id'=>'hardcopy_documents','softcopy_id'=>'softcopy_documents','document_id'=>'softcopy_documents','request_id'=>'requests','workflow_id'=>'workflows','version_id'=>'workflow_versions','step_id'=>'workflow_steps'] as $key=>$target)
             if (!empty($post[$key])) $this->add($target, (int) $post[$key]);
         $this->before = $this->snapshot();

@@ -3,18 +3,19 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 // Shared fieldset for both workflow requests and authorized direct softcopy.
 // Business logic, authorization and approval routing remain server-side.
 $softcopyDirect = !empty($softcopyDirect);
+$numbering_options = $numbering_options ?? [];
 ?>
 <div class="col-md-6">
     <label class="form-label" for="reqType">Softcopy Action</label>
     <select class="form-select" name="type" id="reqType" required autocomplete="off">
         <option value="softcopy_create">Create Softcopy</option>
         <option value="softcopy_revise">Revise Softcopy</option>
-        <option value="softcopy_cancel">Cancel Softcopy</option>
     </select>
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSubject">Subject / Reason</label>
-    <input class="form-control" name="subject" id="reqSubject" maxlength="255" required autocomplete="off">
+    <textarea class="form-control" name="subject" id="reqSubject" rows="1" maxlength="255" required
+        autocomplete="off"></textarea>
 </div>
 <div class="col-md-6">
     <label class="form-label" for="reqSoftcopy">Existing Softcopy Document</label>
@@ -32,37 +33,58 @@ $softcopyDirect = !empty($softcopyDirect);
     <input class="form-control" name="title" id="reqTitle" maxlength="255" autocomplete="off">
 </div>
 <div class="col-md-6">
-    <label class="form-label" for="reqNumber">Document Number</label>
-    <input class="form-control" name="document_number" id="reqNumber" maxlength="100" autocomplete="off">
-</div>
-<div class="col-md-6">
-    <label class="form-label" for="reqSeries">Series Number <span class="optional-label">(optional)</span></label>
-    <input class="form-control" name="series_number" id="reqSeries" maxlength="100" autocomplete="off">
-</div>
-<div class="col-md-6">
     <label class="form-label" for="reqCategory">Category</label>
     <select class="form-select" name="category_id" id="reqCategory" data-searchable autocomplete="off">
         <option value="">Choose a category</option>
         <?php foreach ($category_options as $category): ?>
-            <option value="<?= (int) $category['id'] ?>"><?= html_escape($category['name']) ?></option>
+            <option value="<?= (int) $category['id'] ?>"
+                data-code-pattern="<?= html_escape($category['code_pattern'] ?? 'DOC-001') ?>"
+                    data-number-options="<?= html_escape(json_encode($numbering_options[(int) $category['id']] ?? [])) ?>"
+                    data-next-number="<?= html_escape($number_previews[(int) $category['id']] ?? '') ?>">
+                <?= html_escape($category['name']) ?></option>
         <?php endforeach; ?>
     </select>
 </div>
-<div class="col-md-6">
-    <label class="form-label" for="newRevisionLevel">New Revision Level</label>
-    <input class="form-control" id="newRevisionLevel" name="new_revision_level" maxlength="30" autocomplete="off">
+<div class="col-md-6" data-series-number-checker-wrap hidden>
+    <label class="form-check mt-4">
+        <input class="form-check-input" type="checkbox" name="series_number_checker" value="1"
+            data-series-number-checker autocomplete="off">
+        Need Series Number?
+    </label>
+</div>
+<div class="col-md-6" data-document-number-auto hidden>
+    <label class="form-label" for="generatedDocumentNumber">Generated Document Number</label>
+    <input class="form-control" name="generated_document_number" id="generatedDocumentNumber" readonly
+        autocomplete="off">
+</div>
+<div class="col-md-6" data-document-number-manual hidden>
+    <label class="form-label" for="reqNumber">Document Number</label>
+    <select class="form-select" name="document_number" id="reqNumber" data-searchable disabled autocomplete="off">
+        <option value="">Choose an existing document number</option>
+    </select>
+</div>
+<div class="col-md-6" data-series-number-field hidden>
+    <label class="form-label" for="reqSeries">Series Number</label>
+    <input class="form-control" name="series_number_manual" id="reqSeries" maxlength="100" disabled autocomplete="off">
+    <small class="form-text" data-series-number-guide hidden></small>
+</div>
+<div class="col-md-6" data-auto-revision-level-wrap hidden>
+    <label class="form-label" for="nextRevisionLevel">Next Revision Level (automatic)</label>
+    <input class="form-control" id="nextRevisionLevel" data-auto-revision-level readonly autocomplete="off">
 </div>
 <div class="col-md-6">
     <label class="form-label" for="revisionPages">Number of Pages</label>
     <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1" autocomplete="off">
 </div>
 
-<div class="col-md-6">
-    <label class="form-label" for="revisionEffective">Effective Date
-        <span class="optional-label">(optional)</span></label>
-    <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
-    <small class="form-text">If blank, effective date defaults to approval day.</small>
-</div>
+<?php if ($softcopyDirect): ?>
+    <div class="col-md-6">
+        <label class="form-label" for="revisionEffective">Effective Date
+            <span class="optional-label">(optional)</span></label>
+        <input class="form-control" type="date" id="revisionEffective" name="effective_date" autocomplete="off">
+        <small class="form-text">If blank, effective date defaults to approval day.</small>
+    </div>
+<?php endif; ?>
 
 <div class="col-12">
     <label class="form-label" for="revisionFile">Document File<span class="optional-label">(required for Create and
