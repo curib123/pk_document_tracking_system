@@ -19,6 +19,11 @@ Each document begins with a cover and contents. Select a contents entry in
 the PDF to open that topic. Section labels and page numbers help you find
 the same topic in the editable files.
 
+The User Guide pairs current screen examples and lettered callouts with numbered
+instructions, expected results and reminders. Screenshots use demonstration
+accounts and records; names, counts and available actions depend on your account.
+The PDF and editable PowerPoint include the same illustrations.
+
 ## Choose the right path
 
 | What you need | Where to start | When the record changes |

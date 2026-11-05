@@ -1,12 +1,15 @@
-"""Build the current plain-language PDF, Visio and PowerPoint documentation.
+"""Build the current illustrated PDF, Visio and PowerPoint documentation.
 
 Content lives in the four adjacent JSON files. --verify checks existing exports;
 --check-source checks the route, request and content inventory without exporting.
 Requires the existing pymupdf and python-pptx packages. No application data is read.
 Visio exports include VSDX and VDX copies for older desktop versions.
+Guide screenshots and control positions come from capture_screenshots.py's
+isolated demonstration site. Both guide exports must retain every screenshot.
 """
 from pathlib import Path
 import argparse
+import io
 import json
 import math
 import posixpath
@@ -23,6 +26,7 @@ from visio_legacy import legacy_visio, VDX_NS
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(__file__).resolve().parent
+SCREENSHOTS = SOURCE / 'screenshots'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
 MARKER = 'CURRENT USER PROCEDURES | 05 NOVEMBER 2026'
@@ -159,6 +163,10 @@ def load_content():
             for key, _, _ in SPECS}
 
 
+def guide_screens():
+    return json.loads((SCREENSHOTS / 'manifest.json').read_text(encoding='utf-8'))
+
+
 def entries(key, data):
     return data['sections' if key == 'guide' else 'pages']
 
@@ -177,6 +185,21 @@ def check_source(content):
     sections = {section['id'] for section in content['guide']['sections']}
     assert REQUIRED_GUIDE <= sections, f'Missing user procedures: {REQUIRED_GUIDE-sections}'
     assert all(section in sections for section, _ in GROUPS)
+    screens = guide_screens()
+    assert set(screens) == sections, f'Screenshot coverage drift: {set(screens) ^ sections}'
+    for identifier, screen in screens.items():
+        path = SCREENSHOTS / screen['file']
+        assert path.parent == SCREENSHOTS and path.suffix == '.png', identifier
+        image = pdf.Pixmap(path)
+        assert (image.width, image.height) == (screen['width'], screen['height']), identifier
+        assert screen['caption'], identifier
+        assert 1 <= len(screen['controls']) <= 3, f'Missing or excess guide callouts: {identifier}'
+        labels = {''.join(control['label'].lower().split()) for control in screen['controls']}
+        assert len(labels) == len(screen['controls']), f'Duplicate guide callouts: {identifier}'
+        for control in screen['controls']:
+            assert control['label'] and control['width'] > 0 and control['height'] > 0, identifier
+            assert 0 <= control['x'] < control['x']+control['width'] <= image.width+1, identifier
+            assert 0 <= control['y'] < control['y']+control['height'] <= image.height+1, identifier
     dfd_text = json.dumps(content['dfd'])
     assert all(role in dfd_text for role in ROLES), 'DFD must name every supplied role'
     for key, _, _ in SPECS:
@@ -215,14 +238,14 @@ def panel(page, rect, fill=PALE, border=RULE):
     page.draw_rect(rect, color=border, fill=fill, width=.65)
 
 
-def arrow(page, points, label=None, label_rect=None):
-    page.draw_polyline(points, color=ACCENT, width=1.4)
+def arrow(page, points, label=None, label_rect=None, color=ACCENT):
+    page.draw_polyline(points, color=color, width=1.4)
     end, previous = pdf.Point(points[-1]), pdf.Point(points[-2])
     angle = math.atan2(end.y-previous.y, end.x-previous.x)
     wings = [pdf.Point(end.x-8*math.cos(angle+offset), end.y-8*math.sin(angle+offset)) for offset in (-.45, .45)]
-    page.draw_polyline([wings[0], end, wings[1]], color=ACCENT, width=1.4)
+    page.draw_polyline([wings[0], end, wings[1]], color=color, width=1.4)
     if label:
-        text(page, label_rect, label, 12, color=ACCENT, align=1, minimum=11)
+        text(page, label_rect, label, 12, color=color, align=1, minimum=11)
 
 
 def header(doc, kind, title, number, total, subtitle='', section=''):
@@ -283,43 +306,84 @@ def flowchart_page(doc, item, number, total):
     page = header(doc, 'Flowchart', item['title'], number, total,
                   'Start at the top. Follow Yes or No at the question to see what happens next.', chapter('flowchart', item['id']))
     for rect, label, fill in [
-        ((268, 168, 750, 234), item['start'], PALE),
+        ((268, 168, 750, 234), item['start'], INK),
         ((268, 251, 750, 317), item['action'], PALE),
         ((268, 506, 750, 578), item['yes'], PALE),
         ((855, 355, 1148, 478), item['no'], GOLD),
-        ((268, 609, 750, 677), item['result'], PALE),
+        ((268, 609, 750, 677), item['result'], INK),
     ]:
-        panel(page, rect, fill, ACCENT if label == item['result'] else RULE)
         r = pdf.Rect(rect)
-        text(page, r+(14, 10, -14, -7), label, 16, align=1, minimum=13)
+        if fill == INK:
+            # Straight segments retain editable geometry in both Visio formats.
+            radius = r.height/2
+            points = []
+            for center, first in [(pdf.Point(r.x1-radius, r.y0+radius), -90),
+                                  (pdf.Point(r.x0+radius, r.y0+radius), 90)]:
+                for angle in range(first, first+181, 15):
+                    a = math.radians(angle)
+                    points.append((center.x+radius*math.cos(a), center.y+radius*math.sin(a)))
+            page.draw_polyline(points+[points[0]], color=INK, fill=INK, width=.7)
+        else:
+            panel(page, rect, fill, RULE)
+        text(page, r+(25, 10, -25, -7), label, 16, color=WHITE if fill == INK else INK, align=1, minimum=13)
     diamond = [(509, 345), (710, 410), (509, 475), (308, 410), (509, 345)]
-    page.draw_polyline(diamond, color=ACCENT, fill=GOLD, width=1)
+    page.draw_polyline(diamond, color=(.70, .42, .08), fill=GOLD, width=1)
     text(page, (396, 381, 622, 442), item['question'], 16, True, align=1, minimum=13)
-    arrow(page, [(509, 234), (509, 251)])
-    arrow(page, [(509, 317), (509, 345)])
-    arrow(page, [(509, 475), (509, 506)], 'Yes', (524, 478, 569, 501))
-    arrow(page, [(710, 410), (855, 410)], 'No', (753, 381, 805, 404))
-    arrow(page, [(509, 578), (509, 609)])
+    arrow(page, [(509, 234), (509, 251)], color=GREY)
+    arrow(page, [(509, 317), (509, 345)], color=GREY)
+    arrow(page, [(509, 475), (509, 506)], 'Yes', (524, 478, 569, 501), color=GREY)
+    arrow(page, [(710, 410), (855, 410)], 'No', (753, 381, 805, 404), color=GREY)
+    arrow(page, [(509, 578), (509, 609)], color=GREY)
     notes(page, item['notes'], (42, 701, 1148, 774), 'Keep in mind')
 
 
 def guide_page(doc, item, number, total):
     page = header(doc, 'User Guide', item['title'], number, total, 'For: ' + item['audience'], chapter('guide', item['id']))
-    y = 178
-    height = min(103, 526/len(item['steps']))
-    for index, value in enumerate(item['steps'], 1):
-        panel(page, (42, y, 97, y+49), PALE)
-        text(page, (49, y+10, 90, y+43), f'{index:02}', 19, True, ACCENT, align=1)
-        text(page, (117, y+4, 808, y+height-13), value, 18, minimum=15)
-        if index < len(item['steps']):
-            page.draw_line((117, y+height-10), (808, y+height-10), color=(.86, .90, .91), width=.5)
+    screen = guide_screens()[item['id']]
+    # An unfilled frame keeps the separate screenshot and callouts editable in PowerPoint.
+    page.draw_rect((42, 176, 818, 594), color=RULE, width=.7)
+    text(page, (57, 183, 803, 205), screen['caption'], 11, True, GREY, minimum=10)
+    scale = min(746/screen['width'], 373/screen['height'])
+    width, height = screen['width']*scale, screen['height']*scale
+    image_rect = pdf.Rect(430-width/2, 397-height/2, 430+width/2, 397+height/2)
+    page.insert_image(image_rect, filename=str(SCREENSHOTS/screen['file']))
+    for index, control in enumerate(screen['controls']):
+        letter = chr(65+index)
+        x, y = image_rect.x0+control['x']*scale, image_rect.y0+control['y']*scale
+        region = pdf.Rect(x, y, x+control['width']*scale, y+control['height']*scale)
+        page.draw_rect(region, color=ACCENT, width=.8)
+        badge_x = max(image_rect.x0, x-23)
+        badge_y = max(image_rect.y0, min(y, image_rect.y1-20))
+        panel(page, (badge_x, badge_y, badge_x+20, badge_y+20), ACCENT, ACCENT)
+        text(page, (badge_x, badge_y+2, badge_x+20, badge_y+20), letter, 9, True, WHITE, align=1, minimum=9)
+        legend_x = 42+index*262
+        text(page, (legend_x, 600, legend_x+251, 626), letter+'  '+control['label'], 11, True, ACCENT, minimum=10)
+
+    text(page, (847, 178, 1148, 205), 'WHAT TO DO', 12, True, ACCENT)
+    weights = []
+    for value in item['steps']:
+        lines, current = 1, ''
+        for word in plain(value).split():
+            candidate = (current+' '+word).strip()
+            if pdf.get_text_length(candidate, fontsize=15) > 256:
+                lines, current = lines+1, word
+            else:
+                current = candidate
+        weights.append(max(2, lines))
+    spare = (550-sum(weights)*18)/len(weights)
+    y = 218
+    for index, (value, weight) in enumerate(zip(item['steps'], weights), 1):
+        height = weight*18+spare
+        text(page, (847, y+2, 878, y+24), f'{index:02}', 11, True, ACCENT, minimum=11)
+        text(page, (892, y, 1148, y+height-12), value, 15, minimum=13.5)
         y += height
-    panel(page, (847, 176, 1148, 371), PALE)
-    text(page, (864, 194, 1130, 224), 'Expected result', 16, True, ACCENT)
-    text(page, (864, 239, 1130, 352), item['result'], 16, minimum=14)
-    if item.get('notes'):
-        notes(page, item['notes'], (847, 392, 1148, 759))
-    text(page, (42, 731, 810, 769), 'Use your own account. Available actions depend on your permissions and document access.', 12, color=GREY)
+
+    panel(page, (42, 632, 818, 774), PALE)
+    page.draw_line((290, 644), (290, 761), color=RULE, width=.7)
+    text(page, (57, 643, 275, 665), 'EXPECTED RESULT', 11, True, ACCENT, minimum=11)
+    text(page, (57, 670, 275, 766), item['result'], 13, minimum=12)
+    text(page, (307, 643, 803, 665), 'REMEMBER', 11, True, ACCENT, minimum=11)
+    text(page, (307, 670, 803, 766), '\n'.join(item.get('notes', [])), 12.5, minimum=11)
 
 
 def dfd_page(doc, item, number, total):
@@ -527,6 +591,10 @@ def powerpoint(doc):
     prs.core_properties.subject = 'Current plain-language user procedures, 5 November 2026'
     for page in doc:
         slide = prs.slides.add_slide(prs.slide_layouts[6])
+        for block in page.get_text('dict')['blocks']:
+            if block['type'] == 1:
+                r = pdf.Rect(block['bbox'])
+                slide.shapes.add_picture(io.BytesIO(block['image']), Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
         for drawing in page.get_drawings():
             parts = drawing['items']
             if len(parts) == 1 and parts[0][0] == 're':
@@ -675,6 +743,14 @@ def verify(content, pending=False):
                 else:
                     for value in source_strings(item):
                         assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
+                    if key == 'guide':
+                        screen = guide_screens()[item['id']]
+                        assert normalized(screen['caption']) in page_text, f'Missing screen caption: {item["id"]}'
+                        for control in screen['controls']:
+                            assert normalized(control['label']) in page_text, f'Missing guide callout: {item["id"]}: {control["label"]}'
+                        images = page.get_image_info(hashes=True)
+                        assert len(images) == 1, f'Missing guide screenshot: {item["id"]}'
+                        assert images[0]['digest'] == pdf.Pixmap(SCREENSHOTS/screen['file']).digest, f'Stale guide screenshot: {item["id"]}'
                 for word in ['workflow_steps', 'payload', 'my-requests/', 'softcopy_create', 'external_create']:
                     assert word not in page_text, f'Technical content in {path}: {word}'
                 for block in page.get_text('dict')['blocks']:
@@ -687,6 +763,12 @@ def verify(content, pending=False):
             if key == 'guide':
                 prs = Presentation(editable)
                 assert len(prs.slides) == len(doc)
+                for slide, page, item in zip(prs.slides, doc, items):
+                    pictures = [shape for shape in slide.shapes if shape.shape_type == 13]
+                    assert len(pictures) == len(page.get_image_info()), f'PowerPoint screenshot mismatch: {item["id"]}'
+                    if pictures:
+                        screen = guide_screens()[item['id']]
+                        assert pdf.Pixmap(pictures[0].image.blob).digest == pdf.Pixmap(SCREENSHOTS/screen['file']).digest, f'Stale PowerPoint screenshot: {item["id"]}'
                 native_text = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in prs.slides]
             else:
                 with zipfile.ZipFile(editable) as archive:
@@ -704,7 +786,8 @@ def verify(content, pending=False):
                 legacy_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+VDX_NS+'}Text')) for page in legacy_pages]
                 assert [normalized(t) for t in legacy_text] == all_text, f'Legacy Visio/PDF text mismatch: {base}'
             assert [normalized(t) for t in native_text] == all_text, f'Editable/PDF text mismatch: {base}'
-        print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid.')
+        illustrations = f'; {len(guide_screens())} screenshots and their callouts match' if key == 'guide' else ''
+        print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid{illustrations}.')
     if not pending:
         expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
         expected.update(base+'.vdx' for key, base, _ in SPECS if key != 'guide')
