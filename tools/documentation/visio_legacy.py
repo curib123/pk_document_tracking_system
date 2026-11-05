@@ -4,6 +4,7 @@ DatadiagramML uses named cell elements grouped by ShapeSheet section; changing
 the VSDX namespace alone does not produce a legacy drawing. See Microsoft's
 Visio 2003 XML reference for FaceName, Char, Para, Geom and PageProps.
 """
+import base64
 import posixpath
 import xml.etree.ElementTree as ET
 
@@ -22,6 +23,7 @@ CELL_GROUPS = {
     'StyleProp': 'EnableLineProps EnableFillProps EnableTextProps HideForApply',
     'PageProps': 'PageWidth PageHeight ShdwOffsetX ShdwOffsetY PageScale DrawingScale DrawingSizeType DrawingScaleType InhibitSnap UIVisibility ShdwType ShdwObliqueAngle ShdwScaleFactor',
     'TextBlock': 'LeftMargin RightMargin TopMargin BottomMargin VerticalAlign DefaultTabStop TextBkgnd TextDirection TextBkgndTrans',
+    'Foreign': 'ImgOffsetX ImgOffsetY ImgWidth ImgHeight',
     'PrintProps': 'PageLeftMargin PageRightMargin PageTopMargin PageBottomMargin ScaleX ScaleY PagesX PagesY CenterX CenterY OnPage PrintGrid PrintPageOrientation PaperKind PaperSource',
 }
 GROUP_FOR_CELL = {name: group for group, names in CELL_GROUPS.items() for name in names.split()}
@@ -75,7 +77,7 @@ def legacy_visio(parts, title):
             attributes.setdefault('Unit', 'IN')
         ET.SubElement(parent, name, attributes).text = value
 
-    def sheet(source):
+    def sheet(source, media_targets=None):
         # IsCustomName flags were introduced after the 2003 core schema.
         node = ET.Element(_name(source), {key: value for key, value in source.attrib.items()
                           if key not in {'IsCustomName', 'IsCustomNameU'}})
@@ -107,9 +109,16 @@ def legacy_visio(parts, title):
         text = source.find(tag('Text'))
         if text is not None:
             node.append(_copy(text))
+        foreign = source.find(tag('ForeignData'))
+        if foreign is not None:
+            assert foreign.get('ForeignType') == 'Bitmap', 'Unsupported legacy picture type'
+            relationship_id = foreign.find(tag('Rel')).attrib['{'+REL_NS+'}id']
+            assert media_targets and relationship_id in media_targets, 'Missing legacy picture relationship'
+            picture = ET.SubElement(node, 'ForeignData', dict(foreign.attrib))
+            picture.text = base64.b64encode(parts[media_targets[relationship_id]]).decode('ascii')
         shapes = source.find(tag('Shapes'))
         if shapes is not None:
-            ET.SubElement(node, 'Shapes').extend(sheet(child) for child in shapes)
+            ET.SubElement(node, 'Shapes').extend(sheet(child, media_targets) for child in shapes)
         return node
 
     styles = ET.SubElement(root, 'StyleSheets')
@@ -128,8 +137,16 @@ def legacy_visio(parts, title):
         if page_sheet is not None:
             node.append(sheet(page_sheet))
         relationship_id = page.find(tag('Rel')).attrib['{'+REL_NS+'}id']
-        contents = ET.fromstring(parts[targets[relationship_id]])
+        page_path = targets[relationship_id]
+        contents = ET.fromstring(parts[page_path])
+        relationships_path = posixpath.join(posixpath.dirname(page_path), '_rels', posixpath.basename(page_path)+'.rels')
+        media_targets = {}
+        if relationships_path in parts:
+            for relationship in ET.fromstring(parts[relationships_path]):
+                assert relationship.get('TargetMode') != 'External', 'Diagram pictures must be embedded'
+                media_targets[relationship.attrib['Id']] = posixpath.normpath(posixpath.join(
+                    posixpath.dirname(page_path), relationship.attrib['Target']))
         source_shapes = contents.find(tag('Shapes'))
         if source_shapes is not None:
-            ET.SubElement(node, 'Shapes').extend(sheet(shape) for shape in source_shapes)
+            ET.SubElement(node, 'Shapes').extend(sheet(shape, media_targets) for shape in source_shapes)
     return ET.tostring(root, encoding='utf-8', xml_declaration=True)

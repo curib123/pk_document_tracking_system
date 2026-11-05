@@ -9,6 +9,8 @@ isolated demonstration site. Both guide exports must retain every screenshot.
 """
 from pathlib import Path
 import argparse
+import base64
+import hashlib
 import io
 import json
 import math
@@ -27,6 +29,7 @@ from visio_legacy import legacy_visio, VDX_NS
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(__file__).resolve().parent
 SCREENSHOTS = SOURCE / 'screenshots'
+ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
 MARKER = 'CURRENT USER PROCEDURES | 05 NOVEMBER 2026'
@@ -386,52 +389,69 @@ def guide_page(doc, item, number, total):
     text(page, (307, 670, 803, 766), '\n'.join(item.get('notes', [])), 12.5, minimum=11)
 
 
+def diagram_icon(page, rect, kind):
+    # Reuse the original illustrations from the 680275d documentation package.
+    suffix = '.jpeg' if kind == 'database' else '.png'
+    page.insert_image(pdf.Rect(rect), filename=str(ICONS/('icon-'+kind+suffix)))
+
+
 def dfd_page(doc, item, number, total):
     page = header(doc, 'Data Flow Diagram', item['title'], number, total, item['summary'], chapter('dfd', item['id']))
     if item.get('kind') == 'context':
-        # External actors exchange named information with the single system.
-        # Internal records belong on the following detail pages, not Level 0.
-        panel(page, (435, 177, 755, 686), PALE)
-        text(page, (455, 307, 735, 350), '0. PK DTS', 27, True, ACCENT, align=1)
-        text(page, (455, 367, 735, 501), 'Find and track documents\nManage requests and approvals\nRecord handoffs and history', 18, align=1)
-        positions = [(42, 177, 308, 310), (42, 365, 308, 498), (42, 553, 308, 686),
-                     (882, 235, 1148, 368), (882, 501, 1148, 634)]
+        # Level 0 has one system and five external roles; records stay on detail pages.
+        panel(page, (435, 180, 755, 681), PALE)
+        panel(page, (435, 180, 755, 226), ACCENT, ACCENT)
+        text(page, (451, 190, 739, 224), '0. PK DTS', 23, True, WHITE, align=1)
+        diagram_icon(page, (507, 258, 683, 410), 'account')
+        text(page, (457, 444, 733, 620), 'Find and track documents\nManage requests and approvals\nRecord handoffs and history', 18, align=1)
+        positions = [(42, 180, 298, 329), (42, 356, 298, 505), (42, 532, 298, 681),
+                     (892, 268, 1148, 417), (892, 532, 1148, 681)]
         for actor, rect in zip(item['actors'], positions):
-            panel(page, rect, GOLD, RULE)
             r = pdf.Rect(rect)
-            text(page, r+(12, 13, -12, -72), actor['role'], 17, True, align=1)
-            text(page, (r.x0+12, r.y0+64, r.x1-12, r.y1-9), actor['responsibility'], 13, align=1)
+            panel(page, r+(5, 5, 5, 5), PALE, PALE)
+            panel(page, r, WHITE)
+            kind = 'review' if actor['role'] in {'Plant Manager', 'Internal Auditor'} else 'account' if actor['role'] == 'Administrator' else 'person'
+            diagram_icon(page, (r.x0+100, r.y0+8, r.x0+156, r.y0+62), kind)
+            panel(page, (r.x0, r.y0+69, r.x1, r.y0+105), ACCENT, ACCENT)
+            text(page, (r.x0+9, r.y0+74, r.x1-9, r.y0+105), actor['role'], 14, True, WHITE, align=1, minimum=12)
+            text(page, (r.x0+10, r.y0+112, r.x1-10, r.y1-3), actor['responsibility'], 11, align=1, minimum=10)
             cy = (r.y0+r.y1)/2
             if r.x0 < 400:
                 left, right = r.x1, 435
-                endy = cy
-                arrow(page, [(left, cy-16), (right, endy-16)])
-                arrow(page, [(right, endy+17), (left, cy+17)])
+                arrow(page, [(left, cy-16), (right, cy-16)], color=GREY)
+                arrow(page, [(right, cy+17), (left, cy+17)], color=GREY)
                 text(page, (left+4, cy-60, right-4, cy-19), actor['sends'], 11, align=1, minimum=10)
                 text(page, (left+4, cy+23, right-4, cy+66), actor['receives'], 11, align=1, minimum=10)
             else:
                 left, right = 755, r.x0
-                endy = cy
-                arrow(page, [(right, cy-16), (left, endy-16)])
-                arrow(page, [(left, endy+17), (right, cy+17)])
+                arrow(page, [(right, cy-16), (left, cy-16)], color=GREY)
+                arrow(page, [(left, cy+17), (right, cy+17)], color=GREY)
                 text(page, (left+4, cy-60, right-4, cy-19), actor['sends'], 11, align=1, minimum=10)
                 text(page, (left+4, cy+23, right-4, cy+66), actor['receives'], 11, align=1, minimum=10)
-        text(page, (42, 723, 1148, 773), item['note'], 14)
+        panel(page, (42, 716, 1148, 774), PALE)
+        text(page, (57, 728, 1133, 768), item['note'], 13, minimum=12)
         return
     rows = item['flows']
     for index, row in enumerate(rows):
-        y = 181+index*108
+        y = 176+index*108
         for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
             if kind == 'store':
-                # Open-ended record symbol; readable business record names.
-                page.draw_polyline([(x1, y), (x0, y), (x0, y+78), (x1, y+78)], color=ACCENT, width=1)
+                # Keep the open-ended data-store symbol distinct from actor cards.
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+96), (x1, y+96)], color=GREY, width=1)
+                icon = 'database'
             else:
-                panel(page, (x0, y, x1, y+78), PALE if kind == 'process' else GOLD)
-            text(page, (x0+12, y+12, x1-12, y+69), row[field], 15, bold=kind == 'process', align=1, minimum=12)
+                panel(page, (x0+4, y+4, x1+4, y+100), PALE, PALE)
+                panel(page, (x0, y, x1, y+96), WHITE)
+                icon = 'account' if kind == 'process' else 'review' if any(word in row[field].lower() for word in ['approv', 'review', 'audit']) else 'person'
+            diagram_icon(page, ((x0+x1)/2-32, y+4, (x0+x1)/2+32, y+50), icon)
+            if kind != 'store':
+                panel(page, (x0, y+55, x1, y+96), ACCENT, ACCENT)
+            text(page, (x0+10, y+59, x1-10, y+94), row[field], 13.5, bold=kind == 'process', color=INK if kind == 'store' else WHITE, align=1, minimum=12)
         for x0, x1, field in [(286, 467, 'input'), (735, 918, 'output')]:
-            arrow(page, [(x0, y+50), (x1, y+50)])
-            text(page, (x0+5, y-3, x1-5, y+43), row[field], 12, align=1, minimum=11)
-    text(page, (42, 735, 1148, 776), item['note'], 13, minimum=12)
+            arrow(page, [(x0+4, y+54), (x1, y+54)], color=GREY)
+            text(page, (x0+8, y+3, x1-8, y+47), row[field], 12, align=1, minimum=11)
+    panel(page, (42, 727, 1148, 776), PALE)
+    text(page, (57, 737, 1133, 773), item['note'], 13, minimum=12)
 
 
 def cover_page(doc, key, item, number, total):
@@ -482,8 +502,63 @@ def cell(parent, name, value):
     return ET.SubElement(parent, '{'+NS+'}Cell', N=name, V=str(value))
 
 
-def native_page(page):
-    """Native vector geometry and editable text, matching every PDF page."""
+def verify_diagram_images(doc, parts, legacy):
+    """Check every placed picture's pixels, size and position in both Visio exports."""
+    legacy_pages = legacy.findall('{'+VDX_NS+'}Pages/{'+VDX_NS+'}Page')
+    assert len(legacy_pages) == len(doc), 'Legacy diagram page count mismatch'
+    for index, (page, compatible) in enumerate(zip(doc, legacy_pages), 1):
+        expected = diagram_images(page)
+        original = ET.fromstring(parts[f'visio/pages/page{index}.xml'])
+        original_shapes = [shape for shape in original.iter('{'+NS+'}Shape')
+                           if shape.find('{'+NS+'}ForeignData') is not None]
+        compatible_shapes = [shape for shape in compatible.iter('{'+VDX_NS+'}Shape')
+                             if shape.find('{'+VDX_NS+'}ForeignData') is not None]
+        assert len(original_shapes) == len(expected), f'Missing VSDX diagram pictures: page {index}'
+        assert len(compatible_shapes) == len(expected), f'Missing VDX diagram pictures: page {index}'
+        if not expected:
+            continue
+        relationships = ET.fromstring(parts[f'visio/pages/_rels/page{index}.xml.rels'])
+        targets = {relationship.get('Id'): posixpath.normpath(posixpath.join(
+            'visio/pages', relationship.get('Target'))) for relationship in relationships}
+        for image, native, old in zip(expected, original_shapes, compatible_shapes):
+            foreign = native.find('{'+NS+'}ForeignData')
+            relationship_id = foreign.find('{'+NS+'}Rel').get('{'+REL+'}id')
+            payloads = [parts[targets[relationship_id]], base64.b64decode(old.find('{'+VDX_NS+'}ForeignData').text, validate=True)]
+            expected_pixels = pdf.Pixmap(image['data'])
+            for payload in payloads:
+                pixels = pdf.Pixmap(payload)
+                assert (pixels.width, pixels.height, pixels.n, pixels.digest) == (
+                    expected_pixels.width, expected_pixels.height, expected_pixels.n, expected_pixels.digest), f'Diagram picture pixels changed: page {index}'
+            cells = {entry.get('N'): float(entry.get('V')) for entry in native.findall('{'+NS+'}Cell')}
+            old_cells = {entry.tag.rsplit('}', 1)[-1]: float(entry.text) for entry in old.find('{'+VDX_NS+'}XForm')}
+            for values in [cells, old_cells]:
+                width, height = values['Width']*72, values['Height']*72
+                left, top = values['PinX']*72-width/2, page.rect.height-values['PinY']*72-height/2
+                actual = (left, top, left+width, top+height)
+                assert max(abs(a-b) for a, b in zip(actual, image['rect'])) < .01, f'Diagram picture moved or resized: page {index}'
+            assert foreign.get('CompressionType') == image['compression'], f'Picture compression changed: page {index}'
+            assert old.find('{'+VDX_NS+'}ForeignData').get('CompressionType') == image['compression'], f'Legacy picture compression changed: page {index}'
+
+
+def diagram_images(page):
+    """Return every placed picture, retaining JPEG bytes or PNG transparency."""
+    images = []
+    for info in page.get_image_info(xrefs=True):
+        assert info['xref'] > 0, 'Inline diagram pictures need explicit export support'
+        image = page.parent.extract_image(info['xref'])
+        data, extension = image['image'], image['ext']
+        if image['smask']:
+            pixels = pdf.Pixmap(page.parent, info['xref'])
+            alpha = pdf.Pixmap(page.parent, image['smask'])
+            data, extension = pdf.Pixmap(pixels, alpha).tobytes('png'), 'png'
+        assert extension in {'png', 'jpg', 'jpeg'}, 'Unsupported diagram picture: '+extension
+        images.append({'rect': pdf.Rect(info['bbox']), 'data': data, 'extension': extension,
+                       'compression': 'PNG' if extension == 'png' else 'JPEG'})
+    return images
+
+
+def native_page(page, image_relationships=None):
+    """Native geometry, editable text and embedded pictures matching the PDF."""
     tag = lambda name: '{'+NS+'}'+name
     root = ET.Element(tag('PageContents'))
     shapes = ET.SubElement(root, tag('Shapes'))
@@ -491,9 +566,12 @@ def native_page(page):
         r = pdf.Rect(rect)
         width, height = max(r.width, .01), max(r.height, .01)
         node = ET.SubElement(shapes, tag('Shape'), ID=str(len(shapes)+1), Type='Shape', LineStyle='0', FillStyle='0', TextStyle='0')
-        for name, value in [('PinX', (r.x0+width/2)/72), ('PinY', (H-r.y0-height/2)/72), ('Width', width/72), ('Height', height/72), ('LocPinX', width/144), ('LocPinY', height/144), ('FillPattern', 0), ('LinePattern', 0)]:
+        for name, value in [('PinX', (r.x0+width/2)/72), ('PinY', (page.rect.height-r.y0-height/2)/72), ('Width', width/72), ('Height', height/72), ('LocPinX', width/144), ('LocPinY', height/144), ('FillPattern', 0), ('LinePattern', 0)]:
             cell(node, name, value)
         return node
+    if image_relationships is None:
+        assert not page.get_image_info(), 'Image relationships are required for editable diagram pictures'
+        image_relationships = []
     for drawing in page.get_drawings():
         r = drawing['rect']
         node = shape(r)
@@ -523,6 +601,20 @@ def native_page(page):
             row = ET.SubElement(geometry, tag('Row'), T='MoveTo' if index == 0 else 'LineTo', IX=str(index+1))
             cell(row, 'X', (point.x-r.x0)/72)
             cell(row, 'Y', (r.y1-point.y)/72)
+    for image, relationship_id in image_relationships:
+        r = image['rect']
+        node = shape(r)
+        node.set('Type', 'Foreign')
+        for name, value in [('ImgOffsetX', 0), ('ImgOffsetY', 0),
+                            ('ImgWidth', r.width/72), ('ImgHeight', r.height/72)]:
+            cell(node, name, value)
+        geometry = ET.SubElement(node, tag('Section'), N='Geometry', IX='0')
+        for index, point in enumerate([r.bl, r.br, r.tr, r.tl, r.bl], 1):
+            row = ET.SubElement(geometry, tag('Row'), T='MoveTo' if index == 1 else 'LineTo', IX=str(index))
+            cell(row, 'X', (point.x-r.x0)/72)
+            cell(row, 'Y', (r.y1-point.y)/72)
+        foreign = ET.SubElement(node, tag('ForeignData'), ForeignType='Bitmap', CompressionType=image['compression'])
+        ET.SubElement(foreign, tag('Rel'), {'{'+REL+'}id': relationship_id})
     for block in page.get_text('dict')['blocks']:
         for line in block.get('lines', []):
             for span in line['spans']:
@@ -559,17 +651,33 @@ def visio(doc, items, title):
     content = ET.Element('{'+CT+'}Types')
     ET.SubElement(content, '{'+CT+'}Default', Extension='rels', ContentType='application/vnd.openxmlformats-package.relationships+xml')
     ET.SubElement(content, '{'+CT+'}Default', Extension='xml', ContentType='application/xml')
+    for extension, mime in [('png', 'image/png'), ('jpeg', 'image/jpeg'), ('jpg', 'image/jpeg')]:
+        ET.SubElement(content, '{'+CT+'}Default', Extension=extension, ContentType=mime)
     parts = {'visio/document.xml': xml(document)}
+    media = {}
     overrides = [('visio/document.xml', 'application/vnd.ms-visio.drawing.main+xml'), ('visio/pages/pages.xml', 'application/vnd.ms-visio.pages+xml')]
     for index, (page, item) in enumerate(zip(doc, items), 1):
         node = ET.SubElement(pages, tag('Page'), ID=str(index-1), NameU=f'Page-{index}', Name=plain(item['title']), IsCustomName='1')
         sheet = ET.SubElement(node, tag('PageSheet'), LineStyle='0', FillStyle='0', TextStyle='0')
-        for name, value in [('PageWidth', W/72), ('PageHeight', H/72), ('PageScale', 1), ('DrawingScale', 1), ('PrintPageOrientation', 2)]:
+        for name, value in [('PageWidth', page.rect.width/72), ('PageHeight', page.rect.height/72), ('PageScale', 1), ('DrawingScale', 1), ('PrintPageOrientation', 2)]:
             cell(sheet, name, value)
         ET.SubElement(node, tag('Rel'), {'{'+REL+'}id': f'rId{index}'})
         ET.SubElement(relationships, '{'+PKG+'}Relationship', Id=f'rId{index}', Type='http://schemas.microsoft.com/visio/2010/relationships/page', Target=f'page{index}.xml')
         name = f'visio/pages/page{index}.xml'
-        parts[name] = native_page(page)
+        page_relationships = ET.Element('{'+PKG+'}Relationships')
+        images = []
+        for image in diagram_images(page):
+            digest = hashlib.sha256(image['data']).hexdigest()
+            if digest not in media:
+                media[digest] = 'visio/media/image'+str(len(media)+1)+'.'+image['extension']
+                parts[media[digest]] = image['data']
+            relationship_id = 'rIdImage'+str(len(images)+1)
+            ET.SubElement(page_relationships, '{'+PKG+'}Relationship', Id=relationship_id,
+                          Type=REL+'/image', Target='../media/'+posixpath.basename(media[digest]))
+            images.append((image, relationship_id))
+        parts[name] = native_page(page, images)
+        if images:
+            parts[f'visio/pages/_rels/page{index}.xml.rels'] = xml(page_relationships)
         overrides.append((name, 'application/vnd.ms-visio.page+xml'))
     parts['visio/pages/pages.xml'] = xml(pages)
     parts['visio/pages/_rels/pages.xml.rels'] = xml(relationships)
@@ -743,6 +851,9 @@ def verify(content, pending=False):
                 else:
                     for value in source_strings(item):
                         assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
+                    if key == 'dfd':
+                        expected_icons = 6 if item.get('kind') == 'context' else 3*len(item['flows'])
+                        assert len(page.get_image_info()) == expected_icons, f'Missing DFD illustrations: {item["id"]}'
                     if key == 'guide':
                         screen = guide_screens()[item['id']]
                         assert normalized(screen['caption']) in page_text, f'Missing screen caption: {item["id"]}'
@@ -772,6 +883,7 @@ def verify(content, pending=False):
                 native_text = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in prs.slides]
             else:
                 with zipfile.ZipFile(editable) as archive:
+                    visio_parts = {name: archive.read(name) for name in archive.namelist()}
                     pages = ET.fromstring(archive.read('visio/pages/pages.xml'))
                     assert len(pages) == len(doc)
                     page_parts = [ET.fromstring(archive.read(f'visio/pages/page{i+1}.xml')) for i in range(len(pages))]
@@ -785,6 +897,7 @@ def verify(content, pending=False):
                     assert [s.get('ID') for s in original.iter('{'+NS+'}Shape')] == [s.get('ID') for s in compatible.iter('{'+VDX_NS+'}Shape')], f'Legacy Visio shapes changed: {base}'
                 legacy_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+VDX_NS+'}Text')) for page in legacy_pages]
                 assert [normalized(t) for t in legacy_text] == all_text, f'Legacy Visio/PDF text mismatch: {base}'
+                verify_diagram_images(doc, visio_parts, legacy)
             assert [normalized(t) for t in native_text] == all_text, f'Editable/PDF text mismatch: {base}'
         illustrations = f'; {len(guide_screens())} screenshots and their callouts match' if key == 'guide' else ''
         print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid{illustrations}.')
