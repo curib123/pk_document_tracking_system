@@ -373,7 +373,7 @@ def native_page(page):
                 cell(node, 'VerticalAlign', 0)
                 section = ET.SubElement(node, tag('Section'), N='Character')
                 row = ET.SubElement(section, tag('Row'), IX='0')
-                cell(row, 'Font', 0)
+                cell(row, 'Font', 'Arial')
                 cell(row, 'Size', span['size']/72)
                 cell(row, 'Style', 1 if 'bold' in span['font'].lower() else 0)
                 cell(row, 'Color', f'#{span["color"]:06X}')
@@ -390,7 +390,8 @@ def visio(doc, items, title):
     document = ET.Element(tag('VisioDocument'))
     ET.SubElement(document, tag('DocumentSettings'), TopPage='0', DefaultTextStyle='0', DefaultLineStyle='0', DefaultFillStyle='0')
     faces = ET.SubElement(document, tag('FaceNames'))
-    ET.SubElement(faces, tag('FaceName'), ID='0', NameU='Arial')
+    # VSDX names fonts; numeric font IDs belong to the older VDX format.
+    ET.SubElement(faces, tag('FaceName'), NameU='Arial')
     style = ET.SubElement(ET.SubElement(document, tag('StyleSheets')), tag('StyleSheet'), ID='0', NameU='No Style')
     for name, value in [('EnableLineProps', 1), ('EnableFillProps', 1), ('EnableTextProps', 1), ('ShdwPattern', 0)]:
         cell(style, name, value)
@@ -505,9 +506,21 @@ def check_package(path):
     with zipfile.ZipFile(path) as archive:
         assert archive.testzip() is None, path
         assert len(archive.namelist()) == len(set(archive.namelist())), f'Duplicate parts: {path}'
+        fonts = None
+        if '.vsdx' in path.suffixes:
+            document = ET.fromstring(archive.read('visio/document.xml'))
+            faces = document.findall('{'+NS+'}FaceNames/{'+NS+'}FaceName')
+            fonts = {face.get('NameU') for face in faces}
+            assert fonts and None not in fonts, f'Missing named Visio fonts: {path}'
+            for face in faces:
+                assert set(face.attrib) <= {'NameU', 'UnicodeRanges', 'CharSets', 'Panos', 'Panose', 'Flags'}, f'Invalid VSDX font attributes in {path}: {face.attrib}'
         for name in archive.namelist():
             if name.endswith(('.xml', '.rels')):
                 root = ET.fromstring(archive.read(name))
+                if fonts is not None:
+                    for value in root.iter('{'+NS+'}Cell'):
+                        if value.get('N') == 'Font':
+                            assert value.get('V') in fonts, f'Unknown VSDX font in {path}: {value.attrib}'
                 if name.endswith('.rels'):
                     base = '' if name == '_rels/.rels' else posixpath.dirname(posixpath.dirname(name))
                     for relationship in root:
