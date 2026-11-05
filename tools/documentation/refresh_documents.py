@@ -3,6 +3,7 @@
 Content lives in the four adjacent JSON files. --verify checks existing exports;
 --check-source checks the route, request and content inventory without exporting.
 Requires the existing pymupdf and python-pptx packages. No application data is read.
+Visio exports include VSDX and VDX copies for older desktop versions.
 """
 from pathlib import Path
 import argparse
@@ -18,6 +19,7 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
 from pptx.util import Inches, Pt
+from visio_legacy import legacy_visio, VDX_NS
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(__file__).resolve().parent
@@ -490,9 +492,13 @@ def refresh(content):
             if key == 'guide':
                 powerpoint(doc).save(editable_path)
             else:
+                parts = visio(doc, items, kind)
                 with zipfile.ZipFile(editable_path, 'w', zipfile.ZIP_DEFLATED) as archive:
-                    for name, data in visio(doc, items, kind).items():
+                    for name, data in parts.items():
                         archive.writestr(name, data)
+                legacy_path = DOCS / (base+'.vdx.pending')
+                pending.append((legacy_path, DOCS/(base+'.vdx')))
+                legacy_path.write_bytes(legacy_visio(parts, kind))
             doc.close()
         verify(content, pending=True)
         for temporary, destination in pending:
@@ -574,14 +580,25 @@ def verify(content, pending=False):
                 with zipfile.ZipFile(editable) as archive:
                     pages = ET.fromstring(archive.read('visio/pages/pages.xml'))
                     assert len(pages) == len(doc)
-                    native_text = ['\n'.join(''.join(t.itertext()) for t in ET.fromstring(archive.read(f'visio/pages/page{i+1}.xml')).iter('{'+NS+'}Text')) for i in range(len(pages))]
+                    page_parts = [ET.fromstring(archive.read(f'visio/pages/page{i+1}.xml')) for i in range(len(pages))]
+                    native_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+NS+'}Text')) for page in page_parts]
+                legacy = ET.parse(DOCS / (base+'.vdx'+suffix)).getroot()
+                assert legacy.tag == '{'+VDX_NS+'}VisioDocument', f'Invalid legacy Visio namespace: {base}'
+                legacy_pages = legacy.findall('{'+VDX_NS+'}Pages/{'+VDX_NS+'}Page')
+                assert len(legacy_pages) == len(doc), f'Legacy Visio page count mismatch: {base}'
+                assert [page.get('Name') for page in legacy_pages] == [page.get('Name') for page in pages], f'Legacy Visio page names changed: {base}'
+                for original, compatible in zip(page_parts, legacy_pages):
+                    assert [s.get('ID') for s in original.iter('{'+NS+'}Shape')] == [s.get('ID') for s in compatible.iter('{'+VDX_NS+'}Shape')], f'Legacy Visio shapes changed: {base}'
+                legacy_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+VDX_NS+'}Text')) for page in legacy_pages]
+                assert [normalized(t) for t in legacy_text] == all_text, f'Legacy Visio/PDF text mismatch: {base}'
             assert [normalized(t) for t in native_text] == all_text, f'Editable/PDF text mismatch: {base}'
         print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid.')
     if not pending:
         expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
-        actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx'} and not path.name.startswith('~$')}
+        expected.update(base+'.vdx' for key, base, _ in SPECS if key != 'guide')
+        actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
-        print('Verified all 8 PDF/editable exports. Reference notes and Office lock files are not treated as exports.')
+        print('Verified all 8 PDF/editable exports and 3 legacy Visio copies. Reference notes and Office lock files are not treated as exports.')
 
 
 if __name__ == '__main__':

@@ -273,6 +273,12 @@ attachments.
 - [User Guide](PK_DTS_User_Guide.pdf): step-by-step directions. The matching
   PowerPoint file is editable.
 
+If Visio reports an unsupported file, open the matching **VDX** copy:
+[DFD](PK_DTS_DFD.vdx), [Process Flow](PK_DTS_Process_Flow.vdx), or
+[Flowchart](PK_DTS_Flowchart.vdx). These contain the same editable pages in
+the older Visio XML drawing format. The VSDX copies remain available for
+newer Visio versions.
+
 For a missing action, failed upload, expired access or unavailable task,
 check filters and status, read the full message, and contact the controller
 or Administrator with the request reference, action and time. Keep your
