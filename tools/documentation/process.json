@@ -1,18 +1,18 @@
 {
-  "title": "PK Document Tracking System — Process Flow",
+  "title": "PK Document Tracking System - Process Flow",
   "pages": [
     {
       "id": "sign-in-and-find-documents",
       "title": "Sign in and find documents",
-      "summary": "Sign in, find the document you need and use the actions available to your account.",
+      "summary": "Sign in, find a document and use the actions your account allows.",
       "steps": [
         {
           "actor": "Staff member",
-          "text": "Sign in with the account supplied by the account administrator."
+          "text": "Sign in with the account your Administrator provided."
         },
         {
           "actor": "Staff member",
-          "text": "If asked, choose a new password before opening the workspace."
+          "text": "If asked, replace your temporary password before continuing."
         },
         {
           "actor": "Staff member",
@@ -20,46 +20,46 @@
         },
         {
           "actor": "Staff member",
-          "text": "Use folders, Search and filters; choose View Details to read the full record."
+          "text": "Use folders, Search and filters. Open View Details to read the full record."
         },
         {
           "actor": "PK DTS",
-          "text": "Show records and actions allowed by the staff member's account permissions."
+          "text": "Show the records and actions allowed for this account."
         },
         {
           "actor": "Staff member",
-          "text": "Choose Download or Print when available for the current file; External Documents offer Download."
+          "text": "Use Download or Print when available for the current file. External Documents offer Download."
         }
       ],
       "notes": [
-        "Document visibility, editing, approval and file use depend on separate permissions.",
+        "Viewing, editing, approving and using files each require permission.",
         "Hardcopy records track physical documents. Softcopy and External Documents can include controlled files."
       ]
     },
     {
       "id": "hardcopy-direct-registration",
       "title": "Register or edit a hardcopy",
-      "summary": "An authorized holder records a physical document. Saving applies the change immediately.",
+      "summary": "An authorized holder registers or edits a physical document. Saving updates the record immediately.",
       "steps": [
         {
           "actor": "Document holder",
-          "text": "Open Hardcopy Documents and choose Add New Hardcopy Document, or Edit an active record."
+          "text": "Open Hardcopy Documents. Choose Add New Hardcopy Document, or Edit an active record."
         },
         {
           "actor": "Document holder",
-          "text": "Enter Document Title and choose Area, Specific, optional Asset and Location."
+          "text": "Enter Document Title. Choose Area, Specific, optional Asset and Location."
         },
         {
           "actor": "Document holder",
-          "text": "Check Current Holder and retention dates; add optional Reason / Notes for a new document."
+          "text": "Check Current Holder and retention dates. For a new record, add Reason / Notes if needed."
         },
         {
           "actor": "Document holder",
-          "text": "Choose Save Document and confirm the change."
+          "text": "Choose Save Document and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Validate storage, holder and dates; save the active record and its history."
+          "text": "Check the storage, holder and dates; save the active record and its history."
         }
       ],
       "notes": [
@@ -70,32 +70,32 @@
     },
     {
       "id": "hardcopy-retention-monitoring",
-      "title": "Monitor hardcopy storage and retention",
-      "summary": "Check the storage place and retention dates, then arrange any required follow-up.",
+      "title": "Check storage and retention dates",
+      "summary": "Check where a hardcopy is kept and when its retention period ends, then arrange any follow-up.",
       "steps": [
         {
           "actor": "Document holder",
-          "text": "Open Hardcopy Documents; use folders or Search to find the document."
+          "text": "Open Hardcopy Documents. Use folders or Search to find the document."
         },
         {
           "actor": "Document holder",
-          "text": "Open View Details and check its Area, Specific, Asset, Location and Current Holder."
+          "text": "Open View Details. Check Area, Specific, Asset, Location and Current Holder."
         },
         {
           "actor": "Document holder",
-          "text": "When editing, enable Track retention period and enter Retention Start and Retention End."
+          "text": "When editing, enable Track retention period. Enter Retention Start and Retention End."
         },
         {
           "actor": "PK DTS",
-          "text": "Show the days remaining, Due today or an overdue message using office dates."
+          "text": "Show days remaining, Due today or an overdue message using office dates."
         },
         {
           "actor": "Document holder",
-          "text": "Use Due Today, Overdue, Due in the Next 7 Days or Due in 8-30 Days to review records."
+          "text": "Filter by Due Today, Overdue, Due in the Next 7 Days or Due in 8-30 Days."
         },
         {
           "actor": "Document holder",
-          "text": "Review the physical document, then arrange a permitted update, transfer or disposal."
+          "text": "Review the physical document. Arrange a permitted update, transfer or disposal if needed."
         }
       ],
       "notes": [
@@ -107,23 +107,23 @@
     {
       "id": "softcopy-direct-maintenance",
       "title": "Create or revise a softcopy directly",
-      "summary": "An authorized controller creates a softcopy or publishes a revision without an approval request.",
+      "summary": "An authorized controller creates a softcopy or makes a revision available immediately.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open Softcopy Documents; choose Add New Softcopy Document, or Edit an active record."
+          "text": "Open Softcopy Documents. Choose Add New Softcopy Document, or Edit an active record."
         },
         {
           "actor": "Document controller",
-          "text": "Choose Create Softcopy or Revise Softcopy; enter Subject / Reason and Proposed Document Title."
+          "text": "Choose Create Softcopy or Revise Softcopy. Enter Subject / Reason and Proposed Document Title."
         },
         {
           "actor": "Document controller",
-          "text": "For creation, choose Category; for revision, choose Existing Softcopy Document."
+          "text": "To create, choose Category. To revise, choose Existing Softcopy Document."
         },
         {
           "actor": "Document controller",
-          "text": "Check Number of Pages; attach Document File and enter optional Effective Date and Remarks."
+          "text": "Check Number of Pages and attach Document File. Add Effective Date and Remarks if needed."
         },
         {
           "actor": "Document controller",
@@ -142,20 +142,20 @@
     },
     {
       "id": "external-direct-maintenance",
-      "title": "Create or revise an external document directly",
-      "summary": "An authorized controller records a document from outside the company and publishes its current file.",
+      "title": "Create or revise external documents directly",
+      "summary": "An authorized controller records a document from outside the organization and makes its file available.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open External Documents; choose Add New External Document, or Edit an active record."
+          "text": "Open External Documents. Choose Add New External Document, or Edit an active record."
         },
         {
           "actor": "Document controller",
-          "text": "Enter Document Title, choose Category and add an optional Description."
+          "text": "Enter Document Title, choose Category and add Description if needed."
         },
         {
           "actor": "Document controller",
-          "text": "Choose Attach File. A revision also requires a replacement file."
+          "text": "Choose Attach File. For a revision, attach the replacement file."
         },
         {
           "actor": "Document controller",
@@ -175,31 +175,31 @@
     {
       "id": "document-create-revise-request",
       "title": "Request a new document or revision",
-      "summary": "Submit a proposed softcopy or external document change. Final approval applies it to the live register.",
+      "summary": "Propose a new Softcopy or External Document, or a revision. Final approval updates the document register.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests; choose Softcopy Request or External Document Request, then New Request."
+          "text": "Open My Requests. Choose Softcopy Request or External Document Request, then New Request."
         },
         {
           "actor": "Requester",
-          "text": "Choose Create or Revise for the document type; enter Subject / Reason."
+          "text": "Choose Create or Revise for the document type. Enter Subject / Reason."
         },
         {
           "actor": "Requester",
-          "text": "For a revision, select the existing document; enter the proposed title and other displayed details."
+          "text": "For a revision, choose the existing document. Enter the proposed title and other requested details."
         },
         {
           "actor": "Requester",
-          "text": "For creation, choose its category; attach the required file and add optional Remarks."
+          "text": "For a new record, choose Category. Attach the required file and add Remarks if needed."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft and confirm. Review the draft, then choose Submit and confirm."
+          "text": "Choose Save Draft and confirm. Review it, then choose Submit and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Follow the published approval route; create the document or publish the revision after final approval."
+          "text": "Follow the approval route. Create the document or publish the revision after final approval."
         }
       ],
       "notes": [
@@ -211,27 +211,27 @@
     {
       "id": "request-draft-submit",
       "title": "Save, submit or remove your draft",
-      "summary": "Save a proposal, review it and submit it for approval. An unsubmitted draft can be cancelled.",
+      "summary": "Save and review your proposal, then submit it for approval. You can cancel a draft you have never submitted.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open the relevant My Requests tab, choose New Request and complete the form."
+          "text": "Open the matching My Requests tab. Choose New Request and complete the form."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft and confirm; use Edit to correct your Draft or Returned request."
+          "text": "Choose Save Draft and confirm. Use Edit to correct your Draft or Returned request."
         },
         {
           "actor": "Requester",
-          "text": "Open View Details, check the proposal and use Review File when available."
+          "text": "Open View Details. Check the proposal and use Review File when available."
         },
         {
           "actor": "Requester",
-          "text": "Choose Submit and confirm when the request is ready for approval."
+          "text": "When ready, choose Submit and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Validate permissions, active choices and files; mark Submitted and notify the first approver."
+          "text": "Check permission, active choices and files. Mark Submitted and notify the first approver."
         }
       ],
       "notes": [
@@ -243,27 +243,27 @@
     {
       "id": "approval-return-reject",
       "title": "Review, approve, return or reject",
-      "summary": "Assigned approvers decide in order. Final approval applies the change or prepares a physical transfer.",
+      "summary": "Assigned approvers review in order. Final approval applies the change or prepares a physical transfer.",
       "steps": [
         {
           "actor": "Assigned approver",
-          "text": "Open My Tasks; select the request and review View Details and the Approval Process Timeline."
+          "text": "Open My Tasks and select the request. Read View Details and the Approval Process Timeline."
         },
         {
           "actor": "Assigned approver",
-          "text": "Use Review File when available; check the proposal, attachments and earlier decisions."
+          "text": "Use Review File when available. Check the proposal, attachments and earlier decisions."
         },
         {
           "actor": "Assigned approver",
-          "text": "Choose one decision: Approve, Return or Reject. Add optional remarks and confirm."
+          "text": "Choose Approve, Return or Reject. Add remarks if useful, then confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Record the decision and history; update the status and route work to the responsible person."
+          "text": "Save the decision and history. Update the status and send work to the responsible person."
         },
         {
           "actor": "Requester or assigned approver",
-          "text": "Open the updated request; check its status, remarks and next required action."
+          "text": "Open the updated request. Check its status, remarks and next action."
         }
       ],
       "notes": [
@@ -275,15 +275,15 @@
     {
       "id": "hardcopy-transfer-request",
       "title": "Request and approve a hardcopy transfer",
-      "summary": "Approve the receiving user and destination before the physical document is released.",
+      "summary": "Approve the receiving user and destination before releasing the physical document.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Hardcopy Transfer Request and choose New Request."
+          "text": "Open My Requests > Hardcopy Transfer Request. Choose New Request."
         },
         {
           "actor": "Requester",
-          "text": "Choose Hardcopy Document; check Original Places and Holder from its current record."
+          "text": "Choose Hardcopy Document. Check Original Places and Holder against the current record."
         },
         {
           "actor": "Requester",
@@ -291,15 +291,15 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Receiving User; enter Request Subject and optional Remarks, then Save Draft and Submit."
+          "text": "Choose Receiving User. Enter Request Subject and optional Remarks, then Save Draft and Submit."
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review and approve the proposed transfer through the request's approval route."
+          "text": "Review and approve the transfer in the order set by its approval route."
         },
         {
           "actor": "PK DTS",
-          "text": "Create a For Transfer handoff; retain the current holder and storage place until acceptance."
+          "text": "Create a For Transfer handoff. Keep the holder and storage unchanged until acceptance."
         }
       ],
       "notes": [
@@ -310,32 +310,32 @@
     },
     {
       "id": "hardcopy-dispatch-accept",
-      "title": "Dispatch and accept the physical document",
-      "summary": "The original requester dispatches the approved hardcopy. The named recipient accepts it after physical receipt.",
+      "title": "Dispatch and receive a hardcopy",
+      "summary": "The original requester dispatches the approved document. The named receiver accepts it after physical receipt.",
       "steps": [
         {
           "actor": "Original requester",
-          "text": "Open My Tasks > Hardcopy Transfer Request and find Physical Transfer Handoffs."
+          "text": "Open My Tasks > Hardcopy Transfer Request. Find Physical Transfer Handoffs."
         },
         {
           "actor": "Original requester",
-          "text": "For a For Transfer handoff, release the document, choose Dispatch and confirm."
+          "text": "For a For Transfer handoff, release the document. Choose Dispatch and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Mark the handoff In Transit and record who dispatched it and when."
+          "text": "Mark In Transit. Record who dispatched the document and when."
         },
         {
           "actor": "Receiving user",
-          "text": "After physical receipt, open Physical Transfer Handoffs, choose Accept and confirm."
+          "text": "After receiving the document, open Physical Transfer Handoffs. Choose Accept and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Check the active document and Location, unchanged holder and approved storage path."
+          "text": "Check that the document and Location are active, the holder is unchanged and storage matches approval."
         },
         {
           "actor": "PK DTS",
-          "text": "Set the recipient as holder, update the storage place, mark Accepted and complete the request."
+          "text": "Make the receiver the holder, update storage, mark Accepted and complete the request."
         }
       ],
       "notes": [
@@ -347,31 +347,31 @@
     {
       "id": "request-temporary-access",
       "title": "Request temporary document access",
-      "summary": "Request access to a softcopy or hardcopy until a chosen expiry date. Holder and assignments stay unchanged.",
+      "summary": "Ask to use a softcopy or hardcopy until a chosen date. This leaves the holder and assignments unchanged.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Document Access Request and choose New Request."
+          "text": "Open My Requests > Document Access Request. Choose New Request."
         },
         {
           "actor": "Requester",
-          "text": "Choose Softcopy or Hardcopy and its document; check your name under Recipient / Assigned User."
+          "text": "Choose Softcopy or Hardcopy and its document. Check your name in Recipient / Assigned User."
         },
         {
           "actor": "Requester",
-          "text": "Enter Subject / Reason, set Access Expires At after today and add optional Remarks."
+          "text": "Enter Subject / Reason. Set Access Expires At after today and add Remarks if needed."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft, then Submit; confirm each action."
+          "text": "Choose Save Draft, then Submit. Confirm each action."
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the access request and complete its approval route."
+          "text": "Review the request and complete each approval step."
         },
         {
           "actor": "PK DTS",
-          "text": "Grant access through the approved expiry date; retain the current holder and assignments."
+          "text": "Grant access through the approved expiry date. Keep the holder and assignments unchanged."
         }
       ],
       "notes": [
@@ -383,31 +383,31 @@
     {
       "id": "request-document-assignment",
       "title": "Request a document assignment",
-      "summary": "Ask to become a softcopy assignee or the recorded holder of an active hardcopy.",
+      "summary": "Ask to be added as a softcopy assignee or named as the holder of an active hardcopy.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Document Assignment Request and choose New Request."
+          "text": "Open My Requests > Document Assignment Request. Choose New Request."
         },
         {
           "actor": "Requester",
-          "text": "Choose Softcopy or Hardcopy and its document; check your name under Recipient / Assigned User."
+          "text": "Choose Softcopy or Hardcopy and its document. Check your name in Recipient / Assigned User."
         },
         {
           "actor": "Requester",
-          "text": "Enter Subject / Reason and optional Remarks; choose Save Draft, then Submit and confirm."
+          "text": "Enter Subject / Reason and optional Remarks. Choose Save Draft, then Submit and confirm."
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the proposed assignment and complete the request's approval route."
+          "text": "Review the assignment and complete each approval step."
         },
         {
           "actor": "PK DTS",
-          "text": "For a softcopy, add the requester as an assignee while keeping existing assignees."
+          "text": "For Softcopy, add the requester as an assignee and keep the existing assignees."
         },
         {
           "actor": "PK DTS",
-          "text": "For a hardcopy, set the requester as Current Holder; retain its storage place."
+          "text": "For Hardcopy, make the requester Current Holder and keep the storage unchanged."
         }
       ],
       "notes": [
@@ -419,15 +419,15 @@
     {
       "id": "direct-document-assignments",
       "title": "Assign one document directly",
-      "summary": "An authorized controller assigns a softcopy or changes the recorded holder of a hardcopy immediately.",
+      "summary": "An authorized controller adds a softcopy assignee or changes a hardcopy holder immediately.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open Document Assignments; choose Hardcopy / Places or Softcopy / Categories."
+          "text": "Open Document Assignments. Choose Hardcopy / Places or Softcopy / Categories."
         },
         {
           "actor": "Document controller",
-          "text": "Choose Assign Document; select the active document and Assigned User."
+          "text": "Choose Assign Document. Select the active document and Assigned User."
         },
         {
           "actor": "Document controller",
@@ -435,11 +435,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Validate the active document and user; check for an active hardcopy handoff."
+          "text": "Check the active document and user, and any active hardcopy transfer."
         },
         {
           "actor": "PK DTS",
-          "text": "Change the hardcopy holder or add the softcopy assignee; retain the storage place."
+          "text": "Change the hardcopy holder or add the softcopy assignee. Keep storage unchanged."
         }
       ],
       "notes": [
@@ -451,15 +451,15 @@
     {
       "id": "bulk-hardcopy-assignment",
       "title": "Assign all hardcopies at a Location",
-      "summary": "An authorized controller changes the recorded holder of every active hardcopy at one Location.",
+      "summary": "An authorized controller gives every active hardcopy at one Location the same recorded holder.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open Document Assignments and choose Hardcopy / Places."
+          "text": "Open Document Assignments. Choose Hardcopy / Places."
         },
         {
           "actor": "Document controller",
-          "text": "Choose Location and Assigned User; review the active records at that Location."
+          "text": "Choose Location and Assigned User. Review the active records at that Location."
         },
         {
           "actor": "Document controller",
@@ -467,11 +467,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Validate the user and active records, the 2,000-document limit and any active handoffs."
+          "text": "Check the user, active records, 2,000-document limit and any active transfers."
         },
         {
           "actor": "PK DTS",
-          "text": "Change the holder for the whole selection; keep each document at its recorded storage place."
+          "text": "Change the holder for every selected document. Keep each storage location unchanged."
         }
       ],
       "notes": [
@@ -482,16 +482,16 @@
     },
     {
       "id": "bulk-softcopy-assignment",
-      "title": "Assign a softcopy category branch",
-      "summary": "An authorized controller assigns a user to every active softcopy in a category and its subcategories.",
+      "title": "Assign all softcopies in a category",
+      "summary": "An authorized controller adds a user to every active softcopy in the chosen category and its subcategories.",
       "steps": [
         {
           "actor": "Document controller",
-          "text": "Open Document Assignments and choose Softcopy / Categories."
+          "text": "Open Document Assignments. Choose Softcopy / Categories."
         },
         {
           "actor": "Document controller",
-          "text": "Choose Category / Subcategory and Assigned User; review the selected category branch."
+          "text": "Choose Category / Subcategory and Assigned User. Review the category and its subcategories."
         },
         {
           "actor": "Document controller",
@@ -499,11 +499,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Validate the active user, selected records and 2,000-document bulk limit."
+          "text": "Check the active user, selected records and 2,000-document limit."
         },
         {
           "actor": "PK DTS",
-          "text": "Add the user as an assignee for the whole selection; keep existing assignees."
+          "text": "Add the user to every selected document. Keep the existing assignees."
         }
       ],
       "notes": [
@@ -515,15 +515,15 @@
     {
       "id": "document-disposal",
       "title": "Dispose of a document directly",
-      "summary": "An authorized holder or controller records the disposal method and applies disposal immediately.",
+      "summary": "An authorized holder or controller records the method and marks the document Disposed immediately.",
       "steps": [
         {
           "actor": "Document holder or controller",
-          "text": "Open the permitted document register and choose Dispose on an active record."
+          "text": "Open the document register. Choose Dispose on an active record you are allowed to manage."
         },
         {
           "actor": "Document holder or controller",
-          "text": "Choose Shred, Scratch or Other; describe the method when choosing Other."
+          "text": "Choose Shred, Scratch or Other. Describe the method if you choose Other."
         },
         {
           "actor": "Document holder or controller",
@@ -531,11 +531,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check both direct permissions, the disposal reason and document eligibility."
+          "text": "Check both required direct permissions, the reason and whether the document can be disposed of."
         },
         {
           "actor": "PK DTS",
-          "text": "Mark Disposed and record the method, responsible person and disposal history."
+          "text": "Mark Disposed. Save the method, responsible person and disposal history."
         }
       ],
       "notes": [
@@ -547,31 +547,31 @@
     {
       "id": "document-disposal-request",
       "title": "Request hardcopy or external disposal",
-      "summary": "Submit a proposed disposal for approval. The document changes only after final approval.",
+      "summary": "Ask for approval to dispose of a document. Its record changes after final approval.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Disposal Request and choose New Request."
+          "text": "Open My Requests > Disposal Request. Choose New Request."
         },
         {
           "actor": "Requester",
-          "text": "Choose Hardcopy or External and its active document; complete the displayed request details."
+          "text": "Choose Hardcopy or External and its active document. Complete the request details."
         },
         {
           "actor": "Requester",
-          "text": "Choose Shred, Scratch or Other; describe Other and add optional Remarks."
+          "text": "Choose Shred, Scratch or Other. Describe Other and add Remarks if needed."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft, review the proposal, then Submit; confirm each action."
+          "text": "Choose Save Draft and review it, then Submit. Confirm each action."
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the proposal and decide through the request's approval route."
+          "text": "Review the proposed disposal and complete each approval step."
         },
         {
           "actor": "PK DTS",
-          "text": "After final approval, mark Disposed and retain the approval and disposal history."
+          "text": "After final approval, mark Disposed. Keep the approval and disposal history."
         }
       ],
       "notes": [
@@ -582,32 +582,32 @@
     },
     {
       "id": "maintain-places-categories",
-      "title": "Maintain places and document categories",
-      "summary": "Prepare the active storage places and category folders used in document forms.",
+      "title": "Set up storage places and categories",
+      "summary": "Maintain the storage places and category folders people choose when recording documents.",
       "steps": [
         {
           "actor": "Places maintainer",
-          "text": "Open Setup Places and choose Area, Specific, Asset Number, Location, Softcopy Category or External Category."
+          "text": "Open Setup Places. Choose Area, Specific, Asset Number, Location, Softcopy Category or External Category."
         },
         {
           "actor": "Places maintainer",
-          "text": "Create Area, link Specific to Area, then add optional Asset Numbers under Specific."
+          "text": "Create Area, then a Specific within it. Add optional Asset Numbers under Specific."
         },
         {
           "actor": "Places maintainer",
-          "text": "For Location, enter Location Name, Area and Specific; add optional Asset Number and Archive Date."
+          "text": "For Location, enter Location Name, Area and Specific. Add Asset Number and Archive Date if needed."
         },
         {
           "actor": "Places maintainer",
-          "text": "For a category, enter its name and folder name; select an optional parent and softcopy code pattern."
+          "text": "For a category, enter its name and folder name. Add a parent and softcopy code pattern if needed."
         },
         {
           "actor": "Places maintainer",
-          "text": "Save and confirm; use Edit or Deactivate when permitted."
+          "text": "Save and confirm. Use Edit or Deactivate when allowed."
         },
         {
           "actor": "PK DTS",
-          "text": "Validate parents, category nesting and unique sequence or code rules; update the available choices."
+          "text": "Check parent choices, category nesting and unique codes or sequences. Update the available choices."
         }
       ],
       "notes": [
@@ -619,31 +619,31 @@
     {
       "id": "manage-users-roles",
       "title": "Manage users, roles and permissions",
-      "summary": "Create staff accounts, assign roles and control which pages and actions each user can access.",
+      "summary": "Create accounts, assign roles and choose which pages and actions each person can use.",
       "steps": [
         {
           "actor": "Account administrator",
-          "text": "Open Roles & Permissions; choose Add Role or Edit, select its allowed actions, then Save Role."
+          "text": "Open Roles & Permissions. Choose Add Role or Edit, select allowed actions, then Save Role."
         },
         {
           "actor": "Account administrator",
-          "text": "Open User Management; choose Add User or Edit and enter the staff member's account details."
+          "text": "Open User Management. Choose Add User or Edit and enter the account details."
         },
         {
           "actor": "Account administrator",
-          "text": "Choose Primary role, Assigned roles and an optional Leader; check Active account and choose Save User."
+          "text": "Choose Primary role, Assigned roles and optional Leader. Check Active account, then Save User."
         },
         {
           "actor": "Account administrator",
-          "text": "Give temporary credentials to the intended staff member; reset the temporary password when needed."
+          "text": "Give sign-in details securely to the intended person. Reset a temporary password when needed."
         },
         {
           "actor": "Staff member",
-          "text": "Sign in with the temporary password and complete the required password change."
+          "text": "Sign in with the temporary password, then replace it as prompted."
         },
         {
           "actor": "Account administrator",
-          "text": "Review Assigned Documents; deactivate a user or unused role, or Remove an eligible role."
+          "text": "Review Assigned Documents. Deactivate users or unused roles, or Remove an eligible role."
         }
       ],
       "notes": [
@@ -655,11 +655,11 @@
     {
       "id": "publish-approval-workflow",
       "title": "Publish an approval route",
-      "summary": "Set the ordered approval steps for future submissions. Existing requests keep their recorded route.",
+      "summary": "Choose who approves future requests and in what order. Previously submitted requests keep their recorded route.",
       "steps": [
         {
           "actor": "Workflow administrator",
-          "text": "Open Workflow Builder and select the request type and its version."
+          "text": "Open Workflow Builder. Select the request type and version."
         },
         {
           "actor": "Workflow administrator",
@@ -667,11 +667,11 @@
         },
         {
           "actor": "Workflow administrator",
-          "text": "Choose Add Approval Step; name the step and select a role, person, requester's leader or requester."
+          "text": "Choose Add Approval Step. Name it and select a role, person, requester's leader or requester."
         },
         {
           "actor": "Workflow administrator",
-          "text": "Choose Save Step; edit, reorder or Remove steps to match the business process."
+          "text": "Choose Save Step. Edit, reorder or Remove steps to match the process."
         },
         {
           "actor": "Workflow administrator",
@@ -679,7 +679,7 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Publish the valid route for future submissions; retain the route already recorded by existing requests."
+          "text": "Publish the checked route for future submissions. Keep the route already saved for existing requests."
         }
       ],
       "notes": [
@@ -690,32 +690,32 @@
     },
     {
       "id": "notifications-and-audit",
-      "title": "Follow notices and review the audit trail",
-      "summary": "Use notices to find work needing attention. Authorized auditors can trace recorded system actions.",
+      "title": "Follow reminders and review past actions",
+      "summary": "Use notices to find work needing attention. Authorized reviewers can trace recorded actions in the audit trail.",
       "steps": [
         {
           "actor": "Staff member",
-          "text": "Check the counts beside My Requests and My Tasks and open the relevant tab."
+          "text": "Check the counts beside My Requests and My Tasks. Open the matching tab."
         },
         {
           "actor": "PK DTS",
-          "text": "Highlight the user's Draft or Returned requests, assigned approvals and physical handoff tasks."
+          "text": "Highlight your Draft or Returned requests, assigned approvals and physical handoff tasks."
         },
         {
           "actor": "Staff member",
-          "text": "Open a task reminder and review the request before taking its permitted action."
+          "text": "Open a task reminder. Read the request before taking an allowed action."
         },
         {
           "actor": "Document holder",
-          "text": "Open a retention reminder and review the hardcopy's due or overdue date."
+          "text": "Open a retention reminder. Check the hardcopy's due or overdue date."
         },
         {
           "actor": "Auditor",
-          "text": "Open Internal Audit Trail; use Search and filters to locate the recorded actions."
+          "text": "Open Internal Audit Trail. Search or filter to find the action."
         },
         {
           "actor": "Auditor",
-          "text": "Open View Details to check who acted, when the action occurred and the recorded outcome."
+          "text": "Open View Details. Check who acted, when it happened and the result."
         }
       ],
       "notes": [
@@ -726,32 +726,32 @@
     },
     {
       "id": "backup-and-archive-cleanup",
-      "title": "Create, download and import a backup",
-      "summary": "Create protected recovery copies, download or import an archive, and clean up eligible older files.",
+      "title": "Create, download or import a backup",
+      "summary": "Keep protected recovery copies and remove eligible older backup and log archives when needed.",
       "steps": [
         {
           "actor": "Backup operator",
-          "text": "Open Backup & Restore and check that backup setup is ready."
+          "text": "Open Backup & Restore. Check that backup setup is ready."
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Backup now and confirm to create an encrypted recovery archive."
+          "text": "Choose Backup now and confirm to create a protected backup."
         },
         {
           "actor": "PK DTS",
-          "text": "Create and list the completed archive; show its type, creation time and size."
+          "text": "List the completed backup with its type, creation time and size."
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Download and store the backup in a secure location."
+          "text": "Choose Download. Store the backup in a secure place."
         },
         {
           "actor": "Backup operator",
-          "text": "To add an existing archive, choose Import backup, select Backup ZIP and confirm."
+          "text": "To add an existing backup, choose Import backup. Select Backup ZIP and confirm."
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Clean up when appropriate; confirm removal of eligible archives older than three months."
+          "text": "Choose Clean up when appropriate. Confirm removal of eligible archives older than three months."
         }
       ],
       "notes": [
@@ -762,32 +762,32 @@
     },
     {
       "id": "restore-system-data",
-      "title": "Restore system data from a backup",
-      "summary": "Replace live records and private files with a verified backup, then sign in and check the restored system.",
+      "title": "Restore records and private files",
+      "summary": "Replace current records and private files with a checked backup, then sign in and verify the result.",
       "steps": [
         {
           "actor": "Backup operator",
-          "text": "Open Backup & Restore and choose Restore system data."
+          "text": "Open Backup & Restore. Choose Restore system data."
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Backup to restore; enter Your password and type RESTORE to confirm."
+          "text": "Choose Backup to restore. Enter Your password and type RESTORE."
         },
         {
           "actor": "Backup operator",
-          "text": "Choose Restore selected backup and confirm replacement of the live records and private files."
+          "text": "Choose Restore selected backup. Confirm replacement of current records and private files."
         },
         {
           "actor": "PK DTS",
-          "text": "Validate the archive and authorization; create a recovery backup before replacing live data."
+          "text": "Check the backup and permission. Save a recovery backup before replacing current data."
         },
         {
           "actor": "PK DTS",
-          "text": "Pause normal use, restore records and private files, then sign out the restoring operator."
+          "text": "Pause normal use, restore records and private files, then sign out the operator."
         },
         {
           "actor": "Backup operator",
-          "text": "Sign in again and check the restored records, attachments and normal business actions."
+          "text": "Sign in again. Check the restored records, attachments and everyday tasks."
         }
       ],
       "notes": [
