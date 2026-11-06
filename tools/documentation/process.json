@@ -285,7 +285,7 @@
           "label": "Reject",
           "cases": [
             {"when": "Any assigned operator rejects", "next": "Status: Rejected. The approval route ends."},
-            {"when": "Proposed change", "next": "Not applied. The existing document stays unchanged."},
+            {"when": "Proposed change", "next": "Not applied. No new document is created."},
             {"when": "Requester checks the result", "next": "Read the decision and remarks. This request cannot be resubmitted."}
           ]
         }
