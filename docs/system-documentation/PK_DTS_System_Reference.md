@@ -165,10 +165,12 @@ Remarks are optional, but help explain corrections and rejections.
 | **Return** at a later step | The previous approver's task reopens. The request stays Submitted. |
 | **Reject** | Approval ends and the request becomes Rejected. |
 
-For a worked example, open **page 10 of the [Process Flow](PK_DTS_Process_Flow.pdf)**.
-It uses the supplied **Softcopy Request** default, with the exact step names and
-assigned operators: Requester's leader, Plant Manager and Document Control
-Officer. Separate Approve, Return and Reject paths show who acts next.
+For worked examples, open **pages 11-18 of the [Process Flow](PK_DTS_Process_Flow.pdf)**.
+There is a separate example for each current request: Softcopy Create and Revise,
+External Create and Revise, Hardcopy Transfer, Document Access, Document Assignment,
+and Disposal. Each uses its supplied default workflow's exact step names and
+assigned operators. Separate Approve, Return and Reject paths show who acts next
+and when the requested change takes effect.
 
 Submitted and Returned requests keep their original approval route, even when
 an Administrator publishes a new default. Opening a notification does not
