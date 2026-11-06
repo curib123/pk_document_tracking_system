@@ -340,7 +340,7 @@ def approval_example_page(doc, item, number, total):
         arrow(page, [(x+172, 422), (x+172, 449)], color=color)
         panel(page, (x, 449, x+344, 706), PALE)
         panel(page, (x, 449, x+344, 487), color, color)
-        text(page, (x+15, 456, x+329, 482), path['label'].upper(), 17, True, WHITE, align=1)
+        text(page, (x+15, 456, x+329, 482), path['label'], 17, True, WHITE, align=1)
         for case_index, case in enumerate(path['cases']):
             y = 498+case_index*68
             text(page, (x+14, y, x+330, y+22), case['when'], 12.5, True, color, minimum=12)
