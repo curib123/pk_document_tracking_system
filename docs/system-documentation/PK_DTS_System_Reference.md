@@ -308,11 +308,24 @@ password private.
 The [User Guide PowerPoint](PK_DTS_User_Guide.pptx) contains the same screen examples
 as the PDF. Diagrams are available as editable Visio files:
 
-| Diagram | Current Visio format | Older Visio XML format |
+| Diagram | Visio 2013 or newer | Older Visio XML format |
 | --- | --- | --- |
 | Data Flow Diagram | [VSDX](PK_DTS_DFD.vsdx) | [VDX](PK_DTS_DFD.vdx) |
 | Process Flow | [VSDX](PK_DTS_Process_Flow.vsdx) | [VDX](PK_DTS_Process_Flow.vdx) |
 | Flowchart | [VSDX](PK_DTS_Flowchart.vsdx) | [VDX](PK_DTS_Flowchart.vdx) |
 
-If Visio reports an unsupported file, try the matching VDX copy. Both formats
-contain the same editable pages.
+For an older Visio installation, or if VSDX will not open, use the matching
+**VDX** copy. It uses the Visio 2003 XML format. Both copies contain the same
+editable pages, text, shapes and illustrations. Open the file from **File > Open**
+inside Visio; changing its filename extension does not convert it.
+
+VSDX was introduced with Visio 2013. Visio 2010 needs additional compatibility
+software to open it, so the VDX copy avoids that requirement.
+[Microsoft's file-format guide](https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
+and [Visio 2010 compatibility notes](https://support.microsoft.com/en-us/topic/you-cannot-open-vsdx-or-vsdm-files-in-visio-2010-3cf95a92-a9f5-85db-187b-4e7f56e591bd)
+explain the difference.
+
+**Opening check, 6 November 2026:** all six diagram files opened and every page
+rendered in Microsoft Visio Viewer 16.0.20228, with no reported errors. This checks
+viewing; opening, editing and saving in every desktop Visio release has not been
+verified. Use the matching PDF if you only need to read or print the diagram.
