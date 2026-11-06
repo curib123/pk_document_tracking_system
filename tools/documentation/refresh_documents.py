@@ -32,20 +32,31 @@ SCREENSHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
-MARKER = 'CURRENT USER PROCEDURES | 05 NOVEMBER 2026'
+MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  06 NOVEMBER 2026'
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
 CT = 'http://schemas.openxmlformats.org/package/2006/content-types'
 ET.register_namespace('', NS)
 ET.register_namespace('r', REL)
-INK = (35/255, 50/255, 71/255)
+INK = (28/255, 43/255, 61/255)
 ACCENT = (146/255, 40/255, 74/255)
-PALE = (246/255, 248/255, 251/255)
+PALE = (246/255, 247/255, 249/255)
 GOLD = (1, .973, .917)
-GREY = (92/255, 112/255, 140/255)
-RULE = (213/255, 222/255, 232/255)
+GREY = (80/255, 99/255, 119/255)
+RULE = (221/255, 227/255, 233/255)
 WHITE = (1, 1, 1)
+SUCCESS = (26/255, 104/255, 91/255)
+SUCCESS_PALE = (239/255, 247/255, 244/255)
+
+# Keep the meaning of a No branch independent of its editorial wording.
+# All remaining No branches end with their own outcome on that page.
+FLOW_RETURNS = {
+    'account-entry', 'hardcopy-direct', 'electronic-direct',
+    'electronic-request', 'request-submission', 'direct-disposal',
+    'direct-assignment', 'places-categories', 'accounts', 'roles',
+    'workflows', 'audit-trail', 'backup-management', 'restore',
+}
 
 # Implementation identifiers stay here, outside the reader's documents. New
 # endpoints require an explicit review and a link to a user-guide procedure.
@@ -253,16 +264,17 @@ def arrow(page, points, label=None, label_rect=None, color=ACCENT):
 
 def header(doc, kind, title, number, total, subtitle='', section=''):
     page = doc.new_page(width=W, height=H)
-    page.draw_rect((0, 0, W, 7), fill=ACCENT, color=ACCENT)
-    text(page, (42, 25, 795, 48), 'PK DOCUMENT TRACKING SYSTEM / ' + kind.upper(), 11, True, ACCENT, minimum=11)
+    page.draw_rect((0, 0, W, 5), fill=INK, color=INK)
+    page.draw_rect((0, 0, 170, 5), fill=ACCENT, color=ACCENT)
+    text(page, (42, 28, 795, 50), 'PK DTS  /  ' + kind.upper(), 11, True, ACCENT, minimum=11)
     if section:
-        text(page, (800, 36, 1148, 62), section.upper(), 10, True, GREY, align=2, minimum=10)
-    text(page, (42, 66, 1148, 110), title, 27, True, minimum=20)
+        text(page, (800, 28, 1148, 50), section.upper(), 10, True, GREY, align=2, minimum=10)
+    text(page, (42, 67, 1148, 111), title, 29, True, minimum=20)
     if subtitle:
         text(page, (42, 118, 1148, 157), subtitle, 14, color=GREY, minimum=12)
     page.draw_line((42, 787), (1148, 787), color=RULE, width=.7)
-    text(page, (42, 802, 980, 825), MARKER, 10, color=GREY, minimum=10)
-    text(page, (903, 802, 980, 825), 'Contents', 10, True, ACCENT, align=2, minimum=10)
+    text(page, (42, 802, 880, 825), MARKER, 9, color=GREY, minimum=9)
+    text(page, (893, 802, 980, 825), 'Back to contents', 10, True, ACCENT, align=2, minimum=10)
     text(page, (1020, 802, 1148, 825), f'{number} / {total}', 10, color=GREY, align=2, minimum=10)
     return page
 
@@ -291,31 +303,16 @@ def process_page(doc, item, number, total):
     page = header(doc, 'Process Flow', item['title'], number, total,
                   item['summary'], chapter('process', item['id']))
     steps = item['steps']
-    left_count = (len(steps)+1)//2
-    positions = []
-    for index in range(len(steps)):
-        column = 0 if index < left_count else 1
-        row = index if column == 0 else index-left_count
-        # Read down the first column, then across to the second column.
-        y = 176+row*210
-        actor_x, action_x = (268, 42) if column == 0 else (506, 659)
-        positions.append((actor_x, action_x, y))
-
-    for (x, _, y), (next_x, _, next_y) in zip(positions, positions[1:]):
-        if next_x == x:
-            arrow(page, [(x+68, y+164), (next_x+68, next_y)])
-        else:
-            arrow(page, [(x+136, y+82), (455, y+82),
-                         (455, next_y+82), (next_x, next_y+82)])
-
-    for index, (step, (actor_x, action_x, y)) in enumerate(zip(steps, positions), 1):
-        panel(page, (action_x, y, action_x+209, y+164), PALE)
-        text(page, (action_x+13, y+13, action_x+196, y+37),
-             'STEP '+str(index), 12, True, ACCENT, minimum=12)
-        text(page, (action_x+13, y+45, action_x+196, y+152),
-             step['text'], 15, minimum=14)
-
-        panel(page, (actor_x, y, actor_x+136, y+164), WHITE)
+    text(page, (42, 170, 864, 191), 'FOLLOW THE STEPS FROM TOP TO BOTTOM', 10, True, GREY, minimum=10)
+    row_height = (556-16*(len(steps)-1))/len(steps)
+    for index, step in enumerate(steps, 1):
+        y = 204+(index-1)*(row_height+16)
+        center = y+row_height/2
+        if index < len(steps):
+            arrow(page, [(63, center+18), (63, center+row_height+16-21)], color=RULE)
+        panel(page, (42, center-18, 84, center+18), ACCENT, ACCENT)
+        text(page, (42, center-10, 84, center+14), f'{index:02}', 13, True, WHITE, align=1)
+        panel(page, (100, y, 870, y+row_height), PALE)
         actor = step['actor']
         if actor == 'PK DTS':
             kind = 'database' if any(word in step['text'].lower() for word in
@@ -324,14 +321,14 @@ def process_page(doc, item, number, total):
             kind = 'review'
         else:
             kind = 'person'
-        diagram_icon(page, (actor_x+22, y+13, actor_x+114, y+105), kind)
-        panel(page, (actor_x, y+116, actor_x+136, y+164), ACCENT, ACCENT)
-        text(page, (actor_x+8, y+125, actor_x+128, y+160),
-             actor, 11, True, WHITE, align=1, minimum=10.5)
+        diagram_icon(page, (114, center-23, 160, center+23), kind)
+        text(page, (174, center-24, 309, center+26), actor, 13, True, minimum=12)
+        page.draw_line((326, y+15), (326, y+row_height-15), color=RULE, width=.8)
+        text(page, (346, center-30, 852, center+35), step['text'], 16, minimum=14)
 
     panel(page, (890, 176, 1148, 760), PALE)
     panel(page, (890, 176, 1148, 211), ACCENT, ACCENT)
-    text(page, (904, 184, 1134, 208), 'NOTES / CHECKS', 12, True, WHITE, minimum=12)
+    text(page, (904, 184, 1134, 208), 'KEEP IN MIND', 12, True, WHITE, minimum=12)
     y = 227
     height = (744-y)/len(item['notes'])
     for index, value in enumerate(item['notes']):
@@ -376,13 +373,13 @@ def flowchart_page(doc, item, number, total):
 
     # A failed validation returns to the action. Other No outcomes stop here;
     # joining them to the successful result would imply an unapplied change took effect.
-    retry = any(term in item['no'].lower()
-                for term in ('retry', 'again', 'repeating', 'adjust the search'))
+    retry = item['id'] in FLOW_RETURNS
     next_review = item['id'] == 'approval'
     node((42, 196, 334, 306), item['start'], terminal=True)
     node((408, 196, 802, 306), item['action'])
     node((42, 358, 334, 506), item['no'], terminal=not (retry or next_review))
-    node((856, 358, 1148, 506), item['yes'])
+    panel(page, (856, 358, 1148, 506), SUCCESS_PALE, RULE)
+    label((856, 358, 1148, 506), item['yes'])
     node((408, 586, 802, 683), item['result'], terminal=True)
 
     diamond = [(605, 334), (785, 425), (605, 516), (425, 425), (605, 334)]
@@ -390,7 +387,7 @@ def flowchart_page(doc, item, number, total):
     label((467, 358, 743, 492), item['question'], bold=True)
     arrow(page, [(334, 251), (408, 251)], color=GREY)
     arrow(page, [(605, 306), (605, 334)], color=GREY)
-    arrow(page, [(785, 425), (856, 425)], 'Yes', (793, 393, 848, 418), color=GREY)
+    arrow(page, [(785, 425), (856, 425)], 'Yes', (793, 393, 848, 418), color=SUCCESS)
     arrow(page, [(425, 425), (334, 425)], 'No', (347, 393, 411, 418), color=GREY)
     arrow(page, [(1002, 506), (1002, 635), (802, 635)], color=GREY)
     if retry or next_review:
@@ -415,38 +412,51 @@ def guide_page(doc, item, number, total):
         x, y = image_rect.x0+control['x']*scale, image_rect.y0+control['y']*scale
         region = pdf.Rect(x, y, x+control['width']*scale, y+control['height']*scale)
         page.draw_rect(region, color=ACCENT, width=.8)
-        badge_x = max(image_rect.x0, x-23)
+        badge_x = max(44, x-23)
         badge_y = max(image_rect.y0, min(y, image_rect.y1-20))
+        if image_rect.width <= 700:
+            # Modal screenshots leave generous side margins. Use them so the
+            # letter does not cover a field value or the adjacent Cancel button.
+            left = (region.x0+region.x1)/2 < (image_rect.x0+image_rect.x1)/2
+            badge_x = image_rect.x0-26 if left else image_rect.x1+6
+            line_y = badge_y+10
+            edge = region.x0 if left else region.x1
+            page.draw_line((badge_x+20 if left else badge_x, line_y),
+                           (edge, line_y), color=ACCENT, width=.65)
         panel(page, (badge_x, badge_y, badge_x+20, badge_y+20), ACCENT, ACCENT)
         text(page, (badge_x, badge_y+2, badge_x+20, badge_y+20), letter, 9, True, WHITE, align=1, minimum=9)
         legend_x = 42+index*262
         text(page, (legend_x, 600, legend_x+251, 626), letter+'  '+control['label'], 11, True, ACCENT, minimum=10)
 
-    text(page, (847, 178, 1148, 205), 'WHAT TO DO', 12, True, ACCENT)
+    panel(page, (836, 176, 1148, 774), PALE, PALE)
+    text(page, (852, 188, 1132, 211), 'FOLLOW THESE STEPS', 12, True, ACCENT)
     weights = []
     for value in item['steps']:
         lines, current = 1, ''
         for word in plain(value).split():
             candidate = (current+' '+word).strip()
-            if pdf.get_text_length(candidate, fontsize=15) > 256:
+            if pdf.get_text_length(candidate, fontsize=15) > 241:
                 lines, current = lines+1, word
             else:
                 current = candidate
         weights.append(max(2, lines))
-    spare = (550-sum(weights)*18)/len(weights)
-    y = 218
+    spare = (530-sum(weights)*18)/len(weights)
+    y = 230
     for index, (value, weight) in enumerate(zip(item['steps'], weights), 1):
         height = weight*18+spare
-        text(page, (847, y+2, 878, y+24), f'{index:02}', 11, True, ACCENT, minimum=11)
-        text(page, (892, y, 1148, y+height-12), value, 15, minimum=13.5)
+        panel(page, (850, y, 877, y+25), ACCENT, ACCENT)
+        text(page, (850, y+5, 877, y+23), str(index), 10, True, WHITE, align=1, minimum=10)
+        text(page, (892, y, 1133, y+height-16), value, 15, minimum=13.5)
+        if index < len(weights):
+            page.draw_line((892, y+height-11), (1133, y+height-11), color=RULE, width=.6)
         y += height
 
-    panel(page, (42, 632, 818, 774), PALE)
-    page.draw_line((290, 644), (290, 761), color=RULE, width=.7)
-    text(page, (57, 643, 275, 665), 'EXPECTED RESULT', 11, True, ACCENT, minimum=11)
+    panel(page, (42, 632, 290, 774), SUCCESS_PALE, SUCCESS_PALE)
+    panel(page, (302, 632, 818, 774), PALE, PALE)
+    text(page, (57, 643, 275, 665), 'AFTER THIS', 11, True, SUCCESS, minimum=11)
     text(page, (57, 670, 275, 766), item['result'], 13, minimum=12)
-    text(page, (307, 643, 803, 665), 'REMEMBER', 11, True, ACCENT, minimum=11)
-    text(page, (307, 670, 803, 766), '\n'.join(item.get('notes', [])), 12.5, minimum=11)
+    text(page, (317, 643, 803, 665), 'KEEP IN MIND', 11, True, ACCENT, minimum=11)
+    text(page, (317, 670, 803, 766), '\n'.join(item.get('notes', [])), 12.5, minimum=11)
 
 
 def diagram_icon(page, rect, kind):
@@ -468,12 +478,11 @@ def dfd_page(doc, item, number, total):
                      (892, 268, 1148, 417), (892, 532, 1148, 681)]
         for actor, rect in zip(item['actors'], positions):
             r = pdf.Rect(rect)
-            panel(page, r+(5, 5, 5, 5), PALE, PALE)
             panel(page, r, WHITE)
             kind = 'review' if actor['role'] in {'Plant Manager', 'Internal Auditor'} else 'account' if actor['role'] == 'Administrator' else 'person'
             diagram_icon(page, (r.x0+100, r.y0+8, r.x0+156, r.y0+62), kind)
-            panel(page, (r.x0, r.y0+69, r.x1, r.y0+105), ACCENT, ACCENT)
-            text(page, (r.x0+9, r.y0+74, r.x1-9, r.y0+105), actor['role'], 14, True, WHITE, align=1, minimum=12)
+            page.draw_line((r.x0+18, r.y0+69), (r.x1-18, r.y0+69), color=RULE, width=.7)
+            text(page, (r.x0+9, r.y0+79, r.x1-9, r.y0+109), actor['role'], 14, True, ACCENT, align=1, minimum=12)
             text(page, (r.x0+10, r.y0+112, r.x1-10, r.y1-3), actor['responsibility'], 11, align=1, minimum=10)
             cy = (r.y0+r.y1)/2
             if r.x0 < 400:
@@ -492,45 +501,56 @@ def dfd_page(doc, item, number, total):
         text(page, (57, 728, 1133, 768), item['note'], 13, minimum=12)
         return
     rows = item['flows']
+    for left, right, caption in [(42, 286, 'FROM'), (286, 467, 'INFORMATION'),
+                                  (467, 735, 'ACTIVITY'), (735, 918, 'RESULT'),
+                                  (918, 1148, 'TO')]:
+        text(page, (left, 176, right, 198), caption, 10, True, GREY, align=1, minimum=10)
     for index, row in enumerate(rows):
-        y = 176+index*108
+        y = 212+index*98
         for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
             if kind == 'store':
                 # Keep the open-ended data-store symbol distinct from actor cards.
-                page.draw_polyline([(x1, y), (x0, y), (x0, y+96), (x1, y+96)], color=GREY, width=1)
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+80), (x1, y+80)], color=GREY, width=1)
                 icon = 'database'
             else:
-                panel(page, (x0+4, y+4, x1+4, y+100), PALE, PALE)
-                panel(page, (x0, y, x1, y+96), WHITE)
+                panel(page, (x0, y, x1, y+80), PALE if kind == 'process' else WHITE)
+                if kind == 'process':
+                    panel(page, (x0, y, x0+3, y+80), ACCENT, ACCENT)
                 icon = 'account' if kind == 'process' else 'review' if any(word in row[field].lower() for word in ['approv', 'review', 'audit']) else 'person'
-            diagram_icon(page, ((x0+x1)/2-32, y+4, (x0+x1)/2+32, y+50), icon)
-            if kind != 'store':
-                panel(page, (x0, y+55, x1, y+96), ACCENT, ACCENT)
-            text(page, (x0+10, y+59, x1-10, y+94), row[field], 13.5, bold=kind == 'process', color=INK if kind == 'store' else WHITE, align=1, minimum=12)
+            diagram_icon(page, (x0+12, y+21, x0+50, y+59), icon)
+            text(page, (x0+62, y+17, x1-12, y+71), row[field], 13.5, bold=kind == 'process', minimum=12)
         for x0, x1, field in [(286, 467, 'input'), (735, 918, 'output')]:
-            arrow(page, [(x0+4, y+54), (x1, y+54)], color=GREY)
-            text(page, (x0+8, y+3, x1-8, y+47), row[field], 12, align=1, minimum=11)
+            arrow(page, [(x0+4, y+60), (x1, y+60)], color=GREY)
+            text(page, (x0+8, y+7, x1-8, y+53), row[field], 12.5, align=1, minimum=11)
     panel(page, (42, 727, 1148, 776), PALE)
     text(page, (57, 737, 1133, 773), item['note'], 13, minimum=12)
 
 
 def cover_page(doc, key, item, number, total):
-    page = header(doc, item['title'], '', number, total, section='Everyday procedures')
+    page = header(doc, item['title'], '', number, total, section='Practical reference series')
     lead, subtitle, description, topics = BOOKS[key]
-    text(page, (42, 174, 775, 211), lead.upper(), 13, True, ACCENT)
-    text(page, (42, 228, 790, 372), item['title'], 56, True, minimum=43)
-    text(page, (42, 390, 785, 439), subtitle, 24, True, minimum=20)
-    text(page, (42, 460, 770, 576), description, 21, minimum=18)
-    panel(page, (42, 655, 783, 750), PALE)
-    text(page, (62, 672, 763, 730), 'Start with the contents page. Choose a topic, follow its explanation, and check the result.', 19, minimum=16)
-    panel(page, (835, 174, 1148, 750), INK, INK)
-    text(page, (859, 201, 1124, 243), 'INSIDE THIS DOCUMENT', 13, True, WHITE)
+    text(page, (42, 124, 775, 158), 'PK DOCUMENT TRACKING SYSTEM', 13, True, GREY)
+    page.draw_line((42, 175), (133, 175), color=ACCENT, width=4)
+    text(page, (42, 207, 755, 356), item['title'], 62, True, minimum=48)
+    text(page, (42, 376, 755, 427), subtitle, 24, True, minimum=20)
+    text(page, (42, 450, 737, 561), description, 20, minimum=18)
+    text(page, (42, 589, 755, 617), lead.upper(), 12, True, ACCENT)
+    panel(page, (798, 124, 1148, 620), INK, INK)
+    text(page, (824, 153, 1122, 182), 'IN THIS GUIDE', 11, True, WHITE, minimum=11)
     for index, topic in enumerate(topics):
-        y = 285+index*139
-        text(page, (859, y, 1124, y+31), f'0{index+1}', 17, True, (.37, .86, .80))
-        text(page, (859, y+40, 1124, y+116), topic, 22, True, WHITE, minimum=18)
+        y = 214+index*130
+        text(page, (824, y, 863, y+31), f'0{index+1}', 16, True, (.61, .83, .78))
+        text(page, (883, y, 1122, y+100), topic, 21, True, WHITE, minimum=18)
         if index < len(topics)-1:
-            page.draw_line((859, y+124), (1124, y+124), color=(.28, .37, .46), width=.6)
+            page.draw_line((824, y+106), (1122, y+106), color=(.28, .37, .46), width=.6)
+    for index, (title, detail) in enumerate([
+            ('Find your task', 'Choose a topic in the contents.'),
+            ('Follow the page', 'Read the steps, arrows or screen example.'),
+            ('Check the result', 'Review the outcome and reminders.')]):
+        x = 42+index*377
+        panel(page, (x, 659, x+352, 761), PALE, PALE)
+        text(page, (x+17, 673, x+335, 701), title, 17, True)
+        text(page, (x+17, 711, x+335, 752), detail, 14, color=GREY, minimum=13)
 
 
 def contents_rows(item):
@@ -545,9 +565,11 @@ def contents_page(doc, key, item, number, total):
     page = header(doc, kind, item['title'], number, total,
                   'Choose a topic to jump to its page in the PDF. Page numbers also help you find it in the editable copy.', 'Find your task')
     for entry, rect in contents_rows(item):
+        if int((rect.y0-190)/46) % 2 == 0:
+            panel(page, rect, PALE, PALE)
         page.draw_line((rect.x0, rect.y1), (rect.x1, rect.y1), color=RULE, width=.5)
-        text(page, (rect.x0+1, rect.y0+3, rect.x1-58, rect.y1-2), entry['title'], 14, minimum=12)
-        text(page, (rect.x1-47, rect.y0+3, rect.x1-2, rect.y1-2), str(entry['page']), 15, True, ACCENT, align=2)
+        text(page, (rect.x0+10, rect.y0+7, rect.x1-58, rect.y1-2), entry['title'], 14, minimum=12)
+        text(page, (rect.x1-47, rect.y0+7, rect.x1-10, rect.y1-2), str(entry['page']), 15, True, ACCENT, align=2)
 
 
 def rgb(value):
@@ -756,7 +778,7 @@ def powerpoint(doc):
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
     prs.core_properties.title = 'PK DTS - User Guide'
-    prs.core_properties.subject = 'Current plain-language user procedures, 5 November 2026'
+    prs.core_properties.subject = 'Everyday document control, 6 November 2026'
     for page in doc:
         slide = prs.slides.add_slide(prs.slide_layouts[6])
         for block in page.get_text('dict')['blocks']:
@@ -768,6 +790,7 @@ def powerpoint(doc):
             if len(parts) == 1 and parts[0][0] == 're':
                 r = parts[0][1]
                 node = slide.shapes.add_shape(MSO_SHAPE.RECTANGLE, Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
+                node.shadow.inherit = False
             else:
                 assert not drawing['fill'], 'Filled PowerPoint polygon needs explicit support'
                 for part in parts:
@@ -817,12 +840,12 @@ def refresh(content):
                 else:
                     renderers[key](doc, item, index, len(items))
             for index, item in enumerate(items):
-                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(903, 800, 985, 828), 'page': 1})
+                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(893, 800, 985, 828), 'page': 1})
                 if item.get('kind') == 'contents':
                     for entry, rect in contents_rows(item):
                         doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': rect, 'page': entry['page']-1})
             doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
-            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Current plain-language procedures, 5 November 2026', 'author': 'PK Document Tracking System'})
+            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, 6 November 2026', 'author': 'PK Document Tracking System'})
             pdf_path = DOCS / (base+'.pdf.pending')
             pending.append((pdf_path, DOCS/(base+'.pdf')))
             doc.save(pdf_path, garbage=4, deflate=True)
@@ -900,7 +923,7 @@ def verify(content, pending=False):
             all_text = []
             for page, item in zip(doc, items):
                 page_text = normalized(page.get_text())
-                assert MARKER in page_text
+                assert normalized(MARKER) in page_text
                 if item.get('kind') in {'cover', 'contents'}:
                     assert normalized(item['title']) in page_text
                     if item['kind'] == 'contents':
