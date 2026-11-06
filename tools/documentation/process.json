@@ -175,7 +175,7 @@
     {
       "id": "document-create-revise-request",
       "title": "Request a new document or revision",
-      "summary": "Propose a new Softcopy or External Document, or a revision. Final approval updates the document register.",
+      "summary": "Default review order: Requester's leader > Plant Manager > Document Control Officer. Final approval creates the document or publishes its revision.",
       "steps": [
         {
           "actor": "Requester",
@@ -183,35 +183,43 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Create or Revise for the document type. Enter Subject / Reason."
+          "text": "Choose Create or Revise. Enter Subject / Reason, the proposed title and other requested details."
         },
         {
           "actor": "Requester",
-          "text": "For a revision, choose the existing document. Enter the proposed title and other requested details."
+          "text": "For creation, choose Category. For revision, choose the existing document. Attach the required file and add optional Remarks."
         },
         {
           "actor": "Requester",
-          "text": "For a new record, choose Category. Attach the required file and add Remarks if needed."
+          "text": "Choose Save Draft and confirm. Review it, then Submit and confirm."
         },
         {
-          "actor": "Requester",
-          "text": "Choose Save Draft and confirm. Review it, then choose Submit and confirm."
+          "actor": "Assigned approvers",
+          "text": "Review in the displayed order. At each step, choose Approve, Return or Reject and confirm."
         },
         {
           "actor": "PK DTS",
-          "text": "Follow the approval route. Create the document or publish the revision after final approval."
+          "text": "Final approval creates an Active record and file at revision 00, or publishes the next revision and file. Request: Completed."
         }
       ],
       "notes": [
-        "Softcopy creation also asks for Number of Pages and supports optional series. Its number and revision are assigned when approved.",
-        "External requests use External Create Request or External Revised Request. Enter Description and upload the required Attach File.",
-        "Uploads accept PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A pending attachment is not the current approved file."
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends the request as Rejected. No new record or revision is applied. The request cannot be resubmitted.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route.",
+        "Softcopy creation: Number of Pages and optional series. External: External Create Request or External Revised Request; Description.",
+        "PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX; up to 15 MB. Pending files are not current. Creation numbers are assigned at approval."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise"
       ]
     },
     {
       "id": "request-draft-submit",
       "title": "Save, submit or remove your draft",
-      "summary": "Save and review your proposal, then submit it for approval. You can cancel a draft you have never submitted.",
+      "summary": "Save and review your proposal, then submit it for approval. Use the linked decision example for your request type.",
       "steps": [
         {
           "actor": "Requester",
@@ -227,17 +235,33 @@
         },
         {
           "actor": "Requester",
-          "text": "When ready, choose Submit and confirm."
+          "text": "When ready, choose Submit and confirm. Check Approval Process Timeline for the assigned reviewers."
         },
         {
           "actor": "PK DTS",
           "text": "Check permission, active choices and files. Mark Submitted and notify the first approver."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "Apply changes only after final approval. A transfer stays Approved until Dispatch and Accept complete it."
         }
       ],
       "notes": [
-        "Only the requester can edit their Draft or Returned request. Submitted requests keep the route recorded at submission.",
-        "An existing Submitted Access, Assignment or Transfer request blocks another of these for the same requester and document.",
-        "Only the requester can Cancel a Draft. Delete permanently removes an eligible Cancelled draft only if it was never submitted."
+        "Only the requester can edit their Draft or Returned request. Submitted and resubmitted requests keep the original route.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected without applying the change. That request cannot be resubmitted.",
+        "A Submitted Access, Assignment or Transfer request blocks another of these for the same requester and document.",
+        "Only the requester can Cancel a Draft. Delete permanently removes an eligible Cancelled draft only if never submitted."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
     },
     {
@@ -899,7 +923,7 @@
     {
       "id": "hardcopy-transfer-request",
       "title": "Request and approve a hardcopy transfer",
-      "summary": "Approve the receiving user and destination before releasing the physical document.",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Approval prepares the physical handoff.",
       "steps": [
         {
           "actor": "Requester",
@@ -919,23 +943,28 @@
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review and approve the transfer in the order set by its approval route."
+          "text": "Choose Approve, Return or Reject in the displayed order. Requester account completes Requester Confirmation in My Tasks."
         },
         {
           "actor": "PK DTS",
-          "text": "Create a For Transfer handoff. Keep the holder and storage unchanged until acceptance."
+          "text": "After final approval: request Approved; handoff For Transfer. Holder and location stay unchanged until Accept."
         }
       ],
       "notes": [
-        "Source and destination choices must be active and allowed. The destination needs Area, Specific and Location; Asset is optional.",
-        "The requester may differ from the Current Holder. Only the original requester can later choose Dispatch.",
-        "Default route: Plant Manager, Document Control Officer, then Requester confirmation. Check the published route for changes."
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no handoff or holder change. The request cannot be resubmitted.",
+        "Source, destination and receiver must be active and allowed. Destination needs Area, Specific and Location; Asset is optional.",
+        "The requester may differ from Current Holder. Only the original requester can later Dispatch.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
       "id": "hardcopy-dispatch-accept",
       "title": "Dispatch and receive a hardcopy",
-      "summary": "The original requester dispatches the approved document. The named receiver accepts it after physical receipt.",
+      "summary": "Default approvals first: Plant Manager > Document Control Officer > Requester account. Then the requester dispatches and the named receiver accepts.",
       "steps": [
         {
           "actor": "Original requester",
@@ -959,19 +988,24 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Make the receiver the holder, update storage, mark Accepted and complete the request."
+          "text": "Make the receiver the holder and update storage. Mark the handoff Accepted and the request Completed."
         }
       ],
       "notes": [
         "Only the original requester can Dispatch. Only the named receiving user can Accept an In Transit handoff.",
-        "A changed holder, unavailable Location or changed approved storage path blocks acceptance and leaves the handoff unchanged.",
-        "When the holder changes, acceptance revokes the previous holder's personal hardcopy access grants. Global permissions still apply."
+        "A changed holder, unavailable Location or changed approved storage path blocks acceptance; the handoff stays unchanged.",
+        "A holder change revokes the previous holder's personal hardcopy access grants. Global permissions still apply.",
+        "Before final approval: first-step Return goes to the requester (Returned); later Return goes to the previous approver (Submitted).",
+        "Reject ends approval as Rejected with no handoff. Check Approval Process Timeline; Dispatch and Accept are separate from approvals."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
       "id": "request-temporary-access",
       "title": "Request temporary document access",
-      "summary": "Ask to use a softcopy or hardcopy until a chosen date. This leaves the holder and assignments unchanged.",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Request access for yourself.",
       "steps": [
         {
           "actor": "Requester",
@@ -991,23 +1025,28 @@
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the request and complete each approval step."
+          "text": "Review in the displayed order. Choose Approve, Return or Reject; Requester account has the final confirmation."
         },
         {
           "actor": "PK DTS",
-          "text": "Grant access through the approved expiry date. Keep the holder and assignments unchanged."
+          "text": "Final approval grants access through the approved expiry date. Request: Completed. Holder and assignments stay unchanged."
         }
       ],
       "notes": [
-        "This request is for you. Recipient / Assigned User cannot be changed to another person.",
+        "For yourself only; Recipient / Assigned User cannot change. Check Approval Process Timeline; resubmission keeps its route.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no new access. Existing permissions stay unchanged. The request cannot be resubmitted.",
         "Expiry must still be valid at final approval. Access ends at the end of the selected date, or earlier if revoked.",
-        "The account's document and file permissions still apply. Catalog visibility alone does not grant download, print or edit rights."
+        "Document and file permissions still apply. Seeing a document title does not grant download, print or edit rights."
+      ],
+      "decision_examples": [
+        "approval-access"
       ]
     },
     {
       "id": "request-document-assignment",
       "title": "Request a document assignment",
-      "summary": "Ask to be added as a softcopy assignee or named as the holder of an active hardcopy.",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester's leader. The final step is named Requester Approval.",
       "steps": [
         {
           "actor": "Requester",
@@ -1023,21 +1062,26 @@
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the assignment and complete each approval step."
+          "text": "Choose Approve, Return or Reject in order. The requester's leader completes Requester Approval."
         },
         {
           "actor": "PK DTS",
-          "text": "For Softcopy, add the requester as an assignee and keep the existing assignees."
+          "text": "On final approval for Softcopy, add the requester as an assignee and keep existing assignees. Request: Completed."
         },
         {
           "actor": "PK DTS",
-          "text": "For Hardcopy, make the requester Current Holder and keep the storage unchanged."
+          "text": "On final approval for Hardcopy, make the requester Current Holder. Keep storage unchanged. Request: Completed."
         }
       ],
       "notes": [
-        "This request is for the requester. An authorized document controller uses Document Assignments to assign another person.",
-        "Hardcopy assignment changes the recorded holder after final approval. It does not move the document or use Dispatch and Accept.",
-        "Assignment does not create a temporary access grant. The account's document and file permissions still apply."
+        "This request is for you. Authorized controllers use Document Assignments to assign others. Check Approval Process Timeline.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected. No assignment or holder change is applied. The request cannot be resubmitted.",
+        "Hardcopy assignment does not move the document or use Dispatch and Accept. Resubmission keeps the original route.",
+        "Assignment does not create temporary access. The account's document and file permissions still apply."
+      ],
+      "decision_examples": [
+        "approval-assignment"
       ]
     },
     {
@@ -1171,7 +1215,7 @@
     {
       "id": "document-disposal-request",
       "title": "Request hardcopy or external disposal",
-      "summary": "Ask for approval to dispose of a document. Its record changes after final approval.",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Final approval applies disposal.",
       "steps": [
         {
           "actor": "Requester",
@@ -1191,17 +1235,22 @@
         },
         {
           "actor": "Assigned approvers",
-          "text": "Review the proposed disposal and complete each approval step."
+          "text": "Follow Approval Process Timeline. Choose Approve, Return or Reject; Requester account has the final confirmation."
         },
         {
           "actor": "PK DTS",
-          "text": "After final approval, mark Disposed. Keep the approval and disposal history."
+          "text": "After final approval, mark the document Disposed and the request Completed. Keep approval and disposal history."
         }
       ],
       "notes": [
-        "Disposal requests support Hardcopy and External Documents only. Softcopy disposal is available as a permitted direct action.",
-        "Other requires a description of up to 250 characters. A Return or Reject leaves the proposed disposal unapplied.",
+        "Hardcopy and External only. Softcopy disposal uses a permitted direct action. Other needs a description of up to 250 characters.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no disposal. The document stays unchanged. The request cannot be resubmitted.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route.",
         "Approved Hardcopy disposal clears Location and personal grants. External disposal keeps stored files and revision records."
+      ],
+      "decision_examples": [
+        "approval-disposal"
       ]
     },
     {
