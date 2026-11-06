@@ -243,8 +243,8 @@
     {
       "id": "approval-return-reject",
       "kind": "approval-example",
-      "title": "Review, approve, return or reject",
-      "summary": "Default workflow example: Softcopy Request (Create Softcopy). Each assigned operator can Approve, Return or Reject.",
+      "title": "Softcopy creation: approve, return or reject",
+      "summary": "Default workflow example: Softcopy Request (Create Softcopy). Each assigned reviewer can Approve, Return or Reject.",
       "steps": [
         {
           "actor": "Requester",
@@ -263,36 +263,637 @@
           "text": "Document Control Officer Review & Approval"
         }
       ],
-      "review": "At each review: read the proposal, Review File and approval history. Choose an action, add optional remarks and Confirm.",
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
       "paths": [
         {
           "label": "Approve",
           "cases": [
-            {"when": "Requester's leader approves", "next": "Plant Manager reviews next."},
-            {"when": "Plant Manager approves", "next": "Document Control Officer reviews next."},
-            {"when": "Document Control Officer approves", "next": "Apply the approved change. Status: Completed."}
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Create the Active record and file at revision 00. Status: Completed."
+            }
           ]
         },
         {
           "label": "Return",
           "cases": [
-            {"when": "Requester's leader returns", "next": "Requester corrects and resubmits. Status: Returned until resubmission."},
-            {"when": "Plant Manager returns", "next": "Requester's leader reviews again. Status stays Submitted."},
-            {"when": "Document Control Officer returns", "next": "Plant Manager reviews again. Status stays Submitted."}
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
           ]
         },
         {
           "label": "Reject",
           "cases": [
-            {"when": "Any assigned operator rejects", "next": "Status: Rejected. The approval route ends."},
-            {"when": "Proposed change", "next": "Not applied. No new document is created."},
-            {"when": "Requester checks the result", "next": "Read the decision and remarks. This request cannot be resubmitted."}
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. No new document is created."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
           ]
         }
       ],
       "notes": [
-        "This sample uses the supplied default. Check your Approval Process Timeline. A returned request keeps its original route when resubmitted.",
-        "Only the assigned user or role can decide; Administrator status gives no bypass. An approved transfer still needs Dispatch and Accept."
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Only the assigned user or role can decide; Administrator status gives no bypass."
+      ]
+    },
+    {
+      "id": "approval-softcopy-revise",
+      "kind": "approval-example",
+      "title": "Softcopy revision: approve, return or reject",
+      "summary": "Default workflow example: Softcopy Request (Revise Softcopy). Each assigned reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the revision request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Publish the next revision and replacement file. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. The current approved file and revision stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Revision keeps the document number, category and series. The approved replacement becomes the current file."
+      ]
+    },
+    {
+      "id": "approval-external-create",
+      "kind": "approval-example",
+      "title": "External creation: approve, return or reject",
+      "summary": "Default workflow example: External Document Request (External Create Request). Each reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the external creation request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Create the Active record and file at revision 00. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. No new external document is created."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "External Documents uses its own categories. The attached file becomes the current file after final approval."
+      ]
+    },
+    {
+      "id": "approval-external-revise",
+      "kind": "approval-example",
+      "title": "External revision: approve, return or reject",
+      "summary": "Default workflow example: External Document Request (External Revised Request). Each reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the external revision request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Publish the next revision and replacement file. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. The current external file and revision stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "The approved replacement becomes the current Download file. External Documents has no separate File History action."
+      ]
+    },
+    {
+      "id": "approval-transfer",
+      "kind": "approval-example",
+      "title": "Hardcopy transfer: approve, return or reject",
+      "summary": "Default workflow example: Hardcopy Transfer Request. Requester Confirmation is an approval step before the physical handoff.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the transfer request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager  Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Approval"
+        },
+        {
+          "actor": "Requester",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Status: Approved; handoff: For Transfer. Then Dispatch and Accept."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No handoff is created. The current holder and location stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Only the requester can Dispatch; only the named receiver can Accept. Holder and location change after Accept."
+      ]
+    },
+    {
+      "id": "approval-access",
+      "kind": "approval-example",
+      "title": "Document access: approve, return or reject",
+      "summary": "Default workflow example: Document Access Request. The requester completes the final Requester Confirmation step.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the access request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Grant access through the approved expiry. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No new access is granted. Existing permissions stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Access is for the requester. The expiry must still be valid at final approval; document holder and location stay unchanged."
+      ]
+    },
+    {
+      "id": "approval-assignment",
+      "kind": "approval-example",
+      "title": "Document assignment: approve, return or reject",
+      "summary": "Default workflow example: Document Assignment Request. The final Requester Approval step is assigned to the requester's leader.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the assignment request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Requester Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester's leader reviews next."
+            },
+            {
+              "when": "Requester's leader approves",
+              "next": "Assign the softcopy or hardcopy to the requester. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester's leader returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No new assignment or hardcopy holder change is applied."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Softcopy assignment adds the requester as assignee. Hardcopy assignment changes the holder, keeps Location and records no physical handoff."
+      ]
+    },
+    {
+      "id": "approval-disposal",
+      "kind": "approval-example",
+      "title": "Disposal request: approve, return or reject",
+      "summary": "Default workflow example: Disposal Request. The requester completes the final Requester Confirmation step.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the disposal request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and Review File when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Mark the document Disposed and record it. Request status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No disposal is applied. The document stays unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Disposal requests cover Hardcopy and External Documents. Hardcopy disposal clears Location; active document grants are revoked."
       ]
     },
     {
