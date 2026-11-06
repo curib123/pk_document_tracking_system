@@ -92,6 +92,16 @@ REQUESTS = {
  'assignment': 'assignment-request',
  'disposal': 'disposal-request',
 }
+APPROVAL_EXAMPLES = {
+ 'softcopy_create': 'approval-return-reject',
+ 'softcopy_revise': 'approval-softcopy-revise',
+ 'external_create': 'approval-external-create',
+ 'external_revise': 'approval-external-revise',
+ 'transfer': 'approval-transfer',
+ 'access': 'approval-access',
+ 'assignment': 'approval-assignment',
+ 'disposal': 'approval-disposal',
+}
 LEGACY = {'hardcopy_create', 'hardcopy_update', 'softcopy_cancel'}
 ROLES = {'Administrator', 'Document Control Officer', 'Plant Manager', 'Internal Auditor', 'Staff'}
 REQUIRED_GUIDE = {
@@ -199,6 +209,11 @@ def check_source(content):
     sections = {section['id'] for section in content['guide']['sections']}
     assert REQUIRED_GUIDE <= sections, f'Missing user procedures: {REQUIRED_GUIDE-sections}'
     assert all(section in sections for section, _ in GROUPS)
+    process_pages = {item['id']: item for item in content['process']['pages']}
+    assert set(APPROVAL_EXAMPLES) == set(REQUESTS), 'Every current request action needs a decision example'
+    for request, identifier in APPROVAL_EXAMPLES.items():
+        assert identifier in process_pages, f'Missing approval decision example: {request}'
+        assert process_pages[identifier].get('kind') == 'approval-example', f'Missing decision paths: {request}'
     screens = guide_screens()
     assert set(screens) == sections, f'Screenshot coverage drift: {set(screens) ^ sections}'
     for identifier, screen in screens.items():
@@ -233,7 +248,7 @@ def check_source(content):
                 assert 1 <= len(item['steps']) <= 5, item['id']
             if key == 'flowchart':
                 assert all(item.get(field) for field in ['start', 'action', 'question', 'yes', 'no', 'result']), item['id']
-    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions; {len(LEGACY)} historical actions distinguished.')
+    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with explicit decision examples; {len(LEGACY)} historical actions distinguished.')
 
 
 def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12):
