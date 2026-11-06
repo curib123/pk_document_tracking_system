@@ -10,6 +10,7 @@ isolated demonstration site. Both guide exports must retain every screenshot.
 from pathlib import Path
 import argparse
 import base64
+import copy
 import hashlib
 import io
 import json
@@ -183,8 +184,34 @@ def normalized(value):
 
 
 def load_content():
-    return {key: json.loads((SOURCE / (key + '.json')).read_text(encoding='utf-8'))
-            for key, _, _ in SPECS}
+    content = {key: json.loads((SOURCE / (key + '.json')).read_text(encoding='utf-8'))
+               for key, _, _ in SPECS}
+    examples = {item['id']: item for item in content['process']['pages']
+                if item.get('kind') == 'approval-example'}
+    for key in ['guide', 'flowchart']:
+        items = entries(key, content[key])
+        for index, item in enumerate(items):
+            if item.get('kind') != 'approval-reference':
+                continue
+            example = copy.deepcopy(examples[item['example']])
+            example.update(id=item['id'], example_id=item['example'],
+                           kind='approval-flowchart' if key == 'flowchart' else 'approval-example')
+            items[index] = example
+    for item in content['dfd']['pages']:
+        if item.get('kind') == 'request-decision-data':
+            example = examples[item['approval_example']]
+            item['workflow'] = example['summary'].split('. ', 1)[0].rstrip('.') + '.'
+            item['operators'] = copy.deepcopy(example['steps'][1:])
+            operators = [step['actor'] for step in item['operators']]
+            destinations = ['Requester'] + operators[:-1]
+            item['return_paths'] = 'Return: ' + '; '.join(
+                f'{actor} to {target}' for actor, target in zip(operators, destinations)) + '.'
+    return content
+
+
+def example_id(item):
+    return item.get('example_id', item.get('approval_example',
+        item['id'] if item.get('kind') == 'approval-example' else None))
 
 
 def guide_screens():
@@ -214,8 +241,12 @@ def check_source(content):
     for request, identifier in APPROVAL_EXAMPLES.items():
         assert identifier in process_pages, f'Missing approval decision example: {request}'
         assert process_pages[identifier].get('kind') == 'approval-example', f'Missing decision paths: {request}'
+    for key, _, _ in SPECS:
+        examples = [example_id(item) for item in entries(key, content[key]) if example_id(item)]
+        assert len(examples) == len(APPROVAL_EXAMPLES) and set(examples) == set(APPROVAL_EXAMPLES.values()), f'Incomplete decision coverage: {key}'
     screens = guide_screens()
-    assert set(screens) == sections, f'Screenshot coverage drift: {set(screens) ^ sections}'
+    screen_sections = {item['id'] for item in content['guide']['sections'] if item.get('kind') != 'approval-example'}
+    assert set(screens) == screen_sections, f'Screenshot coverage drift: {set(screens) ^ screen_sections}'
     for identifier, screen in screens.items():
         path = SCREENSHOTS / screen['file']
         assert path.parent == SCREENSHOTS and path.suffix == '.png', identifier
@@ -238,17 +269,22 @@ def check_source(content):
         for item in items:
             assert item['title'] and item['id']
             assert 'proposed' not in item['title'].lower(), item['title']
+            related = item.get('decision_examples', [])
+            assert len(related) <= 8 and len(related) == len(set(related)), item['id']
+            assert set(related) <= set(APPROVAL_EXAMPLES.values()), item['id']
+            if item.get('kind') in {'approval-example', 'approval-flowchart'}:
+                assert len(item['steps']) == 4 and item['review'], item['id']
+                assert [path['label'] for path in item['paths']] == ['Approve', 'Return', 'Reject'], item['id']
+                assert all(len(path['cases']) == 3 for path in item['paths']), item['id']
             if key == 'process':
                 assert 3 <= len(item['steps']) <= 6, item['id']
-                if item.get('kind') == 'approval-example':
-                    assert len(item['steps']) == 4 and item['review'], item['id']
-                    assert [path['label'] for path in item['paths']] == ['Approve', 'Return', 'Reject'], item['id']
-                    assert all(len(path['cases']) == 3 for path in item['paths']), item['id']
             if key == 'guide':
                 assert 1 <= len(item['steps']) <= 5, item['id']
-            if key == 'flowchart':
+            if key == 'flowchart' and item.get('kind') != 'approval-flowchart':
                 assert all(item.get(field) for field in ['start', 'action', 'question', 'yes', 'no', 'result']), item['id']
-    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with explicit decision examples; {len(LEGACY)} historical actions distinguished.')
+            if item.get('kind') == 'request-decision-data':
+                assert len(item['operators']) == 3 and len(item['flows']) == 5, item['id']
+    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with decisions in all four books; {len(LEGACY)} historical actions distinguished.')
 
 
 def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12):
@@ -318,26 +354,40 @@ def notes(page, values, rect, title='Remember'):
         y += height
 
 
-def approval_example_page(doc, item, number, total):
+def approval_example_page(doc, item, number, total, book='process'):
     """Show the named default operators and all three review outcomes together."""
-    page = header(doc, 'Process Flow', item['title'], number, total,
-                  item['summary'], chapter('process', item['id']))
-    text(page, (42, 174, 1148, 195), 'ASSIGNED OPERATORS / APPROVAL ORDER', 11, True, GREY, minimum=11)
+    kind = next(title for key, _, title in SPECS if key == book)
+    page = header(doc, kind, item['title'], number, total,
+                  item['summary'], chapter(book, item['id']))
+    flowchart = book == 'flowchart'
+    shift = -20 if flowchart else 0
+    top = 163 if flowchart else 174
+    text(page, (42, top, 1148, top+21), 'ASSIGNED OPERATORS / APPROVAL ORDER', 11, True, GREY, minimum=11)
     for index, step in enumerate(item['steps']):
         x = 42+index*284
-        panel(page, (x, 208, x+254, 345), PALE)
-        diagram_icon(page, (x+14, 224, x+53, 263), 'person' if index == 0 else 'review')
-        text(page, (x+65, 222, x+239, 274), step['actor'], 15, True, minimum=14)
-        text(page, (x+14, 284, x+240, 337), step['text'], 14, minimum=13)
+        panel(page, (x, 208+shift, x+254, 345+shift), PALE)
+        diagram_icon(page, (x+14, 224+shift, x+53, 263+shift), 'person' if index == 0 else 'review')
+        text(page, (x+65, 222+shift, x+239, 274+shift), step['actor'], 15, True, minimum=14)
+        text(page, (x+14, 284+shift, x+240, 337+shift), step['text'], 14, minimum=13)
         if index < len(item['steps'])-1:
-            arrow(page, [(x+254, 276), (x+284, 276)], color=SUCCESS)
-    text(page, (42, 365, 1148, 406), item['review'], 15, align=1, minimum=14)
-    page.draw_line((595, 406), (595, 422), color=GREY, width=1.2)
-    page.draw_line((214, 422), (976, 422), color=GREY, width=1.2)
+            arrow(page, [(x+254, 276+shift), (x+284, 276+shift)], color=SUCCESS)
+    review_y = 333 if flowchart else 365
+    text(page, (42, review_y, 1148, review_y+39), item['review'], 15, align=1, minimum=14)
+    if flowchart:
+        page.draw_polyline([(595, 375), (665, 403), (595, 431), (525, 403), (595, 375)],
+                           color=GREY, fill=GOLD, width=1)
+        text(page, (546, 391, 644, 414), 'Decision?', 13, True, align=1)
+        arrow(page, [(525, 403), (214, 403), (214, 449)], color=SUCCESS)
+        arrow(page, [(595, 431), (595, 449)], color=ACCENT)
+        arrow(page, [(665, 403), (976, 403), (976, 449)], color=INK)
+    else:
+        page.draw_line((595, 406), (595, 422), color=GREY, width=1.2)
+        page.draw_line((214, 422), (976, 422), color=GREY, width=1.2)
     for index, path in enumerate(item['paths']):
         x = 42+index*381
         color = [SUCCESS, ACCENT, INK][index]
-        arrow(page, [(x+172, 422), (x+172, 449)], color=color)
+        if not flowchart:
+            arrow(page, [(x+172, 422), (x+172, 449)], color=color)
         panel(page, (x, 449, x+344, 706), PALE)
         panel(page, (x, 449, x+344, 487), color, color)
         text(page, (x+15, 456, x+329, 482), path['label'], 17, True, WHITE, align=1)
@@ -393,6 +443,8 @@ def process_page(doc, item, number, total):
 
 
 def flowchart_page(doc, item, number, total):
+    if item.get('kind') == 'approval-flowchart':
+        return approval_example_page(doc, item, number, total, book='flowchart')
     page = header(doc, 'Flowchart', item['title'], number, total,
                   'Start at the upper left. Follow the arrows and the Yes or No answer at the question.',
                   chapter('flowchart', item['id']))
@@ -452,6 +504,8 @@ def flowchart_page(doc, item, number, total):
 
 
 def guide_page(doc, item, number, total):
+    if item.get('kind') == 'approval-example':
+        return approval_example_page(doc, item, number, total, book='guide')
     page = header(doc, 'User Guide', item['title'], number, total, 'For: ' + item['audience'], chapter('guide', item['id']))
     screen = guide_screens()[item['id']]
     # An unfilled frame keeps the separate screenshot and callouts editable in PowerPoint.
@@ -520,7 +574,8 @@ def diagram_icon(page, rect, kind):
 
 
 def dfd_page(doc, item, number, total):
-    page = header(doc, 'Data Flow Diagram', item['title'], number, total, item['summary'], chapter('dfd', item['id']))
+    summary = (item['workflow']+' ' if item.get('workflow') else '') + item['summary']
+    page = header(doc, 'Data Flow Diagram', item['title'], number, total, summary, chapter('dfd', item['id']))
     if item.get('kind') == 'context':
         # Level 0 has one system and five external roles; records stay on detail pages.
         panel(page, (435, 180, 755, 681), PALE)
@@ -555,27 +610,40 @@ def dfd_page(doc, item, number, total):
         text(page, (57, 728, 1133, 768), item['note'], 13, minimum=12)
         return
     rows = item['flows']
+    decision_data = item.get('kind') == 'request-decision-data'
+    if decision_data:
+        for index, operator in enumerate(item['operators']):
+            x = 42+381*index
+            panel(page, (x, 174, x+344, 263), PALE)
+            text(page, (x+12, 184, x+332, 212), operator['actor'], 15, True, ACCENT, minimum=13)
+            text(page, (x+12, 225, x+332, 258), operator['text'], 13, minimum=12)
+    caption_y = 276 if decision_data else 176
+    row_height = 67 if decision_data else 80
     for left, right, caption in [(42, 286, 'FROM'), (286, 467, 'INFORMATION'),
                                   (467, 735, 'ACTIVITY'), (735, 918, 'RESULT'),
                                   (918, 1148, 'TO')]:
-        text(page, (left, 176, right, 198), caption, 10, True, GREY, align=1, minimum=10)
+        text(page, (left, caption_y, right, caption_y+22), caption, 10, True, GREY, align=1, minimum=10)
     for index, row in enumerate(rows):
-        y = 212+index*98
+        y = 302+index*79 if decision_data else 212+index*98
         for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
             if kind == 'store':
                 # Keep the open-ended data-store symbol distinct from actor cards.
-                page.draw_polyline([(x1, y), (x0, y), (x0, y+80), (x1, y+80)], color=GREY, width=1)
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+row_height), (x1, y+row_height)], color=GREY, width=1)
                 icon = 'database'
             else:
-                panel(page, (x0, y, x1, y+80), PALE if kind == 'process' else WHITE)
+                panel(page, (x0, y, x1, y+row_height), PALE if kind == 'process' else WHITE)
                 if kind == 'process':
-                    panel(page, (x0, y, x0+3, y+80), ACCENT, ACCENT)
+                    panel(page, (x0, y, x0+3, y+row_height), ACCENT, ACCENT)
                 icon = 'account' if kind == 'process' else 'review' if any(word in row[field].lower() for word in ['approv', 'review', 'audit']) else 'person'
-            diagram_icon(page, (x0+12, y+21, x0+50, y+59), icon)
-            text(page, (x0+62, y+17, x1-12, y+71), row[field], 13.5, bold=kind == 'process', minimum=12)
+            center = y+row_height/2
+            diagram_icon(page, (x0+12, center-19, x0+50, center+19), icon)
+            text(page, (x0+62, center-26, x1-12, center+28), row[field], 13.5, bold=kind == 'process', minimum=12)
         for x0, x1, field in [(286, 467, 'input'), (735, 918, 'output')]:
-            arrow(page, [(x0+4, y+60), (x1, y+60)], color=GREY)
-            text(page, (x0+8, y+7, x1-8, y+53), row[field], 12.5, align=1, minimum=11)
+            arrow_y = y+48 if decision_data else y+60
+            arrow(page, [(x0+4, arrow_y), (x1, arrow_y)], color=GREY)
+            text(page, (x0+8, y+4, x1-8, arrow_y-6), row[field], 12.5, align=1, minimum=11)
+    if decision_data:
+        text(page, (42, 691, 1148, 724), item['return_paths'], 12.5, color=ACCENT, minimum=12)
     panel(page, (42, 727, 1148, 776), PALE)
     text(page, (57, 737, 1133, 773), item['note'], 13, minimum=12)
 
@@ -828,17 +896,20 @@ def visio(doc, items, title):
     return parts
 
 
-def powerpoint(doc):
+def powerpoint(doc, items=None):
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
     prs.core_properties.title = 'PK DTS - User Guide'
     prs.core_properties.subject = 'Everyday document control, 6 November 2026'
-    for page in doc:
+    items = items or [{} for _ in doc]
+    for page, item in zip(doc, items):
         slide = prs.slides.add_slide(prs.slide_layouts[6])
-        for block in page.get_text('dict')['blocks']:
-            if block['type'] == 1:
-                r = pdf.Rect(block['bbox'])
-                slide.shapes.add_picture(io.BytesIO(block['image']), Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
+        illustrated_example = item.get('kind') == 'approval-example'
+        if not illustrated_example:
+            for block in page.get_text('dict')['blocks']:
+                if block['type'] == 1:
+                    r = pdf.Rect(block['bbox'])
+                    slide.shapes.add_picture(io.BytesIO(block['image']), Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
         for drawing in page.get_drawings():
             parts = drawing['items']
             if len(parts) == 1 and parts[0][0] == 're':
@@ -863,6 +934,12 @@ def powerpoint(doc):
                 node.line.width = Pt(drawing['width'])
             else:
                 node.line.fill.background()
+        if illustrated_example:
+            # Operator illustrations sit above their filled cards; screen
+            # examples still keep their callout rectangles above the picture.
+            for picture in diagram_images(page):
+                r = picture['rect']
+                slide.shapes.add_picture(io.BytesIO(picture['data']), Pt(r.x0), Pt(r.y0), Pt(r.width), Pt(r.height))
         for block in page.get_text('dict')['blocks']:
             for line in block.get('lines', []):
                 for span in line['spans']:
@@ -898,6 +975,14 @@ def refresh(content):
                 if item.get('kind') == 'contents':
                     for entry, rect in contents_rows(item):
                         doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': rect, 'page': entry['page']-1})
+                targets = {example_id(value): position for position, value in enumerate(items) if example_id(value)}
+                if item.get('decision_examples'):
+                    text(doc[index], (610, 802, 670, 825), 'Decisions:', 9, True, GREY, minimum=9)
+                    for link_index, identifier in enumerate(item['decision_examples']):
+                        x = 675+24*link_index
+                        target = targets[identifier]
+                        text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
+                        doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
             doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
             doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, 6 November 2026', 'author': 'PK Document Tracking System'})
             pdf_path = DOCS / (base+'.pdf.pending')
@@ -907,7 +992,7 @@ def refresh(content):
             editable_path = DOCS / (base+extension+'.pending')
             pending.append((editable_path, DOCS/(base+extension)))
             if key == 'guide':
-                powerpoint(doc).save(editable_path)
+                powerpoint(doc, items).save(editable_path)
             else:
                 parts = visio(doc, items, kind)
                 with zipfile.ZipFile(editable_path, 'w', zipfile.ZIP_DEFLATED) as archive:
@@ -963,7 +1048,7 @@ def source_strings(item):
             yield from source_strings(value)
     elif isinstance(item, dict):
         for key, value in item.items():
-            if key not in {'id', 'kind', 'from_kind', 'to_kind'}:
+            if key not in {'id', 'kind', 'from_kind', 'to_kind', 'example_id', 'approval_example', 'decision_examples'}:
                 yield from source_strings(value)
 
 
@@ -993,7 +1078,14 @@ def verify(content, pending=False):
                         assert len(page.get_image_info()) == expected_icons, f'Missing DFD illustrations: {item["id"]}'
                     if key == 'process':
                         assert len(page.get_image_info()) == len(item['steps']), f'Missing process illustrations: {item["id"]}'
-                    if key == 'guide':
+                    if item.get('kind') in {'approval-example', 'approval-flowchart'}:
+                        assert len(page.get_image_info()) == len(item['steps']), f'Missing operator illustrations: {item["id"]}'
+                    if item.get('decision_examples'):
+                        targets = {example_id(value): position for position, value in enumerate(items) if example_id(value)}
+                        expected_links = {1} | {targets[identifier] for identifier in item['decision_examples']}
+                        assert len(page.get_links()) == 1+len(item['decision_examples']), f'Missing decision links: {item["id"]}'
+                        assert {link['page'] for link in page.get_links()} == expected_links, f'Wrong decision links: {item["id"]}'
+                    if key == 'guide' and item.get('kind') != 'approval-example':
                         screen = guide_screens()[item['id']]
                         assert normalized(screen['caption']) in page_text, f'Missing screen caption: {item["id"]}'
                         for control in screen['controls']:
@@ -1016,7 +1108,11 @@ def verify(content, pending=False):
                 for slide, page, item in zip(prs.slides, doc, items):
                     pictures = [shape for shape in slide.shapes if shape.shape_type == 13]
                     assert len(pictures) == len(page.get_image_info()), f'PowerPoint screenshot mismatch: {item["id"]}'
-                    if pictures:
+                    if pictures and item.get('kind') == 'approval-example':
+                        for picture, expected in zip(pictures, diagram_images(page)):
+                            actual_pixels, expected_pixels = pdf.Pixmap(picture.image.blob), pdf.Pixmap(expected['data'])
+                            assert (actual_pixels.width, actual_pixels.height, actual_pixels.n, actual_pixels.digest) == (expected_pixels.width, expected_pixels.height, expected_pixels.n, expected_pixels.digest), f'PowerPoint operator picture mismatch: {item["id"]}'
+                    elif pictures:
                         screen = guide_screens()[item['id']]
                         assert pdf.Pixmap(pictures[0].image.blob).digest == pdf.Pixmap(SCREENSHOTS/screen['file']).digest, f'Stale PowerPoint screenshot: {item["id"]}'
                 native_text = ['\n'.join(s.text for s in slide.shapes if s.has_text_frame) for slide in prs.slides]
