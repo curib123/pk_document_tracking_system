@@ -242,34 +242,57 @@
     },
     {
       "id": "approval-return-reject",
+      "kind": "approval-example",
       "title": "Review, approve, return or reject",
-      "summary": "Assigned approvers review in order. Final approval applies the change or prepares a physical transfer.",
+      "summary": "Default workflow example: Softcopy Request (Create Softcopy). Each assigned operator can Approve, Return or Reject.",
       "steps": [
         {
-          "actor": "Assigned approver",
-          "text": "Open My Tasks and select the request. Read View Details and the Approval Process Timeline."
+          "actor": "Requester",
+          "text": "Prepare the proposal and Submit."
         },
         {
-          "actor": "Assigned approver",
-          "text": "Use Review File when available. Check the proposal, attachments and earlier decisions."
+          "actor": "Requester's leader",
+          "text": "Noted By"
         },
         {
-          "actor": "Assigned approver",
-          "text": "Choose Approve, Return or Reject. Add remarks if useful, then confirm."
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
         },
         {
-          "actor": "PK DTS",
-          "text": "Save the decision and history. Update the status and send work to the responsible person."
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, Review File and approval history. Choose an action, add optional remarks and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {"when": "Requester's leader approves", "next": "Plant Manager reviews next."},
+            {"when": "Plant Manager approves", "next": "Document Control Officer reviews next."},
+            {"when": "Document Control Officer approves", "next": "Apply the approved change. Status: Completed."}
+          ]
         },
         {
-          "actor": "Requester or assigned approver",
-          "text": "Open the updated request. Check its status, remarks and next action."
+          "label": "Return",
+          "cases": [
+            {"when": "Requester's leader returns", "next": "Requester corrects and resubmits. Status: Returned until resubmission."},
+            {"when": "Plant Manager returns", "next": "Requester's leader reviews again. Status stays Submitted."},
+            {"when": "Document Control Officer returns", "next": "Plant Manager reviews again. Status stays Submitted."}
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {"when": "Any assigned operator rejects", "next": "Status: Rejected. The approval route ends."},
+            {"when": "Proposed change", "next": "Not applied. The existing document stays unchanged."},
+            {"when": "Requester checks the result", "next": "Read the decision and remarks. This request cannot be resubmitted."}
+          ]
         }
       ],
       "notes": [
-        "Approve advances the route. Final approval usually marks Completed; a transfer stays Approved until Dispatch and Accept finish.",
-        "Later Return reopens the previous approver and stays Submitted. First-step Return marks Returned; requester edits and resubmits on the original route.",
-        "Reject marks Rejected and ends the route. Only the assigned user or matching role member can decide; Administrator status gives no bypass."
+        "This sample uses the supplied default. Check your Approval Process Timeline. A returned request keeps its original route when resubmitted.",
+        "Only the assigned user or role can decide; Administrator status gives no bypass. An approved transfer still needs Dispatch and Accept."
       ]
     },
     {

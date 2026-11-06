@@ -225,6 +225,10 @@ def check_source(content):
             assert 'proposed' not in item['title'].lower(), item['title']
             if key == 'process':
                 assert 3 <= len(item['steps']) <= 6, item['id']
+                if item.get('kind') == 'approval-example':
+                    assert len(item['steps']) == 4 and item['review'], item['id']
+                    assert [path['label'] for path in item['paths']] == ['Approve', 'Return', 'Reject'], item['id']
+                    assert all(len(path['cases']) == 3 for path in item['paths']), item['id']
             if key == 'guide':
                 assert 1 <= len(item['steps']) <= 5, item['id']
             if key == 'flowchart':
@@ -299,7 +303,42 @@ def notes(page, values, rect, title='Remember'):
         y += height
 
 
+def approval_example_page(doc, item, number, total):
+    """Show the named default operators and all three review outcomes together."""
+    page = header(doc, 'Process Flow', item['title'], number, total,
+                  item['summary'], chapter('process', item['id']))
+    text(page, (42, 174, 1148, 195), 'ASSIGNED OPERATORS / APPROVAL ORDER', 11, True, GREY, minimum=11)
+    for index, step in enumerate(item['steps']):
+        x = 42+index*284
+        panel(page, (x, 208, x+254, 345), PALE)
+        diagram_icon(page, (x+14, 224, x+53, 263), 'person' if index == 0 else 'review')
+        text(page, (x+65, 222, x+239, 274), step['actor'], 15, True, minimum=14)
+        text(page, (x+14, 284, x+240, 337), step['text'], 14, minimum=13)
+        if index < len(item['steps'])-1:
+            arrow(page, [(x+254, 276), (x+284, 276)], color=SUCCESS)
+    text(page, (42, 365, 1148, 406), item['review'], 15, align=1, minimum=14)
+    page.draw_line((595, 406), (595, 422), color=GREY, width=1.2)
+    page.draw_line((214, 422), (976, 422), color=GREY, width=1.2)
+    for index, path in enumerate(item['paths']):
+        x = 42+index*381
+        color = [SUCCESS, ACCENT, INK][index]
+        arrow(page, [(x+172, 422), (x+172, 449)], color=color)
+        panel(page, (x, 449, x+344, 706), PALE)
+        panel(page, (x, 449, x+344, 487), color, color)
+        text(page, (x+15, 456, x+329, 482), path['label'].upper(), 17, True, WHITE, align=1)
+        for case_index, case in enumerate(path['cases']):
+            y = 498+case_index*68
+            text(page, (x+14, y, x+330, y+22), case['when'], 12.5, True, color, minimum=12)
+            text(page, (x+14, y+24, x+330, y+63), case['next'], 13, minimum=12)
+            if case_index < len(path['cases'])-1:
+                page.draw_line((x+14, y+64), (x+330, y+64), color=RULE, width=.6)
+    notes(page, item['notes'], (42, 721, 1148, 776))
+    return page
+
+
 def process_page(doc, item, number, total):
+    if item.get('kind') == 'approval-example':
+        return approval_example_page(doc, item, number, total)
     page = header(doc, 'Process Flow', item['title'], number, total,
                   item['summary'], chapter('process', item['id']))
     steps = item['steps']
