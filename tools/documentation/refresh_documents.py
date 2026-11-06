@@ -194,6 +194,18 @@ def load_content():
             if item.get('kind') != 'approval-reference':
                 continue
             example = copy.deepcopy(examples[item['example']])
+            if key == 'flowchart':
+                # Flowcharts use connected decisions, while the guide keeps the
+                # fuller operator/outcome reference. Both share the same facts.
+                example = dict(
+                    title=example['title'], summary=example['summary'],
+                    requester=example['steps'][0], reviewers=example['steps'][1:],
+                    review=example['review'], returns=example['paths'][1]['cases'],
+                    approved_result=example['paths'][0]['cases'][-1]['next'],
+                    rejected_result=example['paths'][2]['cases'][0]['next'],
+                    rejected_effect=example['paths'][2]['cases'][1]['next'],
+                    rejected_next=example['paths'][2]['cases'][2]['next'],
+                    notes=example['notes'])
             example.update(id=item['id'], example_id=item['example'],
                            kind='approval-flowchart' if key == 'flowchart' else 'approval-example')
             items[index] = example
@@ -272,10 +284,14 @@ def check_source(content):
             related = item.get('decision_examples', [])
             assert len(related) <= 8 and len(related) == len(set(related)), item['id']
             assert set(related) <= set(APPROVAL_EXAMPLES.values()), item['id']
-            if item.get('kind') in {'approval-example', 'approval-flowchart'}:
+            if item.get('kind') == 'approval-example':
                 assert len(item['steps']) == 4 and item['review'], item['id']
                 assert [path['label'] for path in item['paths']] == ['Approve', 'Return', 'Reject'], item['id']
                 assert all(len(path['cases']) == 3 for path in item['paths']), item['id']
+            if item.get('kind') == 'approval-flowchart':
+                assert len(item['reviewers']) == len(item['returns']) == 3, item['id']
+                assert all(item.get(field) for field in ['requester', 'review', 'approved_result',
+                    'rejected_result', 'rejected_effect', 'rejected_next']), item['id']
             if key == 'process':
                 assert 3 <= len(item['steps']) <= 6, item['id']
             if key == 'guide':
@@ -305,6 +321,21 @@ def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12)
 
 def panel(page, rect, fill=PALE, border=RULE):
     page.draw_rect(rect, color=border, fill=fill, width=.65)
+
+
+def rounded_panel(page, rect, fill=PALE, border=INK, radius=15):
+    """Rounded native geometry, also editable in the legacy Visio format."""
+    r = pdf.Rect(rect)
+    radius = min(radius, r.height/2, r.width/2)
+    points = []
+    for cx, cy, start in [(r.x1-radius, r.y0+radius, -90),
+                          (r.x1-radius, r.y1-radius, 0),
+                          (r.x0+radius, r.y1-radius, 90),
+                          (r.x0+radius, r.y0+radius, 180)]:
+        for angle in range(start, start+91, 10):
+            a = math.radians(angle)
+            points.append((cx+radius*math.cos(a), cy+radius*math.sin(a)))
+    page.draw_polyline(points+[points[0]], color=border, fill=fill, width=1)
 
 
 def arrow(page, points, label=None, label_rect=None, color=ACCENT):
@@ -442,9 +473,78 @@ def process_page(doc, item, number, total):
         y += height
 
 
+def approval_flowchart_page(doc, item, number, total):
+    """Three real decision nodes with forward, return and terminating paths."""
+    page = header(doc, 'Flowchart', item['title'], number, total,
+                  item['summary'], chapter('flowchart', item['id']))
+    rounded_panel(page, (42, 174, 310, 242), INK, INK, radius=30)
+    text(page, (67, 179, 285, 203), item['requester']['actor'], 13, True, WHITE, align=1)
+    text(page, (62, 205, 290, 239), item['requester']['text'], 12, color=WHITE, align=1, minimum=11)
+    text(page, (350, 180, 1148, 233), item['review'], 14, color=GREY, minimum=13)
+
+    centers = [176, 595, 1014]
+    arrow(page, [(176, 242), (176, 270)], color=INK)
+    for index, (center, operator) in enumerate(zip(centers, item['reviewers'])):
+        left, right = center-134, center+134
+        panel(page, (left, 270, right, 374), WHITE, GREY)
+        text(page, (left+15, 285, right-15, 324), operator['actor'], 15, True, align=1, minimum=14)
+        text(page, (left+15, 331, right-15, 368), operator['text'], 13, color=GREY, align=1, minimum=12)
+        arrow(page, [(center, 374), (center, 410)], color=INK)
+        page.draw_polyline([(center, 410), (center+106, 460), (center, 510),
+                            (center-106, 460), (center, 410)], color=INK, fill=GOLD, width=1)
+        text(page, (center-73, 450, center+73, 476), 'Decision?', 15, True, align=1)
+        if index < 2:
+            bend = center+210
+            arrow(page, [(center+106, 460), (bend, 460), (bend, 322),
+                          (centers[index+1]-134, 322)], color=SUCCESS)
+            text(page, (center+108, 434, bend, 456), 'Approve', 12, True, SUCCESS, align=1)
+        else:
+            arrow(page, [(1120, 460), (1170, 460), (1170, 675), (1148, 675)], color=SUCCESS)
+            text(page, (1082, 483, 1165, 505), 'Approve', 12, True, SUCCESS, align=1)
+        if index == 0:
+            arrow(page, [(70, 460), (22, 460), (22, 207), (42, 207)], color=ACCENT)
+            text(page, (26, 480, 104, 503), 'Return', 12, True, ACCENT, align=1)
+        else:
+            bend = center-193
+            previous = centers[index-1]
+            arrow(page, [(center-106, 460), (bend, 460), (bend, 248),
+                          (previous, 248), (previous, 270)], color=ACCENT)
+            text(page, (bend, 480, center-106, 503), 'Return', 12, True, ACCENT, align=1)
+        # All Reject branches meet on one bus; none join the approval outcome.
+        page.draw_line((center, 510), (center, 545), color=INK, width=1.4)
+        text(page, (center+8, 515, center+78, 539), 'Reject', 12, True, INK)
+    page.draw_line((176, 545), (1014, 545), color=INK, width=1.4)
+    arrow(page, [(403, 545), (403, 638)], color=INK)
+    # Explicit line jumps distinguish crossings from joined branches.
+    for crossing in [402, 821]:
+        page.draw_line((crossing-7, 322), (crossing+7, 322), color=WHITE, width=4)
+        page.draw_line((crossing, 309), (crossing, 329), color=ACCENT, width=1.4)
+        jump = [(crossing-7, 322), (crossing-6, 318), (crossing-3, 315),
+                (crossing+3, 315), (crossing+6, 318), (crossing+7, 322)]
+        page.draw_polyline(jump, color=WHITE, width=5)
+        page.draw_polyline(jump, color=SUCCESS, width=1.4)
+
+    for index, outcome in enumerate(item['returns']):
+        x = 42+381*index
+        text(page, (x+8, 564, x+336, 585), outcome['when'], 12, True, ACCENT, minimum=11)
+        text(page, (x+8, 588, x+336, 626), outcome['next'], 12, color=GREY, minimum=11)
+    rounded_panel(page, (42, 638, 766, 713), PALE, INK, radius=30)
+    text(page, (67, 644, 741, 668), item['rejected_result'], 14, True, align=1)
+    text(page, (67, 671, 741, 711), item['rejected_effect']+' '+item['rejected_next'],
+         12, align=1, minimum=11)
+    # Transfer approval starts a separate physical handoff; it is not completion.
+    if item['example_id'] == 'approval-transfer':
+        panel(page, (880, 638, 1148, 713), SUCCESS_PALE, SUCCESS)
+    else:
+        rounded_panel(page, (880, 638, 1148, 713), SUCCESS_PALE, SUCCESS, radius=25)
+    text(page, (901, 648, 1127, 707), item['approved_result'], 13, True, SUCCESS, align=1, minimum=11)
+    notes(page, item['notes'], (42, 721, 1148, 776))
+    return page
+
+
 def flowchart_page(doc, item, number, total):
     if item.get('kind') == 'approval-flowchart':
-        return approval_example_page(doc, item, number, total, book='flowchart')
+        return approval_flowchart_page(doc, item, number, total)
     page = header(doc, 'Flowchart', item['title'], number, total,
                   'Start at the upper left. Follow the arrows and the Yes or No answer at the question.',
                   chapter('flowchart', item['id']))
@@ -578,21 +678,17 @@ def dfd_page(doc, item, number, total):
     page = header(doc, 'Data Flow Diagram', item['title'], number, total, summary, chapter('dfd', item['id']))
     if item.get('kind') == 'context':
         # Level 0 has one system and five external roles; records stay on detail pages.
-        panel(page, (435, 180, 755, 681), PALE)
-        panel(page, (435, 180, 755, 226), ACCENT, ACCENT)
-        text(page, (451, 190, 739, 224), '0. PK DTS', 23, True, WHITE, align=1)
-        diagram_icon(page, (507, 258, 683, 410), 'account')
-        text(page, (457, 444, 733, 620), 'Find and track documents\nManage requests and approvals\nRecord handoffs and history', 18, align=1)
+        rounded_panel(page, (435, 180, 755, 681), PALE, INK, radius=28)
+        page.draw_line((435, 244), (755, 244), color=INK, width=1)
+        text(page, (451, 198, 739, 235), '0. PK DTS', 23, True, align=1)
+        text(page, (457, 358, 733, 566), 'Find and track documents\n\nManage requests and approvals\n\nRecord handoffs and history', 18, align=1)
         positions = [(42, 180, 298, 329), (42, 356, 298, 505), (42, 532, 298, 681),
                      (892, 268, 1148, 417), (892, 532, 1148, 681)]
         for actor, rect in zip(item['actors'], positions):
             r = pdf.Rect(rect)
-            panel(page, r, WHITE)
-            kind = 'review' if actor['role'] in {'Plant Manager', 'Internal Auditor'} else 'account' if actor['role'] == 'Administrator' else 'person'
-            diagram_icon(page, (r.x0+100, r.y0+8, r.x0+156, r.y0+62), kind)
-            page.draw_line((r.x0+18, r.y0+69), (r.x1-18, r.y0+69), color=RULE, width=.7)
-            text(page, (r.x0+9, r.y0+79, r.x1-9, r.y0+109), actor['role'], 14, True, ACCENT, align=1, minimum=12)
-            text(page, (r.x0+10, r.y0+112, r.x1-10, r.y1-3), actor['responsibility'], 11, align=1, minimum=10)
+            panel(page, r, WHITE, INK)
+            text(page, (r.x0+15, r.y0+29, r.x1-15, r.y0+72), actor['role'], 16, True, align=1, minimum=14)
+            text(page, (r.x0+17, r.y0+85, r.x1-17, r.y1-16), actor['responsibility'], 13, color=GREY, align=1, minimum=12)
             cy = (r.y0+r.y1)/2
             if r.x0 < 400:
                 left, right = r.x1, 435
@@ -619,26 +715,40 @@ def dfd_page(doc, item, number, total):
             text(page, (x+12, 225, x+332, 258), operator['text'], 13, minimum=12)
     caption_y = 276 if decision_data else 176
     row_height = 67 if decision_data else 80
-    for left, right, caption in [(42, 286, 'FROM'), (286, 467, 'INFORMATION'),
-                                  (467, 735, 'ACTIVITY'), (735, 918, 'RESULT'),
-                                  (918, 1148, 'TO')]:
+    for left, right, caption in [(42, 286, 'SOURCE'), (286, 467, 'INPUT DATA'),
+                                  (467, 735, 'PROCESS'), (735, 918, 'OUTPUT DATA'),
+                                  (918, 1148, 'DESTINATION')]:
         text(page, (left, caption_y, right, caption_y+22), caption, 10, True, GREY, align=1, minimum=10)
     for index, row in enumerate(rows):
         y = 302+index*79 if decision_data else 212+index*98
         for x0, x1, field, kind in [(42, 286, 'from', row['from_kind']), (467, 735, 'process', 'process'), (918, 1148, 'to', row['to_kind'])]:
+            if field == 'from' and row.get('context_from'):
+                # A decision alone cannot supply the proposal or saved route.
+                # Show both the operator and request record as process inputs.
+                panel(page, (x0, y, x1, y+28), WHITE, INK)
+                text(page, (x0+9, y+5, x1-9, y+26), row['from'], 12, align=1, minimum=11)
+                page.draw_polyline([(x1, y+37), (x0, y+37), (x0, y+67), (x1, y+67)], color=INK, width=1)
+                text(page, (x0+9, y+43, x1-9, y+65), row['context_from'], 12, align=1, minimum=11)
+                continue
             if kind == 'store':
-                # Keep the open-ended data-store symbol distinct from actor cards.
-                page.draw_polyline([(x1, y), (x0, y), (x0, y+row_height), (x1, y+row_height)], color=GREY, width=1)
-                icon = 'database'
+                page.draw_polyline([(x1, y), (x0, y), (x0, y+row_height), (x1, y+row_height)], color=INK, width=1)
+            elif kind == 'process':
+                rounded_panel(page, (x0, y, x1, y+row_height), PALE, INK, radius=14)
             else:
-                panel(page, (x0, y, x1, y+row_height), PALE if kind == 'process' else WHITE)
-                if kind == 'process':
-                    panel(page, (x0, y, x0+3, y+row_height), ACCENT, ACCENT)
-                icon = 'account' if kind == 'process' else 'review' if any(word in row[field].lower() for word in ['approv', 'review', 'audit']) else 'person'
+                panel(page, (x0, y, x1, y+row_height), WHITE, INK)
             center = y+row_height/2
-            diagram_icon(page, (x0+12, center-19, x0+50, center+19), icon)
-            text(page, (x0+62, center-26, x1-12, center+28), row[field], 13.5, bold=kind == 'process', minimum=12)
+            rect = pdf.Rect(x0+15, y+10, x1-15, y+row_height-10)
+            size = 14 if kind == 'process' else 13.5
+            spare = page.new_shape().insert_textbox(rect, plain(row[field]), fontsize=size,
+                fontname='hebo' if kind == 'process' else 'helv', align=1)
+            text(page, rect+(0, max(0, spare)/2, 0, 0), row[field], size,
+                 bold=kind == 'process', align=1, minimum=12)
         for x0, x1, field in [(286, 467, 'input'), (735, 918, 'output')]:
+            if field == 'input' and row.get('context_from'):
+                for offset, label in [(23, row['input']), (60, row['context_input'])]:
+                    arrow(page, [(x0, y+offset), (x1, y+offset)], color=GREY)
+                    text(page, (x0+5, y+offset-24, x1-5, y+offset-3), label, 11, align=1, minimum=10)
+                continue
             arrow_y = y+48 if decision_data else y+60
             arrow(page, [(x0+4, arrow_y), (x1, arrow_y)], color=GREY)
             text(page, (x0+8, y+4, x1-8, arrow_y-6), row[field], 12.5, align=1, minimum=11)
@@ -1048,7 +1158,7 @@ def source_strings(item):
             yield from source_strings(value)
     elif isinstance(item, dict):
         for key, value in item.items():
-            if key not in {'id', 'kind', 'from_kind', 'to_kind', 'example_id', 'approval_example', 'decision_examples'}:
+            if key not in {'id', 'kind', 'from_kind', 'to_kind', 'context_kind', 'example_id', 'approval_example', 'decision_examples'}:
                 yield from source_strings(value)
 
 
@@ -1073,12 +1183,11 @@ def verify(content, pending=False):
                 else:
                     for value in source_strings(item):
                         assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
-                    if key == 'dfd':
-                        expected_icons = 6 if item.get('kind') == 'context' else 3*len(item['flows'])
-                        assert len(page.get_image_info()) == expected_icons, f'Missing DFD illustrations: {item["id"]}'
+                    if key == 'dfd' or item.get('kind') == 'approval-flowchart':
+                        assert not page.get_image_info(), f'Diagram symbols must be editable shapes: {item["id"]}'
                     if key == 'process':
                         assert len(page.get_image_info()) == len(item['steps']), f'Missing process illustrations: {item["id"]}'
-                    if item.get('kind') in {'approval-example', 'approval-flowchart'}:
+                    if item.get('kind') == 'approval-example':
                         assert len(page.get_image_info()) == len(item['steps']), f'Missing operator illustrations: {item["id"]}'
                     if item.get('decision_examples'):
                         targets = {example_id(value): position for position, value in enumerate(items) if example_id(value)}
