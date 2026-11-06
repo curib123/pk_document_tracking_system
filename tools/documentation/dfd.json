@@ -26,18 +26,18 @@
         {"from": "Document user", "from_kind": "actor", "input": "Handoff, access or disposal details", "process": "6-8. Track holders and document use", "output": "Holder, access or disposal result", "to": "Document tracking records", "to_kind": "store"},
         {"from": "Authorized setup user", "from_kind": "actor", "input": "Setup and recovery choices", "process": "9-11. Manage system settings", "output": "Settings, notices, audit and backups", "to": "System records", "to_kind": "store"}
       ],
-      "note": "Boxes show people or activities. Open-ended boxes show saved records. Arrow labels explain what information moves between them."
+      "note": "Rectangles are external entities. Rounded rectangles are processes. Open-ended boxes are data stores. Labelled arrows show information."
     },
     {
       "id": "hardcopy-tracking",
       "title": "2. Physical documents and storage",
       "summary": "Register and edit hardcopies directly. New hardcopy creation and update requests are unavailable.",
       "flows": [
-        {"from": "Hardcopy record editor", "from_kind": "actor", "input": "Title, holder and storage", "process": "2.1 Register or edit hardcopy", "output": "Record and change history", "to": "Hardcopy register", "to_kind": "store"},
-        {"from": "Reference records", "from_kind": "store", "input": "Active storage choices and holder", "process": "2.1 Check record details", "output": "Save result or required correction", "to": "Hardcopy record editor", "to_kind": "actor"},
-        {"from": "Hardcopy register", "from_kind": "store", "input": "Holder, storage and status", "process": "2.2 View hardcopy details", "output": "Holder and storage details", "to": "Authorized document user", "to_kind": "actor"},
+        {"from": "Hardcopy record editor", "from_kind": "actor", "input": "Title, holder and storage", "process": "2.1 Validate and save hardcopy", "output": "Record and change history", "to": "Hardcopy register", "to_kind": "store"},
+        {"from": "Reference records", "from_kind": "store", "input": "Active storage choices and holder", "process": "2.1 Validate and save hardcopy", "output": "Save result or required correction", "to": "Hardcopy record editor", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Holder, storage and status", "process": "2.2 Show hardcopy tracking", "output": "Holder and storage details", "to": "Authorized document user", "to_kind": "actor"},
         {"from": "Hardcopy register", "from_kind": "store", "input": "Retention start and end dates", "process": "2.3 View retention status", "output": "Days remaining; due; overdue", "to": "Authorized record reviewer", "to_kind": "actor"},
-        {"from": "Handoff records", "from_kind": "store", "input": "Approved move and receipt history", "process": "2.2 View tracking history", "output": "Release and receipt details", "to": "Authorized reviewer", "to_kind": "actor"}
+        {"from": "Handoff records", "from_kind": "store", "input": "Approved move and receipt history", "process": "2.2 Show hardcopy tracking", "output": "Release and receipt details", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "Storage follows Area > Specific > optional Asset > Location. Retention dates remind you to review a document; they never dispose of it."
     },
@@ -75,7 +75,7 @@
         {"from": "Requester", "from_kind": "actor", "input": "Draft details, file and submission", "process": "5.1 Check and submit request", "output": "Submitted request and route", "to": "Request records", "to_kind": "store"},
         {"from": "Published approval routes", "from_kind": "store", "input": "Review order and requester's leader", "process": "5.2 Assign the active review", "output": "Proposal, review task and file", "to": "Assigned approver", "to_kind": "actor"},
         {"from": "Assigned approver", "from_kind": "actor", "input": "Approve, Return or Reject; remarks", "process": "5.3 Record the decision", "output": "Decision and current stage", "to": "Request records", "to_kind": "store"},
-        {"from": "Request records", "from_kind": "store", "input": "First reviewer returns the request", "process": "5.4 Show required corrections", "output": "Request to correct and resubmit", "to": "Requester", "to_kind": "actor"},
+        {"from": "Request records", "from_kind": "store", "input": "First-step Return and remarks", "process": "5.4 Show required corrections", "output": "Request to correct and resubmit", "to": "Requester", "to_kind": "actor"},
         {"from": "Request records", "from_kind": "store", "input": "Final approval and request details", "process": "5.5 Apply approved action", "output": "Document change or pending handoff", "to": "Document activity records", "to_kind": "store"}
       ],
       "note": "A later Return sends work to the previous approver. Reject ends the request. Resubmission keeps the route. Reading a notice makes no decision."
@@ -110,30 +110,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or new softcopy",
+          "output": "Review status or new record",
           "to": "Request and softcopy records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no document created",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval creates the Active softcopy and approved file at revision 00; the request becomes Completed. Reject creates no document."
+      "note": "Final approval: Active record, approved file, revision 00; request Completed. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-softcopy-revise",
@@ -165,30 +174,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or approved revision",
+          "output": "Review status or revision data",
           "to": "Request and softcopy records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no new revision",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval advances the revision and publishes the replacement file; the request becomes Completed. Reject leaves the current file unchanged."
+      "note": "Final approval: next revision and current replacement file; request Completed. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-external-create",
@@ -220,30 +238,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or external record",
+          "output": "Review status or new record",
           "to": "Request and external records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no document created",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval creates the Active external record and current file at revision 00; the request becomes Completed. Reject creates no record."
+      "note": "Final approval: Active record, current file, revision 00; request Completed. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-external-revise",
@@ -275,30 +302,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or approved revision",
+          "output": "Review status or revision data",
           "to": "Request and external records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no new revision",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval publishes the next external revision and current Download file; the request becomes Completed. Reject leaves the current file unchanged."
+      "note": "Final approval: next revision and current replacement file; request Completed. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-transfer",
@@ -330,30 +366,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or approved handoff",
+          "output": "Review status or handoff data",
           "to": "Request and transfer records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no handoff created",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval sets the request to Approved and handoff to For Transfer. Dispatch and Accept follow; holder and location change only after Accept."
+      "note": "Final approval: Approved / For Transfer. Dispatch then Accept changes holder and location. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-access",
@@ -385,30 +430,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or access grant",
+          "output": "Review status or access grant",
           "to": "Request and access records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no new access grant",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval grants the requester access through the approved expiry and sets Completed. Reject grants no access; existing permissions stay unchanged."
+      "note": "Final approval: requester gains access through approved expiry; request Completed. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-assignment",
@@ -440,30 +494,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or assignment",
+          "output": "Review status or assignment data",
           "to": "Request and document records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no assignment change",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval assigns the softcopy or changes the hardcopy holder to the requester; status becomes Completed. Hardcopy Location stays unchanged."
+      "note": "Final approval: requester becomes assignee or hardcopy holder; Completed; Location unchanged. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "decision-disposal",
@@ -495,30 +558,39 @@
           "from_kind": "actor",
           "input": "Approve decision and remarks",
           "process": "Record approval and progress",
-          "output": "Next review or disposal record",
+          "output": "Review status or disposal data",
           "to": "Request and disposal records",
-          "to_kind": "store"
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Return decision and remarks",
           "process": "Record the return destination",
-          "output": "Correction or earlier review",
-          "to": "Requester or prior reviewer",
-          "to_kind": "actor"
+          "output": "Returned state and review history",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         },
         {
           "from": "Assigned reviewer",
           "from_kind": "actor",
           "input": "Reject decision and remarks",
           "process": "Record rejection and close",
-          "output": "Rejected; no disposal applied",
-          "to": "Request decision history",
-          "to_kind": "store"
+          "output": "Rejected status and remarks",
+          "to": "Request records",
+          "to_kind": "store",
+          "context_from": "Request records",
+          "context_input": "Request and route details",
+          "context_kind": "store"
         }
       ],
-      "note": "Final approval marks the document Disposed and request Completed, revokes grants and clears Hardcopy Location. Reject leaves the document unchanged."
+      "note": "Final approval: Disposed; request Completed; grants revoked; Hardcopy Location cleared. Return notice: requester at step 1; previous reviewer later."
     },
     {
       "id": "physical-handoffs",
