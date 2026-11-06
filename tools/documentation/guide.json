@@ -185,6 +185,9 @@
       "notes": [
         "Attach a file before submission. This request form has no Effective Date field.",
         "The final document number is assigned at final approval and may differ from the preview."
+      ],
+      "decision_examples": [
+        "approval-return-reject"
       ]
     },
     {
@@ -202,6 +205,9 @@
       "notes": [
         "When editing a draft, keep its attachment or upload a replacement.",
         "Softcopy cancellation requests are unavailable. Ask an authorized controller if the document needs disposal."
+      ],
+      "decision_examples": [
+        "approval-softcopy-revise"
       ]
     },
     {
@@ -271,6 +277,9 @@
       "notes": [
         "External Categories are separate from Softcopy Categories.",
         "Attach a file before submission. External documents have no retention dates."
+      ],
+      "decision_examples": [
+        "approval-external-create"
       ]
     },
     {
@@ -288,6 +297,9 @@
       "notes": [
         "Choose an Active external document available to your account.",
         "When editing a draft, keep its attachment or upload a replacement."
+      ],
+      "decision_examples": [
+        "approval-external-revise"
       ]
     },
     {
@@ -324,6 +336,12 @@
         "Office app links expire after 10 minutes. Refresh Review File for a new link.",
         "Editing a review copy does not change the system file. The requester must attach the revised file.",
         "For first-time WPS use, select Download WPS opener setup and follow the included instructions."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise"
       ]
     },
     {
@@ -342,6 +360,16 @@
         "You cannot edit or cancel a Submitted request. Rejected requests are closed.",
         "Most final approvals produce Completed. A transfer still needs Dispatch and Accept.",
         "A Returned request keeps its original approval process when resubmitted."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
     },
     {
@@ -360,6 +388,16 @@
         "At the first step, Return sends the request to its requester for correction.",
         "At a later step, Return sends it to the previous approver. Its status stays Submitted.",
         "The approval process assigns each task and may include a Requester account confirmation step."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
     },
     {
@@ -378,7 +416,57 @@
         "These routes reflect the local review on 5 November 2026. Authorized administrators can change routes for future submissions.",
         "Submitted and Returned requests keep their original route, even if the default route changes.",
         "Requester confirmation is an approval task in My Tasks. Transfer Dispatch and Accept are separate steps."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
+    },
+    {
+      "id": "decision-softcopy-create",
+      "kind": "approval-reference",
+      "example": "approval-return-reject"
+    },
+    {
+      "id": "decision-softcopy-revise",
+      "kind": "approval-reference",
+      "example": "approval-softcopy-revise"
+    },
+    {
+      "id": "decision-external-create",
+      "kind": "approval-reference",
+      "example": "approval-external-create"
+    },
+    {
+      "id": "decision-external-revise",
+      "kind": "approval-reference",
+      "example": "approval-external-revise"
+    },
+    {
+      "id": "decision-transfer",
+      "kind": "approval-reference",
+      "example": "approval-transfer"
+    },
+    {
+      "id": "decision-access",
+      "kind": "approval-reference",
+      "example": "approval-access"
+    },
+    {
+      "id": "decision-assignment",
+      "kind": "approval-reference",
+      "example": "approval-assignment"
+    },
+    {
+      "id": "decision-disposal",
+      "kind": "approval-reference",
+      "example": "approval-disposal"
     },
     {
       "id": "transfer-request",
@@ -396,6 +484,9 @@
         "Choose a different active destination with matching storage choices.",
         "The holder and location stay unchanged until the named recipient accepts the document.",
         "Another submitted access, assignment or transfer request for you and this document may block submission."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
@@ -413,6 +504,9 @@
       "notes": [
         "Only the original requester can Dispatch. Being the holder alone does not allow it.",
         "Dispatch does not change the recorded holder or location."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
@@ -430,6 +524,9 @@
       "notes": [
         "Only the named recipient can Accept. Tell the controller if the holder, active location or destination no longer matches.",
         "The previous holder's personal access grants end when this handoff changes the holder."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
@@ -448,6 +545,9 @@
         "Access is for you. It does not change the holder or move the document.",
         "Download and print need separate permissions. This request does not cover external documents.",
         "An unfinished related request for you and the same document may block submission."
+      ],
+      "decision_examples": [
+        "approval-access"
       ]
     },
     {
@@ -466,6 +566,9 @@
         "Softcopy assignment adds or reactivates your assignment. Other assignees stay assigned.",
         "Use a transfer request when physical movement and receipt must be recorded.",
         "This request does not cover external documents."
+      ],
+      "decision_examples": [
+        "approval-assignment"
       ]
     },
     {
@@ -484,6 +587,9 @@
         "Other Reason is required for Other and can contain up to 250 characters.",
         "For softcopies, an authorized controller uses direct Dispose. There is no softcopy disposal request.",
         "Retention alerts do not submit or approve disposal."
+      ],
+      "decision_examples": [
+        "approval-disposal"
       ]
     },
     {
