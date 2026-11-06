@@ -165,12 +165,21 @@ Remarks are optional, but help explain corrections and rejections.
 | **Return** at a later step | The previous approver's task reopens. The request stays Submitted. |
 | **Reject** | Approval ends and the request becomes Rejected. |
 
-For worked examples, open **pages 11-18 of the [Process Flow](PK_DTS_Process_Flow.pdf)**.
-There is a separate example for each current request: Softcopy Create and Revise,
-External Create and Revise, Hardcopy Transfer, Document Access, Document Assignment,
-and Disposal. Each uses its supplied default workflow's exact step names and
-assigned operators. Separate Approve, Return and Reject paths show who acts next
-and when the requested change takes effect.
+All four documents include a separate example for each current request: Softcopy
+Create and Revise, External Create and Revise, Hardcopy Transfer, Document Access,
+Document Assignment, and Disposal. Each uses the supplied default workflow's
+exact step names and assigned operators.
+
+| What you want to see | Decision examples |
+| --- | --- |
+| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DTS_DFD.pdf), pages **9-16** |
+| The Approve, Return and Reject choices and their outcomes | [Flowchart](PK_DTS_Flowchart.pdf), pages **12-19** |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pdf), pages **11-18** |
+| The same decisions alongside the screen instructions | [User Guide](PK_DTS_User_Guide.pdf), pages **27-34** |
+
+On related procedure pages, select a page number beside **Decisions** in the PDF
+footer to open the matching example. Direct actions use their own procedures;
+they do not go through these approval routes.
 
 Submitted and Returned requests keep their original approval route, even when
 an Administrator publishes a new default. Opening a notification does not

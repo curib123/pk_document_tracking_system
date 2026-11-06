@@ -170,6 +170,11 @@ User Guide and diagrams. The generator creates the PDF, editable PowerPoint,
 and both Visio formats. Guide screen examples and callouts are kept alongside
 the content. Python needs `pymupdf` and `python-pptx` installed.
 
+All four documents cover the eight current request types and their approval,
+return and rejection outcomes. The Process Flow owns the shared default workflow
+examples; the other books reuse their operator names and decision details.
+Related procedures link to the matching examples through the PDF footer.
+
 ```powershell
 # Check source coverage without generating files.
 python -X utf8 tools/documentation/refresh_documents.py --check-source
