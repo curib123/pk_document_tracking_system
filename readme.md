@@ -174,6 +174,10 @@ All four documents cover the eight current request types and their approval,
 return and rejection outcomes. The Process Flow owns the shared default workflow
 examples; the other books reuse their operator names and decision details.
 Related procedures link to the matching examples through the PDF footer.
+The Flowchart keeps its existing procedures and adds a connected approval flow
+for each request, with decision diamonds, Return loops and separate Reject ends.
+The DFD uses external entities, numbered processes, record stores and labeled
+information flows. Its symbols and text remain editable in both Visio formats.
 
 ```powershell
 # Check source coverage without generating files.
