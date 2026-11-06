@@ -7,36 +7,11 @@
       "title": "People and their information",
       "summary": "See what each of the five standard roles provides to PK DTS and receives in return.",
       "actors": [
-        {
-          "role": "Staff",
-          "responsibility": "Requester, holder or named receiving user",
-          "sends": "Searches; requests; receipt",
-          "receives": "Records; status; tasks"
-        },
-        {
-          "role": "Document Control Officer",
-          "responsibility": "Controls documents; reviews assigned requests",
-          "sends": "Record changes; decisions",
-          "receives": "Documents; review tasks"
-        },
-        {
-          "role": "Plant Manager",
-          "responsibility": "Reviews assigned requests; may also request",
-          "sends": "Decisions; requests",
-          "receives": "Proposals; records; status"
-        },
-        {
-          "role": "Administrator",
-          "responsibility": "Manages accounts, setup and recovery",
-          "sends": "Setup; recovery choices",
-          "receives": "Results; records; archives"
-        },
-        {
-          "role": "Internal Auditor",
-          "responsibility": "Reviews permitted records and audit evidence",
-          "sends": "Searches; audit filters",
-          "receives": "Records; history; audit"
-        }
+        {"role": "Staff", "responsibility": "Requester, holder or named receiving user", "sends": "Searches; requests; receipt", "receives": "Records; status; tasks"},
+        {"role": "Document Control Officer", "responsibility": "Controls documents; reviews assigned requests", "sends": "Record changes; decisions", "receives": "Documents; review tasks"},
+        {"role": "Plant Manager", "responsibility": "Reviews assigned requests; may also request", "sends": "Decisions; requests", "receives": "Proposals; records; status"},
+        {"role": "Administrator", "responsibility": "Manages accounts, setup and recovery", "sends": "Setup; recovery choices", "receives": "Results; records; archives"},
+        {"role": "Internal Auditor", "responsibility": "Reviews permitted records and audit evidence", "sends": "Searches; audit filters", "receives": "Records; history; audit"}
       ],
       "note": "These are the five standard roles; custom roles are allowed. Requester, requester's leader and receiving user describe duties, not extra roles."
     },
@@ -45,51 +20,11 @@
       "title": "How information moves through PK DTS",
       "summary": "Read each row from left to right: information comes in, an activity takes place, and a result is recorded or shared.",
       "flows": [
-        {
-          "from": "User",
-          "from_kind": "actor",
-          "input": "Sign-in details and search terms",
-          "process": "1. Sign in and find records",
-          "output": "Sign-in result; permitted records",
-          "to": "User",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Document controller",
-          "from_kind": "actor",
-          "input": "Document details and files",
-          "process": "2-4. Maintain document records",
-          "output": "Saved documents and changes",
-          "to": "Document registers",
-          "to_kind": "store"
-        },
-        {
-          "from": "Request participants",
-          "from_kind": "actor",
-          "input": "Proposal, file and decisions",
-          "process": "5. Review document requests",
-          "output": "Request progress and decisions",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Document user",
-          "from_kind": "actor",
-          "input": "Handoff, access or disposal details",
-          "process": "6-8. Track holders and document use",
-          "output": "Holder, access or disposal result",
-          "to": "Document tracking records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Authorized setup user",
-          "from_kind": "actor",
-          "input": "Setup and recovery choices",
-          "process": "9-11. Manage system settings",
-          "output": "Settings, notices, audit and backups",
-          "to": "System records",
-          "to_kind": "store"
-        }
+        {"from": "User", "from_kind": "actor", "input": "Sign-in details and search terms", "process": "1. Sign in and find records", "output": "Sign-in result; permitted records", "to": "User", "to_kind": "actor"},
+        {"from": "Document controller", "from_kind": "actor", "input": "Document details and files", "process": "2-4. Maintain document records", "output": "Saved documents and changes", "to": "Document registers", "to_kind": "store"},
+        {"from": "Request participants", "from_kind": "actor", "input": "Proposal, file and decisions", "process": "5. Review document requests", "output": "Request progress and decisions", "to": "Request records", "to_kind": "store"},
+        {"from": "Document user", "from_kind": "actor", "input": "Handoff, access or disposal details", "process": "6-8. Track holders and document use", "output": "Holder, access or disposal result", "to": "Document tracking records", "to_kind": "store"},
+        {"from": "Authorized setup user", "from_kind": "actor", "input": "Setup and recovery choices", "process": "9-11. Manage system settings", "output": "Settings, notices, audit and backups", "to": "System records", "to_kind": "store"}
       ],
       "note": "Boxes show people or activities. Open-ended boxes show saved records. Arrow labels explain what information moves between them."
     },
@@ -98,51 +33,11 @@
       "title": "2. Physical documents and storage",
       "summary": "Register and edit hardcopies directly. New hardcopy creation and update requests are unavailable.",
       "flows": [
-        {
-          "from": "Hardcopy record editor",
-          "from_kind": "actor",
-          "input": "Title, holder and storage",
-          "process": "2.1 Register or edit hardcopy",
-          "output": "Record and change history",
-          "to": "Hardcopy register",
-          "to_kind": "store"
-        },
-        {
-          "from": "Reference records",
-          "from_kind": "store",
-          "input": "Active storage choices and holder",
-          "process": "2.1 Check record details",
-          "output": "Save result or required correction",
-          "to": "Hardcopy record editor",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Hardcopy register",
-          "from_kind": "store",
-          "input": "Holder, storage and status",
-          "process": "2.2 View hardcopy details",
-          "output": "Holder and storage details",
-          "to": "Authorized document user",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Hardcopy register",
-          "from_kind": "store",
-          "input": "Retention start and end dates",
-          "process": "2.3 View retention status",
-          "output": "Days remaining; due; overdue",
-          "to": "Authorized record reviewer",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Handoff records",
-          "from_kind": "store",
-          "input": "Approved move and receipt history",
-          "process": "2.2 View tracking history",
-          "output": "Release and receipt details",
-          "to": "Authorized reviewer",
-          "to_kind": "actor"
-        }
+        {"from": "Hardcopy record editor", "from_kind": "actor", "input": "Title, holder and storage", "process": "2.1 Register or edit hardcopy", "output": "Record and change history", "to": "Hardcopy register", "to_kind": "store"},
+        {"from": "Reference records", "from_kind": "store", "input": "Active storage choices and holder", "process": "2.1 Check record details", "output": "Save result or required correction", "to": "Hardcopy record editor", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Holder, storage and status", "process": "2.2 View hardcopy details", "output": "Holder and storage details", "to": "Authorized document user", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Retention start and end dates", "process": "2.3 View retention status", "output": "Days remaining; due; overdue", "to": "Authorized record reviewer", "to_kind": "actor"},
+        {"from": "Handoff records", "from_kind": "store", "input": "Approved move and receipt history", "process": "2.2 View tracking history", "output": "Release and receipt details", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "Storage follows Area > Specific > optional Asset > Location. Retention dates remind you to review a document; they never dispose of it."
     },
@@ -151,51 +46,11 @@
       "title": "3. Softcopy documents and files",
       "summary": "Direct changes take effect immediately. Requested changes take effect after final approval. Softcopy cancellation is unavailable.",
       "flows": [
-        {
-          "from": "Document controller",
-          "from_kind": "actor",
-          "input": "Title, category, pages and file",
-          "process": "3.1 Create or revise directly",
-          "output": "Current document and file",
-          "to": "Softcopy records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Requester",
-          "from_kind": "actor",
-          "input": "Proposed details and file",
-          "process": "5. Save and route request",
-          "output": "Draft or submitted proposal",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Request records",
-          "from_kind": "store",
-          "input": "Approved creation or revision",
-          "process": "3.2 Publish approved change",
-          "output": "Current revision and file",
-          "to": "Softcopy records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Softcopy records",
-          "from_kind": "store",
-          "input": "Current file and user access",
-          "process": "3.3 Check file permission",
-          "output": "Download or print access",
-          "to": "Authorized file user",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Softcopy revision history",
-          "from_kind": "store",
-          "input": "Revision details and changes",
-          "process": "3.4 View revision history",
-          "output": "Earlier revisions and changes",
-          "to": "Authorized reviewer",
-          "to_kind": "actor"
-        }
+        {"from": "Document controller", "from_kind": "actor", "input": "Title, category, pages and file", "process": "3.1 Create or revise directly", "output": "Current document and file", "to": "Softcopy records", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Proposed details and file", "process": "5. Save and route request", "output": "Draft or submitted proposal", "to": "Request records", "to_kind": "store"},
+        {"from": "Request records", "from_kind": "store", "input": "Approved creation or revision", "process": "3.2 Publish approved change", "output": "Current revision and file", "to": "Softcopy records", "to_kind": "store"},
+        {"from": "Softcopy records", "from_kind": "store", "input": "Current file and user access", "process": "3.3 Check file permission", "output": "Download or print access", "to": "Authorized file user", "to_kind": "actor"},
+        {"from": "Softcopy revision history", "from_kind": "store", "input": "Revision details and changes", "process": "3.4 View revision history", "output": "Earlier revisions and changes", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "New records use Softcopy Categories and automatic numbers; a series is optional. A revision keeps the same document number and adds a revision."
     },
@@ -204,51 +59,11 @@
       "title": "4. External documents and files",
       "summary": "Documents from outside the organization use their own categories. Create or revise them directly, or request approval.",
       "flows": [
-        {
-          "from": "Document controller",
-          "from_kind": "actor",
-          "input": "Title, category, description and file",
-          "process": "4.1 Create or revise directly",
-          "output": "Current document and revision",
-          "to": "External document records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Requester",
-          "from_kind": "actor",
-          "input": "Creation or revision proposal",
-          "process": "5. Save and route request",
-          "output": "Proposal and file for review",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Request records",
-          "from_kind": "store",
-          "input": "Approved creation or revision",
-          "process": "4.2 Publish approved change",
-          "output": "Current document and file",
-          "to": "External document records",
-          "to_kind": "store"
-        },
-        {
-          "from": "External Categories",
-          "from_kind": "store",
-          "input": "Category and parent folder",
-          "process": "4.3 Browse external folders",
-          "output": "Permitted document list",
-          "to": "Authorized document user",
-          "to_kind": "actor"
-        },
-        {
-          "from": "External document records",
-          "from_kind": "store",
-          "input": "Current file and user access",
-          "process": "4.4 Check file permission",
-          "output": "Current file download",
-          "to": "Authorized file user",
-          "to_kind": "actor"
-        }
+        {"from": "Document controller", "from_kind": "actor", "input": "Title, category, description and file", "process": "4.1 Create or revise directly", "output": "Current document and revision", "to": "External document records", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Creation or revision proposal", "process": "5. Save and route request", "output": "Proposal and file for review", "to": "Request records", "to_kind": "store"},
+        {"from": "Request records", "from_kind": "store", "input": "Approved creation or revision", "process": "4.2 Publish approved change", "output": "Current document and file", "to": "External document records", "to_kind": "store"},
+        {"from": "External Categories", "from_kind": "store", "input": "Category and parent folder", "process": "4.3 Browse external folders", "output": "Permitted document list", "to": "Authorized document user", "to_kind": "actor"},
+        {"from": "External document records", "from_kind": "store", "input": "Current file and user access", "process": "4.4 Check file permission", "output": "Current file download", "to": "Authorized file user", "to_kind": "actor"}
       ],
       "note": "Create and revise both need a new attachment. Revision numbers increase automatically. External documents have no retention dates; Download opens the current file."
     },
@@ -257,51 +72,11 @@
       "title": "5. Requests and approval decisions",
       "summary": "The published approval route sets who reviews a request and in what order. PK DTS saves each decision.",
       "flows": [
-        {
-          "from": "Requester",
-          "from_kind": "actor",
-          "input": "Draft details, file and submission",
-          "process": "5.1 Check and submit request",
-          "output": "Submitted request and route",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Published approval routes",
-          "from_kind": "store",
-          "input": "Review order and requester's leader",
-          "process": "5.2 Assign the active review",
-          "output": "Proposal, review task and file",
-          "to": "Assigned approver",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Assigned approver",
-          "from_kind": "actor",
-          "input": "Approve, Return or Reject; remarks",
-          "process": "5.3 Record the decision",
-          "output": "Decision and current stage",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Request records",
-          "from_kind": "store",
-          "input": "First reviewer returns the request",
-          "process": "5.4 Show required corrections",
-          "output": "Request to correct and resubmit",
-          "to": "Requester",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Request records",
-          "from_kind": "store",
-          "input": "Final approval and request details",
-          "process": "5.5 Apply approved action",
-          "output": "Document change or pending handoff",
-          "to": "Document activity records",
-          "to_kind": "store"
-        }
+        {"from": "Requester", "from_kind": "actor", "input": "Draft details, file and submission", "process": "5.1 Check and submit request", "output": "Submitted request and route", "to": "Request records", "to_kind": "store"},
+        {"from": "Published approval routes", "from_kind": "store", "input": "Review order and requester's leader", "process": "5.2 Assign the active review", "output": "Proposal, review task and file", "to": "Assigned approver", "to_kind": "actor"},
+        {"from": "Assigned approver", "from_kind": "actor", "input": "Approve, Return or Reject; remarks", "process": "5.3 Record the decision", "output": "Decision and current stage", "to": "Request records", "to_kind": "store"},
+        {"from": "Request records", "from_kind": "store", "input": "First reviewer returns the request", "process": "5.4 Show required corrections", "output": "Request to correct and resubmit", "to": "Requester", "to_kind": "actor"},
+        {"from": "Request records", "from_kind": "store", "input": "Final approval and request details", "process": "5.5 Apply approved action", "output": "Document change or pending handoff", "to": "Document activity records", "to_kind": "store"}
       ],
       "note": "A later Return sends work to the previous approver. Reject ends the request. Resubmission keeps the route. Reading a notice makes no decision."
     },
@@ -750,51 +525,11 @@
       "title": "6. Transfer, dispatch and receipt",
       "summary": "Approval prepares the handoff. Acceptance checks the document, holder and agreed storage before changing the holder and location.",
       "flows": [
-        {
-          "from": "Approved transfer request",
-          "from_kind": "store",
-          "input": "Holder, recipient and destination",
-          "process": "6.1 Prepare physical handoff",
-          "output": "For Transfer handoff",
-          "to": "Transfer tracking records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Original requester",
-          "from_kind": "actor",
-          "input": "Dispatch confirmation",
-          "process": "6.2 Record dispatch",
-          "output": "In Transit; dispatcher; time",
-          "to": "Transfer tracking records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Named receiving user",
-          "from_kind": "actor",
-          "input": "Accept confirmation after receipt",
-          "process": "6.3 Check and record receipt",
-          "output": "Accepted; receiver; time",
-          "to": "Transfer tracking records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Accepted transfer record",
-          "from_kind": "store",
-          "input": "Recipient and approved storage",
-          "process": "6.4 Update holder and storage",
-          "output": "New holder and location",
-          "to": "Hardcopy records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Transfer tracking records",
-          "from_kind": "store",
-          "input": "Accepted receipt and completion",
-          "process": "6.5 View handoff result",
-          "output": "Receipt and updated tracking",
-          "to": "Authorized tracking viewer",
-          "to_kind": "actor"
-        }
+        {"from": "Approved transfer request", "from_kind": "store", "input": "Holder, recipient and destination", "process": "6.1 Prepare physical handoff", "output": "For Transfer handoff", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Original requester", "from_kind": "actor", "input": "Dispatch confirmation", "process": "6.2 Record dispatch", "output": "In Transit; dispatcher; time", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Named receiving user", "from_kind": "actor", "input": "Accept confirmation after receipt", "process": "6.3 Check and record receipt", "output": "Accepted; receiver; time", "to": "Transfer tracking records", "to_kind": "store"},
+        {"from": "Accepted transfer record", "from_kind": "store", "input": "Recipient and approved storage", "process": "6.4 Update holder and storage", "output": "New holder and location", "to": "Hardcopy records", "to_kind": "store"},
+        {"from": "Transfer tracking records", "from_kind": "store", "input": "Accepted receipt and completion", "process": "6.5 View handoff result", "output": "Receipt and updated tracking", "to": "Authorized tracking viewer", "to_kind": "actor"}
       ],
       "note": "Only the original requester can Dispatch; only the named receiver can Accept. A holder change removes the previous holder's personal hardcopy access grants."
     },
@@ -803,51 +538,11 @@
       "title": "7. Document access and assignment",
       "summary": "Access allows document use. Assignment adds a softcopy assignee or changes a hardcopy holder. A transfer records the physical handoff.",
       "flows": [
-        {
-          "from": "Requester",
-          "from_kind": "actor",
-          "input": "Reason for access and expiry date",
-          "process": "5. Review access request",
-          "output": "Approved access request",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Approved access request",
-          "from_kind": "store",
-          "input": "Requester, document and expiry",
-          "process": "7.1 Grant temporary access",
-          "output": "Personal access until expiry",
-          "to": "Document access records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Approved assignment request",
-          "from_kind": "store",
-          "input": "Requester and selected document",
-          "process": "7.2 Apply assignment",
-          "output": "New assignee or holder",
-          "to": "Document assignment records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Assignment controller",
-          "from_kind": "actor",
-          "input": "Document, Location or category; user",
-          "process": "7.3 Assign documents directly",
-          "output": "Updated assignees or holders",
-          "to": "Document assignment records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Document permission records",
-          "from_kind": "store",
-          "input": "Current access and permissions",
-          "process": "7.4 Show permitted documents",
-          "output": "Permitted records and actions",
-          "to": "Document user",
-          "to_kind": "actor"
-        }
+        {"from": "Requester", "from_kind": "actor", "input": "Reason for access and expiry date", "process": "5. Review access request", "output": "Approved access request", "to": "Request records", "to_kind": "store"},
+        {"from": "Approved access request", "from_kind": "store", "input": "Requester, document and expiry", "process": "7.1 Grant temporary access", "output": "Personal access until expiry", "to": "Document access records", "to_kind": "store"},
+        {"from": "Approved assignment request", "from_kind": "store", "input": "Requester and selected document", "process": "7.2 Apply assignment", "output": "New assignee or holder", "to": "Document assignment records", "to_kind": "store"},
+        {"from": "Assignment controller", "from_kind": "actor", "input": "Document, Location or category; user", "process": "7.3 Assign documents directly", "output": "Updated assignees or holders", "to": "Document assignment records", "to_kind": "store"},
+        {"from": "Document permission records", "from_kind": "store", "input": "Current access and permissions", "process": "7.4 Show permitted documents", "output": "Permitted records and actions", "to": "Document user", "to_kind": "actor"}
       ],
       "note": "Request Hardcopy or Softcopy access or assignment for yourself. Hardcopy assignment keeps storage unchanged; direct assignment checks for active transfers."
     },
@@ -856,51 +551,11 @@
       "title": "8. Disposal records",
       "summary": "Disposal limits document use and saves the reason. Follow the organization's separate procedure for physically disposing of the document.",
       "flows": [
-        {
-          "from": "Authorized document user",
-          "from_kind": "actor",
-          "input": "Document and disposal reason",
-          "process": "8.1 Dispose directly",
-          "output": "Disposed status and history",
-          "to": "Document registers",
-          "to_kind": "store"
-        },
-        {
-          "from": "Requester",
-          "from_kind": "actor",
-          "input": "Hardcopy or External disposal details",
-          "process": "5. Review disposal request",
-          "output": "Approved disposal request",
-          "to": "Request records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Approved disposal request",
-          "from_kind": "store",
-          "input": "Hardcopy and disposal method",
-          "process": "8.2 Dispose approved hardcopy",
-          "output": "Disposed; Location cleared",
-          "to": "Hardcopy records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Approved disposal request",
-          "from_kind": "store",
-          "input": "External document and method",
-          "process": "8.3 Dispose approved external",
-          "output": "Disposed status and history",
-          "to": "External document records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Disposal history",
-          "from_kind": "store",
-          "input": "Method, responsible person and date",
-          "process": "8.4 View disposal result",
-          "output": "Disposal details and history",
-          "to": "Authorized reviewer",
-          "to_kind": "actor"
-        }
+        {"from": "Authorized document user", "from_kind": "actor", "input": "Document and disposal reason", "process": "8.1 Dispose directly", "output": "Disposed status and history", "to": "Document registers", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Hardcopy or External disposal details", "process": "5. Review disposal request", "output": "Approved disposal request", "to": "Request records", "to_kind": "store"},
+        {"from": "Approved disposal request", "from_kind": "store", "input": "Hardcopy and disposal method", "process": "8.2 Dispose approved hardcopy", "output": "Disposed; Location cleared", "to": "Hardcopy records", "to_kind": "store"},
+        {"from": "Approved disposal request", "from_kind": "store", "input": "External document and method", "process": "8.3 Dispose approved external", "output": "Disposed status and history", "to": "External document records", "to_kind": "store"},
+        {"from": "Disposal history", "from_kind": "store", "input": "Method, responsible person and date", "process": "8.4 View disposal result", "output": "Disposal details and history", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "Direct hardcopy disposal keeps Location and personal access grants. Approved disposal requests clear Location and remove those grants."
     },
@@ -909,51 +564,11 @@
       "title": "9. Accounts, places and approval setup",
       "summary": "Authorized staff maintain accounts, roles, places, categories and approval routes. A user receives the permissions of all their active roles.",
       "flows": [
-        {
-          "from": "Account administrator",
-          "from_kind": "actor",
-          "input": "Account, roles, leader or password reset",
-          "process": "9.1 Maintain user accounts",
-          "output": "Account and role membership",
-          "to": "User accounts",
-          "to_kind": "store"
-        },
-        {
-          "from": "Role administrator",
-          "from_kind": "actor",
-          "input": "Role name and permitted actions",
-          "process": "9.2 Maintain roles and permissions",
-          "output": "Permitted actions by active role",
-          "to": "Role permissions",
-          "to_kind": "store"
-        },
-        {
-          "from": "Setup maintainer",
-          "from_kind": "actor",
-          "input": "Places and category folders",
-          "process": "9.3 Maintain places and categories",
-          "output": "Storage and category structure",
-          "to": "Reference records",
-          "to_kind": "store"
-        },
-        {
-          "from": "Approval-route administrator",
-          "from_kind": "actor",
-          "input": "Review order and approvers",
-          "process": "9.4 Check and publish route",
-          "output": "Default route for new requests",
-          "to": "Published approval routes",
-          "to_kind": "store"
-        },
-        {
-          "from": "User accounts",
-          "from_kind": "store",
-          "input": "Active roles and requester's leader",
-          "process": "9.5 Identify assigned reviewer",
-          "output": "Account, role or leader assignment",
-          "to": "Assigned approver",
-          "to_kind": "actor"
-        }
+        {"from": "Account administrator", "from_kind": "actor", "input": "Account, roles, leader or password reset", "process": "9.1 Maintain user accounts", "output": "Account and role membership", "to": "User accounts", "to_kind": "store"},
+        {"from": "Role administrator", "from_kind": "actor", "input": "Role name and permitted actions", "process": "9.2 Maintain roles and permissions", "output": "Permitted actions by active role", "to": "Role permissions", "to_kind": "store"},
+        {"from": "Setup maintainer", "from_kind": "actor", "input": "Places and category folders", "process": "9.3 Maintain places and categories", "output": "Storage and category structure", "to": "Reference records", "to_kind": "store"},
+        {"from": "Approval-route administrator", "from_kind": "actor", "input": "Review order and approvers", "process": "9.4 Check and publish route", "output": "Default route for new requests", "to": "Published approval routes", "to_kind": "store"},
+        {"from": "User accounts", "from_kind": "store", "input": "Active roles and requester's leader", "process": "9.5 Identify assigned reviewer", "output": "Account, role or leader assignment", "to": "Assigned approver", "to_kind": "actor"}
       ],
       "note": "Document Control Officers do not manage users, roles, workflows or backups by default. Leader and receiver duties can belong to any permitted role."
     },
@@ -962,51 +577,11 @@
       "title": "10-11. Notices, history and backups",
       "summary": "Notices point to work. Audit records show past actions. Automatic backups need administrator setup and a recent successful run.",
       "flows": [
-        {
-          "from": "Request tracking records",
-          "from_kind": "store",
-          "input": "Assigned work and progress",
-          "process": "10.1 Show task notices",
-          "output": "Notice and link to work",
-          "to": "Assigned user",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Hardcopy register",
-          "from_kind": "store",
-          "input": "Visible hardcopy due dates",
-          "process": "10.2 Show retention reminder",
-          "output": "Document review reminder",
-          "to": "Authorized document user",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Audit records",
-          "from_kind": "store",
-          "input": "Person, action, date and result",
-          "process": "10.3 Review recorded actions",
-          "output": "Filtered audit results",
-          "to": "Authorized audit reviewer",
-          "to_kind": "actor"
-        },
-        {
-          "from": "Authorized backup operator",
-          "from_kind": "actor",
-          "input": "Create, import or cleanup choice",
-          "process": "11.1 Check and manage backups",
-          "output": "Validated backup and result",
-          "to": "Backup archives",
-          "to_kind": "store"
-        },
-        {
-          "from": "Authorized backup operator",
-          "from_kind": "actor",
-          "input": "Archive, password and confirmation",
-          "process": "11.2 Save recovery copy and restore",
-          "output": "Restored records and private files",
-          "to": "System records and recovery copy",
-          "to_kind": "store"
-        }
+        {"from": "Request tracking records", "from_kind": "store", "input": "Assigned work and progress", "process": "10.1 Show task notices", "output": "Notice and link to work", "to": "Assigned user", "to_kind": "actor"},
+        {"from": "Hardcopy register", "from_kind": "store", "input": "Visible hardcopy due dates", "process": "10.2 Show retention reminder", "output": "Document review reminder", "to": "Authorized document user", "to_kind": "actor"},
+        {"from": "Audit records", "from_kind": "store", "input": "Person, action, date and result", "process": "10.3 Review recorded actions", "output": "Filtered audit results", "to": "Authorized audit reviewer", "to_kind": "actor"},
+        {"from": "Authorized backup operator", "from_kind": "actor", "input": "Create, import or cleanup choice", "process": "11.1 Check and manage backups", "output": "Validated backup and result", "to": "Backup archives", "to_kind": "store"},
+        {"from": "Authorized backup operator", "from_kind": "actor", "input": "Archive, password and confirmation", "process": "11.2 Save recovery copy and restore", "output": "Restored records and private files", "to": "System records and recovery copy", "to_kind": "store"}
       ],
       "note": "Reading a notice does not finish the task. Restore replaces current records and files, pauses normal use, then signs out the operator after success."
     }
