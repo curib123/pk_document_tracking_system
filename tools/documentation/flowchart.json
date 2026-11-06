@@ -74,6 +74,12 @@
         "Default route: Requester's leader, then Plant Manager, then Document Control Officer. Published routes can be changed.",
         "Revision requests select an active document in the correct register. The existing approved file remains current during review.",
         "New Softcopy cancellation requests are unavailable. Retained historical requests may still appear."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise"
       ]
     },
     {
@@ -89,6 +95,16 @@
         "A returned request keeps its original approval route when resubmitted, even after an administrator publishes a newer route.",
         "Cancel is available only for your own Draft. Delete is limited to your own Cancelled draft that was never submitted.",
         "New Hardcopy create/update and Softcopy cancellation requests are unavailable; their past records remain readable."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
     },
     {
@@ -99,11 +115,21 @@
       "question": "Is this the final approval step?",
       "yes": "Apply the approved change, access, assignment or disposal; prepare any transfer handoff",
       "no": "Send the request to the next approver for review",
-      "result": "PK DTS saves the decision and updates progress until final approval",
+      "result": "The request is Completed; a transfer stays Approved until the named receiver accepts",
       "notes": [
         "Only the currently assigned user or an active member of the assigned role can decide that step.",
         "The approved operation takes effect at final approval. An approved transfer still requires Dispatch and Accept.",
         "If a decision cannot be saved or applied, read the error and refresh before retrying."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
     },
     {
@@ -113,13 +139,63 @@
       "action": "Check the issue; choose Return or Reject, add remarks if useful, then confirm",
       "question": "Return the request for another review?",
       "yes": "Send it to the previous approver; at the first step, send it back to the requester",
-      "no": "Reject and close the request. Keep its history without applying the proposed change",
+      "no": "Mark Rejected and end the route; keep history without applying the proposed change",
       "result": "Review resumes where needed. Only a first-step Return lets the requester edit and resubmit",
       "notes": [
         "A return from a later step leaves the request Submitted and gives the task back to the previous approver.",
         "After that approver approves again, the returned step must review again before approval can advance.",
         "A first-step return marks the request Returned. The requester corrects it and resubmits using the original route."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
       ]
+    },
+    {
+      "id": "decision-softcopy-create",
+      "kind": "approval-reference",
+      "example": "approval-return-reject"
+    },
+    {
+      "id": "decision-softcopy-revise",
+      "kind": "approval-reference",
+      "example": "approval-softcopy-revise"
+    },
+    {
+      "id": "decision-external-create",
+      "kind": "approval-reference",
+      "example": "approval-external-create"
+    },
+    {
+      "id": "decision-external-revise",
+      "kind": "approval-reference",
+      "example": "approval-external-revise"
+    },
+    {
+      "id": "decision-transfer",
+      "kind": "approval-reference",
+      "example": "approval-transfer"
+    },
+    {
+      "id": "decision-access",
+      "kind": "approval-reference",
+      "example": "approval-access"
+    },
+    {
+      "id": "decision-assignment",
+      "kind": "approval-reference",
+      "example": "approval-assignment"
+    },
+    {
+      "id": "decision-disposal",
+      "kind": "approval-reference",
+      "example": "approval-disposal"
     },
     {
       "id": "transfer-approval",
@@ -127,13 +203,16 @@
       "start": "You need to move an active hardcopy",
       "action": "Select the document, receiving user, destination storage and remarks; save and submit the transfer request",
       "question": "Have all required approvers approved?",
-      "yes": "Prepare the handoff and mark it For Transfer",
-      "no": "Follow the Return or Reject outcome. Dispatch becomes available after final approval",
-      "result": "The original requester can dispatch the approved document",
+      "yes": "Mark the request Approved and the handoff For Transfer; wait for Dispatch and Accept",
+      "no": "Wait for remaining reviews, or follow Return or Reject. Dispatch requires final approval",
+      "result": "The original requester can Dispatch; approval alone does not change the holder or location",
       "notes": [
-        "Default route: Plant Manager, then Document Control Officer, then Requester confirmation.",
+        "Default route: Plant Manager, Document Control Officer, then Requester account (Requester Confirmation).",
         "The source and destination must be valid and the receiving account active; conflicting pending requests or transfers can block it.",
         "Approval alone does not change the current holder or complete physical receipt."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
@@ -142,13 +221,16 @@
       "start": "The approved transfer shows For Transfer",
       "action": "The requester confirms Dispatch. After the document arrives, the named receiver opens the handoff task",
       "question": "Has the named receiver confirmed Accept?",
-      "yes": "Complete the transfer; update the holder and destination location",
+      "yes": "Mark the transfer Accepted and the request Completed; update the holder and destination location",
       "no": "Leave In Transit until the receiver confirms physical receipt",
       "result": "The record shows the new holder, location and completed handoff history",
       "notes": [
         "Only the requester dispatches. Only the named receiving user accepts that transfer.",
         "Dispatch marks In Transit. Custody and location change after acceptance.",
         "Direct reassignment is a separate immediate action and is blocked while a transfer is active."
+      ],
+      "decision_examples": [
+        "approval-transfer"
       ]
     },
     {
@@ -158,12 +240,16 @@
       "action": "Select an active Softcopy or Hardcopy; enter the reason and, for access, a future expiry; save and submit",
       "question": "Have all required approvers approved?",
       "yes": "Grant access until expiry, add you as a Softcopy assignee, or make you the Hardcopy holder",
-      "no": "Follow the Return or Reject outcome; access and assignment stay unchanged",
-      "result": "You receive the approved access or assignment",
+      "no": "Wait for remaining reviews, or follow Return or Reject; no new access or assignment is applied",
+      "result": "The request is Completed, with access or assignment granted to you",
       "notes": [
-        "Access default: Plant Manager, Document Control Officer, Requester confirmation. Assignment ends with Requester's leader instead.",
+        "Access default: Plant Manager, Document Control Officer, Requester account. Assignment ends with Requester's leader.",
         "These requests are for the requester; they do not select another recipient. External Documents are not supported here.",
         "Access expires at the end of the chosen day. Assignment is separate from an access grant; file permissions still apply."
+      ],
+      "decision_examples": [
+        "approval-access",
+        "approval-assignment"
       ]
     },
     {
@@ -188,12 +274,15 @@
       "action": "Choose Disposal Request; select Hardcopy or External, the document and disposal reason; save and submit",
       "question": "Have all required approvers approved disposal?",
       "yes": "Dispose the selected document and preserve its approval and disposal history",
-      "no": "Follow the Return or Reject outcome; the document is not disposed of",
-      "result": "The completed request shows the disposed document and approved reason",
+      "no": "Wait for remaining reviews, or follow Return or Reject; the proposed disposal is not applied",
+      "result": "The request is Completed and the document is Disposed, with approval and disposal history",
       "notes": [
-        "Example route: Plant Manager, Document Control Officer, then Requester confirmation. Check the published route. Softcopy disposal requests are unavailable.",
+        "Example: Plant Manager > Document Control Officer > Requester account. Check your timeline. Softcopy disposal requests are unavailable.",
         "Choose Shred, Scratch or Other. Other needs a description of up to 250 characters.",
         "Approved Hardcopy disposal clears Location and personal access grants. External disposal keeps files and revision records."
+      ],
+      "decision_examples": [
+        "approval-disposal"
       ]
     },
     {
