@@ -1,128 +1,151 @@
 # PK Document Tracking System
 
-A PHP application for managing physical and digital documents, custody, assignments, and approval workflows. Built with CodeIgniter 3 and MySQL/MariaDB, with a server-rendered interface and shared document viewers.
+Keep documents easy to find, track who holds the originals, and guide changes
+through the right approvals.
 
-## Features
+PK DTS brings physical records, approved electronic files and external documents
+into one workspace. Each person sees the documents and actions their account
+allows.
 
-- Hardcopy documents organized by Area, Specific, Asset, and Location, with holder and retention information.
-- Softcopy documents with controlled files, revisions, file history, authorized downloads, printing, and category filters.
-- External documents with independent hierarchical categories, table and folder views, category, owner, status, and created-date filters, reusable status badges, private attachments, direct create/revise/dispose actions, approval requests, and automatic revision levels. Attachments are downloaded through the row action; filenames are not displayed in the register.
-- Requests for document creation, updates, cancellation, transfers, disposal, access, and assignments.
-- Approval tasks, workflow history, and notifications.
-- Individual document assignments and bulk assignment by Location or Category, including subcategories.
-- Role-based permissions, user administration, and filesystem audit logs.
-- Dashboard summaries, searchable registers, responsive modals, and persistent light/dark mode.
-- Backup and restore tools, plus a browser installation option when PWA installation is available.
+## Start here
 
-## Requirements
+| What you need | Where to go |
+| --- | --- |
+| A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DTS_System_Reference.md) |
+| Instructions with screen examples | [User Guide](docs/system-documentation/PK_DTS_User_Guide.pdf) |
+| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DTS_Process_Flow.pdf) |
+| Help choosing the next step | [Flowchart](docs/system-documentation/PK_DTS_Flowchart.pdf) |
+| An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DTS_DFD.pdf) |
 
-- PHP 8.x with `mysqli`, `fileinfo`, `mbstring`, and `zip` enabled.
-- Composer for the PHP dependencies in [composer.json](composer.json).
-- MySQL/MariaDB compatible with the supplied database schema. The supplied SQL export identifies MariaDB 10.4.32 as its source server.
-- Apache with `mod_rewrite` and permission to use the repository's `.htaccess` files.
-- Write access for PHP to `storage/` and its subdirectories.
+The documentation folder also includes editable PowerPoint and Visio copies.
+Use the local [dashboard](http://localhost/pk_document_tracking_system/dashboard)
+when the application is running; you will be asked to sign in if needed.
 
-XAMPP is the local Windows setup used by the included helper scripts. Frontend CSS and JavaScript are checked in; a frontend build is not required to run the PHP application.
+## What you can do
 
-## Local setup with XAMPP
+| Area | Main tasks |
+| --- | --- |
+| **Hardcopy Documents** | Register physical records, track their holder and storage location, and review retention dates. |
+| **Softcopy Documents** | Manage approved electronic files, revisions, categories, downloads and printing. |
+| **External Documents** | Manage documents received from outside the organization, using separate categories, revisions and downloads. |
+| **My Requests** | Request Softcopy or External creation and revision, Hardcopy transfer, document access, assignment, or eligible disposal. |
+| **My Tasks** | Review assigned requests and complete transfer dispatch or receipt. |
+| **Document Assignments** | Assign individual documents, hardcopies at a Location, or softcopies in a category and its subcategories. |
+| **Administration** | Manage accounts, permissions, approval routes, audit records, backups and recovery. |
 
-1. Place the checkout at `C:\xampp\htdocs\pk_document_tracking_system`, or configure Apache to serve your chosen checkout.
-2. Start Apache and MySQL from the XAMPP Control Panel.
-3. Install PHP dependencies from the repository root:
+Search, Table and Folder views, filters, notifications, and light/dark mode help
+with daily work. A browser installation option is available when supported;
+the system still needs a network connection.
+
+Hardcopy registration and editing use direct actions. New hardcopy creation or
+update requests and new softcopy cancellation requests are unavailable. Eligible
+unsubmitted drafts can be cancelled; older request histories remain readable.
+
+## Set up a local copy
+
+The following sections are for the person installing or maintaining PK DTS.
+The application uses PHP 8, CodeIgniter 3 and MySQL/MariaDB. XAMPP is the Windows
+setup used by the supplied helper scripts.
+
+### Before you start
+
+| Requirement | Check |
+| --- | --- |
+| PHP 8.x | Enable `mysqli`, `fileinfo`, `mbstring` and `zip`. |
+| Composer | Install the PHP packages listed in [composer.json](composer.json). |
+| MySQL or MariaDB | Use a version compatible with the supplied schema. The SQL export identifies MariaDB 10.4.32 as its source server. |
+| Apache | Enable `mod_rewrite` and allow the repository's `.htaccess` rules. |
+| File access | Allow PHP to write to `storage/` and its subdirectories. |
+
+The interface's CSS and JavaScript are included in the repository. No frontend
+build is needed to run the application.
+
+### Install with XAMPP
+
+1. Put the checkout at `C:\xampp\htdocs\pk_document_tracking_system`, or configure
+   Apache for your chosen folder.
+2. Start Apache and MySQL in the XAMPP Control Panel.
+3. From the repository root, install PHP dependencies:
 
    ```powershell
    composer install
    ```
 
-4. Create an empty `pk_dts` database using `utf8mb4`. Import [database/pk_dts.sql](database/pk_dts.sql) into that database using phpMyAdmin or the MySQL client. This file contains schema **and existing data**; review it before importing and do not import it over an existing installation. Review [database/migrations](database/migrations) against the installed schema when upgrading; there is no automatic migration runner. For an installation without category numbering, apply [20261104_category_code_pattern.sql](database/migrations/20261104_category_code_pattern.sql) and [20261104_external_document_permissions.sql](database/migrations/20261104_external_document_permissions.sql). Existing installations with External Documents tables should apply [20261104_external_retention_dates_description.sql](database/migrations/20261104_external_retention_dates_description.sql) if needed to add descriptions, then apply [20261104_remove_external_retention.sql](database/migrations/20261104_remove_external_retention.sql) to remove unused External Documents retention fields, followed by [20261104_external_categories.sql](database/migrations/20261104_external_categories.sql) to add dedicated External Categories. To rename the default approval workflows to match the My Requests tab labels, apply [20261104_request_workflow_names.sql](database/migrations/20261104_request_workflow_names.sql). If the category-pattern migration is already applied and reusing a document number with a new series fails, apply [20261104_softcopy_series_number_index.sql](database/migrations/20261104_softcopy_series_number_index.sql) to ensure the database permits the same document number with distinct series numbers. Existing installations with prefix-only category patterns can continue using them; new category patterns should include an initial sequence, such as `PPM-001`.
-5. Configure the database environment variables described below if your connection differs from the local defaults.
-6. Create your own administrator account if needed:
+4. Create an empty `pk_dts` database using `utf8mb4`. Review and import
+   [database/pk_dts.sql](database/pk_dts.sql) with phpMyAdmin or the MySQL client.
+   **The export includes existing data. Import it only into the intended empty
+   database.** For an existing installation, use the upgrade notes below.
+5. Set the database configuration below if your connection differs from the
+   local defaults.
+6. If needed, create an Administrator account:
 
    ```powershell
    C:\xampp\php\php.exe tools/create_admin.php your_admin_username
    ```
 
-   The interactive command asks for a name, position, and password. Password input is visible. The database must already contain an active Administrator role.
+   Enter the requested name, position and password. Password input is visible,
+   and the password needs at least 9 characters. An active Administrator role
+   must already exist in the database.
+7. Open the [local dashboard](http://localhost/pk_document_tracking_system/dashboard)
+   and sign in.
 
-7. Open [the local dashboard](http://localhost/pk_document_tracking_system/dashboard) and sign in. Unauthenticated requests redirect to the login page.
+The root [index.php](index.php) opens `public/index.php`. The root `.htaccess`
+serves public assets and blocks private application folders. Application dates
+use `Asia/Manila`.
 
-The repository-root [index.php](index.php) forwards to `public/index.php`. The root `.htaccess` maps public assets and blocks private application directories. Application dates use `Asia/Manila`.
+### Configure the connection
 
-## Configuration
-
-Database settings come from [application/config/database.php](application/config/database.php):
+Configuration comes from environment variables available to the PHP process.
+The application does not automatically load `.env` files.
 
 | Variable | Local default | Purpose |
 | --- | --- | --- |
-| `DB_HOST` | `127.0.0.1` | Database host |
+| `DB_HOST` | `127.0.0.1` | Database server |
 | `DB_PORT` | `3306` | Database port |
 | `DB_DATABASE` | `pk_dts` | Database name |
 | `DB_USERNAME` | `root` | Database user |
 | `DB_PASSWORD` | Empty | Database password |
-| `CI_ENV` | `production` | Application environment; `development` enables displayed PHP errors |
+| `CI_ENV` | `production` | Application mode; `development` displays PHP errors |
 | `PK_ENCRYPTION_KEY` | Empty | CodeIgniter encryption key |
 
-Set environment variables for the process that runs PHP. Variables set in a PowerShell window apply to commands launched from that window; they do not automatically reach an already-running XAMPP Apache process. The application does not automatically load `.env` files. Keep credentials and private keys outside version control.
+See [database.php](application/config/database.php) for database settings.
+Variables set in a PowerShell window reach commands launched from that window;
+they do not automatically reach an already-running XAMPP Apache process. Keep
+credentials and private keys outside version control.
 
-## Project layout
+### Upgrade an existing database
 
-| Path | Contents |
+Review [database/migrations](database/migrations) against the installed schema
+before applying a change. There is no automatic migration runner. The November
+updates address these cases:
+
+| If the installation needs... | Review and apply as appropriate |
 | --- | --- |
-| `application/controllers/` | HTTP controllers and permission checks |
-| `application/models/` | Database queries and listings |
-| `application/services/` | Document, workflow, file, security, and backup operations |
-| `application/view/` | Page templates and shared UI components |
-| `public/assets/` | Styles, JavaScript, fonts, and images |
-| `database/` | Database export and incremental SQL migrations |
-| `docs/system-documentation/` | Current as-built system reference and exported user/process diagrams |
-| `storage/` | Private files, sessions, logs, audits, and generated artifacts |
-| `tests/` | Focused browser and HTTP regression checks |
-| `tools/` | Administrator, backup, asset, and local synchronization utilities |
+| Category numbering and External document permissions | [Category numbering](database/migrations/20261104_category_code_pattern.sql), then [External permissions](database/migrations/20261104_external_document_permissions.sql) |
+| An External Description field | [External description update](database/migrations/20261104_external_retention_dates_description.sql), if needed |
+| Removal of unused External retention fields | [Remove External retention](database/migrations/20261104_remove_external_retention.sql), after the description update if it was needed |
+| Separate External Categories | [External categories](database/migrations/20261104_external_categories.sql), after the preceding External updates |
+| Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
+| The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 
-Shared colors are defined in [public/assets/css/colors.css](public/assets/css/colors.css). Theme behavior lives in [public/assets/js/theme.js](public/assets/js/theme.js), and document View rendering lives in [public/assets/js/document-view.js](public/assets/js/document-view.js).
+Existing prefix-only category patterns still work. New category patterns should
+include an initial sequence, such as `PPM-001`.
 
-## Verification
+## Maintain backups
 
-The available browser checks require Python, Playwright, Microsoft Edge, running MySQL, and the PHP dependencies:
+Administrators can use **Backup & Restore** in the application. For command-line
+operation, [tools/backup.php](tools/backup.php) supports creating, listing,
+checking, retaining and restoring backups.
 
-```powershell
-python -m pip install playwright
-python tests/cancelled_draft_delete.py
-python tests/document_assignments.py
-python tests/document_header.py
-python tests/theme_toggle.py
-python tests/dark_mode_feedback.py
-python tests/modal_close_buttons.py
-```
+Configure these variables in the PHP process environment:
 
-These checks clone the source database into a generated database ending in `_test`, run a temporary application, and drop that test database afterward. The source database is read for the clone; test mutations apply to the disposable copy. The database account needs permission to create and drop test databases. Generated screenshots are written under ignored `storage/` directories.
-
-The fixture defaults to `C:\xampp\php\php.exe`, `C:\xampp\mysql\bin\mysql.exe`, and source database `pk_dts`. Override these with `TEST_PHP`, `TEST_MYSQL`, and `TEST_SOURCE_DATABASE`; `mysqldump.exe` must be beside the configured MySQL executable. Database credentials use `DB_HOST`, `DB_USERNAME`, and `DB_PASSWORD`. The fixture currently connects through the client's default MySQL port.
-
-External CDN assets are blocked by default to exercise the fallback interface. To also check Bootstrap and other CDN assets:
-
-```powershell
-$env:TEST_EXTERNAL_ASSETS = '1'
-python tests/document_assignments.py
-python tests/modal_close_buttons.py
-Remove-Item Env:TEST_EXTERNAL_ASSETS
-```
-
-The current `composer test` and npm build/test scripts reference runner files that are absent from this checkout. Use the focused checks above until those runners are restored.
-
-## Sync a development checkout to local XAMPP
-
-When editing a separate development checkout, run this from that checkout:
-
-```powershell
-powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/sync_local_xampp.ps1
-```
-
-The script defaults to `C:\xampp\htdocs\pk_document_tracking_system` and `http://localhost/pk_document_tracking_system/`. Both checkouts must have clean working trees, and the served checkout must be able to fast-forward to the development branch. The script updates tracked files and verifies HTTP asset hashes. It does not import database changes or replace private storage. Reload the browser after syncing.
-
-## Backups
-
-[tools/backup.php](tools/backup.php) provides CLI backup, listing, verification, retention, and restore commands. Configure `DB_*`, `PK_BACKUP_PASSWORD` (at least 12 characters), and `PK_BACKUP_SIGNING_KEY` (at least 32 characters) in the PHP process environment. `PK_MYSQL` and `PK_MYSQLDUMP` can override the database tool paths; `PK_BACKUP_DIR` can select a private backup directory.
+| Setting | Requirement |
+| --- | --- |
+| `DB_*` | Connection to the intended database |
+| `PK_BACKUP_PASSWORD` | At least 12 characters |
+| `PK_BACKUP_SIGNING_KEY` | At least 32 characters |
+| `PK_MYSQL`, `PK_MYSQLDUMP` | Optional overrides for the database tool paths |
+| `PK_BACKUP_DIR` | Optional private backup folder |
 
 ```powershell
 php tools/backup.php manual
@@ -130,4 +153,74 @@ php tools/backup.php list
 php tools/backup.php verify <archive-name.zip>
 ```
 
-[tools/install_backup_schedule.ps1](tools/install_backup_schedule.ps1) can register a daily 5 PM task on a Windows host configured for UTC+08:00. It requires an elevated PowerShell session and configuration available to the SYSTEM account. Restore replaces application data and requires the CLI's explicit `--confirm` flag; verify the intended archive and target database first.
+Replace `<archive-name.zip>` with the intended archive name.
+
+[install_backup_schedule.ps1](tools/install_backup_schedule.ps1) registers a daily
+5:00 PM task on a Windows host using UTC+08:00. Run it from an elevated PowerShell
+session with the required configuration available to the SYSTEM account. Check
+that a scheduled run succeeds.
+
+Restoring replaces application data. Confirm the archive and target database
+before restoring; the command-line tool requires its explicit `--confirm` flag.
+
+## Keep the documentation current
+
+The four content files in [tools/documentation](tools/documentation) supply the
+User Guide and diagrams. The generator creates the PDF, editable PowerPoint,
+and both Visio formats. Guide screen examples and callouts are kept alongside
+the content. Python needs `pymupdf` and `python-pptx` installed.
+
+```powershell
+# Check source coverage without generating files.
+python -X utf8 tools/documentation/refresh_documents.py --check-source
+
+# Rebuild and verify the exported documents.
+python -X utf8 tools/documentation/refresh_documents.py
+
+# Verify existing exports.
+python -X utf8 tools/documentation/refresh_documents.py --verify
+```
+
+These checks cover the documented routes, request actions, content and exported
+packages. They do not prove how the files open in desktop PowerPoint or Visio.
+
+## Check application changes
+
+The application test runners referenced by `composer test` and the npm scripts
+are absent from this checkout. The older browser test scripts are also absent;
+do not use those commands as evidence that an application change passed.
+
+Check the affected behavior in the running application with suitable test data.
+Documentation verification above checks the documentation only.
+
+## Sync a development checkout to XAMPP
+
+If you edit a separate checkout, run this command from that development checkout:
+
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/sync_local_xampp.ps1
+```
+
+The defaults are `C:\xampp\htdocs\pk_document_tracking_system` and
+`http://localhost/pk_document_tracking_system/`. Both working trees must be clean,
+and the served checkout must be able to fast-forward to the development branch.
+The script updates tracked files and checks the served assets. Database upgrades
+and private storage remain separate. Reload the browser after syncing.
+
+## Find the project files
+
+| Folder | What it contains |
+| --- | --- |
+| `application/controllers/` | Page entry points and permission checks |
+| `application/models/` | Database queries and document lists |
+| `application/services/` | Document, approval, file, security and backup operations |
+| `application/view/` | Page templates and shared interface components |
+| `public/assets/` | Styles, JavaScript, fonts and images |
+| `database/` | Database export and individual upgrade scripts |
+| `docs/system-documentation/` | Everyday reference, guides and editable diagrams |
+| `storage/` | Private files, sessions, logs, audit records and generated output |
+| `tools/` | Administrator, backup, documentation and local sync utilities |
+
+For interface maintenance, start with [shared colors](public/assets/css/colors.css),
+[theme behavior](public/assets/js/theme.js), and the
+[document viewer](public/assets/js/document-view.js).
