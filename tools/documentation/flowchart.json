@@ -191,7 +191,7 @@
       "no": "Follow the Return or Reject outcome; the document is not disposed of",
       "result": "The completed request shows the disposed document and approved reason",
       "notes": [
-        "Default route: Plant Manager, Document Control Officer, then Requester confirmation. Check the published route. Softcopy disposal requests are unavailable.",
+        "Example route: Plant Manager, Document Control Officer, then Requester confirmation. Check the published route. Softcopy disposal requests are unavailable.",
         "Choose Shred, Scratch or Other. Other needs a description of up to 250 characters.",
         "Approved Hardcopy disposal clears Location and personal access grants. External disposal keeps files and revision records."
       ]

@@ -24,7 +24,7 @@
         {"from": "Document controller", "from_kind": "actor", "input": "Document details and files", "process": "2-4. Maintain document records", "output": "Saved documents and changes", "to": "Document registers", "to_kind": "store"},
         {"from": "Request participants", "from_kind": "actor", "input": "Proposal, file and decisions", "process": "5. Review document requests", "output": "Request progress and decisions", "to": "Request records", "to_kind": "store"},
         {"from": "Document user", "from_kind": "actor", "input": "Handoff, access or disposal details", "process": "6-8. Track holders and document use", "output": "Holder, access or disposal result", "to": "Document tracking records", "to_kind": "store"},
-        {"from": "Authorized administrator", "from_kind": "actor", "input": "Setup and recovery choices", "process": "9-11. Manage system settings", "output": "Settings, notices, audit and backups", "to": "System records", "to_kind": "store"}
+        {"from": "Authorized setup user", "from_kind": "actor", "input": "Setup and recovery choices", "process": "9-11. Manage system settings", "output": "Settings, notices, audit and backups", "to": "System records", "to_kind": "store"}
       ],
       "note": "Boxes show people or activities. Open-ended boxes show saved records. Arrow labels explain what information moves between them."
     },
