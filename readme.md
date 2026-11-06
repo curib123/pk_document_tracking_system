@@ -184,6 +184,20 @@ python -X utf8 tools/documentation/refresh_documents.py --verify
 These checks cover the documented routes, request actions, content and exported
 packages. They do not prove how the files open in desktop PowerPoint or Visio.
 
+On Windows with Microsoft Visio Viewer installed, also open and render every page
+of the six Visio exports:
+
+```powershell
+powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File tools/documentation/verify_visio.ps1
+```
+
+This read-only check fails if a drawing cannot load or render, a page or shape is
+missing, or Viewer reports an error. Its report is saved under
+`storage/visio-verification/`. Add `-RenderPages` to save page images as well.
+Viewer checks do not certify editing and saving in every desktop Visio version.
+See the [format guidance](docs/system-documentation/PK_DTS_System_Reference.md#edit-the-documentation)
+when choosing between the VSDX and older VDX copies.
+
 ## Check application changes
 
 The application test runners referenced by `composer test` and the npm scripts
