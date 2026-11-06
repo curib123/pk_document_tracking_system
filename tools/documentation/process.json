@@ -587,7 +587,7 @@
           "text": "Document Control Officer Approval"
         },
         {
-          "actor": "Requester",
+          "actor": "Requester account",
           "text": "Requester Confirmation"
         }
       ],
@@ -669,7 +669,7 @@
           "text": "Document Control Officer"
         },
         {
-          "actor": "Requester",
+          "actor": "Requester account",
           "text": "Requester Confirmation"
         }
       ],
@@ -833,7 +833,7 @@
           "text": "Document Control Officer"
         },
         {
-          "actor": "Requester",
+          "actor": "Requester account",
           "text": "Requester Confirmation"
         }
       ],
