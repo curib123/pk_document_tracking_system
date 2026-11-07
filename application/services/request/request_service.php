@@ -158,7 +158,7 @@ class Request_service
             'external_document_number' => trim((string) ($post['external_document_number'] ?? '')),
             'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number' => '', // Generated when the request is approved.
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
             'external_category_id' => (int) ($post['external_category_id'] ?? 0),
