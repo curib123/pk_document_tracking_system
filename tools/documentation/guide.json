@@ -217,8 +217,8 @@
       "steps": [
         "For a new number, choose Category and leave Need Series Number? unchecked.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
-        "To reuse a number, select Need Series Number?. Choose an existing Document Number in that category and enter Series Number.",
-        "Check the previously used series numbers. Choose a combination that has not been used.",
+        "To reuse a number, select Need Series Number? and choose an existing Document Number in that category. Series No. is generated automatically.",
+        "Check the Generated Series Number preview. The Softcopy Category Series No. Code Pattern controls its prefix and starting sequence.",
         "Finish the direct creation or request steps."
       ],
       "result": "The record gets a new category number or an existing number with a unique series.",
@@ -818,7 +818,7 @@
       ],
       "result": "You can fix common input problems or give the right information to the person helping you.",
       "notes": [
-        "For a duplicate number and series, use an unused combination. For a blank generated number, ask for a category check.",
+        "If numbering fails, ask the controller to check the Softcopy Category patterns and required unique index; the next series is assigned on approval.",
         "Reopen Review File for an expired review link. Submit a new request if document access has expired.",
         "Keep your password private and use your own account for every action."
       ]
