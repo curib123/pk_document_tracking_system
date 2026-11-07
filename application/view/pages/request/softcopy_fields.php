@@ -39,7 +39,7 @@ $numbering_options = $numbering_options ?? [];
         <?php foreach ($category_options as $category): ?>
             <option value="<?= (int) $category['id'] ?>"
                 data-code-pattern="<?= html_escape($category['code_pattern'] ?? 'DOC-001') ?>"
-                data-series-code-pattern="<?= html_escape($category['series_code_pattern'] ?? '001') ?>"
+                data-series-code-pattern="<?= html_escape($category['series_code_pattern'] ?? '') ?>"
                     data-number-options="<?= html_escape(json_encode($numbering_options[(int) $category['id']] ?? [])) ?>"
                     data-next-number="<?= html_escape($number_previews[(int) $category['id']] ?? '') ?>">
                 <?= html_escape($category['name']) ?></option>
