@@ -50,12 +50,19 @@ class Softcopy_operation_service
             $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
             require_once APPPATH . 'services/softcopy/document_number_generator.php';
+            require_once APPPATH . 'services/softcopy/document_series_generator.php';
             $reuseNumber = !empty($payload['series_number_checker']);
             $number = $reuseNumber
                 ? trim((string) ($payload['document_number'] ?? ''))
                 : Document_number_generator::next($db, $categoryId);
             // Client previews are advisory; the actual series is allocated at approval.
-            $series = $reuseNumber ? Document_number_generator::next_series($db, $categoryId, $number) : '';
+            $series = $reuseNumber
+                ? Document_series_generator::next(
+                    $db,
+                    $categoryId,
+                    $number,
+                    trim((string) ($payload['series_code_pattern'] ?? ''))
+                ) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId
