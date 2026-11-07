@@ -16,7 +16,7 @@ class Place_model extends CI_Model
             'table' => 'categories',
             'label' => 'Softcopy Categories',
             'key' => 'name',
-            'fields' => ['name', 'folder_name', 'code_pattern', 'description', 'parent_id']
+            'fields' => ['name', 'folder_name', 'code_pattern', 'series_code_pattern', 'description', 'parent_id']
         ],
         'external-categories' => [
             'table' => 'external_categories',
@@ -126,7 +126,7 @@ class Place_model extends CI_Model
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
         }
         if ($table === 'categories') {
-            return $this->db->select('id,name,code_pattern')->from('categories')
+            return $this->db->select('id,name,code_pattern,series_code_pattern')->from('categories')
                 ->where('active', 1)->order_by('name')->get()->result_array();
         }
         if ($table === 'external_categories') {
