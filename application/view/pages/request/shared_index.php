@@ -370,7 +370,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
               <?php if ($tab === 'softcopy'): ?>
                 <?php $this->load->view('pages/request/softcopy_fields', [
                   'softcopy_options' => $softcopy_options,
-                  'category_options' => $category_options,
+                  'category_options' => $numbered_category_options,
                   'numbering_options' => $numbering_options,
                   'number_previews' => $number_previews,
                   'softcopyDirect' => FALSE
