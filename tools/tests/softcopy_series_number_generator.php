@@ -95,7 +95,7 @@ assertSeriesError(static function () {
     Document_number_generator::validate_series_pattern('SER');
 }, 'Missing sequence disallowed');
 assertSeriesError(static function () {
-    Document_number_generator::validate_series_pattern("SER-001\n");
+    Document_number_generator::validate_series_pattern("SER-\n001");
 }, 'Invalid line breaks');
 
 echo "Softcopy series pattern tests passed.\n";
