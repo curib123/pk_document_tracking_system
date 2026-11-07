@@ -71,9 +71,10 @@ class Documents extends MY_Controller
             $options['locations'] = $this->Document_model->hardcopy_locations();
         }
         $softcopy_options = $domain === 'softcopy' ? $this->Document_model->options('softcopy', $this->user, FALSE, TRUE) : [];
-        $category_options = $domain === 'softcopy' ? $this->Place_model->options('numbered_categories') : [];
+        $category_options = $domain === 'softcopy' ? $options['categories'] : [];
+        $numbered_category_options = $domain === 'softcopy' ? $this->Place_model->options('numbered_categories') : [];
         $numbering_options = $domain === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [];
-        $number_previews = $domain === 'softcopy' ? $this->Document_model->softcopy_number_previews($category_options) : [];
+        $number_previews = $domain === 'softcopy' ? $this->Document_model->softcopy_number_previews($numbered_category_options) : [];
         $latest = [];
         $accessible = [];
         $filesByDocument = [];
@@ -104,6 +105,7 @@ class Documents extends MY_Controller
             'file_histories' => $filesByDocument,
             'softcopy_options' => $softcopy_options,
             'category_options' => $category_options,
+            'numbered_category_options' => $numbered_category_options,
             'numbering_options' => $numbering_options,
             'number_previews' => $number_previews,
             'folder_browser' => $browser,
