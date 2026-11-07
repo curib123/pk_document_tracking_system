@@ -172,6 +172,20 @@ class Folder_model extends CI_Model
 
     public function scope_documents($domain, $browser, $alias = 'd')
     {
+        if ($domain === 'softcopy' && !empty($browser['filter']['category_id']) &&
+            !empty($browser['tree']['nodes'])) {
+            // A folder-only category is a parent of nested folders and numbered
+            // categories. Browsing it includes descendants instead of showing
+            // an empty folder simply because documents live in child categories.
+            require_once APPPATH . 'services/presentation/folder_tree.php';
+            $folder = 'category:' . (int) $browser['filter']['category_id'];
+            $keys = Folder_tree::branch($browser['tree'], $folder);
+            $ids = array_map(static function ($key) {
+                return (int) substr($key, strlen('category:'));
+            }, $keys);
+            $this->db->where_in($alias . '.category_id', $ids);
+            return;
+        }
         if ($domain === 'hardcopy' && array_key_exists('document_paths', $browser)) {
             if (!$browser['document_paths']) {
                 $this->db->where('1 = 0');
