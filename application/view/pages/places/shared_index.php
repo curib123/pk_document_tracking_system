@@ -182,18 +182,18 @@ $dt_sortable = array_values(array_intersect(
                                 <?php else: ?>
                                     <div class="col-md-6">
                                         <label class="form-label"
-                                            for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?></label>
+                                            for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?><?= $field === 'series_code_pattern' ? ' <span class="optional-label">(optional)</span>' : '' ?></label>
                                         <?php if ($field === 'description'): ?>
                                             <textarea class="form-control" id="f-<?= html_escape($field) ?>"
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' || $field === 'series_code_pattern' ? 'required' : '' ?> maxlength="<?= in_array($field, ['code_pattern', 'series_code_pattern'], TRUE) ? '100' : '150' ?>" autocomplete="off"
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= in_array($field, ['code_pattern', 'series_code_pattern'], TRUE) ? '100' : '150' ?>" autocomplete="off"
                                                 <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : ($field === 'series_code_pattern' ? 'placeholder="For example 001 or SER-001"' : '') ?>>
                                             <?php if ($field === 'code_pattern'): ?>
                                                 <small class="form-text">Enter the initial document number, including its starting sequence. New documents continue from this number, for example PPM-001, PPM-01, or PPM-0001.</small>
                                             <?php elseif ($field === 'series_code_pattern'): ?>
-                                                <small class="form-text">Starting Series No. format for this category, for example 001 or SER-001. Each existing document number has its own auto-incrementing series.</small>
+                                                <small class="form-text">Optional. Leave blank if this category does not use series numbers. Enter 001 or SER-001 to enable automatic series numbering for existing document numbers.</small>
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
