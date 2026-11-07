@@ -45,11 +45,11 @@ class Place_service
                 if ($data['category_type'] === 'folder') {
                     // Folder-only nodes organize bounded nested folders; they
                     // never allocate document numbers or require a code pattern.
-                    $data['code_pattern'] = '';
+                    $data['code_pattern'] = NULL;
                 } elseif (preg_match('/[\r\n]/', $data['code_pattern'])) {
                     throw new DomainException('Document No. Code Pattern cannot contain line breaks.');
                 }
-                if (mb_strlen($data['code_pattern']) > 100)
+                if (mb_strlen((string) $data['code_pattern']) > 100)
                     throw new DomainException('Document code pattern must not exceed 100 characters.');
             }
             if (!$id)
