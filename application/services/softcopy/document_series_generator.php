@@ -13,8 +13,9 @@ class Document_series_generator
         $pattern = trim($pattern);
         if ($pattern === '' || mb_strlen($pattern) > 100
             || preg_match('/[\r\n]/', $pattern)
-            || !preg_match('/^(.*?)([0-9]+)$/D', $pattern, $match)) {
-            throw new DomainException('Enter a series code pattern ending with a positive number, such as 001 or SER-001.');
+            || !preg_match('/^(.+-)([0-9]+)$/D', $pattern, $match)
+                && !preg_match('/^()([0-9]+)$/D', $pattern, $match)) {
+            throw new DomainException('Enter a Series No. Code Pattern ending in digits after its final dash, such as sample-series-002 (numeric-only 001 is also supported).');
         }
         $digits = ltrim($match[2], '0');
         $limit = (string) PHP_INT_MAX;
