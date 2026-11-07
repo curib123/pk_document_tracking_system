@@ -300,6 +300,28 @@ class Request_service
             } elseif ($type === 'softcopy_create') {
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_effective_date($payload);
+                // Validate initial per-Document-No. setup before queuing approvals.
+                // The authoritative number and original-series assignment remain
+                // deferred until final approval inside the shared transaction.
+                if (!empty($payload['series_number_checker'])) {
+                    $seriesCategoryId = (int) ($payload['category_id'] ?? 0);
+                    $seriesDocumentNo = trim((string) ($payload['document_number'] ?? ''));
+                    if ($seriesDocumentNo === '' || !$seriesCategoryId ||
+                        !$this->ci->db->get_where('softcopy_documents', [
+                            'category_id' => $seriesCategoryId,
+                            'document_number' => $seriesDocumentNo
+                        ])->row_array()) {
+                        throw new DomainException('Choose an existing Document No. from the selected category.');
+                    }
+                    $configured = $this->ci->db->get_where('softcopy_document_series_patterns', [
+                        'category_id' => $seriesCategoryId,
+                        'document_number' => $seriesDocumentNo
+                    ])->row_array();
+                    if (!$configured) {
+                        require_once APPPATH . 'services/softcopy/document_series_generator.php';
+                        Document_series_generator::validate_pattern((string) ($payload['series_code_pattern'] ?? ''));
+                    }
+                }
             }
             if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
                 require_once APPPATH . 'services/documents/external_document_service.php';
