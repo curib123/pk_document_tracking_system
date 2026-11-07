@@ -215,15 +215,15 @@
       "title": "Use document and series numbers",
       "audience": "Softcopy creators and requesters",
       "steps": [
-        "For a new number, choose Category. If the category does not have an optional Series No. Code Pattern, Need Series Number? is not available.",
+        "For a new document, choose Category and leave Need Series Number? unchecked. The category defines only the Document No. Code Pattern.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
-        "If the category has a Series No. Code Pattern, select Need Series Number? and choose an existing Document Number. Series No. is generated automatically.",
-        "Check the Generated Series Number preview. The Softcopy Category Series No. Code Pattern controls its prefix and starting sequence.",
+        "For the first series, check Need Series Number?, select an existing Document No. and enter a one-time Series No. Code Pattern for that document number.",
+        "Preview the original document's preceding Series No. and the new Generated Series No. For pattern 001, original becomes 000 and new record 001 on approval.",
         "Finish the direct creation or request steps."
       ],
       "result": "The record gets a new category number or an existing number with a unique series.",
       "notes": [
-        "A series identifies a separate record. A revision keeps the document number and series.",
+        "Each Document No. stores its own series pattern after first approval. Future series increment automatically; revisions keep their series.",
         "If the preview is blank or no number is available, ask the controller to check the category."
       ]
     },
@@ -818,7 +818,7 @@
       ],
       "result": "You can fix common input problems or give the right information to the person helping you.",
       "notes": [
-        "If numbering fails, ask the controller to check the Softcopy Category patterns and required unique index. Series numbering is optional per category and is assigned on approval only when configured.",
+        "If numbering fails, check that the selected Document No. exists, its first-time pattern is valid, and the per-document series-pattern migration and unique index are installed.",
         "Reopen Review File for an expired review link. Submit a new request if document access has expired.",
         "Keep your password private and use your own account for every action."
       ]
