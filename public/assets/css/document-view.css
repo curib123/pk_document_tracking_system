@@ -685,18 +685,20 @@
   flex: 1 0 100%;
   min-width: 0;
   width: 100%;
-  max-height: 65vh;
+  max-height: min(52vh, 480px);
   border: 1px solid var(--ui-line-soft);
   border-radius: 8px;
   background: var(--surface);
   object-fit: contain;
 }
 #viewModal.is-document-view img.doc-modal-file-preview {
+  width: auto;
   height: auto;
-  min-height: 120px;
+  max-width: 100%;
+  margin-inline: auto;
 }
 #viewModal.is-document-view .doc-modal-file-pdf {
-  height: min(72vh, 760px);
+  height: min(65vh, 640px);
 }
 #viewModal.is-document-view .doc-modal-activity-title,
 #viewModal.is-document-view .doc-modal-file-title {
@@ -754,6 +756,12 @@
 }
 
 @media (max-width: 767.98px) {
+  #viewModal.is-document-view .doc-modal-file-preview {
+    max-height: 42vh;
+  }
+  #viewModal.is-document-view .doc-modal-file-pdf {
+    height: 52vh;
+  }
   #viewModal.is-document-view .doc-modal-overview {
     padding: 0 20px;
   }
