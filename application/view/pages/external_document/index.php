@@ -3,13 +3,6 @@ $table = $table ?? [];
 require_once APPPATH . 'services/presentation/document_folder_tree.php';
 $folderNodes = $folder_browser['tree']['nodes'] ?? [];
 $dt_path = 'documents/external';
-$file_route = static function ($path) {
-    $url_path = parse_url(site_url($path), PHP_URL_PATH);
-    if (!$url_path) {
-        throw new RuntimeException('Unable to build an external document file URL.');
-    }
-    return $url_path;
-};
 $dt_columns = [
     'title' => 'Document Title',
     'document_number' => 'Document No.',
@@ -29,9 +22,9 @@ foreach ($rows as $row) {
                 strtoupper((string) pathinfo($attachment['original_name'], PATHINFO_EXTENSION)) . ' | ' .
                 number_format((int) $attachment['size']) . ' bytes | ' . $attachment['created_at'];
             $attachmentLinks[] = [
-                'url' => $can_download ? $file_route('files/download/' . (int) $attachment['id']) : '',
+                'url' => $can_download ? site_url('files/download/' . (int) $attachment['id']) : '',
                 'preview_url' => $can_preview && ($attachment['mime_type'] === 'application/pdf' || strpos((string) $attachment['mime_type'], 'image/') === 0)
-                    ? $file_route('files/preview/' . (int) $attachment['id']) : '',
+                    ? site_url('files/preview/' . (int) $attachment['id']) : '',
                 'preview_type' => $attachment['mime_type'],
                 'label' => $attachment['original_name']
             ];
