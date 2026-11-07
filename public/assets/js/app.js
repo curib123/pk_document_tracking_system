@@ -919,7 +919,7 @@
     // Softcopy Categories define this independently of the document code pattern.
     // Preview is provisional; PHP assigns the authoritative value at approval.
     var seriesPattern = selected?.dataset.seriesCodePattern || "";
-    var seriesParts = seriesPattern.match(/^(.*?)(\\d+)$/);
+    var seriesParts = seriesPattern.match(/^(.*?)(\d+)$/);
     var usedSeries = numberOptions[manualField.value] || [];
     seriesField.value = "";
     if (manual && manualField.value && seriesParts) {
@@ -931,7 +931,7 @@
       usedSeries.forEach(function (value) {
         if (value.slice(0, seriesPrefix.length).toLowerCase() !== seriesPrefix.toLowerCase()) return;
         var suffix = value.slice(seriesPrefix.length);
-        if (!/^\\d+$/.test(suffix)) return;
+        if (!/^\d+$/.test(suffix)) return;
         seriesFound = true;
         var sequence = BigInt(suffix);
         if (sequence > seriesMaximum) seriesMaximum = sequence;
