@@ -39,7 +39,6 @@ $numbering_options = $numbering_options ?? [];
         <?php foreach ($category_options as $category): ?>
             <option value="<?= (int) $category['id'] ?>"
                 data-code-pattern="<?= html_escape($category['code_pattern'] ?? 'DOC-001') ?>"
-                data-series-code-pattern="<?= html_escape($category['series_code_pattern'] ?? '') ?>"
                     data-number-options="<?= html_escape(json_encode($numbering_options[(int) $category['id']] ?? [])) ?>"
                     data-next-number="<?= html_escape($number_previews[(int) $category['id']] ?? '') ?>">
                 <?= html_escape($category['name']) ?></option>
@@ -63,6 +62,17 @@ $numbering_options = $numbering_options ?? [];
     <select class="form-select" name="document_number" id="reqNumber" data-searchable disabled autocomplete="off">
         <option value="">Choose an existing document number</option>
     </select>
+</div>
+<div class="col-md-6" data-series-pattern-setup hidden>
+    <label class="form-label" for="reqSeriesPattern">Series No. Code Pattern (first-time setup)</label>
+    <input class="form-control" name="series_code_pattern" id="reqSeriesPattern"
+        placeholder="For example 001 or SER-001" maxlength="100" disabled autocomplete="off">
+    <small class="form-text">Set this only once for the selected Document No. The original document receives the preceding series: 001 means original 000, new document 001.</small>
+</div>
+<div class="col-md-6" data-original-series-preview hidden>
+    <label class="form-label" for="reqOriginalSeries">Original Document Series No.</label>
+    <input class="form-control" id="reqOriginalSeries" readonly disabled autocomplete="off">
+    <small class="form-text">Assigned to the existing original record on final approval.</small>
 </div>
 <div class="col-md-6" data-series-number-field hidden>
     <label class="form-label" for="reqSeries">Generated Series Number</label>
