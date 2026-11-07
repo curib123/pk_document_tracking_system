@@ -122,7 +122,6 @@ CREATE TABLE `categories` (
   `name` varchar(150) NOT NULL,
   `folder_name` varchar(150) NOT NULL,
   `code_pattern` varchar(150) NOT NULL DEFAULT 'DOC-001',
-  `series_code_pattern` varchar(100) NOT NULL DEFAULT '',
   `description` text DEFAULT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `created_by` bigint(20) UNSIGNED NOT NULL,
@@ -135,8 +134,8 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `code_pattern`, `series_code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Uncategorized', 'Uncategorized', 'DOC-1-001', '', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'DOC-1-001', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
 
 -- --------------------------------------------------------
 
@@ -883,6 +882,21 @@ CREATE TABLE `softcopy_documents` (
 INSERT INTO `softcopy_documents` (`id`, `document_number`, `series_number`, `title`, `category_id`, `current_revision_id`, `status`, `previous_status`, `created_by`, `creation_source`, `creation_reason`, `source_request_id`, `version`, `created_at`, `updated_at`) VALUES
 (1, 'policy-00001', '1', 'Handwashing Policy', 1, 1, 'active', NULL, 6, 'request', 'New Policy sa Handwashing', 1, 1, '2026-10-16 05:50:08', '2026-10-16 05:50:08'),
 (2, 'ppms-001', '1', 'Egg Releasing Form', 1, 2, 'active', NULL, 4, 'direct', 'New softcopy Document', NULL, 1, '2026-10-16 06:39:18', '2026-10-16 06:39:18');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for document-specific Series No. code patterns
+--
+
+CREATE TABLE `softcopy_document_series_patterns` (
+  `category_id` bigint(20) UNSIGNED NOT NULL,
+  `document_number` varchar(100) NOT NULL,
+  `code_pattern` varchar(100) NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`category_id`,`document_number`),
+  CONSTRAINT `softcopy_document_series_category_fk` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
