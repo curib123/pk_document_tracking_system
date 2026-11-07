@@ -121,6 +121,7 @@ CREATE TABLE `categories` (
   `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `folder_name` varchar(150) NOT NULL,
+  `category_type` varchar(20) NOT NULL DEFAULT 'pattern',
   `code_pattern` varchar(150) NOT NULL DEFAULT 'DOC-001',
   `description` text DEFAULT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
@@ -134,8 +135,8 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Uncategorized', 'Uncategorized', 'DOC-1-001', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `category_type`, `code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'pattern', 'DOC-1-001', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
 
 -- --------------------------------------------------------
 
