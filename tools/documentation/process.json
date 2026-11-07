@@ -135,7 +135,7 @@
         }
       ],
       "notes": [
-        "The system generates new document numbers. Softcopy Category Series No. Code Pattern is optional; when configured, Need Series Number? allows an existing document number with a uniquely generated series. Otherwise regular document creation works without series.",
+        "The category generates new Document Nos. When Need Series Number? is selected for an existing Document No., its first-time Series No. Code Pattern is entered in that form, not in category setup. On approval the original gets the preceding series (001 -> 000) and the new document gets 001; subsequent series increment per Document No.",
         "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
         "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
       ]
