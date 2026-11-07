@@ -24,7 +24,7 @@ class Place_service
         }
         if ($data[$c['key']] === '')
             throw new DomainException('Name is required.');
-        foreach (['name', 'asset_number', 'folder_name', 'code_pattern', 'series_code_pattern'] as $key) {
+        foreach (['name', 'asset_number', 'folder_name', 'code_pattern'] as $key) {
             if (isset($data[$key]) && mb_strlen((string) $data[$key]) > 150)
                 throw new DomainException('Value is too long.');
         }
@@ -46,10 +46,6 @@ class Place_service
             if ($c['slug'] === 'softcopy-categories') {
                 if (mb_strlen($data['code_pattern']) > 100)
                     throw new DomainException('Document code pattern must not exceed 100 characters.');
-                require_once APPPATH . 'services/softcopy/document_number_generator.php';
-                // Series numbering is opt-in for each Softcopy Category.
-                if (trim((string) $data['series_code_pattern']) !== '')
-                    Document_number_generator::validate_series_pattern((string) $data['series_code_pattern']);
             }
             if (!$id)
                 $data['created_by'] = $actorId;
