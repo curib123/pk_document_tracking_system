@@ -130,7 +130,7 @@ class Document_number_generator
         [$prefix, $initial, $width] = self::validate_series_pattern((string) $category['series_code_pattern']);
 
         $document = $db->query(
-            'SELECT id FROM softcopy_documents WHERE category_id=? AND document_number=? LIMIT 1',
+            'SELECT id FROM softcopy_documents WHERE category_id=? AND document_number=? LIMIT 1 FOR UPDATE',
             [$categoryId, $number]
         )->row_array();
         if (!$document) {
@@ -140,7 +140,7 @@ class Document_number_generator
         // Include historic manually entered series and cancelled documents.
         // Never recycle a previously used matching series.
         $rows = $db->query(
-            'SELECT series_number FROM softcopy_documents WHERE category_id=? AND document_number=? AND series_number IS NOT NULL',
+            'SELECT series_number FROM softcopy_documents WHERE category_id=? AND document_number=? AND series_number IS NOT NULL FOR UPDATE',
             [$categoryId, $number]
         )->result_array();
 
