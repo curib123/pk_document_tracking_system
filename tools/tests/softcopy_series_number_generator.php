@@ -24,7 +24,10 @@ class FakeSeriesDb
     public function query($sql, $params)
     {
         if (strpos($sql, 'FROM categories') !== FALSE) {
-            return new FakeSeriesResult((int) $params[0] > 0 ? [['id' => (int) $params[0]]] : []);
+            return new FakeSeriesResult((int) $params[0] > 0 ? [[
+                'id' => (int) $params[0],
+                'category_type' => (int) $params[0] === 99 ? 'folder' : 'pattern'
+            ]] : []);
         }
         $cat = (int) $params[0];
         $number = (string) $params[1];
@@ -114,6 +117,23 @@ same(['000', '001'], Document_series_generator::initial_pair('001'), 'Numeric in
 same(['SER-004', 'SER-005'], Document_series_generator::initial_pair('SER-005'), 'Prefixed initial series pair');
 same(['sample-series-001', 'sample-series-002'], Document_series_generator::initial_pair('sample-series-002'), 'Final-dash numeric decrement preserves both prefix components');
 same('sample-series-003', Document_series_generator::format_number('sample-series-', 3, 3), 'Next series after 002');
+$db->documents[] = [
+    'id' => 7, 'category_id' => 1, 'document_number' => 'DOC-005',
+    'series_number' => NULL, 'status' => 'active'
+];
+same('sample-series-002', Document_series_generator::next($db, 1, 'DOC-005', 'sample-series-002', 25),
+    'First series assigned from multi-dash pattern');
+same('sample-series-001', $db->documents[count($db->documents) - 1]['series_number'],
+    'Original receives multi-dash predecessor');
+$db->documents[] = [
+    'id' => 8, 'category_id' => 1, 'document_number' => 'DOC-005',
+    'series_number' => 'sample-series-002', 'status' => 'active'
+];
+same('sample-series-003', Document_series_generator::next($db, 1, 'DOC-005', '', 25),
+    'Next creation increments only digits following the last dash');
+rejected(static function () use ($db) {
+    Document_series_generator::next($db, 99, 'DOC-005', 'sample-series-002', 25);
+}, 'Folder-only category cannot allocate a document series');
 rejected(static function () {
     Document_series_generator::validate_pattern('sample-series002');
 }, 'Non-dash letter-to-number prefix must not be accepted');
