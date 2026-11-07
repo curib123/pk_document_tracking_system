@@ -215,9 +215,9 @@
       "title": "Use document and series numbers",
       "audience": "Softcopy creators and requesters",
       "steps": [
-        "For a new number, choose Category and leave Need Series Number? unchecked.",
+        "For a new number, choose Category. If the category does not have an optional Series No. Code Pattern, Need Series Number? is not available.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
-        "To reuse a number, select Need Series Number? and choose an existing Document Number in that category. Series No. is generated automatically.",
+        "If the category has a Series No. Code Pattern, select Need Series Number? and choose an existing Document Number. Series No. is generated automatically.",
         "Check the Generated Series Number preview. The Softcopy Category Series No. Code Pattern controls its prefix and starting sequence.",
         "Finish the direct creation or request steps."
       ],
@@ -818,7 +818,7 @@
       ],
       "result": "You can fix common input problems or give the right information to the person helping you.",
       "notes": [
-        "If numbering fails, ask the controller to check the Softcopy Category patterns and required unique index; the next series is assigned on approval.",
+        "If numbering fails, ask the controller to check the Softcopy Category patterns and required unique index. Series numbering is optional per category and is assigned on approval only when configured.",
         "Reopen Review File for an expired review link. Submit a new request if document access has expired.",
         "Keep your password private and use your own account for every action."
       ]
