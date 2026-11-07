@@ -894,8 +894,7 @@ CREATE TABLE `softcopy_document_series_patterns` (
   `document_number` varchar(100) NOT NULL,
   `code_pattern` varchar(100) NOT NULL,
   `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
-  PRIMARY KEY (`category_id`,`document_number`),
-  CONSTRAINT `softcopy_document_series_category_fk` FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`)
+  PRIMARY KEY (`category_id`,`document_number`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
@@ -1924,6 +1923,13 @@ ALTER TABLE `revision_artifacts`
 ALTER TABLE `role_permissions`
   ADD CONSTRAINT `role_permissions_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `roles` (`id`),
   ADD CONSTRAINT `role_permissions_ibfk_2` FOREIGN KEY (`permission_id`) REFERENCES `permissions` (`id`);
+
+--
+-- Constraints for document-specific Series No. patterns
+--
+ALTER TABLE `softcopy_document_series_patterns`
+  ADD CONSTRAINT `softcopy_document_series_category_fk`
+    FOREIGN KEY (`category_id`) REFERENCES `categories` (`id`);
 
 --
 -- Constraints for table `softcopy_documents`
