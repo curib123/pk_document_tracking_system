@@ -98,6 +98,7 @@
 
   function reset() {
     modal.classList.remove("is-document-view");
+    modal.classList.remove("is-external-document-view");
     modal.classList.remove("is-assignment-view");
     modal.setAttribute("data-view-domain", "");
     [
@@ -322,6 +323,9 @@
   function prepareHeading(data) {
     modal.classList.add("is-document-view");
     var h = data.header || {};
+    if (h.eyebrow === "EXTERNAL DOCUMENT") {
+      modal.classList.add("is-external-document-view");
+    }
     var domain =
       data.domain === "hardcopy"
         ? "hardcopy"
@@ -505,32 +509,35 @@
     var links = Array.isArray(section.links) ? section.links : [];
     entries.forEach(function (entry, index) {
       var row = node("article", "doc-modal-file-item");
-      var fileIcon = node("span", "doc-modal-file-icon");
-      fileIcon.append(icon("files"));
-      var content = node("div", "doc-modal-file-content");
+      var fileInfo = node("div", "doc-modal-file-info");
       var link = links[index] || {};
+      var fileName = entry[0].replace(/^\d+\.\s*/, "");
       var previewDestination = link.preview_url ? safeLink(link.preview_url) : null;
       if (previewDestination && String(link.preview_type || "").indexOf("image/") === 0) {
         var preview = node("img", "doc-modal-file-preview");
         preview.src = previewDestination;
-        preview.alt = entry[0].replace(/^\d+\.\s*/, "");
+        preview.alt = fileName;
         preview.loading = "lazy";
         row.append(preview);
       } else if (previewDestination && link.preview_type === "application/pdf") {
         var pdf = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
-        pdf.src = previewDestination;
-        pdf.title = "Preview " + entry[0].replace(/^\d+\.\s*/, "");
+        pdf.src = previewDestination + "#toolbar=0&navpanes=0&view=FitH";
+        pdf.title = "Preview " + fileName;
         row.append(pdf);
       }
-      content.append(
-        node(
-          "strong",
-          "doc-modal-file-title",
-          entry[0].replace(/^\d+\.\s*/, ""),
-        ),
-      );
-      content.append(node("p", "doc-modal-file-meta", formatDates(entry[1])));
-      row.append(fileIcon, content);
+      fileInfo.append(node("strong", "doc-modal-file-title", fileName));
+      if (previewDestination) {
+        var fullView = node(
+          "a",
+          "btn btn-sm btn-outline-secondary doc-modal-download",
+          "Full View",
+        );
+        fullView.href = previewDestination;
+        fullView.target = "_blank";
+        fullView.rel = "noopener";
+        fullView.setAttribute("aria-label", "Open full view of " + fileName);
+        fileInfo.append(fullView);
+      }
       var destination = link.url ? safeLink(link.url) : null;
       if (destination) {
         var anchor = node(
@@ -539,12 +546,9 @@
           "Download",
         );
         anchor.href = destination;
-        anchor.setAttribute(
-          "aria-label",
-          "Download " + entry[0].replace(/^\d+\.\s*/, ""),
-        );
+        anchor.setAttribute("aria-label", "Download " + fileName);
         anchor.append(icon("files"));
-        row.append(anchor);
+        fileInfo.append(anchor);
       }
       var printDestination = link.print_url ? safeLink(link.print_url) : null;
       if (printDestination) {
@@ -556,12 +560,10 @@
         print.href = printDestination;
         print.target = "_blank";
         print.rel = "noopener";
-        print.setAttribute(
-          "aria-label",
-          "Print " + entry[0].replace(/^\d+\.\s*/, ""),
-        );
-        row.append(print);
+        print.setAttribute("aria-label", "Print " + fileName);
+        fileInfo.append(print);
       }
+      row.append(fileInfo);
       list.append(row);
     });
     return list;

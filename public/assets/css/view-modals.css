@@ -10,6 +10,26 @@
 #viewModal.is-document-view:has(#viewDetails:empty) .modal-dialog {
   max-width: 760px;
 }
+#viewModal.is-external-document-view .modal-dialog {
+  width: calc(100% - 24px);
+  max-width: 1600px;
+  max-height: calc(100dvh - 24px);
+  margin: 12px auto;
+}
+#viewModal.is-external-document-view .modal-content {
+  max-height: calc(100dvh - 24px);
+}
+#viewModal.is-external-document-view .modal-header {
+  padding: 14px 20px;
+}
+#viewModal.is-external-document-view .doc-modal-metadata {
+  gap: 7px;
+  margin-top: 10px;
+}
+#viewModal.is-external-document-view .doc-modal-metadata-item {
+  padding-top: 7px;
+  padding-bottom: 7px;
+}
 #viewModal .modal-content,
 #fileHistoryModal .modal-content,
 .workflow-steps-modal .modal-content {
