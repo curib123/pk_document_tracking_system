@@ -39,6 +39,7 @@ $numbering_options = $numbering_options ?? [];
         <?php foreach ($category_options as $category): ?>
             <option value="<?= (int) $category['id'] ?>"
                 data-code-pattern="<?= html_escape($category['code_pattern'] ?? 'DOC-001') ?>"
+                data-series-code-pattern="<?= html_escape($category['series_code_pattern'] ?? '001') ?>"
                     data-number-options="<?= html_escape(json_encode($numbering_options[(int) $category['id']] ?? [])) ?>"
                     data-next-number="<?= html_escape($number_previews[(int) $category['id']] ?? '') ?>">
                 <?= html_escape($category['name']) ?></option>
@@ -64,9 +65,9 @@ $numbering_options = $numbering_options ?? [];
     </select>
 </div>
 <div class="col-md-6" data-series-number-field hidden>
-    <label class="form-label" for="reqSeries">Series Number</label>
-    <input class="form-control" name="series_number_manual" id="reqSeries" maxlength="100" disabled autocomplete="off">
-    <small class="form-text" data-series-number-guide hidden></small>
+    <label class="form-label" for="reqSeries">Generated Series Number</label>
+    <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" readonly disabled autocomplete="off">
+    <small class="form-text" data-series-number-guide>Preview only. The final series number is generated on approval.</small>
 </div>
 <div class="col-md-6" data-auto-revision-level-wrap hidden>
     <label class="form-label" for="nextRevisionLevel">Next Revision Level (automatic)</label>
