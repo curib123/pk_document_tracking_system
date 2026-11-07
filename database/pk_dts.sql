@@ -122,7 +122,7 @@ CREATE TABLE `categories` (
   `name` varchar(150) NOT NULL,
   `folder_name` varchar(150) NOT NULL,
   `category_type` varchar(20) NOT NULL DEFAULT 'pattern',
-  `code_pattern` varchar(150) NOT NULL DEFAULT 'DOC-001',
+  `code_pattern` varchar(150) DEFAULT 'DOC-001',
   `description` text DEFAULT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `created_by` bigint(20) UNSIGNED NOT NULL,

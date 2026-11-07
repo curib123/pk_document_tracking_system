@@ -16,7 +16,9 @@ PREPARE softcopy_category_kind_statement FROM @softcopy_category_kind_sql;
 EXECUTE softcopy_category_kind_statement;
 DEALLOCATE PREPARE softcopy_category_kind_statement;
 
--- New folder-only rows use category_type = 'folder' and code_pattern = ''.
+-- This initial version represented folder-only rows with an empty pattern.
+-- Apply 20261107_softcopy_folder_category_patterns.sql afterward so folders
+-- can use NULL and multiple folder-only categories can coexist.
 -- Numbered categories use category_type = 'pattern' and PPM-001, etc.
 -- Do not automatically convert existing parent categories into folders,
 -- because they may already contain controlled documents.

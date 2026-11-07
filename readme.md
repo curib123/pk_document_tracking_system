@@ -130,6 +130,7 @@ updates address these cases:
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 | Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
+| Multiple folder-only Softcopy Categories | [Folder category pattern migration](database/migrations/20261107_softcopy_folder_category_patterns.sql), after Softcopy Category Types |
 | First-time Series No. pattern for each Document No. | [Document Series Pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql), after category numbering and the series-number index |
 
 Existing prefix-only category patterns still work. New category patterns should
