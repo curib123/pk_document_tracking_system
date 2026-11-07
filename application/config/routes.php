@@ -95,6 +95,7 @@ $route['files/upload']['POST'] = 'Files/upload';
 $route['files/download/(:num)']['GET'] = 'Files/download/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
 $route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';
+$route['files/preview/(:num)']['GET'] = 'Files/preview/$1';
 
 // Review a file or access its review content.
 $route['files/review/(:num)']['GET'] = 'Files/review/$1';

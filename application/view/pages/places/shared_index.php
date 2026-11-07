@@ -106,7 +106,8 @@ $dt_sortable = array_values(array_intersect(
         'asset' => 'Asset',
         'location' => 'Location',
         'softcopy-categories' => 'Softcopy Categories',
-        'external-categories' => 'External Categories'
+        'external-categories' => 'External Categories',
+        'subsidiary' => 'Subsidiary Setup'
     ] as $slug => $label):
         $perm = [
             'area' => 'areas',
@@ -114,7 +115,8 @@ $dt_sortable = array_values(array_intersect(
             'asset' => 'assets',
             'location' => 'locations',
             'softcopy-categories' => 'categories',
-            'external-categories' => 'external_categories'
+            'external-categories' => 'external_categories',
+            'subsidiary' => 'subsidiaries'
         ][$slug];
         if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
             <a href="<?= site_url('places/' . $slug) ?>" class="tab-link <?= $cfg['slug'] === $slug ? 'active' : '' ?>">

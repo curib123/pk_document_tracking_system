@@ -166,6 +166,21 @@ INSERT INTO `external_categories` (`id`, `parent_id`, `name`, `folder_name`, `de
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `subsidiaries`
+--
+
+CREATE TABLE `subsidiaries` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `disposals`
 --
 
@@ -439,7 +454,11 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (92, 'External Categories: View', 'external_categories', 'External Categories', 'view', 'View', 'Allows view operations for external categories.', 1),
 (93, 'External Categories: Add', 'external_categories', 'External Categories', 'add', 'Add', 'Allows add operations for external categories.', 1),
 (94, 'External Categories: Edit', 'external_categories', 'External Categories', 'edit', 'Edit', 'Allows edit operations for external categories.', 1),
-(95, 'External Categories: Delete', 'external_categories', 'External Categories', 'delete', 'Delete', 'Allows delete operations for external categories.', 1);
+(95, 'External Categories: Delete', 'external_categories', 'External Categories', 'delete', 'Delete', 'Allows delete operations for external categories.', 1),
+(96, 'Subsidiaries: View', 'subsidiaries', 'Subsidiaries', 'view', 'View', 'Allows view operations for subsidiaries.', 1),
+(97, 'Subsidiaries: Add', 'subsidiaries', 'Subsidiaries', 'add', 'Add', 'Allows add operations for subsidiaries.', 1),
+(98, 'Subsidiaries: Edit', 'subsidiaries', 'Subsidiaries', 'edit', 'Edit', 'Allows edit operations for subsidiaries.', 1),
+(99, 'Subsidiaries: Delete', 'subsidiaries', 'Subsidiaries', 'delete', 'Delete', 'Allows delete operations for subsidiaries.', 1);
 
 -- --------------------------------------------------------
 
@@ -791,6 +810,15 @@ JOIN `permissions` external_permission
   AND external_permission.`action_key`=category_permission.`action_key`
 WHERE category_permission.`module_key`='categories';
 
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, subsidiary_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` external_category_permission ON external_category_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` subsidiary_permission
+  ON subsidiary_permission.`module_key`='subsidiaries'
+  AND subsidiary_permission.`action_key`=external_category_permission.`action_key`
+WHERE external_category_permission.`module_key`='external_categories';
+
 -- --------------------------------------------------------
 
 --
@@ -893,6 +921,8 @@ CREATE TABLE `softcopy_revisions` (
 CREATE TABLE `external_documents` (
   `id` bigint(20) UNSIGNED NOT NULL,
   `title` varchar(255) NOT NULL,
+  `document_number` varchar(150) DEFAULT NULL,
+  `subsidiary_id` bigint(20) UNSIGNED DEFAULT NULL,
   `description` varchar(2000) NOT NULL DEFAULT '',
   `category_id` bigint(20) UNSIGNED NOT NULL DEFAULT 1,
   `current_revision_id` bigint(20) UNSIGNED DEFAULT NULL,
@@ -920,6 +950,17 @@ CREATE TABLE `external_revisions` (
   `approved_by` bigint(20) UNSIGNED NOT NULL,
   `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_revision_files`
+--
+
+CREATE TABLE `external_revision_files` (
+  `revision_id` bigint(20) UNSIGNED NOT NULL,
+  `file_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1310,10 +1351,19 @@ ALTER TABLE `external_categories`
   ADD KEY `external_categories_active_name` (`active`,`name`);
 
 --
+-- Indexes for table `subsidiaries`
+--
+ALTER TABLE `subsidiaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `subsidiaries_active_name` (`active`,`name`);
+
+--
 -- Indexes for table `external_documents`
 --
 ALTER TABLE `external_documents`
   ADD PRIMARY KEY (`id`),
+  ADD KEY `external_documents_number` (`document_number`),
+  ADD KEY `external_documents_subsidiary` (`subsidiary_id`),
   ADD KEY `external_documents_category` (`category_id`),
   ADD KEY `external_documents_creator_status` (`created_by`,`status`),
   ADD KEY `external_documents_current_revision` (`current_revision_id`);
@@ -1327,6 +1377,13 @@ ALTER TABLE `external_revisions`
   ADD UNIQUE KEY `external_revision_file` (`file_id`),
   ADD KEY `external_revision_uploaded_by` (`uploaded_by`),
   ADD KEY `external_revision_approved_by` (`approved_by`);
+
+--
+-- Indexes for table `external_revision_files`
+--
+ALTER TABLE `external_revision_files`
+  ADD PRIMARY KEY (`revision_id`,`file_id`),
+  ADD UNIQUE KEY `external_revision_file_attachment` (`file_id`);
 
 --
 -- Indexes for table `disposals`
@@ -1471,6 +1528,12 @@ ALTER TABLE `external_documents`
 -- AUTO_INCREMENT for table `external_categories`
 --
 ALTER TABLE `external_categories`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `subsidiaries`
+--
+ALTER TABLE `subsidiaries`
   MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
@@ -1631,7 +1694,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=96;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `requests`
@@ -1798,6 +1861,7 @@ ALTER TABLE `locations`
 ALTER TABLE `external_documents`
   ADD CONSTRAINT `external_documents_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `external_documents_category_fk` FOREIGN KEY (`category_id`) REFERENCES `external_categories` (`id`),
+  ADD CONSTRAINT `external_documents_subsidiary_fk` FOREIGN KEY (`subsidiary_id`) REFERENCES `subsidiaries` (`id`),
   ADD CONSTRAINT `external_documents_current_revision_fk` FOREIGN KEY (`current_revision_id`) REFERENCES `external_revisions` (`id`);
 
 --
@@ -1808,6 +1872,13 @@ ALTER TABLE `external_revisions`
   ADD CONSTRAINT `external_revisions_file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`),
   ADD CONSTRAINT `external_revisions_uploaded_by_fk` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `external_revisions_approved_by_fk` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `external_revision_files`
+--
+ALTER TABLE `external_revision_files`
+  ADD CONSTRAINT `external_revision_files_revision_fk` FOREIGN KEY (`revision_id`) REFERENCES `external_revisions` (`id`),
+  ADD CONSTRAINT `external_revision_files_file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`);
 
 --
 -- Constraints for table `notifications`

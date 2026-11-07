@@ -155,6 +155,8 @@ class Request_service
             'title' => trim((string) ($post['title'] ?? '')),
             'description' => trim((string) ($post['description'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
+            'external_document_number' => trim((string) ($post['external_document_number'] ?? '')),
+            'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
             'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
@@ -305,6 +307,8 @@ class Request_service
                     $payload['title'],
                     $payload['description']
                 );
+                $externalService->validate_document_number($payload['external_document_number']);
+                $payload['subsidiary_id'] = $externalService->validate_subsidiary($payload['subsidiary_id']) ?? 0;
                 $payload['external_category_id'] = $externalService->validate_category(
                     (int) $payload['external_category_id']
                 );
@@ -312,17 +316,24 @@ class Request_service
                     throw new DomainException('Choose an active external document to revise.');
                 }
             }
-            if (!empty($attachment['name'])) {
+            if ($external) {
                 require_once APPPATH . 'services/files/file_service.php';
                 $files = new File_service();
-                if ($external) {
-                    $fileId = $type === 'external_create'
-                        ? $files->stage_external_creation((int) $user['id'], $attachment)
-                        : $files->stage_external_revision((int) $payload['external_document_id'], (int) $user['id'], $attachment);
+                $fileIds = $type === 'external_create'
+                    ? $files->stage_external_creation((int) $user['id'], $attachment)
+                    : $files->stage_external_revision((int) $payload['external_document_id'], (int) $user['id'], $attachment);
+                foreach ($fileIds as $stagedId) {
+                    $staged = $this->ci->db->select('storage_name')->get_where('files', ['id' => $stagedId])->row_array();
+                    if ($staged && preg_match('/^[a-f0-9]{64}$/', $staged['storage_name']))
+                        $this->stagedPaths[] = PK_ROOT . '/storage/documents/' . $staged['storage_name'];
+                }
+            } elseif (!empty($attachment['name'])) {
+                require_once APPPATH . 'services/files/file_service.php';
+                $files = new File_service();
+                if ($type === 'softcopy_create') {
+                    $fileId = $files->stage_creation((int) $user['id'], $attachment);
                 } else {
-                    $fileId = $type === 'softcopy_create'
-                        ? $files->stage_creation((int) $user['id'], $attachment)
-                        : $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
+                    $fileId = $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
                 }
                 $staged = $this->ci->db->select('storage_name')->get_where('files', ['id' => $fileId])->row_array();
                 if ($staged && preg_match('/^[a-f0-9]{64}$/', $staged['storage_name']))
@@ -338,9 +349,23 @@ class Request_service
                 ) {
                     throw new DomainException('Only your matching draft may be edited.');
                 }
-                $payload[$fileField] = $fileId ?: ((int) ($old[$fileField] ?? 0));
-            } elseif ($fileId) {
-                $payload[$fileField] = $fileId;
+                if ($external) {
+                    $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                    $oldFileIds = $old[$filesField] ?? [$old[$fileField] ?? 0];
+                    $fileIds = array_values(array_unique(array_filter(array_map(
+                        'intval',
+                        array_merge((array) $oldFileIds, $fileIds ?? [])
+                    ))));
+                    $payload[$filesField] = $fileIds;
+                    $payload[$fileField] = $fileIds[0] ?? 0;
+                } else {
+                    $payload[$fileField] = $fileId ?: ((int) ($old[$fileField] ?? 0));
+                }
+            } elseif ($external) {
+                if (!empty($fileIds)) {
+                    $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] = $fileIds;
+                    $payload[$fileField] = $fileIds[0];
+                }
             }
         }
         if (in_array($type, ['hardcopy_create', 'hardcopy_update'], TRUE)) {
@@ -517,16 +542,21 @@ class Request_service
                 $payload = json_decode($r['payload'], TRUE) ?: [];
                 $creation = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
                 $external = str_starts_with($r['type'], 'external_');
-                $file = $this->ci->db->get_where('files', [
-                    'id' => (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0),
+                $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+                $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                $fileIds = array_values(array_unique(array_filter(array_map(
+                    'intval',
+                    (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+                ))));
+                $files = $fileIds ? $this->ci->db->where_in('id', $fileIds)->where([
                     'document_id' => $creation ? NULL : (int) ($external
                         ? ($payload['external_document_id'] ?? 0) : $r['softcopy_id']),
                     'uploaded_by' => (int) $r['requested_by'],
                     'status' => 'pending',
                     'domain' => $external ? 'external' : 'softcopy',
                     'purpose' => $creation ? 'creation' : 'revision'
-                ])->row_array();
-                if (!$file)
+                ])->get('files')->result_array() : [];
+                if (!$fileIds || count($files) !== count($fileIds))
                     throw new DomainException('Upload a Document Filefor review before submitting.');
             }
             if (in_array($r['type'], ['hardcopy_create', 'hardcopy_update'], TRUE)) {

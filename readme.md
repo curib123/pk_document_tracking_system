@@ -125,6 +125,8 @@ updates address these cases:
 | An External Description field | [External description update](database/migrations/20261104_external_retention_dates_description.sql), if needed |
 | Removal of unused External retention fields | [Remove External retention](database/migrations/20261104_remove_external_retention.sql), after the description update if it was needed |
 | Separate External Categories | [External categories](database/migrations/20261104_external_categories.sql), after the preceding External updates |
+| External document numbers and Subsidiary setup | [External document subsidiaries](database/migrations/20261107_external_document_subsidiaries.sql), after External Categories |
+| Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 

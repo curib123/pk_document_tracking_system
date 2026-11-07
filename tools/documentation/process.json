@@ -155,7 +155,7 @@
         },
         {
           "actor": "Document controller",
-          "text": "Choose Attach File. For a revision, attach the replacement file."
+          "text": "Choose Attach Files and select up to 20 PDF, image, scan or supported document files. For a revision, these files become the replacement attachments."
         },
         {
           "actor": "Document controller",
@@ -168,7 +168,7 @@
       ],
       "notes": [
         "External Documents use External Categories and do not use retention dates.",
-        "Attach PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. Description may contain up to 2,000 characters.",
+        "Attach up to 20 PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX files, up to 15 MB each. Description may contain up to 2,000 characters.",
         "Revising a record or using its file requires the appropriate permission and document access."
       ]
     },
@@ -1260,7 +1260,7 @@
       "steps": [
         {
           "actor": "Places maintainer",
-          "text": "Open Setup Places. Choose Area, Specific, Asset Number, Location, Softcopy Category or External Category."
+          "text": "Open Master Data. Choose Area, Specific, Asset Number, Location, Softcopy Category, External Category or Subsidiary Setup."
         },
         {
           "actor": "Places maintainer",

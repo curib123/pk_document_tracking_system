@@ -5,7 +5,7 @@ require_once APPPATH . 'services/security/user_roles.php';
 class File_model extends CI_Model
 {
     /** Controlled request files: owner or actively assigned approver only. */
-    public function review_file($requestId, $viewer)
+    public function review_file($requestId, $viewer, $requestedFileId = 0)
     {
         $r = $this->db->get_where('requests', ['id' => (int) $requestId])->row_array();
         if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
@@ -33,8 +33,14 @@ class File_model extends CI_Model
         $data = json_decode($r['payload'], TRUE) ?: [];
         $create = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
         $external = str_starts_with($r['type'], 'external_');
-        $fileId = (int) ($data[$create ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
-        if (!$fileId)
+        $fileField = $create ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $create ? 'controlled_file_ids' : 'revision_file_ids';
+        $fileIds = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($data[$filesField] ?? [$data[$fileField] ?? 0])
+        ))));
+        $fileId = (int) $requestedFileId ?: (int) ($data[$fileField] ?? ($fileIds[0] ?? 0));
+        if (!$fileId || !in_array($fileId, $fileIds, TRUE))
             return NULL;
         return $this->db->get_where('files', [
             'id' => $fileId,
@@ -61,7 +67,8 @@ class File_model extends CI_Model
         return $this->db->select('f.*,e.created_by AS owner_id,e.status AS document_status')
             ->from('files f')
             ->join('external_documents e', 'e.id=f.document_id AND f.domain="external"')
-            ->join('external_revisions current', 'current.id=e.current_revision_id AND current.file_id=f.id')
+            ->join('external_revision_files current_files', 'current_files.file_id=f.id')
+            ->join('external_revisions current', 'current.id=e.current_revision_id AND current.id=current_files.revision_id')
             ->where('f.id', (int) $id)->where('f.status', 'approved')
             ->limit(1)->get()->row_array();
     }
@@ -118,6 +125,27 @@ class File_model extends CI_Model
         $result = [];
         foreach ($rows as $file)
             $result[$file['document_id']][] = $file;
+        return $result;
+    }
+
+    public function current_external_files(array $documentIds): array
+    {
+        $documentIds = array_values(array_unique(array_filter(array_map('intval', $documentIds))));
+        if (!$documentIds) {
+            return [];
+        }
+        $rows = $this->db->select('d.id AS document_id,f.id,f.original_name,f.mime_type,f.size,f.created_at')
+            ->from('external_documents d')
+            ->join('external_revisions r', 'r.id=d.current_revision_id')
+            ->join('external_revision_files rf', 'rf.revision_id=r.id')
+            ->join('files f', 'f.id=rf.file_id AND f.status="approved"')
+            ->where_in('d.id', $documentIds)
+            ->order_by('rf.file_id')
+            ->get()->result_array();
+        $result = [];
+        foreach ($rows as $file) {
+            $result[(int) $file['document_id']][] = $file;
+        }
         return $result;
     }
 }

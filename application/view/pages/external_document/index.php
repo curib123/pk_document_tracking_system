@@ -5,6 +5,8 @@ $folderNodes = $folder_browser['tree']['nodes'] ?? [];
 $dt_path = 'documents/external';
 $dt_columns = [
     'title' => 'Document Title',
+    'document_number' => 'Document No.',
+    'subsidiary_name' => 'Subsidiary',
     'category_name' => 'Category',
     'status' => 'Status',
     'description' => 'Description',
@@ -14,22 +16,52 @@ $dt_columns = [
 ];
 $dt_rows = [];
 foreach ($rows as $row) {
+    $attachments = $row['attachments'] ?? [];
+    $attachmentFields = [];
+    $attachmentLinks = [];
+    if ($can_preview || $can_download) {
+        foreach ($attachments as $index => $attachment) {
+            $attachmentFields[($index + 1) . '. ' . $attachment['original_name']] =
+                strtoupper((string) pathinfo($attachment['original_name'], PATHINFO_EXTENSION)) . ' | ' .
+                number_format((int) $attachment['size']) . ' bytes | ' . $attachment['created_at'];
+            $attachmentLinks[] = [
+                'url' => $can_download ? 'files/download/' . (int) $attachment['id'] : '',
+                'preview_url' => $can_preview && in_array($attachment['mime_type'], ['application/pdf', 'image/jpeg', 'image/png'], TRUE)
+                    ? 'files/preview/' . (int) $attachment['id'] : '',
+                'preview_type' => $attachment['mime_type'],
+                'label' => $attachment['original_name']
+            ];
+        }
+    }
     $display = [
-        'Document Title' => $row['title'],
-        'Category' => $row['category_name'] ?? 'Uncategorized',
-        'Status' => ucfirst($row['status']),
-        'Description' => $row['description'] ?? '',
-        'Revision Level' => $row['revision_level'] ?? '00',
-        'Created Date' => $row['created_at'],
-        'Updated' => $row['updated_at']
+        'kind' => 'record',
+        'header' => [
+            'title' => $row['title'],
+            'status' => ucfirst($row['status']),
+            'eyebrow' => 'EXTERNAL DOCUMENT',
+            'number' => $row['document_number'] ?? ''
+        ],
+        'sections' => [
+            [
+                'key' => 'files',
+                'title' => 'Current Attachments',
+                'fields' => $attachmentFields,
+                'links' => $attachmentLinks,
+                'empty' => ($can_preview || $can_download)
+                    ? 'No current attachments are available.'
+                    : 'Attachment previews are not available with your current permissions.'
+            ]
+        ]
     ];
     $buttons = [['type' => 'view']];
-    if ($can_download && $row['status'] === 'active' && !empty($row['file_id'])) {
-        $buttons[] = [
-            'type' => 'download',
-            'url' => 'files/download/' . (int) $row['file_id'],
-            'label' => 'Download'
-        ];
+    if ($can_download && $row['status'] === 'active') {
+        foreach ($row['attachments'] ?? [] as $index => $attachment) {
+            $buttons[] = [
+                'type' => 'download',
+                'url' => 'files/download/' . (int) $attachment['id'],
+                'label' => 'Download ' . ($index + 1) . ': ' . $attachment['original_name']
+            ];
+        }
     }
     if ($can_direct && $row['status'] === 'active') {
         $buttons[] = ['type' => 'edit', 'label' => 'Edit'];
@@ -48,6 +80,8 @@ foreach ($rows as $row) {
         'id' => (int) $row['id'],
         'cells' => [
             'title' => $row['title'],
+            'document_number' => $row['document_number'] ?? '',
+            'subsidiary_name' => $row['subsidiary_name'] ?? '',
             'category_name' => $row['category_name'] ?? 'Uncategorized',
             'status' => ucfirst($row['status']),
             'description' => $row['description'] ?? '',
@@ -60,6 +94,8 @@ foreach ($rows as $row) {
             'external_document_id' => (int) $row['id'],
             'external_category_id' => (int) $row['category_id'],
             'title' => $row['title'],
+            'external_document_number' => $row['document_number'] ?? '',
+            'subsidiary_id' => (int) ($row['subsidiary_id'] ?? 0),
             'description' => $row['description'] ?? ''
         ],
         'display' => $display,
@@ -79,7 +115,7 @@ $dt_limit = $table['limit'] ?? 10;
 $dt_total = $total ?? count($rows);
 $dt_sort = $table['sort'] ?? 'updated_at';
 $dt_dir = strtolower($table['dir'] ?? 'desc');
-$dt_sortable = ['title', 'category_name', 'description', 'revision_level', 'created_at', 'updated_at'];
+$dt_sortable = ['title', 'document_number', 'subsidiary_name', 'category_name', 'description', 'revision_level', 'created_at', 'updated_at'];
 $dt_date_filters = TRUE;
 $dt_filters = [
     'status' => ['all' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed'],
@@ -173,6 +209,21 @@ $layoutLink = static function ($target) use ($folder_params, $folder_value) {
                                 <input class="form-control" id="externalTitle" name="title" maxlength="255" required
                                     autocomplete="off">
                             </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="externalDocumentNumber">Document No. <span class="optional-label">(optional)</span></label>
+                                <input class="form-control" id="externalDocumentNumber" name="external_document_number"
+                                    maxlength="150" autocomplete="off">
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label" for="externalSubsidiary">Subsidiary <span class="optional-label">(optional)</span></label>
+                                <select class="form-select" id="externalSubsidiary" name="subsidiary_id"
+                                    data-searchable autocomplete="off">
+                                    <option value="">Select a subsidiary</option>
+                                    <?php foreach ($subsidiary_options as $subsidiary): ?>
+                                        <option value="<?= (int) $subsidiary['id'] ?>"><?= html_escape($subsidiary['name']) ?></option>
+                                    <?php endforeach; ?>
+                                </select>
+                            </div>
                             <div class="col-12">
                                 <label class="form-label" for="externalDescription">Description</label>
                                 <textarea class="form-control" id="externalDescription" name="description"
@@ -191,9 +242,9 @@ $layoutLink = static function ($target) use ($folder_params, $folder_value) {
                             </div>
                             <div class="col-12">
                                 <label class="form-label" for="externalAttachment">Attach File</label>
-                                <input class="form-control" id="externalAttachment" type="file" name="external_attachment"
-                                    accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" required autocomplete="off">
-                                <small class="form-text">Maximum file size: 15 MB.</small>
+                                <input class="form-control" id="externalAttachment" type="file" name="external_attachment[]"
+                                    accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" multiple required autocomplete="off">
+                                <small class="form-text">Select up to 20 files (15 MB each). PDF, PNG/JPG scans, TXT, DOCX and XLSX are supported.</small>
                             </div>
                         </div>
                     </div>

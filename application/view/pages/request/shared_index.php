@@ -209,10 +209,22 @@ foreach ($rows as $row) {
   $buttons = [['type' => 'view']];
   if (
     in_array($row['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE) &&
-    !empty($payload[in_array($row['type'], ['softcopy_create', 'external_create'], TRUE) ? 'controlled_file_id' : 'revision_file_id']) &&
     in_array($row['status'], ['draft', 'returned', 'submitted'], TRUE)
   ) {
-    $buttons[] = ['type' => 'review', 'url' => 'files/review/' . $row['id']];
+    $creation = in_array($row['type'], ['softcopy_create', 'external_create'], TRUE);
+    $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+    $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+    $reviewFileIds = array_values(array_unique(array_filter(array_map(
+      'intval',
+      (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+    ))));
+    foreach ($reviewFileIds as $index => $fileId) {
+      $buttons[] = [
+        'type' => 'review',
+        'url' => 'files/review/' . $row['id'] . '?file_id=' . $fileId,
+        'label' => count($reviewFileIds) > 1 ? 'Review File ' . ($index + 1) : 'Review File'
+      ];
+    }
   }
   $canEdit = isset($permissions['*']) || !empty($permissions['requests']['edit']);
   if (!$task && in_array($row['status'], ['draft', 'returned'], TRUE) && in_array($row['type'], $allowed_request_types, TRUE)) {

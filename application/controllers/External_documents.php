@@ -9,6 +9,7 @@ class External_documents extends MY_Controller
         $this->load->model('Permission_model');
         $this->load->model('Folder_model');
         $this->load->model('Place_model');
+        $this->load->model('File_model');
         $state = $this->table_state('updated_at');
         if ($state['status'] === '') {
             $state['status'] = 'active';
@@ -68,6 +69,8 @@ class External_documents extends MY_Controller
             if ($state['q'] !== '') {
                 $this->db->group_start()
                     ->like('d.title', $state['q'])
+                    ->or_like('d.document_number', $state['q'])
+                    ->or_like('s.name', $state['q'])
                     ->or_like('d.description', $state['q'])
                     ->or_like('r.revision_level', $state['q'])
                     ->or_like('f.original_name', $state['q'])
@@ -83,7 +86,8 @@ class External_documents extends MY_Controller
             $this->db->from('external_documents d')
                 ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
                 ->join('files f', 'f.id=r.file_id AND f.domain="external" AND f.status="approved"', 'left')
-                ->join('external_categories c', 'c.id=d.category_id', 'left');
+                ->join('external_categories c', 'c.id=d.category_id', 'left')
+                ->join('subsidiaries s', 's.id=d.subsidiary_id', 'left');
         };
         $joinCurrent();
         $applyFilters();
@@ -92,6 +96,8 @@ class External_documents extends MY_Controller
 
         $sortColumns = [
             'title' => 'd.title',
+            'document_number' => 'd.document_number',
+            'subsidiary_name' => 's.name',
             'category_name' => 'c.name',
             'description' => 'd.description',
             'revision_level' => 'r.revision_level',
@@ -101,12 +107,17 @@ class External_documents extends MY_Controller
         $sort = isset($sortColumns[$state['sort']]) ? $sortColumns[$state['sort']] : 'd.updated_at';
         $joinCurrent();
         $applyFilters();
-        $rows = $this->db->select('d.id,d.title,d.description,d.status,
-                d.category_id,d.created_by,d.created_at,d.updated_at,c.name AS category_name,
+        $rows = $this->db->select('d.id,d.title,d.document_number,d.subsidiary_id,d.description,d.status,
+                d.category_id,d.created_by,d.created_at,d.updated_at,c.name AS category_name,s.name AS subsidiary_name,
                 r.revision_level,f.id AS file_id', FALSE)
             ->order_by($sort, $state['dir'])
             ->limit($state['limit'], ($state['page'] - 1) * $state['limit'])
             ->get()->result_array();
+        $attachments = $this->File_model->current_external_files(array_column($rows, 'id'));
+        foreach ($rows as &$row) {
+            $row['attachments'] = $attachments[(int) $row['id']] ?? [];
+        }
+        unset($row);
 
         $this->render('External Documents', 'pages/external_document/index', [
             'rows' => $rows,
@@ -114,6 +125,7 @@ class External_documents extends MY_Controller
             'total' => $total,
             'owner_options' => $ownerOptions,
             'external_category_options' => $this->Place_model->options('external_categories'),
+            'subsidiary_options' => $this->Place_model->options('subsidiaries'),
             'folder_browser' => $browser,
             'folder_params' => [
                 'q' => $state['q'],
@@ -135,7 +147,8 @@ class External_documents extends MY_Controller
             'can_request' => $this->Permission_model->allowed($this->user, 'requests', 'view') &&
                 $this->Permission_model->allowed($this->user, 'requests', 'add') &&
                 $this->Permission_model->allowed($this->user, 'external_documents', 'request'),
-            'can_download' => $this->Permission_model->allowed($this->user, 'files', 'download')
+            'can_download' => $this->Permission_model->allowed($this->user, 'files', 'download'),
+            'can_preview' => $this->Permission_model->allowed($this->user, 'files', 'view')
         ]);
     }
 

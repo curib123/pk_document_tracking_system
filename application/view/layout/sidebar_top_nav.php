@@ -11,10 +11,10 @@ $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
 
-// Show Setup Places only when at least one place module is accessible.
+// Show Master Data only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories', 'subsidiaries'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;
@@ -157,17 +157,19 @@ $navPage = end($navParts);
             <?php endif; ?>
 
             <!-- Document Control -->
-            <?php if ($visible('assignment', 'direct')): ?>
+            <?php if ($visible('assignment', 'direct') || $visible('workflows') || $anyPlace): ?>
                 <div class="side-heading">Document Control</div>
 
-                <a
-                    class="side-link<?= $active('admin/document-assignments') ?>"
-                    <?= $active('admin/document-assignments') === ' active' ? 'aria-current="page"' : '' ?>
-                    href="<?= site_url('admin/document-assignments') ?>"
-                >
-                    <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
-                    Document Assignments
-                </a>
+                <?php if ($visible('assignment', 'direct')): ?>
+                    <a
+                        class="side-link<?= $active('admin/document-assignments') ?>"
+                        <?= $active('admin/document-assignments') === ' active' ? 'aria-current="page"' : '' ?>
+                        href="<?= site_url('admin/document-assignments') ?>"
+                    >
+                        <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                        Document Assignments
+                    </a>
+                <?php endif; ?>
 
                 <?php if ($visible('workflows')): ?>
                     <a
@@ -180,18 +182,14 @@ $navPage = end($navParts);
                     </a>
                 <?php endif; ?>
 
-                <?php if ($anyPlace && (
-                    $visible('assignment', 'direct') ||
-                    $visible('categories') ||
-                    $visible('external_categories')
-                )): ?>
+                <?php if ($anyPlace): ?>
                     <a
                         class="side-link<?= $active('places') ?>"
                         <?= strpos($path, 'places') === 0 ? 'aria-current="page"' : '' ?>
                         href="<?= site_url('places') ?>"
                     >
                         <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
-                        Setup Places
+                        Master Data
                     </a>
                 <?php endif; ?>
             <?php endif; ?>

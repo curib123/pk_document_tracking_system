@@ -45,7 +45,11 @@ class Files extends MY_Controller
     public function review($requestId)
     {
         $this->authenticate();
-        $file = $this->File_model->review_file((int) $requestId, $this->user);
+        $file = $this->File_model->review_file(
+            (int) $requestId,
+            $this->user,
+            (int) $this->input->get('file_id')
+        );
         if (!$file) {
             show_error('Document Fileis not available for your review.', 403);
             return;
@@ -96,7 +100,7 @@ class Files extends MY_Controller
         if (!$viewer || (int) $viewer['session_version'] !== (int) $claims['session_version'] || !empty($viewer['require_password_change'])) {
             show_error('Review access has expired. Reopen Review File.', 403); return;
         }
-        $file = $this->File_model->review_file((int) $requestId, $viewer);
+        $file = $this->File_model->review_file((int) $requestId, $viewer, (int) $claims['file_id']);
         if (!$file || (int) $file['id'] !== (int) $claims['file_id']) { show_error('Review access is no longer available.', 403); return; }
         if (!preg_match('/^[a-f0-9]{64}$/D', (string) $file['storage_name'])) { show_404(); return; }
         $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
@@ -203,6 +207,40 @@ class Files extends MY_Controller
             : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
             $this->safe_download_name($file['original_name']) . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
+    public function preview($id)
+    {
+        $this->require_permission('files', 'view');
+        $file = $this->File_model->approved_file((int) $id);
+        if (!$file || !$this->File_model->allowed($this->user, $file)) {
+            show_error('File preview is not permitted.', 403);
+            return;
+        }
+        if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png'], TRUE)) {
+            show_error('Preview is available for PDF and image attachments only.', 415);
+            return;
+        }
+        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+            show_404();
+            return;
+        }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path) || is_link($path)) {
+            show_404();
+            return;
+        }
+        $this->audit_event('files/preview', 'files:' . (int) $id);
+        header('Content-Type: ' . $file['mime_type']);
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Content-Security-Policy: ' . ($file['mime_type'] === 'application/pdf'
+            ? "frame-ancestors 'self'"
+            : "sandbox allow-same-origin; frame-ancestors 'self'"));
+        header('Content-Disposition: inline; filename="' . $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
         readfile($path);
         exit;

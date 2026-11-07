@@ -105,6 +105,8 @@ class Requests extends MY_Controller
                 'category_options' => $this->Place_model->options('categories'),
                 'external_category_options' => $tab === 'external'
                     ? $this->Place_model->options('external_categories') : [],
+                'subsidiary_options' => $tab === 'external'
+                    ? $this->Place_model->options('subsidiaries') : [],
                 'numbering_options' => $tab === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [],
                 'number_previews' => $tab === 'softcopy'
                     ? $this->Document_model->softcopy_number_previews($this->Place_model->options('categories')) : [],
@@ -128,7 +130,8 @@ class Requests extends MY_Controller
         $canViewAll = $this->can('*', '*') || $this->can('documents', 'access_all') ||
             $this->can('documents', 'view_all');
         $this->db->select(
-            'd.id,d.title,d.description,d.category_id,r.revision_level'
+            'd.id,d.title,d.description,d.document_number AS external_document_number,
+            d.subsidiary_id,d.category_id,r.revision_level'
         )
             ->from('external_documents d')
             ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')

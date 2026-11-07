@@ -26,6 +26,19 @@
     <label class="form-label" for="externalRequestTitle">Document Title</label>
     <input class="form-control" id="externalRequestTitle" name="title" maxlength="255" required autocomplete="off">
 </div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestNumber">Document No. <span class="optional-label">(optional)</span></label>
+    <input class="form-control" id="externalRequestNumber" name="external_document_number" maxlength="150" autocomplete="off">
+</div>
+<div class="col-md-6" data-external-subsidiary>
+    <label class="form-label" for="externalRequestSubsidiary">Subsidiary <span class="optional-label">(optional)</span></label>
+    <select class="form-select" id="externalRequestSubsidiary" name="subsidiary_id" data-searchable autocomplete="off">
+        <option value="">Select a subsidiary</option>
+        <?php foreach ($subsidiary_options as $subsidiary): ?>
+            <option value="<?= (int) $subsidiary['id'] ?>"><?= html_escape($subsidiary['name']) ?></option>
+        <?php endforeach; ?>
+    </select>
+</div>
 <div class="col-md-6" data-external-category>
     <label class="form-label" for="externalRequestCategory">External Category</label>
     <select class="form-select" id="externalRequestCategory" name="external_category_id" data-searchable autocomplete="off">
@@ -42,9 +55,9 @@
         data-external-description rows="3" autocomplete="off"></textarea>
 </div>
 <div class="col-12">
-    <label class="form-label" for="externalRequestAttachment">Attach File <span class="optional-label">(maximum 15 MB)</span></label>
-    <input class="form-control" id="externalRequestAttachment" type="file" name="external_attachment"
-        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" autocomplete="off">
+    <label class="form-label" for="externalRequestAttachment">Attach Files <span class="optional-label">(up to 20 files, 15 MB each)</span></label>
+    <input class="form-control" id="externalRequestAttachment" type="file" name="external_attachment[]"
+        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" multiple autocomplete="off">
 </div>
 <div class="col-12">
     <small class="form-text">The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level.</small>

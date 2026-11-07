@@ -61,19 +61,24 @@ class File_service
         $payload = json_decode($request['payload'] ?? '{}', TRUE) ?: [];
         $creation = in_array($request['type'], ['softcopy_create', 'external_create'], TRUE);
         $external = str_starts_with($request['type'], 'external_');
-        $id = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
-        if (!$id) return 0;
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+        $ids = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+        ))));
+        if (!$ids) return 0;
         $data = ['status' => $request['status'] === 'rejected' ? 'rejected' : 'deleted'];
         if ($request['status'] === 'rejected' && $actorId) {
             $data += ['rejected_by' => $actorId, 'rejected_at' => date('Y-m-d H:i:s'), 'rejection_reason' => $reason];
         }
-        $this->ci->db->where([
-            'id' => $id, 'domain' => $external ? 'external' : 'softcopy', 'status' => 'pending',
+        $this->ci->db->where_in('id', $ids)->where([
+            'domain' => $external ? 'external' : 'softcopy', 'status' => 'pending',
             'document_id' => $creation ? NULL : (int) ($external
                 ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
             'uploaded_by' => (int) $request['requested_by'], 'purpose' => $creation ? 'creation' : 'revision'
         ])->set('version', 'version + 1', FALSE)->update('files', $data);
-        return $id;
+        return count($ids);
     }
 
     /** Called after commit; historical rows and revision links remain available. */
@@ -160,9 +165,9 @@ class File_service
         return $this->stage_controlled(NULL, $actorId, $upload, 'creation');
     }
 
-    public function stage_external_creation($actorId, $upload)
+    public function stage_external_creation($actorId, $uploads): array
     {
-        return $this->stage_controlled(NULL, $actorId, $upload, 'creation', 'external');
+        return $this->stage_external_uploads(NULL, $actorId, $uploads, 'creation');
     }
 
     public function stage_revision($docId, $actorId, $upload)
@@ -176,7 +181,7 @@ class File_service
         return $this->stage_controlled((int) $docId, $actorId, $upload, 'revision');
     }
 
-    public function stage_external_revision($docId, $actorId, $upload)
+    public function stage_external_revision($docId, $actorId, $uploads): array
     {
         $document = $this->ci->db->get_where('external_documents', [
             'id' => (int) $docId,
@@ -184,7 +189,64 @@ class File_service
         ])->row_array();
         if (!$document)
             throw new DomainException('Select an active external document.');
-        return $this->stage_controlled((int) $docId, $actorId, $upload, 'revision', 'external');
+        return $this->stage_external_uploads((int) $docId, $actorId, $uploads, 'revision');
+    }
+
+    private function stage_external_uploads($docId, $actorId, $uploads): array
+    {
+        $files = $this->normalize_external_uploads($uploads);
+        if (count($files) > 20) {
+            throw new DomainException('Upload no more than 20 files at once.');
+        }
+        $staged = [];
+        try {
+            foreach ($files as $upload) {
+                $staged[] = $this->stage_controlled($docId, $actorId, $upload, $docId === NULL ? 'creation' : 'revision', 'external');
+            }
+        } catch (Throwable $error) {
+            $this->cleanup_staged($staged);
+            throw $error;
+        }
+        return $staged;
+    }
+
+    private function normalize_external_uploads($uploads): array
+    {
+        if (!is_array($uploads) || !array_key_exists('name', $uploads)) {
+            return [];
+        }
+        if (!is_array($uploads['name'])) {
+            return (int) ($uploads['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE ? [] : [$uploads];
+        }
+        $files = [];
+        foreach ($uploads['name'] as $index => $name) {
+            $file = [];
+            foreach (['name', 'type', 'tmp_name', 'error', 'size'] as $key) {
+                $file[$key] = $uploads[$key][$index] ?? NULL;
+            }
+            if ((int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE || $name !== '') {
+                $files[] = $file;
+            }
+        }
+        return $files;
+    }
+
+    public function cleanup_staged(array $fileIds): void
+    {
+        $fileIds = array_values(array_unique(array_filter(array_map('intval', $fileIds))));
+        if (!$fileIds) {
+            return;
+        }
+        $files = $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('status', 'pending')->get('files')->result_array();
+        $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('status', 'pending')->delete('files');
+        foreach ($files as $file) {
+            $path = $this->controlled_path((string) $file['storage_name']);
+            if ($path && !@unlink($path)) {
+                log_message('error', 'Staged external attachment cleanup failed for file ' . (int) $file['id'] . '.');
+            }
+        }
     }
 
     private function stage_controlled($docId, $actorId, $upload, $purpose, $domain = 'softcopy')

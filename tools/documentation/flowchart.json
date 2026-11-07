@@ -303,7 +303,7 @@
     {
       "id": "places-categories",
       "title": "Set up storage places and categories",
-      "start": "Authorized maintainer opens Setup Places",
+      "start": "Authorized maintainer opens Master Data",
       "action": "Choose the place or category tab; add or edit its name, folder and parent details; confirm Save",
       "question": "Are the details, parent choices and permission valid?",
       "yes": "Save the entry for use in the matching document register",

@@ -61,7 +61,7 @@
         "Open Overview to see your totals and recent activity.",
         "Under Document Management, choose Hardcopy Documents, Softcopy Documents or External Documents.",
         "Open My Requests to start or follow a request. Open My Tasks for work assigned to you.",
-        "Document controllers with permission use Document Assignments and Setup Places.",
+        "Document controllers with permission use Document Assignments and Master Data.",
         "Administrators also use User Management, Roles & Permissions, Workflow Builder and Backup & Restore."
       ],
       "result": "You can find the page for the work you need to do.",
@@ -234,13 +234,13 @@
       "steps": [
         "Open External Documents and select Add New External Document.",
         "Enter Document Title, choose Category and add an optional Description.",
-        "Select Attach File and choose the document.",
+        "Select Attach Files and choose up to 20 files, including scanned PDFs or PNG/JPG images (15 MB per file).",
         "Select Save Directly and Confirm.",
         "Find the new record. Check its title, category, description and revision level."
       ],
-      "result": "The Active external document and its approved file are ready immediately at revision 00.",
+      "result": "The Active external document and its approved attachments are ready immediately at revision 00.",
       "notes": [
-        "Every later revision needs a replacement file.",
+        "Every later revision needs at least one replacement attachment.",
         "External documents have their own categories and no retention fields."
       ]
     },
@@ -251,14 +251,14 @@
       "steps": [
         "Open External Documents, find the Active document and select Edit.",
         "Check or update Document Title, Description and Category.",
-        "Select Attach File and choose the replacement document.",
+        "Select Attach Files and choose up to 20 replacement files, including scanned PDFs or PNG/JPG images (15 MB per file).",
         "Select Save Directly and Confirm.",
-        "Check the revision level. If permitted, select Download to inspect the current file."
+        "Check the revision level. If permitted, use the Download actions to inspect each current attachment."
       ],
-      "result": "The details and current file change immediately. The revision level increases automatically.",
+      "result": "The details and current attachments change immediately. The revision level increases automatically.",
       "notes": [
         "You can revise only an Active external document you have permission to manage.",
-        "Download gives you the current approved file.",
+        "Download gives you each current approved attachment.",
         "Earlier revision records and files remain stored, but External Documents has no separate File History action."
       ]
     },
@@ -270,13 +270,13 @@
         "Open My Requests, choose External Document Request and select New Request.",
         "Set External Document Action to External Create Request. Enter Subject / Reason.",
         "Enter Document Title, choose External Category and add an optional Description.",
-        "Select Attach File and add optional Remarks. Select Save Draft and Confirm.",
-        "Check View Details and Review File. Select Submit, Continue and Confirm."
+        "Select Attach Files and choose up to 20 scanned PDFs, PNG/JPG images or supported documents (15 MB each). Add optional Remarks, then Save Draft and Confirm.",
+        "Check View Details and review each attachment. Select Submit, Continue and Confirm."
       ],
-      "result": "Final approval registers the Active external document and its approved file at revision 00.",
+      "result": "Final approval registers the Active external document and its approved attachments at revision 00.",
       "notes": [
         "External Categories are separate from Softcopy Categories.",
-        "Attach a file before submission. External documents have no retention dates."
+        "Attach at least one file before submission. External documents have no retention dates."
       ],
       "decision_examples": [
         "approval-external-create"
@@ -290,13 +290,13 @@
         "Open My Requests, choose External Document Request and select New Request.",
         "Choose External Revised Request and select Existing External Document.",
         "Enter Subject / Reason. Check or update Document Title, External Category and Description.",
-        "Attach the replacement file and add optional Remarks. Select Save Draft and Confirm.",
-        "Check Review File, then select Submit, Continue and Confirm."
+        "Attach at least one replacement file (up to 20), add optional Remarks, then Save Draft and Confirm.",
+        "Review each attachment, then select Submit, Continue and Confirm."
       ],
       "result": "Final approval updates the external document and makes its next revision current.",
       "notes": [
         "Choose an Active external document available to your account.",
-        "When editing a draft, keep its attachment or upload a replacement."
+        "When editing a draft, existing attachments are kept; newly selected files are added to them."
       ],
       "decision_examples": [
         "approval-external-revise"
@@ -311,13 +311,13 @@
         "Select Download for the current approved file, or Print to open the print viewer.",
         "For PDF, image or text files, wait for the preview and select Print. Download Office files and print in Word, Excel or WPS.",
         "Use File History or Document Files to view the revision details available to you.",
-        "For an Active external document, use Download to save its current file."
+        "Open View on an external document to preview its current PDF or image attachments; select Download beside an attachment to save it."
       ],
       "result": "You receive the current approved file if you have permission to download or print it.",
       "notes": [
-        "Accepted uploads: PDF, TXT, PNG, JPG/JPEG, DOCX and XLSX, up to 15 MB.",
+        "External documents support up to 20 attachments in one upload: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB per file.",
         "Normal downloads exclude files from superseded, disposed and cancelled documents.",
-        "File History and Document Files are Softcopy features. External Documents shows its current revision and Download."
+        "File History and Document Files are Softcopy features. External Documents shows previews for current PDF/image attachments and download actions when your permissions allow."
       ]
     },
     {
@@ -651,7 +651,7 @@
       "title": "Set up physical storage locations",
       "audience": "Administrator or authorized storage controller",
       "steps": [
-        "Open Setup Places. Use the Area, Specific, Asset and Location tabs.",
+        "Open Master Data. Use the Area, Specific, Asset and Location tabs.",
         "Add an Area, then a Specific within it. Add an Asset Number under that Specific if needed.",
         "Add a Location. Enter Location Name, Sequence, Area and Specific. Add Asset Number and Archive Date if needed.",
         "Select Save Record and Confirm. Use Edit to correct an entry.",
@@ -668,7 +668,7 @@
       "title": "Set up softcopy and external categories",
       "audience": "Administrator or authorized category controller",
       "steps": [
-        "Open Setup Places and choose Softcopy Categories or External Categories.",
+        "Open Master Data and choose Softcopy Categories or External Categories.",
         "Select Add Softcopy Categories or Add External Categories. Enter Name and Folder. Add Description and Parent Id if needed.",
         "For Softcopy Categories, enter Code Pattern with a starting number, such as PPM-001.",
         "Keep Active checked. Select Save Record and Confirm.",

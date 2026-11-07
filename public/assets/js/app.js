@@ -976,12 +976,14 @@
       record = {};
     }
     var form = select.form;
-    ["title", "description"].forEach(function (name) {
+    ["title", "description", "external_document_number"].forEach(function (name) {
       var field = form.querySelector('[name="' + name + '"]');
       if (field) field.value = record[name] || "";
     });
     var category = form.querySelector('[name="external_category_id"]');
     if (category && record.category_id) category.value = record.category_id;
+    var subsidiary = form.querySelector('[name="subsidiary_id"]');
+    if (subsidiary) subsidiary.value = record.subsidiary_id || "";
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
       var isDisposal = form.querySelector('[name="type"]')?.value === "disposal";

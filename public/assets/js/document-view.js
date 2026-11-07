@@ -494,6 +494,20 @@
       var fileIcon = node("span", "doc-modal-file-icon");
       fileIcon.append(icon("files"));
       var content = node("div", "doc-modal-file-content");
+      var link = links[index] || {};
+      var previewDestination = link.preview_url ? safeLink(link.preview_url) : null;
+      if (previewDestination && ["image/jpeg", "image/png"].includes(link.preview_type)) {
+        var preview = node("img", "doc-modal-file-preview");
+        preview.src = previewDestination;
+        preview.alt = entry[0].replace(/^\d+\.\s*/, "");
+        preview.loading = "lazy";
+        row.append(preview);
+      } else if (previewDestination && link.preview_type === "application/pdf") {
+        var pdf = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
+        pdf.src = previewDestination;
+        pdf.title = "Preview " + entry[0].replace(/^\d+\.\s*/, "");
+        row.append(pdf);
+      }
       content.append(
         node(
           "strong",
@@ -503,7 +517,6 @@
       );
       content.append(node("p", "doc-modal-file-meta", formatDates(entry[1])));
       row.append(fileIcon, content);
-      var link = links[index] || {};
       var destination = link.url ? safeLink(link.url) : null;
       if (destination) {
         var anchor = node(

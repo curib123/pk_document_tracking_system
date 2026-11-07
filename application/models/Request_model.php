@@ -77,7 +77,8 @@ class Request_model extends CI_Model
             )
             ->select(
                 'COALESCE(sd.title,hd.title,ed.title) AS source_title,' .
-                'COALESCE(sd.document_number,hd.sequence_number,ed.title) AS source_reference',
+                'COALESCE(sd.document_number,hd.sequence_number,ed.document_number,ed.title) AS source_reference,' .
+                'ed.document_number AS external_source_number',
                 FALSE
             );
         if ($task)
@@ -106,6 +107,7 @@ class Request_model extends CI_Model
         $references = [
             'categories' => ['name', ['category_id' => 'Proposed Category']],
             'external_documents' => ['title', ['external_document_id' => 'Selected External Document']],
+            'subsidiaries' => ['name', ['subsidiary_id' => 'Proposed Subsidiary']],
             'areas' => ['name', ['area_id' => 'Proposed Area', 'destination_area_id' => 'Destination Area']],
             'specifics' => ['name', ['specific_id' => 'Proposed Specific', 'destination_specific_id' => 'Destination Specific']],
             'assets' => ['asset_number', ['asset_id' => 'Proposed Asset', 'destination_asset_id' => 'Destination Asset']],
@@ -159,10 +161,13 @@ class Request_model extends CI_Model
                 !empty($row['source_reference'])
             )
                 $details['Document Number'] = $row['source_reference'];
+            if (!empty($payload['external_document_id']) && !empty($row['external_source_number']))
+                $details['Document Number'] = $row['external_source_number'];
             foreach ([
                 'title' => 'Proposed Title',
                 'description' => 'Description',
                 'document_number' => 'Proposed Document Number',
+                'external_document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
                 'retention_period' => 'Retention Period',
                 'retention_start_date' => 'Retention Start Date',
