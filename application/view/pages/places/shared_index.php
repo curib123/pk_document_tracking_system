@@ -181,9 +181,6 @@ $dt_sortable = array_values(array_intersect(
                                                 <option value="<?= (int) $option['id'] ?>" <?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-parent-kind="' . html_escape($option['category_type'] ?? 'pattern') . '"' : '' ?>><?= html_escape($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? ($option['display_path'] ?? $option['name']) : $option['name']) ?><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? html_escape(($option['category_type'] ?? 'pattern') === 'folder' ? ' (Folder)' : ' (Legacy pattern category)') : '' ?></option>
                                             <?php endforeach; ?>
                                         </select>
-                                        <?php if ($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories'): ?>
-                                            <small class="form-text">Choose a Folder category to nest this category beneath. Folder categories can be nested; numbered categories create documents within the chosen folder.</small>
-                                        <?php endif; ?>
                                     </div>
                                 <?php else: ?>
                                     <div class="col-md-6" <?= $field === 'code_pattern' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-number-pattern' : '' ?>>
@@ -192,9 +189,8 @@ $dt_sortable = array_values(array_intersect(
                                         <?php if ($field === 'category_type' && $cfg['slug'] === 'softcopy-categories'): ?>
                                             <select class="form-select" id="f-category_type" name="category_type" data-softcopy-category-type required autocomplete="off">
                                                 <option value="pattern">Document Number Pattern</option>
-                                                <option value="folder">Folder (parent / nested folder)</option>
+                                                <option value="folder">Folder</option>
                                             </select>
-                                            <small class="form-text">Folder: organize nested categories without numbering. Document Number Pattern: generate document numbers within a folder or at root.</small>
                                         <?php elseif ($field === 'description'): ?>
                                             <textarea class="form-control" id="f-<?= html_escape($field) ?>"
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
@@ -202,9 +198,6 @@ $dt_sortable = array_values(array_intersect(
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
                                                 name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= $field === 'code_pattern' ? '100' : '150' ?>" autocomplete="off"
                                                 <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : '' ?>>
-                                            <?php if ($field === 'code_pattern'): ?>
-                                                <small class="form-text">Enter the initial document number; only the numeric segment after the final dash increments, for example PPM-001, PPM-002, PPM-003. This is not required for Folder categories.</small>
-                                            <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>
