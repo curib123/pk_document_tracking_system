@@ -13,7 +13,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/document-view.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/document-view.css?v=' . filemtime(FCPATH . 'assets/css/document-view.css')) ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/unified-ux.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/roles-permission.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/action-feedback.css') ?>">
@@ -22,10 +22,10 @@
     <link rel="stylesheet" href="<?= base_url('assets/css/backup.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/logout-transition.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/plan-enhancements.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/view-modals.css?v=' . filemtime(FCPATH . 'assets/css/view-modals.css')) ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/pwa.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/theme.css') ?>">
-    <link rel="stylesheet" href="<?= base_url('assets/css/document-header.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/document-header.css?v=' . filemtime(FCPATH . 'assets/css/document-header.css')) ?>">
     <?php if (!empty($login_transition)): ?>
         <link rel="preload" as="image" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
         <link rel="stylesheet" href="<?= base_url('assets/css/login-transition.css') ?>">

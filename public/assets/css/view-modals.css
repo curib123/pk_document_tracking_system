@@ -12,7 +12,7 @@
 }
 #viewModal.is-external-document-view .modal-dialog {
   width: calc(100% - 24px);
-  max-width: 1600px;
+  max-width: 1200px;
   max-height: calc(100dvh - 24px);
   margin: 12px auto;
 }
