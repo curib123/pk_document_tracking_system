@@ -135,7 +135,7 @@
         }
       ],
       "notes": [
-        "The category generates new Document Nos. When Need Series Number? is selected for an existing Document No., its first-time Series No. Code Pattern is entered in that form, not in category setup. On approval the original gets the preceding series (001 -> 000) and the new document gets 001; subsequent series increment per Document No.",
+        "Document Number Pattern categories increment the numeric suffix after the final dash, while Folder categories are nested parents only. Series No. Code Pattern is configured per existing Document No., not by category. For sample-series-002, approval assigns sample-series-001 to the original and sample-series-002 to the new record; subsequent series increment to sample-series-003.",
         "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
         "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
       ]
@@ -1272,7 +1272,7 @@
         },
         {
           "actor": "Places maintainer",
-          "text": "For a category, enter its name and folder name. Add a parent and softcopy code pattern if needed."
+          "text": "For a Softcopy Category, choose Folder for parent/nested folders without numbering, or Document Number Pattern to generate document numbers; numbered categories can be children of Folder categories."
         },
         {
           "actor": "Places maintainer",
@@ -1285,7 +1285,7 @@
       ],
       "notes": [
         "A Location can omit Asset Number. Its Sequence is unique within its Specific and is assigned automatically when left empty.",
-        "Softcopy Categories and External Categories are separate. Only softcopy categories define a document numbering pattern.",
+        "Softcopy Categories and External Categories are separate. Only Softcopy Document Number Pattern categories have a numbering pattern; Folder-only categories organize nested parent folders.",
         "Deactivation removes a choice from active selection; it does not delete the existing document records."
       ]
     },
