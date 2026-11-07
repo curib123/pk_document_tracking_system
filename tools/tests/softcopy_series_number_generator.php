@@ -1,106 +1,137 @@
 <?php
 /**
- * Standalone regression tests for auto-generated Softcopy Series No.
+ * Regression checks for first-time series setup on a specific Document No.
  * Run: php tools/tests/softcopy_series_number_generator.php
- * A database connection and CodeIgniter bootstrap are not required.
  */
 define('BASEPATH', __DIR__);
-require_once dirname(__DIR__, 2) . '/application/services/softcopy/document_number_generator.php';
+require_once dirname(__DIR__, 2) . '/application/services/softcopy/document_series_generator.php';
 
-class SeriesFakeResult
+class FakeSeriesResult
 {
     private $rows;
-    public function __construct(array $rows) { $this->rows = $rows; }
+    public function __construct($rows) { $this->rows = $rows; }
     public function row_array() { return $this->rows[0] ?? NULL; }
     public function result_array() { return $this->rows; }
 }
 
-class SeriesFakeDb
+class FakeSeriesDb
 {
-    public $categories = [];
     public $documents = [];
-
-    public function query($sql, $parameters)
+    public $revisions = [];
+    public $config = [];
+    public $history = [];
+    private $conditions = [];
+    public function query($sql, $params)
     {
         if (strpos($sql, 'FROM categories') !== FALSE) {
-            $row = $this->categories[(int) $parameters[0]] ?? NULL;
-            return new SeriesFakeResult($row && $row['active'] ? [$row] : []);
+            return new FakeSeriesResult((int) $params[0] > 0 ? [['id' => (int) $params[0]]] : []);
         }
-
-        $categoryId = (int) $parameters[0];
-        $documentNumber = (string) $parameters[1];
-        $matching = array_values(array_filter($this->documents, static function ($row) use ($categoryId, $documentNumber) {
-            return $row['category_id'] === $categoryId && $row['document_number'] === $documentNumber;
-        }));
-
-        if (strpos($sql, 'SELECT id FROM softcopy_documents') !== FALSE) {
-            return new SeriesFakeResult($matching ? [['id' => $matching[0]['id']]] : []);
+        $cat = (int) $params[0];
+        $number = (string) $params[1];
+        if (strpos($sql, 'FROM softcopy_documents') !== FALSE) {
+            return new FakeSeriesResult(array_values(array_filter(
+                $this->documents,
+                static function ($row) use ($cat, $number) {
+                    return $row['category_id'] === $cat && $row['document_number'] === $number;
+                }
+            )));
         }
-        if (strpos($sql, 'SELECT series_number FROM softcopy_documents') !== FALSE) {
-            return new SeriesFakeResult(array_values(array_map(static function ($row) {
-                return ['series_number' => $row['series_number']];
-            }, array_filter($matching, static function ($row) {
-                return $row['series_number'] !== NULL;
-            }))));
+        if (strpos($sql, 'FROM softcopy_document_series_patterns') !== FALSE) {
+            $pattern = $this->config[$cat . ':' . $number] ?? NULL;
+            return new FakeSeriesResult($pattern === NULL ? [] : [['code_pattern' => $pattern]]);
         }
-        throw new RuntimeException('Unexpected query: ' . $sql);
+        throw new RuntimeException('Unexpected fake query: ' . $sql);
     }
+    public function set($field, $value, $escape = TRUE) { return $this; }
+    public function where($field, $value) { $this->conditions[$field] = $value; return $this; }
+    public function update($table, $changes)
+    {
+        if ($table === 'softcopy_documents') {
+            foreach ($this->documents as &$document) {
+                if ($document['id'] === $this->conditions['id']) {
+                    $document = array_merge($document, $changes);
+                }
+            }
+            unset($document);
+        } elseif ($table === 'softcopy_revisions') {
+            foreach ($this->revisions as &$revision) {
+                if ($revision['document_id'] === $this->conditions['document_id']) {
+                    $revision = array_merge($revision, $changes);
+                }
+            }
+            unset($revision);
+        } else {
+            throw new RuntimeException('Unexpected fake update: ' . $table);
+        }
+        $this->conditions = [];
+        return TRUE;
+    }
+    public function insert($table, $data)
+    {
+        if ($table === 'softcopy_document_series_patterns') {
+            $this->config[$data['category_id'] . ':' . $data['document_number']] = $data['code_pattern'];
+            return TRUE;
+        }
+        if ($table === 'status_history') {
+            $this->history[] = $data;
+            return TRUE;
+        }
+        throw new RuntimeException('Unexpected fake insert: ' . $table);
+    }
+    public function trans_status() { return TRUE; }
 }
 
-function assertSameSeries($expected, $actual, $label)
+function same($expected, $actual, $label)
 {
     if ($expected !== $actual) {
         throw new RuntimeException($label . ': expected ' . var_export($expected, TRUE) . ', got ' . var_export($actual, TRUE));
     }
 }
-
-function assertSeriesError(callable $action, $label)
+function rejected(callable $callback, $label)
 {
-    try {
-        $action();
-    } catch (DomainException $e) {
-        return;
-    }
-    throw new RuntimeException('Expected validation error: ' . $label);
+    try { $callback(); }
+    catch (DomainException $e) { return; }
+    throw new RuntimeException($label . ': expected rejection');
 }
 
-$db = new SeriesFakeDb();
-$db->categories = [
-    1 => ['id' => 1, 'active' => 1, 'series_code_pattern' => '001'],
-    2 => ['id' => 2, 'active' => 1, 'series_code_pattern' => 'SER-005'],
-    3 => ['id' => 3, 'active' => 1, 'series_code_pattern' => '']
-];
+$db = new FakeSeriesDb();
 $db->documents = [
-    ['id' => 1, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => NULL],
-    ['id' => 2, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => '001'],
-    ['id' => 3, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => '002'],
-    ['id' => 4, 'category_id' => 1, 'document_number' => 'PPM-002', 'series_number' => NULL],
-    ['id' => 5, 'category_id' => 2, 'document_number' => 'ABC-001', 'series_number' => NULL],
-    ['id' => 6, 'category_id' => 2, 'document_number' => 'ABC-001', 'series_number' => 'SER-009'],
-    ['id' => 9, 'category_id' => 3, 'document_number' => 'BARE-001', 'series_number' => NULL]
+    ['id' => 1, 'category_id' => 1, 'document_number' => 'DOC-001', 'series_number' => NULL, 'status' => 'active'],
+    ['id' => 2, 'category_id' => 1, 'document_number' => 'DOC-002', 'series_number' => NULL, 'status' => 'active'],
+    ['id' => 3, 'category_id' => 1, 'document_number' => 'DOC-003', 'series_number' => '001', 'status' => 'active'],
+    ['id' => 4, 'category_id' => 1, 'document_number' => 'DOC-004', 'series_number' => NULL, 'status' => 'active'],
+    ['id' => 5, 'category_id' => 1, 'document_number' => 'DOC-004', 'series_number' => NULL, 'status' => 'active']
+];
+$db->revisions = [
+    ['document_id' => 1, 'series_number' => NULL],
+    ['document_id' => 2, 'series_number' => NULL]
 ];
 
-assertSameSeries('003', Document_number_generator::next_series($db, 1, 'PPM-001'), 'Existing series increments');
-assertSameSeries('001', Document_number_generator::next_series($db, 1, 'PPM-002'), 'Independent per document');
-assertSameSeries('SER-010', Document_number_generator::next_series($db, 2, 'ABC-001'), 'Prefix and starting sequence');
-assertSeriesError(static function () use ($db) {
-    Document_number_generator::next_series($db, 3, 'BARE-001');
-}, 'Blank optional series pattern disables series allocation');
-$db->documents[] = ['id' => 7, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => '007'];
-assertSameSeries('008', Document_number_generator::next_series($db, 1, 'PPM-001'), 'Highest historical series wins');
-$db->documents[] = ['id' => 8, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => 'legacy'];
-assertSameSeries('008', Document_number_generator::next_series($db, 1, 'PPM-001'), 'Nonmatching series is ignored');
-assertSeriesError(static function () use ($db) {
-    Document_number_generator::next_series($db, 1, 'PPM-999');
-}, 'Document must exist');
-assertSeriesError(static function () {
-    Document_number_generator::validate_series_pattern('SER-000');
-}, 'Zero start disallowed');
-assertSeriesError(static function () {
-    Document_number_generator::validate_series_pattern('SER');
-}, 'Missing sequence disallowed');
-assertSeriesError(static function () {
-    Document_number_generator::validate_series_pattern("SER-\n001");
-}, 'Invalid line breaks');
-
-echo "Softcopy series pattern tests passed.\n";
+rejected(static function () use ($db) {
+    Document_series_generator::next($db, 1, 'DOC-001');
+}, 'First setup requires an explicit document pattern');
+same(['000', '001'], Document_series_generator::initial_pair('001'), 'Numeric initial series pair');
+same(['SER-004', 'SER-005'], Document_series_generator::initial_pair('SER-005'), 'Prefixed initial series pair');
+same('001', Document_series_generator::next($db, 1, 'DOC-001', '001', 25), 'First new series');
+same('000', $db->documents[0]['series_number'], 'Original document decremented');
+same('000', $db->revisions[0]['series_number'], 'Original revision series updated');
+same('001', $db->config['1:DOC-001'], 'Pattern stored per document');
+same('series_initialized', $db->history[0]['action'], 'Initial series audit event');
+$db->documents[] = ['id' => 6, 'category_id' => 1, 'document_number' => 'DOC-001', 'series_number' => '001', 'status' => 'active'];
+same('002', Document_series_generator::next($db, 1, 'DOC-001', ''), 'Next new series without new setup');
+same('SER-005', Document_series_generator::next($db, 1, 'DOC-002', 'SER-005'), 'Second document independent pattern');
+same('SER-004', $db->documents[1]['series_number'], 'Second document original is predecessor');
+same('002', Document_series_generator::next($db, 1, 'DOC-003', '001'), 'Legacy numbered document continues from max');
+rejected(static function () use ($db) {
+    Document_series_generator::next($db, 1, 'DOC-004', '001');
+}, 'Ambiguous multiple unnumbered originals');
+rejected(static function () {
+    Document_series_generator::validate_pattern('SER-000');
+}, 'Zero first series');
+rejected(static function () {
+    Document_series_generator::validate_pattern("SER-\n001");
+}, 'Line breaks invalid');
+rejected(static function () {
+    Document_series_generator::validate_pattern('SER');
+}, 'Missing digits');
+echo "Document-specific series tests passed.\n";
