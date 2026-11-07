@@ -501,6 +501,40 @@
       }, 0);
   });
 
+  function updateSoftcopyCategoryKind(form) {
+    if (!form?.hasAttribute("data-softcopy-category-setup")) return;
+    var select = form.querySelector("[data-softcopy-category-type]");
+    var codeWrap = form.querySelector("[data-category-number-pattern]");
+    var code = form.querySelector('[name="code_pattern"]');
+    if (!select || !codeWrap || !code) return;
+
+    var isFolder = select.value === "folder";
+    codeWrap.hidden = isFolder;
+    code.disabled = isFolder;
+    code.required = !isFolder;
+    // A folder is a hierarchy node, never a numbered document category.
+    // Preserve a typed code when temporarily switching types; the server
+    // discards it if Folder is selected and never uses it for numbering.
+    var parent = form.querySelector('[name="parent_id"]');
+    if (parent) {
+      var selected = parent.value;
+      parent.querySelectorAll("[data-category-parent-kind]").forEach(function (option) {
+        option.disabled = option.dataset.categoryParentKind !== "folder" &&
+          option.value !== selected;
+      });
+    }
+  }
+
+  document.addEventListener("change", function (event) {
+    if (event.target?.matches("[data-softcopy-category-type]")) {
+      updateSoftcopyCategoryKind(event.target.form);
+    }
+  });
+  document.addEventListener("reset", function (event) {
+    if (!event.target?.hasAttribute("data-softcopy-category-setup")) return;
+    setTimeout(function () { updateSoftcopyCategoryKind(event.target); }, 0);
+  });
+
   document.addEventListener("click", function (event) {
     var edit = event.target.closest(".js-edit");
     if (edit) {
@@ -551,6 +585,7 @@
       updateDisposalReason();
       updateHardcopyRequestAction();
       if (target.id === "assignmentForm") updateDocumentDomain();
+      updateSoftcopyCategoryKind(target);
       updateHardcopyRetention();
       updateHardcopyTransfer();
       syncSearchableControls(target);
@@ -1099,6 +1134,7 @@
   updateDocumentDomain();
   updateDisposalReason();
   updateRequestActionFields();
+  document.querySelectorAll("[data-softcopy-category-setup]").forEach(updateSoftcopyCategoryKind);
   document.querySelectorAll("form").forEach(updateRetentionPeriod);
 
   function updateStepApprover() {
