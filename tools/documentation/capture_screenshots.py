@@ -90,7 +90,7 @@ def seed(site):
     location = insert('locations', name='Records Cabinet A', sequence_number=1, area_id=area, specific_id=specific)
     insert('locations', name='Records Cabinet B', sequence_number=2, area_id=area, specific_id=specific)
     category = insert('categories', name='Quality Procedures', folder_name='Quality Procedures',
-                      code_pattern='QP-001', series_code_pattern='001', created_by=1)
+                      code_pattern='QP-001', created_by=1)
     external_category = insert('external_categories', name='Supplier References',
                                folder_name='Supplier References', created_by=1)
     for title in ['Sample Inspection Record', 'Sample Dispatch Record', 'Sample Incoming Record']:
@@ -270,8 +270,9 @@ def capture(page, base, review_request):
     page.locator('#reqCategory').select_option('1', force=True)
     page.locator('[name="series_number_checker"]').check()
     page.locator('#reqNumber').select_option('QP-001', force=True)
+    page.locator('#reqSeriesPattern').fill('001')
     expect(page.locator('#reqSeries')).to_have_value('002')
-    shot('softcopy-numbering', 'Softcopy Category patterns control both document and automatic series numbers.', '#editModal .modal-content')
+    shot('softcopy-numbering', 'The first Series No. Code Pattern is configured per Document No.', '#editModal .modal-content')
     goto('documents/softcopy?layout=table&folder=all')
     page.get_by_role('button', name='Edit', exact=True).first.click()
     shot('softcopy-direct-revise', 'Create a direct revision of the selected softcopy.', '#editModal .modal-content')
