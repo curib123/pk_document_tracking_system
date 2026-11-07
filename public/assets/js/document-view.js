@@ -517,7 +517,7 @@
         var preview = node("img", "doc-modal-file-preview");
         preview.src = previewDestination;
         preview.alt = fileName;
-        preview.loading = "lazy";
+        preview.loading = "eager";
         row.append(preview);
       } else if (previewDestination && link.preview_type === "application/pdf") {
         var pdf = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");

@@ -72,7 +72,9 @@
             </a>
         <?php elseif ($type === 'download'): ?>
             <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
-                aria-label="<?= html_escape($label) ?>" href="<?= site_url($button['url']) ?>">
+                aria-label="<?= html_escape($label) ?>" href="<?= !empty($button['same_origin'])
+                    ? html_escape($button['url'])
+                    : site_url($button['url']) ?>">
                 <i class="fa-solid fa-download" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </a>
         <?php elseif ($type === 'action'): ?>
