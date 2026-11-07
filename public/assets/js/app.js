@@ -842,7 +842,7 @@
     var checker = form.querySelector("[data-series-number-checker]");
     var autoField = form.querySelector('[name="generated_document_number"]');
     var manualField = form.querySelector('[name="document_number"]');
-    var seriesField = form.querySelector('[name="series_number_manual"]');
+    var seriesField = form.querySelector('[name="generated_series_number"]');
     if (!category || !checker || !autoField || !manualField || !seriesField) return;
 
     var create = form.querySelector('[name="type"]')?.value === "softcopy_create";
@@ -916,13 +916,42 @@
       autoField.value = "";
     }
 
+    // Softcopy Categories define this independently of the document code pattern.
+    // Preview is provisional; PHP assigns the authoritative value at approval.
+    var seriesPattern = selected?.dataset.seriesCodePattern || "";
+    var seriesParts = seriesPattern.match(/^(.*?)(\\d+)$/);
+    var usedSeries = numberOptions[manualField.value] || [];
+    seriesField.value = "";
+    if (manual && manualField.value && seriesParts) {
+      var seriesPrefix = seriesParts[1];
+      var start = BigInt(seriesParts[2]);
+      var seriesMaximum = 0n;
+      var seriesFound = false;
+      var seriesWidth = seriesParts[2].length;
+      usedSeries.forEach(function (value) {
+        if (value.slice(0, seriesPrefix.length).toLowerCase() !== seriesPrefix.toLowerCase()) return;
+        var suffix = value.slice(seriesPrefix.length);
+        if (!/^\\d+$/.test(suffix)) return;
+        seriesFound = true;
+        var sequence = BigInt(suffix);
+        if (sequence > seriesMaximum) seriesMaximum = sequence;
+        seriesWidth = Math.max(seriesWidth, suffix.length);
+      });
+      if (start > 0n) {
+        var nextSeries = seriesFound && seriesMaximum + 1n > start ? seriesMaximum + 1n : start;
+        var digits = nextSeries.toString();
+        var preview = seriesPrefix + digits.padStart(Math.max(seriesWidth, digits.length), "0");
+        seriesField.value = preview.length <= 100 ? preview : "";
+      }
+    }
+
     var seriesGuide = form.querySelector("[data-series-number-guide]");
-    var existingSeries = numberOptions[manualField.value] || [];
     if (seriesGuide) {
-      seriesGuide.hidden = !manual || !existingSeries.length;
-      seriesGuide.textContent = existingSeries.length
-        ? "Previously used series numbers for " + manualField.value + ": " + existingSeries.join(", ")
-        : "";
+      seriesGuide.hidden = !manual;
+      seriesGuide.textContent = "Preview only. The final series number is generated on approval." +
+        (manual && manualField.value && usedSeries.length
+          ? " Previously used for " + manualField.value + ": " + usedSeries.join(", ")
+          : "");
     }
   }
   // Selecting a different softcopy starts from that record, never a previous
