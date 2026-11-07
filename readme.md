@@ -129,10 +129,35 @@ updates address these cases:
 | Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
+| Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
 | First-time Series No. pattern for each Document No. | [Document Series Pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql), after category numbering and the series-number index |
 
 Existing prefix-only category patterns still work. New category patterns should
 include an initial sequence, such as `PPM-001`.
+
+### Nested Softcopy Category folders and number patterns
+
+**Places → Softcopy Categories** now supports two distinct category types:
+
+- **Folder**: a parent or nested folder. It has no code pattern and cannot
+  directly create a softcopy document. Folder children can be folders or
+  Document Number Pattern categories.
+- **Document Number Pattern**: a document-creation category with a required
+  `Document No. Code Pattern`, e.g. `PPM-001`. It can be under a Folder
+  (or at the root), and each new document increments only the numeric
+  suffix following the final dash: `PPM-001 → PPM-002 → PPM-003`.
+
+For example, `Quality (Folder) / Procedures (Folder) / Process Manuals
+(Document Number Pattern: PPM-001)`. The folder tree remains nested for
+browsing and assigning documents, while numbered categories are the only
+ones available when creating a new softcopy.
+
+Existing categories default to **Document Number Pattern** during migration,
+preserving existing documents and links. New parent selections must be Folder
+categories. An existing legacy parent relationship is preserved on edit, but
+new nested categories cannot be placed beneath a numbered category. Numbered
+categories holding documents cannot be converted to Folder, and Folders with
+children cannot be converted to numbered categories.
 
 ### Automatic softcopy series numbers (per Document No.)
 
@@ -155,6 +180,12 @@ To create the **first series** for an existing document:
 5. Save/submit and approve. The pattern and both series assignments are saved
    atomically at approval, **not** while saving a draft.
 
+The first series may have a multi-part dash prefix. For example,
+`sample-series-002` assigns **`sample-series-001` to the original** and
+**`sample-series-002` to the new record**; subsequent records with the same
+Document No. become `sample-series-003`, `sample-series-004`, and so on.
+Only the numeric segment after the **final dash** changes.
+
 For the same Document No., future series automatically increment (`002`, `003`, ...).
 The setup is no longer shown once that document has a saved series pattern.
 Other Document Nos. may have entirely different patterns or none at all.
@@ -171,7 +202,9 @@ lock and database unique index; the displayed series is only a preview.
 **Database upgrade:** Back up the database, then ensure the
 [document-series unique index](database/migrations/20261104_softcopy_series_number_index.sql)
 is installed before running the
-[per-document Series No. pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql).
+[per-document Series No. pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql),
+plus the [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql)
+to enable Folder and Document Number Pattern category types.
 Migrations are **not run automatically**. If the former experimental category
 series-pattern column was installed, the new code ignores it; the upgrade
 preserves that old column rather than deleting its data.
