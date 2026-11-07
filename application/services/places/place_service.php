@@ -46,9 +46,8 @@ class Place_service
                     // Folder-only nodes organize unlimited nested folders; they
                     // never allocate document numbers or require a code pattern.
                     $data['code_pattern'] = '';
-                } elseif (!preg_match('/^.+-[0-9]+$/D', $data['code_pattern'])
-                    || preg_match('/[\r\n]/', $data['code_pattern'])) {
-                    throw new DomainException('Document No. Code Pattern must end in a numeric segment after the final dash, such as PPM-001.');
+                } elseif (preg_match('/[\r\n]/', $data['code_pattern'])) {
+                    throw new DomainException('Document No. Code Pattern cannot contain line breaks.');
                 }
                 if (mb_strlen($data['code_pattern']) > 100)
                     throw new DomainException('Document code pattern must not exceed 100 characters.');
@@ -65,7 +64,7 @@ class Place_service
             if (in_array($c['slug'], $categorySlugs, TRUE)) {
                 require_once APPPATH . 'services/places/category_parent_policy.php';
                 $categoryColumns = $c['slug'] === 'softcopy-categories'
-                    ? 'id,parent_id,active,category_type' : 'id,parent_id,active';
+                    ? 'id,parent_id,active,category_type,code_pattern' : 'id,parent_id,active';
                 $categories = $this->ci->db->query(
                     'SELECT ' . $categoryColumns . ' FROM ' . $c['table'] . ' ORDER BY id FOR UPDATE'
                 )->result_array();
@@ -75,6 +74,14 @@ class Place_service
                     foreach ($categories as $category)
                         $byId[(int) $category['id']] = $category;
                     $prior = $byId[$id] ?? NULL;
+                    if ($data['category_type'] === 'pattern' &&
+                        !preg_match('/^.+-[0-9]+$/D', $data['code_pattern']) &&
+                        // Existing legacy prefix formats remain editable as
+                        // long as their saved pattern has not been changed.
+                        (!$prior || $prior['category_type'] !== 'pattern' ||
+                         $prior['code_pattern'] !== $data['code_pattern'])) {
+                        throw new DomainException('Document No. Code Pattern must end in a numeric segment after the final dash, such as PPM-001.');
+                    }
                     $parentId = (int) $data['parent_id'];
                     if ($parentId && ($byId[$parentId]['category_type'] ?? '') !== 'folder'
                         && (!$prior || (int) $prior['parent_id'] !== $parentId)) {
