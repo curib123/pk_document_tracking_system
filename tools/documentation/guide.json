@@ -236,7 +236,7 @@
         "Enter Document Title, choose Category and add an optional Description.",
         "Select Attach Files and choose up to 20 files, including scanned PDFs or PNG/JPG images (15 MB per file).",
         "Select Save Directly and Confirm.",
-        "Find the new record. Check its title, category, description and revision level."
+        "Find the new record and select View to check its details and current attachments."
       ],
       "result": "The Active external document and its approved attachments are ready immediately at revision 00.",
       "notes": [
@@ -253,7 +253,7 @@
         "Check or update Document Title, Description and Category.",
         "Select Attach Files and choose up to 20 replacement files, including scanned PDFs or PNG/JPG images (15 MB per file).",
         "Select Save Directly and Confirm.",
-        "Check the revision level. If permitted, use the Download actions to inspect each current attachment."
+        "Select View to check the document details in the header and inspect current attachments. Use Download when permitted."
       ],
       "result": "The details and current attachments change immediately. The revision level increases automatically.",
       "notes": [
@@ -317,7 +317,7 @@
       "notes": [
         "External documents support up to 20 attachments in one upload: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB per file.",
         "Normal downloads exclude files from superseded, disposed and cancelled documents.",
-        "File History and Document Files are Softcopy features. External Documents shows previews for current PDF/image attachments and download actions when your permissions allow."
+        "External document details appear in the View header, with previews for current PDF/image attachments and download actions when your permissions allow. File History and Document Files are Softcopy features."
       ]
     },
     {

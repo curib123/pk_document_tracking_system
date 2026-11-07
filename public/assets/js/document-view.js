@@ -132,6 +132,14 @@
   var STORAGE_LEVELS = ["Area", "Specific", "Asset", "Location"];
   var STORAGE_HEADER_FIELDS = ["Current Holder", "Days until disposal"];
   var HEADER_FIELDS = {
+    "Document No.": "fa-code-branch",
+    Subsidiary: "fa-user",
+    Category: "fa-folder-open",
+    Status: "fa-circle-info",
+    Description: "fa-circle-info",
+    "Revision Level": "fa-code-branch",
+    "Created Date": "fa-calendar-plus",
+    Updated: "fa-clock-rotate-left",
     "Created By": "fa-user",
     "Requested By": "fa-user",
     "Created": "fa-calendar-plus",
@@ -347,12 +355,18 @@
       normalizedEntries(recordFields).forEach(function (entry) {
         var label = entry[0];
         if (!Object.prototype.hasOwnProperty.call(HEADER_FIELDS, label)) return;
-        var item = node("div", "doc-modal-metadata-item" + (/Version$/.test(label) ? " is-version" : ""));
+        var metadataValue = fieldValue([label, recordFields[label]]);
+        var item = node(
+          "div",
+          "doc-modal-metadata-item" +
+            (/Version$/.test(label) ? " is-version" : "") +
+            (metadataValue.length > 120 ? " is-wide" : ""),
+        );
         var term = node("dt", "doc-modal-metadata-label");
         var glyph = node("span", "doc-modal-metadata-icon " + HEADER_FIELDS[label]);
         glyph.setAttribute("aria-hidden", "true");
         term.append(glyph, node("span", "", label));
-        item.append(term, node("dd", "doc-modal-metadata-value", fieldValue([label, recordFields[label]])));
+        item.append(term, node("dd", "doc-modal-metadata-value", metadataValue));
         metadata.append(item);
       });
       metadata.hidden = !metadata.children.length;

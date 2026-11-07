@@ -9,10 +9,7 @@ $dt_columns = [
     'subsidiary_name' => 'Subsidiary',
     'category_name' => 'Category',
     'status' => 'Status',
-    'description' => 'Description',
-    'revision_level' => 'Revision Level',
-    'created_at' => 'Created Date',
-    'updated_at' => 'Updated'
+    'revision_level' => 'Revision Level'
 ];
 $dt_rows = [];
 foreach ($rows as $row) {
@@ -25,9 +22,9 @@ foreach ($rows as $row) {
                 strtoupper((string) pathinfo($attachment['original_name'], PATHINFO_EXTENSION)) . ' | ' .
                 number_format((int) $attachment['size']) . ' bytes | ' . $attachment['created_at'];
             $attachmentLinks[] = [
-                'url' => $can_download ? 'files/download/' . (int) $attachment['id'] : '',
+                'url' => $can_download ? site_url('files/download/' . (int) $attachment['id']) : '',
                 'preview_url' => $can_preview && in_array($attachment['mime_type'], ['application/pdf', 'image/jpeg', 'image/png'], TRUE)
-                    ? 'files/preview/' . (int) $attachment['id'] : '',
+                    ? site_url('files/preview/' . (int) $attachment['id']) : '',
                 'preview_type' => $attachment['mime_type'],
                 'label' => $attachment['original_name']
             ];
@@ -43,6 +40,20 @@ foreach ($rows as $row) {
         ],
         'sections' => [
             [
+                'key' => 'overview',
+                'title' => 'Document Details',
+                'fields' => [
+                    'Document No.' => $row['document_number'] ?? '',
+                    'Subsidiary' => $row['subsidiary_name'] ?? '',
+                    'Category' => $row['category_name'] ?? 'Uncategorized',
+                    'Status' => ucfirst($row['status']),
+                    'Description' => $row['description'] ?? '',
+                    'Revision Level' => $row['revision_level'] ?? '00',
+                    'Created Date' => $row['created_at'],
+                    'Updated' => $row['updated_at']
+                ]
+            ],
+            [
                 'key' => 'files',
                 'title' => 'Current Attachments',
                 'fields' => $attachmentFields,
@@ -55,11 +66,11 @@ foreach ($rows as $row) {
     ];
     $buttons = [['type' => 'view']];
     if ($can_download && $row['status'] === 'active') {
-        foreach ($row['attachments'] ?? [] as $index => $attachment) {
+        foreach ($row['attachments'] ?? [] as $attachment) {
             $buttons[] = [
                 'type' => 'download',
                 'url' => 'files/download/' . (int) $attachment['id'],
-                'label' => 'Download ' . ($index + 1) . ': ' . $attachment['original_name']
+                'label' => 'Download'
             ];
         }
     }
@@ -84,10 +95,7 @@ foreach ($rows as $row) {
             'subsidiary_name' => $row['subsidiary_name'] ?? '',
             'category_name' => $row['category_name'] ?? 'Uncategorized',
             'status' => ucfirst($row['status']),
-            'description' => $row['description'] ?? '',
-            'revision_level' => $row['revision_level'] ?? '00',
-            'created_at' => $row['created_at'],
-            'updated_at' => $row['updated_at']
+            'revision_level' => $row['revision_level'] ?? '00'
         ],
         'record' => [
             'type' => 'external_revise',
@@ -115,7 +123,7 @@ $dt_limit = $table['limit'] ?? 10;
 $dt_total = $total ?? count($rows);
 $dt_sort = $table['sort'] ?? 'updated_at';
 $dt_dir = strtolower($table['dir'] ?? 'desc');
-$dt_sortable = ['title', 'document_number', 'subsidiary_name', 'category_name', 'description', 'revision_level', 'created_at', 'updated_at'];
+$dt_sortable = ['title', 'document_number', 'subsidiary_name', 'category_name', 'revision_level'];
 $dt_date_filters = TRUE;
 $dt_filters = [
     'status' => ['all' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed'],
