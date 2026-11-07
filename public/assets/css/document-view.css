@@ -710,17 +710,35 @@
 #viewModal.is-external-document-view .doc-modal-file-preview {
   max-width: 100%;
 }
+#viewModal.is-external-document-view .doc-modal-file-list {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: 16px;
+}
+#viewModal.is-external-document-view .doc-modal-file-item {
+  min-width: 0;
+  padding: 12px;
+  border: 1px solid var(--ui-line-soft);
+  border-radius: 10px;
+}
+#viewModal.is-external-document-view .doc-modal-file-item:first-child {
+  padding-top: 12px;
+}
+#viewModal.is-external-document-view .doc-modal-file-item:last-child {
+  padding-bottom: 12px;
+}
 #viewModal.is-external-document-view img.doc-modal-file-preview {
-  width: min(40vw, 100%);
-  height: min(45vh, 460px);
+  width: 100%;
+  height: min(65vh, 680px);
   max-width: 100%;
-  max-height: min(45vh, 460px);
+  max-height: min(65vh, 680px);
   object-fit: contain;
 }
 #viewModal.is-external-document-view .doc-modal-file-pdf {
   width: 100%;
-  height: min(45vh, 460px);
-  max-height: min(45vh, 460px);
+  height: min(65vh, 680px);
+  max-height: min(65vh, 680px);
 }
 #viewModal.is-document-view .doc-modal-activity-title,
 #viewModal.is-document-view .doc-modal-file-title {
@@ -791,14 +809,14 @@
     max-width: 100%;
   }
   #viewModal.is-external-document-view img.doc-modal-file-preview {
-    width: min(40vw, 100%);
-    height: min(40vh, 360px);
-    max-height: min(40vh, 360px);
+    width: 100%;
+    height: min(55vh, 500px);
+    max-height: min(55vh, 500px);
   }
   #viewModal.is-external-document-view .doc-modal-file-pdf {
     width: 100%;
-    height: min(40vh, 360px);
-    max-height: min(40vh, 360px);
+    height: min(55vh, 500px);
+    max-height: min(55vh, 500px);
   }
   #viewModal.is-document-view .doc-modal-overview {
     padding: 0 20px;

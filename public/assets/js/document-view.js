@@ -323,7 +323,8 @@
   function prepareHeading(data) {
     modal.classList.add("is-document-view");
     var h = data.header || {};
-    if (h.eyebrow === "EXTERNAL DOCUMENT") {
+    var isExternalDocument = h.eyebrow === "EXTERNAL DOCUMENT";
+    if (isExternalDocument) {
       modal.classList.add("is-external-document-view");
     }
     var domain =
@@ -359,6 +360,7 @@
       normalizedEntries(recordFields).forEach(function (entry) {
         var label = entry[0];
         if (!Object.prototype.hasOwnProperty.call(HEADER_FIELDS, label)) return;
+        if (isExternalDocument && label === "Status") return;
         var metadataValue = fieldValue([label, recordFields[label]]);
         var item = node(
           "div",
