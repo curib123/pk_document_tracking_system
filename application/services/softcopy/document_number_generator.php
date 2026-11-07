@@ -127,7 +127,11 @@ class Document_number_generator
         if ($number === '' || mb_strlen($number) > 100) {
             throw new DomainException('Choose an existing document number in the selected category.');
         }
-        [$prefix, $initial, $width] = self::validate_series_pattern((string) $category['series_code_pattern']);
+        $seriesPattern = trim((string) ($category['series_code_pattern'] ?? ''));
+        if ($seriesPattern === '') {
+            throw new DomainException('This Softcopy Category does not use series numbers. Configure an optional Series No. Code Pattern before creating a document with a series.');
+        }
+        [$prefix, $initial, $width] = self::validate_series_pattern($seriesPattern);
 
         $document = $db->query(
             'SELECT id FROM softcopy_documents WHERE category_id=? AND document_number=? LIMIT 1 FOR UPDATE',
