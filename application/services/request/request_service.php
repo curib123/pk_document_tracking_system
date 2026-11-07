@@ -300,6 +300,14 @@ class Request_service
             } elseif ($type === 'softcopy_create') {
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_effective_date($payload);
+                // Folder-only categories are for nesting; they cannot create documents.
+                if (!$this->ci->db->get_where('categories', [
+                    'id' => (int) ($payload['category_id'] ?? 0),
+                    'active' => 1,
+                    'category_type' => 'pattern'
+                ])->row_array()) {
+                    throw new DomainException('Choose an active Document Number Pattern category, not a folder.');
+                }
                 // Validate initial per-Document-No. setup before queuing approvals.
                 // The authoritative number and original-series assignment remain
                 // deferred until final approval inside the shared transaction.
