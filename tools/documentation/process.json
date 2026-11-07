@@ -135,7 +135,7 @@
         }
       ],
       "notes": [
-        "The system generates a new document number. Need Series Number? allows an existing category number with a unique series.",
+        "The system generates a new document number. Need Series Number? allows an existing document number with a unique automatically generated series based on the Softcopy Category Series No. Code Pattern.",
         "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
         "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
       ]
