@@ -118,13 +118,19 @@ the document automatically. Dismissing the notice leaves the record unchanged.
 A direct action applies immediately. A request leaves the current document
 unchanged until final approval.
 
-New softcopies use a **Softcopy Category** and a generated document
-number. **Series No. Code Pattern is configured per Document No., not in
+New softcopies use **Document Number Pattern** categories and a generated
+document number. Softcopy Category setup also offers **Folder** categories,
+which can be nested as parents of further folders and numbered categories,
+but cannot generate a document number themselves. Numbered category code
+patterns increment their final dash-separated numeric segment
+(e.g. `PPM-001 → PPM-002`). **Series No. Code Pattern is configured per Document No., not in
 Softcopy Category setup.** When **Need Series Number?** is selected, choose an
 existing Document No. If it does not yet have a series setup, a one-time
 **Series No. Code Pattern** field appears, for example `001` or `SER-001`.
-The original record receives the preceding number (`001` means original
-`000`), and the new record receives the configured starting number (`001`).
+The original record receives the preceding number, and the new record
+receives the configured starting number: for `sample-series-002`, the
+original becomes `sample-series-001`, the first new record gets
+`sample-series-002`, and the next new record gets `sample-series-003`.
 Both are assigned when creation is approved, along with an audit entry.
 Later creations with that Document No. use the saved pattern and increment
 automatically. Regular revisions retain their existing Series No. The
