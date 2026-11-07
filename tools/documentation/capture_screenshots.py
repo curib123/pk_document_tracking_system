@@ -90,7 +90,7 @@ def seed(site):
     location = insert('locations', name='Records Cabinet A', sequence_number=1, area_id=area, specific_id=specific)
     insert('locations', name='Records Cabinet B', sequence_number=2, area_id=area, specific_id=specific)
     category = insert('categories', name='Quality Procedures', folder_name='Quality Procedures',
-                      code_pattern='QP-001', created_by=1)
+                      code_pattern='QP-001', series_code_pattern='001', created_by=1)
     external_category = insert('external_categories', name='Supplier References',
                                folder_name='Supplier References', created_by=1)
     for title in ['Sample Inspection Record', 'Sample Dispatch Record', 'Sample Incoming Record']:
