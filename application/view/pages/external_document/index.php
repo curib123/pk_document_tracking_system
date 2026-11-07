@@ -23,7 +23,7 @@ foreach ($rows as $row) {
                 number_format((int) $attachment['size']) . ' bytes | ' . $attachment['created_at'];
             $attachmentLinks[] = [
                 'url' => $can_download ? site_url('files/download/' . (int) $attachment['id']) : '',
-                'preview_url' => $can_preview && in_array($attachment['mime_type'], ['application/pdf', 'image/jpeg', 'image/png'], TRUE)
+                'preview_url' => $can_preview && ($attachment['mime_type'] === 'application/pdf' || strpos((string) $attachment['mime_type'], 'image/') === 0)
                     ? site_url('files/preview/' . (int) $attachment['id']) : '',
                 'preview_type' => $attachment['mime_type'],
                 'label' => $attachment['original_name']
@@ -65,14 +65,12 @@ foreach ($rows as $row) {
         ]
     ];
     $buttons = [['type' => 'view']];
-    if ($can_download && $row['status'] === 'active') {
-        foreach ($row['attachments'] ?? [] as $attachment) {
-            $buttons[] = [
-                'type' => 'download',
-                'url' => 'files/download/' . (int) $attachment['id'],
-                'label' => 'Download'
-            ];
-        }
+    if ($can_download && $row['status'] === 'active' && !empty($row['attachments'])) {
+        $buttons[] = [
+            'type' => 'download',
+            'url' => 'files/download-external/' . (int) $row['id'],
+            'label' => 'Download All'
+        ];
     }
     if ($can_direct && $row['status'] === 'active') {
         $buttons[] = ['type' => 'edit', 'label' => 'Edit'];
@@ -251,8 +249,8 @@ $layoutLink = static function ($target) use ($folder_params, $folder_value) {
                             <div class="col-12">
                                 <label class="form-label" for="externalAttachment">Attach File</label>
                                 <input class="form-control" id="externalAttachment" type="file" name="external_attachment[]"
-                                    accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" multiple required autocomplete="off">
-                                <small class="form-text">Select up to 20 files (15 MB each). PDF, PNG/JPG scans, TXT, DOCX and XLSX are supported.</small>
+                                    accept=".pdf,image/*" multiple required autocomplete="off">
+                                <small class="form-text">Select up to 20 PDF or image files (15 MB each). Image formats are detected from the file content.</small>
                             </div>
                         </div>
                     </div>

@@ -57,7 +57,8 @@
 <div class="col-12">
     <label class="form-label" for="externalRequestAttachment">Attach Files <span class="optional-label">(up to 20 files, 15 MB each)</span></label>
     <input class="form-control" id="externalRequestAttachment" type="file" name="external_attachment[]"
-        accept=".pdf,.txt,.png,.jpg,.jpeg,.docx,.xlsx" multiple autocomplete="off">
+        accept=".pdf,image/*" multiple autocomplete="off">
+    <small class="text-secondary">PDF and image files only (up to 20 files, 15 MB each).</small>
 </div>
 <div class="col-12">
     <small class="form-text">The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level.</small>

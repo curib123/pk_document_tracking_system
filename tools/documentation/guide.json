@@ -234,7 +234,7 @@
       "steps": [
         "Open External Documents and select Add New External Document.",
         "Enter Document Title, choose Category and add an optional Description.",
-        "Select Attach Files and choose up to 20 files, including scanned PDFs or PNG/JPG images (15 MB per file).",
+        "Select Attach Files and choose up to 20 PDF or image files (15 MB per file).",
         "Select Save Directly and Confirm.",
         "Find the new record and select View to check its details and current attachments."
       ],
@@ -251,7 +251,7 @@
       "steps": [
         "Open External Documents, find the Active document and select Edit.",
         "Check or update Document Title, Description and Category.",
-        "Select Attach Files and choose up to 20 replacement files, including scanned PDFs or PNG/JPG images (15 MB per file).",
+        "Select Attach Files and choose up to 20 replacement PDF or image files (15 MB per file).",
         "Select Save Directly and Confirm.",
         "Select View to check the document details in the header and inspect current attachments. Use Download when permitted."
       ],
@@ -270,7 +270,7 @@
         "Open My Requests, choose External Document Request and select New Request.",
         "Set External Document Action to External Create Request. Enter Subject / Reason.",
         "Enter Document Title, choose External Category and add an optional Description.",
-        "Select Attach Files and choose up to 20 scanned PDFs, PNG/JPG images or supported documents (15 MB each). Add optional Remarks, then Save Draft and Confirm.",
+        "Select Attach Files and choose up to 20 PDF or image files (15 MB each). Add optional Remarks, then Save Draft and Confirm.",
         "Check View Details and review each attachment. Select Submit, Continue and Confirm."
       ],
       "result": "Final approval registers the Active external document and its approved attachments at revision 00.",
@@ -315,7 +315,7 @@
       ],
       "result": "You receive the current approved file if you have permission to download or print it.",
       "notes": [
-        "External documents support up to 20 attachments in one upload: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB per file.",
+        "External documents support up to 20 PDF or image attachments in one upload, up to 15 MB per file. Image formats are accepted based on detected image content.",
         "Normal downloads exclude files from superseded, disposed and cancelled documents.",
         "External document details appear in the View header, with previews for current PDF/image attachments and download actions when your permissions allow. File History and Document Files are Softcopy features."
       ]

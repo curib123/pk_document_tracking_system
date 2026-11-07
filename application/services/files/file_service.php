@@ -277,10 +277,11 @@ class File_service
             'xlsx' => ['application/zip', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
         ];
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
-        if (
-            !$name || strlen($name) > 255 || !isset($allowed[$ext]) ||
-            !in_array($mime, $allowed[$ext], TRUE)
-        ) {
+        $validType = $domain === 'external'
+            ? (($ext === 'pdf' && $mime === 'application/pdf') ||
+                ($ext !== '' && strpos((string) $mime, 'image/') === 0))
+            : (isset($allowed[$ext]) && in_array($mime, $allowed[$ext], TRUE));
+        if (!$name || strlen($name) > 255 || !$validType) {
             throw new DomainException('Unsupported Document Fileformat.');
         }
         $directory = PK_ROOT . '/storage/documents';

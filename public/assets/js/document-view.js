@@ -510,7 +510,7 @@
       var content = node("div", "doc-modal-file-content");
       var link = links[index] || {};
       var previewDestination = link.preview_url ? safeLink(link.preview_url) : null;
-      if (previewDestination && ["image/jpeg", "image/png"].includes(link.preview_type)) {
+      if (previewDestination && String(link.preview_type || "").indexOf("image/") === 0) {
         var preview = node("img", "doc-modal-file-preview");
         preview.src = previewDestination;
         preview.alt = entry[0].replace(/^\d+\.\s*/, "");

@@ -19,6 +19,15 @@ class Files extends MY_Controller
         return $name !== '' && $name !== '.' ? $name : 'document';
     }
 
+    private function clear_output_buffers(): void
+    {
+        while (ob_get_level() > 0) {
+            if (!@ob_end_clean()) {
+                break;
+            }
+        }
+    }
+
     public function upload()
     {
         $this->require_permission('files', 'upload');
@@ -196,6 +205,7 @@ class Files extends MY_Controller
             show_404();
             return;
         }
+        $this->clear_output_buffers();
         header('Content-Type: ' . $file['mime_type']);
         $this->audit_event('files/print-content', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
@@ -220,7 +230,7 @@ class Files extends MY_Controller
             show_error('File preview is not permitted.', 403);
             return;
         }
-        if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png'], TRUE)) {
+        if ($file['mime_type'] !== 'application/pdf' && strpos((string) $file['mime_type'], 'image/') !== 0) {
             show_error('Preview is available for PDF and image attachments only.', 415);
             return;
         }
@@ -233,6 +243,7 @@ class Files extends MY_Controller
             show_404();
             return;
         }
+        $this->clear_output_buffers();
         $this->audit_event('files/preview', 'files:' . (int) $id);
         header('Content-Type: ' . $file['mime_type']);
         header('X-Content-Type-Options: nosniff');
@@ -273,6 +284,116 @@ class Files extends MY_Controller
             $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($filePath));
         readfile($filePath);
+        exit;
+    }
+
+    public function download_external($documentId)
+    {
+        $this->require_permission('files', 'download');
+        $documentId = (int) $documentId;
+        $document = $this->db->select('id,title,status')
+            ->get_where('external_documents', ['id' => $documentId])
+            ->row_array();
+        if (!$document || $document['status'] !== 'active') {
+            show_404();
+            return;
+        }
+
+        $filesByDocument = $this->File_model->current_external_files([$documentId]);
+        $files = $filesByDocument[$documentId] ?? [];
+        if (!$files) {
+            show_404();
+            return;
+        }
+
+        $downloadFiles = [];
+        foreach ($files as $listedFile) {
+            $file = $this->File_model->approved_file((int) $listedFile['id']);
+            if (!$file || !$this->File_model->allowed($this->user, $file)) {
+                show_error('File download is not permitted.', 403);
+                return;
+            }
+            if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+                show_404();
+                return;
+            }
+            $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+            if (!is_file($path) || is_link($path)) {
+                show_404();
+                return;
+            }
+            $downloadFiles[] = ['path' => $path, 'name' => $this->safe_download_name($file['original_name'])];
+        }
+
+        if (!class_exists('ZipArchive')) {
+            show_error('ZIP downloads are unavailable on this server.', 503);
+            return;
+        }
+        $archivePath = tempnam(PK_ROOT . '/storage', '.external-download-');
+        if ($archivePath === FALSE) {
+            show_error('The external document archive could not be created.', 500);
+            return;
+        }
+        $archive = new ZipArchive();
+        $opened = $archive->open($archivePath, ZipArchive::OVERWRITE);
+        if ($opened !== TRUE) {
+            unlink($archivePath);
+            show_error('The external document archive could not be created.', 500);
+            return;
+        }
+
+        $archiveOpen = TRUE;
+        $usedNames = [];
+        $archiveError = NULL;
+        try {
+            foreach ($downloadFiles as $file) {
+                $name = $file['name'];
+                $extension = pathinfo($name, PATHINFO_EXTENSION);
+                $stem = $extension === '' ? $name : substr($name, 0, -(strlen($extension) + 1));
+                $candidate = $name;
+                $suffix = 2;
+                while (isset($usedNames[strtolower($candidate)])) {
+                    $candidate = $stem . ' (' . $suffix++ . ')' . ($extension === '' ? '' : '.' . $extension);
+                }
+                $usedNames[strtolower($candidate)] = TRUE;
+                if (!$archive->addFile($file['path'], $candidate)) {
+                    $archiveError = 'An attachment could not be added to the archive.';
+                    break;
+                }
+            }
+            if ($archiveError === NULL && !$archive->close()) {
+                $archiveOpen = FALSE;
+                $archiveError = 'The external document archive could not be finalized.';
+            } elseif ($archiveError === NULL) {
+                $archiveOpen = FALSE;
+            }
+            if ($archiveError === NULL) {
+                $this->audit_event('files/download-external', 'external_documents:' . $documentId, [
+                    'file_ids' => array_column($files, 'id')
+                ]);
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                header('Content-Type: application/zip');
+                header('X-Content-Type-Options: nosniff');
+                header('Cache-Control: private, no-store, max-age=0');
+                header('Content-Disposition: attachment; filename="' .
+                    $this->safe_download_name($document['title']) . '-attachments.zip"');
+                header('Content-Length: ' . filesize($archivePath));
+                readfile($archivePath);
+            }
+        } finally {
+            if ($archiveOpen) {
+                $archive->close();
+            }
+            if (is_file($archivePath)) {
+                unlink($archivePath);
+            }
+        }
+        if ($archiveError !== NULL) {
+            show_error($archiveError, 500);
+            return;
+        }
         exit;
     }
 }
