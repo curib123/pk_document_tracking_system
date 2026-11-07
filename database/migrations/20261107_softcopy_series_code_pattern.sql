@@ -1,6 +1,6 @@
 -- Add an independent, per-category pattern for automatically generated Softcopy Series No.
--- Apply after the category code-pattern migration. Existing category rows get 001.
--- Safe to rerun; existing data and series numbers are preserved.
+-- Apply after the category code-pattern migration. New category rows default to blank (opt-in).
+-- Safe to rerun; pre-existing category values and series numbers are preserved.
 SET @category_series_code_pattern_exists = (
   SELECT COUNT(*) FROM information_schema.columns
   WHERE table_schema = DATABASE()
@@ -9,8 +9,8 @@ SET @category_series_code_pattern_exists = (
 );
 SET @category_series_code_pattern_sql = IF(
   @category_series_code_pattern_exists = 0,
-  'ALTER TABLE `categories` ADD COLUMN `series_code_pattern` varchar(100) NOT NULL DEFAULT ''001'' AFTER `code_pattern`',
-  'SELECT 1'
+  'ALTER TABLE `categories` ADD COLUMN `series_code_pattern` varchar(100) NOT NULL DEFAULT '''' AFTER `code_pattern`',
+  'ALTER TABLE `categories` MODIFY COLUMN `series_code_pattern` varchar(100) NOT NULL DEFAULT '''''
 );
 PREPARE category_series_code_pattern_stmt FROM @category_series_code_pattern_sql;
 EXECUTE category_series_code_pattern_stmt;
