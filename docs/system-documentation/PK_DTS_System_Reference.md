@@ -119,13 +119,15 @@ A direct action applies immediately. A request leaves the current document
 unchanged until final approval.
 
 New softcopies use a **Softcopy Category** and a generated document number.
-Softcopy Category setup has both a **Document No. Code Pattern** and a
-**Series No. Code Pattern** (for example, `001` or `SER-001`). If you
-select **Need Series Number?**, choose an existing document number in that
-category. The system automatically previews its next unused series; manual
-series entry is no longer available. The final series is generated when creation
-is approved, so the preview may change before approval. Complete **Number of
-Pages** and the other displayed fields.
+Softcopy Category setup requires a **Document No. Code Pattern**, but
+**Series No. Code Pattern** (for example, `001` or `SER-001`) is
+**optional**. Leave it blank for categories that do not need series
+numbers: regular document creation still works, and **Need Series Number?**
+is hidden. When a category has a series pattern, select **Need Series
+Number?** and choose an existing document number to preview the next
+unused series automatically. Manual series entry is unavailable. The
+final series number is generated on approval and may differ from the
+preview. Complete **Number of Pages** and the other displayed fields.
 
 A revision needs a replacement file. It keeps the document number, series and
 category, and advances the revision automatically. An older revision can appear
