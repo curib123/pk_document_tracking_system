@@ -215,10 +215,10 @@
       "title": "Use document and series numbers",
       "audience": "Softcopy creators and requesters",
       "steps": [
-        "For a new document, choose Category and leave Need Series Number? unchecked. The category defines only the Document No. Code Pattern.",
+        "For a new document, choose a Document Number Pattern category (not a Folder) and leave Need Series Number? unchecked. The category defines the Document No. Code Pattern.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
         "For the first series, check Need Series Number?, select an existing Document No. and enter a one-time Series No. Code Pattern for that document number.",
-        "Preview the original document's preceding Series No. and the new Generated Series No. For pattern 001, original becomes 000 and new record 001 on approval.",
+        "Preview the original document's preceding Series No. and the new Generated Series No. For sample-series-002, the original becomes sample-series-001 and the new record sample-series-002; the next becomes sample-series-003.",
         "Finish the direct creation or request steps."
       ],
       "result": "The record gets a new category number or an existing number with a unique series.",
@@ -670,13 +670,13 @@
       "steps": [
         "Open Master Data and choose Softcopy Categories or External Categories.",
         "Select Add Softcopy Categories or Add External Categories. Enter Name and Folder. Add Description and Parent Id if needed.",
-        "For Softcopy Categories, enter Code Pattern with a starting number, such as PPM-001.",
+        "For Softcopy Categories, choose Category Type: Folder to nest a parent folder (no code pattern), or Document Number Pattern to generate documents. Numbering patterns increment the numeric segment after the final dash, e.g. PPM-001 to PPM-002.",
         "Keep Active checked. Select Save Record and Confirm.",
         "Use Edit to update a category, or Deactivate to stop offering it in new selections."
       ],
       "result": "Each document type has its own folders. Softcopy Code Pattern controls document numbering.",
       "notes": [
-        "External Categories has no Code Pattern.",
+        "External Categories have no Code Pattern. Folder-only Softcopy Categories have no numbering pattern; nested Folder categories can parent Document Number Pattern categories.",
         "A category cannot be its own parent or be placed inside one of its subcategories."
       ]
     },
