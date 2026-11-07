@@ -521,7 +521,7 @@
         row.append(preview);
       } else if (previewDestination && link.preview_type === "application/pdf") {
         var pdf = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
-        pdf.src = previewDestination + "#toolbar=0&navpanes=0&view=FitH";
+        pdf.src = previewDestination + "#toolbar=0&navpanes=0&view=Fit";
         pdf.title = "Preview " + fileName;
         row.append(pdf);
       }
