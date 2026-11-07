@@ -118,11 +118,14 @@ the document automatically. Dismissing the notice leaves the record unchanged.
 A direct action applies immediately. A request leaves the current document
 unchanged until final approval.
 
-New softcopies use a **Softcopy Category** and a generated document number. If you
-select **Need Series Number?**, choose an existing number in that category and
-enter an unused series. The displayed number is a preview; the final number is
-assigned when creation is approved. Complete **Number of Pages** and the other
-displayed fields.
+New softcopies use a **Softcopy Category** and a generated document number.
+Softcopy Category setup has both a **Document No. Code Pattern** and a
+**Series No. Code Pattern** (for example, `001` or `SER-001`). If you
+select **Need Series Number?**, choose an existing document number in that
+category. The system automatically previews its next unused series; manual
+series entry is no longer available. The final series is generated when creation
+is approved, so the preview may change before approval. Complete **Number of
+Pages** and the other displayed fields.
 
 A revision needs a replacement file. It keeps the document number, series and
 category, and advances the revision automatically. An older revision can appear
