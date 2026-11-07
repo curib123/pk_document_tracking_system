@@ -238,7 +238,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
 <script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 <script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
-<script src="<?= base_url('assets/js/document-view.js') ?>"></script>
+<script src="<?= base_url('assets/js/document-view.js?v=' . filemtime(FCPATH . 'assets/js/document-view.js')) ?>"></script>
 <script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
 <script src="<?= base_url('assets/js/auth.js') ?>"></script>
 <script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
