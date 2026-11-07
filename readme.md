@@ -129,40 +129,52 @@ updates address these cases:
 | Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
-| Automatic Series No. from Softcopy Category setup | [Series Code Pattern migration](database/migrations/20261107_softcopy_series_code_pattern.sql), after category numbering and the series-number index |
+| First-time Series No. pattern for each Document No. | [Document Series Pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql), after category numbering and the series-number index |
 
 Existing prefix-only category patterns still work. New category patterns should
 include an initial sequence, such as `PPM-001`.
 
-### Automatic softcopy series numbers
+### Automatic softcopy series numbers (per Document No.)
 
-In **Places → Softcopy Categories**, **Document No. Code Pattern** (e.g.,
-`PPM-001`) is required, while **Series No. Code Pattern** (e.g., `001`
-or `SER-001`) is **optional**. Leave the series field blank if the category
-does not use series numbers; normal document creation continues and the
-**Need Series Number?** option is hidden for that category. Enter a valid
-series pattern to enable automatic series numbering for existing document
-numbers. For a new document number, Series No. remains empty. To create
-another record under an existing number in a series-enabled category,
-check **Need Series Number?** and select that number. The read-only
-**Generated Series Number** is a preview, never a manual entry.
+In **Places → Softcopy Categories**, configure only **Document No. Code Pattern**
+(for example `PPM-001`). **Series No. Code Pattern is NOT set on a category.**
 
-Series sequencing is independent for each document number and uses the category's
-starting number, numeric width and optional prefix. For example, with `001`,
-if `PPM-001` has series `001` and `002`, its next series is `003`;
-`PPM-002` independently begins with `001`. Historic matching series count
-towards the next number, including cancelled records. The server assigns the
-final unique number **inside the direct-create or approval transaction**, not
-when a draft is saved; preview values can change before approval. Existing
-softcopy records and revision series remain unchanged.
+To create a new document, select its category and leave **Need Series Number?**
+unchecked. The usual next Document No. is generated, without a Series No.
 
-**Upgrade requirement:** Apply both the
-[softcopy series-number unique index](database/migrations/20261104_softcopy_series_number_index.sql)
-and the [category Series Code Pattern migration](database/migrations/20261107_softcopy_series_code_pattern.sql)
-before using the updated application. Neither runs automatically. Take a database
-backup before installing database changes. The migration defaults new
-categories to an empty optional series pattern. Existing configured values
-are preserved if the column already exists.
+To create the **first series** for an existing document:
+
+1. Check **Need Series Number?** on Softcopy Direct or My Requests.
+2. Select the existing **Document No.** (for example, `PPM-001`).
+3. If that Document No. has never been configured for series numbering, enter its
+   one-time **Series No. Code Pattern**, for example `001` or `SER-001`.
+4. The form previews both the **Original Document Series No.** and the new
+   **Generated Series Number**. With `001`, the original becomes **`000`**
+   (one less) and the newly created record becomes **`001`**. With `SER-005`,
+   the original becomes `SER-004` and the new record `SER-005`.
+5. Save/submit and approve. The pattern and both series assignments are saved
+   atomically at approval, **not** while saving a draft.
+
+For the same Document No., future series automatically increment (`002`, `003`, ...).
+The setup is no longer shown once that document has a saved series pattern.
+Other Document Nos. may have entirely different patterns or none at all.
+If an existing number has historical series already, the configured pattern
+continues after the largest matching series. Regular revisions **do not**
+generate a new series; they retain the existing one.
+
+Historic softcopy numbers and revisions remain unchanged except for the
+original unnumbered document, which is explicitly assigned the preceding
+series on first-time setup. That change updates its revision metadata and
+adds an audit event. Concurrent approvals are serialized through the category
+lock and database unique index; the displayed series is only a preview.
+
+**Database upgrade:** Back up the database, then ensure the
+[document-series unique index](database/migrations/20261104_softcopy_series_number_index.sql)
+is installed before running the
+[per-document Series No. pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql).
+Migrations are **not run automatically**. If the former experimental category
+series-pattern column was installed, the new code ignores it; the upgrade
+preserves that old column rather than deleting its data.
 
 ## Maintain backups
 
