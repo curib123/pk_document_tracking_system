@@ -175,7 +175,7 @@ $dt_sortable = array_values(array_intersect(
                                             name="<?= html_escape($field) ?>" data-searchable autocomplete="off">
                                             <option value="">No parent (root)</option>
                                             <?php foreach ($options[$optName] as $option): ?>
-                                                <option value="<?= (int) $option['id'] ?>" <?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-parent-kind="' . html_escape($option['category_type'] ?? 'pattern') . '"' : '' ?>><?= html_escape($option['name']) ?><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? html_escape(($option['category_type'] ?? 'pattern') === 'folder' ? ' (Folder)' : ' (Legacy pattern category)') : '' ?></option>
+                                                <option value="<?= (int) $option['id'] ?>" <?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-parent-kind="' . html_escape($option['category_type'] ?? 'pattern') . '"' : '' ?>><?= html_escape($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? ($option['display_path'] ?? $option['name']) : $option['name']) ?><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? html_escape(($option['category_type'] ?? 'pattern') === 'folder' ? ' (Folder)' : ' (Legacy pattern category)') : '' ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                         <?php if ($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories'): ?>
