@@ -43,7 +43,7 @@ class Place_service
                 if (!in_array($data['category_type'], ['folder', 'pattern'], TRUE))
                     throw new DomainException('Choose a valid Softcopy Category type.');
                 if ($data['category_type'] === 'folder') {
-                    // Folder-only nodes organize unlimited nested folders; they
+                    // Folder-only nodes organize bounded nested folders; they
                     // never allocate document numbers or require a code pattern.
                     $data['code_pattern'] = '';
                 } elseif (preg_match('/[\r\n]/', $data['code_pattern'])) {
@@ -260,6 +260,13 @@ class Place_service
         $record = $this->ci->Place_model->find($c, $id);
         if (!$record)
             throw new DomainException('Record not found.');
+        if ($c['slug'] === 'softcopy-categories') {
+            // Do not strand nested folders or active code-pattern children.
+            $children = $this->ci->db->where('parent_id', (int) $id)
+                ->where('active', 1)->count_all_results('categories');
+            if ($children > 0)
+                throw new DomainException('Move or deactivate child categories before deactivating this parent folder.');
+        }
         $this->ci->db->where('id', (int) $id)->set('version', 'version+1', FALSE)->update($c['table'], ['active' => 0]);
         if ($this->ci->db->error()['code'])
             throw new DomainException('This place could not be deactivated.');
