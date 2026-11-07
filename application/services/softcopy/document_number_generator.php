@@ -6,7 +6,7 @@ class Document_number_generator
     public static function next($db, int $categoryId): string
     {
         $category = $db->query(
-            'SELECT id,code_pattern FROM categories WHERE id=? AND active=1 FOR UPDATE',
+            'SELECT id,code_pattern,category_type FROM categories WHERE id=? AND active=1 FOR UPDATE',
             [$categoryId]
         )->row_array();
         return self::calculate($db, $categoryId, $category);
@@ -15,7 +15,7 @@ class Document_number_generator
     public static function preview($db, int $categoryId): string
     {
         $category = $db->query(
-            'SELECT id,code_pattern FROM categories WHERE id=? AND active=1',
+            'SELECT id,code_pattern,category_type FROM categories WHERE id=? AND active=1',
             [$categoryId]
         )->row_array();
         return self::calculate($db, $categoryId, $category);
@@ -23,8 +23,8 @@ class Document_number_generator
 
     private static function calculate($db, int $categoryId, ?array $category): string
     {
-        if (!$category) {
-            throw new DomainException('Choose an active softcopy category.');
+        if (!$category || ($category['category_type'] ?? 'pattern') !== 'pattern') {
+            throw new DomainException('Choose an active Document Number Pattern category. Folder-only categories cannot generate document numbers.');
         }
 
         $pattern = trim((string) $category['code_pattern']);
@@ -82,6 +82,7 @@ class Document_number_generator
         }
         return $number;
     }
+
 
     public static function require_existing($db, int $categoryId, string $number): void
     {

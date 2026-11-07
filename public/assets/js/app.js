@@ -501,6 +501,40 @@
       }, 0);
   });
 
+  function updateSoftcopyCategoryKind(form) {
+    if (!form?.hasAttribute("data-softcopy-category-setup")) return;
+    var select = form.querySelector("[data-softcopy-category-type]");
+    var codeWrap = form.querySelector("[data-category-number-pattern]");
+    var code = form.querySelector('[name="code_pattern"]');
+    if (!select || !codeWrap || !code) return;
+
+    var isFolder = select.value === "folder";
+    codeWrap.hidden = isFolder;
+    code.disabled = isFolder;
+    code.required = !isFolder;
+    // A folder is a hierarchy node, never a numbered document category.
+    // Preserve a typed code when temporarily switching types; the server
+    // discards it if Folder is selected and never uses it for numbering.
+    var parent = form.querySelector('[name="parent_id"]');
+    if (parent) {
+      var selected = parent.value;
+      parent.querySelectorAll("[data-category-parent-kind]").forEach(function (option) {
+        option.disabled = option.dataset.categoryParentKind !== "folder" &&
+          option.value !== selected;
+      });
+    }
+  }
+
+  document.addEventListener("change", function (event) {
+    if (event.target?.matches("[data-softcopy-category-type]")) {
+      updateSoftcopyCategoryKind(event.target.form);
+    }
+  });
+  document.addEventListener("reset", function (event) {
+    if (!event.target?.hasAttribute("data-softcopy-category-setup")) return;
+    setTimeout(function () { updateSoftcopyCategoryKind(event.target); }, 0);
+  });
+
   document.addEventListener("click", function (event) {
     var edit = event.target.closest(".js-edit");
     if (edit) {
@@ -551,6 +585,7 @@
       updateDisposalReason();
       updateHardcopyRequestAction();
       if (target.id === "assignmentForm") updateDocumentDomain();
+      updateSoftcopyCategoryKind(target);
       updateHardcopyRetention();
       updateHardcopyTransfer();
       syncSearchableControls(target);
@@ -842,36 +877,34 @@
     var checker = form.querySelector("[data-series-number-checker]");
     var autoField = form.querySelector('[name="generated_document_number"]');
     var manualField = form.querySelector('[name="document_number"]');
-    var seriesField = form.querySelector('[name="series_number_manual"]');
-    if (!category || !checker || !autoField || !manualField || !seriesField) return;
+    var patternField = form.querySelector('[name="series_code_pattern"]');
+    var seriesField = form.querySelector('[name="generated_series_number"]');
+    var originalField = form.querySelector("#reqOriginalSeries");
+    if (!category || !checker || !autoField || !manualField || !seriesField || !patternField) return;
 
     var create = form.querySelector('[name="type"]')?.value === "softcopy_create";
     var manual = create && checker.checked;
     var autoWrap = form.querySelector("[data-document-number-auto]");
     var manualWrap = form.querySelector("[data-document-number-manual]");
-    var checkerWrap = checker.closest("[data-series-number-checker-wrap]");
+    var checkerWrap = form.querySelector("[data-series-number-checker-wrap]");
     var seriesWrap = form.querySelector("[data-series-number-field]");
+    var patternWrap = form.querySelector("[data-series-pattern-setup]");
+    var originalWrap = form.querySelector("[data-original-series-preview]");
+    checker.disabled = !create;
+    if (!create) checker.checked = false;
     if (checkerWrap) checkerWrap.hidden = !create;
     if (autoWrap) autoWrap.hidden = !create || manual;
     if (manualWrap) manualWrap.hidden = !manual;
-    if (seriesWrap) seriesWrap.hidden = !manual;
     autoField.disabled = !create || manual;
     autoField.required = create && !manual;
     manualField.disabled = !manual;
     manualField.required = manual;
-    seriesField.disabled = !manual;
-    seriesField.required = manual;
-    checker.disabled = !create;
-    if (!create) {
-      checker.checked = false;
-      seriesField.value = "";
-    } else if (!manual) {
-      seriesField.value = "";
-    }
+    seriesField.disabled = true; // Read-only preview, never posted.
+    seriesField.required = false;
 
     var selected = category.options[category.selectedIndex];
-    var pattern = selected?.dataset.codePattern || "";
-    var parts = pattern.match(/^(.*?)(\d+)$/);
+    var docPattern = selected?.dataset.codePattern || "";
+    var parts = docPattern.match(/^(.*?)(\d+)$/);
     var prefix = parts ? parts[1] : "";
     var initial = parts ? Number(parts[2]) : 0;
     var width = parts ? parts[2].length : 0;
@@ -893,36 +926,81 @@
     delete manualField.dataset.pendingValue;
 
     var maximum = 0;
-    var hasMatchingNumber = false;
+    var hasMatching = false;
     Object.keys(numberOptions).forEach(function (number) {
       if (!number.startsWith(prefix)) return;
       var suffix = number.slice(prefix.length);
       if (!/^\d+$/.test(suffix)) return;
-      hasMatchingNumber = true;
+      hasMatching = true;
       var value = Number(suffix);
-      if (value > maximum) {
+      if (value >= maximum) {
         maximum = value;
-        width = Math.max(width, suffix.length);
-      } else if (value === maximum) {
         width = Math.max(width, suffix.length);
       }
     });
     if (selected?.dataset.nextNumber) {
       autoField.value = selected.dataset.nextNumber;
     } else if (prefix && initial > 0) {
-      var next = String(hasMatchingNumber ? Math.max(initial, maximum + 1) : initial);
-      autoField.value = prefix + next.padStart(Math.max(width, next.length), "0");
+      var nextDocument = String(hasMatching ? Math.max(initial, maximum + 1) : initial);
+      autoField.value = prefix + nextDocument.padStart(Math.max(width, nextDocument.length), "0");
     } else {
       autoField.value = "";
     }
 
+    // Each Document No. has its OWN first-time code pattern, not the category.
+    var info = numberOptions[manualField.value] || {};
+    var previouslyUsed = Array.isArray(info.series) ? info.series : [];
+    var storedPattern = info.series_code_pattern || "";
+    var needsSetup = manual && !!manualField.value && !storedPattern;
+    if (patternWrap) patternWrap.hidden = !needsSetup;
+    patternField.disabled = !needsSetup;
+    patternField.required = needsSetup;
+    if (manual && storedPattern) patternField.value = "";
+    if (seriesWrap) seriesWrap.hidden = !manual || !manualField.value;
+    if (originalWrap) originalWrap.hidden = true;
+    seriesField.value = "";
+    if (originalField) originalField.value = "";
+
+    var seriesPattern = storedPattern || (needsSetup ? patternField.value.trim() : "");
+    var seriesParts = seriesPattern.match(/^(.*?)(\d+)$/);
+    var previewError = "";
+    if (manual && manualField.value && seriesParts && BigInt(seriesParts[2]) > 0n) {
+      var seriesPrefix = seriesParts[1];
+      var start = BigInt(seriesParts[2]);
+      var highest = 0n;
+      var seriesWidth = seriesParts[2].length;
+      previouslyUsed.forEach(function (series) {
+        if (series.slice(0, seriesPrefix.length).toLowerCase() !== seriesPrefix.toLowerCase()) return;
+        var digits = series.slice(seriesPrefix.length);
+        if (!/^\d+$/.test(digits)) return;
+        var seq = BigInt(digits);
+        if (seq > highest) highest = seq;
+        seriesWidth = Math.max(seriesWidth, digits.length);
+      });
+      var unnumbered = Number(info.unnumbered_count || 0);
+      if (needsSetup && unnumbered === 1) {
+        var preceding = seriesPrefix + String(start - 1n).padStart(seriesWidth, "0");
+        if (originalField) originalField.value = preceding;
+        if (originalWrap) originalWrap.hidden = false;
+        if (previouslyUsed.some(function (value) {
+          return value.toLowerCase() === preceding.toLowerCase();
+        })) previewError = "Original series conflicts with an existing series. Choose a different first-series pattern.";
+        if (start - 1n > highest) highest = start - 1n;
+      } else if (needsSetup && unnumbered > 1) {
+        previewError = "Multiple original records have no series. Resolve them before first setup.";
+      }
+      var nextSeries = highest + 1n > start ? highest + 1n : start;
+      var digits = String(nextSeries);
+      var preview = seriesPrefix + digits.padStart(Math.max(seriesWidth, digits.length), "0");
+      if (preview.length <= 100) seriesField.value = preview;
+    }
+
     var seriesGuide = form.querySelector("[data-series-number-guide]");
-    var existingSeries = numberOptions[manualField.value] || [];
     if (seriesGuide) {
-      seriesGuide.hidden = !manual || !existingSeries.length;
-      seriesGuide.textContent = existingSeries.length
-        ? "Previously used series numbers for " + manualField.value + ": " + existingSeries.join(", ")
-        : "";
+      seriesGuide.hidden = !manual || !manualField.value;
+      seriesGuide.textContent = previewError || (needsSetup
+        ? "First-time Series No. setup. The original document takes one less than the new first series. Both assignments occur on final approval."
+        : "Series No. Code Pattern was already configured for this Document No. Next series is assigned on final approval.");
     }
   }
   // Selecting a different softcopy starts from that record, never a previous
@@ -962,6 +1040,7 @@
     }
   });
   document.addEventListener("input", function (event) {
+    if (event.target?.id === "reqSeriesPattern") updateSoftcopyNumberFields(event.target.form);
     if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
       updateRetentionPeriod(event.target.form);
     }
@@ -1038,6 +1117,11 @@
     if (event.target?.id === "reqCategory" ||
         event.target?.matches("[data-series-number-checker]") ||
         event.target?.id === "reqNumber") {
+      // A one-time setup entered for a different Document No. must not carry over.
+      if (event.target?.id === "reqCategory" || event.target?.id === "reqNumber") {
+        var firstPattern = event.target.form?.querySelector('[name="series_code_pattern"]');
+        if (firstPattern) firstPattern.value = "";
+      }
       updateSoftcopyNumberFields(event.target.form);
     }
     if (event.target?.name === "document_domain") {
@@ -1050,6 +1134,7 @@
   updateDocumentDomain();
   updateDisposalReason();
   updateRequestActionFields();
+  document.querySelectorAll("[data-softcopy-category-setup]").forEach(updateSoftcopyCategoryKind);
   document.querySelectorAll("form").forEach(updateRetentionPeriod);
 
   function updateStepApprover() {

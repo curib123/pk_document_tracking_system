@@ -158,8 +158,9 @@ class Request_service
             'external_document_number' => trim((string) ($post['external_document_number'] ?? '')),
             'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number' => '', // Generated when the request is approved.
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
+            'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),
             'external_category_id' => (int) ($post['external_category_id'] ?? 0),
             'external_document_id' => (int) ($post['external_document_id'] ?? 0),
@@ -299,6 +300,36 @@ class Request_service
             } elseif ($type === 'softcopy_create') {
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_effective_date($payload);
+                // Folder-only categories are for nesting; they cannot create documents.
+                if (!$this->ci->db->get_where('categories', [
+                    'id' => (int) ($payload['category_id'] ?? 0),
+                    'active' => 1,
+                    'category_type' => 'pattern'
+                ])->row_array()) {
+                    throw new DomainException('Choose an active Document Number Pattern category, not a folder.');
+                }
+                // Validate initial per-Document-No. setup before queuing approvals.
+                // The authoritative number and original-series assignment remain
+                // deferred until final approval inside the shared transaction.
+                if (!empty($payload['series_number_checker'])) {
+                    $seriesCategoryId = (int) ($payload['category_id'] ?? 0);
+                    $seriesDocumentNo = trim((string) ($payload['document_number'] ?? ''));
+                    if ($seriesDocumentNo === '' || !$seriesCategoryId ||
+                        !$this->ci->db->get_where('softcopy_documents', [
+                            'category_id' => $seriesCategoryId,
+                            'document_number' => $seriesDocumentNo
+                        ])->row_array()) {
+                        throw new DomainException('Choose an existing Document No. from the selected category.');
+                    }
+                    $configured = $this->ci->db->get_where('softcopy_document_series_patterns', [
+                        'category_id' => $seriesCategoryId,
+                        'document_number' => $seriesDocumentNo
+                    ])->row_array();
+                    if (!$configured) {
+                        require_once APPPATH . 'services/softcopy/document_series_generator.php';
+                        Document_series_generator::validate_pattern((string) ($payload['series_code_pattern'] ?? ''));
+                    }
+                }
             }
             if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
                 require_once APPPATH . 'services/documents/external_document_service.php';

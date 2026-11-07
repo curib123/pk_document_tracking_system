@@ -16,7 +16,7 @@ class Place_model extends CI_Model
             'table' => 'categories',
             'label' => 'Softcopy Categories',
             'key' => 'name',
-            'fields' => ['name', 'folder_name', 'code_pattern', 'description', 'parent_id']
+            'fields' => ['name', 'category_type', 'folder_name', 'code_pattern', 'description', 'parent_id']
         ],
         'external-categories' => [
             'table' => 'external_categories',
@@ -103,6 +103,7 @@ class Place_model extends CI_Model
             'assets' => 'asset_number',
             'locations' => 'name',
             'categories' => 'name',
+            'numbered_categories' => 'name',
             'external_categories' => 'name',
             'subsidiaries' => 'name'
         ];
@@ -126,8 +127,33 @@ class Place_model extends CI_Model
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
         }
         if ($table === 'categories') {
-            return $this->db->select('id,name,code_pattern')->from('categories')
+            // All active folder and number-pattern categories remain available
+            // for hierarchy/assignment selectors. Add full paths so folders
+            // with identical names in different branches are distinguishable.
+            $rows = $this->db->select('id,name,code_pattern,category_type,parent_id')->from('categories')
                 ->where('active', 1)->order_by('name')->get()->result_array();
+            $byId = [];
+            foreach ($rows as $row)
+                $byId[(int) $row['id']] = $row;
+            foreach ($rows as &$row) {
+                $parts = [(string) $row['name']];
+                $parent = (int) ($row['parent_id'] ?? 0);
+                $seen = [(int) $row['id'] => TRUE];
+                while ($parent && !isset($seen[$parent]) && isset($byId[$parent]) && count($seen) < 32) {
+                    $seen[$parent] = TRUE;
+                    array_unshift($parts, (string) $byId[$parent]['name']);
+                    $parent = (int) ($byId[$parent]['parent_id'] ?? 0);
+                }
+                $row['display_path'] = implode(' / ', $parts);
+            }
+            unset($row);
+            return $rows;
+        }
+        if ($table === 'numbered_categories') {
+            // Creation only: a folder-only category cannot allocate a Document No.
+            return $this->db->select('id,name,code_pattern,parent_id')->from('categories')
+                ->where('active', 1)->where('category_type', 'pattern')
+                ->order_by('name')->get()->result_array();
         }
         if ($table === 'external_categories') {
             return $this->db->select('id,name')->from('external_categories')

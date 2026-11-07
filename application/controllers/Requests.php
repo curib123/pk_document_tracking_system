@@ -103,13 +103,14 @@ class Requests extends MY_Controller
                     'users' => $this->Document_model->active_users()
                 ] : [],
                 'category_options' => $this->Place_model->options('categories'),
+                'numbered_category_options' => $tab === 'softcopy' ? $this->Place_model->options('numbered_categories') : [],
                 'external_category_options' => $tab === 'external'
                     ? $this->Place_model->options('external_categories') : [],
                 'subsidiary_options' => $tab === 'external'
                     ? $this->Place_model->options('subsidiaries') : [],
                 'numbering_options' => $tab === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [],
                 'number_previews' => $tab === 'softcopy'
-                    ? $this->Document_model->softcopy_number_previews($this->Place_model->options('categories')) : [],
+                    ? $this->Document_model->softcopy_number_previews($this->Place_model->options('numbered_categories')) : [],
                 'external_options' => in_array($tab, ['external', 'hardcopy-disposal'], TRUE) && !$task
                     ? $this->external_document_options() : [],
                 'location_options' => $this->Place_model->options('locations'),

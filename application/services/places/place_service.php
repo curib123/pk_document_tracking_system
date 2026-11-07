@@ -38,13 +38,20 @@ class Place_service
         if (in_array($c['slug'], $categorySlugs, TRUE)) {
             if (!$data['folder_name'])
                 throw new DomainException('Folder name is required.');
-            if ($c['slug'] === 'softcopy-categories' && (
-                !preg_match('/^.*[^0-9][0-9]+$/D', $data['code_pattern']) ||
-                preg_match('/[\r\n]/', $data['code_pattern'])
-            ))
-                throw new DomainException('Document code pattern must include a prefix and an initial sequence number, such as PPM-001.');
-            if ($c['slug'] === 'softcopy-categories' && mb_strlen($data['code_pattern']) > 100)
-                throw new DomainException('Document code pattern must not exceed 100 characters.');
+            if ($c['slug'] === 'softcopy-categories') {
+                $data['category_type'] = $data['category_type'] ?: 'pattern';
+                if (!in_array($data['category_type'], ['folder', 'pattern'], TRUE))
+                    throw new DomainException('Choose a valid Softcopy Category type.');
+                if ($data['category_type'] === 'folder') {
+                    // Folder-only nodes organize bounded nested folders; they
+                    // never allocate document numbers or require a code pattern.
+                    $data['code_pattern'] = '';
+                } elseif (preg_match('/[\r\n]/', $data['code_pattern'])) {
+                    throw new DomainException('Document No. Code Pattern cannot contain line breaks.');
+                }
+                if (mb_strlen($data['code_pattern']) > 100)
+                    throw new DomainException('Document code pattern must not exceed 100 characters.');
+            }
             if (!$id)
                 $data['created_by'] = $actorId;
             if ($id && $id === $data['parent_id'])
@@ -56,21 +63,59 @@ class Place_service
         try {
             if (in_array($c['slug'], $categorySlugs, TRUE)) {
                 require_once APPPATH . 'services/places/category_parent_policy.php';
+                $categoryColumns = $c['slug'] === 'softcopy-categories'
+                    ? 'id,parent_id,active,category_type,code_pattern' : 'id,parent_id,active';
                 $categories = $this->ci->db->query(
-                    'SELECT id,parent_id,active FROM ' . $c['table'] . ' ORDER BY id FOR UPDATE'
+                    'SELECT ' . $categoryColumns . ' FROM ' . $c['table'] . ' ORDER BY id FOR UPDATE'
                 )->result_array();
                 Category_parent_policy::validate($categories, $id, (int) $data['parent_id']);
+                if ($c['slug'] === 'softcopy-categories') {
+                    $byId = [];
+                    foreach ($categories as $category)
+                        $byId[(int) $category['id']] = $category;
+                    $prior = $byId[$id] ?? NULL;
+                    if ($data['category_type'] === 'pattern' &&
+                        !preg_match('/^.+-[0-9]+$/D', $data['code_pattern']) &&
+                        // Existing legacy prefix formats remain editable as
+                        // long as their saved pattern has not been changed.
+                        (!$prior || $prior['category_type'] !== 'pattern' ||
+                         $prior['code_pattern'] !== $data['code_pattern'])) {
+                        throw new DomainException('Document No. Code Pattern must end in a numeric segment after the final dash, such as PPM-001.');
+                    }
+                    $parentId = (int) $data['parent_id'];
+                    if ($parentId && ($byId[$parentId]['category_type'] ?? '') !== 'folder'
+                        && (!$prior || (int) $prior['parent_id'] !== $parentId)) {
+                        throw new DomainException('Parent Category must be a Folder category, not a Document Number Pattern category.');
+                    }
+                    if ($prior && $data['category_type'] === 'folder'
+                        && $prior['category_type'] !== 'folder') {
+                        $hasDocuments = $this->ci->db->where('category_id', $id)
+                            ->count_all_results('softcopy_documents') > 0;
+                        if ($hasDocuments)
+                            throw new DomainException('This category already contains documents. Move them before converting it to a folder-only category.');
+                    }
+                    if ($prior && $data['category_type'] === 'pattern'
+                        && $prior['category_type'] === 'folder') {
+                        foreach ($categories as $child) {
+                            if ((int) ($child['parent_id'] ?? 0) === $id) {
+                                throw new DomainException('This folder has child categories. Move them before converting it into a Document Number Pattern category.');
+                            }
+                        }
+                    }
+                }
             }
-            if ($c['slug'] === 'softcopy-categories') {
+            if ($c['slug'] === 'softcopy-categories' && $data['category_type'] === 'pattern') {
                 $patternPrefix = preg_replace('/[0-9]+$/', '', $data['code_pattern']);
                 $patterns = $this->ci->db->query(
-                    'SELECT id,code_pattern FROM categories WHERE id<>? FOR UPDATE',
+                    'SELECT id,code_pattern,category_type FROM categories WHERE id<>? FOR UPDATE',
                     [$id]
                 )->result_array();
                 foreach ($patterns as $category) {
+                    if ($category['category_type'] !== 'pattern')
+                        continue;
                     $existingPrefix = preg_replace('/[0-9]+$/', '', (string) $category['code_pattern']);
                     if (strcasecmp($existingPrefix, $patternPrefix) === 0)
-                        throw new DomainException('Each category must have a unique document code prefix.');
+                        throw new DomainException('Each Document Number Pattern category must have a unique document code prefix.');
                 }
             }
             if (
@@ -215,6 +260,13 @@ class Place_service
         $record = $this->ci->Place_model->find($c, $id);
         if (!$record)
             throw new DomainException('Record not found.');
+        if ($c['slug'] === 'softcopy-categories') {
+            // Do not strand nested folders or active code-pattern children.
+            $children = $this->ci->db->where('parent_id', (int) $id)
+                ->where('active', 1)->count_all_results('categories');
+            if ($children > 0)
+                throw new DomainException('Move or deactivate child categories before deactivating this parent folder.');
+        }
         $this->ci->db->where('id', (int) $id)->set('version', 'version+1', FALSE)->update($c['table'], ['active' => 0]);
         if ($this->ci->db->error()['code'])
             throw new DomainException('This place could not be deactivated.');

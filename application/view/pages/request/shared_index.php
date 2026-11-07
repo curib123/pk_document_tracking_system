@@ -172,7 +172,8 @@ foreach ($rows as $row) {
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',
     'description' => $payload['description'] ?? '',
-    'series_number_manual' => $payload['series_number'] ?? '',
+    'series_code_pattern' => $payload['series_code_pattern'] ?? '',
+    'generated_series_number' => '', // Recomputed from the selected document.
     'series_number_checker' => !empty($payload['series_number_checker']) ? 1 : 0,
     'document_number' => $payload['document_number'] ?? '',
     'category_id' => $payload['category_id'] ?? '',
@@ -369,7 +370,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
               <?php if ($tab === 'softcopy'): ?>
                 <?php $this->load->view('pages/request/softcopy_fields', [
                   'softcopy_options' => $softcopy_options,
-                  'category_options' => $category_options,
+                  'category_options' => $numbered_category_options,
                   'numbering_options' => $numbering_options,
                   'number_previews' => $number_previews,
                   'softcopyDirect' => FALSE

@@ -13,7 +13,8 @@ $labels = [
     'sequence_number' => 'Sequence',
     'description' => 'Description',
     'folder_name' => 'Folder',
-    'code_pattern' => 'Code Pattern',
+    'code_pattern' => 'Document No. Code Pattern',
+    'category_type' => 'Category Type',
     'area_name' => 'Area',
     'specific_name' => 'Specific',
     'asset_name' => 'Asset',
@@ -37,7 +38,10 @@ foreach ($rows as $row) {
     $cells = [];
     foreach ($dt_columns as $field => $label) {
         $value = $row[$field] ?? '';
-        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0') : $value;
+        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0')
+            : ($field === 'category_type'
+                ? ($value === 'folder' ? 'Folder' : 'Document Number Pattern')
+                : $value);
     }
     $display = [];
     foreach ($dt_columns as $field => $label)
@@ -145,7 +149,7 @@ $dt_sortable = array_values(array_intersect(
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form id="editForm" method="post" action="<?= site_url('places/' . $cfg['slug'] . '/save') ?>"
-                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?> autocomplete="off">
+                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?> <?= $cfg['slug'] === 'softcopy-categories' ? 'data-softcopy-category-setup' : '' ?> autocomplete="off">
                 <div class="modal-header">
                     <h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -169,20 +173,29 @@ $dt_sortable = array_values(array_intersect(
                                     $optName = $references[$field]; ?>
                                     <div class="col-md-6">
                                         <label class="form-label"
-                                            for="f-<?= html_escape($field) ?>"><?= html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
+                                            for="f-<?= html_escape($field) ?>"><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'Parent Folder (optional)' : html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
                                         <select class="form-select" id="f-<?= html_escape($field) ?>"
                                             name="<?= html_escape($field) ?>" data-searchable autocomplete="off">
-                                            <option value="">Select <?= html_escape(str_replace('_id', '', $field)) ?></option>
+                                            <option value="">No parent (root)</option>
                                             <?php foreach ($options[$optName] as $option): ?>
-                                                <option value="<?= (int) $option['id'] ?>"><?= html_escape($option['name']) ?></option>
+                                                <option value="<?= (int) $option['id'] ?>" <?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-parent-kind="' . html_escape($option['category_type'] ?? 'pattern') . '"' : '' ?>><?= html_escape($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? ($option['display_path'] ?? $option['name']) : $option['name']) ?><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? html_escape(($option['category_type'] ?? 'pattern') === 'folder' ? ' (Folder)' : ' (Legacy pattern category)') : '' ?></option>
                                             <?php endforeach; ?>
                                         </select>
+                                        <?php if ($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories'): ?>
+                                            <small class="form-text">Choose a Folder category to nest this category beneath. Folder categories can be nested; numbered categories create documents within the chosen folder.</small>
+                                        <?php endif; ?>
                                     </div>
                                 <?php else: ?>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6" <?= $field === 'code_pattern' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-number-pattern' : '' ?>>
                                         <label class="form-label"
                                             for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?></label>
-                                        <?php if ($field === 'description'): ?>
+                                        <?php if ($field === 'category_type' && $cfg['slug'] === 'softcopy-categories'): ?>
+                                            <select class="form-select" id="f-category_type" name="category_type" data-softcopy-category-type required autocomplete="off">
+                                                <option value="pattern">Document Number Pattern</option>
+                                                <option value="folder">Folder (parent / nested folder)</option>
+                                            </select>
+                                            <small class="form-text">Folder: organize nested categories without numbering. Document Number Pattern: generate document numbers within a folder or at root.</small>
+                                        <?php elseif ($field === 'description'): ?>
                                             <textarea class="form-control" id="f-<?= html_escape($field) ?>"
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
@@ -190,7 +203,7 @@ $dt_sortable = array_values(array_intersect(
                                                 name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= $field === 'code_pattern' ? '100' : '150' ?>" autocomplete="off"
                                                 <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : '' ?>>
                                             <?php if ($field === 'code_pattern'): ?>
-                                                <small class="form-text">Enter the initial document number, including its starting sequence. New documents continue from this number, for example PPM-001, PPM-01, or PPM-0001.</small>
+                                                <small class="form-text">Enter the initial document number; only the numeric segment after the final dash increments, for example PPM-001, PPM-002, PPM-003. This is not required for Folder categories.</small>
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>

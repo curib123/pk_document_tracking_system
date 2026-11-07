@@ -36,8 +36,9 @@ class Softcopy_direct_service
             'title' => trim((string) ($post['title'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number_manual'] ?? '')),
+            'series_number' => '', // Generated on approval, never accepted from the browser.
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
+            'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
             'date_received' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d'),

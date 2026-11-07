@@ -50,22 +50,27 @@ class Softcopy_operation_service
             $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
             require_once APPPATH . 'services/softcopy/document_number_generator.php';
-            $manualNumber = !empty($payload['series_number_checker']);
-            $number = $manualNumber
+            require_once APPPATH . 'services/softcopy/document_series_generator.php';
+            $reuseNumber = !empty($payload['series_number_checker']);
+            $number = $reuseNumber
                 ? trim((string) ($payload['document_number'] ?? ''))
                 : Document_number_generator::next($db, $categoryId);
-            $series = $manualNumber ? trim((string) ($payload['series_number'] ?? '')) : '';
+            // Client previews are advisory; the actual series is allocated at approval.
+            $series = $reuseNumber
+                ? Document_series_generator::next(
+                    $db,
+                    $categoryId,
+                    $number,
+                    trim((string) ($payload['series_code_pattern'] ?? '')),
+                    (int) $actorId
+                ) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId
             ) {
                 throw new DomainException('Document title and category are required.');
             }
-            if ($manualNumber) {
-                if ($series === '') {
-                    throw new DomainException('Enter the series number for the selected document number.');
-                }
-                Document_number_generator::require_existing($db, $categoryId, $number);
+            if ($reuseNumber) {
                 if ($db->get_where('softcopy_documents', [
                     'document_number' => $number,
                     'series_number' => $series
@@ -92,7 +97,7 @@ class Softcopy_operation_service
                         'Softcopy creation duplicate index error: ' . ($databaseError['message'] ?? 'unknown database error')
                     );
                     throw new DomainException(
-                        'This document number and series number are already in use. If you are reusing an existing document number, apply the softcopy series-number index migration.'
+                        'This document number and series number are already in use. Confirm the softcopy series-number index migration is applied.'
                     );
                 }
                 log_message(
