@@ -129,9 +129,34 @@ updates address these cases:
 | Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
+| Automatic Series No. from Softcopy Category setup | [Series Code Pattern migration](database/migrations/20261107_softcopy_series_code_pattern.sql), after category numbering and the series-number index |
 
 Existing prefix-only category patterns still work. New category patterns should
 include an initial sequence, such as `PPM-001`.
+
+### Automatic softcopy series numbers
+
+In **Places → Softcopy Categories**, configure both **Document No. Code Pattern**
+(e.g., `PPM-001`) and **Series No. Code Pattern** (e.g., `001` or `SER-001`).
+For a *new* document number, the system uses the normal document pattern and
+leaves Series No. empty. To create another record under an *existing* document
+number, check **Need Series Number?** and select that document number. The form
+shows the **Generated Series Number** as a preview; it cannot be entered manually.
+
+Series sequencing is independent for each document number and uses the category's
+starting number, numeric width and optional prefix. For example, with `001`,
+if `PPM-001` has series `001` and `002`, its next series is `003`;
+`PPM-002` independently begins with `001`. Historic matching series count
+towards the next number, including cancelled records. The server assigns the
+final unique number **inside the direct-create or approval transaction**, not
+when a draft is saved; preview values can change before approval. Existing
+softcopy records and revision series remain unchanged.
+
+**Upgrade requirement:** Apply both the
+[softcopy series-number unique index](database/migrations/20261104_softcopy_series_number_index.sql)
+and the [category Series Code Pattern migration](database/migrations/20261107_softcopy_series_code_pattern.sql)
+before using the updated application. Neither runs automatically. Take a database
+backup before installing database changes.
 
 ## Maintain backups
 
