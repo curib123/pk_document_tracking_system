@@ -136,12 +136,16 @@ include an initial sequence, such as `PPM-001`.
 
 ### Automatic softcopy series numbers
 
-In **Places → Softcopy Categories**, configure both **Document No. Code Pattern**
-(e.g., `PPM-001`) and **Series No. Code Pattern** (e.g., `001` or `SER-001`).
-For a *new* document number, the system uses the normal document pattern and
-leaves Series No. empty. To create another record under an *existing* document
-number, check **Need Series Number?** and select that document number. The form
-shows the **Generated Series Number** as a preview; it cannot be entered manually.
+In **Places → Softcopy Categories**, **Document No. Code Pattern** (e.g.,
+`PPM-001`) is required, while **Series No. Code Pattern** (e.g., `001`
+or `SER-001`) is **optional**. Leave the series field blank if the category
+does not use series numbers; normal document creation continues and the
+**Need Series Number?** option is hidden for that category. Enter a valid
+series pattern to enable automatic series numbering for existing document
+numbers. For a new document number, Series No. remains empty. To create
+another record under an existing number in a series-enabled category,
+check **Need Series Number?** and select that number. The read-only
+**Generated Series Number** is a preview, never a manual entry.
 
 Series sequencing is independent for each document number and uses the category's
 starting number, numeric width and optional prefix. For example, with `001`,
@@ -156,7 +160,9 @@ softcopy records and revision series remain unchanged.
 [softcopy series-number unique index](database/migrations/20261104_softcopy_series_number_index.sql)
 and the [category Series Code Pattern migration](database/migrations/20261107_softcopy_series_code_pattern.sql)
 before using the updated application. Neither runs automatically. Take a database
-backup before installing database changes.
+backup before installing database changes. The migration defaults new
+categories to an empty optional series pattern. Existing configured values
+are preserved if the column already exists.
 
 ## Maintain backups
 
