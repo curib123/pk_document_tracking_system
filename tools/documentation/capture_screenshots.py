@@ -114,10 +114,10 @@ def seed(site):
                             document_id=1 if status == 'approved' else None,
                             uploaded_by=1 if status == 'approved' else 5,
                             approved_by=1 if status == 'approved' else None, status=status))
-    insert('softcopy_documents', document_number='QP-001', series_number='001', title='Sample Quality Procedure',
+    insert('softcopy_documents', document_number='QP-001', series_number=None, title='Sample Quality Procedure',
            category_id=category, created_by=1, creation_source='direct', creation_reason='Documentation example')
     revision = insert('softcopy_revisions', document_id=1, revision_number=1, reason='Initial controlled issue',
-                      effective_date='2026-11-01', page_number=1, series_number='001',
+                      effective_date='2026-11-01', page_number=1, series_number=None,
                       document_title='Sample Quality Procedure', new_revision_level='00',
                       new_effective_date='2026-11-01', date_received='2026-11-01', date_released='2026-11-01',
                       approval_date='2026-11-01', file_id=files[0], uploaded_by=1, approved_by=1)
@@ -271,7 +271,8 @@ def capture(page, base, review_request):
     page.locator('[name="series_number_checker"]').check()
     page.locator('#reqNumber').select_option('QP-001', force=True)
     page.locator('#reqSeriesPattern').fill('001')
-    expect(page.locator('#reqSeries')).to_have_value('002')
+    expect(page.locator('#reqOriginalSeries')).to_have_value('000')
+    expect(page.locator('#reqSeries')).to_have_value('001')
     shot('softcopy-numbering', 'The first Series No. Code Pattern is configured per Document No.', '#editModal .modal-content')
     goto('documents/softcopy?layout=table&folder=all')
     page.get_by_role('button', name='Edit', exact=True).first.click()
