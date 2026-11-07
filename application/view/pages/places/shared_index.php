@@ -13,7 +13,8 @@ $labels = [
     'sequence_number' => 'Sequence',
     'description' => 'Description',
     'folder_name' => 'Folder',
-    'code_pattern' => 'Code Pattern',
+    'code_pattern' => 'Document No. Code Pattern',
+    'series_code_pattern' => 'Series No. Code Pattern',
     'area_name' => 'Area',
     'specific_name' => 'Specific',
     'asset_name' => 'Asset',
@@ -187,10 +188,12 @@ $dt_sortable = array_values(array_intersect(
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= $field === 'code_pattern' ? '100' : '150' ?>" autocomplete="off"
-                                                <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : '' ?>>
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' || $field === 'series_code_pattern' ? 'required' : '' ?> maxlength="<?= in_array($field, ['code_pattern', 'series_code_pattern'], TRUE) ? '100' : '150' ?>" autocomplete="off"
+                                                <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : ($field === 'series_code_pattern' ? 'placeholder="For example 001 or SER-001"' : '') ?>>
                                             <?php if ($field === 'code_pattern'): ?>
                                                 <small class="form-text">Enter the initial document number, including its starting sequence. New documents continue from this number, for example PPM-001, PPM-01, or PPM-0001.</small>
+                                            <?php elseif ($field === 'series_code_pattern'): ?>
+                                                <small class="form-text">Starting Series No. format for this category, for example 001 or SER-001. Each existing document number has its own auto-incrementing series.</small>
                                             <?php endif; ?>
                                         <?php endif; ?>
                                     </div>
