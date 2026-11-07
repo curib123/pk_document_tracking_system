@@ -102,7 +102,8 @@ class Requests extends MY_Controller
                     'locations' => $this->Document_model->hardcopy_locations(),
                     'users' => $this->Document_model->active_users()
                 ] : [],
-                'category_options' => $this->Place_model->options('numbered_categories'),
+                'category_options' => $this->Place_model->options('categories'),
+                'numbered_category_options' => $tab === 'softcopy' ? $this->Place_model->options('numbered_categories') : [],
                 'external_category_options' => $tab === 'external'
                     ? $this->Place_model->options('external_categories') : [],
                 'subsidiary_options' => $tab === 'external'
