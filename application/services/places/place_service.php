@@ -47,7 +47,9 @@ class Place_service
                 if (mb_strlen($data['code_pattern']) > 100)
                     throw new DomainException('Document code pattern must not exceed 100 characters.');
                 require_once APPPATH . 'services/softcopy/document_number_generator.php';
-                Document_number_generator::validate_series_pattern((string) $data['series_code_pattern']);
+                // Series numbering is opt-in for each Softcopy Category.
+                if (trim((string) $data['series_code_pattern']) !== '')
+                    Document_number_generator::validate_series_pattern((string) $data['series_code_pattern']);
             }
             if (!$id)
                 $data['created_by'] = $actorId;
