@@ -16,7 +16,7 @@ class Place_model extends CI_Model
             'table' => 'categories',
             'label' => 'Softcopy Categories',
             'key' => 'name',
-            'fields' => ['name', 'folder_name', 'code_pattern', 'description', 'parent_id']
+            'fields' => ['name', 'category_type', 'folder_name', 'code_pattern', 'description', 'parent_id']
         ],
         'external-categories' => [
             'table' => 'external_categories',
@@ -103,6 +103,7 @@ class Place_model extends CI_Model
             'assets' => 'asset_number',
             'locations' => 'name',
             'categories' => 'name',
+            'numbered_categories' => 'name',
             'external_categories' => 'name',
             'subsidiaries' => 'name'
         ];
@@ -126,8 +127,16 @@ class Place_model extends CI_Model
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
         }
         if ($table === 'categories') {
-            return $this->db->select('id,name,code_pattern')->from('categories')
+            // All active folder and number-pattern categories remain available
+            // for hierarchy/assignment selectors.
+            return $this->db->select('id,name,code_pattern,category_type,parent_id')->from('categories')
                 ->where('active', 1)->order_by('name')->get()->result_array();
+        }
+        if ($table === 'numbered_categories') {
+            // Creation only: a folder-only category cannot allocate a Document No.
+            return $this->db->select('id,name,code_pattern,parent_id')->from('categories')
+                ->where('active', 1)->where('category_type', 'pattern')
+                ->order_by('name')->get()->result_array();
         }
         if ($table === 'external_categories') {
             return $this->db->select('id,name')->from('external_categories')
