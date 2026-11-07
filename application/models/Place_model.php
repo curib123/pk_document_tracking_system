@@ -128,9 +128,26 @@ class Place_model extends CI_Model
         }
         if ($table === 'categories') {
             // All active folder and number-pattern categories remain available
-            // for hierarchy/assignment selectors.
-            return $this->db->select('id,name,code_pattern,category_type,parent_id')->from('categories')
+            // for hierarchy/assignment selectors. Add full paths so folders
+            // with identical names in different branches are distinguishable.
+            $rows = $this->db->select('id,name,code_pattern,category_type,parent_id')->from('categories')
                 ->where('active', 1)->order_by('name')->get()->result_array();
+            $byId = [];
+            foreach ($rows as $row)
+                $byId[(int) $row['id']] = $row;
+            foreach ($rows as &$row) {
+                $parts = [(string) $row['name']];
+                $parent = (int) ($row['parent_id'] ?? 0);
+                $seen = [(int) $row['id'] => TRUE];
+                while ($parent && !isset($seen[$parent]) && isset($byId[$parent]) && count($seen) < 32) {
+                    $seen[$parent] = TRUE;
+                    array_unshift($parts, (string) $byId[$parent]['name']);
+                    $parent = (int) ($byId[$parent]['parent_id'] ?? 0);
+                }
+                $row['display_path'] = implode(' / ', $parts);
+            }
+            unset($row);
+            return $rows;
         }
         if ($table === 'numbered_categories') {
             // Creation only: a folder-only category cannot allocate a Document No.
