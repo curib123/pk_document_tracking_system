@@ -112,6 +112,11 @@ rejected(static function () use ($db) {
 }, 'First setup requires an explicit document pattern');
 same(['000', '001'], Document_series_generator::initial_pair('001'), 'Numeric initial series pair');
 same(['SER-004', 'SER-005'], Document_series_generator::initial_pair('SER-005'), 'Prefixed initial series pair');
+same(['sample-series-001', 'sample-series-002'], Document_series_generator::initial_pair('sample-series-002'), 'Final-dash numeric decrement preserves both prefix components');
+same('sample-series-003', Document_series_generator::format_number('sample-series-', 3, 3), 'Next series after 002');
+rejected(static function () {
+    Document_series_generator::validate_pattern('sample-series002');
+}, 'Non-dash letter-to-number prefix must not be accepted');
 same('001', Document_series_generator::next($db, 1, 'DOC-001', '001', 25), 'First new series');
 same('000', $db->documents[0]['series_number'], 'Original document decremented');
 same('000', $db->revisions[0]['series_number'], 'Original revision series updated');
