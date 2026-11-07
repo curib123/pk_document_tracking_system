@@ -60,11 +60,11 @@ class Document_series_generator
             throw new DomainException('Select an existing Document No. before setting up a series.');
         }
         $category = $db->query(
-            'SELECT id FROM categories WHERE id=? AND active=1 FOR UPDATE',
+            'SELECT id,category_type FROM categories WHERE id=? AND active=1 FOR UPDATE',
             [$categoryId]
         )->row_array();
-        if (!$category) {
-            throw new DomainException('Choose an active softcopy category.');
+        if (!$category || ($category['category_type'] ?? 'pattern') !== 'pattern') {
+            throw new DomainException('Choose an active Document Number Pattern category.');
         }
 
         $documents = $db->query(
