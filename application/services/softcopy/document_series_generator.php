@@ -53,7 +53,7 @@ class Document_series_generator
      * Authoritative allocation on approval/direct creation, serialized by
      * locking the same category row used by document-number generation.
      */
-    public static function next($db, int $categoryId, string $number, string $submittedPattern = ''): string
+    public static function next($db, int $categoryId, string $number, string $submittedPattern = '', int $actorId = 0): string
     {
         $number = trim($number);
         if ($number === '' || mb_strlen($number) > 100) {
@@ -68,7 +68,7 @@ class Document_series_generator
         }
 
         $documents = $db->query(
-            'SELECT id,series_number FROM softcopy_documents WHERE category_id=? AND document_number=? ORDER BY id FOR UPDATE',
+            'SELECT id,series_number,status FROM softcopy_documents WHERE category_id=? AND document_number=? ORDER BY id FOR UPDATE',
             [$categoryId, $number]
         )->result_array();
         if (!$documents) {
@@ -105,8 +105,21 @@ class Document_series_generator
                     }
                 }
                 $baseId = (int) $unnumbered[0]['id'];
-                $db->where('id', $baseId)->update('softcopy_documents', ['series_number' => $previous]);
+                $db->set('version', 'version + 1', FALSE)->where('id', $baseId)
+                    ->update('softcopy_documents', ['series_number' => $previous]);
                 $db->where('document_id', $baseId)->update('softcopy_revisions', ['series_number' => $previous]);
+                if ($actorId > 0) {
+                    $oldStatus = (string) ($unnumbered[0]['status'] ?? 'active');
+                    $db->insert('status_history', [
+                        'domain' => 'softcopy',
+                        'document_id' => $baseId,
+                        'previous_status' => $oldStatus,
+                        'new_status' => $oldStatus,
+                        'action' => 'series_initialized',
+                        'user_id' => $actorId,
+                        'remarks' => 'Assigned original Series No. ' . $previous . ' before creating a new series for ' . $number
+                    ]);
+                }
                 if ($db->trans_status() === FALSE) {
                     throw new DomainException('Could not assign the original document its preceding series number.');
                 }
