@@ -38,7 +38,10 @@ foreach ($rows as $row) {
     $cells = [];
     foreach ($dt_columns as $field => $label) {
         $value = $row[$field] ?? '';
-        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0') : $value;
+        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0')
+            : ($field === 'category_type'
+                ? ($value === 'folder' ? 'Folder' : 'Document Number Pattern')
+                : $value);
     }
     $display = [];
     foreach ($dt_columns as $field => $label)
