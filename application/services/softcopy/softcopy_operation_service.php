@@ -61,7 +61,8 @@ class Softcopy_operation_service
                     $db,
                     $categoryId,
                     $number,
-                    trim((string) ($payload['series_code_pattern'] ?? ''))
+                    trim((string) ($payload['series_code_pattern'] ?? '')),
+                    (int) $actorId
                 ) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
