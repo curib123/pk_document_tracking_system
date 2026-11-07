@@ -172,7 +172,8 @@ foreach ($rows as $row) {
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',
     'description' => $payload['description'] ?? '',
-    'generated_series_number' => '', // Refreshed from category pattern, not persisted.
+    'series_code_pattern' => $payload['series_code_pattern'] ?? '',
+    'generated_series_number' => '', // Recomputed from the selected document.
     'series_number_checker' => !empty($payload['series_number_checker']) ? 1 : 0,
     'document_number' => $payload['document_number'] ?? '',
     'category_id' => $payload['category_id'] ?? '',
