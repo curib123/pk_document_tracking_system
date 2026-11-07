@@ -9,7 +9,7 @@ SET @category_series_code_pattern_exists = (
 );
 SET @category_series_code_pattern_sql = IF(
   @category_series_code_pattern_exists = 0,
-  "ALTER TABLE `categories` ADD COLUMN `series_code_pattern` varchar(100) NOT NULL DEFAULT '001' AFTER `code_pattern`",
+  'ALTER TABLE `categories` ADD COLUMN `series_code_pattern` varchar(100) NOT NULL DEFAULT ''001'' AFTER `code_pattern`',
   'SELECT 1'
 );
 PREPARE category_series_code_pattern_stmt FROM @category_series_code_pattern_sql;
