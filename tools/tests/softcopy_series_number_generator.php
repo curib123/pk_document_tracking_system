@@ -67,7 +67,8 @@ function assertSeriesError(callable $action, $label)
 $db = new SeriesFakeDb();
 $db->categories = [
     1 => ['id' => 1, 'active' => 1, 'series_code_pattern' => '001'],
-    2 => ['id' => 2, 'active' => 1, 'series_code_pattern' => 'SER-005']
+    2 => ['id' => 2, 'active' => 1, 'series_code_pattern' => 'SER-005'],
+    3 => ['id' => 3, 'active' => 1, 'series_code_pattern' => '']
 ];
 $db->documents = [
     ['id' => 1, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => NULL],
@@ -75,12 +76,16 @@ $db->documents = [
     ['id' => 3, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => '002'],
     ['id' => 4, 'category_id' => 1, 'document_number' => 'PPM-002', 'series_number' => NULL],
     ['id' => 5, 'category_id' => 2, 'document_number' => 'ABC-001', 'series_number' => NULL],
-    ['id' => 6, 'category_id' => 2, 'document_number' => 'ABC-001', 'series_number' => 'SER-009']
+    ['id' => 6, 'category_id' => 2, 'document_number' => 'ABC-001', 'series_number' => 'SER-009'],
+    ['id' => 9, 'category_id' => 3, 'document_number' => 'BARE-001', 'series_number' => NULL]
 ];
 
 assertSameSeries('003', Document_number_generator::next_series($db, 1, 'PPM-001'), 'Existing series increments');
 assertSameSeries('001', Document_number_generator::next_series($db, 1, 'PPM-002'), 'Independent per document');
 assertSameSeries('SER-010', Document_number_generator::next_series($db, 2, 'ABC-001'), 'Prefix and starting sequence');
+assertSeriesError(static function () use ($db) {
+    Document_number_generator::next_series($db, 3, 'BARE-001');
+}, 'Blank optional series pattern disables series allocation');
 $db->documents[] = ['id' => 7, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => '007'];
 assertSameSeries('008', Document_number_generator::next_series($db, 1, 'PPM-001'), 'Highest historical series wins');
 $db->documents[] = ['id' => 8, 'category_id' => 1, 'document_number' => 'PPM-001', 'series_number' => 'legacy'];
