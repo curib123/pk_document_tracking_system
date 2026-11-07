@@ -846,12 +846,16 @@
     if (!category || !checker || !autoField || !manualField || !seriesField) return;
 
     var create = form.querySelector('[name="type"]')?.value === "softcopy_create";
-    var manual = create && checker.checked;
+    var selected = category.options[category.selectedIndex];
+    var seriesPattern = (selected?.dataset.seriesCodePattern || "").trim();
+    var seriesEnabled = seriesPattern !== "";
+    if (!seriesEnabled) checker.checked = false;
+    var manual = create && seriesEnabled && checker.checked;
     var autoWrap = form.querySelector("[data-document-number-auto]");
     var manualWrap = form.querySelector("[data-document-number-manual]");
     var checkerWrap = checker.closest("[data-series-number-checker-wrap]");
     var seriesWrap = form.querySelector("[data-series-number-field]");
-    if (checkerWrap) checkerWrap.hidden = !create;
+    if (checkerWrap) checkerWrap.hidden = !create || !seriesEnabled;
     if (autoWrap) autoWrap.hidden = !create || manual;
     if (manualWrap) manualWrap.hidden = !manual;
     if (seriesWrap) seriesWrap.hidden = !manual;
@@ -859,9 +863,10 @@
     autoField.required = create && !manual;
     manualField.disabled = !manual;
     manualField.required = manual;
-    seriesField.disabled = !manual;
-    seriesField.required = manual;
-    checker.disabled = !create;
+    // The series field is display-only, never a required browser submission.
+    seriesField.disabled = true;
+    seriesField.required = false;
+    checker.disabled = !create || !seriesEnabled;
     if (!create) {
       checker.checked = false;
       seriesField.value = "";
@@ -869,7 +874,6 @@
       seriesField.value = "";
     }
 
-    var selected = category.options[category.selectedIndex];
     var pattern = selected?.dataset.codePattern || "";
     var parts = pattern.match(/^(.*?)(\d+)$/);
     var prefix = parts ? parts[1] : "";
@@ -918,7 +922,6 @@
 
     // Softcopy Categories define this independently of the document code pattern.
     // Preview is provisional; PHP assigns the authoritative value at approval.
-    var seriesPattern = selected?.dataset.seriesCodePattern || "";
     var seriesParts = seriesPattern.match(/^(.*?)(\d+)$/);
     var usedSeries = numberOptions[manualField.value] || [];
     seriesField.value = "";
