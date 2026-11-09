@@ -63,9 +63,13 @@ jobs:
                     e.name.endsWith("/fonts/fa-solid-900.woff2")),
                   chartLibrary: !!window.Chart,
                 };
-                const modal = window.bootstrap.Modal.getOrCreateInstance(document.querySelector("#testModal"));
+                const modalNode = document.querySelector("#testModal");
+                const shown = new Promise(resolve =>
+                  modalNode.addEventListener("shown.bs.modal", resolve, { once: true }));
+                const modal = window.bootstrap.Modal.getOrCreateInstance(modalNode);
                 modal.show();
-                checks.modalOpened = document.querySelector("#testModal").classList.contains("show");
+                await shown;
+                checks.modalOpened = modalNode.classList.contains("show");
                 modal.hide();
                 const chart = new Chart(document.querySelector("#chart"), {
                   type: "bar", data: { labels: ["LAN"], datasets: [{ label: "Records", data: [3] }] }
