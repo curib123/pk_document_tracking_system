@@ -11,14 +11,10 @@
     <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
     <?php $this->load->view('reusable_components/pwa_head'); ?>
 
-    <link rel="stylesheet" media="print" onload="this.media='all';window.pkBootstrapCssReady=true;if(window.pkBootstrapUiReady)window.pkBootstrapUiReady()" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
-    <noscript>
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap">
-    </noscript>
+    <!-- Office LAN assets; no external CDN requests. -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/bootstrap.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/fontawesome.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/poppins.css') ?>">
 
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
