@@ -118,26 +118,36 @@ class File_service
     }
 
     /** Daily reconciliation also covers legacy terminal records and deleted documents. */
-    public function cleanup_daily(): void
+    public function cleanup_daily(): bool
     {
-        if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return;
+        if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return FALSE;
         $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
         $databaseKey = $this->ci->db->hostname . ':' . $this->ci->db->database;
         $marker = PK_ROOT . '/storage/.controlled-file-cleanup-' . substr(hash('sha256', $databaseKey), 0, 16);
-        if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return;
-        $lock = fopen($marker, 'c+');
-        if (!$lock) return;
+        if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return TRUE;
+        $lock = @fopen($marker, 'c+');
+        if (!$lock) {
+            log_message('error', 'Daily Document Filecleanup could not open its checkpoint; it will be retried.');
+            return FALSE;
+        }
+        $locked = FALSE;
         try {
-            if (!flock($lock, LOCK_EX | LOCK_NB)) return;
-            if (trim((string) stream_get_contents($lock)) === $day) return;
+            if (!flock($lock, LOCK_EX | LOCK_NB)) return FALSE;
+            $locked = TRUE;
+            rewind($lock);
+            if (trim((string) stream_get_contents($lock)) === $day) return TRUE;
             $this->reconcile_retired();
             rewind($lock);
-            ftruncate($lock, 0);
-            fwrite($lock, $day);
+            if (!ftruncate($lock, 0) || fwrite($lock, $day) === FALSE || !fflush($lock)) {
+                log_message('error', 'Daily Document Filecleanup could not update its checkpoint; it will be retried.');
+                return FALSE;
+            }
+            return TRUE;
         } catch (Throwable $error) {
             log_message('error', 'Daily Document Filecleanup failed; it will be retried.');
+            return FALSE;
         } finally {
-            flock($lock, LOCK_UN);
+            if ($locked) flock($lock, LOCK_UN);
             fclose($lock);
         }
     }
