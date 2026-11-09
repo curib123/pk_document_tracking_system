@@ -40,9 +40,24 @@ class Softcopy_operation_service
         }
     }
 
+    public function validate_revision_level($payload)
+    {
+        $value = $payload['new_revision_level'] ?? NULL;
+        if (!is_scalar($value)) {
+            throw new DomainException('Revision level is required and must be no longer than 30 characters.');
+        }
+        $level = trim((string) $value);
+        if ($level === '' || mb_strlen($level) > 30) {
+            throw new DomainException('Revision level is required and must be no longer than 30 characters.');
+        }
+    }
+
     public function apply($type, $payload, $softcopyId, $actorId, $ownerId, $requestId = NULL)
     {
         $this->validate_type($type);
+        if ($requestId === NULL && in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            $this->validate_revision_level($payload);
+        }
         $db = $this->ci->db;
         $reason = trim((string) ($payload['remarks'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
@@ -119,7 +134,9 @@ class Softcopy_operation_service
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
             $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
-            $revisionLevel = '00';
+            $revisionLevel = $requestId === NULL
+                ? trim((string) $payload['new_revision_level'])
+                : '00';
             $effective = (string) ($payload['effective_date'] ?? '');
             $received = (string) ($payload['date_received'] ?? '');
             $released = (string) ($payload['date_released'] ?? '');
@@ -201,7 +218,9 @@ class Softcopy_operation_service
             $previous = $doc['current_revision_id'] ?
                 $db->get_where('softcopy_revisions', ['id' => $doc['current_revision_id']])->row_array() : NULL;
             $nextRevisionNumber = (int) ($max['revision_number'] ?? 0) + 1;
-            $level = str_pad((string) max(0, $nextRevisionNumber - 1), 2, '0', STR_PAD_LEFT);
+            $level = $requestId === NULL
+                ? trim((string) $payload['new_revision_level'])
+                : str_pad((string) max(0, $nextRevisionNumber - 1), 2, '0', STR_PAD_LEFT);
             if ($title !== '' && mb_strlen($title) > 255) {
                 throw new DomainException('Document title is too long.');
             }

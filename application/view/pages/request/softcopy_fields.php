@@ -79,10 +79,14 @@ $numbering_options = $numbering_options ?? [];
     <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" readonly disabled autocomplete="off">
     <small class="form-text" data-series-number-guide>Preview only. The final series number is generated on approval.</small>
 </div>
-<div class="col-md-6" data-auto-revision-level-wrap hidden>
-    <label class="form-label" for="nextRevisionLevel">Next Revision Level (automatic)</label>
-    <input class="form-control" id="nextRevisionLevel" data-auto-revision-level readonly autocomplete="off">
-</div>
+<?php if ($softcopyDirect): ?>
+    <div class="col-md-6" data-direct-revision-level-wrap>
+        <label class="form-label" for="directRevisionLevel">Revision Level</label>
+        <input class="form-control" id="directRevisionLevel" name="new_revision_level"
+            data-direct-revision-level maxlength="30" value="00" required autocomplete="off">
+        <small class="form-text">Set the revision level to apply during direct approval.</small>
+    </div>
+<?php endif; ?>
 <div class="col-md-6">
     <label class="form-label" for="revisionPages">Number of Pages</label>
     <input class="form-control" type="number" id="revisionPages" name="page_number" min="1" value="1" autocomplete="off">

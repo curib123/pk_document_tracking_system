@@ -41,6 +41,7 @@ class Softcopy_direct_service
             'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
+            'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),
             'date_received' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
             'date_released' => '',
             'page_number' => (int) ($post['page_number'] ?? 0)
@@ -66,6 +67,7 @@ class Softcopy_direct_service
             throw new DomainException('Select an existing softcopy document.');
         }
         if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            $service->validate_revision_level($payload);
             if (
                 $type === 'softcopy_revise' &&
                 ($payload['title'] === '' || mb_strlen($payload['title']) > 255)

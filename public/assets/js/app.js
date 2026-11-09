@@ -739,6 +739,7 @@
       effective_date: ["softcopy_create", "softcopy_revise"],
       // Received and released dates are recorded by PHP, not user inputs.
       page_number: ["softcopy_revise"],
+      new_revision_level: ["softcopy_create", "softcopy_revise"],
       revision_attachment: ["softcopy_create", "softcopy_revise"],
       external_attachment: ["external_create", "external_revise"],
     };
@@ -775,19 +776,25 @@
         field.required = show;
       }
     });
-    updateRevisionLevelPreview(select.form, operation);
+    updateDirectRevisionLevel(select.form, operation);
     updateSoftcopyNumberFields(select.form);
     updateExternalRequestFields(select.form);
   }
 
-  function updateRevisionLevelPreview(form, operation) {
-    var wrap = form.querySelector("[data-auto-revision-level-wrap]");
-    var preview = form.querySelector("[data-auto-revision-level]");
-    if (!wrap || !preview) return;
+  function updateDirectRevisionLevel(form, operation) {
+    var level = form.querySelector("[data-direct-revision-level]");
+    if (!level) return;
+    var create = operation === "softcopy_create";
     var revise = operation === "softcopy_revise";
-    wrap.hidden = !revise;
-    if (!revise) {
-      preview.value = "";
+    var wrap = level.closest("[data-direct-revision-level-wrap]");
+    if (wrap) wrap.hidden = !create && !revise;
+    level.disabled = !create && !revise;
+    level.required = create || revise;
+    if (create) {
+      level.value = "00";
+      return;
+    } else if (!revise) {
+      level.value = "";
       return;
     }
     var source = form.querySelector("#reqSoftcopy");
@@ -798,7 +805,7 @@
       record = {};
     }
     var currentNumber = Number(record.revision_number || 0);
-    preview.value = String(Math.max(0, currentNumber)).padStart(2, "0");
+    level.value = String(Math.max(0, currentNumber)).padStart(2, "0");
   }
 
   function updateExternalRequestFields(form) {
@@ -1041,7 +1048,7 @@
         if (field) field.value = "";
       },
     );
-    updateRevisionLevelPreview(form, form.querySelector('[name="type"]')?.value);
+    updateDirectRevisionLevel(form, form.querySelector('[name="type"]')?.value);
     var subject = form.querySelector('[name="subject"]');
     if (
       subject &&
