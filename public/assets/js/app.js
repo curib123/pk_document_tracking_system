@@ -2,8 +2,19 @@
 (function () {
   "use strict";
 
+  window.pkBootstrapUiReady = function () {
+    if (
+      window.pkBootstrapCssReady &&
+      window.pkBootstrapScriptReady &&
+      document.body
+    ) {
+      document.body.classList.remove("offline-ui");
+    }
+  };
+
   // Works on offline office networks when Bootstrap's CDN cannot be reached.
   // Keep native server form actions and confirmation semantics unchanged.
+  var offlineBootstrap = null;
   if (!window.bootstrap) {
     document.body.classList.add("offline-ui");
 
@@ -84,8 +95,10 @@
         },
       },
     };
+    offlineBootstrap = window.bootstrap;
 
     document.addEventListener("click", function (event) {
+      if (window.bootstrap !== offlineBootstrap) return;
       var trigger = event.target.closest("[data-bs-toggle]");
       if (trigger) {
         var type = trigger.getAttribute("data-bs-toggle");
@@ -139,6 +152,7 @@
     });
 
     document.addEventListener("keydown", function (event) {
+      if (window.bootstrap !== offlineBootstrap) return;
       if (event.key === "Escape") {
         if (fallbackOpenModal) {
           // Escape may close dropdowns, but must never close a modal.
