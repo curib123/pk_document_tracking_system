@@ -57,8 +57,31 @@ setup used by the supplied helper scripts.
 | Apache | Enable `mod_rewrite` and allow the repository's `.htaccess` rules. |
 | File access | Allow PHP to write to `storage/` and its subdirectories. |
 
-The interface's CSS and JavaScript are included in the repository. No frontend
-build is needed to run the application.
+The interface's CSS, JavaScript and third-party frontend dependencies are
+included in the repository. No frontend build or internet access is needed
+at runtime.
+
+### Office LAN use without public internet
+
+Install PHP/Composer dependencies **before** taking the server offline. Keep
+the web server and database running and connect other computers to the same
+office network (Wi-Fi or Ethernet). Access the **server's LAN IP**, e.g.
+`http://192.168.1.10/pk_document_tracking_system/` (substitute its actual
+address). `localhost` from another computer refers to that computer,
+**not** the server.
+
+Bootstrap 5.3.3, Font Awesome Free 6.7.2, Poppins fonts and Chart.js 4.4.7
+are served from local `public/assets/` files rather than the public CDN.
+Dashboard charts load only on the dashboard. The service worker no longer
+aborts a slow office LAN GET request after 3 seconds; it still never caches
+documents or private application responses.
+
+Check the static dependency set with `php tools/tests/offline_assets.php`.
+For an end-to-end offline-internet test, disconnect **only the public internet**
+while leaving the office LAN connected, then verify sign-in, icons, modals,
+dashboard charts, requests and document downloads in a client browser.
+The PHP server and MySQL still need LAN connectivity: PK DTS is not a
+fully offline browser database.
 
 ### Install with XAMPP
 

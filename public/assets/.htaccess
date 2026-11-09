@@ -1,0 +1,7 @@
+# Static public assets are safe to reuse across page navigations.
+# Private document downloads and HTML/PHP responses are outside this directory.
+<IfModule mod_headers.c>
+    <FilesMatch "\.(css|js|woff2?|ttf|png|jpe?g|gif|webp|svg|ico)$">
+        Header set Cache-Control "public, max-age=3600, must-revalidate"
+    </FilesMatch>
+</IfModule>
