@@ -229,24 +229,24 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     </div>
 </div>
 <!-- Run local Bootstrap before the application handlers. -->
-<script src="<?= base_url('assets/js/vendor/bootstrap.bundle.min.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/vendor/bootstrap.bundle.min.js') ?>"></script>
 <?php if ($this->router->fetch_class() === 'dashboard'): ?>
-<script src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
 <?php endif; ?>
-<script src="<?= base_url('assets/js/app.js') ?>"></script>
-<script src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
-<script src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
-<script src="<?= base_url('assets/js/row-actions.js') ?>"></script>
-<script src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
-<script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
-<script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
-<script src="<?= base_url('assets/js/document-view.js?v=' . filemtime(FCPATH . 'assets/js/document-view.js')) ?>"></script>
-<script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
-<script src="<?= base_url('assets/js/auth.js') ?>"></script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
-<script src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
-<script src="<?= base_url('assets/js/live-table.js') ?>"></script>
-<script src="<?= base_url('assets/js/motion.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/app.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/row-actions.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/document-view.js?v=' . filemtime(FCPATH . 'assets/js/document-view.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/document-tree.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/auth.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/dashboard.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/live-table.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/motion.js') ?>"></script>
 </body>
 
 </html>

@@ -3,6 +3,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Notifications extends MY_Controller
 {
+    private function releaseSessionLock(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (!session_write_close()) {
+                log_message('error', 'Unable to release the PHP session lock before notification processing.');
+            }
+        }
+    }
+
     private function response(array $tasks, int $status = 200)
     {
         foreach ($tasks as &$task) {
@@ -27,6 +36,7 @@ class Notifications extends MY_Controller
         if (!$this->user || !empty($this->user['require_password_change']))
             return $this->output->set_status_header(401)->set_content_type('application/json')
                 ->set_output('{"items":[],"total":0}');
+        $this->releaseSessionLock();
         $page = (int) $this->input->get('page', TRUE);
         $limit = (int) $this->input->get('limit', TRUE);
         $this->load->model('Notification_model');
@@ -53,6 +63,7 @@ class Notifications extends MY_Controller
         if (!preg_match('/^[1-9][0-9]*:[1-9][0-9]*$/D', $key))
             return $this->output->set_status_header(400)->set_content_type('application/json')
                 ->set_output('{"ok":false}');
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         $claimed = $this->Notification_model->claim_approvals($this->user, [$key]);
         $page = $this->Notification_model->unread_page($this->user, 1, 5);
@@ -72,6 +83,7 @@ class Notifications extends MY_Controller
     {
         if (!$this->user || !empty($this->user['require_password_change']))
             return $this->response([], 401);
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         return $this->response($this->Notification_model->pending_approvals($this->user));
     }
@@ -81,6 +93,7 @@ class Notifications extends MY_Controller
         if (!$this->user || !empty($this->user['require_password_change']))
             return $this->output->set_status_header(401)->set_header('Cache-Control', 'no-store, private')
                 ->set_content_type('application/json')->set_output('{"items":[]}');
+        $this->releaseSessionLock();
         $this->load->model('Document_model');
         $items = $this->Document_model->retention_alerts($this->user);
         return $this->output->set_header('Cache-Control', 'no-store, private')
@@ -95,6 +108,7 @@ class Notifications extends MY_Controller
         $keys = $this->input->post('keys');
         if (!is_array($keys) || count($keys) > 100)
             return $this->response([], 400);
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         try {
             return $this->response($this->Notification_model->claim_approvals($this->user, $keys));

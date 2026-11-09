@@ -258,9 +258,12 @@ php tools/backup.php verify <archive-name.zip>
 Replace `<archive-name.zip>` with the intended archive name.
 
 [install_backup_schedule.ps1](tools/install_backup_schedule.ps1) registers a daily
-5:00 PM task on a Windows host using UTC+08:00. Run it from an elevated PowerShell
-session with the required configuration available to the SYSTEM account. Check
-that a scheduled run succeeds.
+4:45 PM maintenance task and 5:00 PM backup task on a Windows host using UTC+08:00.
+Maintenance handles retention and controlled-file reconciliation outside of user
+requests. Run the installer from an elevated PowerShell session with the required
+configuration available to the SYSTEM account. Check that both scheduled runs
+succeed. The maintenance task can also be run manually with
+`php public/index.php maintenance run`.
 
 Restoring replaces application data. Confirm the archive and target database
 before restoring; the command-line tool requires its explicit `--confirm` flag.
