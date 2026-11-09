@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - test/offline-lan-smoke-20261109
+  pull_request:
+    branches:
+      - stable-branch
 
 permissions:
   contents: read
