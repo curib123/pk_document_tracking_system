@@ -1,0 +1,111 @@
+name: Test frontend without internet access
+
+on:
+  push:
+    branches:
+      - test/offline-lan-smoke-20261109
+
+permissions:
+  contents: read
+
+jobs:
+  lan-browser-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify committed assets and JavaScript
+        run: |
+          php tools/tests/offline_assets.php
+          node --check public/assets/js/vendor/bootstrap.bundle.min.js
+          node --check public/assets/js/vendor/chart.umd.min.js
+          node --check public/service-worker.js
+          node --check public/assets/js/app.js
+
+      - name: Simulate internet-disconnected office browser
+        shell: bash
+        run: |
+          set -euo pipefail
+          cat > public/offline-smoke-test.html <<'HTML'
+          <!doctype html>
+          <html lang="en"><head><meta charset="utf-8"><title>Office LAN offline test</title>
+          <link rel="stylesheet" href="/assets/css/vendor/bootstrap.min.css">
+          <link rel="stylesheet" href="/assets/css/vendor/fontawesome.min.css">
+          <link rel="stylesheet" href="/assets/css/vendor/poppins.css">
+          </head><body>
+          <button type="button" id="button" class="btn btn-primary">Local Bootstrap</button>
+          <i id="icon" class="fa-solid fa-folder-open"></i>
+          <strong id="poppins" style="font-family:Poppins,sans-serif;font-weight:700">Local fonts</strong>
+          <canvas id="chart" width="100" height="100"></canvas>
+          <div class="modal fade" id="testModal" tabindex="-1"><div class="modal-dialog">
+          <div class="modal-content"><div class="modal-body">Bootstrap modal</div></div></div></div>
+          <pre id="result">RUNNING</pre>
+          <script src="/assets/js/vendor/bootstrap.bundle.min.js"></script>
+          <script src="/assets/js/vendor/chart.umd.min.js"></script>
+          <script>
+            window.addEventListener("load", async function () {
+              const out = document.querySelector("#result");
+              try {
+                await document.fonts.load("400 16px Poppins");
+                await document.fonts.load("700 16px Poppins");
+                const css = getComputedStyle(document.querySelector("#button"));
+                const icon = getComputedStyle(document.querySelector("#icon"), "::before");
+                const checks = {
+                  bootstrapStyles: css.paddingLeft !== "0px" && css.borderRadius !== "0px",
+                  bootstrapJavaScript: !!window.bootstrap && !!window.bootstrap.Modal,
+                  fontAwesomeGlyph: icon.fontFamily.includes("Font Awesome") && icon.content !== "none",
+                  poppinsFontLoaded: document.fonts.check("700 16px Poppins") &&
+                    performance.getEntriesByType("resource").some(e => e.name.endsWith("/fonts/Poppins-Bold.ttf")),
+                  fontAwesomeFontLoaded: performance.getEntriesByType("resource").some(e =>
+                    e.name.endsWith("/fonts/fa-solid-900.woff2")),
+                  chartLibrary: !!window.Chart,
+                };
+                const modal = window.bootstrap.Modal.getOrCreateInstance(document.querySelector("#testModal"));
+                modal.show();
+                checks.modalOpened = document.querySelector("#testModal").classList.contains("show");
+                modal.hide();
+                const chart = new Chart(document.querySelector("#chart"), {
+                  type: "bar", data: { labels: ["LAN"], datasets: [{ label: "Records", data: [3] }] }
+                });
+                checks.chartRendered = chart.data.datasets[0].data[0] === 3;
+                chart.destroy();
+                checks.onlyLanResources = performance.getEntriesByType("resource")
+                  .every(e => e.name.startsWith(location.origin + "/"));
+                const failed = Object.keys(checks).filter(key => !checks[key]);
+                out.textContent = (failed.length ? "FAIL" : "PASS") + " " + JSON.stringify(checks);
+              } catch (error) {
+                out.textContent = "FAIL " + error.message;
+              }
+            });
+          </script>
+          </body></html>
+          HTML
+
+          python3 -m http.server 8765 --bind 127.0.0.1 --directory public >/tmp/pk-offline-http.log 2>&1 &
+          SERVER_PID=$!
+          trap 'kill "$SERVER_PID" || true' EXIT
+          sleep 2
+          if command -v google-chrome >/dev/null; then
+            BROWSER=$(command -v google-chrome)
+          elif command -v chromium >/dev/null; then
+            BROWSER=$(command -v chromium)
+          else
+            echo "Chrome/Chromium unavailable on runner" >&2
+            exit 1
+          fi
+
+          # Wildcard DNS resolution is blocked; only the local office-server analogue survives.
+          "$BROWSER" --headless=new --no-sandbox --disable-dev-shm-usage --disable-gpu \
+            --no-first-run --no-default-browser-check --disable-background-networking \
+            --host-resolver-rules="MAP * ~NOTFOUND, EXCLUDE 127.0.0.1" \
+            --virtual-time-budget=5000 --dump-dom \
+            http://127.0.0.1:8765/offline-smoke-test.html \
+            >/tmp/pk-offline-browser.html 2>/tmp/pk-offline-browser.log
+          grep 'id="result"' /tmp/pk-offline-browser.html || true
+          if ! grep -q 'id="result">PASS ' /tmp/pk-offline-browser.html; then
+            echo "Browser failed local-asset smoke test:" >&2
+            tail -n 40 /tmp/pk-offline-browser.log >&2 || true
+            cat /tmp/pk-offline-http.log >&2 || true
+            exit 1
+          fi
+          echo "PASS: all browser dependencies loaded from 127.0.0.1 with public DNS unavailable."
