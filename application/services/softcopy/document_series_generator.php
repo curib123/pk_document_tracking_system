@@ -141,9 +141,8 @@ class Document_series_generator
             }
         }
 
-        // Use the largest historic matching suffix, including cancelled rows.
-        $highest = 0;
-        $hasMatch = FALSE;
+        // Width follows the widest matching suffix ever seen, for consistent
+        // padding, even though the next value no longer does (see below).
         foreach ($documents as $existing) {
             $value = (string) ($existing['series_number'] ?? '');
             if (strncasecmp($value, $prefix, strlen($prefix)) !== 0) {
@@ -160,11 +159,26 @@ class Document_series_generator
                 || (strlen($digits) === strlen($limit) && strcmp($digits, $limit) >= 0)) {
                 throw new DomainException('An existing series exceeds the supported sequence range.');
             }
-            $hasMatch = TRUE;
-            $highest = max($highest, (int) $digits);
             $width = max($width, strlen($suffix));
         }
-        $next = $hasMatch ? max($start, $highest + 1) : $start;
+
+        // Continue from the most recently created record for this Document
+        // No. (documents is ordered by id), not simply the highest value
+        // ever seen historically. A manual correction on the latest record
+        // is what later auto-numbering builds on top of.
+        $latest = end($documents);
+        $latestValue = $start - 1;
+        if ($latest) {
+            $value = (string) ($latest['series_number'] ?? '');
+            if (strncasecmp($value, $prefix, strlen($prefix)) === 0) {
+                $suffix = substr($value, strlen($prefix));
+                if ($suffix !== '' && ctype_digit($suffix)) {
+                    $digits = ltrim($suffix, '0');
+                    $latestValue = (int) ($digits === '' ? '0' : $digits);
+                }
+            }
+        }
+        $next = max($start, $latestValue + 1);
         $newSeries = self::format_number($prefix, $next, $width);
         foreach ($documents as $existing) {
             if ($existing['series_number'] !== NULL
