@@ -2,6 +2,12 @@
 /** Pure PHP 8.0-compatible approval-route rules shared by publication and request execution. */
 final class Workflow_graph
 {
+    public static function is_document_lock_step(array $graph, string $stepKey): bool
+    {
+        return is_string($graph['document_lock_step_key'] ?? NULL) &&
+            $graph['document_lock_step_key'] === $stepKey;
+    }
+
     public static function renumber(array $steps): array
     {
         $steps = array_values($steps);
@@ -29,5 +35,8 @@ final class Workflow_graph
             if (in_array($type, ['user', 'role'], TRUE) && (int) ($approver['value'] ?? 0) < 1)
                 throw new DomainException('Select an approver account or role.');
         }
+        $lockStep = $graph['document_lock_step_key'] ?? NULL;
+        if ($lockStep !== NULL && (!is_string($lockStep) || !in_array($lockStep, array_column($steps, 'key'), TRUE)))
+            throw new DomainException('Choose a document-locking approver from the configured approval steps.');
     }
 }

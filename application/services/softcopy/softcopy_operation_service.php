@@ -52,6 +52,17 @@ class Softcopy_operation_service
         }
     }
 
+    public function assert_document_unlocked(int $documentId): void
+    {
+        $locked = $this->ci->db->select('f.id')->from('softcopy_documents d')
+            ->join('softcopy_revisions r', 'r.id=d.current_revision_id')
+            ->join('files f', 'f.id=r.file_id')
+            ->where('d.id', $documentId)->where('f.locked_at IS NOT NULL', NULL, FALSE)
+            ->limit(1)->get()->row_array();
+        if ($locked)
+            throw new DomainException('This softcopy file is locked after approval and cannot be replaced or deleted.');
+    }
+
     public function apply($type, $payload, $softcopyId, $actorId, $ownerId, $requestId = NULL)
     {
         $this->validate_type($type);
@@ -199,6 +210,7 @@ class Softcopy_operation_service
         }
 
         if ($type === 'softcopy_revise') {
+            $this->assert_document_unlocked((int) $softcopyId);
             $this->validate_revision($payload);
             $fileId = (int) ($payload['revision_file_id'] ?? 0);
             $file = $db->get_where('files', [
@@ -270,6 +282,8 @@ class Softcopy_operation_service
             return ['document_id' => (int) $softcopyId, 'revision_id' => $revisionId, 'file_id' => $fileId];
         }
 
+        if ($type === 'softcopy_cancel')
+            $this->assert_document_unlocked((int) $softcopyId);
         $db->where('id', $softcopyId)->update('softcopy_documents', [
             'previous_status' => $doc['status'],
             'status' => 'cancelled'

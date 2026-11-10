@@ -227,6 +227,9 @@ CREATE TABLE `files` (
   `status` varchar(30) NOT NULL DEFAULT 'pending',
   `approved_by` bigint(20) UNSIGNED DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL,
+  `lock_request_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `locked_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `locked_at` datetime DEFAULT NULL,
   `rejected_by` bigint(20) UNSIGNED DEFAULT NULL,
   `rejected_at` datetime DEFAULT NULL,
   `rejection_reason` text DEFAULT NULL,
@@ -1308,6 +1311,33 @@ INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`
 (20, 19, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00'),
 (21, 20, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00');
 
+UPDATE `workflow_versions` v
+JOIN `workflows` w ON w.`id` = v.`workflow_id`
+SET v.`graph` = JSON_SET(
+  v.`graph`,
+  '$.document_lock_step_key',
+  JSON_EXTRACT(
+    v.`graph`,
+    REPLACE(
+      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      '.approver.label',
+      '.key'
+    )
+  )
+)
+WHERE v.`status` = 'published'
+  AND v.`is_default` = 1
+  AND w.`request_type` IN ('softcopy_create', 'softcopy_revise', 'external_create', 'external_revise')
+  AND JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label') IS NOT NULL
+  AND JSON_UNQUOTE(JSON_EXTRACT(
+    v.`graph`,
+    REPLACE(
+      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      '.approver.label',
+      '.approver.type'
+    )
+  )) = 'role';
+
 --
 -- Indexes for dumped tables
 --
@@ -1416,6 +1446,7 @@ ALTER TABLE `files`
   ADD UNIQUE KEY `storage_name` (`storage_name`),
   ADD KEY `uploaded_by` (`uploaded_by`),
   ADD KEY `approved_by` (`approved_by`),
+  ADD KEY `files_locked_request` (`lock_request_id`),
   ADD KEY `rejected_by` (`rejected_by`),
   ADD KEY `document_files` (`domain`,`document_id`,`status`);
 

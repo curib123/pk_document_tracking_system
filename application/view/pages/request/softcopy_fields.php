@@ -22,8 +22,10 @@ $numbering_options = $numbering_options ?? [];
     <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable autocomplete="off">
         <option value="">Choose a document</option>
         <?php foreach ($softcopy_options as $item): ?>
-            <option value="<?= (int) $item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>">
-                <?= html_escape($item['document_number'] . ' · ' . $item['title']) ?>
+            <option value="<?= (int) $item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>"
+                <?= !empty($item['file_locked_at']) ? 'disabled' : '' ?>>
+                <?= html_escape($item['document_number'] . ' · ' . $item['title'] .
+                    (!empty($item['file_locked_at']) ? ' (Locked - read-only)' : '')) ?>
             </option>
         <?php endforeach; ?>
     </select>
@@ -110,6 +112,10 @@ $numbering_options = $numbering_options ?? [];
         <?= $softcopyDirect
             ? 'Required for direct creation or revision; the Document Fileis approved as part of the transaction.'
             : 'Attach the file for approver review. An existing uploaded file can be retained when editing the draft.' ?>
+    </small>
+    <small class="form-text">Approved locked documents remain available to view and download, but cannot be revised.</small>
+    <small class="form-text" data-locked-attachment-message hidden>
+        This attachment was locked by the designated approver. Keep the existing file; replacement is unavailable.
     </small>
 </div>
 <div class="col-12">

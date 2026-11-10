@@ -223,6 +223,49 @@ $dt_create = '';
                   <?php endforeach; ?>
                 </ol>
               <?php endif; ?>
+              <?php if ($isDraft && $canEdit && in_array($workflow['request_type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+              ], TRUE)): ?>
+                <form method="post" action="<?= site_url('admin/workflows/document-lock-approver') ?>"
+                  data-confirm="Save the designated document-locking approver?" autocomplete="off"
+                  class="border rounded p-3 mb-3">
+                  <input type="hidden" name="workflow_version_id" value="<?= (int) $version['id'] ?>">
+                  <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
+                  <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
+                  <input type="hidden" name="confirmed" value="no">
+                  <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                    value="<?= $this->security->get_csrf_hash() ?>">
+                  <label class="form-label" for="documentLockStep-<?= (int) $version['id'] ?>">
+                    Document-locking approver
+                  </label>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <select class="form-select" id="documentLockStep-<?= (int) $version['id'] ?>"
+                      name="document_lock_step_key" autocomplete="off" style="max-width: 32rem">
+                      <option value="">No locking approver selected</option>
+                      <?php foreach ($steps as $step): ?>
+                        <option value="<?= $esc($step['key']) ?>"
+                          <?= ($graph['document_lock_step_key'] ?? NULL) === $step['key'] ? 'selected' : '' ?>>
+                          <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <button class="btn btn-outline-primary" type="submit">Save Approver</button>
+                  </div>
+                  <small class="form-text d-block mt-2">
+                    Only this step’s approval locks eligible Excel, PDF, or Word attachments. Later workflow steps continue normally.
+                  </small>
+                </form>
+              <?php elseif (!$isDraft && in_array($workflow['request_type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+              ], TRUE) && !empty($graph['document_lock_step_key'])): ?>
+                <p class="small text-secondary">Document-locking approver:
+                  <?php foreach ($steps as $step)
+                    if ($step['key'] === $graph['document_lock_step_key']) {
+                      echo $esc($step['name']) . ' — ' . $esc($step['approver']['label'] ?? 'Configured approver');
+                      break;
+                    } ?>
+                </p>
+              <?php endif; ?>
               <?php if ($isDraft && $canEdit): ?>
                 <div class="workflow-version-actions d-flex flex-wrap gap-2 justify-content-between border-top pt-3">
                   <button type="button" class="btn btn-outline-primary js-workflow-step"

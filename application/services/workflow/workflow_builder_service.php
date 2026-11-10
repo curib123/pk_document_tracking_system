@@ -61,7 +61,16 @@ class Workflow_builder_service
 
     private function persist(array $version, array $graph): void
     {
+        $lockIndex = NULL;
+        $lockKey = $graph['document_lock_step_key'] ?? NULL;
+        if (is_string($lockKey)) {
+            $index = array_search($lockKey, array_column($graph['steps'], 'key'), TRUE);
+            if ($index !== FALSE)
+                $lockIndex = $index;
+        }
         $graph['steps'] = Workflow_graph::renumber($graph['steps']);
+        $graph['document_lock_step_key'] = $lockIndex !== NULL
+            ? $graph['steps'][$lockIndex]['key'] : NULL;
         Workflow_graph::validate($graph, FALSE);
         $this->ci->db->where('id', (int) $version['id'])->where('status', 'draft')
             ->update('workflow_versions', ['graph' => json_encode($graph, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
@@ -122,6 +131,19 @@ class Workflow_builder_service
             if ($index === FALSE)
                 throw new DomainException('Draft approval step was not found.');
             array_splice($graph['steps'], $index, 1);
+            $this->persist($version, $graph);
+        });
+    }
+
+    public function save_document_lock_approver(array $post): void
+    {
+        $this->transaction(function () use ($post) {
+            $version = $this->draft($post['workflow_version_id'] ?? 0, $post);
+            $graph = $version['decoded'];
+            $stepKey = trim((string) ($post['document_lock_step_key'] ?? ''));
+            if ($stepKey !== '' && !in_array($stepKey, array_column($graph['steps'], 'key'), TRUE))
+                throw new DomainException('Choose a document-locking approver from the configured approval steps.');
+            $graph['document_lock_step_key'] = $stepKey !== '' ? $stepKey : NULL;
             $this->persist($version, $graph);
         });
     }

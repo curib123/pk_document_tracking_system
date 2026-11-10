@@ -146,7 +146,10 @@ foreach ($rows as $row) {
         'title' => 'Document File',
         'fields' => [
           'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-            ? 'Attached to this request for review' : 'No attachment'
+            ? (!empty($row['locked_attachment'])
+              ? 'Locked by the designated approver; remains viewable and downloadable'
+              : 'Attached to this request for review')
+            : 'No attachment'
         ]
       ]
     ]);
@@ -168,6 +171,7 @@ foreach ($rows as $row) {
     'id' => $row['id'],
     'version' => $row['version'],
     'type' => $row['type'],
+    'locked_attachment' => !empty($row['locked_attachment']),
     'subject' => $payload['subject'] ?? '',
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',

@@ -31,6 +31,21 @@ class External_document_service
         return NULL;
     }
 
+    public function assert_document_unlocked(int $documentId): void
+    {
+        $locked = $this->ci->db->query(
+            'SELECT f.id FROM external_documents d
+             JOIN external_revisions r ON r.id=d.current_revision_id
+             JOIN files f ON f.id=r.file_id OR f.id IN (
+                 SELECT rf.file_id FROM external_revision_files rf WHERE rf.revision_id=r.id
+             )
+             WHERE d.id=? AND f.locked_at IS NOT NULL LIMIT 1',
+            [$documentId]
+        )->row_array();
+        if ($locked)
+            throw new DomainException('This external document file is locked after approval and cannot be replaced.');
+    }
+
     public function execute_direct(array $post, int $actorId, $attachment): array
     {
         $this->ci->load->model('Identity_model');
@@ -50,6 +65,8 @@ class External_document_service
         if ($type === 'external_revise' && !$this->manageable($documentId, $actor)) {
             throw new DomainException('External document is not available for direct revision.');
         }
+        if ($type === 'external_revise')
+            $this->assert_document_unlocked($documentId);
         $description = trim((string) ($post['description'] ?? ''));
         $title = trim((string) ($post['title'] ?? ''));
         $documentNumber = trim((string) ($post['external_document_number'] ?? ''));
@@ -264,6 +281,7 @@ class External_document_service
             if (!$document || $document['status'] !== 'active') {
                 throw new DomainException('Select an active external document to revise.');
             }
+            $this->assert_document_unlocked($documentId);
             $categoryId = $this->validate_category($categoryId ?: (int) $document['category_id']);
             $previous = $document['current_revision_id']
                 ? $this->ci->db->get_where('external_revisions', [

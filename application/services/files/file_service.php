@@ -50,6 +50,7 @@ class File_service
         if ($document && !in_array($document['status'], ['disposed', 'cancelled'], TRUE)) return;
         $db->where('domain', 'softcopy')->where('document_id', $documentId)
             ->where_in('status', ['approved', 'pending', 'superseded'])
+            ->where('locked_at IS NULL', NULL, FALSE)
             ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
     }
 
@@ -77,7 +78,7 @@ class File_service
             'document_id' => $creation ? NULL : (int) ($external
                 ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
             'uploaded_by' => (int) $request['requested_by'], 'purpose' => $creation ? 'creation' : 'revision'
-        ])->set('version', 'version + 1', FALSE)->update('files', $data);
+        ])->where('locked_at IS NULL', NULL, FALSE)->set('version', 'version + 1', FALSE)->update('files', $data);
         return count($ids);
     }
 
@@ -90,6 +91,7 @@ class File_service
         $removed = 0;
         try {
             $db->where('domain', $domain)->where_in('status', $statuses);
+            $db->where('locked_at IS NULL', NULL, FALSE);
             if ($documentId > 0) $db->where('document_id', $documentId);
             if ($fileId > 0) $db->where('id', $fileId);
             $files = $db->get('files')->result_array();
@@ -248,8 +250,10 @@ class File_service
             return;
         }
         $files = $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('locked_at IS NULL', NULL, FALSE)
             ->where('status', 'pending')->get('files')->result_array();
         $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('locked_at IS NULL', NULL, FALSE)
             ->where('status', 'pending')->delete('files');
         foreach ($files as $file) {
             $path = $this->controlled_path((string) $file['storage_name']);

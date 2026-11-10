@@ -423,6 +423,12 @@ class Administration extends MY_Controller
             (new Administration_service())->save_workflow_step($this->input->post());
         }, 'admin/workflows');
     }
+    public function save_document_lock_approver()
+    {
+        $this->mutate('workflows', 'edit', function () {
+            (new Administration_service())->save_document_lock_approver($this->input->post());
+        }, 'admin/workflows');
+    }
     public function remove_workflow_step()
     {
         $this->mutate('workflows', 'edit', function () {

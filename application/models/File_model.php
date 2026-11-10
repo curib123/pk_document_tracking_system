@@ -109,12 +109,14 @@ class File_model extends CI_Model
         $scope = $this->file_scope($user);
         $canHistory = $this->Permission_model->allowed($user, 'files', 'history');
         $this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
-                f.status,u.first_name,u.last_name,
+                f.status,f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name,
+                u.first_name,u.last_name,
                 (f.status="approved" AND current.file_id=f.id) AS is_current,
                 ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY (current.file_id=f.id) DESC,f.id DESC) AS history_rank', FALSE)
             ->from('files f')->join('softcopy_documents d', 'd.id=f.document_id')
             ->join('softcopy_revisions current', 'current.id=d.current_revision_id', 'left')
             ->join('users u', 'u.id=f.uploaded_by')
+            ->join('users lu', 'lu.id=f.locked_by', 'left')
             ->where('f.domain', 'softcopy')->where_in('f.status', ['approved', 'superseded'])->where('d.status', 'active')
             ->where_in('f.document_id', array_map('intval', $ids))
             ->where($scope, NULL, FALSE);
@@ -134,11 +136,13 @@ class File_model extends CI_Model
         if (!$documentIds) {
             return [];
         }
-        $rows = $this->db->select('d.id AS document_id,f.id,f.original_name,f.mime_type,f.size,f.created_at')
+        $rows = $this->db->select('d.id AS document_id,f.id,f.original_name,f.mime_type,f.size,f.created_at,
+                f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name', FALSE)
             ->from('external_documents d')
             ->join('external_revisions r', 'r.id=d.current_revision_id')
             ->join('external_revision_files rf', 'rf.revision_id=r.id')
             ->join('files f', 'f.id=rf.file_id AND f.status="approved"')
+            ->join('users lu', 'lu.id=f.locked_by', 'left')
             ->where_in('d.id', $documentIds)
             ->order_by('rf.file_id')
             ->get()->result_array();

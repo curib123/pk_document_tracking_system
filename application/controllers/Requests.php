@@ -132,7 +132,10 @@ class Requests extends MY_Controller
             $this->can('documents', 'view_all');
         $this->db->select(
             'd.id,d.title,d.description,d.document_number AS external_document_number,
-            d.subsidiary_id,d.category_id,r.revision_level'
+            d.subsidiary_id,d.category_id,r.revision_level,
+            EXISTS(SELECT 1 FROM external_revision_files rf JOIN files f ON f.id=rf.file_id
+                WHERE rf.revision_id=d.current_revision_id AND f.locked_at IS NOT NULL) AS has_locked_file',
+            FALSE
         )
             ->from('external_documents d')
             ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
@@ -192,13 +195,25 @@ class Requests extends MY_Controller
         $this->authenticate();
         $this->confirmed();
         try {
-            (new Request_service())->decide(
+            $lockedFiles = (new Request_service())->decide(
                 $tab,
                 (int) $this->input->post('id'),
                 $this->user,
                 (string) $this->input->post('decision'),
                 (string) $this->input->post('remark')
             );
+            foreach ($lockedFiles as $file) {
+                $this->audit_event('files/document-lock', 'files:' . $file['file_id'], [
+                    'request_id' => $file['request_id'],
+                    'designated_step_key' => $file['step_key'],
+                    'designated_step' => $file['step_name'],
+                    'designated_approver' => $file['designated_approver'],
+                    'approved_by_id' => $file['approver_id'],
+                    'approved_by' => $file['approver_name'],
+                    'approval_timestamp' => $file['approved_at'],
+                    'file_extension' => $file['extension']
+                ], $file['approver_id']);
+            }
             $this->notice('Approval decision recorded.');
         } catch (Throwable $e) {
             $this->error_notice($e);

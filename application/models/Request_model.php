@@ -97,8 +97,50 @@ class Request_model extends CI_Model
         $rows = $this->db->order_by($sort, $direction)->order_by('r.id', $direction)
             ->limit($limit, ($page - 1) * $limit)->get()->result_array();
         $rows = $this->details($rows);
+        $this->mark_locked_attachments($rows);
         return [$rows, $total, $page];
     }
+
+    private function mark_locked_attachments(array &$rows): void
+    {
+        $fileIdsByRequest = [];
+        $fileIds = [];
+        foreach ($rows as $row) {
+            if (!in_array($row['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+            ], TRUE))
+                continue;
+            $payload = json_decode((string) ($row['payload'] ?? ''), TRUE) ?: [];
+            $creation = in_array($row['type'], ['softcopy_create', 'external_create'], TRUE);
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) (
+                $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] ??
+                [$payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0]
+            )))));
+            if ($ids) {
+                $fileIdsByRequest[(int) $row['id']] = $ids;
+                $fileIds = array_merge($fileIds, $ids);
+            }
+        }
+        $fileIds = array_values(array_unique($fileIds));
+        $lockedIds = [];
+        if ($fileIds) {
+            foreach ($this->db->select('id,lock_request_id')->where_in('id', $fileIds)
+                ->where('locked_at IS NOT NULL', NULL, FALSE)->get('files')->result_array() as $file) {
+                $lockedIds[(int) $file['lock_request_id']][(int) $file['id']] = TRUE;
+            }
+        }
+        foreach ($rows as &$row) {
+            $requestId = (int) $row['id'];
+            $row['locked_attachment'] = FALSE;
+            foreach ($fileIdsByRequest[$requestId] ?? [] as $fileId)
+                if (!empty($lockedIds[$requestId][$fileId])) {
+                    $row['locked_attachment'] = TRUE;
+                    break;
+                }
+        }
+        unset($row);
+    }
+
     /** Resolve the selected request's proposal into human-readable labels in batches. */
     private function details($rows)
     {

@@ -229,8 +229,9 @@ class Document_model extends CI_Model
         if ($domain === 'softcopy') {
             return $this->db->select(
                 'd.id,d.document_number,d.title,d.series_number,d.category_id,d.version,
-                 cr.revision_number,cr.new_revision_level'
+                 cr.revision_number,cr.new_revision_level,current_file.locked_at AS file_locked_at'
             )->join('softcopy_revisions cr', 'cr.id=d.current_revision_id', 'left')
+                ->join('files current_file', 'current_file.id=cr.file_id', 'left')
                 ->order_by('title')->get()->result_array();
         }
         return $this->db->select(

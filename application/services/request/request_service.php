@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/workflow/workflow_graph.php';
 class Request_service
 {
     private $ci;
@@ -144,6 +145,26 @@ class Request_service
                 'This request type is not valid for the selected tab. Please select the correct tab and try again.'
             );
         $id = (int) ($post['id'] ?? 0);
+        if ($id && $this->has_uploaded_attachment($attachment)) {
+            $existing = $this->ci->db->get_where('requests', ['id' => $id])->row_array();
+            if ($existing && in_array($existing['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+            ], TRUE)) {
+                $oldPayload = json_decode($existing['payload'], TRUE) ?: [];
+                $creation = in_array($existing['type'], ['softcopy_create', 'external_create'], TRUE);
+                $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+                $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                $fileIds = array_values(array_unique(array_filter(array_map(
+                    'intval',
+                    (array) ($oldPayload[$filesField] ?? [$oldPayload[$fileField] ?? 0])
+                ))));
+                if ($fileIds && $this->ci->db->where_in('id', $fileIds)
+                    ->where('locked_at IS NOT NULL', NULL, FALSE)
+                    ->limit(1)->get('files')->row_array()) {
+                    throw new DomainException('The approved file is locked and cannot be replaced.');
+                }
+            }
+        }
         $subject = trim((string) ($post['subject'] ?? ''));
         if ($subject === '' || mb_strlen($subject) > 255)
             throw new DomainException(
@@ -288,6 +309,8 @@ class Request_service
         $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
         if (in_array($type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) {
             if ($type === 'softcopy_revise') {
+                require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
+                (new Softcopy_operation_service())->assert_document_unlocked($softcopyId);
                 if (
                     !$this->ci->db->get_where('softcopy_documents', [
                         'id' => $softcopyId,
@@ -338,6 +361,8 @@ class Request_service
                     $payload['title'],
                     $payload['description']
                 );
+                if ($type === 'external_revise')
+                    $externalService->assert_document_unlocked((int) $payload['external_document_id']);
                 $externalService->validate_document_number($payload['external_document_number']);
                 $payload['subsidiary_id'] = $externalService->validate_subsidiary($payload['subsidiary_id']) ?? 0;
                 $payload['external_category_id'] = $externalService->validate_category(
@@ -887,12 +912,88 @@ class Request_service
         throw new DomainException('Unsupported request action.');
     }
 
+    private function has_uploaded_attachment($attachment): bool
+    {
+        if (!is_array($attachment) || !isset($attachment['name']))
+            return FALSE;
+        $names = is_array($attachment['name']) ? $attachment['name'] : [$attachment['name']];
+        foreach ($names as $name)
+            if (is_string($name) && $name !== '')
+                return TRUE;
+        return FALSE;
+    }
+
+    private function lock_approved_attachments(array $request, array $graph, array $step, array $user, string $approvedAt): array
+    {
+        if (!Workflow_graph::is_document_lock_step($graph, (string) $step['node_key']) ||
+            !in_array($request['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+            ], TRUE))
+            return [];
+
+        $payload = json_decode($request['payload'], TRUE) ?: [];
+        $creation = in_array($request['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($request['type'], 'external_');
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+        $fileIds = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+        ))));
+        if (!$fileIds)
+            return [];
+
+        $designatedApprover = 'Configured workflow approver';
+        foreach ($graph['steps'] ?? [] as $configuredStep) {
+            if (($configuredStep['key'] ?? NULL) === $step['node_key']) {
+                $designatedApprover = (string) ($configuredStep['approver']['label'] ?? $configuredStep['name']);
+                break;
+            }
+        }
+        $db = $this->ci->db;
+        $db->select('id,extension')->from('files')->where_in('id', $fileIds)->where([
+            'document_id' => $creation ? NULL : (int) ($external
+                ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
+            'uploaded_by' => (int) $request['requested_by'],
+            'status' => 'pending',
+            'domain' => $external ? 'external' : 'softcopy',
+            'purpose' => $creation ? 'creation' : 'revision'
+        ])->where_in('extension', ['pdf', 'docx', 'xlsx'])
+            ->where('locked_at IS NULL', NULL, FALSE);
+        $files = $db->query($db->get_compiled_select() . ' FOR UPDATE')->result_array();
+        $locked = [];
+        foreach ($files as $file) {
+            if (!$db->where('id', (int) $file['id'])->where('locked_at IS NULL', NULL, FALSE)->update('files', [
+                'locked_by' => (int) $user['id'],
+                'locked_at' => $approvedAt,
+                'lock_request_id' => (int) $request['id']
+            ])) {
+                throw new DomainException('The approved file could not be locked.');
+            }
+            if ($db->affected_rows() === 1) {
+                $locked[] = [
+                    'file_id' => (int) $file['id'],
+                    'extension' => $file['extension'],
+                    'request_id' => (int) $request['id'],
+                    'step_key' => $step['node_key'],
+                    'step_name' => $step['label'],
+                    'designated_approver' => $designatedApprover,
+                    'approver_id' => (int) $user['id'],
+                    'approver_name' => (string) $user['name'],
+                    'approved_at' => $approvedAt
+                ];
+            }
+        }
+        return $locked;
+    }
+
     public function decide($tab, $id, $user, $decision, $comment)
     {
         if (!in_array($decision, ['approved', 'rejected', 'returned'], TRUE))
             throw new DomainException('Invalid decision.');
         $cleanupDocumentId = 0;
         $cleanupFileId = 0;
+        $lockedFiles = [];
         $this->ci->db->trans_begin();
         try {
             $locked = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->result_array();
@@ -915,13 +1016,14 @@ class Request_service
                 ($role === 'role' && User_roles::matches($user, (int) ($assignment['value'] ?? 0)));
             if (!$authorized)
                 throw new DomainException('Only the assigned approver may decide.');
+            $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
             if ($decision !== 'rejected') {
-                $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
                 $keys = array_column($graph['steps'] ?? [], 'key');
                 $index = array_search($step['node_key'], $keys, TRUE);
                 if ($index === FALSE)
                     throw new DomainException('Current step is not in the submitted workflow.');
             }
+            $approvedAt = date('Y-m-d H:i:s');
             $this->ci->db->where('id', $step['id'])->update('workflow_steps', [
                 'status' => $decision,
                 'decision' => $decision,
@@ -929,10 +1031,11 @@ class Request_service
                 'acting_user_id' => $user['id'],
                 'acting_name' => $user['name'],
                 'acting_position' => $user['position_title'] ?: '',
-                'acted_at' => date('Y-m-d H:i:s')
+                'acted_at' => $approvedAt
             ]);
             $this->history($id, $step['id'], $decision, $user, trim($comment));
             if ($decision === 'approved') {
+                $lockedFiles = $this->lock_approved_attachments($r, $graph, $step, $user, $approvedAt);
                 if ($index < count($keys) - 1) {
                     // A returned step must be revisited in this submission,
                     // before any later pending step can receive the request.
@@ -1015,6 +1118,7 @@ class Request_service
         }
         if ($cleanupFileId)
             (new File_service())->cleanup_retired(0, $cleanupFileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
+        return $lockedFiles;
     }
 
     public function delete($tab, $id, $user)

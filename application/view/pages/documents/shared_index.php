@@ -54,7 +54,8 @@ foreach ($rows as $r) {
         ];
     }
     $buttons = [['type' => 'view']];
-    $canEdit = $can && !empty($r['can_write']) && $r['status'] === 'active';
+    $canEdit = $can && !empty($r['can_write']) && $r['status'] === 'active' &&
+        !($cfg['domain'] === 'softcopy' && !empty($latest_files[$r['id']]['locked_at']));
     if ($canEdit)
         $buttons[] = ['type' => 'edit'];
     if ($cfg['domain'] === 'softcopy') {
@@ -65,7 +66,9 @@ foreach ($rows as $r) {
                 $historyEntries[] = [
                     'name' => $item['original_name'],
                     'detail' => $item['first_name'] . ' ' . $item['last_name'] . ' — ' . $item['created_at'] .
-                        ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded'),
+                        ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded') .
+                        (!empty($item['locked_at']) ? ' · Locked ' . $item['locked_at'] . ' by ' .
+                            trim(($item['locked_first_name'] ?? '') . ' ' . ($item['locked_last_name'] ?? '')) : ''),
                     'url' => $canFile('download') && !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
                     'print_url' => $canFile('print') && !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
                 ];
@@ -81,7 +84,8 @@ foreach ($rows as $r) {
             }
         }
     }
-    if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct'])))
+    if ($can && !empty($r['can_write']) && $r['status'] === 'active' &&
+        (isset($permissions['*']) || !empty($permissions['disposal']['direct'])))
         $buttons[] = [
             'type' => 'action',
             'url' => 'documents/' . $cfg['domain'] . '/dispose',

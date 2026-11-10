@@ -558,6 +558,16 @@
       if (!target) return;
       target.reset();
       var record = parse(edit, "record");
+      var lockedAttachment = !!record.locked_attachment;
+      target
+        .querySelectorAll('[name="revision_attachment"], [name="external_attachment[]"]')
+        .forEach(function (field) {
+          field.disabled = lockedAttachment;
+          var message = field.parentElement?.querySelector(
+            "[data-locked-attachment-message]",
+          );
+          if (message) message.hidden = !lockedAttachment;
+        });
       target
         .querySelectorAll('input[name="permissions[]"]')
         .forEach(function (field) {

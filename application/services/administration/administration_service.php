@@ -270,6 +270,7 @@ class Administration_service
         return new Workflow_builder_service();
     }
     public function save_workflow_step($post) { $this->workflow_builder()->save_workflow_step($post); }
+    public function save_document_lock_approver($post) { $this->workflow_builder()->save_document_lock_approver($post); }
     public function remove_workflow_step($post) { $this->workflow_builder()->remove_workflow_step($post); }
     public function move_workflow_step($post) { $this->workflow_builder()->move_workflow_step($post); }
     public function validate_approval_graph($graph) { $this->workflow_builder()->validate_approval_graph($graph); }

@@ -16,8 +16,10 @@
         <option value="">Choose an external document</option>
         <?php foreach ($external_options as $item): ?>
             <option value="<?= (int) $item['id'] ?>"
+                <?= !empty($item['has_locked_file']) ? 'disabled' : '' ?>
                 data-external-record="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
-                <?= html_escape($item['title'] . ' · Revision ' . ($item['revision_level'] ?? '00')) ?>
+                <?= html_escape($item['title'] . ' · Revision ' . ($item['revision_level'] ?? '00') .
+                    (!empty($item['has_locked_file']) ? ' (Locked - read-only)' : '')) ?>
             </option>
         <?php endforeach; ?>
     </select>
@@ -59,6 +61,9 @@
     <input class="form-control" id="externalRequestAttachment" type="file" name="external_attachment[]"
         accept=".pdf,image/*" multiple autocomplete="off">
     <small class="text-secondary">PDF and image files only (up to 20 files, 15 MB each).</small>
+    <small class="form-text" data-locked-attachment-message hidden>
+        This attachment was locked by the designated approver. Keep the existing file; replacement is unavailable.
+    </small>
 </div>
 <div class="col-12">
     <small class="form-text">The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level.</small>

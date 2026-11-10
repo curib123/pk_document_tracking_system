@@ -230,6 +230,7 @@ $route['admin/workflows']['GET'] = 'Administration/workflows';
 
 // Add, update, remove, or reorder workflow steps.
 $route['admin/workflows/step/save']['POST'] = 'Administration/save_workflow_step';
+$route['admin/workflows/document-lock-approver']['POST'] = 'Administration/save_document_lock_approver';
 $route['admin/workflows/step/remove']['POST'] = 'Administration/remove_workflow_step';
 $route['admin/workflows/step/move']['POST'] = 'Administration/move_workflow_step';
 

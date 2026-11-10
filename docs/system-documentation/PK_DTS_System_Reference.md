@@ -202,6 +202,14 @@ The following approval orders are the documented **5 November 2026 snapshot**.
 An Administrator can change future routes. Check **Workflow Builder** for a new
 submission and the request's timeline for work already submitted.
 
+For Softcopy and External Create or Revise workflows, a draft can designate one
+configured approval step as the document-locking approver. That step locks
+eligible Excel (`.xlsx`), PDF, and Word (`.docx`) attachments when approved;
+later workflow steps continue as usual. Locked files remain viewable and
+downloadable, but cannot be replaced or deleted. The lock and approver are
+recorded in the audit trail. The initial document workflow defaults designate
+the configured Plant Manager step.
+
 | Request | Approval order in the snapshot |
 | --- | --- |
 | Softcopy Create or Revise | Requester's leader > Plant Manager > Document Control Officer |
@@ -277,7 +285,7 @@ Use these areas only when your account has the required permission.
 | **Setup Places** | Maintain Areas, Specifics, optional Assets and Locations under the correct parents. Maintain Softcopy and External Categories separately; both allow subcategories. Deactivation stops new selection while keeping historical links. |
 | **User Management** | Set account details, Primary role, Assigned roles and leader. Share temporary passwords securely. New or reset users replace them at sign-in. You cannot deactivate yourself or remove the last active Administrator. |
 | **Roles & Permissions** | Set allowed actions. Administrator access is fixed. Resolve account and workflow dependencies before deactivating or removing a role. |
-| **Workflow Builder** | Choose **Step Actions > Create Next Draft**, or **Start First Draft**. Arrange 1-30 steps and select approvers, then **Validate & Publish**. Future submissions use the new default. |
+| **Workflow Builder** | Choose **Step Actions > Create Next Draft**, or **Start First Draft**. Arrange 1-30 steps and select approvers. For Softcopy or External workflows, optionally select one configured step as the document-locking approver. Then choose **Validate & Publish**. Future submissions use the new default. |
 | **Internal Audit Trail** | Search actions and filter by date or **All Results**, **Success** and **Failed**. Compare the user, time and action with the document or request history. |
 | **Notifications** | Open the bell or task notice to reach the work. Acknowledging one notice does not complete the task or mark every notice as read. |
 
