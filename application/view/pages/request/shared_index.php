@@ -81,6 +81,16 @@ foreach ($rows as $row) {
     $routeText[] = $step['label'] . ' → ' . $step['approver_label'] .
       ' [' . ucwords(str_replace('_', ' ', $step['status'])) . ']';
   }
+  $requestStatus = (string) $row['status'];
+  if (!$task && $requestStatus === 'submitted') {
+    $requestStatus = 'In Progress';
+    foreach ($approval_routes[$row['id']] ?? [] as $step) {
+      if ($step['status'] === 'active') {
+        $requestStatus = 'Awaiting ' . ($step['approver_label'] ?: $step['label']);
+        break;
+      }
+    }
+  }
   // The request viewer uses the same document renderer as System Documents,
   // but presents only submitted proposal metadata and visible approval history.
   // Never pretend an unapproved proposal is already the stored document.
@@ -159,7 +169,7 @@ foreach ($rows as $row) {
     'domain' => $documentDomain,
     'header' => [
       'title' => $headerTitle,
-      'status' => $row['status'],
+      'status' => $requestStatus,
       'record_version' => $row['version'],
       'context_label' => 'Requested By',
       'context_value' => $row['requester_name'],
@@ -287,7 +297,7 @@ foreach ($rows as $row) {
       'type' => ucwords(str_replace('_', ' ', $row['type'])),
       'subject' => $payload['subject'] ?? '',
       'requester' => $row['requester_name'],
-      'status' => $row['status'],
+      'status' => $requestStatus,
       'updated' => $row['updated_at']
     ],
     'display' => $display,
@@ -315,7 +325,7 @@ $dt_filters = [
   'status' => [
     '' => 'All Statuses',
     'draft' => 'Draft',
-    'submitted' => 'Submitted',
+    'submitted' => $task ? 'Submitted' : 'In Progress',
     'completed' => 'Completed',
     'approved' => 'Approved',
     'rejected' => 'Rejected',

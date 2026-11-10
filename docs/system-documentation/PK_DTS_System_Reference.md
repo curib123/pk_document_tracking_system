@@ -178,6 +178,10 @@ Remarks are optional, but help explain corrections and rejections.
 | **Return** at a later step | The previous approver's task reopens. The request stays Submitted. |
 | **Reject** | Approval ends and the request becomes Rejected. |
 
+While a request is being reviewed, its stored status remains Submitted until the
+workflow ends. **My Requests** shows which approver it is awaiting; My Tasks
+continues to show Submitted for actionable approval tasks.
+
 All four documents include a separate example for each current request: Softcopy
 Create and Revise, External Create and Revise, Hardcopy Transfer, Document Access,
 Document Assignment, and Disposal. Each uses the supplied default workflow's
