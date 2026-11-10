@@ -10,12 +10,14 @@ try {
     $encoded = $encoded.PadRight($encoded.Length + ((4 - $encoded.Length % 4) % 4), '=')
     $documentUri = [Uri][Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
     $siteUri = [Uri](Get-Content -LiteralPath $ConfigPath -Raw | ConvertFrom-Json).BaseUrl
-    $allowedPrefix = $siteUri.AbsolutePath.TrimEnd('/') + '/files/review-content/'
+    $basePath = $siteUri.AbsolutePath.TrimEnd('/')
+    $allowedPrefixes = @($basePath + '/files/review-content/', $basePath + '/files/preview-content/')
+    $matchedPrefix = $allowedPrefixes | Where-Object { $documentUri.AbsolutePath.StartsWith($_, [StringComparison]::Ordinal) } | Select-Object -First 1
     if (!$documentUri.IsAbsoluteUri -or $documentUri.Scheme -notin @('http', 'https') -or
         $documentUri.GetLeftPart([UriPartial]::Authority) -ne $siteUri.GetLeftPart([UriPartial]::Authority) -or
         $documentUri.UserInfo -or $documentUri.Query -or $documentUri.Fragment -or
-        !$documentUri.AbsolutePath.StartsWith($allowedPrefix, [StringComparison]::Ordinal) -or
-        $documentUri.AbsolutePath.Substring($allowedPrefix.Length) -notmatch '^[1-9][0-9]*/[A-Za-z0-9_-]+\.[a-f0-9]{64}/review\.(docx|xlsx)$') {
+        !$matchedPrefix -or
+        $documentUri.AbsolutePath.Substring($matchedPrefix.Length) -notmatch '^[1-9][0-9]*/[A-Za-z0-9_-]+\.[a-f0-9]{64}/review\.(docx|xlsx)$') {
         throw 'This link is outside the configured PK DTS review service.'
     }
     $extension = $Matches[1]

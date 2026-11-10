@@ -133,7 +133,9 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
-        readfile($path);
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+            readfile($path);
+        }
         exit;
     }
 
@@ -310,7 +312,9 @@ class Files extends MY_Controller
         header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
-        readfile($path);
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+            readfile($path);
+        }
         exit;
     }
 

@@ -97,11 +97,16 @@ $route['files/download-external/(:num)']['GET'] = 'Files/download_external/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
 $route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';
 $route['files/preview/(:num)']['GET'] = 'Files/preview/$1';
+// Office's "Open in app" fetcher probes with HEAD before GET; without a
+// matching route it 404s the handshake and Office reports the document
+// as unreadable, even though the stored file itself is intact.
 $route['files/preview-content/(:num)/(:any)/(:any)']['GET'] = 'Files/preview_content/$1/$2/$3';
+$route['files/preview-content/(:num)/(:any)/(:any)']['HEAD'] = 'Files/preview_content/$1/$2/$3';
 
 // Review a file or access its review content.
 $route['files/review/(:num)']['GET'] = 'Files/review/$1';
 $route['files/review-content/(:num)/(:any)/(:any)']['GET'] = 'Files/review_content/$1/$2/$3';
+$route['files/review-content/(:num)/(:any)/(:any)']['HEAD'] = 'Files/review_content/$1/$2/$3';
 
 // Configure office document viewing or printing.
 $route['files/office-setup']['GET'] = 'Files/office_setup';
