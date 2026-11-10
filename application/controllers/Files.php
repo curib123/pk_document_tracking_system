@@ -63,6 +63,7 @@ class Files extends MY_Controller
             show_error('Document Fileis not available for your review.', 403);
             return;
         }
+        $canBypassLock = empty($file['locked_at']) || $this->can('files', 'download_locked');
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
             show_404();
             return;
@@ -72,8 +73,13 @@ class Files extends MY_Controller
             show_404();
             return;
         }
+        $wantsDownload = $this->input->get('download') === '1';
+        if ($wantsDownload && !$canBypassLock) {
+            show_error('This file is locked after Plant Manager approval and is read-only. Ask Document Control for a full download.', 403);
+            return;
+        }
         $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
-        if (in_array($extension, ['docx', 'xlsx'], TRUE) && $this->input->get('download') !== '1') {
+        if (in_array($extension, ['docx', 'xlsx'], TRUE) && !$wantsDownload) {
             require_once APPPATH . 'services/files/office_review_ticket.php';
             $ticket = (new Office_review_ticket())->issue($this->user, (int) $requestId, (int) $file['id']);
             $contentUrl = site_url('files/review-content/' . (int) $requestId . '/' . $ticket . '/review.' . $extension);
@@ -84,7 +90,7 @@ class Files extends MY_Controller
                 'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
                 'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
                 'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '='),
-                'download_url' => site_url('files/review/' . (int) $requestId) . '?download=1']);
+                'download_url' => $canBypassLock ? site_url('files/review/' . (int) $requestId) . '?download=1' : NULL]);
             return;
         }
         $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
