@@ -793,6 +793,13 @@
     });
     updateDirectRevisionLevel(select.form, operation);
     updateSoftcopyNumberFields(select.form);
+    var directSeriesWrap = select.form.querySelector("[data-direct-series-edit]");
+    var directSeriesField = select.form.querySelector('[name="series_number"]');
+    var selectedSoftcopy = select.form.querySelector('[name="softcopy_id"]');
+    var editSeries = select.form.dataset.softcopyDirect === "yes" &&
+      operation === "softcopy_revise" && !!selectedSoftcopy?.value;
+    if (directSeriesWrap) directSeriesWrap.hidden = !editSeries;
+    if (directSeriesField) directSeriesField.disabled = !editSeries;
     updateExternalRequestFields(select.form);
   }
 

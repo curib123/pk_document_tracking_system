@@ -233,7 +233,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <?php if ($this->router->fetch_class() === 'dashboard'): ?>
 <script defer src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
 <?php endif; ?>
-<script defer src="<?= base_url('assets/js/app.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/row-actions.js') ?>"></script>

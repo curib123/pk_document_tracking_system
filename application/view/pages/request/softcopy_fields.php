@@ -82,6 +82,12 @@ $numbering_options = $numbering_options ?? [];
     <small class="form-text" data-series-number-guide>Auto-filled with the next series. Edit this to use a different Series No. instead.</small>
 </div>
 <?php if ($softcopyDirect): ?>
+    <div class="col-md-6" data-direct-series-edit hidden>
+        <label class="form-label" for="directSeriesNumber">Series No.</label>
+        <input class="form-control" name="series_number" id="directSeriesNumber" maxlength="100"
+            autocomplete="off" disabled>
+        <small class="form-text">Correct the Series No. for this document as part of the revision.</small>
+    </div>
     <div class="col-md-6" data-direct-revision-level-wrap>
         <label class="form-label" for="directRevisionLevel">Revision Level</label>
         <input class="form-control" id="directRevisionLevel" name="new_revision_level"

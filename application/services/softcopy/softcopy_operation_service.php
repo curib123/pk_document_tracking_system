@@ -217,6 +217,18 @@ class Softcopy_operation_service
         if ($type === 'softcopy_revise') {
             $this->assert_document_unlocked((int) $softcopyId);
             $this->validate_revision($payload);
+            $series = $requestId === NULL && array_key_exists('series_number', $payload)
+                && $payload['series_number'] !== NULL
+                ? trim((string) $payload['series_number'])
+                : trim((string) ($doc['series_number'] ?? ''));
+            if (mb_strlen($series) > 100) {
+                throw new DomainException('Series No. must be 100 characters or fewer.');
+            }
+            if ($series !== '' && $db->where('document_number', $doc['document_number'])
+                ->where('series_number', $series)->where('id !=', (int) $softcopyId)
+                ->limit(1)->get('softcopy_documents')->row_array()) {
+                throw new DomainException('That document number and series number are already in use.');
+            }
             $fileId = (int) ($payload['revision_file_id'] ?? 0);
             $file = $db->get_where('files', [
                 'id' => $fileId,
@@ -251,7 +263,7 @@ class Softcopy_operation_service
                     'reason' => $reason,
                     'effective_date' => $effective,
                     'page_number' => (int) $payload['page_number'],
-                    'series_number' => $doc['series_number'],
+                    'series_number' => $series !== '' ? $series : NULL,
                     'document_title' => $title ?: $doc['title'],
                     'previous_revision_level' => $previous['new_revision_level'] ?? NULL,
                     'new_revision_level' => $level,
@@ -269,7 +281,8 @@ class Softcopy_operation_service
             $revisionId = (int) $db->insert_id();
             $db->where('id', $softcopyId)->update('softcopy_documents', [
                 'current_revision_id' => $revisionId,
-                'title' => $title ?: $doc['title']
+                'title' => $title ?: $doc['title'],
+                'series_number' => $series !== '' ? $series : NULL
             ]);
             $db->where('id', $fileId)->update('files', [
                 'status' => 'approved',
