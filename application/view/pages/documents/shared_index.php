@@ -6,6 +6,7 @@ $can = isset($permissions['*']) || !empty($permissions[$cfg['domain']]['direct']
 $canFile = static function ($action) use ($permissions) {
     return isset($permissions['*']) || !empty($permissions['files'][$action]);
 };
+$canBypassLock = $canFile('download_locked');
 // Keep document registers scannable. All other metadata remains available in
 // the shared permission-scoped View Details modal, not duplicated in the table.
 $dt_columns = $cfg['domain'] === 'hardcopy'
@@ -69,7 +70,12 @@ foreach ($rows as $r) {
                         ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded') .
                         (!empty($item['locked_at']) ? ' · Locked ' . $item['locked_at'] . ' by ' .
                             trim(($item['locked_first_name'] ?? '') . ' ' . ($item['locked_last_name'] ?? '')) : ''),
-                    'url' => $canFile('download') && !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
+                    'url' => !empty($item['is_current']) && $canFile('download')
+                        ? site_url((!empty($item['locked_at']) && !$canBypassLock
+                            ? 'files/preview/' . $item['id']
+                            : 'files/download/' . $item['id']))
+                        : '',
+                    'url_label' => !empty($item['locked_at']) && !$canBypassLock ? 'Preview' : 'Download',
                     'print_url' => $canFile('print') && !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
                 ];
             }
@@ -79,8 +85,12 @@ foreach ($rows as $r) {
                 $latest = $latest_files[$r['id']];
                 if ($canFile('print'))
                     $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
-                if ($canFile('download'))
-                    $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                if ($canFile('download')) {
+                    $latestLocked = !empty($latest['locked_at']) && !$canBypassLock;
+                    $buttons[] = $latestLocked
+                        ? ['type' => 'review', 'url' => 'files/preview/' . $latest['id'], 'label' => 'Preview (Locked)']
+                        : ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                }
             }
         }
     }

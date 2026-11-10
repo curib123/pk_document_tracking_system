@@ -14,14 +14,18 @@
     <div class="review-actions">
       <a class="primary" href="<?= html_escape($office_url) ?>">Open in <?= html_escape($app) ?></a>
       <a href="<?= html_escape($wps_url) ?>">Open in WPS</a>
-      <a href="<?= site_url('files/review/' . $request_id) ?>?download=1">Download</a>
+      <?php if (!empty($download_url)): ?>
+      <a href="<?= html_escape($download_url) ?>">Download</a>
+      <?php endif; ?>
     </div>
     <p class="hint">App links expire after 10 minutes. Refresh this page to renew them. Changes to a review copy do not update the system document.</p>
     <details><summary>Opening WPS for the first time?</summary>
       <p>Install the PK DTS opener once on your Windows computer. Download and extract the setup package, then follow its README instructions.</p>
       <a href="<?= site_url('files/office-setup') ?>">Download WPS opener setup</a>
     </details>
-    <p class="hint">If the app cannot open this file, use Download and open the saved file in Word, Excel, or WPS.</p>
+    <p class="hint"><?= !empty($download_url)
+        ? 'If the app cannot open this file, use Download and open the saved file in Word, Excel, or WPS.'
+        : 'This file is locked and read-only. Contact Document Control for a full download.' ?></p>
   </main>
 </body>
 </html>

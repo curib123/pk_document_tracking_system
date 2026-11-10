@@ -9,7 +9,7 @@ SET v.`graph` = JSON_SET(
   JSON_EXTRACT(
     v.`graph`,
     REPLACE(
-      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      JSON_UNQUOTE(JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label')),
       '.approver.label',
       '.key'
     )
@@ -22,7 +22,7 @@ WHERE v.`status` = 'published'
   AND JSON_UNQUOTE(JSON_EXTRACT(
     v.`graph`,
     REPLACE(
-      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      JSON_UNQUOTE(JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label')),
       '.approver.label',
       '.approver.type'
     )

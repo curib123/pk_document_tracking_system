@@ -77,9 +77,9 @@ $numbering_options = $numbering_options ?? [];
     <small class="form-text">Assigned to the existing original record on final approval.</small>
 </div>
 <div class="col-md-6" data-series-number-field hidden>
-    <label class="form-label" for="reqSeries">Generated Series Number</label>
-    <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" readonly disabled autocomplete="off">
-    <small class="form-text" data-series-number-guide>Preview only. The final series number is generated on approval.</small>
+    <label class="form-label" for="reqSeries">Series Number</label>
+    <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" autocomplete="off">
+    <small class="form-text" data-series-number-guide>Auto-filled with the next series. Edit this to use a different Series No. instead.</small>
 </div>
 <?php if ($softcopyDirect): ?>
     <div class="col-md-6" data-direct-revision-level-wrap>

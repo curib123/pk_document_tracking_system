@@ -31,9 +31,9 @@ foreach ($rows as $row) {
                 (!empty($attachment['locked_at']) ? ' | Locked ' . $attachment['locked_at'] . ' by ' .
                     trim(($attachment['locked_first_name'] ?? '') . ' ' . ($attachment['locked_last_name'] ?? '')) : '');
             $attachmentLinks[] = [
-                'url' => $can_download ? $file_route('files/download/' . (int) $attachment['id']) : '',
-                'preview_url' => $can_preview && ($attachment['mime_type'] === 'application/pdf' || strpos((string) $attachment['mime_type'], 'image/') === 0)
-                    ? $file_route('files/preview/' . (int) $attachment['id']) : '',
+                'url' => ($can_download && (empty($attachment['locked_at']) || $can_bypass_lock))
+                    ? $file_route('files/download/' . (int) $attachment['id']) : '',
+                'preview_url' => $can_preview ? $file_route('files/preview/' . (int) $attachment['id']) : '',
                 'preview_type' => $attachment['mime_type'],
                 'label' => $attachment['original_name']
             ];
@@ -74,7 +74,8 @@ foreach ($rows as $row) {
         ]
     ];
     $buttons = [['type' => 'view']];
-    if ($can_download && $row['status'] === 'active' && !empty($row['attachments'])) {
+    $hasLockedFile = count(array_filter($attachments, static fn($file) => !empty($file['locked_at']))) > 0;
+    if ($can_download && $row['status'] === 'active' && !empty($row['attachments']) && (!$hasLockedFile || $can_bypass_lock)) {
         $buttons[] = [
             'type' => 'download',
             'url' => $file_route('files/download-external/' . (int) $row['id']),
@@ -82,7 +83,6 @@ foreach ($rows as $row) {
             'same_origin' => TRUE
         ];
     }
-    $hasLockedFile = count(array_filter($attachments, static fn($file) => !empty($file['locked_at']))) > 0;
     if ($can_direct && $row['status'] === 'active' && !$hasLockedFile) {
         $buttons[] = ['type' => 'edit', 'label' => 'Edit'];
     }

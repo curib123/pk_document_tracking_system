@@ -180,6 +180,8 @@ class Request_service
             'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
             'series_number' => '', // Generated when the request is approved.
+            // A requester-entered Series No. override; blank preserves auto-generation.
+            'generated_series_number' => trim((string) ($post['generated_series_number'] ?? '')),
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),

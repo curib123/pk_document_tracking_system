@@ -81,15 +81,20 @@ class Softcopy_operation_service
             $number = $reuseNumber
                 ? trim((string) ($payload['document_number'] ?? ''))
                 : Document_number_generator::next($db, $categoryId);
-            // Client previews are advisory; the actual series is allocated at approval.
+            // A requester-entered Series No. always wins; leaving it blank
+            // keeps the auto-generated sequence unbroken, as before.
+            $seriesOverride = trim((string) ($payload['generated_series_number'] ?? ''));
+            if ($seriesOverride !== '' && mb_strlen($seriesOverride) > 100) {
+                throw new DomainException('Series No. must be 100 characters or fewer.');
+            }
             $series = $reuseNumber
-                ? Document_series_generator::next(
+                ? ($seriesOverride !== '' ? $seriesOverride : Document_series_generator::next(
                     $db,
                     $categoryId,
                     $number,
                     trim((string) ($payload['series_code_pattern'] ?? '')),
                     (int) $actorId
-                ) : '';
+                )) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId

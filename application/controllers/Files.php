@@ -83,7 +83,8 @@ class Files extends MY_Controller
             $this->load->view('pages/files/review', ['file' => $file, 'request_id' => (int) $requestId,
                 'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
                 'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
-                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '=')]);
+                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '='),
+                'download_url' => site_url('files/review/' . (int) $requestId) . '?download=1']);
             return;
         }
         $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
@@ -225,13 +226,32 @@ class Files extends MY_Controller
     public function preview($id)
     {
         $this->require_permission('files', 'view');
-        $file = $this->File_model->approved_file((int) $id);
+        $id = (int) $id;
+        $file = $this->File_model->approved_file($id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
             show_error('File preview is not permitted.', 403);
             return;
         }
+        $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
+        if (in_array($extension, ['docx', 'xlsx'], TRUE)) {
+            require_once APPPATH . 'services/files/locked_file_ticket.php';
+            $ticket = (new Locked_file_ticket())->issue($this->user, $id);
+            $contentUrl = site_url('files/preview-content/' . $id . '/' . $ticket . '/review.' . $extension);
+            $canBypass = empty($file['locked_at']) || $this->can('files', 'download_locked');
+            $this->audit_event('files/preview-open', 'files:' . $id);
+            header('Cache-Control: private, no-store');
+            header('Referrer-Policy: no-referrer');
+            $this->load->view('pages/files/review', [
+                'file' => $file,
+                'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
+                'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
+                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '='),
+                'download_url' => $canBypass ? site_url('files/download/' . $id) : NULL
+            ]);
+            return;
+        }
         if ($file['mime_type'] !== 'application/pdf' && strpos((string) $file['mime_type'], 'image/') !== 0) {
-            show_error('Preview is available for PDF and image attachments only.', 415);
+            show_error('Preview is available for PDF, image, Word, and Excel attachments only.', 415);
             return;
         }
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
@@ -257,12 +277,47 @@ class Files extends MY_Controller
         exit;
     }
 
+    /** Native apps have no browser session: validate the short-lived capability and current access again. */
+    public function preview_content($id, $ticket, $filename = '')
+    {
+        $id = (int) $id;
+        require_once APPPATH . 'services/files/locked_file_ticket.php';
+        try { $claims = (new Locked_file_ticket())->verify((string) $ticket, $id); }
+        catch (DomainException $error) { show_error($error->getMessage(), 403); return; }
+        $viewer = $this->Identity_model->active_user((int) $claims['user_id']);
+        if (!$viewer || (int) $viewer['session_version'] !== (int) $claims['session_version'] || !empty($viewer['require_password_change'])) {
+            show_error('Preview access has expired. Reopen Preview.', 403); return;
+        }
+        $file = $this->File_model->approved_file($id);
+        if (!$file || !$this->File_model->allowed($viewer, $file)) { show_error('Preview access is no longer available.', 403); return; }
+        if (!preg_match('/^[a-f0-9]{64}$/D', (string) $file['storage_name'])) { show_404(); return; }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path) || is_link($path)) { show_404(); return; }
+        $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
+        $mime = ['docx'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'][$extension] ?? NULL;
+        if (!$mime) { show_404(); return; }
+        $this->audit_event('files/preview-content', 'files:' . $id, [], (int) $viewer['id']);
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: private, no-store');
+        header('Referrer-Policy: no-referrer');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
+        header('Content-Length: ' . filesize($path));
+        readfile($path);
+        exit;
+    }
+
     public function download($id)
     {
         $this->require_permission('files', 'download');
         $file = $this->File_model->approved_file((int) $id);
         if (!$file || !$this->File_model->allowed($this->user, $file)) {
             show_error('File download is not permitted.', 403);
+            return;
+        }
+        if (!empty($file['locked_at']) && !$this->can('files', 'download_locked')) {
+            show_error('This file is locked after approval and is read-only. Use Preview to view it, or ask Document Control for a full download.', 403);
             return;
         }
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
@@ -311,6 +366,10 @@ class Files extends MY_Controller
             $file = $this->File_model->approved_file((int) $listedFile['id']);
             if (!$file || !$this->File_model->allowed($this->user, $file)) {
                 show_error('File download is not permitted.', 403);
+                return;
+            }
+            if (!empty($file['locked_at']) && !$this->can('files', 'download_locked')) {
+                show_error('One or more files are locked after approval and read-only. Preview them individually, or ask Document Control for a full download.', 403);
                 return;
             }
             if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {

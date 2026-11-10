@@ -157,7 +157,7 @@ foreach ($rows as $row) {
         'fields' => [
           'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
             ? (!empty($row['locked_attachment'])
-              ? 'Locked by the designated approver; remains viewable and downloadable'
+              ? 'Locked by the designated approver; read-only preview only unless you hold Download Locked Files permission'
               : 'Attached to this request for review')
             : 'No attachment'
         ]

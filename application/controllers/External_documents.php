@@ -148,7 +148,8 @@ class External_documents extends MY_Controller
                 $this->Permission_model->allowed($this->user, 'requests', 'add') &&
                 $this->Permission_model->allowed($this->user, 'external_documents', 'request'),
             'can_download' => $this->Permission_model->allowed($this->user, 'files', 'download'),
-            'can_preview' => $this->Permission_model->allowed($this->user, 'files', 'view')
+            'can_preview' => $this->Permission_model->allowed($this->user, 'files', 'view'),
+            'can_bypass_lock' => $this->Permission_model->allowed($this->user, 'files', 'download_locked')
         ]);
     }
 

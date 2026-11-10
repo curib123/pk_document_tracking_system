@@ -662,7 +662,12 @@
               var download = document.createElement("a");
               download.className = "btn btn-outline-primary btn-sm";
               download.href = target.href;
-              download.textContent = "Download";
+              var urlLabel = String(file.url_label || "Download");
+              download.textContent = urlLabel;
+              if (urlLabel === "Preview") {
+                download.target = "_blank";
+                download.rel = "noopener";
+              }
               item.append(download);
             }
             var printTarget = file.print_url
@@ -930,7 +935,6 @@
     autoField.required = create && !manual;
     manualField.disabled = !manual;
     manualField.required = manual;
-    seriesField.disabled = true; // Read-only preview, never posted.
     seriesField.required = false;
 
     var selected = category.options[category.selectedIndex];
@@ -987,15 +991,20 @@
     patternField.disabled = !needsSetup;
     patternField.required = needsSetup;
     if (manual && storedPattern) patternField.value = "";
-    if (seriesWrap) seriesWrap.hidden = !manual || !manualField.value;
+    var seriesApplicable = manual && !!manualField.value;
+    seriesField.disabled = !seriesApplicable;
+    if (seriesWrap) seriesWrap.hidden = !seriesApplicable;
     if (originalWrap) originalWrap.hidden = true;
-    seriesField.value = "";
+    if (!seriesApplicable) {
+      seriesField.value = "";
+      delete seriesField.dataset.autoValue;
+    }
     if (originalField) originalField.value = "";
 
     var seriesPattern = storedPattern || (needsSetup ? patternField.value.trim() : "");
     var seriesParts = seriesPattern.match(/^(.*?)(\d+)$/);
     var previewError = "";
-    if (manual && manualField.value && seriesParts && BigInt(seriesParts[2]) > 0n) {
+    if (seriesApplicable && seriesParts && BigInt(seriesParts[2]) > 0n) {
       var seriesPrefix = seriesParts[1];
       var start = BigInt(seriesParts[2]);
       var highest = 0n;
@@ -1023,15 +1032,22 @@
       var nextSeries = highest + 1n > start ? highest + 1n : start;
       var digits = String(nextSeries);
       var preview = seriesPrefix + digits.padStart(Math.max(seriesWidth, digits.length), "0");
-      if (preview.length <= 100) seriesField.value = preview;
+      if (preview.length <= 100) {
+        // Only overwrite when the field still holds the last auto-computed
+        // value; a manually edited Series No. is left alone.
+        if (seriesField.value === "" || seriesField.value === seriesField.dataset.autoValue) {
+          seriesField.value = preview;
+        }
+        seriesField.dataset.autoValue = preview;
+      }
     }
 
     var seriesGuide = form.querySelector("[data-series-number-guide]");
     if (seriesGuide) {
-      seriesGuide.hidden = !manual || !manualField.value;
+      seriesGuide.hidden = !seriesApplicable;
       seriesGuide.textContent = previewError || (needsSetup
-        ? "First-time Series No. setup. The original document takes one less than the new first series. Both assignments occur on final approval."
-        : "Series No. Code Pattern was already configured for this Document No. Next series is assigned on final approval.");
+        ? "First-time Series No. setup. The original document takes one less than the new first series, assigned on final approval. Edit the Series No. above to use a different value."
+        : "Series No. Code Pattern was already configured for this Document No. Edit the Series No. above to use a different value than the next auto-generated one.");
     }
   }
   // Selecting a different softcopy starts from that record, never a previous

@@ -97,6 +97,7 @@ $route['files/download-external/(:num)']['GET'] = 'Files/download_external/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
 $route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';
 $route['files/preview/(:num)']['GET'] = 'Files/preview/$1';
+$route['files/preview-content/(:num)/(:any)/(:any)']['GET'] = 'Files/preview_content/$1/$2/$3';
 
 // Review a file or access its review content.
 $route['files/review/(:num)']['GET'] = 'Files/review/$1';
