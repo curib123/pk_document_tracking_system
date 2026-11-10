@@ -95,6 +95,7 @@ class Files extends MY_Controller
         }
         $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
         $this->audit_event('files/review', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+        $this->clear_output_buffers();
         header('Content-Type: ' . ($inline ? $file['mime_type'] : 'application/octet-stream'));
         header('Cache-Control: private, no-store');
         header('X-Content-Type-Options: nosniff');
@@ -127,6 +128,7 @@ class Files extends MY_Controller
         if (!$mime) { show_404(); return; }
         $this->audit_event('files/review-content', 'requests:' . (int) $requestId,
             ['file_id'=>(int)$file['id']], (int)$viewer['id']);
+        $this->clear_output_buffers();
         header('Content-Type: ' . $mime);
         header('Cache-Control: private, no-store');
         header('Referrer-Policy: no-referrer');
@@ -306,6 +308,7 @@ class Files extends MY_Controller
             'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'][$extension] ?? NULL;
         if (!$mime) { show_404(); return; }
         $this->audit_event('files/preview-content', 'files:' . $id, [], (int) $viewer['id']);
+        $this->clear_output_buffers();
         header('Content-Type: ' . $mime);
         header('Cache-Control: private, no-store');
         header('Referrer-Policy: no-referrer');
@@ -341,6 +344,7 @@ class Files extends MY_Controller
         }
         // File delivery must not depend on maintenance cleanup succeeding.
         // Run deferred cleanup independently, not during a user's download.
+        $this->clear_output_buffers();
         header('Content-Type: application/octet-stream');
         $this->audit_event('files/download', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
