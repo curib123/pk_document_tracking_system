@@ -150,7 +150,7 @@ updates address these cases:
 | Separate External Categories | [External categories](database/migrations/20261104_external_categories.sql), after the preceding External updates |
 | External document numbers and Subsidiary setup | [External document subsidiaries](database/migrations/20261107_external_document_subsidiaries.sql), after External Categories |
 | Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
-| Workflow-triggered document locking and Plant Manager defaults | [Workflow document lock fields](database/migrations/20261110_workflow_document_locks.sql), then [Designate Plant Manager](database/migrations/20261110_designate_plant_manager_document_lock.sql) |
+| Workflow-triggered document locking, Plant Manager defaults, and historical approvals | [Workflow document lock fields](database/migrations/20261110_workflow_document_locks.sql), then [Designate Plant Manager](database/migrations/20261110_designate_plant_manager_document_lock.sql), then [Backfill Plant Manager locks](database/migrations/20261110_backfill_plant_manager_document_locks.sql) |
 | Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 | Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |

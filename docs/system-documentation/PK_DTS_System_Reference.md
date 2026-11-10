@@ -210,6 +210,12 @@ downloadable, but cannot be replaced or deleted. The lock and approver are
 recorded in the audit trail. The initial document workflow defaults designate
 the configured Plant Manager step.
 
+For installations with earlier requests, the
+[Plant Manager lock backfill migration](../../database/migrations/20261110_backfill_plant_manager_document_locks.sql)
+also locks eligible Excel, PDF, and Word files whose request history records
+Plant Manager approval. It records the backfilled lock in request history and
+does not alter submitted workflow snapshots or remaining approval steps.
+
 | Request | Approval order in the snapshot |
 | --- | --- |
 | Softcopy Create or Revise | Requester's leader > Plant Manager > Document Control Officer |
