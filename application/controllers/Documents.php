@@ -130,7 +130,7 @@ class Documents extends MY_Controller
         ]);
     }
     /** Return to the register view (layout, folder, filters) the form was submitted from. */
-    private function back_to_register($domain)
+    private function back_to_register($domain, $savedId = 0, $addLocationId = 0)
     {
         $allowed = ['q', 'page', 'limit', 'sort', 'dir', 'folder', 'layout', 'status', 'owner', 'category', 'period', 'from', 'to', 'retention'];
         $query = [];
@@ -140,6 +140,12 @@ class Documents extends MY_Controller
             static function ($value) {
                 return is_string($value) && strlen($value) <= 100; }
         );
+        // The folder layout reopens the folders that lead to the saved document.
+        if ((int) $savedId > 0)
+            $query['saved'] = (int) $savedId;
+        // A new document reopens the Add modal for the same Location.
+        if ((int) $addLocationId > 0)
+            $query['add_location'] = (int) $addLocationId;
         redirect("documents/{$domain}" . ($query ? '?' . http_build_query($query) : ''));
     }
     public function direct_softcopy()
@@ -177,14 +183,18 @@ class Documents extends MY_Controller
             return $this->direct_softcopy();
         $this->require_permission($domain, 'direct');
         $this->confirmed();
+        $savedId = 0;
+        $addLocationId = 0;
         try {
             $savedId = (new Document_service())->save($domain, $this->input->post(), $this->user);
             $this->audit_created('hardcopy_documents', $savedId);
             $this->notice('Document saved.');
+            if (!(int) $this->input->post('id'))
+                $addLocationId = (int) $this->input->post('location_id');
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        $this->back_to_register($domain);
+        $this->back_to_register($domain, $savedId, $addLocationId);
     }
     public function dispose($domain)
     {

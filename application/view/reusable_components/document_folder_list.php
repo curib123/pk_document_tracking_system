@@ -52,7 +52,24 @@ foreach ($selectedFolders as $at) {
         $at = (string) $nodes[$at]['parent'];
     }
 }
-$sortRecent = ($dt_sort === 'updated_at' || $dt_sort === 'updated') && strtolower($dt_dir) === 'desc';
+// After a save, reopen the folders that lead to the saved document.
+$savedId = (int) $this->input->get('saved');
+if ($savedId > 0) {
+    foreach ($byFolder as $folderKey => $folderRows) {
+        foreach ($folderRows as $folderRow) {
+            if ((int) $folderRow['id'] !== $savedId)
+                continue;
+            $at = (string) $folderKey;
+            $seen = [];
+            while ($at !== '' && isset($nodes[$at]) && !isset($seen[$at]) && count($seen) < 32) {
+                $seen[$at] = TRUE;
+                $selectedChain[$at] = TRUE;
+                $at = (string) $nodes[$at]['parent'];
+            }
+        }
+    }
+}
+$sortRecent =($dt_sort === 'updated_at' || $dt_sort === 'updated') && strtolower($dt_dir) === 'desc';
 $sortAZ = $dt_sort === 'title' && strtolower($dt_dir) === 'asc';
 $sortZA = $dt_sort === 'title' && strtolower($dt_dir) === 'desc';
 

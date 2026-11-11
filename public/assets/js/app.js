@@ -1964,14 +1964,56 @@
     }
     window.bootstrap.Modal.getOrCreateInstance(editor).show();
   }
+  // After a new hardcopy document is saved, reopen a blank Add modal for the
+  // same Location so several documents can be filed in a row.
+  function reopenHardcopyAdd() {
+    var params = new URLSearchParams(window.location.search);
+    var locationId = params.get("add_location");
+    if (!locationId || !/^[0-9]+$/.test(locationId)) return;
+    params.delete("add_location");
+    var query = params.toString();
+    try {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + (query ? "?" + query : ""),
+      );
+    } catch (e) {}
+    var form = document.querySelector("#editForm[data-hardcopy-upsert]");
+    var modal = document.getElementById("editModal");
+    var location = form?.querySelector('[data-hardcopy-level="location"]');
+    if (!form || !modal || !location || !window.bootstrap) return;
+    form.reset();
+    var idField = form.querySelector('[name="id"]');
+    var versionField = form.querySelector('[name="version"]');
+    if (idField) idField.value = "";
+    if (versionField) versionField.value = "";
+    location.value = locationId;
+    if (location.value !== locationId) return; // Location no longer available.
+    form.dataset.confirmed = "";
+    var confirmedField = form.querySelector('[name="confirmed"]');
+    if (confirmedField) confirmedField.value = "no";
+    updateHardcopyHierarchy("location");
+    updateHardcopyRetention();
+    syncSearchableControls(form);
+    var heading = document.getElementById("editTitle");
+    if (heading) heading.textContent = "Add New Hardcopy Document";
+    window.bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
   var noticeModal = document.getElementById("appAlertModal");
   if (noticeModal) {
-    noticeModal.addEventListener("hidden.bs.modal", reopenWorkflow, {
-      once: true,
-    });
+    noticeModal.addEventListener(
+      "hidden.bs.modal",
+      function () {
+        reopenWorkflow();
+        reopenHardcopyAdd();
+      },
+      { once: true },
+    );
     window.bootstrap.Modal.getOrCreateInstance(noticeModal).show();
   } else {
     reopenWorkflow();
+    reopenHardcopyAdd();
   }
 
   document.addEventListener("change", function (event) {

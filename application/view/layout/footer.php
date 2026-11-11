@@ -153,6 +153,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                 <input type="hidden" name="decision" value="">
                 <input type="hidden" name="step_key" value="">
                 <input type="hidden" name="direction" value="">
+                <input type="hidden" name="return_query" value="">
                 <input type="hidden" name="confirmed" value="no">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
                     value="<?= $this->security->get_csrf_hash() ?>">
