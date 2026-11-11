@@ -7,6 +7,7 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * No additional queries or APIs: reuse the authorized paginated dt_rows.
  */
 require_once APPPATH . 'services/presentation/document_folder_tree.php';
+$dt_create = $dt_create ?? '';
 $browser = $dt_folder_browser;
 $tree = $browser['tree'];
 $nodes = $tree['nodes'] ?? [];
@@ -106,7 +107,7 @@ $renderDocument = function (array $dt_row) use ($dt_columns, $dt_folder_domain) 
 };
 
 $renderNode = NULL;
-$renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $byFolder, $renderDocument, $currentFolder, $selectedChain, $selectedFolders, $folderUrl, $kinds, $dt_folder_domain, $searching, $searchFolders) {
+$renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $byFolder, $renderDocument, $currentFolder, $selectedChain, $selectedFolders, $folderUrl, $kinds, $dt_folder_domain, $searching, $searchFolders, $dt_create) {
     if ($depth >= 32 || !isset($nodes[$key]))
         return;
     $node = $nodes[$key];
