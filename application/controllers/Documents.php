@@ -129,6 +129,19 @@ class Documents extends MY_Controller
             'is_administrator' => $this->can('*', '*')
         ]);
     }
+    /** Return to the register view (layout, folder, filters) the form was submitted from. */
+    private function back_to_register($domain)
+    {
+        $allowed = ['q', 'page', 'limit', 'sort', 'dir', 'folder', 'layout', 'status', 'owner', 'category', 'period', 'from', 'to', 'retention'];
+        $query = [];
+        parse_str((string) $this->input->post('return_query'), $query);
+        $query = array_filter(
+            array_intersect_key($query, array_flip($allowed)),
+            static function ($value) {
+                return is_string($value) && strlen($value) <= 100; }
+        );
+        redirect("documents/{$domain}" . ($query ? '?' . http_build_query($query) : ''));
+    }
     public function direct_softcopy()
     {
         $this->require_permission('softcopy', 'direct');
@@ -154,7 +167,7 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/softcopy");
+        $this->back_to_register('softcopy');
     }
 
     public function save($domain)
@@ -171,7 +184,7 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/{$domain}");
+        $this->back_to_register($domain);
     }
     public function dispose($domain)
     {
@@ -200,6 +213,6 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/{$domain}");
+        $this->back_to_register($domain);
     }
 }

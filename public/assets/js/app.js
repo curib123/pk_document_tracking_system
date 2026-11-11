@@ -1905,6 +1905,12 @@
       pendingParent = null;
       pendingForm = null;
     });
+  // Forms that must return to the current register view (table/folder layout,
+  // open folder, filters) carry it in return_query.
+  document.addEventListener("submit", function (event) {
+    var field = event.target.querySelector?.('[name="return_query"]');
+    if (field) field.value = window.location.search.replace(/^\?/, "");
+  });
   document.addEventListener("submit", function (event) {
     var form = event.target;
     if (!form.matches("form[data-confirm]") || form.dataset.confirmed === "yes")

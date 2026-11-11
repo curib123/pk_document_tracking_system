@@ -255,6 +255,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                         <?php endif; ?>
                     </div>
                 </div>
+                <input type="hidden" name="return_query" value="">
                 <input type="hidden" name="confirmed" value="no">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
                     value="<?= $this->security->get_csrf_hash() ?>">
