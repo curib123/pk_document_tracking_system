@@ -539,21 +539,28 @@
   "files": {
     "file": "files.png",
     "route": "documents/softcopy?layout=table&folder=all",
-    "caption": "Review the current controlled file and its file history.",
+    "caption": "Preview the current file in View Details. Download and Print appear when the file is unlocked.",
     "width": 1100,
-    "height": 344,
+    "height": 852,
     "controls": [
       {
+        "label": "Fullscreen",
+        "x": 660.3,
+        "y": 698.2,
+        "width": 100.3,
+        "height": 44
+      },
+      {
         "label": "Download",
-        "x": 891.3,
-        "y": 186.7,
-        "width": 99.6,
+        "x": 875.8,
+        "y": 698.2,
+        "width": 117.1,
         "height": 44
       },
       {
         "label": "Print",
         "x": 1004.9,
-        "y": 186.7,
+        "y": 698.2,
         "width": 66.1,
         "height": 44
       }
@@ -562,16 +569,30 @@
   "review-file": {
     "file": "review-file.png",
     "route": "my-tasks/softcopy?period=all",
-    "caption": "Select Review File to inspect the proposed attachment before deciding.",
-    "width": 1440,
-    "height": 900,
+    "caption": "Open the Document File tab in View Details to preview the proposed attachment before deciding.",
+    "width": 1100,
+    "height": 852,
     "controls": [
       {
-        "label": "Review File",
-        "x": 1208.3,
-        "y": 394.1,
-        "width": 60.9,
-        "height": 14.8
+        "label": "Document File",
+        "x": 61.4,
+        "y": 323.0,
+        "width": 88.4,
+        "height": 19.8
+      },
+      {
+        "label": "Fullscreen",
+        "x": 738.3,
+        "y": 697.1,
+        "width": 100.3,
+        "height": 44
+      },
+      {
+        "label": "Download",
+        "x": 953.9,
+        "y": 697.1,
+        "width": 117.1,
+        "height": 44
       }
     ]
   },

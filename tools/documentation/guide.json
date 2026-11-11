@@ -32,7 +32,8 @@
       "result": "Each person uses their own account and works within their access.",
       "notes": [
         "These are the standard duties. Administrators can change permissions or add roles.",
-        "Primary role and Assigned roles work together. You can decide a task only when it is assigned to you or one of your roles."
+        "Primary role and Assigned roles work together. You can decide a task only when it is assigned to you or one of your roles.",
+        "Download Locked Files lets a role download, print and open locked approved files. Administrator has it; an Administrator can grant it to other roles, such as Document Control Officer, in Roles & Permissions."
       ]
     },
     {
@@ -179,7 +180,7 @@
         "Choose Create Softcopy. Enter Subject / Reason and Proposed Document Title, then choose Category.",
         "Check Generated Document Number. To reuse a number with a new series, select Need Series Number?.",
         "Attach Document File and add optional Remarks. Select Save Draft and Confirm.",
-        "Check View Details or Review File. Select Submit, Continue and Confirm."
+        "Check View Details, including the file preview on its Document File tab. Select Submit, Continue and Confirm."
       ],
       "result": "Final approval creates the Active softcopy and its approved file at revision 00.",
       "notes": [
@@ -199,7 +200,7 @@
         "Choose Revise Softcopy and select Existing Softcopy Document.",
         "Check Proposed Document Title and the next revision level. Enter Subject / Reason and Number of Pages.",
         "Attach the replacement Document File and add optional Remarks. Select Save Draft and Confirm.",
-        "Check Review File, then select Submit, Continue and Confirm."
+        "Check the file preview on the Document File tab of View Details, then select Submit, Continue and Confirm."
       ],
       "result": "Final approval makes the replacement file current and increases the revision level.",
       "notes": [
@@ -215,10 +216,10 @@
       "title": "Use document and series numbers",
       "audience": "Softcopy creators and requesters",
       "steps": [
-        "For a new document, choose a Document Number Pattern category (not a Folder) and leave Need Series Number? unchecked. The category defines the Document No. Code Pattern.",
+        "For a new document, choose a Document Number Pattern category (not a Folder) and leave Need Series Number? unchecked.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
-        "For the first series, check Need Series Number?, select an existing Document No. and enter a one-time Series No. Code Pattern for that document number.",
-        "Preview the original document's preceding Series No. and the new Generated Series No. For sample-series-002, the original becomes sample-series-001 and the new record sample-series-002; the next becomes sample-series-003.",
+        "For the first series, check Need Series Number?, select an existing Document No. and enter a one-time Series No. Code Pattern.",
+        "Preview the preceding Series No. and the new Generated Series No. For sample-series-002, the original becomes sample-series-001 and the new record sample-series-002.",
         "Finish the direct creation or request steps."
       ],
       "result": "The record gets a new category number or an existing number with a unique series.",
@@ -304,38 +305,39 @@
     },
     {
       "id": "files",
-      "title": "Download, print and view file history",
+      "title": "Preview, download, print and view file history",
       "audience": "Users with the required file permissions",
       "steps": [
-        "Open Softcopy Documents and find the Active document.",
-        "Select Download for the current approved file, or Print to open the print viewer.",
-        "For PDF, image or text files, wait for the preview and select Print. Download Office files and print in Word, Excel or WPS.",
-        "Use File History or Document Files to view the revision details available to you.",
-        "Open View on an external document to preview its current PDF or image attachments; select Download beside an attachment to save it."
+        "Open Softcopy Documents, find the Active document, select View and open the Document Files tab to preview the current file.",
+        "Word and Excel files are shown as a PDF made by LibreOffice. The file you uploaded is kept unchanged.",
+        "Select Fullscreen to enlarge the preview. If the file is not locked, you can also select Full View, Download or Print.",
+        "For Word or Excel, Download Original saves the uploaded file and Download PDF saves the converted copy. Print always prints the PDF.",
+        "Use File History or Document Files for revision details. Open View on an external document to preview its PDF or image attachments."
       ],
-      "result": "You receive the current approved file if you have permission to download or print it.",
+      "result": "You can read the current approved file, and download or print it when it is unlocked or you hold Download Locked Files access.",
       "notes": [
-        "External documents support up to 20 PDF or image attachments in one upload, up to 15 MB per file. Image formats are accepted based on detected image content.",
-        "Normal downloads exclude files from superseded, disposed and cancelled documents.",
-        "External document details appear in the View header, with previews for current PDF/image attachments and download actions when your permissions allow. File History and Document Files are Softcopy features."
+        "External documents take up to 20 PDF or image files per upload, 15 MB each.",
+        "Normal downloads exclude files of superseded, disposed and cancelled documents.",
+        "A locked file is read-only: it can be previewed, but Download, Print and Full View need Download Locked Files access.",
+        "The first Word or Excel preview takes a few seconds to convert."
       ]
     },
     {
       "id": "review-file",
-      "title": "Review a request attachment",
+      "title": "Preview a request attachment",
       "audience": "Requester or the currently assigned approver",
       "steps": [
-        "Find the softcopy or external request in My Requests or My Tasks. Select Review File.",
-        "Read PDF, image or text files in the browser when supported.",
-        "For DOCX or XLSX, choose Open in Word or Open in Excel, Open in WPS, or Download.",
-        "Allow the browser to open the installed app. If it cannot, download the file and open the saved copy.",
+        "Find the softcopy or external request in My Requests or My Tasks and select View.",
+        "Open the Document File tab to read the proposed PDF, image, text, Word or Excel file in the browser.",
+        "Select Fullscreen to enlarge it. Word and Excel files appear as a PDF.",
+        "Download Original or Download PDF appears only if the file is not locked or you hold Download Locked Files access.",
         "Return to the request to update the proposal or record your decision."
       ],
       "result": "You can check the proposed file before submission or approval.",
       "notes": [
-        "Office app links expire after 10 minutes. Refresh Review File for a new link.",
-        "Editing a review copy does not change the system file. The requester must attach the revised file.",
-        "For first-time WPS use, select Download WPS opener setup and follow the included instructions."
+        "Only the requester and the currently assigned approver can preview a request attachment, while the request is a draft, returned or submitted.",
+        "Previewing does not change the system file. To correct a file, the requester must attach the revised file.",
+        "Print is offered for approved softcopy files, not for files still attached to a request."
       ],
       "decision_examples": [
         "approval-return-reject",
@@ -379,7 +381,7 @@
       "steps": [
         "Open My Tasks and choose the request tab.",
         "Open View Details. Check the proposal, Approval Process Timeline and Workflow Activity Log.",
-        "For softcopy or external creation and revision, check Review File before deciding.",
+        "For softcopy or external creation and revision, open View Details and check the Document File preview before deciding.",
         "Choose Approve, Return or Reject. Add an optional Remark, then select Continue and Confirm.",
         "Check the result and the next task or request status."
       ],
@@ -387,7 +389,8 @@
       "notes": [
         "At the first step, Return sends the request to its requester for correction.",
         "At a later step, Return sends it to the previous approver. Its status stays Submitted.",
-        "The approval process assigns each task and may include a Requester account confirmation step."
+        "The approval process assigns each task and may include a Requester account confirmation step.",
+        "A Locked badge in Approval Process Timeline and Workflow Activity Log marks the approval that locked the attached file. Until then that step shows Locks file on approval."
       ],
       "decision_examples": [
         "approval-return-reject",
@@ -819,7 +822,7 @@
       "result": "You can fix common input problems or give the right information to the person helping you.",
       "notes": [
         "If numbering fails, check that the selected Document No. exists, its first-time pattern is valid, and the per-document series-pattern migration and unique index are installed.",
-        "Reopen Review File for an expired review link. Submit a new request if document access has expired.",
+        "If a file preview does not load, close View Details and open it again. Submit a new request if document access has expired.",
         "Keep your password private and use your own account for every action."
       ]
     }

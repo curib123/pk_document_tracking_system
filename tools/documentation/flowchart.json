@@ -22,13 +22,14 @@
       "start": "You need a document or its approved file",
       "action": "Open the document register; choose Table or Folder, search or filter, then open the record",
       "question": "Can you view the record and use its file?",
-      "yes": "Read the details; use Download, Print or Softcopy File History when available",
+      "yes": "Read the details and preview the file; Download, Print or Softcopy File History when allowed",
       "no": "Request Hardcopy or Softcopy access when available, or contact document control",
       "result": "You can read the allowed details or use the current approved file",
       "notes": [
         "Page access, document access and file actions are separate permissions. Pending proposal files are for authorized review.",
         "External Documents use a separate category list and a Download action for the current file.",
-        "Softcopy shows permitted revision history. External revision records remain stored but have no separate File History action."
+        "Softcopy shows permitted revision history. External revision records remain stored but have no separate File History action.",
+        "Word and Excel files preview as PDF. A locked file is preview-only unless the role has Download Locked Files access."
       ]
     },
     {
@@ -73,7 +74,8 @@
       "notes": [
         "Default route: Requester's leader, then Plant Manager, then Document Control Officer. Published routes can be changed.",
         "Revision requests select an active document in the correct register. The existing approved file remains current during review.",
-        "New Softcopy cancellation requests are unavailable. Retained historical requests may still appear."
+        "New Softcopy cancellation requests are unavailable. Retained historical requests may still appear.",
+        "Approval at the document-locking step locks the attachment as read-only; the timeline shows a Locked badge on that step."
       ],
       "decision_examples": [
         "approval-return-reject",

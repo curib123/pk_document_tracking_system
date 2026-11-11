@@ -1,6 +1,7 @@
 """Capture current PK DTS screens with synthetic records in a disposable site.
 
 Run: python -X utf8 tools/documentation/capture_screenshots.py
+To refresh only some screens: set PK_CAPTURE_ONLY=files,review-file first (supported: those two).
 Requires local PHP/MySQL and Playwright Chromium/Edge. Only DDL and allowlisted
 static role/permission/settings seeds are read from database/pk_dts.sql. Company
 records, source database contents, private files and existing sessions are unused.
@@ -169,6 +170,8 @@ def capture(page, base, review_request):
     OUTPUT.mkdir(parents=True, exist_ok=True)
     manifest = {}
     control_labels = json.loads((OUTPUT.parent / 'capture_controls.json').read_text())
+    # PK_CAPTURE_ONLY=files,review-file refreshes just those screens and merges them into the manifest.
+    only = {name for name in os.environ.get('PK_CAPTURE_ONLY', '').split(',') if name}
 
     def goto(route):
         response = page.goto(base + route)
@@ -184,6 +187,8 @@ def capture(page, base, review_request):
         assert not page.get_by_text('A Database Error Occurred', exact=True).is_visible(), route
 
     def shot(identifier, caption, selector=None, controls=()):
+        if only and identifier not in only:
+            return
         target = page.locator(selector) if selector else page
         if selector:
             expect(target).to_be_visible()
@@ -225,6 +230,31 @@ def capture(page, base, review_request):
         manifest[identifier] = dict(file=filename, route=page.url.removeprefix(base), caption=caption,
                                     width=image.width, height=image.height, controls=marks)
         print('Captured ' + identifier, flush=True)
+
+    if only:
+        # Refresh only these screens; everything else in the manifest is kept as is.
+        goto('login')
+        page.locator('[name="login"]').fill('demo-admin')
+        page.locator('[name="password"]').fill(PASSWORD)
+        page.locator('button[type="submit"]').click()
+        page.wait_for_url('**/dashboard')
+        if 'files' in only:
+            goto('documents/softcopy?layout=table&folder=all')
+            page.get_by_role('button', name='View', exact=True).first.click()
+            page.get_by_role('tab', name='Document Files', exact=True).click()
+            page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
+            shot('files', 'Preview the current file in View Details. Download and Print appear when the file is unlocked.', '#viewModal .modal-content')
+        if 'review-file' in only:
+            goto('my-tasks/softcopy?period=all')
+            page.get_by_role('button', name='View', exact=True).first.click()
+            page.get_by_role('tab', name='Document File', exact=True).click()
+            page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
+            shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
+        assert set(manifest) == only, (only-set(manifest), set(manifest)-only)
+        manifest = {**json.loads((OUTPUT / 'manifest.json').read_text(encoding='utf-8')), **manifest}
+        (OUTPUT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
+        print('PASS: refreshed ' + ', '.join(sorted(only)))
+        return
 
     def form(identifier, route, button, caption, kind=None):
         goto(route)
@@ -288,11 +318,15 @@ def capture(page, base, review_request):
         form('external-request-' + action, 'my-requests/external', 'New Request',
              'Prepare an external document ' + action + ' request.', 'external_' + action)
     goto('documents/softcopy?layout=table&folder=all')
-    page.locator('[data-bs-target="#fileHistoryModal"]').first.click()
-    shot('files', 'Review the current controlled file and its file history.', '#fileHistoryModal .modal-content')
+    page.get_by_role('button', name='View', exact=True).first.click()
+    page.get_by_role('tab', name='Document Files', exact=True).click()
+    page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
+    shot('files', 'Preview the current file in View Details. Download and Print appear when the file is unlocked.', '#viewModal .modal-content')
     goto('my-tasks/softcopy?period=all')
-    assert page.get_by_role('link', name='Review File', exact=True).count()
-    shot('review-file', 'Select Review File to inspect the proposed attachment before deciding.')
+    page.get_by_role('button', name='View', exact=True).first.click()
+    page.get_by_role('tab', name='Document File', exact=True).click()
+    page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
+    shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
     goto('my-requests/softcopy?period=all')
     shot('request-lifecycle', 'A saved draft remains in My Requests until submitted.')
     goto('my-tasks/softcopy?period=all')
@@ -357,7 +391,7 @@ def main():
         created = True
         review_request = seed(site)
         router = temp / 'router.php'
-        router.write_text("<?php $p=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH); if(is_file(getcwd().'/public'.$p))return false; $_SERVER['SCRIPT_NAME']='/index.php'; require getcwd().'/public/index.php';", encoding='utf-8')
+        router.write_text("<?php $p=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH); if(is_file(getcwd().'/public'.$p))return false; $_SERVER['SCRIPT_NAME']='/public/index.php'; require getcwd().'/public/index.php';", encoding='utf-8')
         with socket.socket() as sock:
             sock.bind(('127.0.0.1', 0))
             port = sock.getsockname()[1]

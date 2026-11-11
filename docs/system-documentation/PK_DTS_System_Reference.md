@@ -71,7 +71,7 @@ the current approval step can decide it.
 1. Open Hardcopy Documents, Softcopy Documents or External Documents.
 2. Choose **Table** or **Folder**, then use **Search** and the available filters.
 3. Open **View Details** where offered and check the record.
-4. Choose the available file action: **Download**, **Print**, or Softcopy **File History**.
+4. In **View Details**, open the **Document Files** tab to preview the file. Then choose the available file action: **Fullscreen**, **Download**, **Print**, or Softcopy **File History**.
 
 Seeing a document title does not automatically allow editing, approval, download
 or printing. Normal file actions use the current approved file. External
@@ -81,10 +81,15 @@ Uploads can be **PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX**, up to **15 MB**. Elect
 document creation and revision need an attachment before submission or direct
 approval. A proposed file becomes the current file only when the change is approved.
 
-Requesters and assigned reviewers can use **Review File** when offered. Office
-review provides Word or Excel, WPS and download options. Reopen Review File if its
-link expires. After editing a review copy, the requester must attach the intended
-replacement in the form; saving that copy alone does not update the proposal.
+Requesters and assigned reviewers preview a proposed attachment on the **Document File**
+tab of **View Details** in My Requests or My Tasks. Previews are read-only: the
+requester must attach any corrected file in the form.
+
+Word (`.docx`) and Excel (`.xlsx`) files are previewed and printed as a PDF that
+the server converts with LibreOffice (see the
+[LibreOffice setup guide](../LIBREOFFICE_SETUP.md)). The uploaded original is kept
+unchanged. Users who may download a file can choose **Download Original** or
+**Download PDF**; **Print** always prints the PDF. **Fullscreen** enlarges any preview.
 
 ## Register and maintain a hardcopy
 
@@ -209,8 +214,12 @@ submission and the request's timeline for work already submitted.
 For Softcopy and External Create or Revise workflows, a draft can designate one
 configured approval step as the document-locking approver. That step locks
 eligible Excel (`.xlsx`), PDF, and Word (`.docx`) attachments when approved;
-later workflow steps continue as usual. Locked files remain viewable and
-downloadable, but cannot be replaced or deleted. The lock and approver are
+later workflow steps continue as usual. A locked file is read-only: everyone with file access can preview it, but Download,
+Download PDF, Print and Full View are offered only to roles with the **Download
+Locked Files** permission (the Administrator has it; it can be granted to other
+roles such as Document Control Officer). Locked files cannot be replaced or deleted.
+The Approval Process Timeline and Workflow Activity Log mark the approval that
+locked the file with a **Locked** badge. The lock and approver are
 recorded in the audit trail. The initial document workflow defaults designate
 the configured Plant Manager step.
 

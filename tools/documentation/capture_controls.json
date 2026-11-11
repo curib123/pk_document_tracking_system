@@ -87,13 +87,13 @@
     "Attach File"
   ],
   "files": [
+    "Fullscreen",
     "Download",
-    "Print",
-    "File History"
+    "Print"
   ],
   "review-file": [
-    "Review File",
-    "Open in Word",
+    "Document File",
+    "Fullscreen",
     "Download"
   ],
   "request-lifecycle": [
