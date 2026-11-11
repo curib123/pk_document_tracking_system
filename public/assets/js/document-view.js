@@ -533,8 +533,8 @@
         row.append(text);
       }
       fileInfo.append(node("strong", "doc-modal-file-title", fileName));
-      // In-page fullscreen works for every previewable file, including locked ones:
-      // unlike the new-tab Full View it keeps the PDF toolbar (save/print) hidden.
+      // In-page fullscreen works for every previewable file, including locked ones,
+      // and keeps the PDF toolbar (save/print) hidden.
       var previewElement = row.querySelector(".doc-modal-file-preview");
       var requestFullscreen = previewElement &&
         (previewElement.requestFullscreen || previewElement.webkitRequestFullscreen);
@@ -557,18 +557,6 @@
           }
         });
         fileInfo.append(fullscreen);
-      }
-      if (previewDestination && link.full_view !== false) {
-        var fullView = node(
-          "a",
-          "btn btn-sm btn-outline-secondary doc-modal-download",
-          "Full View",
-        );
-        fullView.href = previewDestination;
-        fullView.target = "_blank";
-        fullView.rel = "noopener";
-        fullView.setAttribute("aria-label", "Open full view of " + fileName);
-        fileInfo.append(fullView);
       }
       var destination = link.url ? safeLink(link.url) : null;
       var pdfDestination = link.pdf_url ? safeLink(link.pdf_url) : null;
@@ -595,19 +583,6 @@
         pdfAnchor.href = pdfDestination;
         pdfAnchor.setAttribute("aria-label", "Download PDF copy of " + fileName);
         fileInfo.append(pdfAnchor);
-      }
-      var printDestination = link.print_url ? safeLink(link.print_url) : null;
-      if (printDestination) {
-        var print = node(
-          "a",
-          "btn btn-sm btn-outline-primary doc-modal-download",
-          "Print",
-        );
-        print.href = printDestination;
-        print.target = "_blank";
-        print.rel = "noopener";
-        print.setAttribute("aria-label", "Print " + fileName);
-        fileInfo.append(print);
       }
       row.append(fileInfo);
       list.append(row);

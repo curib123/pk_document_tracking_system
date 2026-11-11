@@ -33,7 +33,7 @@
       "notes": [
         "These are the standard duties. Administrators can change permissions or add roles.",
         "Primary role and Assigned roles work together. You can decide a task only when it is assigned to you or one of your roles.",
-        "Download Locked Files lets a role download, print and open locked approved files. Administrator has it; an Administrator can grant it to other roles, such as Document Control Officer, in Roles & Permissions."
+        "Download Locked Files lets a role download and open locked approved files. Administrator has it; an Administrator can grant it to other roles, such as Document Control Officer, in Roles & Permissions."
       ]
     },
     {
@@ -305,20 +305,20 @@
     },
     {
       "id": "files",
-      "title": "Preview, download, print and view file history",
+      "title": "Preview, download and view file history",
       "audience": "Users with the required file permissions",
       "steps": [
         "Open Softcopy Documents, find the Active document, select View and open the Document Files tab to preview the current file.",
         "Word and Excel files are shown as a PDF made by LibreOffice. The file you uploaded is kept unchanged.",
-        "Select Fullscreen to enlarge the preview. If the file is not locked, you can also select Full View, Download or Print.",
-        "For Word or Excel, Download Original saves the uploaded file and Download PDF saves the converted copy. Print always prints the PDF.",
+        "Select Fullscreen to enlarge the preview. If the file is not locked, you can also select Download.",
+        "For Word or Excel, Download Original saves the uploaded file and Download PDF saves the converted copy.",
         "Use File History or Document Files for revision details. Open View on an external document to preview its PDF or image attachments."
       ],
-      "result": "You can read the current approved file, and download or print it when it is unlocked or you hold Download Locked Files access.",
+      "result": "You can read the current approved file, and download it when it is unlocked or you hold Download Locked Files access.",
       "notes": [
         "External documents take up to 20 PDF or image files per upload, 15 MB each.",
         "Normal downloads exclude files of superseded, disposed and cancelled documents.",
-        "A locked file is read-only: it can be previewed, but Download, Print and Full View need Download Locked Files access.",
+        "A locked file is read-only: it can be previewed, but Download needs Download Locked Files access.",
         "The first Word or Excel preview takes a few seconds to convert."
       ]
     },
@@ -337,7 +337,7 @@
       "notes": [
         "Only the requester and the currently assigned approver can preview a request attachment, while the request is a draft, returned or submitted.",
         "Previewing does not change the system file. To correct a file, the requester must attach the revised file.",
-        "Print is offered for approved softcopy files, not for files still attached to a request."
+        "Request attachments are for preview and download only; there is no Print action."
       ],
       "decision_examples": [
         "approval-return-reject",

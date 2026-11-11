@@ -44,12 +44,12 @@
     {
       "id": "softcopy-files",
       "title": "3. Softcopy documents and files",
-      "summary": "Direct changes take effect immediately. Requested changes take effect after final approval. Softcopy cancellation is unavailable. Word and Excel files are previewed and printed as PDF; a locked file is preview-only without Download Locked Files access.",
+      "summary": "Direct changes take effect immediately. Requested changes take effect after final approval. Softcopy cancellation is unavailable. Word and Excel files are previewed as PDF; a locked file is preview-only without Download Locked Files access.",
       "flows": [
         {"from": "Document controller", "from_kind": "actor", "input": "Title, category, pages and file", "process": "3.1 Create or revise directly", "output": "Current document and file", "to": "Softcopy records", "to_kind": "store"},
         {"from": "Requester", "from_kind": "actor", "input": "Proposed details and file", "process": "5. Save and route request", "output": "Draft or submitted proposal", "to": "Request records", "to_kind": "store"},
         {"from": "Request records", "from_kind": "store", "input": "Approved creation or revision", "process": "3.2 Publish approved change", "output": "Current revision and file", "to": "Softcopy records", "to_kind": "store"},
-        {"from": "Softcopy records", "from_kind": "store", "input": "Current file, lock status and access", "process": "3.3 Check permission and lock", "output": "Preview, download or print access", "to": "Authorized file user", "to_kind": "actor"},
+        {"from": "Softcopy records", "from_kind": "store", "input": "Current file, lock status and access", "process": "3.3 Check permission and lock", "output": "Preview or download access", "to": "Authorized file user", "to_kind": "actor"},
         {"from": "Softcopy revision history", "from_kind": "store", "input": "Revision details and changes", "process": "3.4 View revision history", "output": "Earlier revisions and changes", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "New records use Softcopy Categories and automatic numbers; a series is optional. A revision keeps the same document number and adds a revision."

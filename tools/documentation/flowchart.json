@@ -22,7 +22,7 @@
       "start": "You need a document or its approved file",
       "action": "Open the document register; choose Table or Folder, search or filter, then open the record",
       "question": "Can you view the record and use its file?",
-      "yes": "Read the details and preview the file; Download, Print or Softcopy File History when allowed",
+      "yes": "Read the details and preview the file; Download or Softcopy File History when allowed",
       "no": "Request Hardcopy or Softcopy access when available, or contact document control",
       "result": "You can read the allowed details or use the current approved file",
       "notes": [

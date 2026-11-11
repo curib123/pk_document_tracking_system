@@ -12,8 +12,7 @@
             'grants' => 'Manage Access',
             'history' => 'File History',
             'upload' => 'Upload',
-            'download' => 'Download',
-            'print' => 'Print'
+            'download' => 'Download'
         ][$type] ?? 'Action';
         ?>
         <?php if ($type === 'view'): ?>
@@ -59,11 +58,6 @@
                 data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>">
                 <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
-        <?php elseif ($type === 'print'): ?>
-            <a class="btn-icon record-action record-action-print" href="<?= site_url($button['url']) ?>" target="_blank"
-                rel="noopener" title="Print Document File" aria-label="Print Document File">
-                <i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span>
-            </a>
         <?php elseif ($type === 'download'): ?>
             <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>" href="<?= !empty($button['same_origin'])

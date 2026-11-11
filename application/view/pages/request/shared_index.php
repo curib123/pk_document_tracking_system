@@ -206,8 +206,7 @@ foreach ($rows as $row) {
           'pdf_url' => $canDownloadFile && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
             ? $previewUrl . '&download=pdf' : '',
           'preview_url' => $previewUrl,
-          'preview_type' => in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $attachment['mime_type'],
-          'full_view' => $unlocked
+          'preview_type' => in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $attachment['mime_type']
         ];
       }
     }

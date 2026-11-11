@@ -539,29 +539,22 @@
   "files": {
     "file": "files.png",
     "route": "documents/softcopy?layout=table&folder=all",
-    "caption": "Preview the current file in View Details. Download and Print appear when the file is unlocked.",
+    "caption": "Preview the current file in View Details. Download appears when the file is unlocked.",
     "width": 1100,
     "height": 852,
     "controls": [
       {
         "label": "Fullscreen",
-        "x": 660.3,
+        "x": 841.6,
         "y": 698.2,
         "width": 100.3,
         "height": 44
       },
       {
         "label": "Download",
-        "x": 875.8,
+        "x": 953.9,
         "y": 698.2,
         "width": 117.1,
-        "height": 44
-      },
-      {
-        "label": "Print",
-        "x": 1004.9,
-        "y": 698.2,
-        "width": 66.1,
         "height": 44
       }
     ]
@@ -582,7 +575,7 @@
       },
       {
         "label": "Fullscreen",
-        "x": 738.3,
+        "x": 841.6,
         "y": 697.1,
         "width": 100.3,
         "height": 44

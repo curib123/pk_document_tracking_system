@@ -243,7 +243,7 @@ def capture(page, base, review_request):
             page.get_by_role('button', name='View', exact=True).first.click()
             page.get_by_role('tab', name='Document Files', exact=True).click()
             page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
-            shot('files', 'Preview the current file in View Details. Download and Print appear when the file is unlocked.', '#viewModal .modal-content')
+            shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
         if 'review-file' in only:
             goto('my-tasks/softcopy?period=all')
             page.get_by_role('button', name='View', exact=True).first.click()
@@ -321,7 +321,7 @@ def capture(page, base, review_request):
     page.get_by_role('button', name='View', exact=True).first.click()
     page.get_by_role('tab', name='Document Files', exact=True).click()
     page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
-    shot('files', 'Preview the current file in View Details. Download and Print appear when the file is unlocked.', '#viewModal .modal-content')
+    shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
     goto('my-tasks/softcopy?period=all')
     page.get_by_role('button', name='View', exact=True).first.click()
     page.get_by_role('tab', name='Document File', exact=True).click()

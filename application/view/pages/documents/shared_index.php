@@ -75,21 +75,17 @@ foreach ($rows as $r) {
                             ? 'files/preview/' . $item['id']
                             : 'files/download/' . $item['id']))
                         : '',
-                    'url_label' => !empty($item['locked_at']) && !$canBypassLock ? 'Preview' : 'Download',
-                    'print_url' => $canFile('print') && !empty($item['is_current']) &&
-                        (empty($item['locked_at']) || $canBypassLock) ? site_url('files/print/' . $item['id']) : ''
+                    'url_label' => !empty($item['locked_at']) && !$canBypassLock ? 'Preview' : 'Download'
                 ];
             }
             if ($canFile('history'))
                 $buttons[] = ['type' => 'history', 'files' => $historyEntries];
             if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
-                // Locked files are read-only: preview them from View Details. Print
-                // and the original download remain with Download Locked Files roles.
+                // Locked files are read-only: preview them from View Details. The
+                // original download remains with Download Locked Files roles.
                 $latestLocked = !empty($latest['locked_at']) && !$canBypassLock;
                 if (!$latestLocked) {
-                    if ($canFile('print'))
-                        $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
                     if ($canFile('download')) {
                         $isOffice = in_array(strtolower(pathinfo((string) $latest['original_name'], PATHINFO_EXTENSION)), ['docx', 'xlsx'], TRUE);
                         $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id'],

@@ -192,11 +192,8 @@ class Document_detail_model extends CI_Model
                         'url' => $can('files', 'download') && $current && $unlocked ? site_url('files/download/' . $file['id']) : '',
                         'pdf_url' => $can('files', 'download') && $current && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
                             ? site_url('files/download-pdf/' . $file['id']) : '',
-                        'print_url' => $can('files', 'print') && $current && $unlocked ? site_url('files/print/' . $file['id']) : '',
                         'preview_url' => $can('files', 'view') && $current ? site_url('files/preview/' . $file['id']) : '',
-                        'preview_type' => $previewType,
-                        // The browser's own PDF toolbar offers save/print, so no full view while locked.
-                        'full_view' => $unlocked
+                        'preview_type' => $previewType
                     ];
                 }
                 $sections[] = [

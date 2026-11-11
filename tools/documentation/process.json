@@ -28,13 +28,13 @@
         },
         {
           "actor": "Staff member",
-          "text": "Preview the current file in View Details. Use Download or Print when it is unlocked or you hold lock access. External Documents offer Download."
+          "text": "Preview the current file in View Details. Use Download when it is unlocked or you hold lock access. External Documents offer Download."
         }
       ],
       "notes": [
         "Viewing, editing, approving and using files each require permission.",
         "Hardcopy records track physical documents. Softcopy and External Documents can include controlled files.",
-        "Word and Excel files are previewed and printed as a PDF converted by LibreOffice. The original upload is kept for authorized download. A locked file is preview-only unless your role has Download Locked Files access.",
+        "Word and Excel files are previewed as a PDF converted by LibreOffice. The original upload is kept for authorized download. A locked file is preview-only unless your role has Download Locked Files access.",
         "Approval at the document-locking step locks a request attachment as read-only; the timeline marks that step with a Locked badge."
       ]
     },
