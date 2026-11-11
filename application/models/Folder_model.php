@@ -95,13 +95,23 @@ class Folder_model extends CI_Model
                             $parentKey = '';
                         }
                     }
-                    $nodes[] = [
+                    $node = [
                         'key' => $kind . ':' . $row['id'],
                         'parent' => $parentKey,
                         'name' => $row[$definition['title']],
                         'meta' => ucfirst($kind),
                         'kind' => $kind
                     ];
+                    if ($kind === 'location') {
+                        // Lets "Add document here" pre-fill the hardcopy form for this Location.
+                        $node['place'] = [
+                            'location_id' => (int) $row['id'],
+                            'area_id' => (int) ($row['area_id'] ?? 0) ?: ($specificAreas[(int) ($row['specific_id'] ?? 0)] ?? 0),
+                            'specific_id' => (int) ($row['specific_id'] ?? 0),
+                            'asset_id' => (int) ($row['asset_id'] ?? 0)
+                        ];
+                    }
+                    $nodes[] = $node;
                 }
             }
         }

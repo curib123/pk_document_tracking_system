@@ -104,7 +104,8 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
                 'dt_total',
                 'dt_columns',
                 'dt_rows',
-                'dt_folder_show_documents'
+                'dt_folder_show_documents',
+                'dt_create'
             )); ?>
         <?php elseif ($dt_layout === 'grid'): ?>
             <div class="document-card-grid p-3" data-record-layout="grid">

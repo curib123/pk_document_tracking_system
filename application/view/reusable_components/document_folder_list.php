@@ -141,6 +141,16 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
                 <?php foreach ($items as $dt_row):
                     $renderDocument($dt_row);
                 endforeach; ?>
+                <?php if ($dt_folder_domain === 'hardcopy' && !empty($dt_create) && !empty($node['place'])): ?>
+                    <li class="doc-tree-view-folder doc-tree-add-document">
+                        <button type="button" class="btn btn-sm btn-outline-primary js-edit" data-bs-toggle="modal"
+                            data-bs-target="#editModal" data-target="#editForm"
+                            data-record="<?= html_escape(json_encode($node['place'])) ?>"
+                            data-title="<?= html_escape($dt_create . ' — ' . $node['name']) ?>">
+                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i> Add document here
+                        </button>
+                    </li>
+                <?php endif; ?>
                 <?php if ($isCurrent): ?>
                     <li class="doc-tree-view-folder">
                         <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
