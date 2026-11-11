@@ -1328,3 +1328,27 @@
 #viewModal.is-document-view .doc-workflow-lock-badge.is-locked {
   background: var(--ui-amber-100);
 }
+
+/* File preview shown fullscreen from the Fullscreen button. */
+#viewModal .doc-modal-file-preview:fullscreen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  object-fit: contain;
+}
+#viewModal .doc-modal-file-preview:-webkit-full-screen {
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: none !important;
+  max-height: none !important;
+  margin: 0;
+  border: 0;
+  border-radius: 0;
+  background: #fff;
+  object-fit: contain;
+}

@@ -533,6 +533,31 @@
         row.append(text);
       }
       fileInfo.append(node("strong", "doc-modal-file-title", fileName));
+      // In-page fullscreen works for every previewable file, including locked ones:
+      // unlike the new-tab Full View it keeps the PDF toolbar (save/print) hidden.
+      var previewElement = row.querySelector(".doc-modal-file-preview");
+      var requestFullscreen = previewElement &&
+        (previewElement.requestFullscreen || previewElement.webkitRequestFullscreen);
+      if (requestFullscreen) {
+        var fullscreen = node(
+          "button",
+          "btn btn-sm btn-outline-secondary doc-modal-download",
+          "Fullscreen",
+        );
+        fullscreen.type = "button";
+        fullscreen.setAttribute("aria-label", "Show " + fileName + " fullscreen");
+        fullscreen.addEventListener("click", function () {
+          try {
+            var request = previewElement.requestFullscreen
+              ? previewElement.requestFullscreen()
+              : previewElement.webkitRequestFullscreen();
+            if (request && request.catch) request.catch(function () {});
+          } catch (error) {
+            /* Fullscreen can be blocked by the browser; the inline preview remains. */
+          }
+        });
+        fileInfo.append(fullscreen);
+      }
       if (previewDestination && link.full_view !== false) {
         var fullView = node(
           "a",
