@@ -79,6 +79,8 @@ $route['documents/softcopy/direct']['POST'] = 'Documents/direct_softcopy';
 // Save document changes or dispose of a document.
 $route['documents/(:any)/save']['POST'] = 'Documents/save/$1';
 $route['documents/(:any)/dispose']['POST'] = 'Documents/dispose/$1';
+// Administrator-only permanent deletion of disposed documents.
+$route['documents/(:any)/hard-delete']['POST'] = 'Documents/hard_delete/$1';
 
 
 /*

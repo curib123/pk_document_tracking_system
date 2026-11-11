@@ -226,6 +226,100 @@ class Document_service
         $data['location_id'] = $location;
     }
 
+    /**
+     * Permanently delete a DISPOSED document and its dependent rows and stored files.
+     * Administrator only. The disposals and status_history rows are kept as the
+     * permanent record that the document existed and was deleted.
+     */
+    public function hard_delete($domain, $id, $actorId)
+    {
+        $cfg = $this->ci->Document_model->config($domain);
+        if (!in_array($domain, ['hardcopy', 'softcopy'], TRUE))
+            throw new DomainException('Hard delete is not available for this document type.');
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $actor = $this->ci->Identity_model->active_user($actorId);
+        if (!$actor || !$this->ci->Permission_model->allowed($actor, '*', '*'))
+            throw new DomainException('Only an Administrator can permanently delete documents.');
+        $id = (int) $id;
+        $db = $this->ci->db;
+        $storage = [];
+        $db->trans_begin();
+        try {
+            $row = $db->query('SELECT * FROM ' . $cfg['table'] . ' WHERE id=? FOR UPDATE', [$id])->row_array();
+            if (!$row || $row['status'] !== 'disposed')
+                throw new DomainException('Only a disposed document can be permanently deleted.');
+
+            if ($domain === 'hardcopy') {
+                $db->delete('transfers', ['hardcopy_id' => $id]);
+            } else {
+                $revisions = array_map('intval', array_column(
+                    $db->select('id')->get_where('softcopy_revisions', ['document_id' => $id])->result_array(),
+                    'id'
+                ));
+                $fileIds = array_column(
+                    $db->select('id')->get_where('files', ['domain' => 'softcopy', 'document_id' => $id])->result_array(),
+                    'id'
+                );
+                if ($revisions) {
+                    $fileIds = array_merge(
+                        $fileIds,
+                        array_column($db->select('file_id')->where_in('document_id', [$id])->get('softcopy_revisions')->result_array(), 'file_id'),
+                        array_column($db->select('file_id')->where_in('revision_id', $revisions)->get('revision_artifacts')->result_array(), 'file_id')
+                    );
+                }
+                $fileIds = array_values(array_unique(array_map('intval', $fileIds)));
+                $db->where('id', $id)->update('softcopy_documents', ['current_revision_id' => NULL]);
+                if ($revisions) {
+                    $db->where_in('revision_id', $revisions)->delete('revision_artifacts');
+                    $db->where_in('id', $revisions)->delete('softcopy_revisions');
+                }
+                $db->delete('assignments', ['softcopy_id' => $id]);
+                // Keep a file row that some other record still uses; remove only unshared ones.
+                foreach ($fileIds as $fileId) {
+                    $used = $db->where('file_id', $fileId)->count_all_results('softcopy_revisions')
+                        + $db->where('file_id', $fileId)->count_all_results('revision_artifacts')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revision_files')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revisions');
+                    if ($used)
+                        continue;
+                    $file = $db->get_where('files', ['id' => $fileId])->row_array();
+                    if ($file) {
+                        $storage[] = $file['storage_name'];
+                        $db->delete('files', ['id' => $fileId]);
+                    }
+                }
+            }
+            $db->delete('access_grants', ['domain' => $domain, 'document_id' => $id]);
+            $db->where($domain . '_id', $id)->update('requests', [$domain . '_id' => NULL]);
+            $db->delete($cfg['table'], ['id' => $id]);
+            $db->insert('status_history', [
+                'domain' => $domain,
+                'document_id' => $id,
+                'previous_status' => 'disposed',
+                'new_status' => 'deleted',
+                'action' => 'hard_delete',
+                'user_id' => (int) $actorId,
+                'remarks' => 'Permanently deleted by an Administrator: ' . (string) ($row['title'] ?? '')
+            ]);
+            if ($db->trans_status() === FALSE)
+                throw new DomainException('The document could not be permanently deleted because related records are still in use.');
+            if ($db->trans_commit() === FALSE)
+                throw new DomainException('The permanent deletion could not be committed.');
+        } catch (Throwable $e) {
+            $db->trans_rollback();
+            if ($e instanceof DomainException)
+                throw $e;
+            log_message('error', 'Hard delete failed: ' . $e->getMessage());
+            throw new DomainException('The document could not be permanently deleted. Refresh and try again.');
+        }
+        if ($storage) {
+            require_once APPPATH . 'services/files/file_service.php';
+            (new File_service())->purge_storage($storage);
+        }
+        return (string) ($row['title'] ?? '');
+    }
+
     public function dispose($domain, $id, $actorId, $reason = '', $action = 'other')
     {
         $cfg = $this->ci->Document_model->config($domain);

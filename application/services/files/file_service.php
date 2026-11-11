@@ -121,6 +121,37 @@ class File_service
         return $removed;
     }
 
+    /**
+     * Permanently remove stored bytes after a hard delete has committed. A storage
+     * name still referenced by any remaining files row is never removed.
+     */
+    public function purge_storage(array $storageNames): int
+    {
+        $db = $this->ci->db;
+        if ($db->trans_active())
+            return 0;
+        $removed = 0;
+        foreach (array_unique($storageNames) as $storage) {
+            $storage = (string) $storage;
+            try {
+                if ($db->where('storage_name', $storage)->count_all_results('files') > 0)
+                    continue;
+                $path = $this->controlled_path($storage);
+                if (!$path)
+                    continue;
+                if (@unlink($path)) {
+                    require_once APPPATH . 'services/files/pdf_preview_service.php';
+                    Pdf_preview_service::forget($storage);
+                    $removed++;
+                } else
+                    log_message('error', 'Hard delete could not remove a stored Document File.');
+            } catch (Throwable $error) {
+                log_message('error', 'Hard delete file cleanup failed.');
+            }
+        }
+        return $removed;
+    }
+
     /** Daily reconciliation also covers legacy terminal records and deleted documents. */
     public function cleanup_daily(): bool
     {

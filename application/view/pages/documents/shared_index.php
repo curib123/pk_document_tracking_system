@@ -108,6 +108,14 @@ foreach ($rows as $r) {
             'description' => 'Choose a disposal reason and confirm this action.',
             'icon' => 'fa-solid fa-trash-can'
         ];
+    if (!empty($is_administrator) && $r['status'] === 'disposed')
+        $buttons[] = [
+            'type' => 'action',
+            'url' => 'documents/' . $cfg['domain'] . '/hard-delete',
+            'label' => 'Hard Delete',
+            'description' => 'This permanently deletes the disposed document, its files and related records. It cannot be undone.',
+            'icon' => 'fa-solid fa-trash-can-arrow-up'
+        ];
     $path = [
         'area_id' => $r['area_id'] ?? NULL,
         'specific_id' => $r['specific_id'] ?? NULL,

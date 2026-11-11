@@ -196,6 +196,24 @@ class Documents extends MY_Controller
         }
         $this->back_to_register($domain, $savedId, $addLocationId);
     }
+    /** Administrator-only permanent deletion of an already disposed document. */
+    public function hard_delete($domain)
+    {
+        $this->Document_model->config($domain);
+        $this->authenticate();
+        if (!$this->can('*', '*'))
+            show_error('Only an Administrator can permanently delete documents.', 403);
+        $this->confirmed();
+        $id = (int) $this->input->post('id');
+        try {
+            $title = (new Document_service())->hard_delete($domain, $id, (int) $this->user['id']);
+            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id, ['title' => $title]);
+            $this->notice('Document permanently deleted.');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
+        }
+        $this->back_to_register($domain);
+    }
     public function dispose($domain)
     {
         $this->Document_model->config($domain);
