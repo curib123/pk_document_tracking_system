@@ -1093,6 +1093,37 @@ a {
   }
 }
 
+/* Touch tablets in landscape (e.g. 1024-1366px): no fixed sidebar, use the
+   same off-canvas drawer as phones. Keep this query identical to the one in
+   app.js (mobileNavigation). Desktop and laptop windows keep the sidebar. */
+@media (min-width: 992px) and (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100dvh;
+    width: min(288px, calc(100vw - 52px));
+    min-width: 0;
+    transform: translateX(-101%);
+    transition: transform 0.2s ease;
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 10px 0 35px
+      color-mix(in srgb, var(--ui-black) 26.67%, transparent);
+  }
+
+  /* Bootstrap's d-lg-none hides the menu button from 992px up. */
+  #sidebarToggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
+  }
+}
+
 /* =========================================================
    RESPONSIVE: MOBILE DEVICES
 ========================================================= */

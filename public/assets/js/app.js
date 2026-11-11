@@ -430,7 +430,11 @@
   var sidebar = document.getElementById("appSidebar");
   var toggle = document.getElementById("sidebarToggle");
   var sidebarBackdrop = document.getElementById("sidebarBackdrop");
-  var mobileNavigation = window.matchMedia("(max-width: 991.98px)");
+  // Phones, small windows and touch tablets in landscape use the drawer.
+  // Keep in sync with the tablet media query in app.css.
+  var mobileNavigation = window.matchMedia(
+    "(max-width: 991.98px), (max-width: 1366px) and (hover: none) and (pointer: coarse)",
+  );
   function setSidebar(open, returnFocus) {
     if (!sidebar || !toggle) return;
     open = !!open && mobileNavigation.matches;
