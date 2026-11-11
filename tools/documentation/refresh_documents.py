@@ -1248,6 +1248,8 @@ def verify(content, pending=False):
     if not pending:
         expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
         expected.update(base+'.vdx' for key, base, _ in SPECS if key != 'guide')
+        # Built separately by build_request_workflow.py; not part of the four generated books.
+        expected.add('PK_DTS_Request_Workflow.pptx')
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
         print('Verified all 8 PDF/editable exports and 3 legacy Visio copies. Reference notes and Office lock files are not treated as exports.')

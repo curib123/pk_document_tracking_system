@@ -253,6 +253,23 @@ def capture(page, base, review_request):
             page.get_by_role('tab', name='Document File', exact=True).click()
             page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
             shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
+        if 'workflow-tasks' in only:
+            # Extra screen for the request-workflow deck; kept outside the guide manifest.
+            only.discard('workflow-tasks')
+            page.set_viewport_size({'width': 1700, 'height': 900})  # wide enough to show every row action
+            goto('my-tasks/softcopy?period=all')
+            extra = OUTPUT / 'workflow'
+            extra.mkdir(exist_ok=True)
+            marks = {}
+            for label in ['Approve', 'Return', 'Reject']:
+                box = page.get_by_role('button', name=label, exact=True).first.bounding_box()
+                marks[label] = {key: round(box[key], 1) for key in ('x', 'y', 'width', 'height')}
+            page.screenshot(path=str(extra / 'my-tasks.png'), animations='disabled')
+            (extra / 'manifest.json').write_text(json.dumps({'my-tasks': {'file': 'my-tasks.png', 'width': 1700,
+                                                 'height': 900, 'controls': marks}}, indent=2) + '\n', encoding='utf-8')
+            print('PASS: refreshed workflow-tasks')
+            if not only:
+                return
         assert set(manifest) == only, (only-set(manifest), set(manifest)-only)
         manifest = {**json.loads((OUTPUT / 'manifest.json').read_text(encoding='utf-8')), **manifest}
         (OUTPUT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')

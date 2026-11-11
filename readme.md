@@ -296,6 +296,12 @@ python -X utf8 tools/documentation/refresh_documents.py
 python -X utf8 tools/documentation/refresh_documents.py --verify
 ```
 
+The request-workflow presentation ([PK_DTS_Request_Workflow.pptx](docs/system-documentation/PK_DTS_Request_Workflow.pptx)) 
+follows one softcopy request from sign-in to final approval, then shows every request 
+route with the sample users. Rebuild it after route or screen changes with 
+`python -X utf8 tools/documentation/build_request_workflow.py`. Its screens come from 
+`capture_screenshots.py`; refresh the My Tasks screen with `PK_CAPTURE_ONLY=workflow-tasks`.
+
 These checks cover the documented routes, request actions, content and exported
 packages. They do not prove how the files open in desktop PowerPoint or Visio.
 
