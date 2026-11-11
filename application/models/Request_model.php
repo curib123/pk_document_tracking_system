@@ -123,20 +123,26 @@ class Request_model extends CI_Model
         }
         $fileIds = array_values(array_unique($fileIds));
         $lockedIds = [];
+        $filesById = [];
         if ($fileIds) {
-            foreach ($this->db->select('id,lock_request_id')->where_in('id', $fileIds)
-                ->where('locked_at IS NOT NULL', NULL, FALSE)->get('files')->result_array() as $file) {
-                $lockedIds[(int) $file['lock_request_id']][(int) $file['id']] = TRUE;
+            foreach ($this->db->select('id,original_name,mime_type,size,locked_at,lock_request_id')
+                ->where_in('id', $fileIds)->get('files')->result_array() as $file) {
+                $filesById[(int) $file['id']] = $file;
+                if (!empty($file['locked_at']))
+                    $lockedIds[(int) $file['lock_request_id']][(int) $file['id']] = TRUE;
             }
         }
         foreach ($rows as &$row) {
             $requestId = (int) $row['id'];
             $row['locked_attachment'] = FALSE;
-            foreach ($fileIdsByRequest[$requestId] ?? [] as $fileId)
-                if (!empty($lockedIds[$requestId][$fileId])) {
+            // Attachment details for the read-only preview in the request view modal.
+            $row['attachment_files'] = [];
+            foreach ($fileIdsByRequest[$requestId] ?? [] as $fileId) {
+                if (isset($filesById[$fileId]))
+                    $row['attachment_files'][] = $filesById[$fileId];
+                if (!empty($lockedIds[$requestId][$fileId]))
                     $row['locked_attachment'] = TRUE;
-                    break;
-                }
+            }
         }
         unset($row);
     }

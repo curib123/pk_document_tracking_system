@@ -63,47 +63,56 @@ class Files extends MY_Controller
             show_error('Document Fileis not available for your review.', 403);
             return;
         }
-        $canBypassLock = empty($file['locked_at']) || $this->can('files', 'download_locked');
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
-            return;
-        }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
-            return;
-        }
-        $wantsDownload = $this->input->get('download') === '1';
-        if ($wantsDownload && !$canBypassLock) {
-            show_error('This file is locked after Plant Manager approval and is read-only. Ask Document Control for a full download.', 403);
-            return;
-        }
-        $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
-        if (in_array($extension, ['docx', 'xlsx'], TRUE) && !$wantsDownload) {
-            require_once APPPATH . 'services/files/office_review_ticket.php';
-            $ticket = (new Office_review_ticket())->issue($this->user, (int) $requestId, (int) $file['id']);
-            $contentUrl = site_url('files/review-content/' . (int) $requestId . '/' . $ticket . '/review.' . $extension);
-            $this->audit_event('files/review-open', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+        if ($this->input->get('download') === '1') {
+            // The original upload, for roles that may open locked files.
+            if ($this->locked_for_user($file)) {
+                show_error('This file is locked after Plant Manager approval and is read-only. Ask Document Control for a full download.', 403);
+                return;
+            }
+            if (!$this->can('files', 'download')) {
+                show_error('File download is not permitted.', 403);
+                return;
+            }
+            if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+                show_404();
+                return;
+            }
+            $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+            if (!is_file($path) || is_link($path)) {
+                show_404();
+                return;
+            }
+            $this->audit_event('files/review-download', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+            $this->clear_output_buffers();
+            header('Content-Type: application/octet-stream');
             header('Cache-Control: private, no-store');
-            header('Referrer-Policy: no-referrer');
-            $this->load->view('pages/files/review', ['file' => $file, 'request_id' => (int) $requestId,
-                'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
-                'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
-                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '='),
-                'download_url' => $canBypassLock ? site_url('files/review/' . (int) $requestId) . '?download=1' : NULL]);
+            header('X-Content-Type-Options: nosniff');
+            header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
+            header('Content-Length: ' . filesize($path));
+            readfile($path);
+            exit;
+        }
+        // Read-only inline preview; Word/Excel are shown as a LibreOffice-rendered PDF.
+        $source = $this->display_source($file);
+        if (!$source) {
             return;
         }
-        $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
+        if ($source['mime'] !== 'application/pdf' && $source['mime'] !== 'text/plain' &&
+            strpos($source['mime'], 'image/') !== 0) {
+            show_error('Preview is available for PDF, image, text, Word, and Excel attachments only.', 415);
+            return;
+        }
         $this->audit_event('files/review', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
         $this->clear_output_buffers();
-        header('Content-Type: ' . ($inline ? $file['mime_type'] : 'application/octet-stream'));
+        header('Content-Type: ' . $source['mime']);
         header('Cache-Control: private, no-store');
         header('X-Content-Type-Options: nosniff');
-        header('Content-Security-Policy: sandbox');
-        header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' .
-            $this->safe_download_name($file['original_name']) . '"');
-        header('Content-Length: ' . filesize($path));
-        readfile($path);
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
+            ? "frame-ancestors 'self'"
+            : "sandbox allow-same-origin; frame-ancestors 'self'"));
+        header('Content-Disposition: inline; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
         exit;
     }
 

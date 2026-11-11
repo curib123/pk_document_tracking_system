@@ -150,19 +150,43 @@ foreach ($rows as $row) {
       'fields' => $detail
     ];
   if (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
-    array_splice($requestSections, 2, 0, [
-      [
-        'key' => 'files',
-        'title' => 'Document File',
-        'fields' => [
-          'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-            ? (!empty($row['locked_attachment'])
-              ? 'Locked by the designated approver; read-only preview only unless you hold Download Locked Files permission'
-              : 'Attached to this request for review')
-            : 'No attachment'
-        ]
+    $filesSection = [
+      'key' => 'files',
+      'title' => 'Document File',
+      'fields' => [
+        'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
+          ? (!empty($row['locked_attachment'])
+            ? 'Locked by the designated approver; read-only preview only unless you hold Download Locked Files permission'
+            : 'Attached to this request for review')
+          : 'No attachment'
       ]
-    ]);
+    ];
+    // Same read-only preview as the document modals. The endpoint re-checks that the
+    // viewer is the requester or an active approver, so only offer it to them.
+    $canPreviewAttachment = in_array($row['status'], ['draft', 'returned', 'submitted'], TRUE) &&
+      ((int) ($row['requested_by'] ?? 0) === (int) ($user['id'] ?? 0) || ($task && $row['status'] === 'submitted'));
+    if (!empty($row['attachment_files']) && $canPreviewAttachment) {
+      $canBypassLock = isset($permissions['*']) || !empty($permissions['files']['download_locked']);
+      $canDownloadFile = isset($permissions['*']) || !empty($permissions['files']['download']);
+      $filesSection['fields'] = [];
+      $filesSection['links'] = [];
+      foreach ($row['attachment_files'] as $index => $attachment) {
+        $unlocked = empty($attachment['locked_at']) || $canBypassLock;
+        $extension = strtolower(pathinfo((string) $attachment['original_name'], PATHINFO_EXTENSION));
+        $previewUrl = site_url('files/review/' . (int) $row['id'] . '?file_id=' . (int) $attachment['id']);
+        $filesSection['fields'][($index + 1) . '. ' . $attachment['original_name']] =
+          number_format((int) $attachment['size']) . ' bytes' .
+          (!empty($attachment['locked_at']) ? ' · Locked' : '');
+        $filesSection['links'][] = [
+          'label' => $attachment['original_name'],
+          'url' => $canDownloadFile && $unlocked ? $previewUrl . '&download=1' : '',
+          'preview_url' => $previewUrl,
+          'preview_type' => in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $attachment['mime_type'],
+          'full_view' => $unlocked
+        ];
+      }
+    }
+    array_splice($requestSections, 2, 0, [$filesSection]);
   }
   $display = [
     'kind' => $isDocumentRequest ? 'document' : 'record',
