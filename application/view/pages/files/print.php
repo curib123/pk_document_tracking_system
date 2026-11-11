@@ -1,4 +1,4 @@
-<?php $mime = (string) $file['mime_type'];
+<?php $mime = (string) ($print_mime ?? $file['mime_type']);
 $printable = in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE); ?>
 <!doctype html>
 <html lang="en">
@@ -18,11 +18,11 @@ $printable = in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'tex
         </div>
         <div class="print-actions">
             <?php if ($printable): ?><button type="button" id="printButton" disabled>Print</button><?php endif; ?>
-            <a href="<?= site_url('files/download/' . (int) $file['id']) ?>">Download</a>
+            <?php if (!empty($download_url)): ?><a href="<?= html_escape($download_url) ?>">Download</a><?php endif; ?>
         </div>
     </header>
     <p id="printStatus" role="status" aria-live="polite">
-        <?= $printable ? 'Preparing print preview…' : 'Download this Office file and use Print in Word or Excel.' ?></p>
+        <?= $printable ? 'Preparing print preview…' : 'Download this file and use Print in its native application.' ?></p>
     <main>
         <?php if ($mime === 'text/plain'): ?>
             <pre class="print-text"><?= html_escape($text) ?></pre>

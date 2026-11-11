@@ -168,6 +168,43 @@ class Files extends MY_Controller
         exit;
     }
 
+    /** Locked files are read-only except for roles holding Download Locked Files. */
+    private function locked_for_user(array $file): bool
+    {
+        return !empty($file['locked_at']) && !$this->can('files', 'download_locked');
+    }
+
+    /**
+     * What a viewer or printer receives for a file: the original bytes for PDF/image/text,
+     * or a LibreOffice-rendered PDF for Word/Excel. The original upload is never altered.
+     *
+     * @return array{path:string,mime:string,name:string}|null NULL after an error response was sent.
+     */
+    private function display_source(array $file): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+            show_404();
+            return NULL;
+        }
+        $original = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($original) || is_link($original)) {
+            show_404();
+            return NULL;
+        }
+        require_once APPPATH . 'services/files/pdf_preview_service.php';
+        if (Pdf_preview_service::office_extension($file) !== '') {
+            try {
+                $pdf = (new Pdf_preview_service())->pdf_path($file);
+            } catch (DomainException $error) {
+                show_error($error->getMessage(), 503);
+                return NULL;
+            }
+            return ['path' => $pdf, 'mime' => 'application/pdf',
+                'name' => pathinfo((string) $file['original_name'], PATHINFO_FILENAME) . '.pdf'];
+        }
+        return ['path' => $original, 'mime' => (string) $file['mime_type'], 'name' => (string) $file['original_name']];
+    }
+
     /** Accessible print viewer; every file response repeats the access check. */
     public function print_file($id)
     {
@@ -177,13 +214,16 @@ class Files extends MY_Controller
             show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Printing is limited to Document Control.', 403);
             return;
         }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        if (!in_array($source['mime'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
+            show_error('Download this file to print it in its native application.', 415);
             return;
         }
         header('Cache-Control: private, no-store');
@@ -191,7 +231,9 @@ class Files extends MY_Controller
         $this->audit_event('files/print', 'files:' . (int) $id);
         $this->load->view('pages/files/print', [
             'file' => $file,
-            'text' => $file['mime_type'] === 'text/plain' ? file_get_contents($path) : NULL
+            'print_mime' => $source['mime'],
+            'text' => $source['mime'] === 'text/plain' ? file_get_contents($source['path']) : NULL,
+            'download_url' => $this->can('files', 'download') ? site_url('files/download/' . (int) $file['id']) : NULL
         ]);
     }
 
@@ -203,36 +245,36 @@ class Files extends MY_Controller
             show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
-        if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Printing is limited to Document Control.', 403);
+            return;
+        }
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        if (!in_array($source['mime'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
             show_error('Download this file to print it in its native application.', 415);
             return;
         }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
-            return;
-        }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
-            return;
-        }
         $this->clear_output_buffers();
-        header('Content-Type: ' . $file['mime_type']);
+        header('Content-Type: ' . $source['mime']);
         $this->audit_event('files/print-content', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store');
         // Native PDF viewers use a browser plugin, which CSP sandbox disables.
         // Text and image responses keep the sandbox; PDFs remain MIME-scoped.
-        header('Content-Security-Policy: ' . ($file['mime_type'] === 'application/pdf'
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
             ? "frame-ancestors 'self'"
             : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
-            $this->safe_download_name($file['original_name']) . '"');
-        header('Content-Length: ' . filesize($path));
-        readfile($path);
+            $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
         exit;
     }
 
+    /** Read-only inline preview. Word/Excel are shown as a PDF rendered by LibreOffice. */
     public function preview($id)
     {
         $this->require_permission('files', 'view');
@@ -242,48 +284,26 @@ class Files extends MY_Controller
             show_error('File preview is not permitted.', 403);
             return;
         }
-        $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
-        if (in_array($extension, ['docx', 'xlsx'], TRUE)) {
-            require_once APPPATH . 'services/files/locked_file_ticket.php';
-            $ticket = (new Locked_file_ticket())->issue($this->user, $id);
-            $contentUrl = site_url('files/preview-content/' . $id . '/' . $ticket . '/review.' . $extension);
-            $canBypass = empty($file['locked_at']) || $this->can('files', 'download_locked');
-            $this->audit_event('files/preview-open', 'files:' . $id);
-            header('Cache-Control: private, no-store');
-            header('Referrer-Policy: no-referrer');
-            $this->load->view('pages/files/review', [
-                'file' => $file,
-                'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
-                'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
-                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '='),
-                'download_url' => $canBypass ? site_url('files/download/' . $id) : NULL
-            ]);
+        $source = $this->display_source($file);
+        if (!$source) {
             return;
         }
-        if ($file['mime_type'] !== 'application/pdf' && strpos((string) $file['mime_type'], 'image/') !== 0) {
-            show_error('Preview is available for PDF, image, Word, and Excel attachments only.', 415);
-            return;
-        }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
-            return;
-        }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
+        if ($source['mime'] !== 'application/pdf' && $source['mime'] !== 'text/plain' &&
+            strpos($source['mime'], 'image/') !== 0) {
+            show_error('Preview is available for PDF, image, text, Word, and Excel attachments only.', 415);
             return;
         }
         $this->clear_output_buffers();
-        $this->audit_event('files/preview', 'files:' . (int) $id);
-        header('Content-Type: ' . $file['mime_type']);
+        $this->audit_event('files/preview', 'files:' . $id);
+        header('Content-Type: ' . $source['mime']);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
-        header('Content-Security-Policy: ' . ($file['mime_type'] === 'application/pdf'
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
             ? "frame-ancestors 'self'"
             : "sandbox allow-same-origin; frame-ancestors 'self'"));
-        header('Content-Disposition: inline; filename="' . $this->safe_download_name($file['original_name']) . '"');
-        header('Content-Length: ' . filesize($path));
-        readfile($path);
+        header('Content-Disposition: inline; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
         exit;
     }
 

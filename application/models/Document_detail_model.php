@@ -180,10 +180,21 @@ class Document_detail_model extends CI_Model
                     $fileFields[($index + 1) . '. ' . $file['original_name']] =
                         number_format((int) $file['size']) . ' bytes · ' . $file['mime_type'] . ' · ' . $file['created_at'] .
                         ' · ' . (!empty($file['is_current']) ? 'Current' : 'Superseded');
+                    // Locked files are a read-only preview; download/print stay with
+                    // roles holding Download Locked Files (e.g. Document Control, admin).
+                    $current = !empty($file['is_current']);
+                    $unlocked = empty($file['locked_at']) || $can('files', 'download_locked');
+                    $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
+                    // Word/Excel are previewed as a PDF rendered from the preserved original.
+                    $previewType = in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $file['mime_type'];
                     $links[] = [
                         'label' => 'Download ' . $file['original_name'],
-                        'url' => $can('files', 'download') && !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : '',
-                        'print_url' => $can('files', 'print') && !empty($file['is_current']) ? site_url('files/print/' . $file['id']) : ''
+                        'url' => $can('files', 'download') && $current && $unlocked ? site_url('files/download/' . $file['id']) : '',
+                        'print_url' => $can('files', 'print') && $current && $unlocked ? site_url('files/print/' . $file['id']) : '',
+                        'preview_url' => $can('files', 'view') && $current ? site_url('files/preview/' . $file['id']) : '',
+                        'preview_type' => $previewType,
+                        // The browser's own PDF toolbar offers save/print, so no full view while locked.
+                        'full_view' => $unlocked
                     ];
                 }
                 $sections[] = [

@@ -106,9 +106,11 @@ class File_service
                 $path = $this->controlled_path((string) $file['storage_name']);
                 if (!$path)
                     continue;
-                if (@unlink($path))
+                if (@unlink($path)) {
+                    require_once APPPATH . 'services/files/pdf_preview_service.php';
+                    Pdf_preview_service::forget((string) $file['storage_name']);
                     $removed++;
-                else
+                } else
                     log_message('error', 'Retired Document Filecleanup failed for file ' . (int) $file['id'] . '.');
             }
         } catch (Throwable $error) {

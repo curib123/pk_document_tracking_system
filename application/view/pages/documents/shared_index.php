@@ -76,20 +76,22 @@ foreach ($rows as $r) {
                             : 'files/download/' . $item['id']))
                         : '',
                     'url_label' => !empty($item['locked_at']) && !$canBypassLock ? 'Preview' : 'Download',
-                    'print_url' => $canFile('print') && !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
+                    'print_url' => $canFile('print') && !empty($item['is_current']) &&
+                        (empty($item['locked_at']) || $canBypassLock) ? site_url('files/print/' . $item['id']) : ''
                 ];
             }
             if ($canFile('history'))
                 $buttons[] = ['type' => 'history', 'files' => $historyEntries];
             if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
-                if ($canFile('print'))
-                    $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
-                if ($canFile('download')) {
-                    $latestLocked = !empty($latest['locked_at']) && !$canBypassLock;
-                    $buttons[] = $latestLocked
-                        ? ['type' => 'review', 'url' => 'files/preview/' . $latest['id'], 'label' => 'Preview (Locked)']
-                        : ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                // Locked files are read-only: preview them from View Details. Print
+                // and the original download remain with Download Locked Files roles.
+                $latestLocked = !empty($latest['locked_at']) && !$canBypassLock;
+                if (!$latestLocked) {
+                    if ($canFile('print'))
+                        $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
+                    if ($canFile('download'))
+                        $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
                 }
             }
         }

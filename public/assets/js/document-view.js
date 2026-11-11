@@ -526,9 +526,14 @@
         pdf.src = previewDestination + "#toolbar=0&navpanes=0&view=Fit";
         pdf.title = "Preview " + fileName;
         row.append(pdf);
+      } else if (previewDestination && link.preview_type === "text/plain") {
+        var text = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
+        text.src = previewDestination;
+        text.title = "Preview " + fileName;
+        row.append(text);
       }
       fileInfo.append(node("strong", "doc-modal-file-title", fileName));
-      if (previewDestination) {
+      if (previewDestination && link.full_view !== false) {
         var fullView = node(
           "a",
           "btn btn-sm btn-outline-secondary doc-modal-download",

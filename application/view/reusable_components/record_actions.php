@@ -12,7 +12,6 @@
             'grants' => 'Manage Access',
             'history' => 'File History',
             'upload' => 'Upload',
-            'review' => 'Review File',
             'download' => 'Download',
             'print' => 'Print'
         ][$type] ?? 'Action';
@@ -60,11 +59,6 @@
                 data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>">
                 <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
-        <?php elseif ($type === 'review'): ?>
-            <a class="btn-icon record-action record-action-review" title="<?= html_escape($label) ?>"
-                aria-label="<?= html_escape($label) ?>" target="_blank" rel="noopener" href="<?= site_url($button['url']) ?>">
-                <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
-            </a>
         <?php elseif ($type === 'print'): ?>
             <a class="btn-icon record-action record-action-print" href="<?= site_url($button['url']) ?>" target="_blank"
                 rel="noopener" title="Print Document File" aria-label="Print Document File">
