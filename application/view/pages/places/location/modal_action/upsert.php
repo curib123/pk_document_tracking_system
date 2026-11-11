@@ -6,16 +6,10 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     <h3 class="fs-6 fw-bold mb-1">Location details</h3>
     <p class="text-secondary small mb-0">Name the Location and set its order within the selected Specific.</p>
 </div>
-<div class="col-md-7">
+<div class="col-12">
     <label class="form-label" for="location-name">Location Name</label>
     <input class="form-control" id="location-name" name="name" type="text" maxlength="150"
         placeholder="e.g. Location A" required autocomplete="off">
-</div>
-<div class="col-md-5">
-    <label class="form-label" for="location-sequence">Sequence <span class="optional-label">(auto if empty)</span></label>
-    <input class="form-control" id="location-sequence" name="sequence_number" type="number"
-        min="1" max="1000000" step="1" placeholder="e.g. 1" autocomplete="off">
-    <div class="form-text">Unique within this Specific. A = 1, B = 2, C = 3.</div>
 </div>
 
 <div class="col-md-4">
@@ -44,8 +38,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
     <select class="form-select" id="location-asset" name="asset_id" data-location-level="asset" data-searchable autocomplete="off">
         <option value="">No asset / not assigned</option>
         <?php foreach ($options['assets'] as $asset): ?>
-            <option value="<?= (int) $asset['id'] ?>" data-specific-id="<?= (int) $asset['specific_id'] ?>"
-                data-area-id="<?= (int) $asset['area_id'] ?>"><?= html_escape($asset['name']) ?></option>
+            <option value="<?= (int) $asset['id'] ?>" data-specific-ids="<?= html_escape($asset['specific_ids']) ?>"
+                data-area-ids="<?= html_escape($asset['area_ids']) ?>"><?= html_escape($asset['name']) ?></option>
         <?php endforeach; ?>
     </select>
     <div class="form-text">A Location can be saved without an Asset Number.</div>

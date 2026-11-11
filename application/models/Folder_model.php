@@ -8,7 +8,7 @@ class Folder_model extends CI_Model
     private $levels = [
         'area' => ['table' => 'areas', 'title' => 'name', 'parent' => NULL],
         'specific' => ['table' => 'specifics', 'title' => 'name', 'parent' => 'area'],
-        'asset' => ['table' => 'assets', 'title' => 'asset_number', 'parent' => 'specific'],
+        'asset' => ['table' => 'assets', 'title' => 'asset_number', 'parent' => NULL],
         'location' => ['table' => 'locations', 'title' => 'name', 'parent' => NULL]
     ];
 
@@ -37,7 +37,22 @@ class Folder_model extends CI_Model
             // Area > Specific > Asset > Location > Documents.
             // Optional/missing Asset uses Specific or Area as fallback so that
             // legacy and incomplete Places never disappear.
-            $assetSpecifics = [];
+            // An Asset Number can belong to many Specifics. It appears under each of them; the
+            // folder key is asset:<id> for one Specific and asset:<id>:<specific id> for several.
+            $assetLinks = [];
+            $links = $this->db->select('x.asset_id,x.specific_id')->from('asset_specifics x')
+                ->join('specifics s', 's.id=x.specific_id')->where('s.active', 1)
+                ->order_by('x.specific_id')->get()->result_array();
+            foreach ($links as $link)
+                $assetLinks[(int) $link['asset_id']][] = (int) $link['specific_id'];
+            $assetKey = static function ($assetId, $specificId) use ($assetLinks) {
+                $linked = $assetLinks[$assetId] ?? [];
+                if (!$linked)
+                    return '';
+                if (count($linked) === 1)
+                    return 'asset:' . $assetId;
+                return 'asset:' . $assetId . ':' . (in_array($specificId, $linked, TRUE) ? $specificId : $linked[0]);
+            };
             $specificAreas = [];
             foreach ($this->levels as $kind => $definition) {
                 $fields = 'id,' . $definition['title'];
@@ -49,38 +64,42 @@ class Folder_model extends CI_Model
                 foreach ($rows as $row) {
                     if ($kind === 'specific')
                         $specificAreas[(int) $row['id']] = (int) $row['area_id'];
-                    if ($kind === 'asset')
-                        $assetSpecifics[(int) $row['id']] = (int) $row['specific_id'];
+                    if ($kind === 'asset') {
+                        $linked = $assetLinks[(int) $row['id']] ?? [];
+                        foreach ($linked as $specificId)
+                            $nodes[] = [
+                                'key' => $assetKey((int) $row['id'], $specificId),
+                                'parent' => 'specific:' . $specificId,
+                                'name' => $row[$definition['title']],
+                                'meta' => ucfirst($kind),
+                                'kind' => $kind
+                            ];
+                        continue;
+                    }
 
                     $parent = $definition['parent'];
                     $parentId = $parent ? (int) $row[$parent . '_id'] : 0;
+                    $parentKey = $parent ? $parent . ':' . $parentId : '';
                     if ($kind === 'location') {
                         $assetId = (int) ($row['asset_id'] ?? 0);
                         $specificId = (int) ($row['specific_id'] ?? 0);
-                        if ($assetId && isset($assetSpecifics[$assetId]))
-                            $specificId = $assetSpecifics[$assetId];
                         $areaId = (int) ($row['area_id'] ?? 0);
-                        if (!$areaId && $specificId)
-                            $areaId = $specificAreas[$specificId] ?? 0;
-                        if ($assetId && isset($assetSpecifics[$assetId])) {
-                            $parent = 'asset';
-                            $parentId = $assetId;
+                        $assetNode = $assetId ? $assetKey($assetId, $specificId) : '';
+                        if ($assetNode !== '') {
+                            $parentKey = $assetNode;
                         } elseif ($specificId && isset($specificAreas[$specificId])) {
-                            $parent = 'specific';
-                            $parentId = $specificId;
-                        } elseif ($areaId) {
-                            $parent = 'area';
-                            $parentId = $areaId;
+                            $parentKey = 'specific:' . $specificId;
+                        } elseif ($areaId || ($specificId && isset($specificAreas[$specificId]))) {
+                            $parentKey = 'area:' . ($areaId ?: $specificAreas[$specificId]);
                         } else {
-                            $parent = NULL;
-                            $parentId = 0;
+                            $parentKey = '';
                         }
                     }
                     $nodes[] = [
                         'key' => $kind . ':' . $row['id'],
-                        'parent' => $parent ? $parent . ':' . $parentId : '',
+                        'parent' => $parentKey,
                         'name' => $row[$definition['title']],
-                        'meta' => $kind === 'location' ? 'Sequence ' . (int) $row['sequence_number'] : ucfirst($kind),
+                        'meta' => ucfirst($kind),
                         'kind' => $kind
                     ];
                 }
@@ -107,7 +126,7 @@ class Folder_model extends CI_Model
                 'tree' => $tree
             ];
         if (
-            $folder !== '' && (!preg_match('/^(?:(area|specific|asset|location|category):[1-9][0-9]*|location:[1-9][0-9]*:(area|specific|asset):[1-9][0-9]*)$/', $folder) ||
+            $folder !== '' && (!preg_match('/^(?:(area|specific|asset|location|category):[1-9][0-9]*|asset:[1-9][0-9]*:[1-9][0-9]*|location:[1-9][0-9]*:(area|specific|asset):[1-9][0-9]*)$/', $folder) ||
                 !isset($tree['nodes'][$folder]))
         )
             show_404();
@@ -124,7 +143,11 @@ class Folder_model extends CI_Model
             $node = $tree['nodes'][$folder];
             $result['level'] = $node['kind'];
             $result['label'] = $node['name'];
-            $result['filter'] = [$node['kind'] . '_id' => (int) explode(':', $folder)[1]];
+            $parts = explode(':', $folder);
+            $result['filter'] = [$node['kind'] . '_id' => (int) $parts[1]];
+            // An asset folder under one of several Specifics lists only that Specific's records.
+            if ($node['kind'] === 'asset' && isset($parts[2]))
+                $result['filter']['specific_id'] = (int) $parts[2];
             $children = $node['children'];
             $chain = [];
             $at = $folder;

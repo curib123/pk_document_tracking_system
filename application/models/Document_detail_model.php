@@ -149,7 +149,7 @@ class Document_detail_model extends CI_Model
                         'Specific' => $document['specific_name'] ?? '',
                         'Asset' => $document['asset_name'] ?? '',
                         'Location' => $document['location_name'] ?? '',
-                        'Location Sequence' => $document['location_sequence'] ?? '',
+                        'Sequence' => $document['sequence_number'] ?? '',
                         'Current Holder' => $document['holder_name'] ?? '',
                         'Days until disposal' => Retention_countdown::label(
                             $document['retention_enabled'] ?? 0,

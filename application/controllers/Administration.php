@@ -59,7 +59,7 @@ class Administration extends MY_Controller
                 $row['detail'] = $domain === 'hardcopy'
                     ? 'Current holder' . (
                         !empty($row['location_name'])
-                        ? " · {$row['location_name']} · Sequence {$row['location_sequence']}"
+                        ? " · {$row['location_name']}" . (($row['code'] ?? '') !== '' ? " · Sequence {$row['code']}" : '')
                         : ''
                     )
                     : 'Assigned ' . ($row['assigned_at'] ?? 'date not specified');

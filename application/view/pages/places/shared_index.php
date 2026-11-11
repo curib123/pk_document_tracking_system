@@ -27,10 +27,13 @@ foreach ($cfg['fields'] as $field) {
             $key = 'parent_name';
         if (isset($labels[$key]))
             $dt_columns[$key] = $labels[$key];
-    } else {
+    } elseif ($field !== 'sequence_number') {
+        // A Location's internal order is never shown: Sequence belongs to hardcopy documents.
         $dt_columns[$field] = $labels[$field] ?? ucwords(str_replace('_', ' ', $field));
     }
 }
+if ($cfg['slug'] === 'asset')
+    $dt_columns['specific_name'] = 'Specifics';
 if ($cfg['active'])
     $dt_columns['active'] = 'Status';
 $dt_rows = [];
@@ -50,6 +53,10 @@ foreach ($rows as $row) {
     foreach (array_merge(['id', 'version'], $cfg['fields'], ['active']) as $field) {
         if (array_key_exists($field, $row))
             $record[$field] = $row[$field];
+    }
+    if ($cfg['slug'] === 'asset') {
+        // One Asset Number can belong to many Specifics.
+        $record['specific_ids'] = array_values(array_filter(array_map('intval', explode(',', (string) ($row['specific_ids'] ?? '')))));
     }
     // Area, Specific and Asset are simple reference records: use Edit, not View Details.
     $buttons = in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE)
@@ -201,6 +208,22 @@ $dt_sortable = array_values(array_intersect(
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>
+                            <?php if ($cfg['slug'] === 'asset'): ?>
+                                <div class="col-12">
+                                    <span class="form-label d-block" id="asset-specifics-label">Specifics <span class="optional-label">(choose every Specific this Asset Number is used under)</span></span>
+                                    <div class="border rounded p-2" style="max-height: 14rem; overflow-y: auto;" role="group" aria-labelledby="asset-specifics-label">
+                                        <?php foreach ($options['specifics'] as $option): ?>
+                                            <label class="form-check d-block">
+                                                <input class="form-check-input" type="checkbox" name="specific_ids[]"
+                                                    value="<?= (int) $option['id'] ?>" autocomplete="off">
+                                                <?= html_escape($option['name']) ?>
+                                                <span class="text-secondary small">(<?= html_escape($option['area_name'] ?? '') ?>)</span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="form-text">One Asset Number is a single record, however many Specifics it is linked to.</div>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                         <?php if ($cfg['active']): ?>
                             <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox"

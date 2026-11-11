@@ -13,11 +13,12 @@ allows.
 | --- | --- |
 | A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DTS_System_Reference.md) |
 | Instructions with screen examples | [User Guide](docs/system-documentation/PK_DTS_User_Guide.pdf) |
-| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DTS_Process_Flow.pdf) |
+| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DTS_Process_Flow.pptx) |
 | Help choosing the next step | [Flowchart](docs/system-documentation/PK_DTS_Flowchart.pdf) |
 | An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DTS_DFD.pdf) |
 
-The documentation folder also includes editable PowerPoint and Visio copies.
+The documentation folder also includes editable PowerPoint and Visio copies. The Process Flow is a
+PowerPoint presentation.
 Use the local [dashboard](http://localhost/pk_document_tracking_system/dashboard)
 when the application is running; you will be asked to sign in if needed.
 
@@ -277,8 +278,9 @@ and both Visio formats. Guide screen examples and callouts are kept alongside
 the content. Python needs `pymupdf` and `python-pptx` installed.
 
 All four documents cover the eight current request types and their approval,
-return and rejection outcomes. The Process Flow owns the shared default workflow
-examples; the other books reuse their operator names and decision details.
+return and rejection outcomes. `process.json` owns the shared default workflow
+examples; the Process Flow presentation and the other books reuse their operator
+names and decision details.
 Related procedures link to the matching examples through the PDF footer.
 The Flowchart keeps its existing procedures and adds a connected approval flow
 for each request, with decision diamonds, Return loops and separate Reject ends.
@@ -296,10 +298,14 @@ python -X utf8 tools/documentation/refresh_documents.py
 python -X utf8 tools/documentation/refresh_documents.py --verify
 ```
 
-The request-workflow presentation ([PK_DTS_Request_Workflow.pptx](docs/system-documentation/PK_DTS_Request_Workflow.pptx)) 
-follows one softcopy request from sign-in to final approval, then shows every request 
-route with the sample users. Rebuild it after route or screen changes with 
-`python -X utf8 tools/documentation/build_request_workflow.py`. Its screens come from 
+The Process Flow ([PK_DTS_Process_Flow.pptx](docs/system-documentation/PK_DTS_Process_Flow.pptx)), an editable PowerPoint that replaces the former Process Flow PDF and Visio files, 
+explains the three document types (Softcopy: template repository, Hardcopy: location 
+tracker, External: scanned backup repository) with sample documents, follows one softcopy 
+request from sign-in to final approval, walks through every scenario of each type in a 
+linear flow, then shows every request route with the sample users. Slide content for the 
+types and scenarios lives in `tools/documentation/workflow_document_types.py`. Rebuild it 
+after route or screen changes with 
+`python -X utf8 tools/documentation/build_process_flow.py`. Its screens come from 
 `capture_screenshots.py`; refresh the My Tasks screen with `PK_CAPTURE_ONLY=workflow-tasks`.
 
 These checks cover the documented routes, request actions, content and exported

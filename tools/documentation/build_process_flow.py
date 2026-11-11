@@ -1,7 +1,8 @@
-"""Build the editable PowerPoint that walks one request from sign-in to final approval.
+"""Build the Process Flow: an editable PowerPoint that explains the three document types, walks one
+request from sign-in to final approval, and shows every scenario and approval route.
 
-Run: python -X utf8 tools/documentation/build_request_workflow.py
-Output: docs/system-documentation/PK_DTS_Request_Workflow.pptx
+Run: python -X utf8 tools/documentation/build_process_flow.py
+Output: docs/system-documentation/PK_DTS_Process_Flow.pptx
 
 Facts (routes, results, return and reject outcomes) come from process.json so the deck
 cannot drift from the Process Flow. Screens come from screenshots/ (guide screens plus
@@ -10,7 +11,7 @@ the synthetic people of the documentation capture site. The design follows the U
 """
 from pathlib import Path
 import json
-import copy
+import sys
 
 import pymupdf
 from lxml import etree
@@ -21,9 +22,12 @@ from pptx.enum.text import PP_ALIGN, MSO_ANCHOR, MSO_AUTO_SIZE
 from pptx.oxml.ns import qn
 from pptx.util import Pt
 
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from workflow_document_types import TYPES, SCENARIOS, APPLIES  # noqa: E402
+
 SOURCE = Path(__file__).resolve().parent
 ROOT = SOURCE.parents[1]
-OUT = ROOT / 'docs/system-documentation/PK_DTS_Request_Workflow.pptx'
+OUT = ROOT / 'docs/system-documentation/PK_DTS_Process_Flow.pptx'
 SHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 W, H = 1190, 842
@@ -36,10 +40,13 @@ SUCCESS, SUCCESS_PALE, GOLD = '1A685B', 'EFF7F4', 'FFF8EA'
 # Synthetic people of the documentation site (capture_screenshots.py).
 PEOPLE = {
     'Requester': ('Sam Staff', 'Staff', 'icon-person.png'),
-    "Requester's leader": ('Alex Administrator', 'Administrator, Sam\'s leader', 'icon-review.png'),
+    "Requester's leader": ('Alex Staff', 'Staff, Sam\'s leader (Noted By)', 'icon-review.png'),
     'Plant Manager': ('Morgan Manager', 'Plant Manager', 'icon-review.png'),
     'Document Control Officer': ('Casey Controller', 'Document Control Officer', 'icon-review.png'),
     'Requester account': ('Sam Staff', 'Staff (Requester account)', 'icon-person.png'),
+    'Administrator': ('Administrator', 'Any Administrator account', 'icon-review.png'),
+    'Receiving user': ('Receiving user', 'Named on the transfer', 'icon-person.png'),
+    'PK DTS': ('PK DTS', 'The system', 'icon-database.jpeg'),
 }
 FIRST = {'Requester': 'Sam', "Requester's leader": 'Alex', 'Plant Manager': 'Morgan',
          'Document Control Officer': 'Casey', 'Requester account': 'Sam', 'Requester': 'Sam'}
@@ -177,13 +184,13 @@ class Slide:
 def chrome(s, section, title, subtitle, number, total):
     s.rect(0, 0, W, 5, INK, None)
     s.rect(0, 0, 170, 5, ACCENT, None)
-    s.text(42, 27, 400, 14, 'PK DTS  /  REQUEST WORKFLOW', 10, True, ACCENT)
+    s.text(42, 27, 400, 14, 'PK DTS  /  PROCESS FLOW', 10, True, ACCENT)
     s.text(640, 28, 508, 14, section.upper(), 9.5, True, GREY, PP_ALIGN.RIGHT)
     s.text(42, 60, 1106, 40, title, 28, True, INK, minimum=22)
     if subtitle:
         s.text(42, 104, 1106, 20, subtitle, 13, False, GREY)
     s.line(42, 790, 1148, 790, RULE, .75)
-    s.text(42, 802, 600, 12, 'PK DTS  /  REQUEST WORKFLOW  /  ' + DATE, 8, False, GREY)
+    s.text(42, 802, 600, 12, 'PK DTS  /  PROCESS FLOW  /  ' + DATE, 8, False, GREY)
     s.text(1050, 802, 98, 12, '%d / %d' % (number, total), 8, False, GREY, PP_ALIGN.RIGHT)
 
 
@@ -203,26 +210,28 @@ def person_card(s, x, y, w, h, actor, step_text, status, number=None, highlight=
 # ---------------------------------------------------------------- slide kinds
 def cover(prs, number, total):
     s = Slide(prs)
-    chrome(s, 'Request workflow series', '', '', number, total)
+    chrome(s, 'Process flow series', '', '', number, total)
     s.text(42, 128, 600, 16, 'PK DOCUMENT TRACKING SYSTEM', 11, True, GREY)
     s.rect(42, 168, 88, 3, ACCENT, None)
-    s.text(42, 212, 700, 80, 'Request Workflow', 58, True, INK, minimum=44)
+    s.text(42, 212, 700, 80, 'Process Flow', 58, True, INK, minimum=44)
     s.text(42, 338, 700, 34, 'One request, from sign-in to final approval', 24, True, INK)
     s.text(42, 394, 680, 60,
-           'Follow a softcopy request through every step with sample users and roles, '
-           'then see the approval route of every request type.', 16, False, INK)
+           'Learn what softcopy, hardcopy and external documents are, follow one request through every step '
+           'with sample users, then see every scenario and approval route.', 16, False, INK)
     s.text(42, 612, 500, 14, 'WHAT YOU WILL SEE', 10.5, True, ACCENT)
     s.rect(776, 120, 372, 482, INK, None)
-    s.text(800, 148, 300, 14, 'THREE PARTS', 10, True, WHITE)
+    s.text(800, 144, 300, 14, 'FIVE PARTS', 10, True, WHITE)
     parts = [('01', 'Meet the sample users and their roles'),
-             ('02', 'Follow one softcopy request from start to finish'),
-             ('03', 'See every request type and its approval route')]
+             ('02', 'Learn the three document types'),
+             ('03', 'Follow one softcopy request from start to finish'),
+             ('04', 'See every scenario of each document type'),
+             ('05', 'See every request type and its approval route')]
     for i, (n, label) in enumerate(parts):
-        y = 190 + i * 130
+        y = 178 + i * 83
         s.text(800, y, 40, 18, n, 14, True, '8FD3C4')
-        s.text(858, y - 2, 262, 80, label, 19, True, WHITE)
-        if i < 2:
-            s.line(800, y + 96, 1124, y + 96, '3B4A5E', .75)
+        s.text(858, y - 2, 262, 56, label, 16, True, WHITE)
+        if i < 4:
+            s.line(800, y + 62, 1124, y + 62, '3B4A5E', .75)
     for i, (head, body) in enumerate([('Sign in', 'Start as the requester.'),
                                       ('Follow the route', 'Each approver acts in turn.'),
                                       ('Check the result', 'See the status and outcome.')]):
@@ -240,7 +249,7 @@ def users_slide(prs, number, total):
            number, total)
     cast = [
         ('Sam Staff', 'Staff', 'icon-person.png', 'REQUESTER', 'Signs in, creates the request, saves the draft and submits it.'),
-        ('Alex Administrator', "Administrator  /  Sam's leader", 'icon-review.png', "REQUESTER'S LEADER",
+        ('Alex Staff', "Staff  /  Sam's leader", 'icon-review.png', 'NOTED BY LEADER',
          'First reviewer ("Noted By"). Also confirms assignment requests as Sam\'s leader.'),
         ('Morgan Manager', 'Plant Manager', 'icon-review.png', 'PLANT MANAGER',
          'Second reviewer. In document requests, this approval locks the attached file.'),
@@ -275,7 +284,7 @@ def users_slide(prs, number, total):
 
 def journey_slide(prs, number, total):
     s = Slide(prs)
-    chrome(s, 'Part 2  /  One request start to finish', 'The journey at a glance',
+    chrome(s, 'Part 3  /  One request start to finish', 'The journey at a glance',
            'A softcopy creation request: eight stations in order. The status shows where the request stands after each one.',
            number, total)
     stations = [
@@ -365,7 +374,7 @@ def screen_slide(prs, number, total, section, title, subtitle, actor, status, sh
 
 def matrix_slide(prs, number, total, routes):
     s = Slide(prs)
-    chrome(s, 'Part 3  /  Every request type', 'Every request on one page',
+    chrome(s, 'Part 5  /  Every request type', 'Every request on one page',
            'Default routes with the sample users. All eight request types pass three approvals before the result is applied.',
            number, total)
     cols = [('Request', 170), ('Requester', 118), ('Approval 1', 148), ('Approval 2', 148), ('Approval 3', 148), ('When the last approver approves', 374)]
@@ -399,7 +408,7 @@ def matrix_slide(prs, number, total, routes):
 
 def route_slide(prs, number, total, index, route, source):
     s = Slide(prs)
-    chrome(s, 'Part 3  /  Request %d of 8' % index, route['name'] + ' request', route['subtitle'], number, total)
+    chrome(s, 'Part 5  /  Request %d of 8' % index, route['name'] + ' request', route['subtitle'], number, total)
     cards = list(zip(route['actors'], [st['text'] for st in source['steps']], route['statuses']))
     count = len(cards) + (1 if route.get('handoff') else 0)
     gap = 28
@@ -472,6 +481,167 @@ def remember_slide(prs, number, total):
     s.notes('Close with the four rules.')
 
 
+def types_overview_slide(prs, number, total):
+    s = Slide(prs)
+    chrome(s, 'Part 2  /  Document types', 'Three kinds of document, three different jobs',
+           'Each register answers a different question. Pick the register that matches what you need.', number, total)
+    cols = [('Softcopy', 'TEMPLATE REPOSITORY', ACCENT), ('Hardcopy', 'LOCATION TRACKER', INK), ('External', 'SCANNED BACKUP REPOSITORY', SUCCESS)]
+    rows = [
+        ('In one line', ['The repository of approved softcopy templates.',
+                         'A tracker of where each physical document is kept.',
+                         'A repository of scanned outside documents, kept only as backup.']),
+        ('What it stores', ['The approved electronic file, its document number and its revisions.',
+                            'No file. Only the record: place, Current Holder and optional retention dates.',
+                            'Attached scans and files (up to 20 per record) with a category and description.']),
+        ('Sample documents', ['Incident Report Form Template, Inspection Checklist Template',
+                              'Sample Inspection Record in Records Cabinet A',
+                              'Supplier Quality Certificate, Signed Delivery Receipt']),
+        ('How it is used', ['Staff open the approved template and use it to prepare their own document.',
+                            'Staff look up where the paper is and who holds it, then go and get it.',
+                            'Kept as a backup copy of a document that came from outside. Not a template.']),
+        ('How it gets in', ['An approved request, or a direct save by a controller.',
+                            'Registered directly. Moving the paper needs an approved transfer.',
+                            'An approved request, or a direct save by a controller.']),
+    ]
+    lw, cw = 150, (1106 - 150) / 3
+    y0, hh, rh = 142, 62, 104
+    for c, (name, tag, color) in enumerate(cols):
+        x = 42 + lw + c * cw
+        s.rect(x, y0, cw, hh, color, color)
+        s.text(x + 16, y0 + 10, cw - 32, 24, name, 20, True, WHITE)
+        s.text(x + 16, y0 + 38, cw - 32, 14, tag, 9.5, True, 'F4DCE5' if color == ACCENT else 'D4DDE6' if color == INK else 'CFE8E1')
+    for r, (label, cells) in enumerate(rows):
+        y = y0 + hh + r * rh
+        s.rect(42, y, lw, rh, PALE, RULE)
+        s.text(56, y + 14, lw - 24, rh - 28, label, 12.5, True, ACCENT, PP_ALIGN.LEFT, MSO_ANCHOR.MIDDLE, 10)
+        for c, value in enumerate(cells):
+            x = 42 + lw + c * cw
+            s.rect(x, y, cw, rh, WHITE if r % 2 == 0 else PALE, RULE)
+            s.text(x + 16, y + 12, cw - 32, rh - 24, value, 13.5 if r == 0 else 12.5, r == 0, INK, PP_ALIGN.LEFT, MSO_ANCHOR.MIDDLE, 10)
+    s.notes('Softcopy is the template repository. Hardcopy only tracks where the paper is. External keeps scanned outside documents as backup.')
+
+
+def type_slide(prs, number, total, kind):
+    t = TYPES[kind]
+    scenarios = SCENARIOS[kind]
+    s = Slide(prs)
+    chrome(s, 'Part 2  /  Document types', t['title'], t['subtitle'], number, total)
+    s.rect(42, 140, 530, 412, PALE, RULE)
+    s.rect(42, 140, 6, 412, ACCENT, None)
+    s.pill(66, 158, t['tag_width'], 24, t['tag'], ACCENT, WHITE, 10)
+    s.text(66, 198, 486, 14, 'WHAT IT IS', 10.5, True, ACCENT)
+    s.text(66, 218, 486, 124, t['definition'], 15, False, INK, minimum=11)
+    s.text(66, 356, 486, 14, 'WHAT IT HOLDS', 10.5, True, ACCENT)
+    for i, item in enumerate(t['holds']):
+        y = 378 + i * 41
+        s.rect(66, y + 5, 8, 8, ACCENT, None)
+        s.text(86, y, 466, 38, item, 12.5, False, INK, minimum=10)
+    s.text(594, 140, 554, 14, 'SAMPLE DOCUMENTS  (ILLUSTRATIVE)', 10.5, True, ACCENT)
+    for i, (title, meta, pill) in enumerate(t['samples']):
+        y = 164 + i * 97
+        s.rect(594, y, 554, 85, WHITE, RULE)
+        s.rect(610, y + 16, 40, 53, PALE, RULE)
+        for j in range(4):
+            s.rect(617, y + 26 + j * 9, 26 if j < 3 else 15, 2.5, RULE, None)
+        s.text(668, y + 14, 380, 20, title, 14, True, INK, minimum=11)
+        s.text(668, y + 38, 380, 34, meta, 11, False, GREY, minimum=9)
+        s.pill(1066, y + 14, 66, 22, pill, PALE, ACCENT, 10, RULE)
+    s.text(42, 570, 700, 14, 'SCENARIOS COVERED IN PART 4  (%d)' % len(scenarios), 10.5, True, ACCENT)
+    cw, gap = 359, 14.5
+    for i, sc in enumerate(scenarios):
+        row, col = divmod(i, 3)
+        x, y = 42 + col * (cw + gap), 594 + row * 90
+        s.rect(x, y, cw, 78, PALE, RULE)
+        s.rect(x + 14, y + 26, 26, 26, ACCENT, ACCENT, shape=MSO_SHAPE.OVAL)
+        s.text(x + 14, y + 31, 26, 16, str(i + 1), 12, True, WHITE, PP_ALIGN.CENTER)
+        s.text(x + 54, y + 14, cw - 68, 22, sc['name'], 14, True, INK, minimum=11)
+        s.text(x + 54, y + 42, cw - 68, 28, ('Approval route' if sc['kind'] == 'Request' else 'Direct action, no route') +
+               '  /  %d steps' % len(sc['steps']), 11, False, GREY, minimum=9)
+    s.notes(t['title'] + ': ' + t['definition'])
+
+
+def applies_slide(prs, number, total):
+    s = Slide(prs)
+    chrome(s, 'Part 2  /  Document types', 'What you can do with each type',
+           'Not every action exists for every type. Part 4 shows each action that applies, step by step.', number, total)
+    cols = [('Action', 250, INK), ('Softcopy', 285, ACCENT), ('Hardcopy', 285, INK), ('External', 286, SUCCESS)]
+    x = 42
+    for head, width, color in cols:
+        s.rect(x, 142, width, 34, color, color)
+        s.text(x + 14, 151, width - 28, 16, head, 12, True, WHITE)
+        x += width
+    rh = 66
+    for r, row in enumerate(APPLIES):
+        y = 176 + r * rh
+        x = 42
+        for c, ((head, width, color), value) in enumerate(zip(cols, row)):
+            s.rect(x, y, width, rh, PALE if r % 2 == 0 else WHITE, RULE)
+            no = value.startswith('No') or value.startswith('Not')
+            s.text(x + 14, y + 8, width - 28, rh - 16, value, 12.5 if c else 13, c == 0, GREY if no else INK,
+                   PP_ALIGN.LEFT, MSO_ANCHOR.MIDDLE, 10)
+            x += width
+    s.rect(42, 716, 1106, 58, GOLD, RULE)
+    s.text(58, 728, 1074, 36, 'Hardcopy has no create or revise request: register or edit it directly, and use a Hardcopy Transfer Request to move the paper. '
+           'Softcopy disposal is direct only.', 12.5, False, INK, minimum=10)
+    s.notes('Which actions exist for each document type.')
+
+
+def scenario_slide(prs, number, total, kind, index, sc):
+    s = Slide(prs)
+    count = len(SCENARIOS[kind])
+    chrome(s, 'Part 4  /  %s scenario %d of %d' % (TYPES[kind]['short'], index, count), sc['title'], sc['subtitle'], number, total)
+    # Sample strip
+    doc, facts = sc['sample']
+    s.rect(42, 136, 1106, 64, GOLD, RULE)
+    s.text(58, 146, 300, 12, 'SAMPLE DOCUMENT', 8.5, True, ACCENT)
+    s.text(58, 163, 300, 26, doc, 15, True, INK, PP_ALIGN.LEFT, MSO_ANCHOR.TOP, 11)
+    fw = (1148 - 380 - 12) / 4
+    for i, (label, value) in enumerate(facts):
+        x = 380 + i * fw
+        s.line(x - 10, 146, x - 10, 190, RULE, .75)
+        s.text(x, 146, fw - 12, 12, label.upper(), 8.5, True, GREY)
+        s.text(x, 162, fw - 12, 30, value, 12, True, INK, minimum=9)
+    # Linear flow
+    steps = sc['steps']
+    n = len(steps)
+    cols = 3 if n <= 6 else 4
+    gap = 40.7 if cols == 4 else 40
+    cw = (1106 - gap * (cols - 1)) / cols
+    ch, y0, rgap = 204, 216, 36
+    rows = -(-n // cols)
+    for i, (actor, head, body, status) in enumerate(steps):
+        row, col = divmod(i, cols)
+        x, y = 42 + col * (cw + gap), y0 + row * (ch + rgap)
+        name, role, icon = PEOPLE[actor]
+        final = i == n - 1
+        s.rect(x, y, cw, ch, SUCCESS_PALE if final else PALE, SUCCESS if final else RULE)
+        s.rect(x + 14, y + 14, 26, 26, ACCENT, ACCENT, shape=MSO_SHAPE.OVAL)
+        s.text(x + 14, y + 19, 26, 16, str(i + 1), 12, True, WHITE, PP_ALIGN.CENTER)
+        s.icon(icon, x + cw - 58, y + 8, 44)
+        s.text(x + 14, y + 50, cw - 28, 20, head, 15, True, INK, minimum=11)
+        s.text(x + 14, y + 73, cw - 28, 14, name, 11.5, True, ACCENT, minimum=10)
+        s.text(x + 14, y + 92, cw - 28, 68, body, 12, False, INK, minimum=9.5)
+        s.pill(x + 14, y + ch - 36, cw - 28, 24, status, WHITE, SUCCESS if final else ACCENT, 10.5, RULE)
+        if col < cols - 1 and i < n - 1:
+            s.line(x + cw + 4, y + ch / 2, x + cw + gap - 4, y + ch / 2, ACCENT, 1.6, arrow=True)
+    if rows == 2:
+        lx = 42 + (cols - 1) * (cw + gap) + cw / 2
+        ymid = y0 + ch + rgap / 2
+        s.line(lx, y0 + ch, lx, ymid, ACCENT, 1.6)
+        s.line(lx, ymid, 42 + cw / 2, ymid, ACCENT, 1.6)
+        s.line(42 + cw / 2, ymid, 42 + cw / 2, y0 + ch + rgap, ACCENT, 1.6, arrow=True)
+    # Result / middle / keep panels
+    py, ph, pw, pg = 676, 102, 358, 16
+    panels = [(sc['result'], SUCCESS_PALE, SUCCESS), (sc['middle'], PALE, ACCENT), (sc['keep'], PALE, INK)]
+    for i, ((label, text), fill, color) in enumerate(panels):
+        x = 42 + i * (pw + pg)
+        s.rect(x, py, pw, ph, fill, SUCCESS if i == 0 else RULE)
+        s.rect(x, py, 5, ph, color, None)
+        s.text(x + 18, py + 11, pw - 34, 12, label, 9.5, True, color)
+        s.text(x + 18, py + 29, pw - 34, ph - 38, text, 12, False, INK, minimum=9.5)
+    s.notes(sc['title'] + ': ' + ' '.join('%d. %s - %s' % (i + 1, st[1], st[2]) for i, st in enumerate(steps)))
+
+
 # ------------------------------------------------------------------- content
 def screen(name, folder=None, labels=None, extra=()):
     base = SHOTS / (folder or '')
@@ -535,7 +705,7 @@ def main():
         assert [step['actor'] for step in source['steps']] == route['actors'], key
         route['result'] = source['paths'][0]['cases'][-1]['next']
 
-    section = 'Part 2  /  One request start to finish'
+    section = 'Part 3  /  One request start to finish'
     stations = [
         dict(title='Station 1: sign in as the requester', subtitle='Sam Staff starts with their own account.',
              actor='Requester', status='No request yet', shot=screen('sign-in', labels=['Username', 'Password', 'Sign In']),
@@ -591,12 +761,15 @@ def main():
     ]
     routes = [dict(name=ROUTES[k]['name'], actors=ROUTES[k]['actors'], result=ROUTES[k]['result']) for k in ROUTES]
 
-    plan = ['cover', 'users', 'journey'] + ['station'] * len(stations) + ['matrix'] + ['route'] * len(ROUTES) + ['remember']
+    scenario_plan = [(kind, i + 1, sc) for kind in ('softcopy', 'hardcopy', 'external') for i, sc in enumerate(SCENARIOS[kind])]
+    plan = (['cover', 'users', 'types', 'type-softcopy', 'type-hardcopy', 'type-external', 'applies', 'journey']
+            + ['station'] * len(stations) + ['scenario'] * len(scenario_plan)
+            + ['matrix'] + ['route'] * len(ROUTES) + ['remember'])
     total = len(plan)
     prs = Presentation()
     prs.slide_width, prs.slide_height = Pt(W), Pt(H)
-    prs.core_properties.title = 'PK DTS - Request Workflow'
-    prs.core_properties.subject = 'One request from sign-in to final approval, 11 November 2026'
+    prs.core_properties.title = 'PK DTS - Process Flow'
+    prs.core_properties.subject = 'Document types, one request from sign-in to final approval, and every scenario, 11 November 2026'
     prs.core_properties.author = 'PK Document Tracking System'
     route_keys = list(ROUTES)
     number = 0
@@ -606,6 +779,14 @@ def main():
             cover(prs, number, total)
         elif kind == 'users':
             users_slide(prs, number, total)
+        elif kind == 'types':
+            types_overview_slide(prs, number, total)
+        elif kind.startswith('type-'):
+            type_slide(prs, number, total, kind[5:])
+        elif kind == 'applies':
+            applies_slide(prs, number, total)
+        elif kind == 'scenario':
+            scenario_slide(prs, number, total, *scenario_plan.pop(0))
         elif kind == 'journey':
             journey_slide(prs, number, total)
         elif kind == 'station':

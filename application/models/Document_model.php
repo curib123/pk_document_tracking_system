@@ -148,7 +148,7 @@ class Document_model extends CI_Model
             $this->db->join('areas a', 'a.id=d.area_id', 'left')->select('a.name AS area_name')
                 ->join('specifics s', 's.id=d.specific_id', 'left')->select('s.name AS specific_name')
                 ->join('assets b', 'b.id=d.asset_id', 'left')->select('b.asset_number AS asset_name')
-                ->join('locations l', 'l.id=d.location_id', 'left')->select('l.name AS location_name,l.sequence_number AS location_sequence')
+                ->join('locations l', 'l.id=d.location_id', 'left')->select('l.name AS location_name')
                 ->join('users h', 'h.id=d.holder_id', 'left')
                 ->select('CONCAT_WS(" ",h.first_name,h.last_name) AS holder_name');
         }
@@ -158,7 +158,8 @@ class Document_model extends CI_Model
             'updated_at' => 'd.updated_at',
             'created_at' => 'd.created_at',
             'document_number' => 'd.document_number',
-            'sequence_number' => 'd.sequence_number'
+            // Sequences are numbers shared by many documents; sort them numerically.
+            'sequence_number' => 'CAST(d.sequence_number AS UNSIGNED)'
         ];
         if ($domain === 'hardcopy')
             unset($sorts['document_number']);
@@ -166,7 +167,7 @@ class Document_model extends CI_Model
             unset($sorts['sequence_number']);
         $sort = $sorts[$filters['sort'] ?? ''] ?? 'd.updated_at';
         $direction = ($filters['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $rows = $this->db->order_by($sort, $direction)->order_by('d.id', $direction)
+        $rows = $this->db->order_by($sort, $direction, FALSE)->order_by('d.id', $direction)
             ->limit($limit, ($page - 1) * $limit)->get()->result_array();
         return [$rows, $total, $page];
     }
@@ -347,7 +348,7 @@ class Document_model extends CI_Model
         return $this->db->select('d.id,d.title,d.sequence_number,d.area_id,
             d.specific_id,d.asset_id,d.location_id,d.holder_id,
             a.name AS area_name,s.name AS specific_name,b.asset_number AS asset_name,
-            l.name AS location_name,l.sequence_number AS location_sequence,
+            l.name AS location_name,
             CONCAT_WS(" ",h.first_name,h.last_name) AS holder_name', FALSE)
             ->from('hardcopy_documents d')
             ->join('areas a', 'a.id=d.area_id', 'left')

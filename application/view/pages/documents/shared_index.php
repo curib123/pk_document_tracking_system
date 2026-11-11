@@ -12,6 +12,7 @@ $canBypassLock = $canFile('download_locked');
 $dt_columns = $cfg['domain'] === 'hardcopy'
     ? [
         'title' => 'Document Title',
+        'sequence_number' => 'Sequence',
         'location_name' => 'Location',
         'holder_name' => 'Holder',
         'status' => 'Status'
@@ -136,7 +137,7 @@ $dt_total = $total;
 $dt_sort = $table['sort'];
 $dt_dir = strtolower($table['dir']);
 $dt_sortable = $cfg['domain'] === 'hardcopy'
-    ? ['title', 'status'] : ['title', 'document_number', 'status'];
+    ? ['title', 'sequence_number', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
 if ($cfg['domain'] === 'hardcopy')

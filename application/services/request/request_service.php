@@ -507,15 +507,15 @@ class Request_service
             }
         }
         if (!empty($location['asset_id'])) {
-            $asset = $this->ci->db->select('b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $location['asset_id'])->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)->get()->row_array();
-            if (
-                !$asset || (int) $asset['specific_id'] !== (int) $location['specific_id'] ||
-                (int) $asset['area_id'] !== (int) $location['area_id']
-            ) {
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            try {
+                Asset_specific_policy::resolve(
+                    $this->ci->db,
+                    $location['asset_id'],
+                    $location['specific_id'],
+                    $location['area_id']
+                );
+            } catch (DomainException $e) {
                 throw new DomainException('Destination location has an invalid hierarchy.');
             }
         } elseif (!empty($location['specific_id'])) {

@@ -10,9 +10,14 @@ final class Hardcopy_folder_tree
     private static function parent_key(array $path, array $nodes): string
     {
         foreach (['asset' => 'asset_id', 'specific' => 'specific_id', 'area' => 'area_id'] as $kind => $field) {
-            $key = $kind . ':' . (int) ($path[$field] ?? 0);
-            if (isset($nodes[$key]))
-                return $key;
+            $id = (int) ($path[$field] ?? 0);
+            // An asset used under several Specifics is filed per Specific: asset:<id>:<specific id>.
+            $keys = $kind === 'asset'
+                ? ['asset:' . $id . ':' . (int) ($path['specific_id'] ?? 0), 'asset:' . $id]
+                : [$kind . ':' . $id];
+            foreach ($keys as $key)
+                if (isset($nodes[$key]))
+                    return $key;
         }
         $location = $nodes['location:' . (int) ($path['location_id'] ?? 0)] ?? [];
         $parent = (string) ($location['parent'] ?? '');

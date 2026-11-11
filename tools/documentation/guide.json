@@ -95,7 +95,7 @@
         "Open Hardcopy Documents and select Add New Hardcopy Document.",
         "Enter Document Title. Choose Area, Specific, optional Asset and Location.",
         "Check Current Holder. Administrators can choose an active user; other users register themselves as holder.",
-        "If needed, turn on Track retention period and enter Retention Start and Retention End. Add optional Reason / Notes.",
+        "Leave Sequence blank for the next number, or enter a Sequence that other documents share. If needed, turn on Track retention period and enter Retention Start and Retention End. Add optional Reason / Notes.",
         "Select Save Document, check the confirmation and select Confirm."
       ],
       "result": "The Active record appears immediately with its holder and storage place.",
@@ -657,14 +657,14 @@
       "audience": "Administrator or authorized storage controller",
       "steps": [
         "Open Master Data. Use the Area, Specific, Asset and Location tabs.",
-        "Add an Area, then a Specific within it. Add an Asset Number under that Specific if needed.",
-        "Add a Location. Enter Location Name, Sequence, Area and Specific. Add Asset Number and Archive Date if needed.",
+        "Add an Area, then a Specific within it. Add an Asset Number and tick every Specific it is used under.",
+        "Add a Location. Enter Location Name, Area and Specific. Add Asset Number and Archive Date if needed.",
         "Select Save Record and Confirm. Use Edit to correct an entry.",
         "Select Deactivate to stop offering an entry in new selections. Use Active or Inactive to check its status."
       ],
       "result": "Document forms offer the active storage places you have set up.",
       "notes": [
-        "Sequence must be unique within a Specific. Leave it blank for an automatic number. Keep each entry under the correct parent.",
+        "One Asset Number is a single record that can belong to many Specifics. A Location has no Sequence: each hardcopy document has its own. Keep each entry under the correct parent.",
         "Deactivation keeps past links. Resolve any linked-record warning before trying again."
       ]
     },

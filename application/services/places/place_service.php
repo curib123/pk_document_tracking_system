@@ -30,8 +30,13 @@ class Place_service
         }
         if ($c['slug'] === 'specific' && !$data['area_id'])
             throw new DomainException('Choose an area.');
-        if ($c['slug'] === 'asset' && !$data['specific_id'])
-            throw new DomainException('Choose a specific.');
+        $specificIds = [];
+        if ($c['slug'] === 'asset') {
+            // One Asset Number can belong to many Specifics.
+            $specificIds = array_values(array_unique(array_filter(array_map('intval', (array) ($post['specific_ids'] ?? [])))));
+            if (!$specificIds)
+                throw new DomainException('Choose at least one specific.');
+        }
         if ($c['slug'] === 'location')
             $this->prepare_location($data);
         $categorySlugs = ['softcopy-categories', 'external-categories'];
@@ -125,12 +130,13 @@ class Place_service
                 ])->row_array()
             )
                 throw new DomainException('Choose an active parent area.');
-            if (
-                $c['slug'] === 'asset' && !$this->ci->db->select('s.id')->from('specifics s')
-                    ->join('areas a', 'a.id=s.area_id')->where('s.id', $data['specific_id'])
-                    ->where('s.active', 1)->where('a.active', 1)->get()->row_array()
-            )
-                throw new DomainException('Choose an active specific in an active area.');
+            if ($c['slug'] === 'asset') {
+                $linked = $this->ci->db->select('s.id')->from('specifics s')
+                    ->join('areas a', 'a.id=s.area_id')->where_in('s.id', $specificIds)
+                    ->where('s.active', 1)->where('a.active', 1)->get()->result_array();
+                if (count($linked) !== count($specificIds))
+                    throw new DomainException('Choose only active specifics in active areas.');
+            }
             if ($id) {
                 $old = $this->ci->db->query('SELECT * FROM ' . $c['table'] . ' WHERE id=? FOR UPDATE', [$id])->row_array();
                 if (!$old)
@@ -147,6 +153,8 @@ class Place_service
                 $this->ci->db->insert($c['table'], $data);
                 $id = (int) $this->ci->db->insert_id();
             }
+            if ($c['slug'] === 'asset')
+                $this->sync_asset_specifics($id, $specificIds);
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Could not save. Check unique values and relations.');
             $this->ci->db->trans_commit();
@@ -158,6 +166,25 @@ class Place_service
             throw new DomainException('Could not save this place. Refresh and try again.');
         }
     }
+    /**
+     * Replace an Asset Number's links with the chosen Specifics. Links to Specifics that are
+     * no longer offered (inactive, or in an inactive area) are kept, so editing never drops them.
+     */
+    private function sync_asset_specifics($assetId, array $specificIds)
+    {
+        $db = $this->ci->db;
+        $offered = array_map('intval', array_column(
+            $db->select('s.id')->from('specifics s')->join('areas a', 'a.id=s.area_id')
+                ->where('s.active', 1)->where('a.active', 1)->get()->result_array(),
+            'id'
+        ));
+        $remove = array_values(array_diff($offered, $specificIds));
+        if ($remove)
+            $db->where('asset_id', (int) $assetId)->where_in('specific_id', $remove)->delete('asset_specifics');
+        foreach ($specificIds as $specificId)
+            $db->query('INSERT IGNORE INTO asset_specifics (asset_id,specific_id) VALUES (?,?)', [(int) $assetId, (int) $specificId]);
+    }
+
     /**
      * Predefined Location hierarchy, strictly resolved from the existing pk_dts
      * areas, specifics and assets (not from client-supplied parent IDs).
@@ -186,22 +213,9 @@ class Place_service
         $assetId = (int) ($data['asset_id'] ?? 0);
 
         if ($assetId) {
-            $asset = $this->ci->db->select('b.id,b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $assetId)->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)
-                ->limit(1)->get()->row_array();
-            if (!$asset)
-                throw new DomainException('Choose an active asset linked to an active specific and area.');
-            if ($specificId && $specificId !== (int) $asset['specific_id']) {
-                throw new DomainException('Selected asset does not belong to the chosen specific.');
-            }
-            if ($areaId && $areaId !== (int) $asset['area_id']) {
-                throw new DomainException('Selected asset does not belong to the chosen area.');
-            }
-            $specificId = (int) $asset['specific_id'];
-            $areaId = (int) $asset['area_id'];
+            // An Asset Number may be used under several Specifics; the Location picks one.
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            [$specificId, $areaId] = Asset_specific_policy::resolve($this->ci->db, $assetId, $specificId, $areaId);
         }
 
         if ($specificId) {
@@ -233,7 +247,8 @@ class Place_service
     }
 
     /**
-     * Sequence belongs to the Location, ordered within its Specific.
+     * Internal display order of a Location within its Specific. It is not shown:
+     * the visible Sequence belongs to each hardcopy document.
      * Assign the next number inside the transaction; the database unique key
      * prevents simultaneous inserts from silently sharing a position.
      */

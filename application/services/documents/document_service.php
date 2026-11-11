@@ -76,10 +76,6 @@ class Document_service
         foreach (['area_id', 'specific_id', 'asset_id', 'location_id'] as $field)
             $data[$field] = !empty($payload[$field]) ? (int) $payload[$field] : NULL;
         $this->validate_hardcopy_location($data, (int) $documentId);
-        $sequence = trim((string) ($payload['sequence_number'] ?? ''));
-        if (mb_strlen($sequence) > 100)
-            throw new DomainException('Sequence number is too long.');
-        $data['sequence_number'] = $sequence ?: NULL;
         $data['retention_enabled'] = !empty($payload['retention_enabled']) ? 1 : 0;
         $data['retention_start_date'] = $data['retention_enabled']
             ? $this->valid_date($payload['retention_start_date'] ?? '') : NULL;
@@ -97,6 +93,17 @@ class Document_service
             throw new DomainException('Hardcopy is not available for update.');
         if ($existing && !$admin && (int) $existing['holder_id'] !== $ownerId)
             throw new DomainException('Only the current holder may request this update.');
+        // The Sequence belongs to the hardcopy document, not to its Location. It is
+        // one-to-many: any number of documents may share the same Sequence, so it is
+        // never checked for uniqueness. A blank entry takes the next document count.
+        $sequence = trim((string) ($payload['sequence_number'] ?? ''));
+        $kept = trim((string) ($existing['sequence_number'] ?? ''));
+        if ($sequence === '') {
+            $sequence = $kept !== '' ? $kept : (string) $this->next_hardcopy_sequence();
+        } elseif ($sequence !== $kept && (!ctype_digit($sequence) || (int) $sequence < 1 || (int) $sequence > 1000000)) {
+            throw new DomainException('Sequence must be a whole number from 1 to 1,000,000. Several documents may share one Sequence.');
+        }
+        $data['sequence_number'] = $sequence;
         $holder = $admin
             ? ((int) ($payload['holder_id'] ?? 0) ?: ($existing['holder_id'] ?? $ownerId))
             : $ownerId;
@@ -134,6 +141,16 @@ class Document_service
         $this->ci->db->where('id', $documentId)->where('status', 'active')->set('version', 'version+1', FALSE)
             ->update('hardcopy_documents', $data);
         return ['document_id' => (int) $documentId];
+    }
+
+    /** The default Sequence for a new hardcopy: the next number after the highest one in use. */
+    private function next_hardcopy_sequence()
+    {
+        $row = $this->ci->db->query(
+            "SELECT COALESCE(MAX(CAST(sequence_number AS UNSIGNED)),0)+1 AS next_sequence
+             FROM hardcopy_documents WHERE sequence_number REGEXP '^[0-9]+$'"
+        )->row_array();
+        return max(1, (int) ($row['next_sequence'] ?? 1));
     }
 
     private function valid_date($value)
@@ -181,22 +198,10 @@ class Document_service
             // the location index migration on existing MariaDB installations.
         }
         if ($asset) {
-            $row = $db->select('b.id,b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $asset)->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)
-                ->get()->row_array();
-            if (!$row)
-                throw new DomainException('Choose an active asset within an active specific and area.');
-            if (
-                ($specific && $specific !== (int) $row['specific_id']) ||
-                ($area && $area !== (int) $row['area_id'])
-            ) {
-                throw new DomainException('Asset does not match the selected area/specific.');
-            }
-            $specific = (int) $row['specific_id'];
-            $area = (int) $row['area_id'];
+            // One Asset Number may be used under several Specifics: the chosen
+            // Specific must be one of its links, never a single stored parent.
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            [$specific, $area] = Asset_specific_policy::resolve($db, $asset, $specific, $area);
         }
         if ($specific) {
             $row = $db->select('s.id,s.area_id')->from('specifics s')

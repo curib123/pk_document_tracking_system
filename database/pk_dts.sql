@@ -75,7 +75,6 @@ INSERT INTO `areas` (`id`, `name`, `active`, `version`, `created_at`, `updated_a
 
 CREATE TABLE `assets` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `specific_id` bigint(20) UNSIGNED NOT NULL,
   `asset_number` varchar(100) NOT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `version` int(11) NOT NULL DEFAULT 1,
@@ -87,12 +86,36 @@ CREATE TABLE `assets` (
 -- Dumping data for table `assets`
 --
 
-INSERT INTO `assets` (`id`, `specific_id`, `asset_number`, `active`, `version`, `created_at`, `updated_at`) VALUES
-(1, 7, '0012-0000424500008', 1, 1, '2026-10-16 06:19:54', '2026-10-16 06:19:54'),
-(2, 7, '012-0000424500001', 1, 1, '2026-10-16 06:20:12', '2026-10-16 06:20:12'),
-(3, 7, '012-0000424500002', 1, 1, '2026-10-16 06:20:35', '2026-10-16 06:20:35'),
-(4, 6, 'PK - PNK - 00106947', 1, 1, '2026-10-16 06:21:00', '2026-10-16 06:21:00'),
-(5, 1, 'PK-PNK-00106945', 1, 1, '2026-10-16 06:21:26', '2026-10-16 06:21:26');
+INSERT INTO `assets` (`id`, `asset_number`, `active`, `version`, `created_at`, `updated_at`) VALUES
+(1, '0012-0000424500008', 1, 1, '2026-10-16 06:19:54', '2026-10-16 06:19:54'),
+(2, '012-0000424500001', 1, 1, '2026-10-16 06:20:12', '2026-10-16 06:20:12'),
+(3, '012-0000424500002', 1, 1, '2026-10-16 06:20:35', '2026-10-16 06:20:35'),
+(4, 'PK - PNK - 00106947', 1, 1, '2026-10-16 06:21:00', '2026-10-16 06:21:00'),
+(5, 'PK-PNK-00106945', 1, 1, '2026-10-16 06:21:26', '2026-10-16 06:21:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `asset_specifics`
+-- One Asset Number can belong to many Specifics.
+--
+
+CREATE TABLE `asset_specifics` (
+  `asset_id` bigint(20) UNSIGNED NOT NULL,
+  `specific_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `asset_specifics`
+--
+
+INSERT INTO `asset_specifics` (`asset_id`, `specific_id`, `created_at`) VALUES
+(1, 7, '2026-10-16 06:19:54'),
+(2, 7, '2026-10-16 06:20:12'),
+(3, 7, '2026-10-16 06:20:35'),
+(4, 6, '2026-10-16 06:21:00'),
+(5, 1, '2026-10-16 06:21:26');
 
 -- --------------------------------------------------------
 
@@ -1366,8 +1389,14 @@ ALTER TABLE `areas`
 ALTER TABLE `assets`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `asset_number` (`asset_number`),
-  ADD KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
-  ADD KEY `specific_id` (`specific_id`);
+  ADD KEY `asset_lookup` (`active`,`asset_number`);
+
+--
+-- Indexes for table `asset_specifics`
+--
+ALTER TABLE `asset_specifics`
+  ADD PRIMARY KEY (`asset_id`,`specific_id`),
+  ADD KEY `idx_asset_specifics_specific` (`specific_id`);
 
 --
 -- Indexes for table `assignments`
@@ -1842,8 +1871,9 @@ ALTER TABLE `access_grants`
 --
 -- Constraints for table `assets`
 --
-ALTER TABLE `assets`
-  ADD CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`);
+ALTER TABLE `asset_specifics`
+  ADD CONSTRAINT `asset_specifics_asset_fk` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
+  ADD CONSTRAINT `asset_specifics_specific_fk` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`);
 
 --
 -- Constraints for table `assignments`

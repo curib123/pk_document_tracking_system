@@ -13,7 +13,7 @@ the history shows who completed each action.
 | Your goal | Open |
 | --- | --- |
 | Follow a task with screen examples | [User Guide](PK_DTS_User_Guide.pdf) |
-| See who acts at each stage | [Process Flow](PK_DTS_Process_Flow.pdf) |
+| See who acts at each stage | [Process Flow](PK_DTS_Process_Flow.pptx) |
 | Decide what to do next | [Flowchart](PK_DTS_Flowchart.pdf) |
 | Understand how people share information | [Data Flow Diagram](PK_DTS_DFD.pdf) |
 
@@ -97,10 +97,13 @@ unchanged. Users who may download a file can choose **Download Original** or
 2. Enter **Document Title** and choose **Area > Specific > optional Asset > Location**.
 3. Check **Current Holder**. Administrators can select another active user; other
    users register themselves as holder.
-4. Add **Reason / Notes** if needed. Set retention dates if you need to track them.
+4. Leave **Sequence** blank to take the next number, or enter a Sequence that other
+   documents share. Add **Reason / Notes** if needed. Set retention dates if you need to
+   track them.
 5. Choose **Save Document**, then confirm and check the record.
 
-Several documents can share one Location. The current holder with direct
+Several documents can share one Location. The **Sequence** belongs to each hardcopy
+document, not to its Location, and several documents may share the same Sequence. The current holder with direct
 permission, or an Administrator, can **Edit** an active record's title, storage
 details and retention dates. Reason / Notes is saved during registration;
 changes to that field during Edit are not saved. Use a transfer when the move
@@ -196,7 +199,7 @@ exact step names and assigned operators.
 | --- | --- |
 | Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DTS_DFD.pdf), pages **9-16** |
 | The Approve, Return and Reject choices and their outcomes | [Flowchart](PK_DTS_Flowchart.pdf), pages **12-19** |
-| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pdf), pages **11-18** |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pptx), slides **33-40** |
 | The same decisions alongside the screen instructions | [User Guide](PK_DTS_User_Guide.pdf), pages **27-34** |
 
 On related procedure pages, select a page number beside **Decisions** in the PDF
@@ -301,7 +304,7 @@ Use these areas only when your account has the required permission.
 
 | Area | Main actions and checks |
 | --- | --- |
-| **Setup Places** | Maintain Areas, Specifics, optional Assets and Locations under the correct parents. Maintain Softcopy and External Categories separately; both allow subcategories. Deactivation stops new selection while keeping historical links. |
+| **Setup Places** | Maintain Areas, Specifics, optional Assets and Locations under the correct parents. One Asset Number is a single record that can belong to many Specifics. Maintain Softcopy and External Categories separately; both allow subcategories. Deactivation stops new selection while keeping historical links. |
 | **User Management** | Set account details, Primary role, Assigned roles and leader. Share temporary passwords securely. New or reset users replace them at sign-in. You cannot deactivate yourself or remove the last active Administrator. |
 | **Roles & Permissions** | Set allowed actions. Administrator access is fixed. Resolve account and workflow dependencies before deactivating or removing a role. |
 | **Workflow Builder** | Choose **Step Actions > Create Next Draft**, or **Start First Draft**. Arrange 1-30 steps and select approvers. For Softcopy or External workflows, optionally select one configured step as the document-locking approver. Then choose **Validate & Publish**. Future submissions use the new default. |
@@ -362,12 +365,12 @@ password private.
 ## Edit the documentation
 
 The [User Guide PowerPoint](PK_DTS_User_Guide.pptx) contains the same screen examples
-as the PDF. Diagrams are available as editable Visio files:
+as the PDF. The [Process Flow](PK_DTS_Process_Flow.pptx) is itself an editable PowerPoint.
+Diagrams are available as editable Visio files:
 
 | Diagram | Visio 2013 or newer | Older Visio XML format |
 | --- | --- | --- |
 | Data Flow Diagram | [VSDX](PK_DTS_DFD.vsdx) | [VDX](PK_DTS_DFD.vdx) |
-| Process Flow | [VSDX](PK_DTS_Process_Flow.vsdx) | [VDX](PK_DTS_Process_Flow.vdx) |
 | Flowchart | [VSDX](PK_DTS_Flowchart.vsdx) | [VDX](PK_DTS_Flowchart.vdx) |
 
 For an older Visio installation, or if VSDX will not open, use the matching

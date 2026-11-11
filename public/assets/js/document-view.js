@@ -227,8 +227,7 @@
           !(domain === "softcopy" && entry[0] === "Document Number" && hasStorageValue(entry[1])) &&
           !(
             section.key === "storage" &&
-            (STORAGE_HEADER_FIELDS.includes(entry[0]) ||
-              entry[0] === "Location Sequence")
+            STORAGE_HEADER_FIELDS.includes(entry[0])
           )
         );
       });

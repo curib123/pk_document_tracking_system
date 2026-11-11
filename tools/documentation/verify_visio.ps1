@@ -141,7 +141,7 @@ public interface PkDtsViewerDraw {
     }
     [void][IO.Directory]::CreateDirectory($outputRoot)
     if (-not $Paths) {
-        $Paths = foreach ($name in @('DFD', 'Flowchart', 'Process_Flow')) {
+        $Paths = foreach ($name in @('DFD', 'Flowchart')) {
             foreach ($extension in @('vsdx', 'vdx')) { "docs/system-documentation/PK_DTS_$name.$extension" }
         }
     }

@@ -254,7 +254,7 @@ def capture(page, base, review_request):
             page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
             shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
         if 'workflow-tasks' in only:
-            # Extra screen for the request-workflow deck; kept outside the guide manifest.
+            # Extra screen for the Process Flow deck; kept outside the guide manifest.
             only.discard('workflow-tasks')
             page.set_viewport_size({'width': 1700, 'height': 900})  # wide enough to show every row action
             goto('my-tasks/softcopy?period=all')

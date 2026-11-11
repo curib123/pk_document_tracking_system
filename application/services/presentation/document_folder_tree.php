@@ -24,9 +24,13 @@ final class Document_folder_tree
             ];
         foreach ($levels as $kind => $field) {
             $id = (int) ($row[$field] ?? 0);
-            $key = $kind . ':' . $id;
-            if ($id > 0 && isset($nodes[$key]))
-                return $key;
+            // An asset used under several Specifics is filed per Specific: asset:<id>:<specific id>.
+            $keys = $kind === 'asset'
+                ? ['asset:' . $id . ':' . (int) ($row['specific_id'] ?? 0), 'asset:' . $id]
+                : [$kind . ':' . $id];
+            foreach ($keys as $key)
+                if ($id > 0 && isset($nodes[$key]))
+                    return $key;
         }
         return 'unfiled';
     }

@@ -117,7 +117,6 @@ REQUIRED_GUIDE = {
 SPECS = [
  ('dfd', 'PK_DTS_DFD', 'Data Flow Diagram'),
  ('flowchart', 'PK_DTS_Flowchart', 'Flowchart'),
- ('process', 'PK_DTS_Process_Flow', 'Process Flow'),
  ('guide', 'PK_DTS_User_Guide', 'User Guide'),
 ]
 BOOKS = {
@@ -127,9 +126,6 @@ BOOKS = {
  'flowchart': ('Choose the next step', 'Decisions made clear',
                'Follow one activity at a time. Each question shows the next action and what happens when a check fails.',
                ['Clear decisions', 'Yes and No paths', 'Practical outcomes']),
- 'process': ('Understand the journey', 'People, actions and outcomes',
-             'Explain each procedure from start to finish: who acts, what they do, and what happens next.',
-             ['Direct document actions', 'Requests and approvals', 'Physical handoffs']),
  'guide': ('Complete everyday tasks', 'A practical guide for every role',
            'Find the task you need, follow the numbered instructions, and check the result before continuing.',
            ['Find and manage documents', 'Request, review and receive', 'Set up and maintain PK DTS']),
@@ -186,6 +182,9 @@ def normalized(value):
 def load_content():
     content = {key: json.loads((SOURCE / (key + '.json')).read_text(encoding='utf-8'))
                for key, _, _ in SPECS}
+    # process.json is shared source data: it owns the approval examples used by the
+    # books and the Process Flow presentation (build_process_flow.py). It is not a book.
+    content['process'] = json.loads((SOURCE / 'process.json').read_text(encoding='utf-8'))
     examples = {item['id']: item for item in content['process']['pages']
                 if item.get('kind') == 'approval-example'}
     for key in ['guide', 'flowchart']:
@@ -300,7 +299,7 @@ def check_source(content):
                 assert all(item.get(field) for field in ['start', 'action', 'question', 'yes', 'no', 'result']), item['id']
             if item.get('kind') == 'request-decision-data':
                 assert len(item['operators']) == 3 and len(item['flows']) == 5, item['id']
-    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with decisions in all four books; {len(LEGACY)} historical actions distinguished.')
+    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with decisions in the three books and the Process Flow presentation; {len(LEGACY)} historical actions distinguished.')
 
 
 def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12):
@@ -385,7 +384,7 @@ def notes(page, values, rect, title='Remember'):
         y += height
 
 
-def approval_example_page(doc, item, number, total, book='process'):
+def approval_example_page(doc, item, number, total, book):
     """Show the named default operators and all three review outcomes together."""
     kind = next(title for key, _, title in SPECS if key == book)
     page = header(doc, kind, item['title'], number, total,
@@ -430,47 +429,6 @@ def approval_example_page(doc, item, number, total, book='process'):
                 page.draw_line((x+14, y+64), (x+330, y+64), color=RULE, width=.6)
     notes(page, item['notes'], (42, 721, 1148, 776))
     return page
-
-
-def process_page(doc, item, number, total):
-    if item.get('kind') == 'approval-example':
-        return approval_example_page(doc, item, number, total)
-    page = header(doc, 'Process Flow', item['title'], number, total,
-                  item['summary'], chapter('process', item['id']))
-    steps = item['steps']
-    text(page, (42, 170, 864, 191), 'FOLLOW THE STEPS FROM TOP TO BOTTOM', 10, True, GREY, minimum=10)
-    row_height = (556-16*(len(steps)-1))/len(steps)
-    for index, step in enumerate(steps, 1):
-        y = 204+(index-1)*(row_height+16)
-        center = y+row_height/2
-        if index < len(steps):
-            arrow(page, [(63, center+18), (63, center+row_height+16-21)], color=RULE)
-        panel(page, (42, center-18, 84, center+18), ACCENT, ACCENT)
-        text(page, (42, center-10, 84, center+14), f'{index:02}', 13, True, WHITE, align=1)
-        panel(page, (100, y, 870, y+row_height), PALE)
-        actor = step['actor']
-        if actor == 'PK DTS':
-            kind = 'database' if any(word in step['text'].lower() for word in
-                ['save', 'record', 'store', 'capture', 'restore', 'backup']) else 'account'
-        elif 'approver' in actor.lower() or actor == 'Auditor':
-            kind = 'review'
-        else:
-            kind = 'person'
-        diagram_icon(page, (114, center-23, 160, center+23), kind)
-        text(page, (174, center-24, 309, center+26), actor, 13, True, minimum=12)
-        page.draw_line((326, y+15), (326, y+row_height-15), color=RULE, width=.8)
-        text(page, (346, center-30, 852, center+35), step['text'], 16, minimum=14)
-
-    panel(page, (890, 176, 1148, 760), PALE)
-    panel(page, (890, 176, 1148, 211), ACCENT, ACCENT)
-    text(page, (904, 184, 1134, 208), 'KEEP IN MIND', 12, True, WHITE, minimum=12)
-    y = 227
-    height = (744-y)/len(item['notes'])
-    for index, value in enumerate(item['notes']):
-        text(page, (904, y, 1134, y+height-16), value, 14, minimum=12.5)
-        if index < len(item['notes'])-1:
-            page.draw_line((904, y+height-11), (1134, y+height-11), color=RULE, width=.5)
-        y += height
 
 
 def approval_flowchart_page(doc, item, number, total):
@@ -1066,7 +1024,7 @@ def powerpoint(doc, items=None):
 
 
 def refresh(content):
-    renderers = {'process': process_page, 'guide': guide_page, 'flowchart': flowchart_page, 'dfd': dfd_page}
+    renderers = {'guide': guide_page, 'flowchart': flowchart_page, 'dfd': dfd_page}
     # Render and validate the complete set before replacing any published file.
     pending = []
     try:
@@ -1185,8 +1143,6 @@ def verify(content, pending=False):
                         assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
                     if key == 'dfd' or item.get('kind') == 'approval-flowchart':
                         assert not page.get_image_info(), f'Diagram symbols must be editable shapes: {item["id"]}'
-                    if key == 'process':
-                        assert len(page.get_image_info()) == len(item['steps']), f'Missing process illustrations: {item["id"]}'
                     if item.get('kind') == 'approval-example':
                         assert len(page.get_image_info()) == len(item['steps']), f'Missing operator illustrations: {item["id"]}'
                     if item.get('decision_examples'):
@@ -1248,11 +1204,12 @@ def verify(content, pending=False):
     if not pending:
         expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
         expected.update(base+'.vdx' for key, base, _ in SPECS if key != 'guide')
-        # Built separately by build_request_workflow.py; not part of the four generated books.
-        expected.add('PK_DTS_Request_Workflow.pptx')
+        # The Process Flow presentation is built separately by build_process_flow.py;
+        # it replaces the former Process Flow PDF and Visio files.
+        expected.add('PK_DTS_Process_Flow.pptx')
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
-        print('Verified all 8 PDF/editable exports and 3 legacy Visio copies. Reference notes and Office lock files are not treated as exports.')
+        print(f'Verified {len(SPECS)} PDF books with their editable files, {len(SPECS)-1} legacy Visio copies and the Process Flow presentation. Reference notes and Office lock files are not treated as exports.')
 
 
 if __name__ == '__main__':

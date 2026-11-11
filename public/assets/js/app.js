@@ -575,6 +575,13 @@
             .map(Number)
             .includes(Number(field.value));
         });
+      target
+        .querySelectorAll('input[name="specific_ids[]"]')
+        .forEach(function (field) {
+          field.checked = (record.specific_ids || [])
+            .map(Number)
+            .includes(Number(field.value));
+        });
       target.querySelectorAll("[name]").forEach(function (field) {
         if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
         if (
@@ -1245,6 +1252,32 @@
     });
   updateStepApprover();
 
+  // One Asset Number can belong to many Specifics (and so several Areas): its options carry
+  // comma lists in data-specific-ids and data-area-ids.
+  function listHas(option, key, value) {
+    return (option.dataset[key] || "").split(",").indexOf(String(value)) !== -1;
+  }
+  function listOnly(option, key) {
+    var values = (option.dataset[key] || "").split(",").filter(Boolean);
+    return values.length === 1 ? values[0] : "";
+  }
+  // Choosing an Asset fills its Area and Specific only when it has a single one; with several,
+  // keep the chosen Specific if the asset is used under it, otherwise ask the user to choose.
+  function applyAssetParents(option, area, specific) {
+    var onlyArea = listOnly(option, "areaIds");
+    if (onlyArea) area.value = onlyArea;
+    var onlySpecific = listOnly(option, "specificIds");
+    if (onlySpecific) specific.value = onlySpecific;
+    else if (specific.value && !listHas(option, "specificIds", specific.value))
+      specific.value = "";
+  }
+  function assetMatches(option, area, specific) {
+    return (
+      (!area.value || listHas(option, "areaIds", area.value)) &&
+      (!specific.value || listHas(option, "specificIds", specific.value))
+    );
+  }
+
   // Location upsert uses live predefined Area > Specific > Asset relationships.
   // The PHP service validates all relationships again before writing to MySQL.
   function updateLocationHierarchy(changed) {
@@ -1260,9 +1293,9 @@
     }
 
     if (changed === "asset" && asset.value) {
-      var chosenAsset = selectedOption(asset);
-      specific.value = chosenAsset.dataset.specificId || "";
-      area.value = chosenAsset.dataset.areaId || "";
+      applyAssetParents(selectedOption(asset), area, specific);
+      if (specific.value)
+        area.value = selectedOption(specific).dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       var chosenSpecific = selectedOption(specific);
       area.value = chosenSpecific.dataset.areaId || "";
@@ -1280,10 +1313,7 @@
 
     Array.from(asset.options).forEach(function (option) {
       if (!option.value) return;
-      var matchesSpecific =
-        !specific.value || option.dataset.specificId === specific.value;
-      var matchesArea = !area.value || option.dataset.areaId === area.value;
-      var available = matchesSpecific && matchesArea;
+      var available = assetMatches(option, area, specific);
       option.hidden = !available;
       option.disabled = !available;
     });
@@ -1294,7 +1324,7 @@
     var help = form.querySelector("#location-hierarchy-help");
     if (help) {
       help.textContent = asset.value
-        ? "Area and specific automatically match the selected asset."
+        ? "Area and specific match the selected asset. If it is used under several specifics, choose one."
         : specific.value
           ? "Area automatically matches the selected specific."
           : "Select an Area and Specific. Asset Number is optional.";
@@ -1462,9 +1492,9 @@
       asset.value =
         loc.dataset.assetId === "0" ? "" : loc.dataset.assetId || "";
     } else if (changed === "asset" && asset.value) {
-      var a = chosen(asset);
-      area.value = a.dataset.areaId || "";
-      specific.value = a.dataset.specificId || "";
+      applyAssetParents(chosen(asset), area, specific);
+      if (specific.value)
+        area.value = chosen(specific).dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       area.value = chosen(specific).dataset.areaId || "";
     }
@@ -1472,10 +1502,7 @@
       return !area.value || opt.dataset.areaId === area.value;
     });
     filter(asset, function (opt) {
-      return (
-        (!area.value || opt.dataset.areaId === area.value) &&
-        (!specific.value || opt.dataset.specificId === specific.value)
-      );
+      return assetMatches(opt, area, specific);
     });
     filter(location, function (opt) {
       return (
@@ -1571,9 +1598,10 @@
       asset.value =
         chosen.dataset.assetId === "0" ? "" : chosen.dataset.assetId || "";
     } else if (changed === "asset" && asset.value) {
-      var chosen = asset.options[asset.selectedIndex];
-      specific.value = chosen.dataset.specificId || "";
-      area.value = chosen.dataset.areaId || "";
+      applyAssetParents(asset.options[asset.selectedIndex], area, specific);
+      if (specific.value)
+        area.value =
+          specific.options[specific.selectedIndex].dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       area.value =
         specific.options[specific.selectedIndex].dataset.areaId || "";
@@ -1589,10 +1617,7 @@
       return !area.value || o.dataset.areaId === area.value;
     });
     filter(asset, function (o) {
-      return (
-        (!area.value || o.dataset.areaId === area.value) &&
-        (!specific.value || o.dataset.specificId === specific.value)
-      );
+      return assetMatches(o, area, specific);
     });
     filter(location, function (o) {
       return (

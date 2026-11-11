@@ -53,7 +53,7 @@
         },
         {
           "actor": "Document holder",
-          "text": "Check Current Holder and retention dates. For a new record, add Reason / Notes if needed."
+          "text": "Check Current Holder and retention dates. Leave Sequence blank for the next number, or enter one shared with other documents. For a new record, add Reason / Notes if needed."
         },
         {
           "actor": "Document holder",
@@ -103,7 +103,7 @@
       "notes": [
         "Both retention dates are required when tracking is enabled. Retention End must be on or after Retention Start.",
         "Reminders cover visible active hardcopies whose retention end date has arrived. Retention never triggers automatic disposal.",
-        "Several hardcopy documents may share one Location. The displayed Location sequence belongs to that storage place."
+        "Several hardcopy documents may share one Location. Each document carries its own Sequence, and several documents may share the same Sequence. A Location has no Sequence."
       ]
     },
     {
@@ -1266,7 +1266,7 @@
         },
         {
           "actor": "Places maintainer",
-          "text": "Create Area, then a Specific within it. Add optional Asset Numbers under Specific."
+          "text": "Create Area, then a Specific within it. Add optional Asset Numbers and choose every Specific each one is used under."
         },
         {
           "actor": "Places maintainer",
@@ -1282,11 +1282,11 @@
         },
         {
           "actor": "PK DTS",
-          "text": "Check parent choices, category nesting and unique codes or sequences. Update the available choices."
+          "text": "Check parent choices, category nesting and unique codes. Update the available choices."
         }
       ],
       "notes": [
-        "A Location can omit Asset Number. Its Sequence is unique within its Specific and is assigned automatically when left empty.",
+        "One Asset Number is a single record that can belong to many Specifics. A Location can omit Asset Number. It has no Sequence: the Sequence belongs to each hardcopy document.",
         "Softcopy Categories and External Categories are separate. Only Softcopy Document Number Pattern categories have a numbering pattern; Folder-only categories organize nested parent folders.",
         "Deactivation removes a choice from active selection; it does not delete the existing document records."
       ]

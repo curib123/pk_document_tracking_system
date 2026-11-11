@@ -5,7 +5,7 @@ class Place_model extends CI_Model
     private $definitions = [
         'area' => ['table' => 'areas', 'label' => 'Areas', 'key' => 'name', 'fields' => ['name']],
         'specific' => ['table' => 'specifics', 'label' => 'Specifics', 'key' => 'name', 'fields' => ['name', 'area_id']],
-        'asset' => ['table' => 'assets', 'label' => 'Assets', 'key' => 'asset_number', 'fields' => ['asset_number', 'specific_id']],
+        'asset' => ['table' => 'assets', 'label' => 'Assets', 'key' => 'asset_number', 'fields' => ['asset_number']],
         'location' => [
             'table' => 'locations',
             'label' => 'Locations',
@@ -54,13 +54,16 @@ class Place_model extends CI_Model
         }
         $parents = [
             'specific' => 'area_id',
-            'asset' => 'specific_id',
             'location' => 'area_id',
             'softcopy-categories' => 'parent_id',
             'external-categories' => 'parent_id'
         ];
-        if (!empty($state['parent']) && isset($parents[$c['slug']]))
+        if (!empty($state['parent']) && $c['slug'] === 'asset') {
+            // An Asset Number can belong to many Specifics.
+            $this->db->where('p.id IN (SELECT asset_id FROM asset_specifics WHERE specific_id=' . (int) $state['parent'] . ')', NULL, FALSE);
+        } elseif (!empty($state['parent']) && isset($parents[$c['slug']])) {
             $this->db->where('p.' . $parents[$c['slug']], (int) $state['parent']);
+        }
         if ($c['active'] && $status !== '' && in_array($status, ['0', '1'], TRUE)) {
             $this->db->where('p.active', (int) $status);
         }
@@ -74,7 +77,6 @@ class Place_model extends CI_Model
         $this->db->select('p.*');
         $joins = [
             'specific' => [['areas a', 'a.id=p.area_id', 'a.name AS area_name']],
-            'asset' => [['specifics s', 's.id=p.specific_id', 's.name AS specific_name']],
             'location' => [
                 ['areas a', 'a.id=p.area_id', 'a.name AS area_name'],
                 ['specifics s', 's.id=p.specific_id', 's.name AS specific_name'],
@@ -85,6 +87,12 @@ class Place_model extends CI_Model
         ];
         foreach ($joins[$c['slug']] ?? [] as $join) {
             $this->db->join($join[0], $join[1], 'left')->select($join[2]);
+        }
+        if ($c['slug'] === 'asset') {
+            $this->db->select('(SELECT GROUP_CONCAT(s.name ORDER BY s.name SEPARATOR ", ") FROM asset_specifics x
+                JOIN specifics s ON s.id=x.specific_id WHERE x.asset_id=p.id) AS specific_name,
+                (SELECT GROUP_CONCAT(x.specific_id ORDER BY x.specific_id) FROM asset_specifics x
+                WHERE x.asset_id=p.id) AS specific_ids', FALSE);
         }
         $sorts = array_intersect($c['fields'], ['name', 'sequence_number', 'asset_number', 'folder_name']);
         if ($c['active'])
@@ -113,17 +121,22 @@ class Place_model extends CI_Model
         // Location Upsert: preload the real Area -> Specific -> Asset relationships.
         // No artificial presets, extra tables, APIs or invented identifiers.
         if ($table === 'specifics') {
-            return $this->db->select('s.id,s.name,s.area_id')
+            return $this->db->select('s.id,s.name,s.area_id,a.name AS area_name')
                 ->from('specifics s')
                 ->join('areas a', 'a.id=s.area_id')
                 ->where('s.active', 1)->where('a.active', 1)
                 ->order_by('s.name')->order_by('s.id')->get()->result_array();
         }
         if ($table === 'assets') {
-            return $this->db->select('b.id,b.asset_number AS name,b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
+            // One row per Asset Number; the comma lists hold every active Specific and Area it is used under.
+            return $this->db->select('b.id,b.asset_number AS name,
+                GROUP_CONCAT(DISTINCT s.id ORDER BY s.id) AS specific_ids,
+                GROUP_CONCAT(DISTINCT s.area_id ORDER BY s.area_id) AS area_ids', FALSE)
+                ->from('assets b')->join('asset_specifics x', 'x.asset_id=b.id')
+                ->join('specifics s', 's.id=x.specific_id')
                 ->join('areas a', 'a.id=s.area_id')
                 ->where('b.active', 1)->where('s.active', 1)->where('a.active', 1)
+                ->group_by('b.id,b.asset_number')
                 ->order_by('b.asset_number')->order_by('b.id')->get()->result_array();
         }
         if ($table === 'categories') {
