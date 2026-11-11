@@ -153,6 +153,17 @@
     "Request Version": "fa-code-branch",
   };
 
+  // Classification and revision details of a softcopy sit in the top header, not the body.
+  var REVISION_HEADER_FIELDS = {
+    "Category / Folder": "fa-folder-open",
+    Series: "fa-layer-group",
+    "Revision Level": "fa-code-branch",
+    "Effective Date": "fa-calendar-check",
+    Pages: "fa-file-lines",
+    "Date Received": "fa-inbox",
+    "Date Released": "fa-paper-plane",
+  };
+
   function hasStorageValue(value) {
     return value != null && String(value).trim() !== "";
   }
@@ -224,6 +235,7 @@
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
           !(section.key === "overview" && (repeated[entry[0]] || Object.prototype.hasOwnProperty.call(HEADER_FIELDS, entry[0]))) &&
+          !(section.key === "revision" && Object.prototype.hasOwnProperty.call(REVISION_HEADER_FIELDS, entry[0])) &&
           !(domain === "softcopy" && entry[0] === "Document Number" && hasStorageValue(entry[1])) &&
           !(
             section.key === "storage" &&
@@ -356,24 +368,32 @@
         return section.key === "overview";
       });
       var recordFields = (overview && overview.fields) || {};
-      normalizedEntries(recordFields).forEach(function (entry) {
-        var label = entry[0];
-        if (!Object.prototype.hasOwnProperty.call(HEADER_FIELDS, label)) return;
-        if (isExternalDocument && label === "Status") return;
-        var metadataValue = fieldValue([label, recordFields[label]]);
-        var item = node(
-          "div",
-          "doc-modal-metadata-item" +
-            (/Version$/.test(label) ? " is-version" : "") +
-            (metadataValue.length > 120 ? " is-wide" : ""),
-        );
-        var term = node("dt", "doc-modal-metadata-label");
-        var glyph = node("span", "doc-modal-metadata-icon " + HEADER_FIELDS[label]);
-        glyph.setAttribute("aria-hidden", "true");
-        term.append(glyph, node("span", "", label));
-        item.append(term, node("dd", "doc-modal-metadata-value", metadataValue));
-        metadata.append(item);
+      var revision = data.sections.find(function (section) {
+        return section.key === "revision";
       });
+      function addMetadata(fields, icons) {
+        normalizedEntries(fields).forEach(function (entry) {
+          var label = entry[0];
+          if (!Object.prototype.hasOwnProperty.call(icons, label)) return;
+          if (isExternalDocument && label === "Status") return;
+          var metadataValue = fieldValue([label, fields[label]]);
+          var item = node(
+            "div",
+            "doc-modal-metadata-item" +
+              (/Version$/.test(label) ? " is-version" : "") +
+              (metadataValue.length > 120 ? " is-wide" : ""),
+          );
+          var term = node("dt", "doc-modal-metadata-label");
+          var glyph = node("span", "doc-modal-metadata-icon " + icons[label]);
+          glyph.setAttribute("aria-hidden", "true");
+          term.append(glyph, node("span", "", label));
+          item.append(term, node("dd", "doc-modal-metadata-value", metadataValue));
+          metadata.append(item);
+        });
+      }
+      // Classification and revision first, then who created or changed the record.
+      if (revision) addMetadata(revision.fields || {}, REVISION_HEADER_FIELDS);
+      addMetadata(recordFields, HEADER_FIELDS);
       metadata.hidden = !metadata.children.length;
     }
 
@@ -537,7 +557,12 @@
       var previewElement = row.querySelector(".doc-modal-file-preview");
       var requestFullscreen = previewElement &&
         (previewElement.requestFullscreen || previewElement.webkitRequestFullscreen);
-      if (requestFullscreen) {
+      // Images and PDFs (including Word and Excel, shown as PDF) open in a viewer that
+      // supports mouse zoom and pan. Text previews keep the plain browser fullscreen.
+      var viewerKind = !previewElement ? "" :
+        previewElement.tagName === "IMG" ? "image" :
+        link.preview_type === "application/pdf" ? "pdf" : "";
+      if (requestFullscreen || (viewerKind && window.PKPreviewViewer)) {
         var fullscreen = node(
           "button",
           "btn btn-sm btn-outline-secondary doc-modal-download",
@@ -545,7 +570,7 @@
         );
         fullscreen.type = "button";
         fullscreen.setAttribute("aria-label", "Show " + fileName + " fullscreen");
-        fullscreen.addEventListener("click", function () {
+        function nativeFullscreen() {
           try {
             var request = previewElement.requestFullscreen
               ? previewElement.requestFullscreen()
@@ -554,6 +579,17 @@
           } catch (error) {
             /* Fullscreen can be blocked by the browser; the inline preview remains. */
           }
+        }
+        fullscreen.addEventListener("click", function () {
+          if (viewerKind && window.PKPreviewViewer) {
+            window.PKPreviewViewer.open({
+              kind: viewerKind,
+              url: previewDestination,
+              title: fileName,
+              opener: fullscreen,
+              onFail: requestFullscreen ? nativeFullscreen : null,
+            });
+          } else if (requestFullscreen) nativeFullscreen();
         });
         fileInfo.append(fullscreen);
       }

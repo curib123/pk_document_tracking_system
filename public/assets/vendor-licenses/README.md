@@ -15,6 +15,11 @@ internet. Do not replace their asset URLs with CDN URLs.
   `MsVlogsm/ISP-Mikrotik-Billing-OneClick/public/xlink-dashboard/chart.umd.min.js.download`.
   The bundled header declares version 4.4.7. MIT license:
   `Chartjs-MIT.txt`.
+- **PDF.js 3.11.174**: the official Mozilla `pdf.min.js` and `pdf.worker.min.js`
+  browser builds, used by the fullscreen file viewer (`preview-viewer.js`) to draw
+  PDF pages with mouse zoom and pan. Apache License 2.0: `PDFjs-Apache-2.0.txt`.
+  Files live in `js/vendor/pdfjs/`. Documents are fetched from the same
+  authorized preview URL as the inline preview; nothing is sent elsewhere.
 - **Poppins 400, 500, 600, 700, 800**: official
   `google/fonts/ofl/poppins` TTF files. SIL Open Font License:
   `Poppins-OFL.txt`. `font-display: swap` keeps text visible on slow links.

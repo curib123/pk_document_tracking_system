@@ -6,8 +6,8 @@
       "title": "Start here",
       "audience": "All users",
       "steps": [
-        "Use Hardcopy Documents for paper records and Softcopy Documents for approved electronic files.",
-        "Use External Documents for documents received from outside the organization.",
+        "Softcopy Documents is the repository of approved softcopy templates. Hardcopy Documents only tracks where each paper document is kept and who holds it.",
+        "External Documents keeps scanned copies of documents received from outside the organization, only as a backup.",
         "Use My Requests to ask for a change. Use My Tasks to review assigned requests or record a physical handoff.",
         "With the required permission, you can add or change documents directly in their document lists.",
         "Read each result message. Select Got it to close it, then check the record or request status."
@@ -15,7 +15,8 @@
       "result": "You know where to start and what to check after each action.",
       "notes": [
         "Your roles and permissions determine which menus, records and actions you can use.",
-        "Saving a request draft does not change a document, its holder, its access or its status."
+        "Saving a request draft does not change a document, its holder, its access or its status.",
+        "The Process Flow presentation (PK_DTS_Process_Flow.pptx) shows each document type and every scenario step by step."
       ]
     },
     {
@@ -83,7 +84,7 @@
       ],
       "result": "You can read the document records available to your account.",
       "notes": [
-        "Hardcopy folders follow Area, Specific, optional Asset, then Location. Softcopy and External folders use separate categories.",
+        "Hardcopy folders follow Area, Specific, optional Asset, then Location. An Asset Number used under several Specifics appears under each. Softcopy and External folders use separate categories.",
         "If a document seems missing, clear the filters and return to All Documents."
       ]
     },
@@ -100,7 +101,7 @@
       ],
       "result": "The Active record appears immediately with its holder and storage place.",
       "notes": [
-        "Choose a Location that belongs to the selected storage places. Asset is optional.",
+        "Hardcopy is tracking only: no file is attached. Choose a Location that belongs to the selected storage places. Asset is optional; if it is used under several Specifics, choose the Specific first.",
         "Register hardcopies here. New hardcopy creation requests are unavailable."
       ]
     },
@@ -127,7 +128,7 @@
       "audience": "Hardcopy users and document controllers",
       "steps": [
         "Find the record in Hardcopy Documents and open View Details.",
-        "Check Holder and the full Area, Specific, Asset and Location details.",
+        "Check Sequence, Holder and the full Area, Specific, Asset and Location details.",
         "Review Related Requests, approval history and transfer history when available.",
         "Before collecting or releasing the original, confirm the holder and any unfinished transfer."
       ],
@@ -148,7 +149,7 @@
         "Attach Document File. Set Revision Level, and add Effective Date and Remarks if needed.",
         "Select Approve Directly and Confirm. Check the success message and the new record."
       ],
-      "result": "The Active softcopy and its approved file are ready immediately at revision 00.",
+      "result": "The Active softcopy template and its approved file are ready immediately at revision 00.",
       "notes": [
         "The displayed document number is a preview. The final number is assigned when the action completes.",
         "Document File is required. A blank Effective Date uses the approval date."
@@ -183,7 +184,7 @@
         "Attach Document File and add optional Remarks. Select Save Draft and Confirm.",
         "Check View Details, including the file preview on its Document File tab. Select Submit, Continue and Confirm."
       ],
-      "result": "Final approval creates the Active softcopy and its approved file at revision 00.",
+      "result": "Final approval creates the Active softcopy template and its approved file at revision 00.",
       "notes": [
         "Attach a file before submission. This request form has no Effective Date field.",
         "The final document number is assigned at final approval and may differ from the preview."
@@ -241,7 +242,7 @@
         "Select Save Directly and Confirm.",
         "Find the new record and select View to check its details and current attachments."
       ],
-      "result": "The Active external document and its approved attachments are ready immediately at revision 00.",
+      "result": "The Active external document and its approved attachments are stored as a backup immediately at revision 00.",
       "notes": [
         "Every later revision needs at least one replacement attachment.",
         "External documents have their own categories and no retention fields."
@@ -276,7 +277,7 @@
         "Select Attach Files and choose up to 20 PDF or image files (15 MB each). Add optional Remarks, then Save Draft and Confirm.",
         "Check View Details and review each attachment. Select Submit, Continue and Confirm."
       ],
-      "result": "Final approval registers the Active external document and its approved attachments at revision 00.",
+      "result": "Final approval registers the Active external document and stores its approved attachments as a backup at revision 00.",
       "notes": [
         "External Categories are separate from Softcopy Categories.",
         "Attach at least one file before submission. External documents have no retention dates."
@@ -359,7 +360,7 @@
         "Follow Status, Approval Process Timeline and Workflow Activity Log. Correct and resubmit a Returned request.",
         "Cancel an unwanted Draft. If Delete appears on its Cancelled record, confirm to permanently remove that never-submitted draft."
       ],
-      "result": "The request shows its progress from Draft to Submitted and its final outcome.",
+      "result": "The request moves in order: Draft, Submitted, each approver in turn, then Completed or Rejected.",
       "notes": [
         "You cannot edit or cancel a Submitted request. Rejected requests are closed.",
         "Most final approvals produce Completed. A transfer still needs Dispatch and Accept.",
@@ -410,7 +411,7 @@
       "title": "Know who reviews each request",
       "audience": "Requesters and assigned approvers",
       "steps": [
-        "Softcopy and External Create or Revise: Requester's leader, then Plant Manager, then Document Control Officer.",
+        "Softcopy and External Create or Revise: Requester's leader (Noted By), then Plant Manager, then Document Control Officer.",
         "Hardcopy Transfer and Document Access: Plant Manager, then Document Control Officer, then Requester confirmation.",
         "Document Assignment: Plant Manager, then Document Control Officer, then Requester's leader.",
         "Disposal: Plant Manager, then Document Control Officer, then Requester confirmation.",
@@ -420,7 +421,8 @@
       "notes": [
         "These routes reflect the local review on 5 November 2026. Authorized administrators can change routes for future submissions.",
         "Submitted and Returned requests keep their original route, even if the default route changes.",
-        "Requester confirmation is an approval task in My Tasks. Transfer Dispatch and Accept are separate steps."
+        "Requester confirmation is an approval task in My Tasks. Transfer Dispatch and Accept are separate steps.",
+        "The Process Flow presentation shows each route as a linear flow with sample users."
       ],
       "decision_examples": [
         "approval-return-reject",
