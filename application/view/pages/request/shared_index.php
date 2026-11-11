@@ -43,6 +43,24 @@ foreach ($rows as $row) {
   foreach ($approval_routes[$row['id']] ?? [] as $step)
     if (!empty($step['step_id']))
       $stepLabels[(int) $step['step_id']] = $step['label'];
+  // The workflow snapshot names the step whose approval locks the attached file.
+  $snapshot = json_decode((string) ($row['snapshot'] ?? ''), TRUE);
+  $lockNodeKey = is_array($snapshot) && is_string($snapshot['document_lock_step_key'] ?? NULL)
+    && in_array($row['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)
+    ? $snapshot['document_lock_step_key'] : NULL;
+  $lockStepIds = [];
+  foreach ($approval_routes[$row['id']] ?? [] as $step)
+    if ($lockNodeKey !== NULL && ($step['node_key'] ?? NULL) === $lockNodeKey)
+      $lockStepIds[(int) $step['step_id']] = TRUE;
+  // Older requests may lack the key in their snapshot: the locking step is then the
+  // approved step whose approval time equals the file's lock time.
+  if (!$lockStepIds && !empty($row['locked_attachment']) && !empty($row['attachment_locked_at']))
+    foreach ($approval_routes[$row['id']] ?? [] as $step)
+      if ($step['status'] === 'approved' && ($step['acted_at'] ?? NULL) === $row['attachment_locked_at'])
+        $lockStepIds[(int) $step['step_id']] = TRUE;
+  // An approval at the lock step is the event that locked the file.
+  $lockedByEvent = static fn($event) => !empty($row['locked_attachment']) &&
+    ($event['action'] ?? '') === 'approved' && !empty($lockStepIds[(int) ($event['step_id'] ?? 0)]);
   $decisionEvents = [];
   foreach ($entries as $event) {
     $decisionEvents[] = [
@@ -52,7 +70,8 @@ foreach ($rows as $row) {
       'user_name' => $event['user_name'],
       'position_title' => $event['position_title'] ?? '',
       'comments' => $event['comments'] ?? '',
-      'created_at' => $event['created_at']
+      'created_at' => $event['created_at'],
+      'locked' => $lockedByEvent($event)
     ];
   }
   $historyByStep = [];
@@ -63,7 +82,8 @@ foreach ($rows as $row) {
         'user_name' => $event['user_name'],
         'position_title' => $event['position_title'] ?? '',
         'comments' => $event['comments'] ?? '',
-        'created_at' => $event['created_at']
+        'created_at' => $event['created_at'],
+        'locked' => $lockedByEvent($event)
       ];
     }
   $historyText = [];
@@ -75,6 +95,9 @@ foreach ($rows as $row) {
   $routeSteps = [];
   foreach ($approval_routes[$row['id']] ?? [] as $step) {
     $tile = ['label' => $step['label'], 'approver_label' => $step['approver_label'], 'status' => $step['status']];
+    if (!empty($lockStepIds[(int) ($step['step_id'] ?? 0)]))
+      // 'locked' once this step's approval has locked the file; otherwise it is the step that will.
+      $tile['lock'] = $step['status'] === 'approved' && !empty($row['locked_attachment']) ? 'locked' : 'locks';
     if (!empty($historyByStep[(int) ($step['step_id'] ?? 0)]))
       $tile['history'] = $historyByStep[(int) $step['step_id']];
     $routeSteps[] = $tile;

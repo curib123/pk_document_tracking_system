@@ -647,6 +647,22 @@
     };
   }
 
+  // "locked": this approval locked the attached file. "locks": this step will lock it.
+  function lockBadge(state) {
+    var locked = state === "locked";
+    var badge = node(
+      "span",
+      "doc-workflow-lock-badge" + (locked ? " is-locked" : ""),
+    );
+    var lock = node("i", "fa-solid fa-lock");
+    lock.setAttribute("aria-hidden", "true");
+    badge.append(lock, locked ? " Locked" : " Locks file on approval");
+    badge.title = locked
+      ? "Approving this step locked the attached file as read-only"
+      : "Approving this step locks the attached file as read-only";
+    return badge;
+  }
+
   function makeDecisionTimeline(history, order, isTransfer) {
     var timeline = node("div", "doc-workflow-timeline is-animated-timeline");
     var sorted = history
@@ -740,6 +756,7 @@
           }),
         ),
       );
+      if (event.locked) heading.append(lockBadge("locked"));
       item.append(marker, heading);
       if (event.request_reference || event.request_title || event.transfer_reference)
         item.append(
@@ -813,6 +830,8 @@
         node("h4", "doc-workflow-step-name", valueText(step.label)),
         node("span", "doc-workflow-step-status", statusText),
       );
+      if (step.lock === "locked" || step.lock === "locks")
+        heading.append(lockBadge(step.lock));
       tile.append(
         heading,
         node("p", "doc-workflow-step-approver", valueText(step.approver_label)),
