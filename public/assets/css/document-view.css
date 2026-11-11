@@ -1352,3 +1352,12 @@
   background: #fff;
   object-fit: contain;
 }
+
+/* Keep a step's status and lock badge together at the right edge of the row. */
+#viewModal.is-document-view .doc-workflow-step-heading {
+  gap: 8px;
+}
+#viewModal.is-document-view .doc-workflow-step-heading .doc-workflow-step-name {
+  flex: 1 1 auto;
+  min-width: 0;
+}

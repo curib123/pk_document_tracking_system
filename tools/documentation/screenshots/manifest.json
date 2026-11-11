@@ -138,21 +138,21 @@
       {
         "label": "Role Name",
         "x": 46,
-        "y": 130.7,
+        "y": 129.6,
         "width": 693.3,
         "height": 19.8
       },
       {
         "label": "Module Permissions",
         "x": 25,
-        "y": 238.5,
+        "y": 237.3,
         "width": 1090,
         "height": 19.2
       },
       {
         "label": "Save Role",
         "x": 1016.1,
-        "y": 759.7,
+        "y": 758.6,
         "width": 95.9,
         "height": 40
       }
@@ -186,26 +186,26 @@
     "route": "documents/hardcopy?layout=table&folder=all&period=all",
     "caption": "Inspect storage, custody, and history in View Details.",
     "width": 1100,
-    "height": 592,
+    "height": 722,
     "controls": [
       {
         "label": "Current Holder",
-        "x": 748.0,
-        "y": 80.6,
+        "x": 32,
+        "y": 208.7,
         "width": 152,
         "height": 13.5
       },
       {
         "label": "Days until disposal",
-        "x": 927.0,
-        "y": 83.3,
+        "x": 211,
+        "y": 208.7,
         "width": 152,
         "height": 13.5
       },
       {
         "label": "Transfer History",
         "x": 372.9,
-        "y": 310.1,
+        "y": 434.6,
         "width": 96.5,
         "height": 19.8
       }
@@ -231,6 +231,13 @@
         "y": 547.0,
         "width": 137.0,
         "height": 40
+      },
+      {
+        "label": "Current Holder",
+        "x": 25,
+        "y": 336.4,
+        "width": 367,
+        "height": 19.8
       }
     ]
   },
@@ -285,26 +292,26 @@
     "route": "documents/softcopy?layout=table&folder=all",
     "caption": "Create a controlled softcopy directly.",
     "width": 800,
-    "height": 756,
+    "height": 780,
     "controls": [
       {
         "label": "Action",
         "x": 25,
-        "y": 114.8,
+        "y": 115.1,
         "width": 367,
         "height": 40
       },
       {
         "label": "Document title",
         "x": 25,
-        "y": 197.6,
+        "y": 197.9,
         "width": 367,
         "height": 40
       },
       {
         "label": "Save",
         "x": 630.0,
-        "y": 695.5,
+        "y": 718.8,
         "width": 142.0,
         "height": 40
       }
@@ -313,9 +320,9 @@
   "softcopy-numbering": {
     "file": "softcopy-numbering.png",
     "route": "documents/softcopy?layout=table&folder=all",
-    "caption": "The selected category controls the generated document number.",
+    "caption": "The first Series No. Code Pattern is configured per Document No.",
     "width": 800,
-    "height": 756,
+    "height": 794,
     "controls": [
       {
         "label": "Need Series Number?",
@@ -332,7 +339,7 @@
         "height": 19.8
       },
       {
-        "label": "Series Number",
+        "label": "Series No. Code Pattern (first-time setup)",
         "x": 25,
         "y": 336.4,
         "width": 367,
@@ -345,19 +352,12 @@
     "route": "documents/softcopy?layout=table&folder=all",
     "caption": "Create a direct revision of the selected softcopy.",
     "width": 800,
-    "height": 756,
+    "height": 794,
     "controls": [
       {
         "label": "Existing Softcopy Document",
         "x": 25,
         "y": 170.8,
-        "width": 367,
-        "height": 19.8
-      },
-      {
-        "label": "Next Revision Level (automatic)",
-        "x": 25,
-        "y": 253.6,
         "width": 367,
         "height": 19.8
       }
@@ -368,7 +368,7 @@
     "route": "my-requests/softcopy",
     "caption": "Prepare a softcopy create request.",
     "width": 800,
-    "height": 650,
+    "height": 674,
     "controls": [
       {
         "label": "Action",
@@ -387,7 +387,7 @@
       {
         "label": "Save",
         "x": 671.4,
-        "y": 589.6,
+        "y": 612.7,
         "width": 100.6,
         "height": 40
       }
@@ -398,7 +398,7 @@
     "route": "my-requests/softcopy",
     "caption": "Prepare a softcopy revise request.",
     "width": 800,
-    "height": 650,
+    "height": 674,
     "controls": [
       {
         "label": "Action",
@@ -417,7 +417,7 @@
       {
         "label": "Save",
         "x": 671.4,
-        "y": 589.6,
+        "y": 612.7,
         "width": 100.6,
         "height": 40
       }
@@ -428,21 +428,28 @@
     "route": "documents/external?layout=table&folder=all",
     "caption": "Register an external document directly.",
     "width": 800,
-    "height": 568,
+    "height": 650,
     "controls": [
       {
         "label": "Document title",
         "x": 25,
-        "y": 114.8,
+        "y": 115.6,
         "width": 750,
-        "height": 40
+        "height": 40.0
       },
       {
         "label": "Save",
         "x": 653.8,
-        "y": 506.8,
+        "y": 590.6,
         "width": 118.2,
         "height": 40
+      },
+      {
+        "label": "Attach File",
+        "x": 25,
+        "y": 458.7,
+        "width": 750,
+        "height": 19.8
       }
     ]
   },
@@ -451,26 +458,26 @@
     "route": "documents/external?layout=table&folder=all",
     "caption": "Revise an existing external document.",
     "width": 800,
-    "height": 568,
+    "height": 650,
     "controls": [
       {
         "label": "Category",
         "x": 25,
-        "y": 292.1,
+        "y": 376.8,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Attach File",
         "x": 25,
-        "y": 374.9,
+        "y": 459.9,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Save Directly",
         "x": 653.8,
-        "y": 506.8,
+        "y": 591.8,
         "width": 118.2,
         "height": 40
       }
@@ -481,26 +488,26 @@
     "route": "my-requests/external",
     "caption": "Prepare an external document create request.",
     "width": 800,
-    "height": 706,
+    "height": 794,
     "controls": [
       {
         "label": "Action",
         "x": 25,
-        "y": 114.8,
+        "y": 115.1,
         "width": 367,
         "height": 40
       },
       {
         "label": "Document title",
         "x": 25,
-        "y": 197.6,
+        "y": 197.9,
         "width": 367,
         "height": 40
       },
       {
         "label": "Save",
         "x": 671.4,
-        "y": 644.1,
+        "y": 734.3,
         "width": 100.6,
         "height": 40
       }
@@ -511,7 +518,7 @@
     "route": "my-requests/external",
     "caption": "Prepare an external document revise request.",
     "width": 800,
-    "height": 788,
+    "height": 794,
     "controls": [
       {
         "label": "Action",
@@ -530,7 +537,7 @@
       {
         "label": "Save",
         "x": 671.4,
-        "y": 726.9,
+        "y": 734,
         "width": 100.6,
         "height": 40
       }
@@ -546,14 +553,14 @@
       {
         "label": "Fullscreen",
         "x": 841.6,
-        "y": 698.2,
+        "y": 721.2,
         "width": 100.3,
         "height": 44
       },
       {
         "label": "Download",
         "x": 953.9,
-        "y": 698.2,
+        "y": 721.2,
         "width": 117.1,
         "height": 44
       }
@@ -605,7 +612,7 @@
       },
       {
         "label": "Submit",
-        "x": 1367.3,
+        "x": 1259.9,
         "y": 394.1,
         "width": 40.3,
         "height": 14.8
@@ -645,53 +652,60 @@
   "approval-routes": {
     "file": "approval-routes.png",
     "route": "my-tasks/softcopy?period=all",
-    "caption": "Inspect the assigned route and the status of each approval step.",
+    "caption": "View Details includes the request approval process.",
     "width": 1100,
     "height": 852,
     "controls": [
       {
         "label": "Approval Process Timeline",
-        "x": 167.7,
-        "y": 370.4,
-        "width": 210.8,
-        "height": 40
+        "x": 201.7,
+        "y": 285.0,
+        "width": 163.8,
+        "height": 19.8
       },
       {
-        "label": "Approval steps",
+        "label": "Workflow Version",
         "x": 29,
-        "y": 453.8,
-        "width": 147.8,
-        "height": 19.2
+        "y": 410.9,
+        "width": 95.4,
+        "height": 16.5
+      },
+      {
+        "label": "Workflow Activity Log",
+        "x": 418.5,
+        "y": 285.0,
+        "width": 130.3,
+        "height": 19.8
       }
     ]
   },
   "transfer-request": {
     "file": "transfer-request.png",
     "route": "my-requests/hardcopy-transfer",
-    "caption": "Choose the destination, receiving user and request subject before saving the draft.",
+    "caption": "Prepare the request and save it as a draft.",
     "width": 800,
     "height": 794,
     "controls": [
       {
+        "label": "Save",
+        "x": 671.4,
+        "y": 734,
+        "width": 100.6,
+        "height": 40
+      },
+      {
         "label": "Destination Location",
-        "x": 408.0,
-        "y": 404.5,
-        "width": 367.0,
+        "x": 408,
+        "y": 404.6,
+        "width": 367,
         "height": 19.8
       },
       {
         "label": "Receiving User",
-        "x": 25.0,
-        "y": 490.0,
-        "width": 367.0,
+        "x": 25,
+        "y": 487.4,
+        "width": 367,
         "height": 19.8
-      },
-      {
-        "label": "Request Subject",
-        "x": 408.0,
-        "y": 516.8,
-        "width": 367.0,
-        "height": 40.0
       }
     ]
   },
@@ -765,21 +779,21 @@
       {
         "label": "Action",
         "x": 25,
-        "y": 115.1,
+        "y": 114.8,
         "width": 367,
         "height": 40
       },
       {
         "label": "Save",
         "x": 671.4,
-        "y": 590.9,
+        "y": 590.7,
         "width": 100.6,
         "height": 40
       },
       {
         "label": "Document Type",
         "x": 25,
-        "y": 171.1,
+        "y": 170.8,
         "width": 367,
         "height": 19.8
       }
@@ -885,21 +899,21 @@
       {
         "label": "Assign Document",
         "x": 21,
-        "y": 15.0,
+        "y": 15.3,
         "width": 141.3,
         "height": 24
       },
       {
         "label": "Assigned User",
         "x": 328,
-        "y": 74.0,
+        "y": 74.3,
         "width": 291,
         "height": 18.1
       },
       {
         "label": "Save Assignment",
         "x": 467.6,
-        "y": 232.8,
+        "y": 233.1,
         "width": 147.4,
         "height": 40
       }
@@ -915,14 +929,14 @@
       {
         "label": "Location Name",
         "x": 25,
-        "y": 147.4,
+        "y": 148.2,
         "width": 430.8,
         "height": 19.8
       },
       {
         "label": "Save Record",
         "x": 657.8,
-        "y": 592.4,
+        "y": 593.4,
         "width": 114.2,
         "height": 40
       }
@@ -937,17 +951,10 @@
     "controls": [
       {
         "label": "Folder",
-        "x": 504.8,
+        "x": 573.2,
         "y": 314.5,
         "width": 50.0,
         "height": 16.5
-      },
-      {
-        "label": "Code Pattern",
-        "x": 678.7,
-        "y": 300.5,
-        "width": 134.1,
-        "height": 45
       }
     ]
   },
@@ -984,7 +991,7 @@
       {
         "label": "Workflow Version",
         "x": 29,
-        "y": 162.4,
+        "y": 160.2,
         "width": 360,
         "height": 19.8
       }
@@ -1053,21 +1060,21 @@
       {
         "label": "Backup to restore",
         "x": 25,
-        "y": 157.5,
+        "y": 157.8,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Your password",
         "x": 25,
-        "y": 240.3,
+        "y": 240.6,
         "width": 367,
         "height": 19.8
       },
       {
         "label": "Type RESTORE to confirm",
         "x": 408,
-        "y": 240.3,
+        "y": 240.6,
         "width": 367,
         "height": 19.8
       }

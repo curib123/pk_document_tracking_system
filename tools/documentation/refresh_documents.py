@@ -33,7 +33,7 @@ SCREENSHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
-MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  06 NOVEMBER 2026'
+MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  11 NOVEMBER 2026'
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -1010,7 +1010,7 @@ def powerpoint(doc, items=None):
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
     prs.core_properties.title = 'PK DTS - User Guide'
-    prs.core_properties.subject = 'Everyday document control, 6 November 2026'
+    prs.core_properties.subject = 'Everyday document control, 11 November 2026'
     items = items or [{} for _ in doc]
     for page, item in zip(doc, items):
         slide = prs.slides.add_slide(prs.slide_layouts[6])
@@ -1094,7 +1094,7 @@ def refresh(content):
                         text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
                         doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
             doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
-            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, 6 November 2026', 'author': 'PK Document Tracking System'})
+            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, 11 November 2026', 'author': 'PK Document Tracking System'})
             pdf_path = DOCS / (base+'.pdf.pending')
             pending.append((pdf_path, DOCS/(base+'.pdf')))
             doc.save(pdf_path, garbage=4, deflate=True)

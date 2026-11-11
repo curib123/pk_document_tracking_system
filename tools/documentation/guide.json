@@ -145,7 +145,7 @@
         "Open Softcopy Documents and select Add New Softcopy Document. Set Softcopy Action to Create Softcopy.",
         "Enter Subject / Reason and Proposed Document Title. Choose Category and check Generated Document Number.",
         "To reuse a number with a new series, follow Use document and series numbers.",
-        "Attach Document File. Add Effective Date and Remarks if needed.",
+        "Attach Document File. Set Revision Level, and add Effective Date and Remarks if needed.",
         "Select Approve Directly and Confirm. Check the success message and the new record."
       ],
       "result": "The Active softcopy and its approved file are ready immediately at revision 00.",
@@ -159,16 +159,17 @@
       "title": "Revise a softcopy directly",
       "audience": "Administrator or authorized document controller",
       "steps": [
-        "Open Softcopy Documents, find the Active document and select Edit.",
-        "Check Existing Softcopy Document and the next revision level.",
-        "Enter Subject / Reason, Proposed Document Title and Number of Pages. Add Effective Date and Remarks if needed.",
+        "Open Softcopy Documents, find the Active document and select Edit. A locked document has no Edit.",
+        "Check Existing Softcopy Document, then set Revision Level.",
+        "Enter Subject / Reason, Proposed Document Title and Number of Pages. Correct Series No. if needed.",
         "Attach the replacement Document File. Select Approve Directly and Confirm.",
         "Reopen the record and check the current revision and file."
       ],
       "result": "The replacement file is current immediately. The revision level increases automatically.",
       "notes": [
         "The document keeps its number, series and category.",
-        "Earlier revisions remain in the history you can view. Their files are not available as the current approved copy."
+        "Earlier revisions remain in the history you can view. Their files are not available as the current approved copy.",
+        "A document with a locked file is read-only: it has no Edit and cannot be picked for revision."
       ]
     },
     {
@@ -198,12 +199,13 @@
       "steps": [
         "Open My Requests, choose Softcopy Request and select New Request.",
         "Choose Revise Softcopy and select Existing Softcopy Document.",
-        "Check Proposed Document Title and the next revision level. Enter Subject / Reason and Number of Pages.",
+        "Check Proposed Document Title. Enter Subject / Reason and Number of Pages.",
         "Attach the replacement Document File and add optional Remarks. Select Save Draft and Confirm.",
         "Check the file preview on the Document File tab of View Details, then select Submit, Continue and Confirm."
       ],
       "result": "Final approval makes the replacement file current and increases the revision level.",
       "notes": [
+        "Documents marked Locked - read-only are disabled in Existing Softcopy Document.",
         "When editing a draft, keep its attachment or upload a replacement.",
         "Softcopy cancellation requests are unavailable. Ask an authorized controller if the document needs disposal."
       ],
@@ -219,7 +221,7 @@
         "For a new document, choose a Document Number Pattern category (not a Folder) and leave Need Series Number? unchecked.",
         "Check Generated Document Number. The category Code Pattern sets its prefix and sequence.",
         "For the first series, check Need Series Number?, select an existing Document No. and enter a one-time Series No. Code Pattern.",
-        "Preview the preceding Series No. and the new Generated Series No. For sample-series-002, the original becomes sample-series-001 and the new record sample-series-002.",
+        "The new Series Number is filled in automatically; edit it to use a different one. For sample-series-002, the original becomes sample-series-001.",
         "Finish the direct creation or request steps."
       ],
       "result": "The record gets a new category number or an existing number with a unique series.",
@@ -733,8 +735,8 @@
       "result": "New submissions use the published default approval process.",
       "notes": [
         "Approver types: Any active member of role, Specific user, Requester's leader, or Requester account.",
-        "Publish 1 to 30 valid steps with active approvers. A Requester's leader step needs an active leader when the request is submitted.",
-        "Submitted and Returned requests keep their original approval process."
+        "Publish 1 to 30 valid steps with active approvers. Submitted and Returned requests keep their original process.",
+        "For Softcopy and External Create or Revise, choose a Document-locking approver; that step's approval locks the file."
       ]
     },
     {

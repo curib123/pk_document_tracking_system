@@ -138,11 +138,14 @@ def seed(site):
                  'transfer', 'access', 'assignment', 'disposal']:
         route = [leader, manager, controller] if kind.startswith(('softcopy_', 'external_')) else [manager, controller, leader if kind == 'assignment' else requester]
         graph = {'steps': [dict(step, key='step_' + str(index+1)) for index, step in enumerate(route)]}
+        if kind.startswith(('softcopy_', 'external_')):
+            graph['document_lock_step_key'] = 'step_2'  # Plant Manager approval locks the file
         workflow = insert('workflows', workflow_key=kind, name=kind.replace('_', ' ').title(),
                           request_type=kind, active=1, created_by=1)
         insert('workflow_versions', workflow_id=workflow, version_number=1, status='published',
                is_default=1, graph=graph, created_by=1, published_at='2026-11-01 09:00:00')
-    graph = {'steps': [dict(step, key='step_' + str(index+1)) for index, step in enumerate([leader, manager, controller])]}
+
+    graph['document_lock_step_key'] = 'step_2'
     insert('requests', reference='DEMO-2026-001', type='softcopy_create', requested_by=1, payload=payload)
     request = insert('requests', reference='DEMO-2026-002', type='softcopy_create', requested_by=5,
                      payload=payload, status='submitted', workflow_version_id=1, snapshot=graph,
@@ -371,7 +374,8 @@ def capture(page, base, review_request):
     goto('dashboard')
     page.locator('#notificationBellButton').click()
     shot('notifications', 'Open the bell to inspect your notification inbox.')
-    expected = {item['id'] for item in json.loads((OUTPUT.parent / 'guide.json').read_text())['sections']}
+    expected = {item['id'] for item in json.loads((OUTPUT.parent / 'guide.json').read_text())['sections']
+                if item.get('kind') != 'approval-reference'}
     assert set(manifest) == expected, (expected-set(manifest), set(manifest)-expected)
     (OUTPUT / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     print(f'PASS: {len(manifest)} current guide screens captured from synthetic records.')
