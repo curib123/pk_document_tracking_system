@@ -63,6 +63,16 @@ class Files extends MY_Controller
             show_error('Document Fileis not available for your review.', 403);
             return;
         }
+        if ($this->input->get('download') === 'pdf') {
+            // The LibreOffice-rendered PDF copy; same access rule as the original.
+            if ($this->locked_for_user($file) || !$this->can('files', 'download')) {
+                show_error('PDF download is not permitted for this file.', 403);
+                return;
+            }
+            $this->audit_event('files/review-download-pdf', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+            $this->send_pdf_copy($file);
+            return;
+        }
         if ($this->input->get('download') === '1') {
             // The original upload, for roles that may open locked files.
             if ($this->locked_for_user($file)) {
@@ -214,6 +224,45 @@ class Files extends MY_Controller
         return ['path' => $original, 'mime' => (string) $file['mime_type'], 'name' => (string) $file['original_name']];
     }
 
+    /** Send the rendered PDF of a Word/Excel file as a download, then exit (or emit an error and return). */
+    private function send_pdf_copy(array $file): void
+    {
+        require_once APPPATH . 'services/files/pdf_preview_service.php';
+        if (Pdf_preview_service::office_extension($file) === '') {
+            show_error('A PDF copy is only available for Word and Excel files. Download the original instead.', 415);
+            return;
+        }
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        $this->clear_output_buffers();
+        header('Content-Type: application/pdf');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Content-Disposition: attachment; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
+        exit;
+    }
+
+    /** Download the converted PDF of a Word/Excel file; the original stays available via download(). */
+    public function download_pdf($id)
+    {
+        $this->require_permission('files', 'download');
+        $file = $this->File_model->approved_file((int) $id);
+        if (!$file || !$this->File_model->allowed($this->user, $file)) {
+            show_error('File download is not permitted.', 403);
+            return;
+        }
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Ask Document Control for a full download.', 403);
+            return;
+        }
+        $this->audit_event('files/download-pdf', 'files:' . (int) $id);
+        $this->send_pdf_copy($file);
+    }
+
     /** Accessible print viewer; every file response repeats the access check. */
     public function print_file($id)
     {
@@ -242,7 +291,9 @@ class Files extends MY_Controller
             'file' => $file,
             'print_mime' => $source['mime'],
             'text' => $source['mime'] === 'text/plain' ? file_get_contents($source['path']) : NULL,
-            'download_url' => $this->can('files', 'download') ? site_url('files/download/' . (int) $file['id']) : NULL
+            'download_url' => $this->can('files', 'download') ? site_url('files/download/' . (int) $file['id']) : NULL,
+            'download_pdf_url' => $this->can('files', 'download') && Pdf_preview_service::office_extension($file) !== ''
+                ? site_url('files/download-pdf/' . (int) $file['id']) : NULL
         ]);
     }
 

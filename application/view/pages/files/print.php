@@ -18,7 +18,8 @@ $printable = in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'tex
         </div>
         <div class="print-actions">
             <?php if ($printable): ?><button type="button" id="printButton" disabled>Print</button><?php endif; ?>
-            <?php if (!empty($download_url)): ?><a href="<?= html_escape($download_url) ?>">Download</a><?php endif; ?>
+            <?php if (!empty($download_url)): ?><a href="<?= html_escape($download_url) ?>"><?= !empty($download_pdf_url) ? 'Download Original' : 'Download' ?></a><?php endif; ?>
+            <?php if (!empty($download_pdf_url)): ?><a href="<?= html_escape($download_pdf_url) ?>">Download PDF</a><?php endif; ?>
         </div>
     </header>
     <p id="printStatus" role="status" aria-live="polite">

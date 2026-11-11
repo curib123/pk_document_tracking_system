@@ -180,6 +180,8 @@ foreach ($rows as $row) {
         $filesSection['links'][] = [
           'label' => $attachment['original_name'],
           'url' => $canDownloadFile && $unlocked ? $previewUrl . '&download=1' : '',
+          'pdf_url' => $canDownloadFile && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
+            ? $previewUrl . '&download=pdf' : '',
           'preview_url' => $previewUrl,
           'preview_type' => in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $attachment['mime_type'],
           'full_view' => $unlocked

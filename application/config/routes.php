@@ -92,6 +92,7 @@ $route['files/upload']['POST'] = 'Files/upload';
 
 // Download, print, or view a file.
 $route['files/download/(:num)']['GET'] = 'Files/download/$1';
+$route['files/download-pdf/(:num)']['GET'] = 'Files/download_pdf/$1';
 $route['files/download-external/(:num)']['GET'] = 'Files/download_external/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
 $route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';

@@ -546,16 +546,30 @@
         fileInfo.append(fullView);
       }
       var destination = link.url ? safeLink(link.url) : null;
+      var pdfDestination = link.pdf_url ? safeLink(link.pdf_url) : null;
       if (destination) {
         var anchor = node(
           "a",
           "btn btn-sm btn-outline-primary doc-modal-download",
-          "Download",
+          pdfDestination ? "Download Original" : "Download",
         );
         anchor.href = destination;
-        anchor.setAttribute("aria-label", "Download " + fileName);
+        anchor.setAttribute(
+          "aria-label",
+          (pdfDestination ? "Download original of " : "Download ") + fileName,
+        );
         anchor.append(icon("files"));
         fileInfo.append(anchor);
+      }
+      if (pdfDestination) {
+        var pdfAnchor = node(
+          "a",
+          "btn btn-sm btn-outline-primary doc-modal-download",
+          "Download PDF",
+        );
+        pdfAnchor.href = pdfDestination;
+        pdfAnchor.setAttribute("aria-label", "Download PDF copy of " + fileName);
+        fileInfo.append(pdfAnchor);
       }
       var printDestination = link.print_url ? safeLink(link.print_url) : null;
       if (printDestination) {

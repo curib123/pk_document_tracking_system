@@ -190,6 +190,8 @@ class Document_detail_model extends CI_Model
                     $links[] = [
                         'label' => 'Download ' . $file['original_name'],
                         'url' => $can('files', 'download') && $current && $unlocked ? site_url('files/download/' . $file['id']) : '',
+                        'pdf_url' => $can('files', 'download') && $current && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
+                            ? site_url('files/download-pdf/' . $file['id']) : '',
                         'print_url' => $can('files', 'print') && $current && $unlocked ? site_url('files/print/' . $file['id']) : '',
                         'preview_url' => $can('files', 'view') && $current ? site_url('files/preview/' . $file['id']) : '',
                         'preview_type' => $previewType,

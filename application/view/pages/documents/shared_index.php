@@ -90,8 +90,13 @@ foreach ($rows as $r) {
                 if (!$latestLocked) {
                     if ($canFile('print'))
                         $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
-                    if ($canFile('download'))
-                        $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                    if ($canFile('download')) {
+                        $isOffice = in_array(strtolower(pathinfo((string) $latest['original_name'], PATHINFO_EXTENSION)), ['docx', 'xlsx'], TRUE);
+                        $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id'],
+                            'label' => $isOffice ? 'Download Original' : 'Download'];
+                        if ($isOffice)
+                            $buttons[] = ['type' => 'download', 'url' => 'files/download-pdf/' . $latest['id'], 'label' => 'Download PDF'];
+                    }
                 }
             }
         }
