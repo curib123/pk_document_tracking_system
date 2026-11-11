@@ -233,9 +233,10 @@ class Document_service
      */
     public function hard_delete($domain, $id, $actorId)
     {
-        $cfg = $this->ci->Document_model->config($domain);
-        if (!in_array($domain, ['hardcopy', 'softcopy'], TRUE))
+        if (!in_array($domain, ['hardcopy', 'softcopy', 'external'], TRUE))
             throw new DomainException('Hard delete is not available for this document type.');
+        $cfg = $domain === 'external'
+            ? ['table' => 'external_documents'] : $this->ci->Document_model->config($domain);
         $this->ci->load->model('Identity_model');
         $this->ci->load->model('Permission_model');
         $actor = $this->ci->Identity_model->active_user($actorId);
@@ -252,6 +253,41 @@ class Document_service
 
             if ($domain === 'hardcopy') {
                 $db->delete('transfers', ['hardcopy_id' => $id]);
+            } elseif ($domain === 'external') {
+                $revisions = array_map('intval', array_column(
+                    $db->select('id')->get_where('external_revisions', ['document_id' => $id])->result_array(),
+                    'id'
+                ));
+                $fileIds = array_column(
+                    $db->select('id')->get_where('files', ['domain' => 'external', 'document_id' => $id])->result_array(),
+                    'id'
+                );
+                if ($revisions) {
+                    $fileIds = array_merge(
+                        $fileIds,
+                        array_column($db->select('file_id')->where_in('id', $revisions)->get('external_revisions')->result_array(), 'file_id'),
+                        array_column($db->select('file_id')->where_in('revision_id', $revisions)->get('external_revision_files')->result_array(), 'file_id')
+                    );
+                }
+                $fileIds = array_values(array_unique(array_map('intval', $fileIds)));
+                $db->where('id', $id)->update('external_documents', ['current_revision_id' => NULL]);
+                if ($revisions) {
+                    $db->where_in('revision_id', $revisions)->delete('external_revision_files');
+                    $db->where_in('id', $revisions)->delete('external_revisions');
+                }
+                foreach ($fileIds as $fileId) {
+                    $used = $db->where('file_id', $fileId)->count_all_results('softcopy_revisions')
+                        + $db->where('file_id', $fileId)->count_all_results('revision_artifacts')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revision_files')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revisions');
+                    if ($used)
+                        continue;
+                    $file = $db->get_where('files', ['id' => $fileId])->row_array();
+                    if ($file) {
+                        $storage[] = $file['storage_name'];
+                        $db->delete('files', ['id' => $fileId]);
+                    }
+                }
             } else {
                 $revisions = array_map('intval', array_column(
                     $db->select('id')->get_where('softcopy_revisions', ['document_id' => $id])->result_array(),
@@ -291,7 +327,8 @@ class Document_service
                 }
             }
             $db->delete('access_grants', ['domain' => $domain, 'document_id' => $id]);
-            $db->where($domain . '_id', $id)->update('requests', [$domain . '_id' => NULL]);
+            if ($domain !== 'external')
+                $db->where($domain . '_id', $id)->update('requests', [$domain . '_id' => NULL]);
             $db->delete($cfg['table'], ['id' => $id]);
             $db->insert('status_history', [
                 'domain' => $domain,

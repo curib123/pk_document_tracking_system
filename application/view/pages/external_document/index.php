@@ -96,6 +96,15 @@ foreach ($rows as $row) {
             'icon' => 'fa-solid fa-trash-can'
         ];
     }
+    if (!empty($is_administrator) && $row['status'] === 'disposed') {
+        $buttons[] = [
+            'type' => 'action',
+            'url' => 'documents/external/hard-delete',
+            'label' => 'Hard Delete',
+            'description' => 'This permanently deletes the disposed document, its files and related records. It cannot be undone.',
+            'icon' => 'fa-solid fa-trash-can-arrow-up'
+        ];
+    }
     $dt_rows[] = [
         'id' => (int) $row['id'],
         'cells' => [

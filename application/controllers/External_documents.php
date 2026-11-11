@@ -141,6 +141,7 @@ class External_documents extends MY_Controller
                 'layout' => $state['layout']
             ],
             'folder_value' => $browser['folder'],
+            'is_administrator' => $this->Permission_model->allowed($this->user, '*', '*'),
             'can_direct' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct'),
             'can_dispose' => $this->Permission_model->allowed($this->user, 'external_documents', 'direct') &&
                 $this->Permission_model->allowed($this->user, 'disposal', 'direct'),
@@ -174,6 +175,35 @@ class External_documents extends MY_Controller
             $this->error_notice($error);
         }
         redirect('documents/external');
+    }
+
+    /** Administrator-only permanent deletion of an already disposed external document. */
+    public function hard_delete()
+    {
+        $this->authenticate();
+        if (!$this->can('*', '*'))
+            show_error('Only an Administrator can permanently delete documents.', 403);
+        $this->confirmed();
+        $id = (int) $this->input->post('id');
+        try {
+            $this->load->model('Document_model');
+            require_once APPPATH . 'services/documents/document_service.php';
+            $title = (new Document_service())->hard_delete('external', $id, (int) $this->user['id']);
+            $this->audit_event('documents/external/hard-delete', 'external_documents:' . $id, ['title' => $title]);
+            $this->notice('External document permanently deleted.');
+        } catch (Throwable $error) {
+            $this->error_notice($error);
+        }
+        // Stay on the same view (status filter, layout, folder).
+        $allowed = ['q', 'page', 'limit', 'sort', 'dir', 'folder', 'layout', 'status', 'owner', 'category', 'period', 'from', 'to'];
+        $query = [];
+        parse_str((string) $this->input->post('return_query'), $query);
+        $query = array_filter(
+            array_intersect_key($query, array_flip($allowed)),
+            static function ($value) {
+                return is_string($value) && strlen($value) <= 100; }
+        );
+        redirect('documents/external' . ($query ? '?' . http_build_query($query) : ''));
     }
 
     public function dispose()

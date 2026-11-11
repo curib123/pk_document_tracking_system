@@ -71,6 +71,7 @@ $route['notifications/inbox/read']['POST'] = 'Notifications/mark_read';
 $route['documents/external']['GET'] = 'External_documents/index';
 $route['documents/external/direct']['POST'] = 'External_documents/direct';
 $route['documents/external/dispose']['POST'] = 'External_documents/dispose';
+$route['documents/external/hard-delete']['POST'] = 'External_documents/hard_delete';
 $route['documents/(:any)']['GET'] = 'Documents/index/$1';
 
 // Add a softcopy document directly.
