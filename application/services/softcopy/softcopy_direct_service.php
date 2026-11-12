@@ -38,10 +38,9 @@ class Softcopy_direct_service
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
             'series_number' => array_key_exists('series_number', $post)
                 ? trim((string) $post['series_number']) : NULL,
-            // A requester-entered Series No. override; blank preserves auto-generation.
+            // The Series No. is typed in manually (no code pattern).
             'generated_series_number' => trim((string) ($post['generated_series_number'] ?? '')),
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
-            'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
             'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),

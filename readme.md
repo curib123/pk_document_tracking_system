@@ -156,7 +156,7 @@ updates address these cases:
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 | Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
 | Multiple folder-only Softcopy Categories | [Folder category pattern migration](database/migrations/20261107_softcopy_folder_category_patterns.sql), after Softcopy Category Types |
-| First-time Series No. pattern for each Document No. | [Document Series Pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql), after category numbering and the series-number index |
+| Manual Series No. (drops the per-Document No. code pattern) | [Remove series patterns migration](database/migrations/20261112_remove_softcopy_series_patterns.sql) |
 
 Existing prefix-only category patterns still work. New category patterns should
 include an initial sequence, such as `PPM-001`.
@@ -185,39 +185,23 @@ new nested categories cannot be placed beneath a numbered category. Numbered
 categories holding documents cannot be converted to Folder, and Folders with
 children cannot be converted to numbered categories.
 
-### Automatic softcopy series numbers (per Document No.)
+### Softcopy series numbers (manual, per Document No.)
 
 In **Places → Softcopy Categories**, configure only **Document No. Code Pattern**
-(for example `PPM-001`). **Series No. Code Pattern is NOT set on a category.**
+(for example `PPM-001`). Series numbers have **no code pattern**; they are typed in.
 
 To create a new document, select its category and leave **Need Series Number?**
 unchecked. The usual next Document No. is generated, without a Series No.
 
-To create the **first series** for an existing document:
+To add a series to an existing document:
 
 1. Check **Need Series Number?** on Softcopy Direct or My Requests.
 2. Select the existing **Document No.** (for example, `PPM-001`).
-3. If that Document No. has never been configured for series numbering, enter its
-   one-time **Series No. Code Pattern**, for example `001` or `SER-001`.
-4. The form previews both the **Original Document Series No.** and the new
-   **Generated Series Number**. With `001`, the original becomes **`000`**
-   (one less) and the newly created record becomes **`001`**. With `SER-005`,
-   the original becomes `SER-004` and the new record `SER-005`.
-5. Save/submit and approve. The pattern and both series assignments are saved
-   atomically at approval, **not** while saving a draft.
-
-The first series may have a multi-part dash prefix. For example,
-`sample-series-002` assigns **`sample-series-001` to the original** and
-**`sample-series-002` to the new record**; subsequent records with the same
-Document No. become `sample-series-003`, `sample-series-004`, and so on.
-Only the numeric segment after the **final dash** changes.
-
-For the same Document No., future series automatically increment (`002`, `003`, ...).
-The setup is no longer shown once that document has a saved series pattern.
-Other Document Nos. may have entirely different patterns or none at all.
-If an existing number has historical series already, the configured pattern
-continues after the largest matching series. Regular revisions **do not**
-generate a new series; they retain the existing one.
+3. Type the **Series Number**. Its placeholder shows the most recent previous
+   series of that Document No. (for example `Previous: SER-004`) as a guide.
+4. Save/submit and approve. The Series No. is required and must be unique for
+   that Document No. Existing records are never renumbered. Regular revisions
+   **do not** change the series; they retain the existing one.
 
 Historic softcopy numbers and revisions remain unchanged except for the
 original unnumbered document, which is explicitly assigned the preceding
@@ -228,7 +212,8 @@ lock and database unique index; the displayed series is only a preview.
 **Database upgrade:** Back up the database, then ensure the
 [document-series unique index](database/migrations/20261104_softcopy_series_number_index.sql)
 is installed before running the
-[per-document Series No. pattern migration](database/migrations/20261107_softcopy_document_series_patterns.sql),
+[remove-series-patterns migration](database/migrations/20261112_remove_softcopy_series_patterns.sql)
+(Series No. is now typed manually),
 plus the [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql)
 to enable Folder and Document Number Pattern category types.
 Migrations are **not run automatically**. If the former experimental category

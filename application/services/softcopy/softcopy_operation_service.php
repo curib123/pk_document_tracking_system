@@ -105,25 +105,26 @@ class Softcopy_operation_service
             $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
             require_once APPPATH . 'services/softcopy/document_number_generator.php';
-            require_once APPPATH . 'services/softcopy/document_series_generator.php';
             $reuseNumber = !empty($payload['series_number_checker']);
             $number = $reuseNumber
                 ? trim((string) ($payload['document_number'] ?? ''))
                 : Document_number_generator::next($db, $categoryId);
-            // A requester-entered Series No. always wins; leaving it blank
-            // keeps the auto-generated sequence unbroken, as before.
-            $seriesOverride = trim((string) ($payload['generated_series_number'] ?? ''));
-            if ($seriesOverride !== '' && mb_strlen($seriesOverride) > 100) {
+            // The Series No. is typed in by the requester; there is no code pattern.
+            $series = $reuseNumber ? trim((string) ($payload['generated_series_number'] ?? '')) : '';
+            if ($reuseNumber) {
+                if ($series === '') {
+                    throw new DomainException('Enter the Series No. for this Document No.');
+                }
+                if (!$db->get_where('softcopy_documents', [
+                    'category_id' => $categoryId,
+                    'document_number' => $number
+                ])->row_array()) {
+                    throw new DomainException('Choose an existing Document No. from the selected category.');
+                }
+            }
+            if (mb_strlen($series) > 100) {
                 throw new DomainException('Series No. must be 100 characters or fewer.');
             }
-            $series = $reuseNumber
-                ? ($seriesOverride !== '' ? $seriesOverride : Document_series_generator::next(
-                    $db,
-                    $categoryId,
-                    $number,
-                    trim((string) ($payload['series_code_pattern'] ?? '')),
-                    (int) $actorId
-                )) : '';
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId

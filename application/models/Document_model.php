@@ -244,10 +244,8 @@ class Document_model extends CI_Model
     public function softcopy_numbering_catalog($viewer)
     {
         $scope = $this->scope('softcopy', $viewer, 'd');
-        $rows = $this->db->select('d.category_id,d.document_number,d.series_number,sp.code_pattern AS series_code_pattern')
+        $rows = $this->db->select('d.category_id,d.document_number,d.series_number')
             ->from('softcopy_documents d')
-            ->join('softcopy_document_series_patterns sp',
-                'sp.category_id=d.category_id AND sp.document_number=d.document_number', 'left')
             ->where($scope, NULL, FALSE)
             ->order_by('d.category_id')->order_by('d.document_number')
             ->order_by('d.id')->get()->result_array();
@@ -256,17 +254,13 @@ class Document_model extends CI_Model
             $categoryId = (int) $row['category_id'];
             $number = (string) $row['document_number'];
             if (!isset($catalog[$categoryId][$number])) {
-                $catalog[$categoryId][$number] = [
-                    'series' => [],
-                    'series_code_pattern' => (string) ($row['series_code_pattern'] ?? ''),
-                    'unnumbered_count' => 0
-                ];
+                $catalog[$categoryId][$number] = ['latest_series' => ''];
             }
+            // Rows are ordered by id, so the last numbered one is the most recent
+            // series; the form shows it as the placeholder guide for the next entry.
             $series = (string) ($row['series_number'] ?? '');
-            if ($series === '') {
-                ++$catalog[$categoryId][$number]['unnumbered_count'];
-            } elseif (!in_array($series, $catalog[$categoryId][$number]['series'], TRUE)) {
-                $catalog[$categoryId][$number]['series'][] = $series;
+            if ($series !== '') {
+                $catalog[$categoryId][$number]['latest_series'] = $series;
             }
         }
         return $catalog;
