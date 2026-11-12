@@ -69,6 +69,8 @@ foreach ($rows as $r) {
                     'name' => $item['original_name'],
                     'detail' => $item['first_name'] . ' ' . $item['last_name'] . ' — ' . $item['created_at'] .
                         ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded') .
+                        ' · ' . (($item['stage'] ?? '') === 'final' ? 'Final (Document Control)'
+                            : (($item['stage'] ?? '') === 'locked' ? 'Locked proposed file' : 'Proposed')) .
                         (!empty($item['locked_at']) ? ' · Locked ' . $item['locked_at'] . ' by ' .
                             trim(($item['locked_first_name'] ?? '') . ' ' . ($item['locked_last_name'] ?? '')) : ''),
                     'url' => !empty($item['is_current']) && $canFile('download')

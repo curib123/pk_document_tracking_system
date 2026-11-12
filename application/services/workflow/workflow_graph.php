@@ -8,6 +8,13 @@ final class Workflow_graph
             $graph['document_lock_step_key'] === $stepKey;
     }
 
+    /** The step whose approval requires the DCO to upload the final controlled file. */
+    public static function is_finalize_step(array $graph, string $stepKey): bool
+    {
+        return is_string($graph['finalize_step_key'] ?? NULL) &&
+            $graph['finalize_step_key'] === $stepKey;
+    }
+
     public static function renumber(array $steps): array
     {
         $steps = array_values($steps);
@@ -38,5 +45,12 @@ final class Workflow_graph
         $lockStep = $graph['document_lock_step_key'] ?? NULL;
         if ($lockStep !== NULL && (!is_string($lockStep) || !in_array($lockStep, array_column($steps, 'key'), TRUE)))
             throw new DomainException('Choose a document-locking approver from the configured approval steps.');
+        $finalStep = $graph['finalize_step_key'] ?? NULL;
+        $keys = array_column($steps, 'key');
+        if ($finalStep !== NULL && (!is_string($finalStep) || !in_array($finalStep, $keys, TRUE)))
+            throw new DomainException('Choose a final-file approver from the configured approval steps.');
+        if ($finalStep !== NULL && $lockStep !== NULL &&
+            array_search($finalStep, $keys, TRUE) <= array_search($lockStep, $keys, TRUE))
+            throw new DomainException('The final-file step must come after the document-locking step.');
     }
 }

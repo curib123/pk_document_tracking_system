@@ -4,6 +4,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 class File_service
 {
     private $ci;
+    /** Storage name of the most recently staged upload (for rollback cleanup). */
+    public $last_storage = '';
 
     public function __construct()
     {
@@ -296,7 +298,41 @@ class File_service
         }
     }
 
-    private function stage_controlled($docId, $actorId, $upload, $purpose, $domain = 'softcopy')
+    /**
+     * The DCO's edited file for a locked softcopy attachment. It stays private and
+     * pending until the request completes, then becomes the final controlled copy.
+     */
+    public function stage_final(array $request, int $sourceFileId, int $actorId, $upload): int
+    {
+        $creation = $request['type'] === 'softcopy_create';
+        $id = $this->stage_controlled(
+            $creation ? NULL : (int) $request['softcopy_id'],
+            $actorId,
+            $upload,
+            'dco_final',
+            'softcopy',
+            ['stage' => 'final', 'source_file_id' => $sourceFileId, 'finalized_by' => $actorId, 'finalized_at' => date('Y-m-d H:i:s')]
+        );
+        return $id;
+    }
+
+    /** Pending final file (if any) for a request payload. */
+    public function pending_final_file(array $payload): ?array
+    {
+        $id = (int) ($payload['final_file_id'] ?? 0);
+        return $id ? ($this->ci->db->get_where('files', [
+            'id' => $id, 'purpose' => 'dco_final', 'status' => 'pending'
+        ])->row_array() ?: NULL) : NULL;
+    }
+
+    /** Removes the uploaded bytes when the surrounding transaction rolled back. */
+    public function discard_storage(string $storage): void
+    {
+        $path = $this->controlled_path($storage);
+        if ($path) @unlink($path);
+    }
+
+    private function stage_controlled($docId, $actorId, $upload, $purpose, $domain = 'softcopy', array $extra = [])
     {
         if (
             !is_array($upload) || (int) ($upload['error'] ?? -1) !== UPLOAD_ERR_OK ||
@@ -341,7 +377,8 @@ class File_service
             throw new DomainException('Could not store the Document File.');
         }
         chmod($path, 0600);
-        $saved = $this->ci->db->insert('files', [
+        $this->last_storage = $storage;
+        $saved = $this->ci->db->insert('files', $extra + [
             'original_name' => $name,
             'storage_name' => $storage,
             'size' => $size,

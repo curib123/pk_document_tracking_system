@@ -300,6 +300,13 @@ foreach ($rows as $row) {
       'icon' => 'fa-solid fa-trash-can'
     ];
   // Rows are already scoped to this user's exact active approval assignment.
+  // The DCO's approval at the designated step must carry the edited final file.
+  $needsFinalFile = FALSE;
+  if ($task && $row['status'] === 'submitted' && in_array($row['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) {
+    $routeGraph = json_decode((string) ($row['snapshot'] ?? ''), TRUE) ?: [];
+    $needsFinalFile = is_string($routeGraph['finalize_step_key'] ?? NULL) &&
+      $routeGraph['finalize_step_key'] === ($row['current_node'] ?? NULL);
+  }
   if ($task && $row['status'] === 'submitted')
     foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
       $buttons[] = [
@@ -313,7 +320,8 @@ foreach ($rows as $row) {
           : ($decision === 'rejected'
             ? 'fa-solid fa-circle-xmark'
             : 'fa-solid fa-arrow-rotate-left'),
-        'show_text' => TRUE
+        'show_text' => TRUE,
+        'final_upload' => $needsFinalFile && $decision === 'approved'
       ];
     }
 

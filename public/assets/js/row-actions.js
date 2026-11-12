@@ -17,8 +17,9 @@
     });
     var decision = action.getAttribute("data-decision");
     var isDisposal = action.getAttribute("data-disposal") === "yes";
+    var needsFinal = action.getAttribute("data-final-upload") === "yes";
     var needsDetails =
-      isDisposal || ["returned", "rejected"].includes(decision);
+      isDisposal || needsFinal || ["returned", "rejected"].includes(decision);
     var title = action.getAttribute("data-title") || "Confirm Action";
     var description =
       action.getAttribute("data-description") ||
@@ -26,8 +27,18 @@
     document.getElementById("actionTitle").textContent = title;
     document.getElementById("actionDescription").textContent = description;
     form.setAttribute("data-confirm", title + "? " + description);
-    document.getElementById("actionRemarkFields").hidden = !needsDetails;
-    form.querySelector('[name="remark"]').disabled = !needsDetails;
+    var showRemark = needsDetails && !needsFinal;
+    document.getElementById("actionRemarkFields").hidden = !showRemark;
+    form.querySelector('[name="remark"]').disabled = !showRemark;
+    var finalBox = document.getElementById("actionFinalFields");
+    var finalFile = document.getElementById("actionFinalFile");
+    if (finalBox && finalFile) {
+      finalBox.hidden = !needsFinal;
+      finalFile.disabled = !needsFinal;
+      finalFile.required = needsFinal;
+    }
+    form.enctype = needsFinal ? "multipart/form-data" : "";
+    if (!needsFinal) form.removeAttribute("enctype");
     var disposal = form.querySelector("#actionDisposalFields");
     if (disposal) {
       disposal.hidden = !isDisposal;

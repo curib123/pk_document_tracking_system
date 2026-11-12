@@ -39,6 +39,14 @@ class File_model extends CI_Model
             'intval',
             (array) ($data[$filesField] ?? [$data[$fileField] ?? 0])
         ))));
+        // The DCO's pending final file is reviewable by later approvers and the requester.
+        $finalId = (int) ($data['final_file_id'] ?? 0);
+        if ($finalId && (int) $requestedFileId === $finalId && !$external) {
+            return $this->db->get_where('files', [
+                'id' => $finalId, 'purpose' => 'dco_final', 'domain' => 'softcopy', 'status' => 'pending',
+                'document_id' => $create ? NULL : (int) $r['softcopy_id']
+            ])->row_array();
+        }
         $fileId = (int) $requestedFileId ?: (int) ($data[$fileField] ?? ($fileIds[0] ?? 0));
         if (!$fileId || !in_array($fileId, $fileIds, TRUE))
             return NULL;
@@ -109,7 +117,7 @@ class File_model extends CI_Model
         $scope = $this->file_scope($user);
         $canHistory = $this->Permission_model->allowed($user, 'files', 'history');
         $this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
-                f.status,f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name,
+                f.status,f.stage,f.finalized_at,f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name,
                 u.first_name,u.last_name,
                 (f.status="approved" AND current.file_id=f.id) AS is_current,
                 ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY (current.file_id=f.id) DESC,f.id DESC) AS history_rank', FALSE)

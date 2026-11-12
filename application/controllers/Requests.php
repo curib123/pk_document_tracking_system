@@ -200,7 +200,8 @@ class Requests extends MY_Controller
                 (int) $this->input->post('id'),
                 $this->user,
                 (string) $this->input->post('decision'),
-                (string) $this->input->post('remark')
+                (string) $this->input->post('remark'),
+                $_FILES['final_file'] ?? NULL
             );
             foreach ($lockedFiles as $file) {
                 $this->audit_event('files/document-lock', 'files:' . $file['file_id'], [

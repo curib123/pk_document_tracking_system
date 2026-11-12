@@ -63,6 +63,35 @@ class Softcopy_operation_service
             throw new DomainException('This softcopy file is locked after approval and cannot be replaced or deleted.');
     }
 
+    /**
+     * The DCO's edited file, when the workflow required one. It, not the
+     * requester's proposed file, becomes the final controlled revision file.
+     */
+    private function final_file(array $payload, $documentId, int $requestId = 0): ?array
+    {
+        $finalId = (int) ($payload['final_file_id'] ?? 0);
+        if (!$finalId)
+            return NULL;
+        $final = $this->ci->db->get_where('files', [
+            'id' => $finalId, 'domain' => 'softcopy', 'purpose' => 'dco_final',
+            'status' => 'pending', 'document_id' => $documentId
+        ])->row_array();
+        if (!$final)
+            throw new DomainException('The final file uploaded by Document Control is unavailable. Return the request to Document Control.');
+        require_once APPPATH . 'services/files/file_service.php';
+        (new File_service())->require_stored_file($final);
+        return $final;
+    }
+
+    /** Requester's locked proposal is kept as history once a final file replaces it. */
+    private function approve_final(array $final, int $actorId, $documentId): void
+    {
+        $this->ci->db->where('id', (int) $final['id'])->update('files', [
+            'document_id' => $documentId, 'status' => 'approved', 'stage' => 'final',
+            'approved_by' => $actorId, 'approved_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
     public function apply($type, $payload, $softcopyId, $actorId, $ownerId, $requestId = NULL)
     {
         $this->validate_type($type);
@@ -149,6 +178,8 @@ class Softcopy_operation_service
             ])->row_array();
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
+            $final = $this->final_file($payload, NULL);
+            $revisionFileId = $final ? (int) $final['id'] : $fileId;
             $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
             $revisionLevel = $requestId === NULL
                 ? trim((string) $payload['new_revision_level'])
@@ -178,7 +209,7 @@ class Softcopy_operation_service
                     'date_received' => $received,
                     'date_released' => $released,
                     'approval_date' => $today,
-                    'file_id' => $fileId,
+                    'file_id' => $revisionFileId,
                     'uploaded_by' => $ownerId,
                     'approved_by' => $actorId
                 ])
@@ -190,10 +221,13 @@ class Softcopy_operation_service
             ]);
             $db->where('id', $fileId)->update('files', [
                 'document_id' => $newId,
-                'status' => 'approved',
+                'status' => $final ? 'superseded' : 'approved',
+                'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
             ]);
+            if ($final)
+                $this->approve_final($final, $actorId, $newId);
             if ($requestId !== NULL) {
                 $db->where('id', $requestId)->update('requests', ['softcopy_id' => $newId]);
             } else {
@@ -202,7 +236,7 @@ class Softcopy_operation_service
             return [
                 'document_id' => $newId,
                 'document_number' => $number,
-                'file_id' => $fileId,
+                'file_id' => $revisionFileId,
                 'revision_id' => $revisionId
             ];
         }
@@ -242,6 +276,8 @@ class Softcopy_operation_service
                 throw new DomainException('A pending controlled revision attachment is required.');
             require_once APPPATH . 'services/files/file_service.php';
             (new File_service())->require_stored_file($file);
+            $final = $this->final_file($payload, (int) $softcopyId);
+            $revisionFileId = $final ? (int) $final['id'] : $fileId;
             $max = $db->select_max('revision_number')
                 ->get_where('softcopy_revisions', ['document_id' => $softcopyId])->row_array();
             $previous = $doc['current_revision_id'] ?
@@ -272,7 +308,7 @@ class Softcopy_operation_service
                     'date_received' => $received,
                     'date_released' => $date,
                     'approval_date' => $date,
-                    'file_id' => $fileId,
+                    'file_id' => $revisionFileId,
                     'uploaded_by' => $ownerId,
                     'approved_by' => $actorId
                 ])
@@ -285,19 +321,22 @@ class Softcopy_operation_service
                 'series_number' => $series !== '' ? $series : NULL
             ]);
             $db->where('id', $fileId)->update('files', [
-                'status' => 'approved',
+                'status' => $final ? 'superseded' : 'approved',
+                'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
             ]);
+            if ($final)
+                $this->approve_final($final, $actorId, (int) $softcopyId);
             // Preserve historical rows/revision links, but only this approved
             // replacement remains controlled. Physical cleanup runs after commit.
             $db->where('domain', 'softcopy')->where('document_id', (int) $softcopyId)
-                ->where('status', 'approved')->where('id !=', $fileId)
+                ->where('status', 'approved')->where('id !=', $revisionFileId)
                 ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'superseded']);
             if ($requestId === NULL) {
                 $this->audit($softcopyId, 'active', 'active', 'direct_revise', $actorId, $reason);
             }
-            return ['document_id' => (int) $softcopyId, 'revision_id' => $revisionId, 'file_id' => $fileId];
+            return ['document_id' => (int) $softcopyId, 'revision_id' => $revisionId, 'file_id' => $revisionFileId];
         }
 
         if ($type === 'softcopy_cancel')

@@ -968,7 +968,8 @@ class Request_service
             if (!$db->where('id', (int) $file['id'])->where('locked_at IS NULL', NULL, FALSE)->update('files', [
                 'locked_by' => (int) $user['id'],
                 'locked_at' => $approvedAt,
-                'lock_request_id' => (int) $request['id']
+                'lock_request_id' => (int) $request['id'],
+                'stage' => 'locked'
             ])) {
                 throw new DomainException('The approved file could not be locked.');
             }
@@ -989,13 +990,66 @@ class Request_service
         return $locked;
     }
 
-    public function decide($tab, $id, $user, $decision, $comment)
+    /**
+     * Approval at the designated finalize step requires the DCO's edited file.
+     * It replaces any earlier pending final file and is recorded on the request.
+     */
+    private function stage_final_file(array &$r, array $step, array $user, $upload, File_service $files): void
+    {
+        $payload = json_decode($r['payload'], TRUE) ?: [];
+        if (!$this->has_uploaded_attachment($upload))
+            throw new DomainException('Upload the edited final file to approve this step. The final controlled copy comes from the Document Control Officer.');
+        if (is_array($upload['name'] ?? NULL))
+            throw new DomainException('Upload one final file.');
+        $creation = $r['type'] === 'softcopy_create';
+        $sourceId = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
+        $source = $this->ci->db->get_where('files', ['id' => $sourceId, 'domain' => 'softcopy'])->row_array();
+        if (!$source || empty($source['locked_at']))
+            throw new DomainException('The locked proposed file is required before a final file can be uploaded.');
+        $old = $files->pending_final_file($payload);
+        $newId = $files->stage_final($r, $sourceId, (int) $user['id'], $upload);
+        $this->final_storage[] = $files->last_storage;
+        if ($old)
+            $this->ci->db->where('id', (int) $old['id'])->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
+        $payload['final_file_id'] = $newId;
+        $r['payload'] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $this->ci->db->where('id', (int) $r['id'])->update('requests', ['payload' => $r['payload']]);
+        $this->ci->db->insert('workflow_history', [
+            'request_id' => (int) $r['id'], 'step_id' => (int) $step['id'], 'action' => 'document_finalized',
+            'user_id' => (int) $user['id'], 'user_name' => (string) $user['name'],
+            'position_title' => (string) ($user['position_title'] ?? ''),
+            'after_state' => json_encode(['file_id' => $newId, 'source_file_id' => $sourceId]),
+            'comments' => 'Final controlled file uploaded by Document Control.'
+        ]);
+    }
+
+    /** Return/reject: the DCO's uploaded final file no longer applies. */
+    private function discard_final_file(array &$r): int
+    {
+        $payload = json_decode($r['payload'], TRUE) ?: [];
+        $id = (int) ($payload['final_file_id'] ?? 0);
+        if (!$id) return 0;
+        $this->ci->db->where(['id' => $id, 'status' => 'pending', 'purpose' => 'dco_final'])
+            ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
+        unset($payload['final_file_id']);
+        $r['payload'] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $this->ci->db->where('id', (int) $r['id'])->update('requests', ['payload' => $r['payload']]);
+        return $id;
+    }
+
+    private $final_storage = [];
+
+    public function decide($tab, $id, $user, $decision, $comment, $finalUpload = NULL)
     {
         if (!in_array($decision, ['approved', 'rejected', 'returned'], TRUE))
             throw new DomainException('Invalid decision.');
         $cleanupDocumentId = 0;
         $cleanupFileId = 0;
         $lockedFiles = [];
+        $discardedFinalId = 0;
+        $this->final_storage = [];
+        require_once APPPATH . 'services/files/file_service.php';
+        $fileService = new File_service();
         $this->ci->db->trans_begin();
         try {
             $locked = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->result_array();
@@ -1037,6 +1091,9 @@ class Request_service
             ]);
             $this->history($id, $step['id'], $decision, $user, trim($comment));
             if ($decision === 'approved') {
+                if (in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE) &&
+                    Workflow_graph::is_finalize_step($graph, (string) $step['node_key']))
+                    $this->stage_final_file($r, $step, $user, $finalUpload, $fileService);
                 $lockedFiles = $this->lock_approved_attachments($r, $graph, $step, $user, $approvedAt);
                 if ($index < count($keys) - 1) {
                     // A returned step must be revisited in this submission,
@@ -1066,6 +1123,7 @@ class Request_service
                     ]);
                 }
             } elseif ($decision === 'returned') {
+                $discardedFinalId = $this->discard_final_file($r);
                 if ($index === 0) {
                     $this->ci->db->where('id', $id)->update('requests', [
                         'status' => 'returned',
@@ -1101,6 +1159,7 @@ class Request_service
                 ]);
                 require_once APPPATH . 'services/files/file_service.php';
                 $r['status'] = 'rejected';
+                $discardedFinalId = $this->discard_final_file($r);
                 $cleanupFileId = (new File_service())->retire_request_attachment($r, (int) $user['id'], trim($comment));
             }
             if ($this->ci->db->trans_status() === FALSE)
@@ -1109,6 +1168,8 @@ class Request_service
                 throw new DomainException('Approval decision could not be committed.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
+            foreach ($this->final_storage as $storage)
+                $fileService->discard_storage($storage);
             if ($e instanceof DomainException)
                 throw $e;
             log_message('error', 'Workflow decision error ' . $e->getMessage());
@@ -1120,6 +1181,8 @@ class Request_service
         }
         if ($cleanupFileId)
             (new File_service())->cleanup_retired(0, $cleanupFileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
+        if ($discardedFinalId)
+            $fileService->cleanup_retired(0, $discardedFinalId, ['deleted'], 'softcopy');
         return $lockedFiles;
     }
 

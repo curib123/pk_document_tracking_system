@@ -68,9 +68,18 @@ class Workflow_builder_service
             if ($index !== FALSE)
                 $lockIndex = $index;
         }
+        $finalIndex = NULL;
+        $finalKey = $graph['finalize_step_key'] ?? NULL;
+        if (is_string($finalKey)) {
+            $index = array_search($finalKey, array_column($graph['steps'], 'key'), TRUE);
+            if ($index !== FALSE)
+                $finalIndex = $index;
+        }
         $graph['steps'] = Workflow_graph::renumber($graph['steps']);
         $graph['document_lock_step_key'] = $lockIndex !== NULL
             ? $graph['steps'][$lockIndex]['key'] : NULL;
+        $graph['finalize_step_key'] = $finalIndex !== NULL
+            ? $graph['steps'][$finalIndex]['key'] : NULL;
         Workflow_graph::validate($graph, FALSE);
         $this->ci->db->where('id', (int) $version['id'])->where('status', 'draft')
             ->update('workflow_versions', ['graph' => json_encode($graph, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
@@ -144,6 +153,10 @@ class Workflow_builder_service
             if ($stepKey !== '' && !in_array($stepKey, array_column($graph['steps'], 'key'), TRUE))
                 throw new DomainException('Choose a document-locking approver from the configured approval steps.');
             $graph['document_lock_step_key'] = $stepKey !== '' ? $stepKey : NULL;
+            $finalKey = trim((string) ($post['finalize_step_key'] ?? ''));
+            if ($finalKey !== '' && !in_array($finalKey, array_column($graph['steps'], 'key'), TRUE))
+                throw new DomainException('Choose a final-file approver from the configured approval steps.');
+            $graph['finalize_step_key'] = $finalKey !== '' ? $finalKey : NULL;
             $this->persist($version, $graph);
         });
     }

@@ -254,6 +254,24 @@ $dt_create = '';
                   <small class="form-text d-block mt-2">
                     Only this step’s approval locks eligible Excel, PDF, or Word attachments. Later workflow steps continue normally.
                   </small>
+                  <?php if (in_array($workflow['request_type'], ['softcopy_create', 'softcopy_revise'], TRUE)): ?>
+                    <label class="form-label mt-3" for="finalizeStep-<?= (int) $version['id'] ?>">
+                      Final-file approver (uploads the final controlled file)
+                    </label>
+                    <select class="form-select" id="finalizeStep-<?= (int) $version['id'] ?>"
+                      name="finalize_step_key" autocomplete="off" style="max-width: 32rem">
+                      <option value="">No final-file step selected</option>
+                      <?php foreach ($steps as $step): ?>
+                        <option value="<?= $esc($step['key']) ?>"
+                          <?= ($graph['finalize_step_key'] ?? NULL) === $step['key'] ? 'selected' : '' ?>>
+                          <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <small class="form-text d-block mt-2">
+                      This approver must upload their edited file to approve. It becomes the final controlled document; the requester’s locked file is kept as history. Must come after the locking step.
+                    </small>
+                  <?php endif; ?>
                 </form>
               <?php elseif (!$isDraft && in_array($workflow['request_type'], [
                 'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
@@ -265,6 +283,11 @@ $dt_create = '';
                       break;
                     } ?>
                 </p>
+                <?php if (!empty($graph['finalize_step_key'])): foreach ($steps as $step)
+                  if ($step['key'] === $graph['finalize_step_key']) { ?>
+                    <p class="small text-secondary">Final-file approver:
+                      <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?></p>
+                  <?php break; } endif; ?>
               <?php endif; ?>
               <?php if ($isDraft && $canEdit): ?>
                 <div class="workflow-version-actions d-flex flex-wrap gap-2 justify-content-between border-top pt-3">
