@@ -36,6 +36,12 @@
       finalBox.hidden = !needsFinal;
       finalFile.disabled = !needsFinal;
       finalFile.required = needsFinal;
+      var dl = document.getElementById("actionFinalDownload");
+      if (dl) {
+        var url = action.getAttribute("data-final-url") || "";
+        dl.hidden = !url;
+        dl.setAttribute("href", url || "#");
+      }
     }
     form.enctype = needsFinal ? "multipart/form-data" : "";
     if (!needsFinal) form.removeAttribute("enctype");

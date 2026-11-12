@@ -240,8 +240,8 @@ class Document_service
         $this->ci->load->model('Identity_model');
         $this->ci->load->model('Permission_model');
         $actor = $this->ci->Identity_model->active_user($actorId);
-        if (!$actor || !$this->ci->Permission_model->allowed($actor, '*', '*'))
-            throw new DomainException('Only an Administrator can permanently delete documents.');
+        if (!$actor || !$this->ci->Permission_model->allowed($actor, 'documents', 'hard_delete'))
+            throw new DomainException('Hard delete permission is required.');
         $id = (int) $id;
         $db = $this->ci->db;
         $storage = [];

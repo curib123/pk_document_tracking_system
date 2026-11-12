@@ -79,7 +79,7 @@ class Files extends MY_Controller
                 show_error('This file is locked after Plant Manager approval and is read-only. Ask Document Control for a full download.', 403);
                 return;
             }
-            if (!$this->can('files', 'download')) {
+            if (empty($file['finalizer_access']) && !$this->can('files', 'download')) {
                 show_error('File download is not permitted.', 403);
                 return;
             }
@@ -190,7 +190,7 @@ class Files extends MY_Controller
     /** Locked files are read-only except for roles holding Download Locked Files. */
     private function locked_for_user(array $file): bool
     {
-        return !empty($file['locked_at']) && !$this->can('files', 'download_locked');
+        return !empty($file['locked_at']) && empty($file['finalizer_access']) && !$this->can('files', 'download_locked');
     }
 
     /**

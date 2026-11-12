@@ -225,7 +225,8 @@ class Softcopy_operation_service
                 'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
-            ]);
+            ] + ($final ? ['locked_at' => NULL] : []) // proposal is replaced; unlock so cleanup purges it
+            );
             if ($final)
                 $this->approve_final($final, $actorId, $newId);
             if ($requestId !== NULL) {
@@ -325,7 +326,8 @@ class Softcopy_operation_service
                 'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
-            ]);
+            ] + ($final ? ['locked_at' => NULL] : []) // proposal is replaced; unlock so cleanup purges it
+            );
             if ($final)
                 $this->approve_final($final, $actorId, (int) $softcopyId);
             // Preserve historical rows/revision links, but only this approved

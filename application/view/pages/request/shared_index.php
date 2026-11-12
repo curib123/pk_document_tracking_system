@@ -114,6 +114,9 @@ foreach ($rows as $row) {
       }
     }
   }
+  // Approver task list: show the approver's own pending step, not the generic request status.
+  if ($task && $requestStatus === 'submitted' && !empty($row['step_label']))
+    $requestStatus = 'Pending your approval: ' . $row['step_label'];
   // The request viewer uses the same document renderer as System Documents,
   // but presents only submitted proposal metadata and visible approval history.
   // Never pretend an unapproved proposal is already the stored document.
@@ -307,6 +310,9 @@ foreach ($rows as $row) {
     $needsFinalFile = is_string($routeGraph['finalize_step_key'] ?? NULL) &&
       $routeGraph['finalize_step_key'] === ($row['current_node'] ?? NULL);
   }
+  $finalSourceId = 0;
+  if ($needsFinalFile)
+    $finalSourceId = (int) ($payload['controlled_file_id'] ?? $payload['revision_file_id'] ?? 0);
   if ($task && $row['status'] === 'submitted')
     foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
       $buttons[] = [
@@ -321,7 +327,9 @@ foreach ($rows as $row) {
             ? 'fa-solid fa-circle-xmark'
             : 'fa-solid fa-arrow-rotate-left'),
         'show_text' => TRUE,
-        'final_upload' => $needsFinalFile && $decision === 'approved'
+        'final_upload' => $needsFinalFile && $decision === 'approved',
+        'final_source_url' => $needsFinalFile && $decision === 'approved' && ($finalSourceId ?? 0)
+          ? site_url('files/review/' . (int) $row['id'] . '?file_id=' . (int) $finalSourceId . '&download=1') : ''
       ];
     }
 

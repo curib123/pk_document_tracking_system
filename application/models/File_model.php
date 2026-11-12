@@ -11,6 +11,7 @@ class File_model extends CI_Model
         if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
             return NULL;
         $allowed = (int) $r['requested_by'] === (int) $viewer['id'];
+        $finalizer = FALSE;
         if (!$allowed && $r['status'] === 'submitted') {
             $steps = $this->db->get_where('workflow_steps', [
                 'request_id' => (int) $requestId,
@@ -24,6 +25,10 @@ class File_model extends CI_Model
                         User_roles::matches($viewer, (int) ($a['value'] ?? 0)))
                 ) {
                     $allowed = TRUE;
+                    // The approver at the workflow's final-file step edits the locked file.
+                    $graph = json_decode((string) ($r['snapshot'] ?? ''), TRUE) ?: [];
+                    $finalizer = is_string($graph['finalize_step_key'] ?? NULL) &&
+                        $graph['finalize_step_key'] === ($step['node_key'] ?? NULL);
                     break;
                 }
             }
@@ -47,10 +52,13 @@ class File_model extends CI_Model
                 'document_id' => $create ? NULL : (int) $r['softcopy_id']
             ])->row_array();
         }
+        // Once Document Control uploaded the final file, the proposed file is removed.
+        if ($finalId && !$external && !$finalizer)
+            return NULL;
         $fileId = (int) $requestedFileId ?: (int) ($data[$fileField] ?? ($fileIds[0] ?? 0));
         if (!$fileId || !in_array($fileId, $fileIds, TRUE))
             return NULL;
-        return $this->db->get_where('files', [
+        $source = $this->db->get_where('files', [
             'id' => $fileId,
             'uploaded_by' => (int) $r['requested_by'],
             'purpose' => $create ? 'creation' : 'revision',
@@ -59,6 +67,9 @@ class File_model extends CI_Model
                 ? ($data['external_document_id'] ?? 0) : $r['softcopy_id']),
             'status' => 'pending'
         ])->row_array();
+        if ($source && $finalizer)
+            $source['finalizer_access'] = TRUE;
+        return $source;
     }
 
     public function approved_file($id)

@@ -96,7 +96,7 @@ foreach ($rows as $row) {
             'icon' => 'fa-solid fa-trash-can'
         ];
     }
-    if (!empty($is_administrator) && $row['status'] === 'disposed') {
+    if ((!empty($is_administrator) || !empty($can_hard_delete)) && $row['status'] === 'disposed') {
         $buttons[] = [
             'type' => 'action',
             'url' => 'documents/external/hard-delete',

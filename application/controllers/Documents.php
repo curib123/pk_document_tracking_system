@@ -196,13 +196,13 @@ class Documents extends MY_Controller
         }
         $this->back_to_register($domain, $savedId, $addLocationId);
     }
-    /** Administrator-only permanent deletion of an already disposed document. */
+    /** Permission-gated permanent deletion of an already disposed document. */
     public function hard_delete($domain)
     {
         $this->Document_model->config($domain);
         $this->authenticate();
-        if (!$this->can('*', '*'))
-            show_error('Only an Administrator can permanently delete documents.', 403);
+        if (!$this->can('documents', 'hard_delete'))
+            show_error('Hard delete permission is required.', 403);
         $this->confirmed();
         $id = (int) $this->input->post('id');
         try {

@@ -146,10 +146,13 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                         <textarea class="form-control" id="actionRemark" name="remark" rows="3" autocomplete="off"></textarea>
                     </div>
                     <div id="actionFinalFields" hidden>
+                        <p class="mb-2"><strong>Step 1.</strong> Download the locked approved file and edit it.
+                            <a class="btn btn-sm btn-outline-primary ms-1" id="actionFinalDownload" href="#"><i class="fa-solid fa-download" aria-hidden="true"></i> Download locked file</a></p>
+                        <p class="mb-2"><strong>Step 2.</strong> Upload your edited file. The requester’s proposed file is then removed.</p>
                         <label for="actionFinalFile" class="form-label">Final edited file <span class="text-danger">(required)</span></label>
                         <input class="form-control" type="file" id="actionFinalFile" name="final_file" disabled
                             accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg">
-                        <small class="form-text">Upload your edited version of the locked file. It becomes the final controlled document; the requester’s locked file is kept as history.</small>
+                        <small class="form-text">Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed.</small>
                     </div>
                     <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                         <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'directDisposal']); ?>

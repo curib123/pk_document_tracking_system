@@ -61,6 +61,22 @@ class Workflow_builder_service
 
     private function persist(array $version, array $graph): void
     {
+        // Defaults for a graph that has never been configured: the Plant Manager
+        // step locks the approved file and the Document Control Officer step
+        // finalizes it. Admins can reassign or clear both in the builder.
+        $type = (string) ($this->ci->db->select('request_type')->get_where('workflows', ['id' => (int) $version['workflow_id']])->row()->request_type ?? '');
+        $defaultStep = static function (array $steps, string $label) {
+            foreach ($steps as $step)
+                if (strcasecmp((string) ($step['approver']['label'] ?? ''), $label) === 0)
+                    return $step['key'];
+            return NULL;
+        };
+        if (!array_key_exists('document_lock_step_key', $graph) &&
+            in_array($type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
+            $graph['document_lock_step_key'] = $defaultStep($graph['steps'], 'Plant Manager');
+        if (!array_key_exists('finalize_step_key', $graph) &&
+            in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE))
+            $graph['finalize_step_key'] = $defaultStep($graph['steps'], 'Document Control Officer');
         $lockIndex = NULL;
         $lockKey = $graph['document_lock_step_key'] ?? NULL;
         if (is_string($lockKey)) {

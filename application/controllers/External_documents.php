@@ -150,6 +150,7 @@ class External_documents extends MY_Controller
                 $this->Permission_model->allowed($this->user, 'external_documents', 'request'),
             'can_download' => $this->Permission_model->allowed($this->user, 'files', 'download'),
             'can_preview' => $this->Permission_model->allowed($this->user, 'files', 'view'),
+            'can_hard_delete' => $this->Permission_model->allowed($this->user, 'documents', 'hard_delete'),
             'can_bypass_lock' => $this->Permission_model->allowed($this->user, 'files', 'download_locked')
         ]);
     }
@@ -177,12 +178,12 @@ class External_documents extends MY_Controller
         redirect('documents/external');
     }
 
-    /** Administrator-only permanent deletion of an already disposed external document. */
+    /** Permission-gated permanent deletion of an already disposed external document. */
     public function hard_delete()
     {
         $this->authenticate();
-        if (!$this->can('*', '*'))
-            show_error('Only an Administrator can permanently delete documents.', 403);
+        if (!$this->can('documents', 'hard_delete'))
+            show_error('Hard delete permission is required.', 403);
         $this->confirmed();
         $id = (int) $this->input->post('id');
         try {

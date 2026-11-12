@@ -116,6 +116,10 @@ class Request_model extends CI_Model
                 $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] ??
                 [$payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0]
             )))));
+            // The DCO's final file replaces the proposed file in the request view.
+            $finalId = (int) ($payload['final_file_id'] ?? 0);
+            if ($finalId && str_starts_with($row['type'], 'softcopy_'))
+                $ids = [$finalId];
             if ($ids) {
                 $fileIdsByRequest[(int) $row['id']] = $ids;
                 $fileIds = array_merge($fileIds, $ids);

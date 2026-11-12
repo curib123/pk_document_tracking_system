@@ -110,7 +110,7 @@ foreach ($rows as $r) {
             'description' => 'Choose a disposal reason and confirm this action.',
             'icon' => 'fa-solid fa-trash-can'
         ];
-    if (!empty($is_administrator) && $r['status'] === 'disposed')
+    if ((!empty($is_administrator) || !empty($permissions['documents']['hard_delete'])) && $r['status'] === 'disposed')
         $buttons[] = [
             'type' => 'action',
             'url' => 'documents/' . $cfg['domain'] . '/hard-delete',
