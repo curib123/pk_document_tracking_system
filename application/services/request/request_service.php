@@ -180,10 +180,9 @@ class Request_service
             'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
             'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
             'series_number' => '', // Generated when the request is approved.
-            // A requester-entered Series No. override; blank preserves auto-generation.
+            // The Series No. is typed in manually (no code pattern).
             'generated_series_number' => trim((string) ($post['generated_series_number'] ?? '')),
             'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
-            'series_code_pattern' => trim((string) ($post['series_code_pattern'] ?? '')),
             'category_id' => (int) ($post['category_id'] ?? 0),
             'external_category_id' => (int) ($post['external_category_id'] ?? 0),
             'external_document_id' => (int) ($post['external_document_id'] ?? 0),
@@ -346,13 +345,9 @@ class Request_service
                         ])->row_array()) {
                         throw new DomainException('Choose an existing Document No. from the selected category.');
                     }
-                    $configured = $this->ci->db->get_where('softcopy_document_series_patterns', [
-                        'category_id' => $seriesCategoryId,
-                        'document_number' => $seriesDocumentNo
-                    ])->row_array();
-                    if (!$configured) {
-                        require_once APPPATH . 'services/softcopy/document_series_generator.php';
-                        Document_series_generator::validate_pattern((string) ($payload['series_code_pattern'] ?? ''));
+                    $typedSeries = trim((string) ($payload['generated_series_number'] ?? ''));
+                    if ($typedSeries === '' || mb_strlen($typedSeries) > 100) {
+                        throw new DomainException('Enter the Series No. (maximum 100 characters).');
                     }
                 }
             }

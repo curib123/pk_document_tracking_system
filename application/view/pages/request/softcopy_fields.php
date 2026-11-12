@@ -65,21 +65,11 @@ $numbering_options = $numbering_options ?? [];
         <option value="">Choose an existing document number</option>
     </select>
 </div>
-<div class="col-md-6" data-series-pattern-setup hidden>
-    <label class="form-label" for="reqSeriesPattern">Series No. Code Pattern (first-time setup)</label>
-    <input class="form-control" name="series_code_pattern" id="reqSeriesPattern"
-        placeholder="For example 001 or SER-001" maxlength="100" disabled autocomplete="off">
-    <small class="form-text">Set this only once for the selected Document No. The original document receives the preceding series: 001 means original 000, new document 001.</small>
-</div>
-<div class="col-md-6" data-original-series-preview hidden>
-    <label class="form-label" for="reqOriginalSeries">Original Document Series No.</label>
-    <input class="form-control" id="reqOriginalSeries" readonly disabled autocomplete="off">
-    <small class="form-text">Assigned to the existing original record on final approval.</small>
-</div>
 <div class="col-md-6" data-series-number-field hidden>
     <label class="form-label" for="reqSeries">Series Number</label>
-    <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" autocomplete="off">
-    <small class="form-text" data-series-number-guide>Auto-filled with the next series. Edit this to use a different Series No. instead.</small>
+    <input class="form-control" name="generated_series_number" id="reqSeries" maxlength="100" autocomplete="off"
+        placeholder="Enter the Series No.">
+    <small class="form-text" data-series-number-guide>Type the Series No. for this Document No.</small>
 </div>
 <?php if ($softcopyDirect): ?>
     <div class="col-md-6" data-direct-series-edit hidden>

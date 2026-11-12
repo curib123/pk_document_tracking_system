@@ -915,10 +915,8 @@
     var checker = form.querySelector("[data-series-number-checker]");
     var autoField = form.querySelector('[name="generated_document_number"]');
     var manualField = form.querySelector('[name="document_number"]');
-    var patternField = form.querySelector('[name="series_code_pattern"]');
     var seriesField = form.querySelector('[name="generated_series_number"]');
-    var originalField = form.querySelector("#reqOriginalSeries");
-    if (!category || !checker || !autoField || !manualField || !seriesField || !patternField) return;
+    if (!category || !checker || !autoField || !manualField || !seriesField) return;
 
     var create = form.querySelector('[name="type"]')?.value === "softcopy_create";
     var manual = create && checker.checked;
@@ -926,8 +924,6 @@
     var manualWrap = form.querySelector("[data-document-number-manual]");
     var checkerWrap = form.querySelector("[data-series-number-checker-wrap]");
     var seriesWrap = form.querySelector("[data-series-number-field]");
-    var patternWrap = form.querySelector("[data-series-pattern-setup]");
-    var originalWrap = form.querySelector("[data-original-series-preview]");
     checker.disabled = !create;
     if (!create) checker.checked = false;
     if (checkerWrap) checkerWrap.hidden = !create;
@@ -937,7 +933,6 @@
     autoField.required = create && !manual;
     manualField.disabled = !manual;
     manualField.required = manual;
-    seriesField.required = false;
 
     var selected = category.options[category.selectedIndex];
     var docPattern = selected?.dataset.codePattern || "";
@@ -984,72 +979,25 @@
       autoField.value = "";
     }
 
-    // Each Document No. has its OWN first-time code pattern, not the category.
+    // The Series No. is typed in manually. The most recent series of the chosen
+    // Document No. is shown only as the placeholder, as a guide.
     var info = numberOptions[manualField.value] || {};
-    var previouslyUsed = Array.isArray(info.series) ? info.series : [];
-    var storedPattern = info.series_code_pattern || "";
-    var needsSetup = manual && !!manualField.value && !storedPattern;
-    if (patternWrap) patternWrap.hidden = !needsSetup;
-    patternField.disabled = !needsSetup;
-    patternField.required = needsSetup;
-    if (manual && storedPattern) patternField.value = "";
+    var latestSeries = info.latest_series || "";
     var seriesApplicable = manual && !!manualField.value;
     seriesField.disabled = !seriesApplicable;
+    seriesField.required = seriesApplicable;
     if (seriesWrap) seriesWrap.hidden = !seriesApplicable;
-    if (originalWrap) originalWrap.hidden = true;
-    if (!seriesApplicable) {
-      seriesField.value = "";
-      delete seriesField.dataset.autoValue;
-    }
-    if (originalField) originalField.value = "";
-
-    var seriesPattern = storedPattern || (needsSetup ? patternField.value.trim() : "");
-    var seriesParts = seriesPattern.match(/^(.*?)(\d+)$/);
-    var previewError = "";
-    if (seriesApplicable && seriesParts && BigInt(seriesParts[2]) > 0n) {
-      var seriesPrefix = seriesParts[1];
-      var start = BigInt(seriesParts[2]);
-      var highest = 0n;
-      var seriesWidth = seriesParts[2].length;
-      previouslyUsed.forEach(function (series) {
-        if (series.slice(0, seriesPrefix.length).toLowerCase() !== seriesPrefix.toLowerCase()) return;
-        var digits = series.slice(seriesPrefix.length);
-        if (!/^\d+$/.test(digits)) return;
-        var seq = BigInt(digits);
-        if (seq > highest) highest = seq;
-        seriesWidth = Math.max(seriesWidth, digits.length);
-      });
-      var unnumbered = Number(info.unnumbered_count || 0);
-      if (needsSetup && unnumbered === 1) {
-        var preceding = seriesPrefix + String(start - 1n).padStart(seriesWidth, "0");
-        if (originalField) originalField.value = preceding;
-        if (originalWrap) originalWrap.hidden = false;
-        if (previouslyUsed.some(function (value) {
-          return value.toLowerCase() === preceding.toLowerCase();
-        })) previewError = "Original series conflicts with an existing series. Choose a different first-series pattern.";
-        if (start - 1n > highest) highest = start - 1n;
-      } else if (needsSetup && unnumbered > 1) {
-        previewError = "Multiple original records have no series. Resolve them before first setup.";
-      }
-      var nextSeries = highest + 1n > start ? highest + 1n : start;
-      var digits = String(nextSeries);
-      var preview = seriesPrefix + digits.padStart(Math.max(seriesWidth, digits.length), "0");
-      if (preview.length <= 100) {
-        // Only overwrite when the field still holds the last auto-computed
-        // value; a manually edited Series No. is left alone.
-        if (seriesField.value === "" || seriesField.value === seriesField.dataset.autoValue) {
-          seriesField.value = preview;
-        }
-        seriesField.dataset.autoValue = preview;
-      }
-    }
+    if (!seriesApplicable) seriesField.value = "";
+    seriesField.placeholder = latestSeries
+      ? "Previous: " + latestSeries
+      : "Enter the Series No.";
 
     var seriesGuide = form.querySelector("[data-series-number-guide]");
     if (seriesGuide) {
       seriesGuide.hidden = !seriesApplicable;
-      seriesGuide.textContent = previewError || (needsSetup
-        ? "First-time Series No. setup. The original document takes one less than the new first series, assigned on final approval. Edit the Series No. above to use a different value."
-        : "Series No. Code Pattern was already configured for this Document No. Edit the Series No. above to use a different value than the next auto-generated one.");
+      seriesGuide.textContent = latestSeries
+        ? "Type the new Series No. The previous series for this Document No. is " + latestSeries + "."
+        : "Type the Series No. This Document No. has no series yet.";
     }
   }
   // Selecting a different softcopy starts from that record, never a previous
@@ -1089,7 +1037,6 @@
     }
   });
   document.addEventListener("input", function (event) {
-    if (event.target?.id === "reqSeriesPattern") updateSoftcopyNumberFields(event.target.form);
     if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
       updateRetentionPeriod(event.target.form);
     }
@@ -1166,10 +1113,10 @@
     if (event.target?.id === "reqCategory" ||
         event.target?.matches("[data-series-number-checker]") ||
         event.target?.id === "reqNumber") {
-      // A one-time setup entered for a different Document No. must not carry over.
+      // A Series No. typed for a different Document No. must not carry over.
       if (event.target?.id === "reqCategory" || event.target?.id === "reqNumber") {
-        var firstPattern = event.target.form?.querySelector('[name="series_code_pattern"]');
-        if (firstPattern) firstPattern.value = "";
+        var typedSeries = event.target.form?.querySelector('[name="generated_series_number"]');
+        if (typedSeries) typedSeries.value = "";
       }
       updateSoftcopyNumberFields(event.target.form);
     }
