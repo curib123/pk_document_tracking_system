@@ -1013,6 +1013,12 @@
   }
   // Selecting a different softcopy starts from that record, never a previous
   // document's proposed title, revision attachment or effective date.
+  // Programmatic changes (e.g. file auto-fill) must refresh the searchable box text.
+  document.addEventListener("change", function (event) {
+    if (event.target?.matches?.("select[data-searchable]")) {
+      syncSearchableControls(event.target.form);
+    }
+  });
   document.addEventListener("change", function (event) {
     if (event.target?.id !== "reqSoftcopy") return;
     var source = event.target,

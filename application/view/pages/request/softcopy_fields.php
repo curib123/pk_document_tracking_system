@@ -112,6 +112,7 @@ $numbering_options = $numbering_options ?? [];
             ? 'Required for direct creation or revision; the Document Fileis approved as part of the transaction.'
             : 'Attach the file for approver review. An existing uploaded file can be retained when editing the draft.' ?>
     </small>
+    <small class="form-text" data-file-autofill-note hidden></small>
     <small class="form-text">Approved locked documents remain available to view and download, but cannot be revised.</small>
     <small class="form-text" data-locked-attachment-message hidden>
         This attachment was locked by the designated approver. Keep the existing file; replacement is unavailable.
