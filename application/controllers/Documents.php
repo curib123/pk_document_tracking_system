@@ -166,7 +166,9 @@ class Documents extends MY_Controller
                 $_FILES['revision_attachment'] ?? NULL
             );
             $this->audit_created('softcopy_documents', $result['document_id']);
-            $message = 'Softcopy action approved and applied directly.';
+            $message = !empty($result['corrected'])
+                ? 'Document details corrected.'
+                : 'Softcopy action approved and applied directly.';
             if (($this->input->post('type') ?? '') === 'softcopy_create' && !empty($result['document_number']))
                 $message .= ' Generated document number: ' . $result['document_number'] . '.';
             $this->notice($message);

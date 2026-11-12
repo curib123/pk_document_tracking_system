@@ -20,6 +20,9 @@ class Softcopy_direct_service
         require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
         $service = new Softcopy_operation_service();
         $type = trim((string) ($post['type'] ?? ''));
+        if ($type === 'softcopy_correct') {
+            return $this->correct($post, (int) $actorId);
+        }
         $service->validate_type($type);
         if ($type === 'softcopy_cancel') {
             throw new DomainException('Direct softcopy cancellation is not available.');
@@ -120,5 +123,95 @@ class Softcopy_direct_service
             (new File_service())->cleanup_superseded($docId);
         }
         return $result;
+    }
+
+    /**
+     * Typo correction of an existing softcopy's details. It never touches the
+     * file, the effective date or the revision history: only the title, Series
+     * No., revision level and page count of the current record are rewritten.
+     */
+    private function correct($post, int $actorId)
+    {
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $this->ci->load->model('Document_model');
+        $actor = $this->ci->Identity_model->active_user($actorId);
+        if (
+            !$actor || !empty($actor['require_password_change']) ||
+            !$this->ci->Permission_model->allowed($actor, 'softcopy', 'direct')
+        ) {
+            throw new DomainException('Direct softcopy permission is required.');
+        }
+        $docId = (int) ($post['softcopy_id'] ?? 0);
+        if ($docId <= 0 || !$this->ci->Document_model->manageable('softcopy', $docId, $actor)) {
+            throw new DomainException('Document is not available for direct modification.');
+        }
+        $title = trim((string) ($post['title'] ?? ''));
+        $series = trim((string) ($post['series_number'] ?? ''));
+        $level = trim((string) ($post['new_revision_level'] ?? ''));
+        $pages = (int) ($post['page_number'] ?? 0);
+        $reason = trim((string) ($post['subject'] ?? ''));
+        $remarks = trim((string) ($post['remarks'] ?? ''));
+        if ($title === '' || mb_strlen($title) > 255) {
+            throw new DomainException('Document title is required (maximum 255 characters).');
+        }
+        if (mb_strlen($series) > 100) {
+            throw new DomainException('Series No. must be 100 characters or fewer.');
+        }
+        if ($level === '' || mb_strlen($level) > 30) {
+            throw new DomainException('Revision level is required and must be no longer than 30 characters.');
+        }
+        if ($pages < 1) {
+            throw new DomainException('Number of pages must be at least one.');
+        }
+
+        $db = $this->ci->db;
+        $db->trans_begin();
+        try {
+            $doc = $db->query('SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE', [$docId])->row_array();
+            if (!$doc || $doc['status'] !== 'active') {
+                throw new DomainException('Select an active softcopy document.');
+            }
+            if ($series !== '' && $db->where('document_number', $doc['document_number'])
+                ->where('series_number', $series)->where('id !=', $docId)
+                ->limit(1)->get('softcopy_documents')->row_array()) {
+                throw new DomainException('That document number and series number are already in use.');
+            }
+            $db->set('version', 'version + 1', FALSE)->where('id', $docId)->update('softcopy_documents', [
+                'title' => $title,
+                'series_number' => $series !== '' ? $series : NULL
+            ]);
+            if (!empty($doc['current_revision_id'])) {
+                $db->where('id', (int) $doc['current_revision_id'])->update('softcopy_revisions', [
+                    'document_title' => $title,
+                    'series_number' => $series !== '' ? $series : NULL,
+                    'new_revision_level' => $level,
+                    'page_number' => $pages
+                ]);
+            }
+            $db->insert('status_history', [
+                'domain' => 'softcopy',
+                'document_id' => $docId,
+                'previous_status' => 'active',
+                'new_status' => 'active',
+                'action' => 'direct_correct',
+                'user_id' => $actorId,
+                'remarks' => $remarks !== '' ? $remarks : $reason
+            ]);
+            if ($db->trans_status() === FALSE) {
+                throw new DomainException('The correction could not be saved.');
+            }
+            if ($db->trans_commit() === FALSE) {
+                throw new DomainException('The correction could not be committed.');
+            }
+        } catch (Throwable $e) {
+            $db->trans_rollback();
+            if ($e instanceof DomainException) {
+                throw $e;
+            }
+            log_message('error', 'Softcopy correction failed: ' . $e->getMessage());
+            throw new DomainException('Unable to correct this softcopy.');
+        }
+        return ['document_id' => $docId, 'document_number' => (string) $doc['document_number'], 'corrected' => TRUE];
     }
 }

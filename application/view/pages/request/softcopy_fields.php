@@ -10,6 +10,9 @@ $numbering_options = $numbering_options ?? [];
     <select class="form-select" name="type" id="reqType" required autocomplete="off">
         <option value="softcopy_create">Create Softcopy</option>
         <option value="softcopy_revise">Revise Softcopy</option>
+        <?php if ($softcopyDirect): ?>
+            <option value="softcopy_correct">Correct Details (typo fix)</option>
+        <?php endif; ?>
     </select>
 </div>
 <div class="col-md-6">
@@ -76,7 +79,7 @@ $numbering_options = $numbering_options ?? [];
         <label class="form-label" for="directSeriesNumber">Series No.</label>
         <input class="form-control" name="series_number" id="directSeriesNumber" maxlength="100"
             autocomplete="off" disabled>
-        <small class="form-text">Correct the Series No. for this document as part of the revision.</small>
+        <small class="form-text">Correct the Series No. for this document.</small>
     </div>
     <div class="col-md-6" data-direct-revision-level-wrap>
         <label class="form-label" for="directRevisionLevel">Revision Level</label>

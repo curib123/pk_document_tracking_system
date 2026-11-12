@@ -714,7 +714,9 @@
     Array.from(select.options).forEach(function (option) {
       var permitted =
         (!Array.isArray(allowed) || allowed.includes(option.value)) &&
-        (!editing || option.value === current);
+        (!editing || option.value === current) &&
+        // Typo correction exists only for editing an existing record.
+        (option.value !== "softcopy_correct" || editing);
       option.disabled = option.hidden = !permitted;
     });
     if (select.selectedOptions[0]?.disabled || !select.value) {
@@ -727,6 +729,7 @@
     var required = {
       softcopy_id: [
         "softcopy_revise",
+        "softcopy_correct",
         "assignment",
         "access",
       ],
@@ -735,6 +738,7 @@
       document_domain: ["disposal"],
       title: [
         "softcopy_create",
+        "softcopy_correct",
         "hardcopy_create",
         "hardcopy_update",
         "softcopy_revise",
@@ -748,8 +752,8 @@
       destination_location_id: ["transfer"],
       effective_date: ["softcopy_create", "softcopy_revise"],
       // Received and released dates are recorded by PHP, not user inputs.
-      page_number: ["softcopy_revise"],
-      new_revision_level: ["softcopy_create", "softcopy_revise"],
+      page_number: ["softcopy_revise", "softcopy_correct"],
+      new_revision_level: ["softcopy_create", "softcopy_revise", "softcopy_correct"],
       revision_attachment: ["softcopy_create", "softcopy_revise"],
       external_attachment: ["external_create", "external_revise"],
     };
@@ -792,7 +796,8 @@
     var directSeriesField = select.form.querySelector('[name="series_number"]');
     var selectedSoftcopy = select.form.querySelector('[name="softcopy_id"]');
     var editSeries = select.form.dataset.softcopyDirect === "yes" &&
-      operation === "softcopy_revise" && !!selectedSoftcopy?.value;
+      (operation === "softcopy_revise" || operation === "softcopy_correct") &&
+      !!selectedSoftcopy?.value;
     if (directSeriesWrap) directSeriesWrap.hidden = !editSeries;
     if (directSeriesField) directSeriesField.disabled = !editSeries;
     updateExternalRequestFields(select.form);
@@ -802,7 +807,8 @@
     var level = form.querySelector("[data-direct-revision-level]");
     if (!level) return;
     var create = operation === "softcopy_create";
-    var revise = operation === "softcopy_revise";
+    var correct = operation === "softcopy_correct";
+    var revise = operation === "softcopy_revise" || correct;
     var wrap = level.closest("[data-direct-revision-level-wrap]");
     if (wrap) wrap.hidden = !create && !revise;
     level.disabled = !create && !revise;
@@ -820,6 +826,11 @@
       record = JSON.parse(source?.selectedOptions[0]?.dataset.softcopyRecord || "{}");
     } catch (error) {
       record = {};
+    }
+    if (correct) {
+      // A correction keeps the current level unless it is being fixed.
+      if (!level.value) level.value = record.new_revision_level || "";
+      return;
     }
     var currentNumber = Number(record.revision_number || 0);
     level.value = String(Math.max(0, currentNumber)).padStart(2, "0");

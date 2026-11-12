@@ -44,15 +44,19 @@ foreach ($rows as $r) {
             $rec['holder_id'] = $user['id'];
     }
     if ($cfg['domain'] === 'softcopy') {
-        // Table edit is a direct revision, never a generic metadata patch.
+        // Table edit only corrects typos in the details: it can never upload a
+        // new file or change the effective date (that is a revision).
         $rec = [
-            'type' => 'softcopy_revise',
+            'id' => $r['id'],
+            'type' => 'softcopy_correct',
             'softcopy_id' => $r['id'],
-            'subject' => 'Revision: ' . $r['title'],
+            'subject' => 'Correction: ' . $r['title'],
             'title' => $r['title'],
             'document_number' => $r['document_number'],
             'series_number' => $r['series_number'] ?? '',
-            'category_id' => $r['category_id']
+            'category_id' => $r['category_id'],
+            'new_revision_level' => $r['new_revision_level'] ?? '',
+            'page_number' => $r['page_number'] ?? ''
         ];
     }
     $buttons = [['type' => 'view']];
