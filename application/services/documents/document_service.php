@@ -231,8 +231,13 @@ class Document_service
      * Administrator only. The disposals and status_history rows are kept as the
      * permanent record that the document existed and was deleted.
      */
+    /** Forensic snapshot of the last hard delete, written to the audit log by the caller. */
+    public $last_hard_delete = [];
+
     public function hard_delete($domain, $id, $actorId)
     {
+        $this->last_hard_delete = [];
+        $deletedFiles = [];
         if (!in_array($domain, ['hardcopy', 'softcopy', 'external'], TRUE))
             throw new DomainException('Hard delete is not available for this document type.');
         $cfg = $domain === 'external'
@@ -285,6 +290,8 @@ class Document_service
                     $file = $db->get_where('files', ['id' => $fileId])->row_array();
                     if ($file) {
                         $storage[] = $file['storage_name'];
+                        $deletedFiles[] = ['id' => (int) $file['id'], 'name' => $file['original_name'],
+                            'size' => (int) $file['size'], 'fingerprint' => $file['fingerprint'] ?? NULL, 'stage' => $file['stage'] ?? NULL];
                         $db->delete('files', ['id' => $fileId]);
                     }
                 }
@@ -322,6 +329,8 @@ class Document_service
                     $file = $db->get_where('files', ['id' => $fileId])->row_array();
                     if ($file) {
                         $storage[] = $file['storage_name'];
+                        $deletedFiles[] = ['id' => (int) $file['id'], 'name' => $file['original_name'],
+                            'size' => (int) $file['size'], 'fingerprint' => $file['fingerprint'] ?? NULL, 'stage' => $file['stage'] ?? NULL];
                         $db->delete('files', ['id' => $fileId]);
                     }
                 }
@@ -337,7 +346,7 @@ class Document_service
                 'new_status' => 'deleted',
                 'action' => 'hard_delete',
                 'user_id' => (int) $actorId,
-                'remarks' => 'Permanently deleted by an Administrator: ' . (string) ($row['title'] ?? '')
+                'remarks' => 'Permanently deleted (hard delete): ' . (string) ($row['title'] ?? '')
             ]);
             if ($db->trans_status() === FALSE)
                 throw new DomainException('The document could not be permanently deleted because related records are still in use.');
@@ -354,6 +363,17 @@ class Document_service
             require_once APPPATH . 'services/files/file_service.php';
             (new File_service())->purge_storage($storage);
         }
+        $this->last_hard_delete = [
+            'domain' => $domain, 'document_id' => $id,
+            'title' => (string) ($row['title'] ?? ''),
+            'document_number' => $row['document_number'] ?? ($row['sequence_number'] ?? NULL),
+            'series_number' => $row['series_number'] ?? NULL,
+            'previous_status' => $row['status'],
+            'created_by' => $row['created_by'] ?? NULL,
+            'disposed_at' => $row['disposed_at'] ?? NULL,
+            'deleted_files' => $deletedFiles,
+            'deleted_file_count' => count($deletedFiles)
+        ];
         return (string) ($row['title'] ?? '');
     }
 

@@ -187,12 +187,17 @@ class External_documents extends MY_Controller
         $this->confirmed();
         $id = (int) $this->input->post('id');
         try {
+            $this->require_password_confirmation();
             $this->load->model('Document_model');
             require_once APPPATH . 'services/documents/document_service.php';
-            $title = (new Document_service())->hard_delete('external', $id, (int) $this->user['id']);
-            $this->audit_event('documents/external/hard-delete', 'external_documents:' . $id, ['title' => $title]);
+            $service = new Document_service();
+            $title = $service->hard_delete('external', $id, (int) $this->user['id']);
+            $this->audit_event('documents/external/hard-delete', 'external_documents:' . $id,
+                ['title' => $title] + $service->last_hard_delete);
             $this->notice('External document permanently deleted.');
         } catch (Throwable $error) {
+            $this->audit_event('documents/external/hard-delete', 'external_documents:' . $id,
+                ['reason' => $error instanceof DomainException ? $error->getMessage() : 'error'], NULL, 'failed');
             $this->error_notice($error);
         }
         // Stay on the same view (status filter, layout, folder).

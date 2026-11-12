@@ -101,6 +101,7 @@ foreach ($rows as $row) {
             'type' => 'action',
             'url' => 'documents/external/hard-delete',
             'label' => 'Hard Delete',
+            'password_confirm' => TRUE,
             'description' => 'This permanently deletes the disposed document, its files and related records. It cannot be undone.',
             'icon' => 'fa-solid fa-trash-can-arrow-up'
         ];

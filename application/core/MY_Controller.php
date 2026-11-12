@@ -73,6 +73,19 @@ class MY_Controller extends CI_Controller
         }
     }
 
+    /** Re-authenticate the signed-in user (and a typed phrase) before an irreversible action. */
+    protected function require_password_confirmation(string $phrase = 'DELETE'): void
+    {
+        $password = (string) $this->input->post('confirm_password');
+        $typed = trim((string) $this->input->post('confirm_phrase'));
+        $row = $this->user ? $this->db->select('password_hash')->get_where('users', [
+            'id' => (int) $this->user['id'], 'active' => 1
+        ])->row_array() : NULL;
+        if ($typed !== $phrase || $password === '' || !$row || !password_verify($password, (string) $row['password_hash'])) {
+            throw new DomainException('Not deleted: type ' . $phrase . ' and enter your correct password.');
+        }
+    }
+
     protected function confirmed()
     {
         if ($this->input->method(TRUE) !== 'POST')

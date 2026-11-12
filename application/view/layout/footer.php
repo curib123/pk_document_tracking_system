@@ -145,6 +145,14 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                                 class="optional-label">(optional)</span></label>
                         <textarea class="form-control" id="actionRemark" name="remark" rows="3" autocomplete="off"></textarea>
                     </div>
+                    <div id="actionPasswordFields" hidden>
+                        <p class="text-danger small mb-2"><strong>This permanently erases the document, its files and records.</strong>
+                            Recommended: download a full backup first (Administration &gt; Backups).</p>
+                        <label for="actionConfirmPhrase" class="form-label">Type <strong>DELETE</strong> to confirm</label>
+                        <input class="form-control mb-2" type="text" id="actionConfirmPhrase" name="confirm_phrase" autocomplete="off" disabled>
+                        <label for="actionConfirmPassword" class="form-label">Your password</label>
+                        <input class="form-control" type="password" id="actionConfirmPassword" name="confirm_password" autocomplete="current-password" disabled>
+                    </div>
                     <div id="actionFinalFields" hidden>
                         <p class="mb-2"><strong>Step 1.</strong> Download the locked approved file and edit it.
                             <a class="btn btn-sm btn-outline-primary ms-1" id="actionFinalDownload" href="#"><i class="fa-solid fa-download" aria-hidden="true"></i> Download locked file</a></p>

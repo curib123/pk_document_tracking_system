@@ -30,6 +30,16 @@
     var showRemark = needsDetails && !needsFinal;
     document.getElementById("actionRemarkFields").hidden = !showRemark;
     form.querySelector('[name="remark"]').disabled = !showRemark;
+    var needsPassword = action.getAttribute("data-password-confirm") === "yes";
+    var passBox = document.getElementById("actionPasswordFields");
+    if (passBox) {
+      passBox.hidden = !needsPassword;
+      passBox.querySelectorAll("input").forEach(function (input) {
+        input.disabled = !needsPassword;
+        input.required = needsPassword;
+        input.value = "";
+      });
+    }
     var finalBox = document.getElementById("actionFinalFields");
     var finalFile = document.getElementById("actionFinalFile");
     if (finalBox && finalFile) {

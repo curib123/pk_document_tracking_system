@@ -1,32 +1,41 @@
 <?php
+require_once APPPATH . 'services/audit/audit_describer.php';
 $dt_path = 'admin/audit';
-$dt_columns = ['timestamp' => 'Recorded At', 'actor' => 'User', 'action' => 'Action', 'subject' => 'Subject', 'status' => 'Result'];
+$dt_columns = ['timestamp' => 'Recorded At', 'actor' => 'User', 'summary' => 'What Happened', 'status' => 'Result'];
 $dt_rows = [];
 foreach ($rows as $row) {
+    $summary = Audit_describer::describe($row, (string) $row['actor_name']);
+    $resultText = $row['status'] === 'success' ? 'Done' : 'Not completed';
     $dt_rows[] = [
         'id' => $row['id'],
         'cells' => [
             'timestamp' => $row['timestamp'],
             'actor' => $row['actor_name'],
-            'action' => $row['action'],
-            'subject' => $row['subject'],
+            'summary' => $summary,
             'status' => $row['status']
         ],
         'display' => [
             'kind' => 'record',
-            'header' => ['title' => 'Audit Event', 'status' => $row['status']],
+            'header' => ['title' => 'Activity Record', 'status' => $row['status']],
             'sections' => [
                 [
                     'key' => 'overview',
-                    'title' => 'Recorded Activity',
+                    'title' => 'What Happened',
                     'fields' => [
-                        'Recorded At' => $row['timestamp'],
-                        'User' => $row['actor_name'],
+                        'What happened' => $summary,
+                        'Who' => $row['actor_name'],
+                        'When' => $row['timestamp'],
+                        'Result' => $resultText
+                    ]
+                ],
+                [
+                    'key' => 'technical',
+                    'title' => 'Technical Details (for IT only)',
+                    'fields' => [
                         'User ID' => $row['actor_id'],
-                        'Action' => $row['action'],
-                        'Subject' => $row['subject'],
-                        'Result' => ucfirst($row['status']),
-                        'Details' => $row['metadata'] ? json_encode($row['metadata'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : 'No additional details'
+                        'System action' => $row['action'],
+                        'Record' => $row['subject'],
+                        'Raw details' => $row['metadata'] ? json_encode($row['metadata'], JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES) : 'None'
                     ]
                 ]
             ]
@@ -37,7 +46,7 @@ foreach ($rows as $row) {
 $dt_q = $table['q'];
 $dt_filter = $table['status'];
 $dt_filter_values = ['status' => $table['status'], 'from' => $table['from'], 'to' => $table['to']];
-$dt_filters = ['status' => ['' => 'All Results', 'success' => 'Success', 'failed' => 'Failed']];
+$dt_filters = ['status' => ['' => 'All Results', 'success' => 'Done', 'failed' => 'Not completed']];
 $dt_page = $table['page'];
 $dt_limit = $table['limit'];
 $dt_total = $total;

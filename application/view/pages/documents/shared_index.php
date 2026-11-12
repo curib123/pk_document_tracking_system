@@ -115,6 +115,7 @@ foreach ($rows as $r) {
             'type' => 'action',
             'url' => 'documents/' . $cfg['domain'] . '/hard-delete',
             'label' => 'Hard Delete',
+            'password_confirm' => TRUE,
             'description' => 'This permanently deletes the disposed document, its files and related records. It cannot be undone.',
             'icon' => 'fa-solid fa-trash-can-arrow-up'
         ];

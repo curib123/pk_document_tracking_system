@@ -206,10 +206,15 @@ class Documents extends MY_Controller
         $this->confirmed();
         $id = (int) $this->input->post('id');
         try {
-            $title = (new Document_service())->hard_delete($domain, $id, (int) $this->user['id']);
-            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id, ['title' => $title]);
+            $this->require_password_confirmation();
+            $service = new Document_service();
+            $title = $service->hard_delete($domain, $id, (int) $this->user['id']);
+            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id,
+                ['title' => $title] + $service->last_hard_delete);
             $this->notice('Document permanently deleted.');
         } catch (Throwable $e) {
+            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id,
+                ['reason' => $e instanceof DomainException ? $e->getMessage() : 'error'], NULL, 'failed');
             $this->error_notice($e);
         }
         $this->back_to_register($domain);
