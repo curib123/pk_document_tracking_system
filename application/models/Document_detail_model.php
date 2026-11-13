@@ -178,20 +178,6 @@ class Document_detail_model extends CI_Model
                         'Date Released' => $document['date_released'] ?? ''
                     ]
                 ];
-                // Optional; read-only, exactly as recorded with the current revision.
-                $signatoryFields = [];
-                foreach ($signatoriesByDoc[$id] ?? [] as $index => $signatory) {
-                    $signatoryFields[($index + 1) . '. ' . $signatory['title']] =
-                        $signatory['full_name'] . ' · ' . $signatory['position'];
-                }
-                if ($signatoryFields) {
-                    $sections[] = [
-                        'key' => 'signatories',
-                        'title' => 'Signatories References',
-                        'description' => 'Signatories recorded with the current revision',
-                        'fields' => $signatoryFields
-                    ];
-                }
                 $fileFields = [];
                 $links = [];
                 foreach ($fileHistories[$id] ?? [] as $index => $file) {
@@ -224,6 +210,20 @@ class Document_detail_model extends CI_Model
                     'links' => $links,
                     'empty' => 'No Document Filehistory available within your file permissions.'
                 ];
+                // Optional; read-only, exactly as recorded with the current revision.
+                $signatoryFields = [];
+                foreach ($signatoriesByDoc[$id] ?? [] as $index => $signatory) {
+                    $signatoryFields[($index + 1) . '. ' . $signatory['title']] =
+                        $signatory['full_name'] . ' · ' . $signatory['position'];
+                }
+                if ($signatoryFields) {
+                    $sections[] = [
+                        'key' => 'signatories',
+                        'title' => 'Signatories References',
+                        'description' => 'Signatories recorded with the current revision',
+                        'fields' => $signatoryFields
+                    ];
+                }
             }
             if ($document['status'] === 'disposed')
                 array_splice($sections, 2, 0, [

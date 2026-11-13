@@ -11,18 +11,26 @@ class FakeResult
     private $rows;
     public function __construct(array $rows) { $this->rows = $rows; }
     public function result_array() { return $this->rows; }
+    public function row_array() { return $this->rows[0] ?? NULL; }
 }
 
 class FakeDb
 {
     public $exists = TRUE;
     public $saved = [];
+    public $history = [];
+    public $doc = ['id' => 1, 'status' => 'active', 'current_revision_id' => 10];
+    public $rolledBack = FALSE;
+    private $deleteRevision = NULL;
 
     public function table_exists($name) { return $this->exists && $name === 'softcopy_signatory_references'; }
 
     /** Mimics GROUP BY <column> ORDER BY MAX(id) DESC on the saved rows. */
-    public function query($sql)
+    public function query($sql, $params = [])
     {
+        if (strpos($sql, 'FROM softcopy_documents') !== FALSE) {
+            return new FakeResult($this->doc && (int) $params[0] === $this->doc['id'] ? [$this->doc] : []);
+        }
         preg_match('/`(signatory_\w+)` AS value/', $sql, $m);
         $column = $m[1];
         $groups = [];
@@ -38,9 +46,34 @@ class FakeDb
 
     public function insert($table, $row)
     {
-        $this->saved[] = $row;
+        if ($table === 'status_history') {
+            $this->history[] = $row;
+        } else {
+            $this->saved[] = $row;
+        }
         return TRUE;
     }
+
+    public function order_by() { return $this; }
+    public function get_where($table, $where)
+    {
+        return new FakeResult(array_values(array_filter($this->saved, static function ($row) use ($where) {
+            return $row['revision_id'] === $where['revision_id'];
+        })));
+    }
+    public function where($column, $value) { $this->deleteRevision = $value; return $this; }
+    public function delete($table)
+    {
+        $revision = $this->deleteRevision;
+        $this->saved = array_values(array_filter($this->saved, static function ($row) use ($revision) {
+            return ($row['revision_id'] ?? NULL) !== $revision;
+        }));
+        return TRUE;
+    }
+    public function trans_begin() {}
+    public function trans_status() { return TRUE; }
+    public function trans_commit() { return TRUE; }
+    public function trans_rollback() { $this->rolledBack = TRUE; }
 }
 
 $ci = new stdClass();
@@ -149,6 +182,36 @@ check('title options deduplicated', array_map('strtolower', array_map(['Signator
     ['approved by', 'prepared by']);
 check('one name option', count($options['full_name']), 1);
 check('positions independent', $options['position'], ['Documentation Officer', 'Plant Manager', 'Quality Manager']);
+
+// ---- Add to / correct an EXISTING document (no new revision) ----
+$ci->db->saved = [];
+$ci->db->history = [];
+$rows = [['title' => 'Prepared By', 'full_name' => 'Juan Dela Cruz', 'position' => 'Documentation Officer']];
+check('add signatories to existing document', $service->replace(1, $rows, 7, 'Late entry'), ['added' => 1, 'changed' => TRUE]);
+check('rows written against the current revision', [count($ci->db->saved), $ci->db->saved[0]['revision_id'], $ci->db->saved[0]['created_by']], [1, 10, 7]);
+check('audit entry written', [$ci->db->history[0]['action'], $ci->db->history[0]['user_id']], ['signatories_update', 7]);
+check('audit keeps before and after', [
+    strpos($ci->db->history[0]['remarks'], 'before: (none)') !== FALSE,
+    strpos($ci->db->history[0]['remarks'], 'Juan Dela Cruz') !== FALSE,
+    strpos($ci->db->history[0]['remarks'], 'Late entry') !== FALSE
+], [TRUE, TRUE, TRUE]);
+
+fails('unchanged list is rejected', function () use ($service, $rows) { $service->replace(1, $rows, 7); }, 'No changes');
+
+$edited = [['title' => 'Prepared By', 'full_name' => 'Juan D. Cruz', 'position' => 'Documentation Officer'],
+    ['title' => 'Approved By', 'full_name' => 'Maria Santos', 'position' => 'Plant Manager']];
+$service->replace(1, $edited, 8);
+check('edit replaces current list in order', array_column($ci->db->saved, 'signatory_full_name'), ['Juan D. Cruz', 'Maria Santos']);
+check('previous values kept in audit', strpos($ci->db->history[1]['remarks'], 'before: Prepared By: Juan Dela Cruz') !== FALSE, TRUE);
+
+$service->replace(1, [], 8);
+check('removing all signatories is allowed', count($ci->db->saved), 0);
+fails('incomplete row rejected', function () use ($service) {
+    $service->replace(1, [['title' => 'Prepared By', 'full_name' => '', 'position' => 'X']], 8);
+}, 'Full Name is required');
+$ci->db->doc['status'] = 'cancelled';
+fails('inactive document rejected', function () use ($service, $rows) { $service->replace(1, $rows, 7); }, 'active softcopy');
+check('rolled back on failure', $ci->db->rolledBack, TRUE);
 
 echo $failures ? "\n$failures failure(s)\n" : "\nAll signatory reference tests passed\n";
 exit($failures ? 1 : 0);
