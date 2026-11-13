@@ -76,6 +76,7 @@ $route['documents/(:any)']['GET'] = 'Documents/index/$1';
 
 // Add a softcopy document directly.
 $route['documents/softcopy/direct']['POST'] = 'Documents/direct_softcopy';
+$route['documents/softcopy/signatories']['POST'] = 'Documents/update_signatories';
 
 // Save document changes or dispose of a document.
 $route['documents/(:any)/save']['POST'] = 'Documents/save/$1';

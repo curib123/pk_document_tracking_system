@@ -23,6 +23,12 @@ $dt_columns = $cfg['domain'] === 'hardcopy'
         'category_name' => 'Category',
         'status' => 'Status'
     ];
+$signatoriesByDoc = [];
+if ($cfg['domain'] === 'softcopy') {
+    require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+    $signatoriesByDoc = (new Signatory_reference_service())
+        ->current_for_documents(array_map('intval', array_column($rows, 'id')));
+}
 $dt_rows = [];
 foreach ($rows as $r) {
     $cells = [];
@@ -56,7 +62,8 @@ foreach ($rows as $r) {
             'series_number' => $r['series_number'] ?? '',
             'category_id' => $r['category_id'],
             'new_revision_level' => $r['new_revision_level'] ?? '',
-            'page_number' => $r['page_number'] ?? ''
+            'page_number' => $r['page_number'] ?? '',
+            'signatories' => $signatoriesByDoc[(int) $r['id']] ?? []
         ];
     }
     $buttons = [['type' => 'view']];
@@ -64,6 +71,9 @@ foreach ($rows as $r) {
         !($cfg['domain'] === 'softcopy' && !empty($latest_files[$r['id']]['locked_at']));
     if ($canEdit)
         $buttons[] = ['type' => 'edit'];
+    // Signatories are metadata, so they stay editable even when the file is locked.
+    if ($cfg['domain'] === 'softcopy' && $can && !empty($r['can_write']) && $r['status'] === 'active')
+        $buttons[] = ['type' => 'edit', 'label' => 'Signatories', 'modal' => '#signatoryModal', 'form' => '#signatoryForm'];
     if ($cfg['domain'] === 'softcopy') {
       
         if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
@@ -283,6 +293,50 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
         </div>
     </div>
 </div>
+
+<?php if ($cfg['domain'] === 'softcopy' && $can): ?>
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="signatoryModal" tabindex="-1"
+        aria-labelledby="signatoryTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form id="signatoryForm" method="post" action="<?= site_url('documents/softcopy/signatories') ?>"
+                    data-confirm="Save the Signatories References for this document?" autocomplete="off">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-6" id="signatoryTitle">Signatories References</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <input type="hidden" name="id" value="">
+                            <div class="col-12">
+                                <label class="form-label" for="signatoryDocument">Document</label>
+                                <input class="form-control" id="signatoryDocument" name="title" readonly
+                                    autocomplete="off">
+                                <small class="form-text">Only the signatories change. The file, revision and other
+                                    details are not touched, and the previous list is kept in the audit history.</small>
+                            </div>
+                            <?php $this->load->view('pages/request/signatory_fields'); ?>
+                            <div class="col-12">
+                                <label class="form-label" for="signatoryRemarks">Reason
+                                    <span class="optional-label">(optional)</span></label>
+                                <textarea class="form-control" id="signatoryRemarks" name="remarks" rows="2"
+                                    maxlength="255" autocomplete="off"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="return_query" value="">
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                        value="<?= $this->security->get_csrf_hash() ?>">
+                    <div class="modal-footer"><button class="btn btn-light" type="button"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save Signatories</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if ($cfg['domain'] === 'softcopy'): ?>
     <div class="modal fade file-history-saas" data-bs-backdrop="static" data-bs-keyboard="false" id="fileHistoryModal"

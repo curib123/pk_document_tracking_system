@@ -178,6 +178,32 @@ class Documents extends MY_Controller
         $this->back_to_register('softcopy');
     }
 
+    /** Add or correct the Signatories References of an existing softcopy (audited). */
+    public function update_signatories()
+    {
+        $this->require_permission('softcopy', 'direct');
+        $this->confirmed();
+        try {
+            $id = (int) $this->input->post('id');
+            if (!$this->Document_model->manageable('softcopy', $id, $this->user)) {
+                throw new DomainException('Document is not available in your authorized scope.');
+            }
+            require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+            $service = new Signatory_reference_service();
+            $service->replace(
+                $id,
+                $service->from_post($this->input->post()),
+                (int) $this->user['id'],
+                trim((string) $this->input->post('remarks'))
+            );
+            $this->audit_created('softcopy_documents', $id);
+            $this->notice('Signatories References saved.');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
+        }
+        $this->back_to_register('softcopy', (int) $this->input->post('id'));
+    }
+
     public function save($domain)
     {
         $c = $this->Document_model->config($domain);

@@ -249,12 +249,14 @@
     });
   }
 
+  var rowSerial = 0;
+
   function addRow(section, values) {
     if (rowsOf(section).length >= MAX_ROWS) return null;
     var template = section.querySelector("template[data-signatory-template]");
     if (!template) return null;
     var row = template.content.firstElementChild.cloneNode(true);
-    var serial = (section.dataset.serial = String(Number(section.dataset.serial || 0) + 1));
+    var serial = ++rowSerial; // Global: the page can hold several signatory sections.
     row.querySelectorAll("input[data-combobox]").forEach(function (input) {
       var field = input.dataset.combobox;
       input.id = "signatory-" + field + "-" + serial;

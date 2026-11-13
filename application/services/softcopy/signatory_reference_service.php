@@ -188,6 +188,85 @@ class Signatory_reference_service
     }
 
     /**
+     * Authorized correction: add signatories to an existing document, or replace
+     * the list recorded with its current revision. The file, revision level and
+     * every other detail are untouched, and a locked file does not block this.
+     * The previous and new lists are written to status_history, so the change
+     * stays auditable. Opens and ends its own transaction.
+     *
+     * @return array{added:int, changed:bool}
+     */
+    public function replace(int $softcopyId, array $rows, int $actorId, string $remarks = ''): array
+    {
+        $rows = $this->validate($rows);
+        $db = $this->ci->db;
+        if (!$db->table_exists(self::TABLE)) {
+            throw new DomainException('Signatories References are not installed. Apply the 20261113 database migration.');
+        }
+        $db->trans_begin();
+        try {
+            $doc = $db->query(
+                'SELECT id, status, current_revision_id FROM softcopy_documents WHERE id=? FOR UPDATE',
+                [$softcopyId]
+            )->row_array();
+            if (!$doc || $doc['status'] !== 'active' || !(int) $doc['current_revision_id']) {
+                throw new DomainException('Select an active softcopy document.');
+            }
+            $revisionId = (int) $doc['current_revision_id'];
+            $before = [];
+            foreach ($db->order_by('sort_order')->order_by('id')
+                ->get_where(self::TABLE, ['revision_id' => $revisionId])->result_array() as $row) {
+                $before[] = [
+                    'title' => $row['signatory_title'],
+                    'full_name' => $row['signatory_full_name'],
+                    'position' => $row['signatory_position']
+                ];
+            }
+            if ($before === $rows) {
+                throw new DomainException('No changes to save.');
+            }
+            $db->where('revision_id', $revisionId)->delete(self::TABLE);
+            $this->save($softcopyId, $revisionId, $rows, $actorId);
+            $db->insert('status_history', [
+                'domain' => 'softcopy',
+                'document_id' => $softcopyId,
+                'previous_status' => 'active',
+                'new_status' => 'active',
+                'action' => 'signatories_update',
+                'user_id' => $actorId,
+                'remarks' => trim(
+                    ($remarks !== '' ? $remarks . ' | ' : '') .
+                    'Signatories before: ' . $this->describe($before) . ' | after: ' . $this->describe($rows)
+                )
+            ]);
+            if ($db->trans_status() === FALSE) {
+                throw new DomainException('The signatories could not be saved.');
+            }
+            if ($db->trans_commit() === FALSE) {
+                throw new DomainException('The signatories could not be committed.');
+            }
+        } catch (Throwable $e) {
+            $db->trans_rollback();
+            if ($e instanceof DomainException) {
+                throw $e;
+            }
+            log_message('error', 'Signatory update failed: ' . $e->getMessage());
+            throw new DomainException('Unable to update the signatories.');
+        }
+        return ['added' => count($rows), 'changed' => TRUE];
+    }
+
+    private function describe(array $rows): string
+    {
+        if (!$rows) {
+            return '(none)';
+        }
+        return implode('; ', array_map(static function ($row) {
+            return $row['title'] . ': ' . $row['full_name'] . ' (' . $row['position'] . ')';
+        }, $rows));
+    }
+
+    /**
      * Signatories of each document's current revision, keyed by document id.
      *
      * @param int[] $softcopyIds
