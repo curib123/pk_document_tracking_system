@@ -116,9 +116,20 @@ class Document_model extends CI_Model
         }
         if ($search !== '') {
             $this->db->group_start()->like('d.title', $search);
-            if ($domain === 'softcopy')
+            if ($domain === 'softcopy') {
                 $this->db->or_like('d.document_number', $search);
-            else
+                // Any signatory (title, full name or position) on any revision of the document.
+                if ($this->db->table_exists('softcopy_signatory_references')) {
+                    $like = $this->db->escape('%' . $this->db->escape_like_str($search) . '%');
+                    $this->db->or_where(
+                        "EXISTS (SELECT 1 FROM softcopy_signatory_references sr WHERE sr.softcopy_id = d.id AND " .
+                        "(sr.signatory_full_name LIKE {$like} ESCAPE '!' OR sr.signatory_title LIKE {$like} ESCAPE '!' " .
+                        "OR sr.signatory_position LIKE {$like} ESCAPE '!'))",
+                        NULL,
+                        FALSE
+                    );
+                }
+            } else
                 $this->db->or_like('d.sequence_number', $search);
             if ($domain === 'hardcopy' && !empty($browser['search']['paths'])) {
                 $this->db->or_group_start();
