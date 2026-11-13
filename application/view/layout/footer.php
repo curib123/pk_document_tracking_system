@@ -254,7 +254,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
-<script defer src="<?= base_url('assets/js/row-actions.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/row-actions.js?v=' . filemtime(FCPATH . 'assets/js/row-actions.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/action-feedback.js') ?>"></script>

@@ -18,8 +18,12 @@
     var decision = action.getAttribute("data-decision");
     var isDisposal = action.getAttribute("data-disposal") === "yes";
     var needsFinal = action.getAttribute("data-final-upload") === "yes";
+    var needsPassword = action.getAttribute("data-password-confirm") === "yes";
     var needsDetails =
-      isDisposal || needsFinal || ["returned", "rejected"].includes(decision);
+      isDisposal ||
+      needsFinal ||
+      needsPassword ||
+      ["returned", "rejected"].includes(decision);
     var title = action.getAttribute("data-title") || "Confirm Action";
     var description =
       action.getAttribute("data-description") ||
@@ -27,10 +31,9 @@
     document.getElementById("actionTitle").textContent = title;
     document.getElementById("actionDescription").textContent = description;
     form.setAttribute("data-confirm", title + "? " + description);
-    var showRemark = needsDetails && !needsFinal;
+    var showRemark = needsDetails && !needsFinal && !needsPassword;
     document.getElementById("actionRemarkFields").hidden = !showRemark;
     form.querySelector('[name="remark"]').disabled = !showRemark;
-    var needsPassword = action.getAttribute("data-password-confirm") === "yes";
     var passBox = document.getElementById("actionPasswordFields");
     if (passBox) {
       passBox.hidden = !needsPassword;
