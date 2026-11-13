@@ -155,7 +155,11 @@
     }).then(function (files) {
       var text = Object.keys(files).filter(function (name) {
         return name.indexOf("word/") === 0;
-      }).sort().map(function (name) { return xmlToText(files[name]); }).join("\n");
+      }).sort(function (a, b) {
+        // Header first: the labelled cells and the title under them live there.
+        var rank = function (n) { return /header/.test(n) ? 0 : /footer/.test(n) ? 2 : 1; };
+        return rank(a) - rank(b) || (a < b ? -1 : 1);
+      }).map(function (name) { return xmlToText(files[name]); }).join("\n");
       return { title: coreTitle(files["docProps/core.xml"]), text: text };
     });
   }
@@ -234,8 +238,17 @@
     return value.slice(0, 30);
   }
 
+  // Flattened text runs cells together ("Title Effectivity Date ..."), so cut a
+  // captured title at the next header label.
+  function cutAtNextLabel(value) {
+    return (value || "").replace(
+      /[\s|:]*(?:effectiv(?:e|ity)\b|rev(?:ision|\.)?\s*(?:no\b|number\b|level\b)|page\s*(?:no\b|number\b)|document\s*(?:no\b|number\b|code\b)|series\b|date\b)[\s\S]*$/i,
+      ""
+    );
+  }
+
   function usableTitle(title) {
-    title = (title || "").replace(/\s+/g, " ").trim();
+    title = cutAtNextLabel(title).replace(/\s+/g, " ").trim();
     // Word/Office write the source file name or a placeholder when untitled.
     if (!title || /^(untitled|microsoft (word|excel)\b.*)$/i.test(title) ||
         /\.(docx?|xlsx?|pdf|txt)$/i.test(title)) return "";
@@ -249,18 +262,19 @@
     if (!match) return "";
     var rest = text.slice(match.index + match[0].length);
     var line = /^[^\n|]{5,255}/.exec(rest);
-    return line ? line[0].trim() : "";
+    return line ? cutAtNextLabel(line[0]).trim() : "";
   }
 
   function extract(info) {
     var text = (info.text || "").slice(0, MAX_TEXT);
-    var title = usableTitle(info.title) ||
-      usableTitle(labelled(text, /\b(?:document\s+title|title)\b/, /([^\n|]{3,255})/)) ||
-      usableTitle(titleUnderHeader(text));
+    // Visible header content first; file properties are often a stale name.
+    var title = usableTitle(labelled(text, /\bdocument\s+title\b/, /([^\n|]{3,255})/)) ||
+      usableTitle(titleUnderHeader(text)) ||
+      usableTitle(info.title);
     var dateText = labelled(text, /\beffectiv(?:e|ity)\s+date/, /([^\n|]{6,40})/);
     return {
       title: title,
-      revision: cleanToken(labelled(text, /\brevision\s*(?:no\.?|number|level)/, /([^\s|]+)/)),
+      revision: cleanToken(labelled(text, /\brev(?:ision|\.)?\s*(?:no\.?|number|level)/, /([^\s|]+)/)),
       effective_date: dateText ? parseDate(dateText) : "",
     };
   }
@@ -270,8 +284,9 @@
   function setField(form, selector, value) {
     var field = form.querySelector(selector);
     // Hidden or disabled fields are not part of this action; leave them alone.
-    if (!field || field.disabled || field.closest("[hidden]")) return false;
+    if (!value || !field || field.disabled || field.closest("[hidden]")) return false;
     field.value = value;
+    field.dispatchEvent(new Event("input", { bubbles: true }));
     return true;
   }
 
@@ -293,13 +308,13 @@
     }).then(function (found) {
       if (mine !== token) return; // a newer file was chosen meanwhile
       var filled = [];
-      if (setField(form, '[name="title"]', found.title) && found.title) {
+      if (setField(form, '[name="title"]', found.title)) {
         filled.push("document title");
       }
-      if (setField(form, '[name="new_revision_level"]', found.revision) && found.revision) {
+      if (setField(form, '[name="new_revision_level"]', found.revision)) {
         filled.push("revision level");
       }
-      if (setField(form, '[name="effective_date"]', found.effective_date) && found.effective_date) {
+      if (setField(form, '[name="effective_date"]', found.effective_date)) {
         filled.push("effectivity date");
       }
       if (note) {
