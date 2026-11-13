@@ -669,7 +669,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 85),
 (1, 86),
 (1, 87),
-(1, 88),
 (2, 13),
 (2, 14),
 (2, 15),
@@ -764,7 +763,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (3, 81),
 (3, 86),
 (3, 87),
-(3, 88),
 (4, 29),
 (4, 33),
 (4, 34),
@@ -787,7 +785,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (4, 82),
 (4, 86),
 (4, 87),
-(4, 88),
 (5, 29),
 (5, 33),
 (5, 34),
@@ -815,8 +812,7 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (5, 80),
 (5, 81),
 (5, 86),
-(5, 87),
-(5, 88);
+(5, 87);
 
 INSERT INTO `role_permissions` (`role_id`, `permission_id`)
 SELECT existing_grants.`role_id`, external_permission.`id`
