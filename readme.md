@@ -157,6 +157,7 @@ updates address these cases:
 | Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
 | Multiple folder-only Softcopy Categories | [Folder category pattern migration](database/migrations/20261107_softcopy_folder_category_patterns.sql), after Softcopy Category Types |
 | Manual Series No. (drops the per-Document No. code pattern) | [Remove series patterns migration](database/migrations/20261112_remove_softcopy_series_patterns.sql) |
+| Optional Signatories References on Softcopy create/revise (editable dropdowns fed by saved values) | [Signatories References migration](database/migrations/20261113_softcopy_signatory_references.sql), after the preceding Softcopy updates |
 
 Existing prefix-only category patterns still work. New category patterns should
 include an initial sequence, such as `PPM-001`.

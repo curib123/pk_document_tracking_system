@@ -315,6 +315,9 @@ class Document_service
                 $db->where('id', $id)->update('softcopy_documents', ['current_revision_id' => NULL]);
                 if ($revisions) {
                     $db->where_in('revision_id', $revisions)->delete('revision_artifacts');
+                    if ($db->table_exists('softcopy_signatory_references')) {
+                        $db->where('softcopy_id', $id)->delete('softcopy_signatory_references');
+                    }
                     $db->where_in('id', $revisions)->delete('softcopy_revisions');
                 }
                 $db->delete('assignments', ['softcopy_id' => $id]);

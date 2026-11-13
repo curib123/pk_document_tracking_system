@@ -54,6 +54,11 @@ class Softcopy_direct_service
         if (!$payload['series_number_checker']) {
             $payload['document_number'] = '';
         }
+        // Optional Signatories References; all three fields are required per entry.
+        if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+            $payload['signatories'] = (new Signatory_reference_service())->from_post($post);
+        }
         $this->ci->load->model('Identity_model');
         $this->ci->load->model('Permission_model');
         $this->ci->load->model('Document_model');

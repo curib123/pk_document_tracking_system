@@ -2224,3 +2224,45 @@ a {
     justify-content: flex-end;
   }
 }
+
+/* Signatories References: repeatable rows of three editable searchable dropdowns. */
+.signatory-references-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.signatory-rows {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.signatory-row {
+  padding: 12px;
+  border: 1px solid var(--ui-line-soft);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.signatory-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.signatory-row-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .signatory-row-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

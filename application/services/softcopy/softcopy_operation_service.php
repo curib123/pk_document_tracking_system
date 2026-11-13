@@ -217,6 +217,7 @@ class Softcopy_operation_service
             )
                 throw new DomainException('Unable to register initial controlled revision.');
             $revisionId = (int) $db->insert_id();
+            $this->save_signatories($newId, $revisionId, $payload, (int) $ownerId);
             $db->where('id', $newId)->update('softcopy_documents', [
                 'current_revision_id' => $revisionId
             ]);
@@ -317,6 +318,7 @@ class Softcopy_operation_service
             )
                 throw new DomainException('Unable to save softcopy revision.');
             $revisionId = (int) $db->insert_id();
+            $this->save_signatories((int) $softcopyId, $revisionId, $payload, (int) $ownerId);
             $db->where('id', $softcopyId)->update('softcopy_documents', [
                 'current_revision_id' => $revisionId,
                 'title' => $title ?: $doc['title'],
@@ -359,6 +361,17 @@ class Softcopy_operation_service
             $reason
         );
         return ['document_id' => (int) $softcopyId];
+    }
+
+    /** Optional Signatories References entered with the create/revise action. */
+    private function save_signatories(int $softcopyId, int $revisionId, array $payload, int $ownerId): void
+    {
+        $rows = $payload['signatories'] ?? [];
+        if (!is_array($rows) || !$rows) {
+            return;
+        }
+        require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+        (new Signatory_reference_service())->save($softcopyId, $revisionId, $rows, $ownerId);
     }
 
     private function audit($id, $previous, $current, $action, $actor, $remarks)

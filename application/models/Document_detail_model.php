@@ -118,6 +118,12 @@ class Document_detail_model extends CI_Model
             foreach ($disposals as $disposal)
                 $disposalsByDoc[$disposal['document_id']] = Disposal_details::recorded($disposal);
         }
+        $signatoriesByDoc = [];
+        if ($domain === 'softcopy') {
+            require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+            $signatoriesByDoc = (new Signatory_reference_service())
+                ->current_for_documents(array_map('intval', array_column($rows, 'id')));
+        }
         $output = [];
         foreach ($rows as $document) {
             $id = (int) $document['id'];
@@ -172,6 +178,20 @@ class Document_detail_model extends CI_Model
                         'Date Released' => $document['date_released'] ?? ''
                     ]
                 ];
+                // Optional; read-only, exactly as recorded with the current revision.
+                $signatoryFields = [];
+                foreach ($signatoriesByDoc[$id] ?? [] as $index => $signatory) {
+                    $signatoryFields[($index + 1) . '. ' . $signatory['title']] =
+                        $signatory['full_name'] . ' · ' . $signatory['position'];
+                }
+                if ($signatoryFields) {
+                    $sections[] = [
+                        'key' => 'signatories',
+                        'title' => 'Signatories References',
+                        'description' => 'Signatories recorded with the current revision',
+                        'fields' => $signatoryFields
+                    ];
+                }
                 $fileFields = [];
                 $links = [];
                 foreach ($fileHistories[$id] ?? [] as $index => $file) {
