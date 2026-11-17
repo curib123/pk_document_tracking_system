@@ -36,7 +36,7 @@ class Scanned_documents extends MY_Controller
             if (!$service->global_access($this->user)) $this->db->where('d.created_by', (int) $this->user['id']);
             if ($category) $this->db->where('d.category_id', $category);
             if ($state['q'] !== '') {
-                $this->db->group_start()->like('d.title', $state['q'])->or_like('c.name', $state['q']);
+                $this->db->group_start()->like('d.title', $state['q'])->or_like('d.description', $state['q'])->or_like('c.name', $state['q']);
                 if (!empty($browser['search']['categories'])) $this->db->or_where_in('d.category_id', $browser['search']['categories']);
                 $this->db->group_end();
             }

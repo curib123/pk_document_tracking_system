@@ -32,6 +32,7 @@
       form.elements.document_version.value = data.version || '';
       if (!data.id) return;
       form.elements.title.value = data.title || '';
+      form.elements.description.value = data.description || '';
       form.elements.scanned_category_id.value = data.category_id || '';
       ['retention_start_date', 'retention_end_date'].forEach(function (key) { form.elements[key].value = data[key] || ''; });
     }

@@ -19,6 +19,9 @@ refuses(fn() => Scanned_policy::metadata('scanned_create', array_replace($p, ['r
 refuses(fn() => Scanned_policy::date('2026-02-30'), 'impossible date refused');
 refuses(fn() => Scanned_policy::date('2026-1-1'), 'noncanonical date refused');
 check(Scanned_policy::action('scanned_update') === 'edit' && Scanned_policy::action('scanned_delete') === 'delete', 'update and delete require distinct permissions');
+Scanned_policy::metadata('scanned_create', array_replace($p, ['description' => str_repeat('a', 2000)]));
+check(TRUE, '2000 character description accepted');
+refuses(fn() => Scanned_policy::metadata('scanned_update', array_replace($p, ['description' => str_repeat('a', 2001)])), 'overlong description refused');
 $zone = new DateTimeZone('Asia/Manila');
 check(Scanned_policy::countdown('2026-11-17', new DateTimeImmutable('2026-11-17 16:00', $zone)) === '0 days 8 hours remaining', 'retention includes full final day');
 check(Scanned_policy::countdown('2026-11-17', new DateTimeImmutable('2026-11-18 00:00', $zone)) === 'Expired: 0 days 0 hours overdue', 'expiry begins at Manila midnight');

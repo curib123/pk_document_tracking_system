@@ -10,7 +10,7 @@ class Audit_context
     private $targets = [];
     private $before;
     private $truncated = FALSE;
-    private const FIELDS = ['id','title','name','username','asset_number','folder_name','version','status','active',
+    private const FIELDS = ['id','title','description','name','username','asset_number','folder_name','version','status','active',
         'holder_id','area_id','specific_id','asset_id','location_id','category_id','parent_id',
         'role_id','leader_id','position_title','document_id','softcopy_id','hardcopy_id','user_id',
         'recipient_id','current_holder_id','destination','recipient_status','transferred_by','accepted_by',

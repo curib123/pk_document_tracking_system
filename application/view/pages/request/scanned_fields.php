@@ -22,6 +22,11 @@
   <label class="form-label" for="scanTitle">Document Title / Category Name</label>
   <input class="form-control" id="scanTitle" name="title" maxlength="255" data-scanned-required>
 </div>
+<div class="col-12" data-scanned-for="scanned_create scanned_update">
+  <label class="form-label" for="scanDescription">Document Description (optional)</label>
+  <textarea class="form-control" id="scanDescription" name="description" rows="3" maxlength="2000"></textarea>
+  <small class="form-text">Describe the document's contents or purpose (up to 2000 characters).</small>
+</div>
 <div class="col-12" data-scanned-for="scanned_category_create">
   <label class="form-label" for="scanParent">Approved Parent Category</label>
   <select class="form-select" id="scanParent" name="parent_id">

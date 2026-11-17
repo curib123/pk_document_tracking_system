@@ -22,6 +22,7 @@ foreach ($rows as $row) {
         ],
         'display' => ['kind' => 'document', 'header' => ['title' => $row['title'], 'status' => $row['status']], 'sections' => [
             ['key' => 'overview', 'title' => 'Scanned Document', 'fields' => [
+                'Document Description' => $row['description'] ?: 'No description',
                 'Category' => $paths[$row['category_id']] ?? $row['category_name'],
                 'Created' => $row['created_at'], 'Updated' => $row['updated_at'], 'Retention Start' => $row['retention_start_date'],
                 'Retention End' => $row['retention_end_date'], 'Time Remaining' => Scanned_policy::countdown($row['retention_end_date'])

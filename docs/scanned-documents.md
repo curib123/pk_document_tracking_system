@@ -7,7 +7,7 @@ Use the shared **Table / Folder** switcher to browse records in a table or the e
 1. Open **Scanned Documents → Upload / Request Category**.
 2. To add a folder, choose **Create Category / Folder**, enter its name, select an approved parent (or no parent for a root folder), and give a reason. Save the draft, then submit it.
 3. A Document Control Officer approves the category in **My Tasks → Scanned Document Request**. Only approved folders appear in upload forms. Nested folders show their full paths.
-4. Choose **Upload Scanned Document**, enter a title, approved folder, retention start/end dates and a reason. Attach up to 20 files, 15 MB each. Supported formats: PDF, PNG, JPEG, TXT, DOCX and XLSX. Save, then submit for approval.
+4. Choose **Upload Scanned Document**, enter a title, optional document description (up to 2000 characters), approved folder, retention start/end dates and a reason. Attach up to 20 files, 15 MB each. Supported formats: PDF, PNG, JPEG, TXT, DOCX and XLSX. Save, then submit for approval.
 5. To change or delete an approved record, use **Request Update** or **Request Deletion**. The existing record stays available until final DCO approval. Updating without attachments keeps current files; selecting attachments replaces the entire current set after approval. Deletion hides the record and its files; request history and reasons remain available.
 
 All proposals and approval decisions require remarks. Created and updated timestamps appear in the register. The retention countdown shows days and hours remaining; the end date includes the entire day in Philippine time. A popup appears after expiration, checked approximately once per minute while the application is open. Expiration does not automatically delete a document.
@@ -24,7 +24,7 @@ At **4:00 PM Asia/Manila**, users with upload permission receive one daily alarm
 
 Allocate a folder to one or more users to control their upload choices. Descendants inherit the nearest allocation; a nested folder can have its own allocation for different users. Clearing a nested allocation restores inheritance; clearing a root allocation makes that branch shared. Existing unallocated folders remain shared. Approved category requests start allocated to their requester. Allocation does not grant access to another user's documents. Folder selection is checked when saving, submitting and approving a request.
 
-For an existing installation, apply `database/migrations/20261117_scanned_documents.sql` once (reruns are safe). Then apply `database/migrations/20261117_scanned_category_allocations.sql` for Master Data folders and user allocations. The repository's database import includes both migrations. Existing document tables and records are preserved.
+For an existing installation, apply `database/migrations/20261117_scanned_documents.sql` once (reruns are safe). Then apply `database/migrations/20261117_scanned_category_allocations.sql` for Master Data folders and user allocations. Apply `database/migrations/20261117_scanned_document_descriptions.sql` to add optional document descriptions. The repository's database import includes these migrations. Existing document tables and records are preserved.
 
 ## Verification
 

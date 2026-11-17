@@ -64,6 +64,7 @@ try:
         form = page.locator('#editForm')
         form.locator('[name=subject]').fill('Browser scanned upload')
         form.locator('[name=title]').fill('Browser Scanned Document')
+        form.locator('[name=description]').fill('Scanned invoices for backup and review.')
         form.locator('[name=scanned_category_id]').select_option(index=1)
         form.locator('[name=retention_start_date]').fill('2026-11-01')
         form.locator('[name=retention_end_date]').fill('2026-11-17')
@@ -90,6 +91,7 @@ try:
         row = approver.locator('tbody tr').filter(has_text='Browser Scanned Document')
         row.locator('.js-view').click()
         expect(approver.locator('#viewModal')).to_be_visible()
+        expect(approver.locator('#viewModal')).to_contain_text('Scanned invoices for backup and review.')
         links = approver.locator('#viewModal a[href*="scanned/file"]')
         expect(links).to_have_count(2)
         file_url = links.first.get_attribute('href')
@@ -110,11 +112,16 @@ try:
         page.goto(base + '/documents/scanned')
         expect(page.locator('tbody tr')).to_contain_text('Browser Scanned Document')
         page.locator('tbody .js-view').click()
+        expect(page.locator('#viewModal')).to_contain_text('Scanned invoices for backup and review.')
         expect(page.locator('#viewModal a[href*="scanned/file"]')).to_have_count(2)
         approved_url = page.locator('#viewModal a[href*="scanned/file"]').first.get_attribute('href')
         assert uploader.request.get(approved_url).status == 200
         assert outside.request.get(approved_url).status == 403
         page.locator('#viewModal [data-bs-dismiss=modal]').first.click()
+        edit_url = page.locator('tbody tr').filter(has_text='Browser Scanned Document').get_by_role('link', name='Request Update').get_attribute('href')
+        page.goto(edit_url)
+        expect(page.locator('#editForm [name=description]')).to_have_value('Scanned invoices for backup and review.')
+        page.goto(base + '/documents/scanned')
         page.locator('[data-scan-alarm-enable]').first.click()
         assert page.evaluate("localStorage.getItem('pk-scan-alarm-sound')") == 'yes'
         page.get_by_role('link', name='Switch to folder tree view').click()

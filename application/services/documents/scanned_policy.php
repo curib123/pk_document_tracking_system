@@ -32,6 +32,8 @@ final class Scanned_policy
         if ($title === '' || mb_strlen($title) > $max)
             throw new DomainException('A title is required (maximum ' . $max . ' characters).');
         if ($type === 'scanned_category_create') return;
+        if (mb_strlen((string) ($payload['description'] ?? '')) > 2000)
+            throw new DomainException('Document description must not exceed 2000 characters.');
         $start = self::date((string) ($payload['retention_start_date'] ?? ''));
         $end = self::date((string) ($payload['retention_end_date'] ?? ''));
         if ($end < $start)

@@ -87,6 +87,7 @@ class Scanned_document_service
         $oldPayload = $old ? json_decode($old['payload'], TRUE) : [];
         $payload = [
             'document_domain' => 'scanned',
+            'description' => trim((string) ($post['description'] ?? $oldPayload['description'] ?? '')),
             'subject' => trim((string) ($post['subject'] ?? '')), 'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')), 'parent_id' => (int) ($post['parent_id'] ?? 0),
             'scanned_category_id' => (int) ($post['scanned_category_id'] ?? 0),
@@ -98,6 +99,8 @@ class Scanned_document_service
         $this->validate($type, $payload, (int) $user['id'], FALSE);
         if (in_array($type, ['scanned_update', 'scanned_delete'], TRUE)) {
             $doc = $this->ci->db->get_where('scanned_documents', ['id' => $payload['scanned_document_id']])->row_array();
+            if (!array_key_exists('description', $post) && !array_key_exists('description', $oldPayload))
+                $payload['description'] = $doc['description'] ?? '';
             // Preserve the version the user actually edited, including returned requests.
             $payload['document_version'] = (int) ($post['document_version'] ?? $oldPayload['document_version'] ?? $doc['version']);
             if ($payload['document_version'] !== (int) $doc['version'])
@@ -188,6 +191,8 @@ class Scanned_document_service
             'title' => $p['title'], 'category_id' => $p['scanned_category_id'],
             'retention_start_date' => $p['retention_start_date'], 'retention_end_date' => $p['retention_end_date']
         ];
+        if ($type !== 'scanned_delete' && array_key_exists('description', $p))
+            $data['description'] = trim((string) $p['description']);
         if ($type === 'scanned_create') {
             $data['created_by'] = (int) $request['requested_by'];
             $this->ci->db->insert('scanned_documents', $data); $id = (int) $this->ci->db->insert_id();
