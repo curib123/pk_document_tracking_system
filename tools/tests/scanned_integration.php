@@ -34,7 +34,7 @@ $fixture = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?:
 $fixture->query('SET FOREIGN_KEY_CHECKS=0');
 foreach ($source->query('SHOW FULL TABLES WHERE Table_type="BASE TABLE"') as $table) {
     $table = array_values($table)[0];
-    if (in_array($table, ['scanned_documents', 'scanned_categories'], TRUE)) continue;
+    if (in_array($table, ['scanned_documents', 'scanned_categories', 'scanned_category_allocations'], TRUE)) continue;
     $ddl = $source->query('SHOW CREATE TABLE `' . $table . '`')->fetch_row()[1];
     $fixture->query($ddl);
 }
@@ -53,6 +53,8 @@ function migrate(mysqli $db, string $sql): void {
 }
 $migration = file_get_contents($root . '/database/migrations/20261117_scanned_documents.sql');
 migrate($fixture, $migration); migrate($fixture, $migration);
+$allocationMigration = file_get_contents($root . '/database/migrations/20261117_scanned_category_allocations.sql');
+migrate($fixture, $allocationMigration); migrate($fixture, $allocationMigration);
 $fixture->query("INSERT IGNORE INTO role_permissions(role_id,permission_id) SELECT 3,id FROM permissions WHERE module_key='scanned_documents'");
 putenv('PK_TEST_DB=1'); putenv('DB_DATABASE=' . $name);
 define('PK_ROOT', $root); define('APPPATH', $root . '/application/');
@@ -138,6 +140,24 @@ try {
     verify($fixture->query('SELECT status FROM scanned_documents')->fetch_row()[0] === 'deleted', 'DCO deletion applied');
     verify($fixture->query("SELECT status FROM files WHERE id=$file")->fetch_row()[0] === 'deleted', 'deleted files no longer approved');
     verify(count($scanned->alerts($uploader, new DateTimeImmutable('2026-11-18 16:00:00', new DateTimeZone('Asia/Manila')))) === 1, 'deleted document excluded from reminders');
+    require APPPATH . 'services/places/scanned_category_service.php';
+    $folders = new Scanned_category_service();
+    $rootFolder = $folders->save(['name'=>'Allocated Root', 'save_allocations'=>'1', 'user_ids'=>[3]], $dco);
+    $nestedFolder = $folders->save(['name'=>'Nested Folder', 'parent_id'=>$rootFolder], $dco);
+    $privateFolder = $folders->save(['name'=>'Private Child', 'parent_id'=>$rootFolder, 'save_allocations'=>'1', 'user_ids'=>[4]], $dco);
+    verify(in_array($nestedFolder, $folders->usable_ids($uploader), TRUE), 'Master Data allocation covers nested folders');
+    verify(!in_array($rootFolder, $folders->usable_ids($outsider), TRUE) && in_array($privateFolder, $folders->usable_ids($outsider), TRUE), 'nested allocation can be assigned to another user');
+    verify(!in_array($privateFolder, $folders->usable_ids($uploader), TRUE), 'child allocation overrides inherited allocation');
+    denied(fn() => $folders->save(['name'=>'Unauthorized'], $uploader), 'request permission does not allow direct folder creation');
+    denied(fn() => $folders->save(['id'=>$rootFolder, 'version'=>1, 'name'=>'Allocated Root', 'user_ids'=>[4]], $uploader), 'allocation permission is enforced in service');
+    denied(fn() => $folders->save(['id'=>$rootFolder, 'version'=>1, 'name'=>'Allocated Root', 'parent_id'=>$nestedFolder], $dco), 'folder cannot move beneath its descendant');
+    denied(fn() => $folders->save(['name'=>'Inactive target', 'user_ids'=>[999999]], $dco), 'unknown user allocation rolls back');
+    $folders->save(['id'=>$rootFolder, 'version'=>1, 'name'=>'Renamed Root'], $dco);
+    denied(fn() => $folders->save(['id'=>$rootFolder, 'version'=>1, 'name'=>'Stale Root'], $dco), 'stale folder edits are refused');
+    verify(in_array($nestedFolder, $folders->usable_ids($uploader), TRUE), 'editing folder preserves allocations when allocation fields omitted');
+    $folders->save(['id'=>$rootFolder, 'version'=>2, 'name'=>'Renamed Root', 'save_allocations'=>'1'], $dco);
+    verify(in_array($rootFolder, $folders->usable_ids($outsider), TRUE), 'clearing root allocation makes it shared');
+    verify($fixture->query("SELECT request_id FROM scanned_categories WHERE id=$rootFolder")->fetch_row()[0] === NULL, 'direct DCO folder creation requires no request');
     echo "$count integration checks passed\n";
     if (in_array('--keep', $argv, TRUE)) {
         $keepFixture = TRUE;
