@@ -108,7 +108,7 @@ class Request_model extends CI_Model
         $fileIds = [];
         foreach ($rows as $row) {
             if (!in_array($row['type'], [
-                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise', 'scanned_create', 'scanned_update'
             ], TRUE))
                 continue;
             $payload = json_decode((string) ($row['payload'] ?? ''), TRUE) ?: [];
@@ -117,6 +117,8 @@ class Request_model extends CI_Model
                 $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] ??
                 [$payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0]
             )))));
+            if (str_starts_with($row['type'], 'scanned_'))
+                $ids = array_values(array_unique(array_map('intval', $payload['scanned_file_ids'] ?? [])));
             // The DCO's final file replaces the proposed file in the request view.
             $finalId = (int) ($payload['final_file_id'] ?? 0);
             if ($finalId && str_starts_with($row['type'], 'softcopy_'))

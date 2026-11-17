@@ -218,10 +218,12 @@ foreach ($rows as $row) {
     array_splice($requestSections, 2, 0, [$filesSection]);
   }
   if ($tab === 'scanned' && !empty($payload['scanned_file_ids'])) {
-    $scanLinks = [];
-    foreach ($payload['scanned_file_ids'] as $index => $fileId)
-      $scanLinks[] = ['label' => 'Scanned attachment ' . ($index + 1), 'url' => site_url('documents/scanned/file/' . (int) $fileId . '?request_id=' . (int) $row['id'])];
-    $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => [], 'links' => $scanLinks];
+    $scanLinks = []; $scanFields = [];
+    foreach ($row['attachment_files'] ?? [] as $index => $attachment) {
+      $scanFields[($index + 1) . '. ' . $attachment['original_name']] = number_format((int) $attachment['size']) . ' bytes';
+      $scanLinks[] = ['label' => $attachment['original_name'], 'url' => site_url('documents/scanned/file/' . (int) $attachment['id'] . '?request_id=' . (int) $row['id'])];
+    }
+    $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => $scanFields, 'links' => $scanLinks];
   }
   $display = [
     'kind' => $isDocumentRequest ? 'document' : 'record',

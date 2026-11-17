@@ -4,9 +4,11 @@ $can = static fn($action) => isset($permissions['*']) || !empty($permissions['sc
 $paths = array_column($categories, 'path', 'id');
 $dt_rows = [];
 foreach ($rows as $row) {
-    $links = [];
-    foreach ($files[$row['id']] ?? [] as $file)
+    $links = []; $fileFields = [];
+    foreach ($files[$row['id']] ?? [] as $index => $file) {
+        $fileFields[($index + 1) . '. ' . $file['original_name']] = number_format((int) $file['size']) . ' bytes';
         $links[] = ['label' => $file['original_name'], 'url' => site_url('documents/scanned/file/' . (int) $file['id'])];
+    }
     $buttons = [['type' => 'view']];
     if ($row['status'] === 'active') foreach (['edit' => ['scanned_update', 'Request Update'], 'delete' => ['scanned_delete', 'Request Deletion']] as $action => [$type, $label])
         if ($can($action) && (isset($permissions['*']) || !empty($permissions['requests']['add'])))
@@ -24,7 +26,7 @@ foreach ($rows as $row) {
                 'Created' => $row['created_at'], 'Updated' => $row['updated_at'], 'Retention Start' => $row['retention_start_date'],
                 'Retention End' => $row['retention_end_date'], 'Time Remaining' => Scanned_policy::countdown($row['retention_end_date']),
                 'Next Upload Due' => $row['scan_due_date'] ?: 'Not scheduled'
-            ]], ['key' => 'files', 'title' => 'Approved Files', 'links' => $links, 'fields' => []]
+            ]], ['key' => 'files', 'title' => 'Approved Files', 'links' => $links, 'fields' => $fileFields]
         ]], 'buttons' => $buttons
     ];
 }
