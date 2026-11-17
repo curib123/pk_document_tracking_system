@@ -165,6 +165,8 @@ class Request_model extends CI_Model
         $references = [
             'categories' => ['name', ['category_id' => 'Proposed Category']],
             'external_documents' => ['title', ['external_document_id' => 'Selected External Document']],
+            'scanned_documents' => ['title', ['scanned_document_id' => 'Selected Scanned Document']],
+            'scanned_categories' => ['name', ['scanned_category_id' => 'Approved Category', 'parent_id' => 'Approved Parent Folder']],
             'subsidiaries' => ['name', ['subsidiary_id' => 'Proposed Subsidiary']],
             'areas' => ['name', ['area_id' => 'Proposed Area', 'destination_area_id' => 'Destination Area']],
             'specifics' => ['name', ['specific_id' => 'Proposed Specific', 'destination_specific_id' => 'Destination Specific']],
@@ -227,6 +229,7 @@ class Request_model extends CI_Model
                 'document_number' => 'Proposed Document Number',
                 'external_document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
+                'scan_due_date' => 'Next Scanned File Upload Due',
                 'retention_period' => 'Retention Period',
                 'retention_start_date' => 'Retention Start Date',
                 'retention_end_date' => 'Retention End Date',

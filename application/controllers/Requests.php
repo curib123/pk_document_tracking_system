@@ -42,6 +42,10 @@ class Requests extends MY_Controller
         $actionModules = [
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
+            'scanned_create' => 'scanned_documents',
+            'scanned_update' => 'scanned_documents',
+            'scanned_delete' => 'scanned_documents',
+            'scanned_category_create' => 'scanned_categories',
             'external_create' => 'external_documents',
             'external_revise' => 'external_documents',
             'transfer' => 'transfer',
@@ -51,14 +55,26 @@ class Requests extends MY_Controller
         ];
         $requestTypes = [];
         foreach ($this->Request_model->types($tab) as $type) {
-            if (isset($actionModules[$type]) && $this->can($actionModules[$type], 'request'))
+            if (isset($actionModules[$type]) && $this->can($actionModules[$type],
+                ['scanned_update' => 'edit', 'scanned_delete' => 'delete'][$type] ?? 'request'))
                 $requestTypes[] = $type;
+        }
+        $scannedOptions = []; $scannedCategories = [];
+        if ($tab === 'scanned') {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            $service = new Scanned_document_service();
+            if (!$task) {
+                if (!$service->global_access($this->user)) $this->db->where('created_by', (int) $this->user['id']);
+                $scannedOptions = $this->db->order_by('title')->get_where('scanned_documents', ['status' => 'active'])->result_array();
+            }
+            $scannedCategories = $service->categories();
         }
         $history = $this->Request_model->histories(array_column($rows, 'id'));
         $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
         $tabLabels = [
             'softcopy' => 'Softcopy Document Request',
             'external' => 'External Document Request',
+            'scanned' => 'Scanned Document Request',
             'hardcopy' => 'Hardcopy Request',
             'hardcopy-transfer' => 'Hardcopy Transfer Request',
             'hardcopy-disposal' => 'Disposal Request',
@@ -82,6 +98,8 @@ class Requests extends MY_Controller
                 'tab' => $tab,
                 'task' => $task,
                 'allowed_request_types' => $requestTypes,
+                'scanned_options' => $scannedOptions,
+                'scanned_categories' => $scannedCategories,
                 'rows' => $rows,
                 'total' => $total,
                 'table' => $state,
@@ -166,7 +184,7 @@ class Requests extends MY_Controller
                 $tab,
                 $this->input->post(),
                 $this->user,
-                $_FILES['external_attachment'] ?? ($_FILES['revision_attachment'] ?? NULL)
+                $_FILES['scanned_attachment'] ?? ($_FILES['external_attachment'] ?? ($_FILES['revision_attachment'] ?? NULL))
             );
             $this->audit_created('requests', $savedId);
             $this->notice('Request draft saved.');

@@ -68,6 +68,8 @@ $route['notifications/inbox/read']['POST'] = 'Notifications/mark_read';
 */
 
 // Display a document section or category.
+$route['documents/scanned']['GET'] = 'Scanned_documents/index';
+$route['documents/scanned/file/(:num)']['GET'] = 'Scanned_documents/file/$1';
 $route['documents/external']['GET'] = 'External_documents/index';
 $route['documents/external/direct']['POST'] = 'External_documents/direct';
 $route['documents/external/dispose']['POST'] = 'External_documents/dispose';

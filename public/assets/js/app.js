@@ -702,7 +702,7 @@
   // One request modal is reused across all request types; hide irrelevant fields.
   function updateRequestActionFields() {
     var select = document.getElementById("reqType");
-    if (!select) return;
+    if (!select || select.form.hasAttribute("data-scanned-form")) return;
     var allowed;
     try {
       allowed = JSON.parse(select.form.dataset.allowedRequestTypes || "null");

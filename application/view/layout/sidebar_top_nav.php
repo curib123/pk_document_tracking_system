@@ -73,7 +73,7 @@ $navPage = end($navParts);
             <?php endif; ?>
 
             <!-- Document Management -->
-            <?php if ($visible('hardcopy') || $visible('softcopy') || $visible('external_documents')): ?>
+            <?php if ($visible('hardcopy') || $visible('softcopy') || $visible('external_documents') || $visible('scanned_documents')): ?>
                 <div class="side-heading">Document Management</div>
 
                 <?php if ($visible('hardcopy')): ?>
@@ -107,6 +107,12 @@ $navPage = end($navParts);
                         External Documents
                     </a>
                 <?php endif; ?>
+            <?php endif; ?>
+
+            <?php if ($visible('scanned_documents')): ?>
+                <a class="side-link<?= $active('documents/scanned') ?>" href="<?= site_url('documents/scanned') ?>">
+                    <i class="fa-solid fa-file-image" aria-hidden="true"></i> Scanned Documents
+                </a>
             <?php endif; ?>
 
             <!-- Document Requests -->

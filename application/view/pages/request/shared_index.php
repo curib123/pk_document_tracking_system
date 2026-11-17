@@ -4,6 +4,7 @@ require_once APPPATH . 'services/request/request_policy.php';
 $tabs = [
   'softcopy' => 'Softcopy Request',
   'external' => 'External Document Request',
+  'scanned' => 'Scanned Document Request',
   'hardcopy' => 'Hardcopy Request',
   'hardcopy-transfer' => 'Hardcopy Transfer Request',
   'hardcopy-disposal' => 'Disposal Request',
@@ -16,6 +17,7 @@ if (!$task) {
 $typeMap = [
   'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise'],
   'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],
+  'scanned' => ['scanned_create' => 'Upload', 'scanned_update' => 'Update', 'scanned_delete' => 'Delete', 'scanned_category_create' => 'Create Category'],
   'hardcopy' => [],
   'hardcopy-transfer' => ['transfer' => 'Transfer'],
   'hardcopy-disposal' => ['disposal' => 'Disposal Request'],
@@ -215,6 +217,12 @@ foreach ($rows as $row) {
     }
     array_splice($requestSections, 2, 0, [$filesSection]);
   }
+  if ($tab === 'scanned' && !empty($payload['scanned_file_ids'])) {
+    $scanLinks = [];
+    foreach ($payload['scanned_file_ids'] as $index => $fileId)
+      $scanLinks[] = ['label' => 'Scanned attachment ' . ($index + 1), 'url' => site_url('documents/scanned/file/' . (int) $fileId . '?request_id=' . (int) $row['id'])];
+    $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => [], 'links' => $scanLinks];
+  }
   $display = [
     'kind' => $isDocumentRequest ? 'document' : 'record',
     'domain' => $documentDomain,
@@ -242,6 +250,11 @@ foreach ($rows as $row) {
     'document_number' => $payload['document_number'] ?? '',
     'category_id' => $payload['category_id'] ?? '',
     'softcopy_id' => $row['softcopy_id'] ?? '',
+    'scanned_document_id' => $payload['scanned_document_id'] ?? '',
+    'scanned_category_id' => $payload['scanned_category_id'] ?? '',
+    'document_version' => $payload['document_version'] ?? '',
+    'parent_id' => $payload['parent_id'] ?? '',
+    'scan_due_date' => $payload['scan_due_date'] ?? '',
     'external_document_id' => $payload['external_document_id'] ?? '',
     'retention_period' => $payload['retention_period'] ?? '',
     'hardcopy_id' => $row['hardcopy_id'] ?? '',
@@ -318,6 +331,7 @@ foreach ($rows as $row) {
         'type' => 'action',
         'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
+        'remark_required' => $tab === 'scanned',
         'label' => $label,
         'description' => "Record {$record['title']} for this workflow step.",
         'icon' => $decision === 'approved'
@@ -416,6 +430,7 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
       <div class="modal-content">
         <form id="editForm" method="post" enctype="multipart/form-data"
           action="<?= site_url("my-requests/{$tab}/save") ?>"
+          <?= $tab === 'scanned' ? 'data-scanned-form' : '' ?>
           data-allowed-request-types="<?= html_escape(json_encode($allowed_request_types)) ?>" <?= $tab === 'hardcopy' ? ' data-hardcopy-upsert="yes" ' : ($tab === 'hardcopy-transfer' ? ' data-hardcopy-transfer="yes" ' : '') ?>
           data-confirm="Save request draft?" autocomplete="off">
           <div class="modal-header">
@@ -425,7 +440,9 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
           <div class="modal-body">
             <div class="row g-3">
               <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
-              <?php if ($tab === 'softcopy'): ?>
+              <?php if ($tab === 'scanned'): ?>
+                <?php $this->load->view('pages/request/scanned_fields', compact('allowed_request_types', 'scanned_options', 'scanned_categories')); ?>
+              <?php elseif ($tab === 'softcopy'): ?>
                 <?php $this->load->view('pages/request/softcopy_fields', [
                   'softcopy_options' => $softcopy_options,
                   'category_options' => $numbered_category_options,

@@ -58,6 +58,8 @@
                 data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>">
                 <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
+        <?php elseif ($type === 'link'): ?>
+            <a class="btn-icon record-action" href="<?= html_escape(site_url($button['url'])) ?>"><?= html_escape($label) ?></a>
         <?php elseif ($type === 'download'): ?>
             <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>" href="<?= !empty($button['same_origin'])
@@ -76,6 +78,7 @@
                 title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
                 data-url="<?= site_url($button['url']) ?>" data-id="<?= (int) $dt_row['id'] ?>"
                 data-decision="<?= html_escape($button['decision'] ?? '') ?>"
+                data-remark-required="<?= !empty($button['remark_required']) ? 'yes' : 'no' ?>"
                 data-disposal="<?= !empty($button['disposal']) ? 'yes' : 'no' ?>"
                 data-final-upload="<?= !empty($button['final_upload']) ? 'yes' : 'no' ?>" data-title="<?= html_escape(!empty($button['final_upload']) ? 'Upload Final Document' : $label) ?>"
                 data-password-confirm="<?= !empty($button['password_confirm']) ? 'yes' : 'no' ?>"
