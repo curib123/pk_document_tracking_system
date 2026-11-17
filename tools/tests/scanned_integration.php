@@ -16,6 +16,8 @@ function cleanup_fixture(mysqli $source, string $name, string $root): void {
         if (!preg_match('/^[a-f0-9]{64}$/D', $row['storage_name'])) continue;
         $path = $root . '/storage/documents/' . $row['storage_name'];
         if (is_file($path)) unlink($path);
+        $preview = $root . '/storage/previews/' . $row['storage_name'] . '.pdf';
+        if (is_file($preview)) unlink($preview);
     }
     $source->query('DROP DATABASE `' . $name . '`');
 }

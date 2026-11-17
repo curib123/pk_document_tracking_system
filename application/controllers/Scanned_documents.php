@@ -96,9 +96,28 @@ class Scanned_documents extends MY_Controller
         require_once APPPATH . 'services/files/file_service.php';
         try { (new File_service())->require_stored_file($file); }
         catch (DomainException $e) { show_error('The stored file is unavailable.', 404); return; }
+        $preview = $this->input->get('preview') === '1';
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        $mime = $file['mime_type'];
+        $name = $file['original_name'];
+        if ($preview) {
+            require_once APPPATH . 'services/files/pdf_preview_service.php';
+            if (Pdf_preview_service::office_extension($file) !== '') {
+                try { $path = (new Pdf_preview_service())->pdf_path($file); }
+                catch (DomainException $error) { show_error($error->getMessage(), 503); return; }
+                $mime = 'application/pdf';
+                $name = pathinfo($name, PATHINFO_FILENAME) . '.pdf';
+            }
+            if (!in_array($mime, ['application/pdf', 'text/plain', 'image/png', 'image/jpeg'], TRUE)) {
+                show_error('Preview is unavailable for this file type.', 415); return;
+            }
+        }
+        $name = preg_replace('/[[:cntrl:]"\\\\]/', '_', basename(str_replace(chr(92), '/', $name)));
         $this->output->set_header('Cache-Control: no-store, private')->set_header('X-Content-Type-Options: nosniff')
-            ->set_header('Content-Security-Policy: sandbox')->set_content_type($file['mime_type'])
-            ->set_header('Content-Disposition: attachment; filename="' . str_replace('"', '', $file['original_name']) . '"')
-            ->set_output(file_get_contents(PK_ROOT . '/storage/documents/' . $file['storage_name']));
+            ->set_header('Content-Security-Policy: ' . ($preview && $mime === 'application/pdf'
+                ? "frame-ancestors 'self'" : "sandbox allow-same-origin; frame-ancestors 'self'"))
+            ->set_content_type($mime)
+            ->set_header('Content-Disposition: ' . ($preview ? 'inline' : 'attachment') . '; filename="' . $name . '"')
+            ->set_output(file_get_contents($path));
     }
 }

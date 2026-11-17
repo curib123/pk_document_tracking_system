@@ -1,5 +1,6 @@
 <?php
 require_once APPPATH . 'services/documents/scanned_policy.php';
+require_once APPPATH . 'services/documents/scanned_file_presentation.php';
 $can = static fn($action) => isset($permissions['*']) || !empty($permissions['scanned_documents'][$action]);
 $paths = array_column($categories, 'path', 'id');
 $dt_rows = [];
@@ -7,7 +8,7 @@ foreach ($rows as $row) {
     $links = []; $fileFields = [];
     foreach ($files[$row['id']] ?? [] as $index => $file) {
         $fileFields[($index + 1) . '. ' . $file['original_name']] = number_format((int) $file['size']) . ' bytes';
-        $links[] = ['label' => $file['original_name'], 'url' => site_url('documents/scanned/file/' . (int) $file['id'])];
+        $links[] = Scanned_file_presentation::link($file);
     }
     $buttons = [['type' => 'view']];
     if ($row['status'] === 'active') foreach (['edit' => ['scanned_update', 'Request Update'], 'delete' => ['scanned_delete', 'Request Deletion']] as $action => [$type, $label])

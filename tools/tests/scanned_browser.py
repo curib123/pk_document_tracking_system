@@ -1,6 +1,10 @@
 """Browser regression using synthetic data: python tools/tests/scanned_browser.py."""
 from pathlib import Path
 import os
+import base64
+import io
+import zipfile
+import re
 import socket
 import subprocess
 import time
@@ -25,6 +29,55 @@ def dismiss(page):
         expect(modal).to_be_hidden()
 
 
+def preview_uploads():
+    # Small, valid fixtures exercise the shared image/PDF/Office/text preview paths.
+    pdf = b'%PDF-1.4\n'
+    objects = [b'<< /Type /Catalog /Pages 2 0 R >>',
+               b'<< /Type /Pages /Kids [3 0 R] /Count 1 >>',
+               b'<< /Type /Page /Parent 2 0 R /MediaBox [0 0 200 200] /Contents 4 0 R >>',
+               b'<< /Length 0 >>\nstream\n\nendstream']
+    offsets = [0]
+    for number, body in enumerate(objects, 1):
+        offsets.append(len(pdf))
+        pdf += f'{number} 0 obj\n'.encode() + body + b'\nendobj\n'
+    xref = len(pdf)
+    pdf += b'xref\n0 5\n0000000000 65535 f \n'
+    pdf += b''.join(f'{offset:010d} 00000 n \n'.encode() for offset in offsets[1:])
+    pdf += f'trailer\n<< /Size 5 /Root 1 0 R >>\nstartxref\n{xref}\n%%EOF\n'.encode()
+    docx = io.BytesIO()
+    with zipfile.ZipFile(docx, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+        archive.writestr('_rels/.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+        archive.writestr('word/document.xml', '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Scanned Office preview</w:t></w:r></w:p></w:body></w:document>')
+    return [
+        {'name':'scan-one.txt', 'mimeType':'text/plain', 'buffer':b'Scanned fixture one\n'},
+        {'name':'scan-image.png', 'mimeType':'image/png', 'buffer':base64.b64decode('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=')},
+        {'name':'scan-pdf.pdf', 'mimeType':'application/pdf', 'buffer':pdf},
+        {'name':'scan-office.docx', 'mimeType':'application/vnd.openxmlformats-officedocument.wordprocessingml.document', 'buffer':docx.getvalue()}]
+
+
+def verify_previews(page, context):
+    page.get_by_role('tab', name=re.compile('Scanned Attachments|Approved Files')).click()
+    expect(page.locator('#viewModal .doc-modal-file-preview')).to_have_count(4)
+    previews = page.locator('#viewModal .doc-modal-file-preview')
+    for index in range(4):
+        response = context.request.get(previews.nth(index).get_attribute('src').split('#')[0])
+        assert response.status == 200, (response.status, response.body()[:200])
+        assert response.headers['content-disposition'].startswith('inline;')
+        if index >= 2:
+            assert response.headers['content-type'].startswith('application/pdf')
+            assert response.body().startswith(b'%PDF-')
+    for filename in ['scan-image.png', 'scan-pdf.pdf', 'scan-office.docx']:
+        page.get_by_role('button', name=f'Show {filename} fullscreen', exact=True).click()
+        expect(page.locator('.pv')).to_be_visible()
+        if filename.endswith('.png'):
+            expect(page.locator('.pv img')).to_be_visible()
+        else:
+            expect(page.locator('.pv canvas').first).to_be_visible(timeout=20000)
+        page.get_by_role('button', name='Close fullscreen view', exact=True).click()
+        expect(page.locator('.pv')).to_have_count(0)
+
+
 try:
     subprocess.run(CLI + ['--keep'], cwd=ROOT, check=True)
     name = (ROOT / 'storage/scanned-test-database.txt').read_text().strip()
@@ -44,14 +97,14 @@ try:
         except OSError:
             time.sleep(0.1)
     with sync_playwright() as p:
-        browser = p.chromium.launch(channel=os.environ.get('PK_TEST_BROWSER', 'msedge'))
+        browser = p.chromium.launch(channel=os.environ.get('PK_TEST_BROWSER', 'msedge'), args=['--disable-gpu'])
         errors = []
 
         def login(user):
-            context = browser.new_context(viewport={'width': 1440, 'height': 1000})
+            context = browser.new_context(viewport={'width': 1440, 'height': 1000}, reduced_motion='reduce')
             page = context.new_page()
             page.on('pageerror', lambda error: errors.append(str(error)) if 'ViewTransition opt-in disabled' not in str(error) else None)
-            page.goto(base + '/login')
+            page.goto(base + '/login', wait_until='domcontentloaded')
             page.locator('[name=login]').fill(user)
             page.locator('[name=password]').fill('Scanned-Test-2026!')
             page.locator('button[type=submit]').click()
@@ -69,10 +122,8 @@ try:
         form.locator('[name=retention_start_date]').fill('2026-11-01')
         form.locator('[name=retention_end_date]').fill('2026-11-17')
         expect(form.locator('[name=scan_due_date]')).to_have_count(0)
-        form.locator('[name=remarks]').fill('Upload files scanned outside this system')
-        form.locator('[type=file]').set_input_files([
-            {'name': 'scan-one.txt', 'mimeType': 'text/plain', 'buffer': b'Scanned fixture one\n'},
-            {'name': 'scan-two.txt', 'mimeType': 'text/plain', 'buffer': b'Scanned fixture two\n'}])
+        expect(form.locator('[name=remarks]')).to_have_count(0)
+        form.locator('[type=file]').set_input_files(preview_uploads())
         form.locator('button[type=submit]').click()
         page.locator('#confirmProceed').click()
         page.wait_for_url('**/my-requests/scanned')
@@ -92,31 +143,34 @@ try:
         row.locator('.js-view').click()
         expect(approver.locator('#viewModal')).to_be_visible()
         expect(approver.locator('#viewModal')).to_contain_text('Scanned invoices for backup and review.')
+        verify_previews(approver, dco)
         links = approver.locator('#viewModal a[href*="scanned/file"]')
-        expect(links).to_have_count(2)
+        expect(links).to_have_count(4)
         file_url = links.first.get_attribute('href')
         assert dco.request.get(file_url).body() == b'Scanned fixture one\n'
         assert uploader.request.get(file_url).status == 200
         outside, outsider = login('outsider')
         assert outside.request.get(file_url).status == 403
+        assert outside.request.get(file_url + '&preview=1').status == 403
         anonymous = browser.new_context().request.get(file_url, max_redirects=0)
         assert anonymous.status in [302, 303, 307] and anonymous.headers['location'].endswith('/login')
         approver.locator('#viewModal [data-bs-dismiss=modal]').first.click()
         row.locator('.js-action[data-decision=approved]').click()
-        expect(approver.locator('#actionRemark')).to_be_visible()
-        expect(approver.locator('#actionRemark')).to_have_attribute('required', '')
-        approver.locator('#actionRemark').fill('Uploaded files verified')
-        approver.locator('#actionForm button[type=submit]').click()
+        expect(approver.locator('#actionRemark')).to_be_hidden()
+        approver.locator('#confirmProceed').click()
         expect(approver.locator('#appAlertMessage')).to_contain_text('Approval decision recorded')
 
         page.goto(base + '/documents/scanned')
         expect(page.locator('tbody tr')).to_contain_text('Browser Scanned Document')
         page.locator('tbody .js-view').click()
         expect(page.locator('#viewModal')).to_contain_text('Scanned invoices for backup and review.')
-        expect(page.locator('#viewModal a[href*="scanned/file"]')).to_have_count(2)
+        expect(page.locator('#viewModal a[href*="scanned/file"]')).to_have_count(4)
+        verify_previews(page, uploader)
         approved_url = page.locator('#viewModal a[href*="scanned/file"]').first.get_attribute('href')
         assert uploader.request.get(approved_url).status == 200
         assert outside.request.get(approved_url).status == 403
+        assert outside.request.get(approved_url + '?preview=1').status == 403
+        assert dco.request.get(file_url + '&preview=1').status == 403
         page.locator('#viewModal [data-bs-dismiss=modal]').first.click()
         edit_url = page.locator('tbody tr').filter(has_text='Browser Scanned Document').get_by_role('link', name='Request Update').get_attribute('href')
         page.goto(edit_url)
@@ -204,7 +258,7 @@ try:
         assert page.locator('#retentionNotificationModal.show').count() == 0
         assert not errors, errors
         browser.close()
-        print('PASS DCO Master Data root/nested creation, allocation editing, upload folder scoping, folder view, mobile layout; browser upload, DCO review, required reason, private files, mobile layout, alarm preference and daily reminder deduplication')
+        print('PASS DCO Master Data root/nested creation, allocation editing, upload folder scoping, folder view, mobile layout; inline image/PDF/text/Office previews, fullscreen, requests without remarks, DCO review, private files, mobile layout, alarm preference and daily reminder deduplication')
 finally:
     if server:
         server.terminate()

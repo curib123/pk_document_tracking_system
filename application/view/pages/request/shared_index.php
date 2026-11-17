@@ -1,5 +1,6 @@
 <?php
 require_once APPPATH . 'services/presentation/request_title.php';
+require_once APPPATH . 'services/documents/scanned_file_presentation.php';
 require_once APPPATH . 'services/request/request_policy.php';
 $tabs = [
   'softcopy' => 'Softcopy Request',
@@ -122,8 +123,8 @@ foreach ($rows as $row) {
   // The request viewer uses the same document renderer as System Documents,
   // but presents only submitted proposal metadata and visible approval history.
   // Never pretend an unapproved proposal is already the stored document.
-  $isDocumentRequest = in_array($tab, ['softcopy', 'external', 'hardcopy', 'hardcopy-disposal'], TRUE);
-  $documentDomain = $tab === 'softcopy' ? 'softcopy' : ($tab === 'external' ? 'external' :
+  $isDocumentRequest = in_array($tab, ['softcopy', 'external', 'scanned', 'hardcopy', 'hardcopy-disposal'], TRUE);
+  $documentDomain = in_array($tab, ['softcopy', 'scanned'], TRUE) ? $tab : ($tab === 'external' ? 'external' :
     ($tab === 'hardcopy-disposal' && ($payload['document_domain'] ?? '') === 'external'
       ? 'external' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record')));
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
@@ -225,7 +226,7 @@ foreach ($rows as $row) {
     $scanLinks = []; $scanFields = [];
     foreach ($row['attachment_files'] ?? [] as $index => $attachment) {
       $scanFields[($index + 1) . '. ' . $attachment['original_name']] = number_format((int) $attachment['size']) . ' bytes';
-      $scanLinks[] = ['label' => $attachment['original_name'], 'url' => site_url('documents/scanned/file/' . (int) $attachment['id'] . '?request_id=' . (int) $row['id'])];
+      $scanLinks[] = Scanned_file_presentation::link($attachment, (int) $row['id']);
     }
     $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => $scanFields, 'links' => $scanLinks];
   }

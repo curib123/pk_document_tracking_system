@@ -208,7 +208,7 @@ class Scanned_document_service
             $this->ci->db->where_in('id', $ids)->where('domain', 'scanned')->update('files', [
                 'document_id' => $id, 'status' => 'approved', 'approved_by' => $actor, 'approved_at' => date('Y-m-d H:i:s')
             ]);
-        // Every approval retains its reason and full proposal in requests/workflow_history.
+        // Every approval retains its full proposal and decision history.
         return ['document_id' => $id];
     }
 }
