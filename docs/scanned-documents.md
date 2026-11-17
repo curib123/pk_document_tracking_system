@@ -12,7 +12,7 @@ Use the shared **Table / Folder** switcher to browse records in a table or the e
 
 All proposals and approval decisions require remarks. Created and updated timestamps appear in the register. The retention countdown shows days and hours remaining; the end date includes the entire day in Philippine time. A popup appears after expiration, checked approximately once per minute while the application is open. Expiration does not automatically delete a document.
 
-At **4:00 PM Asia/Manila**, users with upload permission receive a daily reminder to upload outstanding scanned files. An optional **Next Scanned File Upload Due** date adds document-specific reminders. Returning after 4:00 PM catches up the day's reminder. Daily reminders are acknowledged per user in the current browser. Click **Enable reminder sound** to allow an audible alarm; browser interaction is required for sound. Popups and sound require an open, signed-in application; this is not an operating-system background alarm.
+At **4:00 PM Asia/Manila**, users with upload permission receive one daily alarm reminding them to check whether they have scanned documents to upload as a backup. There is no per-document upload due date. Returning after 4:00 PM catches up the day's reminder. Daily reminders are acknowledged per user in the current browser. Click **Enable reminder sound** to allow an audible alarm; browser interaction is required for sound. Popups and sound require an open, signed-in application; this is not an operating-system background alarm.
 
 ## Permissions and workflow setup
 
@@ -20,10 +20,14 @@ At **4:00 PM Asia/Manila**, users with upload permission receive a daily reminde
 
 **Workflow Builder** includes upload, update, deletion and category creation routes. They are initially published with a DCO approval step if an active Document Control Officer role exists. All four request types go to DCO by default and take effect only after the configured approvals finish. Administrators can edit approvers and add steps in Workflow Builder; published workflow settings determine the route, without a hardcoded DCO role check. If a configured approver role is missing or has no active member, requests cannot proceed until configured. Administrators cannot directly bypass scanned approval.
 
-For an existing installation, apply `database/migrations/20261117_scanned_documents.sql` once (reruns are safe). The repository's database import also includes this migration. Existing document tables and records are preserved.
+**Master Data > Scanned Categories** lets users with View, Create, Edit and Allocate to Users permissions manage approved folders directly. These permissions are initially granted to the DCO role and remain editable in Roles & Permissions. Choose no parent for a root folder, or an existing folder to create a nested folder. Table and Folder views show the structure.
+
+Allocate a folder to one or more users to control their upload choices. Descendants inherit the nearest allocation; a nested folder can have its own allocation for different users. Clearing a nested allocation restores inheritance; clearing a root allocation makes that branch shared. Existing unallocated folders remain shared. Approved category requests start allocated to their requester. Allocation does not grant access to another user's documents. Folder selection is checked when saving, submitting and approving a request.
+
+For an existing installation, apply `database/migrations/20261117_scanned_documents.sql` once (reruns are safe). Then apply `database/migrations/20261117_scanned_category_allocations.sql` for Master Data folders and user allocations. The repository's database import includes both migrations. Existing document tables and records are preserved.
 
 ## Verification
 
-Run `php tools/tests/scanned_policy.php` and `php tools/tests/scanned_integration.php`. The integration test clones only table definitions from the configured database, creates synthetic fixtures in a randomly named `scanned_*_test` database, tests approval and reminder boundaries, then removes its fixtures. It needs local MySQL credentials with create/drop database privileges.
+Run `php tools/tests/scanned_policy.php`, `php tools/tests/scanned_category_policy.php` and `php tools/tests/scanned_integration.php`. The integration test clones only table definitions from the configured database, creates synthetic fixtures in a randomly named `scanned_*_test` database, tests approval and reminder boundaries, then removes its fixtures. It needs local MySQL credentials with create/drop database privileges.
 
 For browser checks, use `python tools/tests/scanned_browser.py` with Playwright and Microsoft Edge installed. It creates its own fixture database and PHP server, tests multi-file upload, approver review, file access, mobile layout and reminder popups, then removes the fixtures.

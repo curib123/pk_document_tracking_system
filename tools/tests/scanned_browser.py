@@ -14,12 +14,15 @@ server = None
 
 
 def dismiss(page):
-    if page.locator('#appAlertModal').count():
-        expect(page.locator('#appAlertModal')).to_be_visible()
-    for selector in ['#appAlertModal.show', '#taskNotificationModal.show', '#retentionNotificationModal.show']:
-        if page.locator(selector).count():
-            page.locator(selector + ' [data-bs-dismiss=modal]').first.click()
-            expect(page.locator(selector)).to_have_count(0)
+    for selector in ['#appAlertModal', '#taskNotificationModal', '#retentionNotificationModal']:
+        modal = page.locator(selector)
+        if not modal.count():
+            continue
+        if selector != '#appAlertModal' and not modal.is_visible():
+            continue
+        page.wait_for_function("id => document.querySelector(id).classList.contains('show') && !window.bootstrap?.Modal.getInstance(document.querySelector(id))?._isTransitioning", arg=selector)
+        modal.locator('[data-bs-dismiss=modal]').first.click()
+        expect(modal).to_be_hidden()
 
 
 try:
@@ -64,6 +67,7 @@ try:
         form.locator('[name=scanned_category_id]').select_option(index=1)
         form.locator('[name=retention_start_date]').fill('2026-11-01')
         form.locator('[name=retention_end_date]').fill('2026-11-17')
+        expect(form.locator('[name=scan_due_date]')).to_have_count(0)
         form.locator('[name=remarks]').fill('Upload files scanned outside this system')
         form.locator('[type=file]').set_input_files([
             {'name': 'scan-one.txt', 'mimeType': 'text/plain', 'buffer': b'Scanned fixture one\n'},
@@ -126,6 +130,59 @@ try:
         assert page.evaluate('document.documentElement.scrollWidth <= innerWidth')
         page.screenshot(path=str(ROOT / 'storage/scanned-register-mobile.png'), full_page=True)
 
+        # DCO Master Data creation and allocation, including inherited subfolders.
+        approver.goto(base + '/places/scanned-categories')
+        dismiss(approver)
+        expect(approver.get_by_role('link', name='Scanned Categories', exact=True)).to_be_visible()
+        approver.locator('.js-edit[data-record="{}"]').click()
+        folder_form = approver.locator('#editForm')
+        folder_form.locator('[name=name]').fill('Browser User Folder')
+        folder_form.locator('[name="user_ids[]"][value="3"]').check()
+        folder_form.locator('button[type=submit]').click()
+        approver.locator('#confirmProceed').click()
+        expect(approver.locator('#appAlertMessage')).to_contain_text('Record saved')
+        dismiss(approver)
+        folder_row = approver.locator('tbody tr').filter(has_text='Browser User Folder')
+        expect(folder_row).to_contain_text('uploader Fixture')
+        folder_row.locator('.js-edit').click()
+        expect(folder_form.locator('[name="user_ids[]"][value="3"]')).to_be_checked()
+        expect(folder_form.locator('[name="user_ids[]"][value="4"]')).not_to_be_checked()
+        root_id = folder_form.locator('[name=id]').input_value()
+        approver.locator('#editModal [data-bs-dismiss=modal]').first.click()
+        approver.locator('.js-edit[data-record="{}"]').click()
+        expect(folder_form.locator('[name=id]')).to_have_value('')
+        folder_form.locator('[name=name]').fill('Browser Nested Folder')
+        folder_form.locator('[name=parent_id]').select_option(root_id)
+        folder_form.locator('button[type=submit]').click()
+        approver.locator('#confirmProceed').click()
+        expect(approver.locator('#appAlertMessage')).to_contain_text('Record saved')
+        dismiss(approver)
+        expect(approver.locator('tbody tr').filter(has_text='Browser User Folder / Browser Nested Folder')).to_have_count(1)
+        approver.get_by_role('link', name='Switch to folder tree view').click()
+        expect(approver.locator('.doc-folder-tree-mode')).to_be_visible()
+        expect(approver.locator('.doc-tree-node')).not_to_have_count(0)
+        approver.set_viewport_size({'width': 390, 'height': 844})
+        approver.reload()
+        assert approver.evaluate('document.documentElement.scrollWidth <= innerWidth')
+        page.goto(base + '/my-requests/scanned?action=scanned_create')
+        dismiss(page)
+        expect(page.locator('[name=scanned_category_id] option').filter(has_text='Browser User Folder / Browser Nested Folder')).to_have_count(1)
+        assert uploader.request.get(base + '/places/scanned-categories').status == 403
+        # Change the root allocation and verify the user's selector updates immediately.
+        approver.set_viewport_size({'width': 1440, 'height': 1000})
+        approver.goto(base + '/places/scanned-categories')
+        folder_row = approver.locator('tbody tr').filter(has_text='Browser User Folder').filter(has_not_text='Browser Nested Folder')
+        folder_row.locator('.js-edit').click()
+        folder_form = approver.locator('#editForm')
+        folder_form.locator('[name="user_ids[]"][value="3"]').uncheck()
+        folder_form.locator('[name="user_ids[]"][value="4"]').check()
+        folder_form.locator('button[type=submit]').click()
+        approver.locator('#confirmProceed').click()
+        expect(approver.locator('#appAlertMessage')).to_contain_text('Record saved')
+        page.goto(base + '/my-requests/scanned?action=scanned_create')
+        expect(page.locator('[name=scanned_category_id] option').filter(has_text='Browser User Folder')).to_have_count(0)
+        page.goto(base + '/documents/scanned')
+
         reminder = {'key': 'scan-daily:fixture:guide', 'title': '4:00 PM scanned file upload reminder',
                     'reference': 'Daily upload check', 'label': 'Upload outstanding scanned files',
                     'url': base + '//documents/scanned', 'daily': True, 'alarm': True}
@@ -140,7 +197,7 @@ try:
         assert page.locator('#retentionNotificationModal.show').count() == 0
         assert not errors, errors
         browser.close()
-        print('PASS browser upload, DCO review, required reason, private files, mobile layout, alarm preference and daily reminder deduplication')
+        print('PASS DCO Master Data root/nested creation, allocation editing, upload folder scoping, folder view, mobile layout; browser upload, DCO review, required reason, private files, mobile layout, alarm preference and daily reminder deduplication')
 finally:
     if server:
         server.terminate()
