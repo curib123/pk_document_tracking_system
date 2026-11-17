@@ -655,7 +655,6 @@ class Request_service
             $steps = $graph['steps'] ?? [];
             require_once APPPATH . 'services/workflow/workflow_graph.php';
             Workflow_graph::validate(is_array($graph) ? $graph : [], TRUE);
-            if (str_starts_with($r['type'], 'scanned_')) $scanned->validate_route($graph);
             // Resubmissions do not overwrite old step rows: workflow_history
             // holds foreign keys to those decisions. Only unfinished old steps
             // become superseded, preserving the exact past approval sequence.

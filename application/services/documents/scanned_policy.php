@@ -39,14 +39,6 @@ final class Scanned_policy
         if (!empty($payload['scan_due_date'])) self::date($payload['scan_due_date']);
     }
 
-    public static function route(array $graph, int $dcoRole): void
-    {
-        $steps = $graph['steps'] ?? [];
-        $last = $steps ? $steps[count($steps) - 1]['approver'] ?? [] : [];
-        if ($dcoRole < 1 || ($last['type'] ?? '') !== 'role' || (int) ($last['value'] ?? 0) !== $dcoRole)
-            throw new DomainException('Scanned workflows must end with the Document Control Officer role.');
-    }
-
     public static function countdown(string $end, ?DateTimeImmutable $now = NULL): string
     {
         self::date($end);

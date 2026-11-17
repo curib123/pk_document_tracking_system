@@ -8,14 +8,6 @@ class Scanned_document_service
     private $ci;
     public function __construct() { $this->ci =& get_instance(); }
 
-    public function dco_role(): int
-    {
-        return (int) ($this->ci->db->get_where('roles', ['name' => 'Document Control Officer', 'active' => 1])
-            ->row_array()['id'] ?? 0);
-    }
-
-    public function validate_route(array $graph): void { Scanned_policy::route($graph, $this->dco_role()); }
-
     public function global_access(array $user): bool
     {
         $this->ci->load->model('Permission_model');
@@ -172,12 +164,7 @@ class Scanned_document_service
     /** Called only within the request engine's locked final-approval transaction. */
     public function apply(array $request, int $actor): array
     {
-        $this->ci->load->model('Identity_model');
-        $approver = $this->ci->Identity_model->active_user($actor);
-        if (!$approver || !User_roles::matches($approver, $this->dco_role()))
-            throw new DomainException('A Document Control Officer must approve this action.');
         $type = $request['type']; $p = json_decode($request['payload'], TRUE) ?: [];
-        $this->validate_route(json_decode($request['snapshot'], TRUE) ?: []);
         $this->validate($type, $p, (int) $request['requested_by']);
         $this->assert_current($type, $p);
         if ($type === 'scanned_category_create') {
