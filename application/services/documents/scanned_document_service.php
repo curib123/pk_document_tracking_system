@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/documents/scanned_policy.php';
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/places/scanned_category_service.php';
 
 class Scanned_document_service
 {
@@ -31,7 +32,7 @@ class Scanned_document_service
         }
     }
 
-    public function categories(): array
+    public function categories(?array $user = NULL): array
     {
         $rows = $this->ci->db->order_by('name')->get('scanned_categories')->result_array();
         $byId = array_column($rows, NULL, 'id');
@@ -44,6 +45,10 @@ class Scanned_document_service
             $row['path'] = implode(' / ', $parts);
         }
         unset($row);
+        if ($user !== NULL) {
+            $allowed = array_flip((new Scanned_category_service())->usable_ids($user));
+            $rows = array_values(array_filter($rows, static fn($row) => isset($allowed[(int) $row['id']])));
+        }
         usort($rows, static fn($a, $b) => strnatcasecmp($a['path'], $b['path']));
         return $rows;
     }
@@ -56,6 +61,10 @@ class Scanned_document_service
         if (($categoryId || $type !== 'scanned_category_create') && !$this->ci->db->get_where(
             'scanned_categories', ['id' => $categoryId])->row_array())
             throw new DomainException('Choose an approved scanned category. Pending folders cannot be used.');
+        $this->ci->load->model('Identity_model');
+        $ownerUser = $this->ci->Identity_model->active_user($owner);
+        if (!$ownerUser) throw new DomainException('The document owner is no longer active.');
+        (new Scanned_category_service())->require_usable($categoryId, $ownerUser);
         if ($type === 'scanned_category_create' || !$attachments) return;
         $ids = array_values(array_unique(array_map('intval', (array) ($payload['scanned_file_ids'] ?? []))));
         if (!$ids && $type === 'scanned_update') return; // Metadata-only change keeps the approved files.
@@ -173,7 +182,12 @@ class Scanned_document_service
                 'name' => $p['title'], 'parent_id' => $p['parent_id'] ?: NULL,
                 'created_by' => (int) $request['requested_by'], 'approved_by' => $actor, 'request_id' => (int) $request['id']
             ])) throw new DomainException('An approved category with that name already exists in this folder.');
-            return ['category_id' => (int) $this->ci->db->insert_id()];
+            $categoryId = (int) $this->ci->db->insert_id();
+            // Approved personal folder requests start allocated to the requester.
+            $this->ci->db->insert('scanned_category_allocations', [
+                'category_id' => $categoryId, 'user_id' => (int) $request['requested_by'], 'allocated_by' => $actor
+            ]);
+            return ['category_id' => $categoryId];
         }
         $id = (int) $p['scanned_document_id'];
         $data = ['approved_by' => $actor];

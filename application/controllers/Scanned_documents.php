@@ -14,7 +14,18 @@ class Scanned_documents extends MY_Controller
         $status = in_array($state['status'], ['active', 'deleted'], TRUE) ? $state['status'] : 'active';
         $folder = trim((string) $this->input->get('folder', TRUE));
         if (strlen($folder) > 100) { show_404(); return; }
-        $browser = $this->Folder_model->browse('scanned', $folder);
+        // Keep allocated upload folders and paths to the user's existing documents.
+        $tree = $this->Folder_model->tree('scanned');
+        if (!(new Scanned_category_service())->unrestricted($this->user)) {
+            require_once APPPATH . 'services/presentation/folder_visibility.php';
+            $paths = array_map(static fn($id) => ['category_id' => $id], (new Scanned_category_service())->usable_ids($this->user));
+            $paths = array_merge($paths, $this->db->select('category_id')->get_where('scanned_documents', ['created_by' => (int) $this->user['id']])->result_array());
+            $tree = Folder_visibility::restrict($tree, $paths, 'scanned');
+            if ($folder !== '' && $folder !== 'all' && !isset($tree['nodes'][$folder])) {
+                show_error('This folder is outside your category access.', 403); return;
+            }
+        }
+        $browser = $this->Folder_model->browse('scanned', $folder, $tree);
         if ($state['layout'] === 'folder' && $state['q'] !== '') {
             require_once APPPATH . 'services/presentation/folder_search.php';
             $browser['search'] = Folder_search::for_browser($browser, $state['q'], 'scanned');

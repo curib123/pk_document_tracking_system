@@ -18,15 +18,15 @@ class Scanned_category_service
             $this->ci->Permission_model->allowed($user, 'documents', 'view_all');
     }
 
-    public function usable_ids(array $user): array {
-        $rows = $this->ci->db->get('scanned_categories')->result_array();
+    public function usable_ids(array $user, bool $lock = FALSE): array {
+        $rows = $this->ci->db->query('SELECT * FROM scanned_categories ORDER BY id' . ($lock ? ' FOR UPDATE' : ''))->result_array();
         if ($this->unrestricted($user)) return array_map('intval', array_column($rows, 'id'));
         return Scanned_category_policy::usable_ids($rows,
-            $this->ci->db->get('scanned_category_allocations')->result_array(), (int) $user['id']);
+            $this->ci->db->query('SELECT * FROM scanned_category_allocations ORDER BY category_id,user_id' . ($lock ? ' FOR UPDATE' : ''))->result_array(), (int) $user['id']);
     }
 
     public function require_usable(int $category, array $user): void {
-        if ($category && !in_array($category, $this->usable_ids($user), TRUE))
+        if ($category && !in_array($category, $this->usable_ids($user, TRUE), TRUE))
             throw new DomainException('Choose a scanned folder allocated to you or a shared folder.');
     }
 

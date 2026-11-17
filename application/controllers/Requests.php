@@ -67,7 +67,7 @@ class Requests extends MY_Controller
                 if (!$service->global_access($this->user)) $this->db->where('created_by', (int) $this->user['id']);
                 $scannedOptions = $this->db->order_by('title')->get_where('scanned_documents', ['status' => 'active'])->result_array();
             }
-            $scannedCategories = $service->categories();
+            $scannedCategories = $service->categories($this->user);
         }
         $history = $this->Request_model->histories(array_column($rows, 'id'));
         $approvalRoutes = $this->Request_model->approval_routes(array_column($rows, 'id'));
