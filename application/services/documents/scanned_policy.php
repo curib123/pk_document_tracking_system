@@ -23,9 +23,6 @@ final class Scanned_policy
     public static function metadata(string $type, array $payload): void
     {
         self::action($type);
-        $reason = trim((string) ($payload['remarks'] ?? ''));
-        if ($reason === '' || mb_strlen($reason) > 2000)
-            throw new DomainException('A remark / reason is required (maximum 2000 characters).');
         if ($type === 'scanned_delete') return;
         $title = trim((string) ($payload['title'] ?? ''));
         $max = $type === 'scanned_category_create' ? 150 : 255;

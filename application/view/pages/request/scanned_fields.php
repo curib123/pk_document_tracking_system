@@ -1,4 +1,4 @@
-<div class="col-12"><p class="text-secondary mb-0">Every upload, update, deletion and new category requires a reason and final DCO approval. Save a draft, then submit it. Approved records stay unchanged while a request is pending.</p></div>
+<div class="col-12"><p class="text-secondary mb-0">Every upload, update, deletion and new category requires approval through the configured workflow (DCO by default). Save a draft, then submit it. Approved records stay unchanged while a request is pending.</p></div>
 <div class="col-md-6">
   <label class="form-label" for="reqType">Request Action</label>
   <select class="form-select" name="type" id="reqType" required>
@@ -50,4 +50,3 @@
   <input class="form-control" id="scanFiles" type="file" name="scanned_attachment[]" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.docx,.xlsx">
   <small class="form-text">Up to 20 files, 15 MB each: PDF, PNG, JPEG, TXT, DOCX or XLSX. For updates, leave blank to keep current files. Choosing files replaces the current set after approval.</small>
 </div>
-<div class="col-12"><label class="form-label" for="scanReason">Remarks / Reason (required)</label><textarea class="form-control" id="scanReason" name="remarks" rows="3" maxlength="2000" required></textarea></div>

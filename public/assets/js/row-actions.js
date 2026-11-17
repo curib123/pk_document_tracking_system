@@ -19,13 +19,14 @@
     var isDisposal = action.getAttribute("data-disposal") === "yes";
     var needsFinal = action.getAttribute("data-final-upload") === "yes";
     var needsPassword = action.getAttribute("data-password-confirm") === "yes";
+    var skipRemarks = action.getAttribute("data-skip-remarks") === "yes";
     var needsRemark = action.getAttribute("data-remark-required") === "yes";
     var needsDetails =
       needsRemark ||
       isDisposal ||
       needsFinal ||
       needsPassword ||
-      ["returned", "rejected"].includes(decision);
+      (!skipRemarks && ["returned", "rejected"].includes(decision));
     var title = action.getAttribute("data-title") || "Confirm Action";
     var description =
       action.getAttribute("data-description") ||
@@ -33,7 +34,7 @@
     document.getElementById("actionTitle").textContent = title;
     document.getElementById("actionDescription").textContent = description;
     form.setAttribute("data-confirm", title + "? " + description);
-    var showRemark = needsRemark || (needsDetails && !needsFinal && !needsPassword);
+    var showRemark = !skipRemarks && (needsRemark || (needsDetails && !needsFinal && !needsPassword));
     document.getElementById("actionRemarkFields").hidden = !showRemark;
     form.querySelector('[name="remark"]').disabled = !showRemark;
     form.querySelector('[name="remark"]').required = needsRemark;

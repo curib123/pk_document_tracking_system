@@ -144,6 +144,10 @@ foreach ($rows as $row) {
     'Remarks' => $payload['remarks'] ?? '',
     'Request Version' => $row['version']
   ];
+  if ($tab === 'scanned') {
+    unset($requestOverview['Remarks'], $requestOverview['Subject / Reason']);
+    $requestOverview['Subject'] = $payload['subject'] ?? '';
+  }
   $requestSections = [
     ['key' => 'overview', 'title' => 'Request & Ownership', 'fields' => $requestOverview],
     [
@@ -332,7 +336,7 @@ foreach ($rows as $row) {
         'type' => 'action',
         'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
-        'remark_required' => $tab === 'scanned',
+        'skip_remarks' => $tab === 'scanned',
         'label' => $label,
         'description' => "Record {$record['title']} for this workflow step.",
         'icon' => $decision === 'approved'

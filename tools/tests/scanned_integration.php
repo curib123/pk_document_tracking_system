@@ -77,7 +77,7 @@ $uploader = $ci->Identity_model->active_user(3); $dco = $ci->Identity_model->act
 $count = 0;
 function verify($ok, $message) { global $count; if (!$ok) throw new RuntimeException($message); $count++; echo "PASS $message\n"; }
 function denied($fn, $message) { try { $fn(); } catch (DomainException $e) { verify(TRUE, $message); return; } verify(FALSE, $message); }
-function proposal($type, $extra = []) { return $extra + ['type' => $type, 'subject' => 'Fixture approval test', 'remarks' => 'Test reason', 'title' => 'Fixture title']; }
+function proposal($type, $extra = []) { return $extra + ['type' => $type, 'subject' => 'Fixture approval test', 'title' => 'Fixture title']; }
 function approve($id) {
     global $service, $dco, $outsider, $fixture;
     $service->submit('scanned', $id, $GLOBALS['uploader']);
@@ -85,7 +85,7 @@ function approve($id) {
     $assignment = json_decode($step['assignment'], TRUE);
     verify($assignment['type'] === 'role' && (int) $assignment['value'] === (int) $dco['role_id'], $step['type'] . ' routes to DCO by default');
     denied(fn() => $service->decide('scanned', $id, $outsider, 'approved', 'Not assigned'), $step['type'] . ' refuses an unassigned approver');
-    $service->decide('scanned', $id, $dco, 'approved', 'Verified fixture');
+    $service->decide('scanned', $id, $dco, 'approved', '');
 }
 $paths = [];
 try {
@@ -101,8 +101,8 @@ try {
     verify($fixture->query('SELECT COUNT(*) FROM scanned_categories')->fetch_row()[0] == 0, 'pending root category cannot be used');
     $service->submit('scanned', $categoryRequest, $uploader);
     denied(fn() => $service->decide('scanned', $categoryRequest, $outsider, 'approved', 'Forged'), 'unassigned user cannot approve');
-    denied(fn() => $service->decide('scanned', $categoryRequest, $dco, 'approved', ''), 'approval requires remark');
-    $service->decide('scanned', $categoryRequest, $dco, 'approved', 'Root approved');
+    $service->decide('scanned', $categoryRequest, $dco, 'approved', '');
+    verify(TRUE, 'DCO approves without remarks');
     $category = (int) $fixture->query('SELECT id FROM scanned_categories')->fetch_row()[0];
     $childRequest = $service->save('scanned', proposal('scanned_category_create', ['title' => 'Nested', 'parent_id' => $category]), $uploader);
     approve($childRequest);

@@ -88,7 +88,7 @@ class Scanned_document_service
         $payload = [
             'document_domain' => 'scanned',
             'description' => trim((string) ($post['description'] ?? $oldPayload['description'] ?? '')),
-            'subject' => trim((string) ($post['subject'] ?? '')), 'remarks' => trim((string) ($post['remarks'] ?? '')),
+            'subject' => trim((string) ($post['subject'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')), 'parent_id' => (int) ($post['parent_id'] ?? 0),
             'scanned_category_id' => (int) ($post['scanned_category_id'] ?? 0),
             'scanned_document_id' => (int) ($post['scanned_document_id'] ?? 0),

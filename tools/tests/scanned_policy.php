@@ -12,9 +12,12 @@ function refuses(callable $fn, string $label): void {
 $p = ['title' => 'Invoices', 'remarks' => 'Archive for audit', 'retention_start_date' => '2026-11-17', 'retention_end_date' => '2026-11-18'];
 Scanned_policy::metadata('scanned_create', $p);
 check(TRUE, 'valid upload metadata accepted');
-refuses(fn() => Scanned_policy::metadata('scanned_create', array_replace($p, ['remarks' => '  '])), 'blank reason refused');
-refuses(fn() => Scanned_policy::metadata('scanned_delete', ['remarks' => '']), 'deletion requires reason');
-refuses(fn() => Scanned_policy::metadata('scanned_category_create', ['title' => 'Root', 'remarks' => '']), 'root category requires reason');
+Scanned_policy::metadata('scanned_create', array_replace($p, ['remarks' => '']));
+check(TRUE, 'upload does not require remarks');
+Scanned_policy::metadata('scanned_delete', []);
+check(TRUE, 'deletion does not require a reason');
+Scanned_policy::metadata('scanned_category_create', ['title'=>'Root']);
+check(TRUE, 'root category does not require a reason');
 refuses(fn() => Scanned_policy::metadata('scanned_create', array_replace($p, ['retention_end_date' => '2026-11-16'])), 'reversed retention refused');
 refuses(fn() => Scanned_policy::date('2026-02-30'), 'impossible date refused');
 refuses(fn() => Scanned_policy::date('2026-1-1'), 'noncanonical date refused');

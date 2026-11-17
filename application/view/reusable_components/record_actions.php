@@ -78,6 +78,7 @@
                 title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
                 data-url="<?= site_url($button['url']) ?>" data-id="<?= (int) $dt_row['id'] ?>"
                 data-decision="<?= html_escape($button['decision'] ?? '') ?>"
+                data-skip-remarks="<?= !empty($button['skip_remarks']) ? 'yes' : 'no' ?>"
                 data-remark-required="<?= !empty($button['remark_required']) ? 'yes' : 'no' ?>"
                 data-disposal="<?= !empty($button['disposal']) ? 'yes' : 'no' ?>"
                 data-final-upload="<?= !empty($button['final_upload']) ? 'yes' : 'no' ?>" data-title="<?= html_escape(!empty($button['final_upload']) ? 'Upload Final Document' : $label) ?>"

@@ -1086,8 +1086,6 @@ class Request_service
                 ($role === 'role' && User_roles::matches($user, (int) ($assignment['value'] ?? 0)));
             if (!$authorized)
                 throw new DomainException('Only the assigned approver may decide.');
-            if (str_starts_with($r['type'], 'scanned_') && trim((string) $comment) === '')
-                throw new DomainException('A remark / reason is required for every scanned approval decision.');
             $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
             if ($decision !== 'rejected') {
                 $keys = array_column($graph['steps'] ?? [], 'key');
