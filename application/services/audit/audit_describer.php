@@ -8,6 +8,7 @@ final class Audit_describer
         'hardcopy-disposal' => 'hardcopy disposals', 'document-assign' => 'document assignments',
         'access-grant' => 'access requests', 'dashboard' => 'the dashboard',
         'softcopy-categories' => 'softcopy categories', 'external-categories' => 'external categories',
+        'scanned-categories' => 'scanned category folders and user allocations',
         'area' => 'areas', 'specific' => 'specific areas', 'location' => 'locations',
         'subsidiary' => 'subsidiaries', 'asset' => 'assets', 'users' => 'user accounts',
         'roles' => 'roles and permissions', 'workflows' => 'approval workflows',

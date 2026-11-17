@@ -14,7 +14,7 @@ $active = function ($prefix) use ($path) {
 // Show Master Data only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories', 'subsidiaries'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories', 'scanned_categories', 'subsidiaries'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;

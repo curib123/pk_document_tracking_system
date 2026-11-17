@@ -586,6 +586,9 @@
             .map(Number)
             .includes(Number(field.value));
         });
+      target.querySelectorAll('input[name="user_ids[]"]').forEach(function (field) {
+        field.checked = (record.user_ids || []).map(Number).includes(Number(field.value));
+      });
       target.querySelectorAll("[name]").forEach(function (field) {
         if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
         if (

@@ -20,6 +20,7 @@ class Places extends MY_Controller
             'location' => 'locations',
             'softcopy-categories' => 'categories',
             'external-categories' => 'external_categories',
+            'scanned-categories' => 'scanned_categories',
             'subsidiary' => 'subsidiaries'
         ] as $slug => $module) {
             if ($this->can($module, 'view')) {
@@ -54,21 +55,49 @@ class Places extends MY_Controller
             'location' => 'location',
             'softcopy-categories' => 'softcopy_category',
             'external-categories' => 'external_category',
+            'scanned-categories' => 'scanned_category',
             'subsidiary' => 'subsidiary'
         ];
+        $extra = [];
+        if ($slug === 'scanned-categories') {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            $options['scanned_categories'] = (new Scanned_document_service())->categories();
+            $this->load->model('Document_model');
+            $options['users'] = $this->Document_model->active_users();
+            $paths = array_column($options['scanned_categories'], 'path', 'id');
+            $allocations = [];
+            foreach ($this->db->select('a.category_id,a.user_id,CONCAT_WS(" ",u.first_name,u.last_name) AS user_name', FALSE)
+                ->from('scanned_category_allocations a')->join('users u', 'u.id=a.user_id')->get()->result_array() as $allocation)
+                $allocations[(int) $allocation['category_id']][] = $allocation;
+            foreach ($rows as &$row) {
+                $assigned = $allocations[(int) $row['id']] ?? [];
+                $row['path'] = $paths[$row['id']] ?? $row['name'];
+                $row['user_ids'] = array_map('intval', array_column($assigned, 'user_id'));
+                $row['allocated_users'] = $assigned ? implode(', ', array_column($assigned, 'user_name')) : 'Shared / inherits parent allocation';
+            }
+            unset($row);
+            $this->load->model('Folder_model');
+            $folder = trim((string) $this->input->get('folder', TRUE));
+            if (strlen($folder) > 100) { show_404(); return; }
+            $extra['folder_browser'] = $this->Folder_model->browse('scanned', $folder);
+        }
         $this->render(
             "Places · {$cfg['label']}",
             "pages/places/{$views[$slug]}/index",
-            ['cfg' => $cfg, 'rows' => $rows, 'total' => $total, 'table' => $state, 'options' => $options]
+            ['cfg' => $cfg, 'rows' => $rows, 'total' => $total, 'table' => $state, 'options' => $options] + $extra
         );
     }
     public function save($slug)
     {
         $cfg = $this->Place_model->config($slug);
-        $this->require_permission($cfg['table'], (int) $this->input->post('id') ? 'edit' : 'add');
+        if ($slug === 'scanned-categories') $this->require_permission('scanned_categories', 'view');
+        else $this->require_permission($cfg['table'], (int) $this->input->post('id') ? 'edit' : 'add');
         $this->confirmed();
         try {
-            $savedId = (new Place_service())->save($cfg, $this->input->post(), (int) $this->user['id']);
+            if ($slug === 'scanned-categories') {
+                require_once APPPATH . 'services/places/scanned_category_service.php';
+                $savedId = (new Scanned_category_service())->save($this->input->post(), $this->user);
+            } else $savedId = (new Place_service())->save($cfg, $this->input->post(), (int) $this->user['id']);
             $this->audit_created($cfg['table'], $savedId);
             $this->notice('Record saved.');
         } catch (Throwable $e) {
@@ -79,6 +108,7 @@ class Places extends MY_Controller
     public function deactivate($slug)
     {
         $cfg = $this->Place_model->config($slug);
+        if (!$cfg['active']) { show_404(); return; }
         $this->require_permission($cfg['table'], 'delete');
         $this->confirmed();
         try {

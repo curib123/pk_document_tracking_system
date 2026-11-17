@@ -24,6 +24,10 @@ class Place_model extends CI_Model
             'key' => 'name',
             'fields' => ['name', 'folder_name', 'description', 'parent_id']
         ],
+        'scanned-categories' => [
+            'table' => 'scanned_categories', 'label' => 'Scanned Categories',
+            'key' => 'name', 'fields' => ['name', 'parent_id']
+        ],
         'subsidiary' => [
             'table' => 'subsidiaries',
             'label' => 'Subsidiaries',
@@ -37,7 +41,7 @@ class Place_model extends CI_Model
             show_404();
         $c = $this->definitions[$slug];
         $c['slug'] = $slug;
-        $c['active'] = TRUE;
+        $c['active'] = $slug !== 'scanned-categories';
         $c['read_only'] = FALSE;
         return $c;
     }
@@ -56,7 +60,8 @@ class Place_model extends CI_Model
             'specific' => 'area_id',
             'location' => 'area_id',
             'softcopy-categories' => 'parent_id',
-            'external-categories' => 'parent_id'
+            'external-categories' => 'parent_id',
+            'scanned-categories' => 'parent_id'
         ];
         if (!empty($state['parent']) && $c['slug'] === 'asset') {
             // An Asset Number can belong to many Specifics.
@@ -83,7 +88,8 @@ class Place_model extends CI_Model
                 ['assets b', 'b.id=p.asset_id', 'b.asset_number AS asset_name']
             ],
             'softcopy-categories' => [['categories par', 'par.id=p.parent_id', 'par.name AS parent_name']],
-            'external-categories' => [['external_categories par', 'par.id=p.parent_id', 'par.name AS parent_name']]
+            'external-categories' => [['external_categories par', 'par.id=p.parent_id', 'par.name AS parent_name']],
+            'scanned-categories' => [['scanned_categories par', 'par.id=p.parent_id', 'par.name AS parent_name']]
         ];
         foreach ($joins[$c['slug']] ?? [] as $join) {
             $this->db->join($join[0], $join[1], 'left')->select($join[2]);

@@ -32,6 +32,9 @@ foreach ($cfg['fields'] as $field) {
         $dt_columns[$field] = $labels[$field] ?? ucwords(str_replace('_', ' ', $field));
     }
 }
+if ($cfg['slug'] === 'scanned-categories') {
+    $dt_columns = ['path' => 'Folder Path', 'allocated_users' => 'Allocated Users'];
+}
 if ($cfg['slug'] === 'asset')
     $dt_columns['specific_name'] = 'Specifics';
 if ($cfg['active'])
@@ -46,6 +49,7 @@ foreach ($rows as $row) {
                 ? ($value === 'folder' ? 'Folder' : 'Document Number Pattern')
                 : $value);
     }
+    if ($cfg['slug'] === 'scanned-categories') $cells += ['title' => $row['name'], 'status' => 'Folder'];
     $display = [];
     foreach ($dt_columns as $field => $label)
         $display[$label] = $cells[$field];
@@ -58,11 +62,12 @@ foreach ($rows as $row) {
         // One Asset Number can belong to many Specifics.
         $record['specific_ids'] = array_values(array_filter(array_map('intval', explode(',', (string) ($row['specific_ids'] ?? '')))));
     }
+    if ($cfg['slug'] === 'scanned-categories') $record['user_ids'] = $row['user_ids'];
     // Area, Specific and Asset are simple reference records: use Edit, not View Details.
     $buttons = in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE)
         ? [] : [['type' => 'view']];
-    if ($can('edit'))
-        $buttons[] = ['type' => 'edit'];
+    if ($can('edit') || ($cfg['slug'] === 'scanned-categories' && $can('allocate')))
+        $buttons[] = ['type' => 'edit', 'label' => $cfg['slug'] === 'scanned-categories' ? 'Edit / Allocate' : 'Edit'];
     if ($cfg['active'] && $can('delete') && !empty($row['active'])) {
         $buttons[] = [
             'type' => 'action',
@@ -74,6 +79,8 @@ foreach ($rows as $row) {
     }
     $dt_rows[] = [
         'id' => $row['id'] ?? 0,
+        'record_kind' => $cfg['slug'] === 'scanned-categories' ? 'folder' : 'document',
+        'record_path' => $cfg['slug'] === 'scanned-categories' ? ['category_id' => (int) $row['id']] : [],
         'cells' => $cells,
         'record' => $record,
         'display' => in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE) ? [] : $display,
@@ -118,6 +125,7 @@ $dt_sortable = array_values(array_intersect(
         'location' => 'Location',
         'softcopy-categories' => 'Softcopy Categories',
         'external-categories' => 'External Categories',
+        'scanned-categories' => 'Scanned Categories',
         'subsidiary' => 'Subsidiary Setup'
     ] as $slug => $label):
         $perm = [
@@ -127,6 +135,7 @@ $dt_sortable = array_values(array_intersect(
             'location' => 'locations',
             'softcopy-categories' => 'categories',
             'external-categories' => 'external_categories',
+            'scanned-categories' => 'scanned_categories',
             'subsidiary' => 'subsidiaries'
         ][$slug];
         if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
@@ -134,7 +143,13 @@ $dt_sortable = array_values(array_intersect(
                 <?= html_escape($label) ?></a>
         <?php endif; endforeach; ?>
 </nav>
-<?php $this->load->view('reusable_components/reusable_datatable', compact(
+<?php
+if ($cfg['slug'] === 'scanned-categories') {
+    $activeLayout = $table['layout'] === 'folder' ? 'folder' : 'table';
+    $layoutLink = static fn($layout) => site_url($dt_path) . '?' . http_build_query(['layout' => $layout, 'q' => $dt_q]);
+    $this->load->view('reusable_components/document_layout_switcher', compact('activeLayout', 'layoutLink'));
+}
+$dtArgs = compact(
     'dt_path',
     'dt_q',
     'dt_filter',
@@ -150,7 +165,12 @@ $dt_sortable = array_values(array_intersect(
     'dt_sort',
     'dt_dir',
     'dt_sortable'
-)); ?>
+);
+if ($cfg['slug'] === 'scanned-categories') $dtArgs += [
+    'dt_folder_browser' => $folder_browser, 'dt_folder_domain' => 'scanned',
+    'dt_extra_params' => ['layout' => $activeLayout, 'folder' => $folder_browser['folder']]
+];
+$this->load->view('reusable_components/reusable_datatable', $dtArgs); ?>
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
     aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
@@ -166,6 +186,8 @@ $dt_sortable = array_values(array_intersect(
                         <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
                         <?php if ($cfg['slug'] === 'location'): ?>
                             <?php $this->load->view('pages/places/location/modal_action/upsert', ['options' => $options]); ?>
+                        <?php elseif ($cfg['slug'] === 'scanned-categories'): ?>
+                            <?php $this->load->view('pages/places/scanned_category/fields', ['options' => $options, 'can' => $can]); ?>
                         <?php else: ?>
                             <?php foreach ($cfg['fields'] as $field):
                                 $references = [
