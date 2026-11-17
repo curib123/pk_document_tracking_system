@@ -7,8 +7,29 @@ mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
 $root = dirname(__DIR__, 2);
 $sourceName = getenv('DB_DATABASE') ?: 'pk_dts';
 $source = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?: 'root', getenv('DB_PASSWORD') ?: '', $sourceName);
+function cleanup_fixture(mysqli $source, string $name, string $root): void {
+    if (!preg_match('/^scanned_[a-f0-9]{10}_test$/D', $name)) throw new RuntimeException('Invalid fixture database.');
+    $exists = $source->query("SELECT SCHEMA_NAME FROM information_schema.SCHEMATA WHERE SCHEMA_NAME='$name'")->fetch_row();
+    if (!$exists) return;
+    $hasFiles = $source->query("SELECT TABLE_NAME FROM information_schema.TABLES WHERE TABLE_SCHEMA='$name' AND TABLE_NAME='files'")->fetch_row();
+    if ($hasFiles) foreach ($source->query("SELECT storage_name FROM `$name`.files WHERE domain='scanned'") as $row) {
+        if (!preg_match('/^[a-f0-9]{64}$/D', $row['storage_name'])) continue;
+        $path = $root . '/storage/documents/' . $row['storage_name'];
+        if (is_file($path)) unlink($path);
+    }
+    $source->query('DROP DATABASE `' . $name . '`');
+}
+if (in_array('--cleanup', $argv, TRUE)) {
+    $marker = $root . '/storage/scanned-test-database.txt';
+    if (!is_file($marker)) exit(0);
+    cleanup_fixture($source, trim(file_get_contents($marker)), $root); unlink($marker); exit(0);
+}
 $name = 'scanned_' . bin2hex(random_bytes(5)) . '_test';
 $source->query('CREATE DATABASE `' . $name . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
+$keepFixture = FALSE;
+register_shutdown_function(static function () use ($source, $name, $root, &$keepFixture) {
+    if (!$keepFixture) cleanup_fixture($source, $name, $root);
+});
 $fixture = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?: 'root', getenv('DB_PASSWORD') ?: '', $name);
 $fixture->query('SET FOREIGN_KEY_CHECKS=0');
 foreach ($source->query('SHOW FULL TABLES WHERE Table_type="BASE TABLE"') as $table) {
@@ -101,11 +122,11 @@ try {
     verify(count($scanned->alerts($uploader, new DateTimeImmutable('2026-11-18 16:00:00', new DateTimeZone('Asia/Manila')))) === 1, 'deleted document excluded from reminders');
     echo "$count integration checks passed\n";
     if (in_array('--keep', $argv, TRUE)) {
+        $keepFixture = TRUE;
         file_put_contents($root . '/storage/scanned-test-database.txt', $name); echo "Fixture database: $name\n"; exit(0);
     }
 } finally {
     if (!in_array('--keep', $argv, TRUE)) {
         foreach ($paths as $path) if (is_file($path)) unlink($path);
-        $source->query('DROP DATABASE `' . $name . '`');
     }
 }
