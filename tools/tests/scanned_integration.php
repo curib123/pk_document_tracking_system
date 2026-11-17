@@ -74,10 +74,25 @@ $count = 0;
 function verify($ok, $message) { global $count; if (!$ok) throw new RuntimeException($message); $count++; echo "PASS $message\n"; }
 function denied($fn, $message) { try { $fn(); } catch (DomainException $e) { verify(TRUE, $message); return; } verify(FALSE, $message); }
 function proposal($type, $extra = []) { return $extra + ['type' => $type, 'subject' => 'Fixture approval test', 'remarks' => 'Test reason', 'title' => 'Fixture title']; }
-function approve($id) { global $service, $dco; $service->submit('scanned', $id, $GLOBALS['uploader']); $service->decide('scanned', $id, $dco, 'approved', 'Verified fixture'); }
+function approve($id) {
+    global $service, $dco, $outsider, $fixture;
+    $service->submit('scanned', $id, $GLOBALS['uploader']);
+    $step = $fixture->query("SELECT s.assignment,r.type FROM workflow_steps s JOIN requests r ON r.id=s.request_id WHERE r.id=$id AND s.status='active'")->fetch_assoc();
+    $assignment = json_decode($step['assignment'], TRUE);
+    verify($assignment['type'] === 'role' && (int) $assignment['value'] === (int) $dco['role_id'], $step['type'] . ' routes to DCO by default');
+    denied(fn() => $service->decide('scanned', $id, $outsider, 'approved', 'Not assigned'), $step['type'] . ' refuses an unassigned approver');
+    $service->decide('scanned', $id, $dco, 'approved', 'Verified fixture');
+}
 $paths = [];
 try {
     verify($fixture->query("SELECT COUNT(*) FROM workflows WHERE request_type LIKE 'scanned_%'")->fetch_row()[0] == 4, 'migration reruns without duplicate workflows');
+    foreach (Scanned_policy::TYPES as $type) {
+        $workflow = $ci->Request_model->active_workflow($type);
+        $graph = json_decode($workflow['graph'] ?? '{}', TRUE);
+        $steps = $graph['steps'] ?? [];
+        $last = $steps ? $steps[count($steps) - 1]['approver'] : [];
+        verify(($last['type'] ?? '') === 'role' && (int) ($last['value'] ?? 0) === (int) $dco['role_id'], $type . ' has a published DCO default');
+    }
     $categoryRequest = $service->save('scanned', proposal('scanned_category_create'), $uploader);
     verify($fixture->query('SELECT COUNT(*) FROM scanned_categories')->fetch_row()[0] == 0, 'pending root category cannot be used');
     $service->submit('scanned', $categoryRequest, $uploader);
@@ -98,7 +113,10 @@ try {
     $p = proposal('scanned_create', ['scanned_category_id' => $category, 'retention_start_date' => '2026-01-01', 'retention_end_date' => '2026-11-17', 'scan_due_date' => '2026-11-17']);
     $ci->db->insert('requests', ['reference' => 'SCANNED-FIXTURE', 'type' => 'scanned_create', 'requested_by' => 3, 'status' => 'draft', 'payload' => json_encode(['scanned_file_ids' => [$file]])]);
     $id = (int) $ci->db->insert_id(); $p['id'] = $id;
-    $service->save('scanned', $p, $uploader); approve($id);
+    $service->save('scanned', $p, $uploader);
+    verify($fixture->query('SELECT COUNT(*) FROM scanned_documents')->fetch_row()[0] == 0, 'pending upload does not register a document');
+    verify($fixture->query("SELECT status FROM files WHERE id=$file")->fetch_row()[0] === 'pending', 'uploaded files stay pending before DCO approval');
+    approve($id);
     $document = $fixture->query('SELECT * FROM scanned_documents')->fetch_assoc(); $documentId = (int) $document['id'];
     verify($document['title'] === 'Fixture title' && (int) $document['approved_by'] === 2, 'approved upload registers document and DCO');
     $update = proposal('scanned_update', ['scanned_document_id' => $documentId, 'document_version' => 1, 'title' => 'Updated title', 'scanned_category_id' => $category, 'retention_start_date' => '2026-01-01', 'retention_end_date' => '2026-11-17', 'scan_due_date' => '2026-11-17']);
