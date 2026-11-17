@@ -36,7 +36,6 @@ final class Scanned_policy
         $end = self::date((string) ($payload['retention_end_date'] ?? ''));
         if ($end < $start)
             throw new DomainException('Retention end date must be on or after its start date.');
-        if (!empty($payload['scan_due_date'])) self::date($payload['scan_due_date']);
     }
 
     public static function countdown(string $end, ?DateTimeImmutable $now = NULL): string

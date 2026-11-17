@@ -256,7 +256,6 @@ foreach ($rows as $row) {
     'scanned_category_id' => $payload['scanned_category_id'] ?? '',
     'document_version' => $payload['document_version'] ?? '',
     'parent_id' => $payload['parent_id'] ?? '',
-    'scan_due_date' => $payload['scan_due_date'] ?? '',
     'external_document_id' => $payload['external_document_id'] ?? '',
     'retention_period' => $payload['retention_period'] ?? '',
     'hardcopy_id' => $row['hardcopy_id'] ?? '',

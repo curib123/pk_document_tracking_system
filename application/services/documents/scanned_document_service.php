@@ -93,7 +93,6 @@ class Scanned_document_service
             'scanned_document_id' => (int) ($post['scanned_document_id'] ?? 0),
             'retention_start_date' => trim((string) ($post['retention_start_date'] ?? '')),
             'retention_end_date' => trim((string) ($post['retention_end_date'] ?? '')),
-            'scan_due_date' => trim((string) ($post['scan_due_date'] ?? '')),
             'scanned_file_ids' => $oldPayload['scanned_file_ids'] ?? []
         ];
         $this->validate($type, $payload, (int) $user['id'], FALSE);
@@ -143,10 +142,8 @@ class Scanned_document_service
         $day = $now->format('Y-m-d');
         $daily = $now->format('H:i') >= '16:00';
         if (!$this->global_access($user)) $this->ci->db->where('created_by', (int) $user['id']);
-        $this->ci->db->where('status', 'active')->group_start()->where('retention_end_date <', $day);
-        if ($daily) $this->ci->db->or_group_start()->where('scan_due_date IS NOT NULL', NULL, FALSE)
-            ->where('scan_due_date <=', $day)->group_end();
-        $rows = $this->ci->db->group_end()->order_by('retention_end_date')->get('scanned_documents')->result_array();
+        $rows = $this->ci->db->where('status', 'active')->where('retention_end_date <', $day)
+            ->order_by('retention_end_date')->get('scanned_documents')->result_array();
         $items = [];
         foreach ($rows as $doc) {
             $url = site_url('documents/scanned') . '?' . http_build_query(['q' => $doc['title']]);
@@ -155,16 +152,11 @@ class Scanned_document_service
                 'title' => $doc['title'], 'reference' => 'Retention ended',
                 'label' => Scanned_policy::countdown($doc['retention_end_date'], $now), 'url' => $url
             ];
-            if ($daily && !empty($doc['scan_due_date']) && $doc['scan_due_date'] <= $day) $items[] = [
-                'key' => 'scan-daily:' . $day . ':' . $doc['id'], 'title' => $doc['title'],
-                'reference' => 'Upload due ' . $doc['scan_due_date'], 'label' => 'Upload a scanned file and request an update.',
-                'url' => $url, 'alarm' => TRUE, 'daily' => TRUE
-            ];
         }
         if ($daily && $this->ci->Permission_model->allowed($user, 'scanned_documents', 'request'))
             array_unshift($items, [
-                'key' => 'scan-daily:' . $day . ':guide', 'title' => '4:00 PM scanned file upload reminder',
-                'reference' => 'Daily upload check', 'label' => 'Check today’s documents and upload outstanding scanned files for DCO approval. Files must be scanned outside this system.',
+                'key' => 'scan-daily:' . $day . ':guide', 'title' => '4:00 PM scanned document backup reminder',
+                'reference' => 'Daily backup check', 'label' => 'Check whether you have scanned documents to upload as a backup.',
                 'url' => site_url('documents/scanned'), 'alarm' => TRUE, 'daily' => TRUE
             ]);
         return $items;
@@ -194,8 +186,7 @@ class Scanned_document_service
         if ($type === 'scanned_delete') $data['status'] = 'deleted';
         else $data += [
             'title' => $p['title'], 'category_id' => $p['scanned_category_id'],
-            'retention_start_date' => $p['retention_start_date'], 'retention_end_date' => $p['retention_end_date'],
-            'scan_due_date' => $p['scan_due_date'] ?: NULL
+            'retention_start_date' => $p['retention_start_date'], 'retention_end_date' => $p['retention_end_date']
         ];
         if ($type === 'scanned_create') {
             $data['created_by'] = (int) $request['requested_by'];

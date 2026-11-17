@@ -40,7 +40,6 @@
 </div>
 <div class="col-md-6" data-scanned-for="scanned_create scanned_update"><label class="form-label" for="scanRetentionStart">Retention Start Date</label><input type="date" class="form-control" id="scanRetentionStart" name="retention_start_date" data-scanned-required></div>
 <div class="col-md-6" data-scanned-for="scanned_create scanned_update"><label class="form-label" for="scanRetentionEnd">Retention End Date</label><input type="date" class="form-control" id="scanRetentionEnd" name="retention_end_date" data-scanned-required><small class="form-text">Includes the full end date in Philippine time.</small></div>
-<div class="col-12" data-scanned-for="scanned_create scanned_update"><label class="form-label" for="scanDueDate">Next Scanned File Upload Due (optional)</label><input type="date" class="form-control" id="scanDueDate" name="scan_due_date"><small class="form-text">Upload files scanned outside this system. Uploads due appear in your 4:00 PM reminder.</small></div>
 <div class="col-12" data-scanned-for="scanned_create scanned_update">
   <label class="form-label" for="scanFiles">Files / Scanned Documents</label>
   <input class="form-control" id="scanFiles" type="file" name="scanned_attachment[]" multiple accept=".pdf,.png,.jpg,.jpeg,.txt,.docx,.xlsx">

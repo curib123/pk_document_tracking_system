@@ -231,7 +231,6 @@ class Request_model extends CI_Model
                 'document_number' => 'Proposed Document Number',
                 'external_document_number' => 'Proposed Document Number',
                 'series_number' => 'Series',
-                'scan_due_date' => 'Next Scanned File Upload Due',
                 'retention_period' => 'Retention Period',
                 'retention_start_date' => 'Retention Start Date',
                 'retention_end_date' => 'Retention End Date',

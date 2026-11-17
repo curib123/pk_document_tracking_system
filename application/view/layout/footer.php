@@ -77,7 +77,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
             </div>
             <div class="modal-body pt-0">
                 <h2 class="h5 fw-bold mb-2" id="retentionNotificationTitle">Document reminders</h2>
-                <p class="text-secondary" id="retentionNotificationMessage">Review expired retention periods and scanned files due for upload. Scanned file upload reminders appear daily from 4:00 PM Philippine time.</p>
+                <p class="text-secondary" id="retentionNotificationMessage">Review expired retention periods. A daily alarm from 4:00 PM Philippine time reminds you to upload scanned documents as a backup.</p>
                 <ol class="task-notification-list" id="retentionNotificationList"></ol>
             </div>
             <div class="modal-footer border-0">

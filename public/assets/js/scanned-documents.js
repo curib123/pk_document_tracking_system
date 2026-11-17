@@ -33,7 +33,7 @@
       if (!data.id) return;
       form.elements.title.value = data.title || '';
       form.elements.scanned_category_id.value = data.category_id || '';
-      ['retention_start_date', 'retention_end_date', 'scan_due_date'].forEach(function (key) { form.elements[key].value = data[key] || ''; });
+      ['retention_start_date', 'retention_end_date'].forEach(function (key) { form.elements[key].value = data[key] || ''; });
     }
     type.addEventListener('change', update);
     doc.addEventListener('change', fillDocument);

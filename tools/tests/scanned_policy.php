@@ -18,7 +18,6 @@ refuses(fn() => Scanned_policy::metadata('scanned_category_create', ['title' => 
 refuses(fn() => Scanned_policy::metadata('scanned_create', array_replace($p, ['retention_end_date' => '2026-11-16'])), 'reversed retention refused');
 refuses(fn() => Scanned_policy::date('2026-02-30'), 'impossible date refused');
 refuses(fn() => Scanned_policy::date('2026-1-1'), 'noncanonical date refused');
-refuses(fn() => Scanned_policy::metadata('scanned_update', array_replace($p, ['scan_due_date' => 'invalid'])), 'invalid rescan date refused');
 check(Scanned_policy::action('scanned_update') === 'edit' && Scanned_policy::action('scanned_delete') === 'delete', 'update and delete require distinct permissions');
 $zone = new DateTimeZone('Asia/Manila');
 check(Scanned_policy::countdown('2026-11-17', new DateTimeImmutable('2026-11-17 16:00', $zone)) === '0 days 8 hours remaining', 'retention includes full final day');

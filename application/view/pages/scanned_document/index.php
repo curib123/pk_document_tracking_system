@@ -18,20 +18,19 @@ foreach ($rows as $row) {
             'title' => $row['title'], 'status' => $row['status'], 'category' => $paths[$row['category_id']] ?? $row['category_name'],
             'created_at' => $row['created_at'], 'updated_at' => $row['updated_at'],
             'retention_start_date' => $row['retention_start_date'], 'retention_end_date' => $row['retention_end_date'],
-            'remaining' => Scanned_policy::countdown($row['retention_end_date']), 'scan_due_date' => $row['scan_due_date'] ?: 'Not scheduled'
+            'remaining' => Scanned_policy::countdown($row['retention_end_date'])
         ],
         'display' => ['kind' => 'document', 'header' => ['title' => $row['title'], 'status' => $row['status']], 'sections' => [
             ['key' => 'overview', 'title' => 'Scanned Document', 'fields' => [
                 'Category' => $paths[$row['category_id']] ?? $row['category_name'],
                 'Created' => $row['created_at'], 'Updated' => $row['updated_at'], 'Retention Start' => $row['retention_start_date'],
-                'Retention End' => $row['retention_end_date'], 'Time Remaining' => Scanned_policy::countdown($row['retention_end_date']),
-                'Next Upload Due' => $row['scan_due_date'] ?: 'Not scheduled'
+                'Retention End' => $row['retention_end_date'], 'Time Remaining' => Scanned_policy::countdown($row['retention_end_date'])
             ]], ['key' => 'files', 'title' => 'Approved Files', 'links' => $links, 'fields' => $fileFields]
         ]], 'buttons' => $buttons
     ];
 }
 $dt_columns = ['title' => 'Title', 'category' => 'Category / Folder', 'created_at' => 'Created', 'updated_at' => 'Updated',
-    'retention_start_date' => 'Retention Start', 'retention_end_date' => 'Retention End', 'remaining' => 'Days / Hours', 'scan_due_date' => 'Next Upload'];
+    'retention_start_date' => 'Retention Start', 'retention_end_date' => 'Retention End', 'remaining' => 'Days / Hours'];
 $dt_path = 'documents/scanned'; $dt_q = $table['q']; $dt_filter = $table['status']; $dt_page = $table['page'];
 $dt_limit = $table['limit']; $dt_total = $total; $dt_sort = $table['sort']; $dt_dir = strtolower($table['dir']);
 $dt_sortable = ['title', 'created_at', 'updated_at', 'retention_end_date']; $dt_create = '';
