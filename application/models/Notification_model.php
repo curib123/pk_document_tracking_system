@@ -11,6 +11,7 @@ class Notification_model extends CI_Model
     private $tabs = [
         'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
         'external' => ['external_create', 'external_revise'],
+        'scanned' => ['scanned_create', 'scanned_update', 'scanned_delete', 'scanned_category_create'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'hardcopy-disposal' => ['disposal'],

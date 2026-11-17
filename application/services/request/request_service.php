@@ -18,6 +18,11 @@ class Request_service
 
     private function authorize($type, $softcopyId, $hardcopyId, array $payload, array $user): void
     {
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            (new Scanned_document_service())->authorize($type, $payload, $user);
+            return;
+        }
         if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), 'request'))
             throw new DomainException(
                 'You don’t have permission to perform this action on the selected document.'
@@ -210,6 +215,10 @@ class Request_service
             'retention_end_date' => trim((string) ($post['retention_end_date'] ?? '')),
             'creation_reason' => trim((string) ($post['creation_reason'] ?? ''))
         ];
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            $payload = (new Scanned_document_service())->prepare($type, $post, $user, $attachment, $this->stagedPaths);
+        }
         if (str_starts_with($type, 'external_')) {
             unset(
                 $payload['retention_enabled'],
@@ -222,7 +231,7 @@ class Request_service
         $hardcopyId = (int) ($post['hardcopy_id'] ?? 0);
         $domain = $payload['document_domain'];
         // Unrelated posted IDs must never attach a request to another document.
-        if (str_starts_with($type, 'external_')) {
+        if (str_starts_with($type, 'scanned_') || str_starts_with($type, 'external_')) {
             $softcopyId = 0;
             $hardcopyId = 0;
         } elseif ($type === 'disposal') {
@@ -577,6 +586,12 @@ class Request_service
 
 
             $this->authorize($r['type'], (int) $r['softcopy_id'], (int) $r['hardcopy_id'], $currentPayload, $user);
+            if (str_starts_with($r['type'], 'scanned_')) {
+                require_once APPPATH . 'services/documents/scanned_document_service.php';
+                $scanned = new Scanned_document_service();
+                $scanned->validate($r['type'], $currentPayload, (int) $r['requested_by']);
+                $scanned->assert_current($r['type'], $currentPayload);
+            }
             if ($r['type'] === 'transfer')
                 $this->validate_transfer_destination((int) $r['hardcopy_id'], $currentPayload);
             $this->assert_no_submitted_related_request(
@@ -640,6 +655,7 @@ class Request_service
             $steps = $graph['steps'] ?? [];
             require_once APPPATH . 'services/workflow/workflow_graph.php';
             Workflow_graph::validate(is_array($graph) ? $graph : [], TRUE);
+            if (str_starts_with($r['type'], 'scanned_')) $scanned->validate_route($graph);
             // Resubmissions do not overwrite old step rows: workflow_history
             // holds foreign keys to those decisions. Only unfinished old steps
             // become superseded, preserving the exact past approval sequence.
@@ -732,6 +748,10 @@ class Request_service
         $soft = (int) $request['softcopy_id'];
         $hard = (int) $request['hardcopy_id'];
         $reason = trim((string) ($payload['remarks'] ?? ''));
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            return (new Scanned_document_service())->apply($request, (int) $actor);
+        }
         $title = trim((string) ($payload['title'] ?? ''));
         $recipient = (int) ($payload['recipient_id'] ?? 0);
         if ($type === 'softcopy_create') {
@@ -1067,6 +1087,8 @@ class Request_service
                 ($role === 'role' && User_roles::matches($user, (int) ($assignment['value'] ?? 0)));
             if (!$authorized)
                 throw new DomainException('Only the assigned approver may decide.');
+            if (str_starts_with($r['type'], 'scanned_') && trim((string) $comment) === '')
+                throw new DomainException('A remark / reason is required for every scanned approval decision.');
             $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
             if ($decision !== 'rejected') {
                 $keys = array_column($graph['steps'] ?? [], 'key');

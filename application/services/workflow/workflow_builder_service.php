@@ -209,6 +209,10 @@ class Workflow_builder_service
             $workflow = $this->ci->db->get_where('workflows', ['id' => $version['workflow_id']])->row_array();
             if (!$workflow)
                 throw new DomainException('Workflow not found.');
+            if (str_starts_with($workflow['request_type'], 'scanned_')) {
+                require_once APPPATH . 'services/documents/scanned_document_service.php';
+                (new Scanned_document_service())->validate_route($version['decoded']);
+            }
             $ids = array_column($this->ci->db->select('id')->get_where('workflows', [
                 'request_type' => $workflow['request_type']
             ])->result_array(), 'id');

@@ -2,6 +2,7 @@
 CREATE TABLE IF NOT EXISTS scanned_categories (
  id bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
  parent_id bigint unsigned DEFAULT NULL,
+ parent_scope bigint unsigned GENERATED ALWAYS AS (COALESCE(parent_id,0)) STORED,
  name varchar(150) NOT NULL,
  created_by bigint unsigned NOT NULL,
  approved_by bigint unsigned NOT NULL,
@@ -9,6 +10,7 @@ CREATE TABLE IF NOT EXISTS scanned_categories (
  created_at timestamp NOT NULL DEFAULT current_timestamp(),
  updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
  KEY scanned_category_parent (parent_id),
+ UNIQUE KEY scanned_category_sibling (parent_scope,name),
  UNIQUE KEY scanned_category_request (request_id),
  FOREIGN KEY (parent_id) REFERENCES scanned_categories(id),
  FOREIGN KEY (created_by) REFERENCES users(id),

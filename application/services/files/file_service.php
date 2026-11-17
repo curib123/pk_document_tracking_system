@@ -212,6 +212,12 @@ class File_service
         return $this->stage_controlled(NULL, $actorId, $upload, 'creation');
     }
 
+    public function stage_scanned($documentId, int $actorId, array $upload): int
+    {
+        return $this->stage_controlled($documentId, $actorId, $upload,
+            $documentId === NULL ? 'creation' : 'revision', 'scanned');
+    }
+
     public function stage_external_creation($actorId, $uploads): array
     {
         return $this->stage_external_uploads(NULL, $actorId, $uploads, 'creation');
