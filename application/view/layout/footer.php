@@ -76,11 +76,12 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                     aria-label="Close retention notification"></button>
             </div>
             <div class="modal-body pt-0">
-                <h2 class="h5 fw-bold mb-2" id="retentionNotificationTitle">Retention period reached</h2>
-                <p class="text-secondary">These active hardcopy records have reached their retention end date.</p>
+                <h2 class="h5 fw-bold mb-2" id="retentionNotificationTitle">Document reminders</h2>
+                <p class="text-secondary" id="retentionNotificationMessage">Review expired retention periods and scanned files due for upload. Scanned file upload reminders appear daily from 4:00 PM Philippine time.</p>
                 <ol class="task-notification-list" id="retentionNotificationList"></ol>
             </div>
             <div class="modal-footer border-0">
+                <button class="btn btn-light" type="button" data-scan-alarm-enable>Enable reminder sound</button>
                 <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Got it</button>
             </div>
         </div>
@@ -254,6 +255,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/scanned-documents.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/row-actions.js?v=' . filemtime(FCPATH . 'assets/js/row-actions.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/logout-transition.js') ?>"></script>

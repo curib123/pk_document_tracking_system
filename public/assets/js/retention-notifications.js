@@ -10,6 +10,43 @@
   var loading = false;
   var disposed = false;
   var stopped = false;
+  var audioContext;
+  var soundEnabled = false;
+  try { soundEnabled = localStorage.getItem('pk-scan-alarm-sound') === 'yes'; } catch (_) {}
+  function enableAudio() {
+    var Audio = window.AudioContext || window.webkitAudioContext;
+    if (!Audio) return;
+    audioContext = audioContext || new Audio();
+    if (audioContext.state === 'suspended') audioContext.resume().catch(function () {});
+  }
+  function sound() {
+    if (!soundEnabled || !audioContext || audioContext.state !== 'running') return;
+    [0, 0.35, 0.7].forEach(function (delay) {
+      var oscillator = audioContext.createOscillator();
+      var gain = audioContext.createGain();
+      oscillator.frequency.value = 880;
+      gain.gain.value = 0.08;
+      oscillator.connect(gain); gain.connect(audioContext.destination);
+      oscillator.start(audioContext.currentTime + delay);
+      oscillator.stop(audioContext.currentTime + delay + 0.2);
+    });
+  }
+  document.addEventListener('click', function (event) {
+    if (event.target.closest('[data-scan-alarm-enable]')) {
+      soundEnabled = true;
+      try { localStorage.setItem('pk-scan-alarm-sound', 'yes'); } catch (_) {}
+      enableAudio();
+      event.target.textContent = 'Reminder sound enabled';
+      setTimeout(sound, 100);
+    } else if (soundEnabled) enableAudio();
+  });
+  function alreadySeen(item) {
+    if (seen.has(item.key)) return true;
+    if (item.daily) {
+      try { return localStorage.getItem(storageKey + ':' + item.key) === 'seen'; } catch (_) {}
+    }
+    return false;
+  }
 
   try {
     var stored = JSON.parse(window.sessionStorage.getItem(storageKey) || "[]");
@@ -39,7 +76,7 @@
     var registerPath = new URL(
       modal.dataset.listUrl,
       window.location.origin,
-    ).pathname.replace(/notifications\/retention$/, "documents/hardcopy");
+    ).pathname.replace(/notifications\/retention$/, "documents/");
     items.forEach(function (item) {
       var row = document.createElement("li");
       row.className = "task-notification-item";
@@ -50,7 +87,7 @@
       var safe =
         url &&
         url.origin === window.location.origin &&
-        url.pathname === registerPath;
+        [registerPath + 'hardcopy', registerPath + 'scanned'].includes(url.pathname);
       var body = document.createElement(safe ? "a" : "div");
       body.className = "task-notification-link";
       if (safe) body.href = url.href;
@@ -78,12 +115,16 @@
     pending = [];
     showing.forEach(function (item) {
       seen.add(item.key);
+      if (item.daily) {
+        try { localStorage.setItem(storageKey + ':' + item.key, 'seen'); } catch (_) {}
+      }
     });
     try {
       window.sessionStorage.setItem(storageKey, JSON.stringify(Array.from(seen)));
     } catch (_) {}
     render(showing);
     window.bootstrap.Modal.getOrCreateInstance(modal).show();
+    if (showing.some(function (item) { return item.alarm; })) sound();
   }
 
   async function poll() {
@@ -104,7 +145,7 @@
       var data = await response.json();
       if (!disposed && !stopped && Array.isArray(data.items)) {
         pending = data.items.filter(function (item) {
-          return item && typeof item.key === "string" && !seen.has(item.key);
+          return item && typeof item.key === "string" && !alreadySeen(item);
         });
         present();
       }

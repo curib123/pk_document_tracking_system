@@ -96,6 +96,8 @@ class Notifications extends MY_Controller
         $this->releaseSessionLock();
         $this->load->model('Document_model');
         $items = $this->Document_model->retention_alerts($this->user);
+        require_once APPPATH . 'services/documents/scanned_document_service.php';
+        $items = array_merge($items, (new Scanned_document_service())->alerts($this->user));
         return $this->output->set_header('Cache-Control', 'no-store, private')
             ->set_content_type('application/json')
             ->set_output(json_encode(['items' => $items]));

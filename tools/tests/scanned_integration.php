@@ -1,0 +1,111 @@
+<?php
+/** Real MySQL approval integration, using an isolated fixture database with no copied records.
+ * php tools/tests/scanned_integration.php [--keep] (keep fixtures for browser checks).
+ */
+if (PHP_SAPI !== 'cli') exit(1);
+mysqli_report(MYSQLI_REPORT_ERROR | MYSQLI_REPORT_STRICT);
+$root = dirname(__DIR__, 2);
+$sourceName = getenv('DB_DATABASE') ?: 'pk_dts';
+$source = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?: 'root', getenv('DB_PASSWORD') ?: '', $sourceName);
+$name = 'scanned_' . bin2hex(random_bytes(5)) . '_test';
+$source->query('CREATE DATABASE `' . $name . '` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci');
+$fixture = new mysqli(getenv('DB_HOST') ?: '127.0.0.1', getenv('DB_USERNAME') ?: 'root', getenv('DB_PASSWORD') ?: '', $name);
+$fixture->query('SET FOREIGN_KEY_CHECKS=0');
+foreach ($source->query('SHOW FULL TABLES WHERE Table_type="BASE TABLE"') as $table) {
+    $table = array_values($table)[0];
+    if (in_array($table, ['scanned_documents', 'scanned_categories'], TRUE)) continue;
+    $ddl = $source->query('SHOW CREATE TABLE `' . $table . '`')->fetch_row()[1];
+    $fixture->query($ddl);
+}
+$fixture->query('SET FOREIGN_KEY_CHECKS=1');
+$fixture->query("INSERT INTO roles(id,name) VALUES(1,'Administrator'),(2,'Document Control Officer'),(3,'Uploader'),(4,'Outsider')");
+$password = $fixture->real_escape_string(password_hash('Scanned-Test-2026!', PASSWORD_DEFAULT));
+foreach ([1 => 'admin', 2 => 'dco', 3 => 'uploader', 4 => 'outsider'] as $id => $login)
+    $fixture->query("INSERT INTO users(id,username,first_name,last_name,role_id,password_hash,require_password_change) VALUES($id,'$login','$login','Fixture',$id,'$password',0)");
+foreach (['view','add','edit','submit','cancel'] as $action)
+    $fixture->query("INSERT INTO permissions(name,module_key,module_label,action_key,action_label) VALUES('Requests $action','requests','Requests','$action','$action')");
+foreach (['view','request'] as $action)
+    $fixture->query("INSERT INTO permissions(name,module_key,module_label,action_key,action_label) VALUES('Softcopy $action','softcopy','Softcopy','$action','$action')");
+$fixture->query("INSERT INTO role_permissions(role_id,permission_id) SELECT 3,id FROM permissions");
+function migrate(mysqli $db, string $sql): void {
+    $db->multi_query($sql); do { if ($result = $db->store_result()) $result->free(); } while ($db->more_results() && $db->next_result());
+}
+$migration = file_get_contents($root . '/database/migrations/20261117_scanned_documents.sql');
+migrate($fixture, $migration); migrate($fixture, $migration);
+$fixture->query("INSERT IGNORE INTO role_permissions(role_id,permission_id) SELECT 3,id FROM permissions WHERE module_key='scanned_documents'");
+putenv('PK_TEST_DB=1'); putenv('DB_DATABASE=' . $name);
+define('PK_ROOT', $root); define('APPPATH', $root . '/application/');
+require APPPATH . 'bootstrap.php';
+define('BASEPATH', $root . '/vendor/codeigniter/framework/system/'); define('ENVIRONMENT', 'testing'); define('FCPATH', $root . '/public/');
+require APPPATH . 'config/constants.php'; require BASEPATH . 'core/Common.php'; require BASEPATH . 'core/Model.php'; require BASEPATH . 'database/DB.php';
+class FixtureLoader {
+    public function model($name) { global $ci; if (!isset($ci->$name)) { require_once APPPATH . 'models/' . $name . '.php'; $ci->$name = new $name(); } }
+}
+$ci = new stdClass(); $ci->load = new FixtureLoader();
+function &get_instance() { global $ci; return $ci; }
+require APPPATH . 'config/database.php';
+$ci->db = DB($db['default'], TRUE); $ci->load->model('Identity_model');
+function site_url($uri = '') { return 'http://127.0.0.1:8098/' . $uri; }
+require APPPATH . 'services/request/request_service.php'; require APPPATH . 'services/documents/scanned_document_service.php';
+$service = new Request_service(); $scanned = new Scanned_document_service();
+$uploader = $ci->Identity_model->active_user(3); $dco = $ci->Identity_model->active_user(2); $outsider = $ci->Identity_model->active_user(4);
+$count = 0;
+function verify($ok, $message) { global $count; if (!$ok) throw new RuntimeException($message); $count++; echo "PASS $message\n"; }
+function denied($fn, $message) { try { $fn(); } catch (DomainException $e) { verify(TRUE, $message); return; } verify(FALSE, $message); }
+function proposal($type, $extra = []) { return $extra + ['type' => $type, 'subject' => 'Fixture approval test', 'remarks' => 'Test reason', 'title' => 'Fixture title']; }
+function approve($id) { global $service, $dco; $service->submit('scanned', $id, $GLOBALS['uploader']); $service->decide('scanned', $id, $dco, 'approved', 'Verified fixture'); }
+$paths = [];
+try {
+    verify($fixture->query("SELECT COUNT(*) FROM workflows WHERE request_type LIKE 'scanned_%'")->fetch_row()[0] == 4, 'migration reruns without duplicate workflows');
+    $categoryRequest = $service->save('scanned', proposal('scanned_category_create'), $uploader);
+    verify($fixture->query('SELECT COUNT(*) FROM scanned_categories')->fetch_row()[0] == 0, 'pending root category cannot be used');
+    $service->submit('scanned', $categoryRequest, $uploader);
+    denied(fn() => $service->decide('scanned', $categoryRequest, $outsider, 'approved', 'Forged'), 'unassigned user cannot approve');
+    denied(fn() => $service->decide('scanned', $categoryRequest, $dco, 'approved', ''), 'approval requires remark');
+    $service->decide('scanned', $categoryRequest, $dco, 'approved', 'Root approved');
+    $category = (int) $fixture->query('SELECT id FROM scanned_categories')->fetch_row()[0];
+    $childRequest = $service->save('scanned', proposal('scanned_category_create', ['title' => 'Nested', 'parent_id' => $category]), $uploader);
+    approve($childRequest);
+    verify(strpos($scanned->categories()[1]['path'], '/') !== FALSE, 'nested approved folder has full path');
+    denied(fn() => $service->save('scanned', proposal('scanned_create', ['scanned_category_id' => 99999]), $uploader), 'unapproved category refused');
+    denied(fn() => $service->save('scanned', proposal('scanned_create', ['scanned_category_id' => $category, 'retention_start_date' => '2026-01-01', 'retention_end_date' => '2026-12-31']), $uploader), 'new document requires an upload');
+    $storage = bin2hex(random_bytes(32)); $path = $root . '/storage/documents/' . $storage;
+    file_put_contents($path, "Scanned fixture\n"); $paths[] = $path;
+    $ci->db->insert('files', ['original_name' => 'fixture.txt', 'storage_name' => $storage, 'size' => filesize($path), 'mime_type' => 'text/plain',
+        'extension' => 'txt', 'fingerprint' => hash_file('sha256', $path), 'domain' => 'scanned', 'purpose' => 'creation', 'uploaded_by' => 3, 'status' => 'pending']);
+    $file = (int) $ci->db->insert_id();
+    $p = proposal('scanned_create', ['scanned_category_id' => $category, 'retention_start_date' => '2026-01-01', 'retention_end_date' => '2026-11-17', 'scan_due_date' => '2026-11-17']);
+    $ci->db->insert('requests', ['reference' => 'SCANNED-FIXTURE', 'type' => 'scanned_create', 'requested_by' => 3, 'status' => 'draft', 'payload' => json_encode(['scanned_file_ids' => [$file]])]);
+    $id = (int) $ci->db->insert_id(); $p['id'] = $id;
+    $service->save('scanned', $p, $uploader); approve($id);
+    $document = $fixture->query('SELECT * FROM scanned_documents')->fetch_assoc(); $documentId = (int) $document['id'];
+    verify($document['title'] === 'Fixture title' && (int) $document['approved_by'] === 2, 'approved upload registers document and DCO');
+    $update = proposal('scanned_update', ['scanned_document_id' => $documentId, 'document_version' => 1, 'title' => 'Updated title', 'scanned_category_id' => $category, 'retention_start_date' => '2026-01-01', 'retention_end_date' => '2026-11-17', 'scan_due_date' => '2026-11-17']);
+    $updateId = $service->save('scanned', $update, $uploader);
+    verify($fixture->query('SELECT title FROM scanned_documents')->fetch_row()[0] === 'Fixture title', 'pending update leaves original untouched');
+    approve($updateId);
+    verify($fixture->query('SELECT title FROM scanned_documents')->fetch_row()[0] === 'Updated title', 'metadata update applied after DCO approval');
+    verify($fixture->query("SELECT status FROM files WHERE id=$file")->fetch_row()[0] === 'approved', 'metadata update keeps approved attachments');
+    denied(fn() => $service->save('scanned', $update, $uploader), 'stale document version refused');
+    denied(fn() => $service->save('scanned', array_replace($update, ['document_version' => 2]), $outsider), 'outside scope update refused');
+    $before = $scanned->alerts($uploader, new DateTimeImmutable('2026-11-17 15:59:59', new DateTimeZone('Asia/Manila')));
+    $at = $scanned->alerts($uploader, new DateTimeImmutable('2026-11-17 16:00:00', new DateTimeZone('Asia/Manila')));
+    verify(count($before) === 0 && count($at) === 2, 'daily upload reminder starts at 4 PM Manila');
+    $expired = $scanned->alerts($uploader, new DateTimeImmutable('2026-11-18 00:00:00', new DateTimeZone('Asia/Manila')));
+    verify(count($expired) === 1 && str_starts_with($expired[0]['key'], 'scanned-expired:'), 'expiration popup starts after full end date');
+    $delete = $service->save('scanned', proposal('scanned_delete', ['scanned_document_id' => $documentId, 'document_version' => 2]), $uploader);
+    verify($fixture->query('SELECT status FROM scanned_documents')->fetch_row()[0] === 'active', 'pending deletion leaves document active');
+    approve($delete);
+    verify($fixture->query('SELECT status FROM scanned_documents')->fetch_row()[0] === 'deleted', 'DCO deletion applied');
+    verify($fixture->query("SELECT status FROM files WHERE id=$file")->fetch_row()[0] === 'deleted', 'deleted files no longer approved');
+    verify(count($scanned->alerts($uploader, new DateTimeImmutable('2026-11-18 16:00:00', new DateTimeZone('Asia/Manila')))) === 1, 'deleted document excluded from reminders');
+    echo "$count integration checks passed\n";
+    if (in_array('--keep', $argv, TRUE)) {
+        file_put_contents($root . '/storage/scanned-test-database.txt', $name); echo "Fixture database: $name\n"; exit(0);
+    }
+} finally {
+    if (!in_array('--keep', $argv, TRUE)) {
+        foreach ($paths as $path) if (is_file($path)) unlink($path);
+        $source->query('DROP DATABASE `' . $name . '`');
+    }
+}

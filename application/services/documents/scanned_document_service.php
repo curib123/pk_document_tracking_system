@@ -85,6 +85,7 @@ class Scanned_document_service
         $old = !empty($post['id']) ? $this->ci->db->get_where('requests', ['id' => (int) $post['id']])->row_array() : NULL;
         $oldPayload = $old ? json_decode($old['payload'], TRUE) : [];
         $payload = [
+            'document_domain' => 'scanned',
             'subject' => trim((string) ($post['subject'] ?? '')), 'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')), 'parent_id' => (int) ($post['parent_id'] ?? 0),
             'scanned_category_id' => (int) ($post['scanned_category_id'] ?? 0),
@@ -130,6 +131,42 @@ class Scanned_document_service
             [(int) ($payload['scanned_document_id'] ?? 0)])->row_array();
         if (!$doc || $doc['status'] !== 'active' || (int) $doc['version'] !== (int) ($payload['document_version'] ?? 0))
             throw new DomainException('The scanned document changed since this proposal. Reload it and create a new request.');
+    }
+
+    public function alerts(array $user, ?DateTimeImmutable $now = NULL): array
+    {
+        $this->ci->load->model('Permission_model');
+        if (!$this->ci->Permission_model->allowed($user, 'scanned_documents', 'view')) return [];
+        $zone = new DateTimeZone('Asia/Manila');
+        $now = ($now ?? new DateTimeImmutable('now', $zone))->setTimezone($zone);
+        $day = $now->format('Y-m-d');
+        $daily = $now->format('H:i') >= '16:00';
+        if (!$this->global_access($user)) $this->ci->db->where('created_by', (int) $user['id']);
+        $this->ci->db->where('status', 'active')->group_start()->where('retention_end_date <', $day);
+        if ($daily) $this->ci->db->or_group_start()->where('scan_due_date IS NOT NULL', NULL, FALSE)
+            ->where('scan_due_date <=', $day)->group_end();
+        $rows = $this->ci->db->group_end()->order_by('retention_end_date')->get('scanned_documents')->result_array();
+        $items = [];
+        foreach ($rows as $doc) {
+            $url = site_url('documents/scanned') . '?' . http_build_query(['q' => $doc['title']]);
+            if ($doc['retention_end_date'] < $day) $items[] = [
+                'key' => 'scanned-expired:' . $doc['id'] . ':' . $doc['retention_end_date'],
+                'title' => $doc['title'], 'reference' => 'Retention ended',
+                'label' => Scanned_policy::countdown($doc['retention_end_date'], $now), 'url' => $url
+            ];
+            if ($daily && !empty($doc['scan_due_date']) && $doc['scan_due_date'] <= $day) $items[] = [
+                'key' => 'scan-daily:' . $day . ':' . $doc['id'], 'title' => $doc['title'],
+                'reference' => 'Upload due ' . $doc['scan_due_date'], 'label' => 'Upload a scanned file and request an update.',
+                'url' => $url, 'alarm' => TRUE, 'daily' => TRUE
+            ];
+        }
+        if ($daily && $this->ci->Permission_model->allowed($user, 'scanned_documents', 'request'))
+            array_unshift($items, [
+                'key' => 'scan-daily:' . $day . ':guide', 'title' => '4:00 PM scanned file upload reminder',
+                'reference' => 'Daily upload check', 'label' => 'Check today’s documents and upload outstanding scanned files for DCO approval. Files must be scanned outside this system.',
+                'url' => site_url('documents/scanned'), 'alarm' => TRUE, 'daily' => TRUE
+            ]);
+        return $items;
     }
 
     /** Called only within the request engine's locked final-approval transaction. */
