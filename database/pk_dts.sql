@@ -2203,3 +2203,12 @@ INSERT IGNORE INTO role_permissions (role_id,permission_id)
 SELECT r.id,p.id FROM roles r JOIN permissions p ON p.module_key='scanned_categories'
  AND p.action_key IN ('view','add','edit','allocate')
 WHERE r.name='Document Control Officer' AND r.active=1;
+
+-- Optional document descriptions; existing scanned records remain valid. Safe to rerun.
+SET @scanned_description_sql = IF(
+ (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()
+  AND TABLE_NAME='scanned_documents' AND COLUMN_NAME='description') = 0,
+ 'ALTER TABLE scanned_documents ADD COLUMN description varchar(2000) NOT NULL DEFAULT \'\' AFTER title', 'SELECT 1');
+PREPARE scanned_description_stmt FROM @scanned_description_sql;
+EXECUTE scanned_description_stmt;
+DEALLOCATE PREPARE scanned_description_stmt;
