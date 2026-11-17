@@ -18,7 +18,7 @@ At **4:00 PM Asia/Manila**, users with upload permission receive a daily reminde
 
 **Roles & Permissions** includes Scanned Documents: View, Upload, Request Update and Request Deletion, plus Scanned Categories: Request Category. General Requests permissions are also needed to create, edit and submit drafts. Existing softcopy view/request grants inherit scanned view/upload and category requests during migration. Administrators assign update/delete permissions separately.
 
-**Workflow Builder** includes upload, update, deletion and category creation routes. They are initially published with a DCO approval step if an active Document Control Officer role exists. Administrators can add earlier steps, but publication, submission and completion enforce the final DCO role. If the role is missing or has no active member, requests cannot proceed until configured. Administrators cannot directly bypass scanned approval.
+**Workflow Builder** includes upload, update, deletion and category creation routes. They are initially published with a DCO approval step if an active Document Control Officer role exists. All four request types go to DCO by default and take effect only after the configured approvals finish. Administrators can edit approvers and add steps in Workflow Builder; published workflow settings determine the route, without a hardcoded DCO role check. If a configured approver role is missing or has no active member, requests cannot proceed until configured. Administrators cannot directly bypass scanned approval.
 
 For an existing installation, apply `database/migrations/20261117_scanned_documents.sql` once (reruns are safe). The repository's database import also includes this migration. Existing document tables and records are preserved.
 
