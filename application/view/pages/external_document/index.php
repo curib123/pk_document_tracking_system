@@ -180,20 +180,7 @@ $layoutLink = static function ($target) use ($folder_params, $folder_value) {
         <strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i> External Document Browser</strong>
         <small>Choose a layout to browse external document categories.</small>
     </div>
-    <nav class="document-layout-switch" aria-label="Choose external document view">
-        <a href="<?= html_escape($layoutLink('table')) ?>"
-            class="document-layout-choice <?= $activeLayout === 'table' ? 'is-active' : '' ?>"
-            aria-label="Switch to table view" <?= $activeLayout === 'table' ? 'aria-current="page"' : '' ?>>
-            <span class="document-layout-choice-icon"><i class="fa-solid fa-table-list" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy">Table</span>
-        </a>
-        <a href="<?= html_escape($layoutLink('folder')) ?>"
-            class="document-layout-choice <?= $activeLayout === 'folder' ? 'is-active' : '' ?>"
-            aria-label="Switch to folder tree view" <?= $activeLayout === 'folder' ? 'aria-current="page"' : '' ?>>
-            <span class="document-layout-choice-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy">Folder</span>
-        </a>
-    </nav>
+    <?php $this->load->view('reusable_components/document_layout_switcher', compact('activeLayout', 'layoutLink')); ?>
 </div>
 <div class="document-register-listing" data-doc-domain="external" data-layout="<?= html_escape($activeLayout) ?>">
 <?php $this->load->view('reusable_components/reusable_datatable', compact(

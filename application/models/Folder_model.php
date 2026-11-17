@@ -14,16 +14,19 @@ class Folder_model extends CI_Model
 
     public function tree($domain)
     {
-        if (!in_array($domain, ['hardcopy', 'softcopy', 'external'], TRUE))
+        if (!in_array($domain, ['hardcopy', 'softcopy', 'external', 'scanned'], TRUE))
             show_404();
         if (isset($this->trees[$domain]))
             return $this->trees[$domain];
         require_once APPPATH . 'services/presentation/folder_tree.php';
         $nodes = [];
-        if (in_array($domain, ['softcopy', 'external'], TRUE)) {
-            $categoryTable = $domain === 'softcopy' ? 'categories' : 'external_categories';
-            $rows = $this->db->select('id,parent_id,name,folder_name')
-                ->get_where($categoryTable, ['active' => 1])->result_array();
+        if (in_array($domain, ['softcopy', 'external', 'scanned'], TRUE)) {
+            $categoryTable = ['softcopy' => 'categories', 'external' => 'external_categories', 'scanned' => 'scanned_categories'][$domain];
+            if ($domain === 'scanned')
+                $rows = $this->db->select('id,parent_id,name,name AS folder_name')->get($categoryTable)->result_array();
+            else
+                $rows = $this->db->select('id,parent_id,name,folder_name')
+                    ->get_where($categoryTable, ['active' => 1])->result_array();
             foreach ($rows as $row)
                 $nodes[] = [
                     'key' => 'category:' . $row['id'],
@@ -205,7 +208,7 @@ class Folder_model extends CI_Model
 
     public function scope_documents($domain, $browser, $alias = 'd')
     {
-        if ($domain === 'softcopy' && !empty($browser['filter']['category_id']) &&
+        if (in_array($domain, ['softcopy', 'scanned'], TRUE) && !empty($browser['filter']['category_id']) &&
             !empty($browser['tree']['nodes'])) {
             // A folder-only category is a parent of nested folders and numbered
             // categories. Browsing it includes descendants instead of showing

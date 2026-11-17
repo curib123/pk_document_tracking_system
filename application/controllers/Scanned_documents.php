@@ -8,15 +8,28 @@ class Scanned_documents extends MY_Controller
     {
         $this->require_permission('scanned_documents', 'view');
         $service = new Scanned_document_service();
+        $this->load->model('Folder_model');
         $state = $this->table_state('updated_at');
         $category = max(0, (int) $this->input->get('category'));
         $status = in_array($state['status'], ['active', 'deleted'], TRUE) ? $state['status'] : 'active';
-        $filter = function () use ($service, $state, $category, $status) {
+        $folder = trim((string) $this->input->get('folder', TRUE));
+        if (strlen($folder) > 100) { show_404(); return; }
+        $browser = $this->Folder_model->browse('scanned', $folder);
+        if ($state['layout'] === 'folder' && $state['q'] !== '') {
+            require_once APPPATH . 'services/presentation/folder_search.php';
+            $browser['search'] = Folder_search::for_browser($browser, $state['q'], 'scanned');
+        }
+        $filter = function () use ($service, $state, $category, $status, $browser) {
             $this->db->from('scanned_documents d')->join('scanned_categories c', 'c.id=d.category_id')
                 ->where('d.status', $status);
             if (!$service->global_access($this->user)) $this->db->where('d.created_by', (int) $this->user['id']);
             if ($category) $this->db->where('d.category_id', $category);
-            if ($state['q'] !== '') $this->db->group_start()->like('d.title', $state['q'])->or_like('c.name', $state['q'])->group_end();
+            if ($state['q'] !== '') {
+                $this->db->group_start()->like('d.title', $state['q'])->or_like('c.name', $state['q']);
+                if (!empty($browser['search']['categories'])) $this->db->or_where_in('d.category_id', $browser['search']['categories']);
+                $this->db->group_end();
+            }
+            $this->Folder_model->scope_documents('scanned', $browser, 'd');
         };
         $filter(); $total = $this->db->count_all_results();
         $state['page'] = min($state['page'], max(1, (int) ceil($total / $state['limit'])));
@@ -34,7 +47,7 @@ class Scanned_documents extends MY_Controller
         $state['status'] = $status;
         $this->render('Scanned Documents', 'pages/scanned_document/index', [
             'rows' => $rows, 'table' => $state, 'total' => $total, 'files' => $files,
-            'categories' => $service->categories(), 'selected_category' => $category
+            'categories' => $service->categories(), 'selected_category' => $category, 'folder_browser' => $browser
         ]);
     }
 

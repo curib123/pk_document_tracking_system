@@ -14,7 +14,7 @@ final class Document_folder_tree
             require_once __DIR__ . '/hardcopy_folder_tree.php';
             return Hardcopy_folder_tree::folder_key($row, $nodes);
         }
-        $levels = in_array($domain, ['softcopy', 'external'], TRUE)
+        $levels = in_array($domain, ['softcopy', 'external', 'scanned'], TRUE)
             ? ['category' => 'category_id']
             : [
                 'location' => 'location_id',
