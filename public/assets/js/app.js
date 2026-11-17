@@ -562,6 +562,10 @@
       if (!target) return;
       target.reset();
       var record = parse(edit, "record");
+      // Hidden input values survive reset; a new record must clear the edited ID.
+      target.querySelectorAll('input[type="hidden"][name="id"], input[type="hidden"][name="version"]').forEach(function (field) {
+        field.value = record[field.name] ?? "";
+      });
       var lockedAttachment = !!record.locked_attachment;
       target
         .querySelectorAll('[name="revision_attachment"], [name="external_attachment[]"]')

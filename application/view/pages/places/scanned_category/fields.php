@@ -6,7 +6,7 @@
   <label class="form-label" for="scannedFolderParent">Parent Folder (optional)</label>
   <?php if ($can('edit') || $can('add')): ?>
     <select class="form-select" id="scannedFolderParent" name="parent_id" data-searchable>
-      <option value="">No parent ? create a root folder</option>
+      <option value="">No parent - create a root folder</option>
       <?php foreach ($options['scanned_categories'] as $category): ?>
         <option value="<?= (int) $category['id'] ?>"><?= html_escape($category['path']) ?></option>
       <?php endforeach; ?>
