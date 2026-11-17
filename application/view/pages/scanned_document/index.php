@@ -47,7 +47,6 @@ $dt_filter_values = ['status' => $table['status'], 'category' => $selected_categ
     <a class="btn btn-light" href="<?= site_url('my-requests/scanned') ?>">My Scanned Requests</a>
     <button class="btn btn-light" type="button" data-scan-alarm-enable>Enable reminder sound</button>
   </div>
-  <p class="text-secondary mb-0">Choose a folder using the category filter. Folder paths show nested categories. Uploads, changes and deletions need DCO approval. Retention includes the full end date; expired records trigger a popup. At 4:00 PM Philippine time, a reminder lists scanned file uploads due while you have the app open.</p>
 </section>
 <?php $this->load->view('reusable_components/reusable_datatable', compact('dt_path', 'dt_q', 'dt_filter', 'dt_page',
     'dt_limit', 'dt_total', 'dt_sort', 'dt_dir', 'dt_sortable', 'dt_filters', 'dt_filter_values', 'dt_create', 'dt_columns', 'dt_rows')); ?>
