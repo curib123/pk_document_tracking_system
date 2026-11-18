@@ -253,10 +253,13 @@ Replace `<archive-name.zip>` with the intended archive name.
 [install_backup_schedule.ps1](tools/install_backup_schedule.ps1) registers a daily
 4:45 PM maintenance task and 5:00 PM backup task on a Windows host using UTC+08:00.
 Maintenance handles retention and controlled-file reconciliation outside of user
-requests. Run the installer from an elevated PowerShell session with the required
+requests. It removes managed uploads and PDF previews at least 24 hours old
+whose storage name has no row in the configured database's `files` table.
+Run the installer from an elevated PowerShell session with the required
 configuration available to the SYSTEM account. Check that both scheduled runs
 succeed. The maintenance task can also be run manually with
-`php public/index.php maintenance run`.
+`php public/index.php maintenance run`. To run only the unregistered-file cleanup,
+use `php public/index.php maintenance run orphans`.
 
 Restoring replaces application data. Confirm the archive and target database
 before restoring; the command-line tool requires its explicit `--confirm` flag.

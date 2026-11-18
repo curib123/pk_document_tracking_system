@@ -94,11 +94,23 @@ final class Backup_service
             return $this->retentionService()->cleanup($now);
         } finally {$this->unlock($lock);}
     }
-    public function apply_retention_daily(?DateTimeImmutable $now=NULL): ?array
+    public function maintain_daily(callable $reconcileFiles): ?array
     {
-        if (file_exists($this->root.'/storage/.restore-in-progress')) return NULL;
+        return $this->with_maintenance_lock(function () use ($reconcileFiles) {
+            $result=$this->retentionService()->cleanup_daily();
+            if ($result===NULL || !$result['failed'])
+                $reconcileFiles();
+            return $result;
+        });
+    }
+    public function with_maintenance_lock(callable $operation)
+    {
         $lock=$this->lock();
-        try {return $this->retentionService()->cleanup_daily($now);}
+        try {
+            if (file_exists($this->root.'/storage/.restore-in-progress'))
+                throw new DomainException('Daily maintenance is paused during restore.');
+            return $operation();
+        }
         finally {$this->unlock($lock);}
     }
     private function retentionService(): Retention_service

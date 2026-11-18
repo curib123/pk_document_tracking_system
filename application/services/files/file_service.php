@@ -3,6 +3,9 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class File_service
 {
+    private const ORPHAN_GRACE_SECONDS = 86400;
+    private const ORPHAN_BATCH_SIZE = 250;
+
     private $ci;
     /** Storage name of the most recently staged upload (for rollback cleanup). */
     public $last_storage = '';
@@ -154,13 +157,27 @@ class File_service
         return $removed;
     }
 
-    /** Daily reconciliation also covers legacy terminal records and deleted documents. */
+    /** Reconcile retired files and storage entries without a database record once per day. */
     public function cleanup_daily(): bool
+    {
+        if (!$this->cleanup_orphans_daily())
+            return FALSE;
+        return $this->run_daily_cleanup('controlled-file-cleanup', fn() => $this->reconcile_retired());
+    }
+
+    public function cleanup_orphans_daily(): bool
+    {
+        // Test databases can share the workspace's live upload directory.
+        return getenv('PK_TEST_DB') === '1' ||
+            $this->run_daily_cleanup('orphan-file-cleanup', fn() => $this->cleanup_unregistered());
+    }
+
+    private function run_daily_cleanup(string $checkpoint, callable $clean): bool
     {
         if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return FALSE;
         $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
         $databaseKey = $this->ci->db->hostname . ':' . $this->ci->db->database;
-        $marker = PK_ROOT . '/storage/.controlled-file-cleanup-' . substr(hash('sha256', $databaseKey), 0, 16);
+        $marker = PK_ROOT . "/storage/.$checkpoint-" . substr(hash('sha256', $databaseKey), 0, 16);
         if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return TRUE;
         $lock = @fopen($marker, 'c+');
         if (!$lock) {
@@ -173,7 +190,7 @@ class File_service
             $locked = TRUE;
             rewind($lock);
             if (trim((string) stream_get_contents($lock)) === $day) return TRUE;
-            $this->reconcile_retired();
+            $clean();
             rewind($lock);
             if (!ftruncate($lock, 0) || fwrite($lock, $day) === FALSE || !fflush($lock)) {
                 log_message('error', 'Daily Document Filecleanup could not update its checkpoint; it will be retried.');
@@ -186,6 +203,70 @@ class File_service
         } finally {
             if ($locked) flock($lock, LOCK_UN);
             fclose($lock);
+        }
+    }
+
+    private function cleanup_unregistered(): void
+    {
+        $cutoff = time() - self::ORPHAN_GRACE_SECONDS;
+        $storage = realpath(PK_ROOT . '/storage');
+        if ($storage === FALSE)
+            throw new RuntimeException('Private storage is unavailable.');
+
+        foreach (['documents' => '/^([a-f0-9]{64})$/D', 'previews' => '/^([a-f0-9]{64})\.pdf$/D'] as $folder => $pattern) {
+            $directory = $storage . DIRECTORY_SEPARATOR . $folder;
+            if (!file_exists($directory) && !is_link($directory))
+                continue;
+            if (is_link($directory) || realpath($directory) !== $directory)
+                throw new RuntimeException('Private storage contains an unexpected directory link.');
+
+            $candidates = [];
+            foreach (new FilesystemIterator($directory) as $entry) {
+                if (!preg_match($pattern, $entry->getFilename(), $matches) ||
+                    !$this->is_old_stored_file($entry->getPathname(), $cutoff))
+                    continue;
+                $candidates[$matches[1]] = $entry->getPathname();
+                if (count($candidates) === self::ORPHAN_BATCH_SIZE) {
+                    $this->remove_unregistered_batch($candidates, $cutoff);
+                    $candidates = [];
+                }
+            }
+            if ($candidates)
+                $this->remove_unregistered_batch($candidates, $cutoff);
+        }
+    }
+
+    private function is_old_stored_file(string $path, int $cutoff): bool
+    {
+        clearstatcache(TRUE, $path);
+        if (is_link($path) || !is_file($path))
+            return FALSE;
+        $modified = @filemtime($path);
+        return $modified !== FALSE && $modified <= $cutoff;
+    }
+
+    private function remove_unregistered_batch(array $candidates, int $cutoff): void
+    {
+        $db = $this->ci->db;
+        if (!$db->trans_begin())
+            throw new RuntimeException('Could not start the stored file check.');
+        try {
+            // Locking reads wait for concurrent uploads to commit their metadata.
+            $rows = $db->query('SELECT storage_name FROM files WHERE storage_name IN ? FOR UPDATE', [array_keys($candidates)]);
+            if (!$rows)
+                throw new RuntimeException('Could not verify stored files against the database.');
+            foreach ($rows->result_array() as $row)
+                unset($candidates[strtolower($row['storage_name'])]);
+
+            foreach ($candidates as $path) {
+                if ($this->is_old_stored_file($path, $cutoff) && !@unlink($path) && $this->is_old_stored_file($path, $cutoff))
+                    throw new RuntimeException('Could not remove an unregistered stored file.');
+            }
+            if (!$db->trans_commit())
+                throw new RuntimeException('Could not complete the stored file check.');
+        } catch (Throwable $error) {
+            $db->trans_rollback();
+            throw $error;
         }
     }
 
