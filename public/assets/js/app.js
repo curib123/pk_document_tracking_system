@@ -306,17 +306,26 @@
   // Each data cell opens the exact same reusable View modal as the eye
   // action; action buttons and links remain independent and never trigger it.
   var recordViewRequest = 0;
-  function openRecordDetails(serialized, recordTitle) {
+  function openRecordDetails(serialized, recordTitle, source) {
     recordViewRequest++;
     var modal = document.getElementById("viewModal");
     var details = document.getElementById("viewDetails");
     var heading = document.getElementById("viewModalTitle");
     if (!modal || !details) return;
+    var reviewActions = document.getElementById("viewReviewActions");
+    reviewActions.replaceChildren();
+    reviewActions.hidden = true;
     try {
       var data = JSON.parse(serialized);
       if (!data || typeof data !== "object")
         throw new Error("Invalid record details");
       renderRecordDetails(details, data);
+      var actions = source?.closest(".record-actions-horizontal")?.nextElementSibling;
+      if (!actions?.matches("template[data-review-actions]")) actions = null;
+      if (actions) {
+        reviewActions.append(actions.content.cloneNode(true));
+        reviewActions.hidden = false;
+      }
       if (heading && !window.PKDocumentView)
         heading.textContent = recordTitle || "View Details";
     } catch (error) {
@@ -404,13 +413,18 @@
   var sharedViewModal = document.getElementById("viewModal");
   if (sharedViewModal)
     sharedViewModal.addEventListener("hidden.bs.modal", function () {
+      if (sharedViewModal.hasAttribute("data-review-suspended")) return;
       recordViewRequest++;
+      var reviewActions = document.getElementById("viewReviewActions");
+      reviewActions.replaceChildren();
+      reviewActions.hidden = true;
     });
   function showTableCellDetails(row) {
     if (!row || !row.hasAttribute("data-row-view")) return;
     openRecordDetails(
       row.getAttribute("data-row-view"),
       row.getAttribute("data-row-title"),
+      row.querySelector(".js-view"),
     );
   }
   document.addEventListener("click", function (event) {
@@ -643,6 +657,7 @@
         openRecordDetails(
           view.getAttribute("data-display"),
           view.getAttribute("data-title"),
+          view,
         );
     }
 

@@ -2,8 +2,13 @@
 // Single source of truth for row actions in table, grid and folder layouts.
 // Text labels are always visible; icons are decorative only.
 ?>
-<div class="record-actions-horizontal">
-    <?php foreach ($dt_row['buttons'] ?? [] as $button):
+<?php foreach (['buttons', 'review_buttons'] as $group): ?>
+<?php if (empty($dt_row[$group])) continue; ?>
+<?php if ($group === 'review_buttons'): ?>
+<template data-review-actions>
+<?php endif; ?>
+<div class="<?= $group === 'review_buttons' ? 'd-flex flex-wrap gap-2' : 'record-actions-horizontal' ?>">
+    <?php foreach ($dt_row[$group] as $button):
         $type = $button['type'] ?? '';
         $label = $button['label'] ?? [
             'view' => 'View',
@@ -16,7 +21,7 @@
         ][$type] ?? 'Action';
         ?>
         <?php if ($type === 'view'): ?>
-            <button type="button" class="btn-icon record-action record-action-view js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
+            <button type="button" class="<?= empty($button['primary']) ? 'btn-icon record-action record-action-view' : 'btn btn-primary btn-sm text-nowrap' ?> js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>"
                 <?php if (!empty($button['view_url'])): ?>data-view-url="<?= html_escape($button['view_url']) ?>"<?php endif; ?>
                 data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>"
@@ -79,7 +84,10 @@
                 in_array(strtolower((string) $label), ['cancel', 'deactivate', 'remove', 'delete', 'reject', 'return'], TRUE)
                 ? 'danger' : 'primary';
             ?>
-            <button type="button" class="btn-icon record-action record-action-<?= $intent ?> js-action"
+            <?php $actionClass = $group === 'review_buttons'
+                ? 'btn btn-sm ' . ['approved' => 'btn-primary', 'returned' => 'btn-outline-secondary', 'rejected' => 'btn-outline-danger'][$button['decision']]
+                : 'btn-icon record-action record-action-' . $intent; ?>
+            <button type="button" class="<?= $actionClass ?> js-action"
                 title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
                 data-url="<?= site_url($button['url']) ?>" data-id="<?= (int) $dt_row['id'] ?>"
                 data-decision="<?= html_escape($button['decision'] ?? '') ?>"
@@ -96,3 +104,7 @@
         <?php endif; ?>
     <?php endforeach; ?>
 </div>
+<?php if ($group === 'review_buttons'): ?>
+</template>
+<?php endif; ?>
+<?php endforeach; ?>

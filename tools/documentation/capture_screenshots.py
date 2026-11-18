@@ -249,15 +249,16 @@ def capture(page, base, review_request):
             shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
         if 'review-file' in only:
             goto('my-tasks/softcopy?period=all')
-            page.get_by_role('button', name='View', exact=True).first.click()
+            page.get_by_role('button', name='Review request', exact=True).first.click()
             page.get_by_role('tab', name='Document File', exact=True).click()
             page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
             shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
         if 'workflow-tasks' in only:
             # Extra screen for the Process Flow deck; kept outside the guide manifest.
             only.discard('workflow-tasks')
-            page.set_viewport_size({'width': 1700, 'height': 900})  # wide enough to show every row action
+            page.set_viewport_size({'width': 1700, 'height': 900})
             goto('my-tasks/softcopy?period=all')
+            page.get_by_role('button', name='Review request', exact=True).first.click()
             extra = OUTPUT / 'workflow'
             extra.mkdir(exist_ok=True)
             marks = {}
@@ -341,18 +342,19 @@ def capture(page, base, review_request):
     page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
     shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
     goto('my-tasks/softcopy?period=all')
-    page.get_by_role('button', name='View', exact=True).first.click()
+    page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('tab', name='Document File', exact=True).click()
     page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
     shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
     goto('my-requests/softcopy?period=all')
     shot('request-lifecycle', 'A saved draft remains in My Requests until submitted.')
     goto('my-tasks/softcopy?period=all')
+    page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('button', name='Approve', exact=True).first.click()
     shot('approvals', 'Review the selected approval decision before confirming.',
          '#confirmModal .modal-content', controls=[('Approval decision', '#confirmMessage'), ('Confirm', '#confirmProceed')])
     goto('my-tasks/softcopy?period=all')
-    page.get_by_role('button', name='View', exact=True).first.click()
+    page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('tab', name='Approval Process Timeline', exact=True).click()
     shot('approval-routes', 'View Details includes the request approval process.', '#viewModal .modal-content')
     for identifier, route in [('transfer-request', 'hardcopy-transfer'), ('access-request', 'access-grant'),

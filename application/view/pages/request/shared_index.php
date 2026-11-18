@@ -218,6 +218,7 @@ foreach ($rows as $row) {
     $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => $scanFields, 'links' => $scanLinks];
   }
   $display = [
+    'review' => $task,
     'kind' => $isDocumentRequest ? 'document' : 'record',
     'domain' => $documentDomain,
     'header' => [
@@ -277,7 +278,10 @@ foreach ($rows as $row) {
     'destination_specific_id' => $payload['destination_specific_id'] ?? '',
     'destination_asset_id' => $payload['destination_asset_id'] ?? ''
   ];
-  $buttons = [['type' => 'view']];
+  $buttons = [$task
+    ? ['type' => 'view', 'label' => 'Review request', 'primary' => TRUE, 'icon' => 'fa-solid fa-file-circle-check']
+    : ['type' => 'view']];
+  $reviewButtons = [];
   $canEdit = isset($permissions['*']) || !empty($permissions['requests']['edit']);
   if (!$task && in_array($row['status'], ['draft', 'returned'], TRUE) && in_array($row['type'], $allowed_request_types, TRUE)) {
     if ($canEdit)
@@ -318,15 +322,33 @@ foreach ($rows as $row) {
   $finalSourceId = 0;
   if ($needsFinalFile)
     $finalSourceId = (int) ($payload['controlled_file_id'] ?? $payload['revision_file_id'] ?? 0);
+  $returnDescription = 'Send this request back for review or changes.';
+  if ($task && !empty($row['step_id'])) {
+    $route = $approval_routes[$row['id']] ?? [];
+    $stepKeys = array_column((array) ($snapshot['steps'] ?? []), 'key');
+    $stepIndex = array_search($row['current_node'], $stepKeys, TRUE);
+    if ($stepIndex === 0) {
+      $returnDescription = 'Return this request to the requester for changes.';
+    } elseif ($stepIndex !== FALSE) {
+      $returnDescription = 'Return this request to the previous reviewer.';
+      $routeIndex = array_search((int) $row['step_id'], array_map('intval', array_column($route, 'step_id')), TRUE);
+      $previous = $routeIndex ? $route[$routeIndex - 1] : [];
+      if (($previous['node_key'] ?? NULL) === $stepKeys[$stepIndex - 1])
+        $returnDescription = 'Return this request to ' . ($previous['approver_label'] ?: $previous['label']) . ' for review.';
+    }
+  }
   if ($task && $row['status'] === 'submitted')
     foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
-      $buttons[] = [
+      $reviewButtons[] = [
         'type' => 'action',
         'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
         'skip_remarks' => $tab === 'scanned',
         'label' => $label,
-        'description' => "Record {$record['title']} for this workflow step.",
+        'description' => $decision === 'returned' ? $returnDescription : match ($decision) {
+          'approved' => 'Approve this workflow step for ' . $headerTitle . '.',
+          'rejected' => 'Reject this request and end its approval workflow.'
+        },
         'icon' => $decision === 'approved'
           ? 'fa-solid fa-check'
           : ($decision === 'rejected'
@@ -353,7 +375,8 @@ foreach ($rows as $row) {
     ],
     'display' => $display,
     'record' => $record,
-    'buttons' => $buttons
+    'buttons' => $buttons,
+    'review_buttons' => $reviewButtons
   ];
 }
 $dt_q = $table['q'];
@@ -372,7 +395,7 @@ $dt_filter_values = [
   'from' => $table['from'],
   'to' => $table['to']
 ];
-$dt_filters = [
+$dt_filters = $task ? [] : [
   'status' => [
     '' => 'All Statuses',
     'draft' => 'Draft',

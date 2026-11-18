@@ -81,10 +81,27 @@
     form.querySelector('[name="confirmed"]').value = needsDetails
       ? "yes"
       : "no";
-    if (needsDetails)
-      window.bootstrap.Modal.getOrCreateInstance(
-        document.getElementById("actionModal"),
-      ).show();
-    else form.requestSubmit();
+    var next = document.getElementById(needsDetails ? "actionModal" : "confirmModal");
+    function confirmAction() {
+      if (needsDetails) window.bootstrap.Modal.getOrCreateInstance(next).show();
+      else form.requestSubmit();
+    }
+    var review = action.closest("#viewModal.show");
+    if (!review) {
+      confirmAction();
+      return;
+    }
+
+    // Bootstrap supports one open modal. Keep the review's selected tab and
+    // scroll position when the reviewer cancels a decision.
+    review.setAttribute("data-review-suspended", "");
+    review.addEventListener("hidden.bs.modal", confirmAction, { once: true });
+    next.addEventListener("hidden.bs.modal", function () {
+      review.removeAttribute("data-review-suspended");
+      if (!needsDetails && form.querySelector('[name="confirmed"]').value === "yes") return;
+      review.addEventListener("shown.bs.modal", function () { action.focus(); }, { once: true });
+      window.bootstrap.Modal.getOrCreateInstance(review).show();
+    }, { once: true });
+    window.bootstrap.Modal.getOrCreateInstance(review).hide();
   });
 })();

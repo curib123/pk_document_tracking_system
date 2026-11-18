@@ -1153,6 +1153,9 @@
     sidebar.setAttribute("role", "tablist");
     sidebar.setAttribute("aria-label", assigned ? "Assigned document types" : "Document detail concerns");
     var main = node("div", "doc-modal-main");
+    var initialTab = data.review
+      ? Math.max(0, concerns.findIndex(function (section) { return section.key === "files"; }))
+      : 0;
     concerns.forEach(function (section, i) {
       var key = section.key || "overview";
       var id = "viewDocSection" + i;
@@ -1161,9 +1164,9 @@
       tab.id = "viewDocTab" + i;
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", id);
-      tab.setAttribute("aria-selected", i === 0 ? "true" : "false");
-      tab.tabIndex = i === 0 ? 0 : -1;
-      if (i === 0) tab.classList.add("is-active");
+      tab.setAttribute("aria-selected", i === initialTab ? "true" : "false");
+      tab.tabIndex = i === initialTab ? 0 : -1;
+      if (i === initialTab) tab.classList.add("is-active");
       tab.append(
         icon(key),
         node("span", "doc-modal-tab-name", section.title || "Details"),
@@ -1174,7 +1177,7 @@
       panel.setAttribute("role", "tabpanel");
       panel.setAttribute("aria-labelledby", tab.id);
       panel.tabIndex = 0;
-      panel.hidden = i !== 0;
+      panel.hidden = i !== initialTab;
       renderSection(panel, section);
       main.append(panel);
     });
@@ -1215,6 +1218,7 @@
   // Clear permission-scoped record details once the modal closes, so a
   // later generic View Details action never flashes the previous document.
   modal.addEventListener("hidden.bs.modal", function () {
+    if (modal.hasAttribute("data-review-suspended")) return;
     reset();
     var details = document.getElementById("viewDetails");
     if (details) details.replaceChildren();
