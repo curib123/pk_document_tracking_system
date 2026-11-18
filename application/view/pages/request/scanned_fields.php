@@ -1,4 +1,4 @@
-<div class="col-12"><p class="text-secondary mb-0">Every upload, update, deletion and new category requires approval through the configured workflow (DCO by default). Save a draft, then submit it. Approved records stay unchanged while a request is pending.</p></div>
+<div class="col-12"><p class="text-secondary mb-0">Every upload, update, deletion and new category requires approval through the configured workflow (DCO by default). Approved records stay unchanged while a request is pending.</p></div>
 <div class="d-none">
   <label class="form-label" for="scannedRequestType">Request Action</label>
   <select class="form-select" name="type" id="scannedRequestType" required>

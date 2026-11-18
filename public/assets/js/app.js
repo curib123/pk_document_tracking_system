@@ -643,7 +643,7 @@
   }
 
   var requestPicker = document.getElementById("requestActionPicker");
-  var requestSave = document.getElementById("requestDraftSave");
+  var requestFormSubmit = document.getElementById("requestFormSubmit");
   function showRequestForm(action, editing) {
     requestPicker.value = action;
     requestPicker.disabled = editing;
@@ -653,9 +653,9 @@
     document.querySelectorAll("form[data-request-form]").forEach(function (candidate) {
       candidate.hidden = candidate !== form;
     });
-    requestSave.disabled = !formId;
-    requestSave.setAttribute("form", formId);
-    if (form) form.action = option.dataset.saveUrl;
+    requestFormSubmit.disabled = !formId;
+    requestFormSubmit.setAttribute("form", formId);
+    if (form) form.action = option.dataset.requestUrl;
     return form;
   }
 

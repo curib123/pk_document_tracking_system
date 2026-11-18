@@ -1,4 +1,5 @@
 <?php
+$submitFromModal = $canRequest('submit');
 $fieldViews = [
   'softcopy' => 'softcopy_fields',
   'external' => 'external_fields',
@@ -37,7 +38,7 @@ foreach ($allowed_request_types as $type) {
                 <?php foreach ($options as $type): ?>
                   <option value="<?= html_escape($type) ?>"
                     data-request-form="request-form-<?= $category === 'document-assign' ? 'access-grant' : $category ?>"
-                    data-save-url="<?= site_url('my-requests/' . $category . '/save') ?>">
+                    data-request-url="<?= site_url('my-requests/' . $category . ($submitFromModal ? '/save-and-submit' : '/save')) ?>">
                     <?= html_escape($actionLabels[$type]) ?>
                   </option>
                 <?php endforeach; ?>
@@ -49,7 +50,7 @@ foreach ($allowed_request_types as $type) {
           <form id="request-form-<?= $group ?>" method="post" enctype="multipart/form-data" hidden
             data-request-form data-allowed-request-types="<?= html_escape(json_encode($formTypes)) ?>"
             <?= $group === 'scanned' ? 'data-scanned-form' : ($group === 'hardcopy-transfer' ? 'data-hardcopy-transfer' : '') ?>
-            data-confirm="Save request draft?" autocomplete="off">
+            data-confirm="<?= $submitFromModal ? 'Submit this request for approval?' : 'Save request draft?' ?>" autocomplete="off">
             <div class="row g-3">
               <?php
               $fieldData = match ($group) {
@@ -76,7 +77,7 @@ foreach ($allowed_request_types as $type) {
       </div>
       <div class="modal-footer">
         <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="requestDraftSave" type="submit" disabled>Save Draft</button>
+        <button class="btn btn-primary" id="requestFormSubmit" type="submit" disabled><?= $submitFromModal ? 'Submit Request' : 'Save Draft' ?></button>
       </div>
     </div>
   </div>

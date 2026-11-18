@@ -207,8 +207,20 @@ class Requests extends MY_Controller
 
     public function save($tab)
     {
+        $this->persist_request($tab, FALSE);
+    }
+
+    public function save_and_submit($tab)
+    {
+        $this->persist_request($tab, TRUE);
+    }
+
+    private function persist_request($tab, bool $submit): void
+    {
         $this->Request_model->types($tab);
         $this->require_permission('requests', (int) $this->input->post('id') ? 'edit' : 'add');
+        if ($submit)
+            $this->require_permission('requests', 'submit');
         $this->confirmed();
         try {
             if (in_array((string) $this->input->post('type'), ['hardcopy_create', 'hardcopy_update'], TRUE)) {
@@ -218,10 +230,11 @@ class Requests extends MY_Controller
                 $tab,
                 $this->input->post(),
                 $this->user,
-                $_FILES['scanned_attachment'] ?? ($_FILES['external_attachment'] ?? ($_FILES['revision_attachment'] ?? NULL))
+                $_FILES['scanned_attachment'] ?? ($_FILES['external_attachment'] ?? ($_FILES['revision_attachment'] ?? NULL)),
+                $submit
             );
             $this->audit_created('requests', $savedId);
-            $this->notice('Request draft saved.');
+            $this->notice($submit ? 'Request submitted for approval.' : 'Request draft saved.');
         } catch (Throwable $e) {
             $this->error_notice($e);
         }

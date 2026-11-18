@@ -60,7 +60,7 @@ class Request_service
             );
     }
 
-    public function save($tab, $post, $user, $attachment = NULL)
+    public function save($tab, $post, $user, $attachment = NULL, bool $submit = FALSE)
     {
         $type = (string) ($post['type'] ?? '');
         if (in_array($type, ['hardcopy_create', 'hardcopy_update'], TRUE)) {
@@ -75,8 +75,11 @@ class Request_service
             throw new DomainException(
                 'You don’t have permission to create or edit this request.'
             );
+        if ($submit && !$this->ci->Permission_model->allowed($user, 'requests', 'submit'))
+            throw new DomainException('Request submission permission is required.');
         $this->stagedPaths = [];
-        $this->ci->db->trans_begin();
+        if (!$this->ci->db->trans_begin())
+            throw new DomainException('Could not save the request. Please try again.');
         try {
             if ($id) {
                 $request = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->row_array();
@@ -89,7 +92,11 @@ class Request_service
                 throw new DomainException(
                     'We couldn’t save your request. Please try again.'
                 );
-            $this->ci->db->trans_commit();
+            // The nested submission transaction shares this commit and upload rollback.
+            if ($submit)
+                $this->submit($tab, $result, $user);
+            if (!$this->ci->db->trans_commit())
+                throw new DomainException('Could not save the request. Please try again.');
             $this->stagedPaths = [];
             return $result;
         } catch (Throwable $e) {
@@ -100,7 +107,7 @@ class Request_service
             $this->stagedPaths = [];
             if ($e instanceof DomainException)
                 throw $e;
-            log_message('error', 'Request draft transaction failed.');
+            log_message('error', 'Request save transaction failed.');
             throw new DomainException('Request could not be saved. Refresh and try again.');
         }
     }
@@ -555,7 +562,8 @@ class Request_service
 
     public function submit($tab, $id, $user)
     {
-        $this->ci->db->trans_begin();
+        if (!$this->ci->db->trans_begin())
+            throw new DomainException('Could not submit the request. Please try again.');
         try {
             $rows = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->result_array();
             $r = $rows[0] ?? NULL;
@@ -718,7 +726,8 @@ class Request_service
             $this->history($id, NULL, 'submitted', $user, NULL);
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Workflow submission failed.');
-            $this->ci->db->trans_commit();
+            if (!$this->ci->db->trans_commit())
+                throw new DomainException('Could not submit the request. Please try again.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException)

@@ -55,7 +55,7 @@ final class Audit_describer
         if (preg_match('#^documents/(\w+)/save$#', $a, $x)) return 'added or updated a ' . $x[1] . ' document record';
         if (preg_match('#^my-tasks/([\w-]+)/decide$#', $a, $x))
             return (self::DECISIONS[$in['decision'] ?? ''] ?? 'acted on') . ' a ' . str_replace('-', ' ', $x[1]) . ' request in their approval tasks';
-        if (preg_match('#^my-requests/([\w-]+)/submit$#', $a, $x)) return 'submitted a ' . str_replace('-', ' ', $x[1]) . ' request for approval';
+        if (preg_match('#^my-requests/([\w-]+)/(?:save-and-)?submit$#', $a, $x)) return 'submitted a ' . str_replace('-', ' ', $x[1]) . ' request for approval';
         if (preg_match('#^my-requests/([\w-]+)/save$#', $a, $x)) return 'saved a draft ' . str_replace('-', ' ', $x[1]) . ' request';
         if (preg_match('#^my-requests/([\w-]+)/delete$#', $a, $x)) return 'deleted a cancelled draft ' . str_replace('-', ' ', $x[1]) . ' request';
         if (preg_match('#^my-requests/([\w-]+)/cancel$#', $a, $x)) return 'cancelled a ' . str_replace('-', ' ', $x[1]) . ' request';
