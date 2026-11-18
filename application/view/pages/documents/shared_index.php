@@ -7,6 +7,7 @@ $canFile = static function ($action) use ($permissions) {
     return isset($permissions['*']) || !empty($permissions['files'][$action]);
 };
 $canBypassLock = $canFile('download_locked');
+$activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
 // Keep document registers scannable. All other metadata remains available in
 // the shared permission-scoped View Details modal, not duplicated in the table.
 $dt_columns = $cfg['domain'] === 'hardcopy'
@@ -108,7 +109,7 @@ foreach ($rows as $r) {
             }
             if ($canFile('history'))
                 $buttons[] = ['type' => 'history', 'files' => $historyEntries];
-            if (!empty($latest_files[$r['id']])) {
+            if ($activeLayout === 'folder' && !empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
                 // Locked files are read-only: preview them from View Details. The
                 // original download remains with Download Locked Files roles.
@@ -202,7 +203,6 @@ $dt_badges = ['status'];
 $dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Add New Softcopy Document' : 'Add New Hardcopy Document') : '';
 $dt_folder_browser = $folder_browser;
 $dt_folder_domain = $cfg['domain'];
-$activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
 $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value) {
     $params = array_merge($folder_params, [
         'folder' => $folder_value,
