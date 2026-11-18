@@ -38,6 +38,9 @@ Search, Table and Folder views, filters, notifications, and light/dark mode help
 with daily work. A browser installation option is available when supported;
 the system still needs a network connection.
 
+Expand **My Requests** or **My Tasks** in the sidebar to open a request category.
+Each category has its own route and count badge; the current category stays highlighted.
+
 Hardcopy registration and editing use direct actions. New hardcopy creation or
 update requests and new softcopy cancellation requests are unavailable. Eligible
 unsubmitted drafts can be cancelled; older request histories remain readable.
@@ -152,7 +155,7 @@ updates address these cases:
 | External document numbers and Subsidiary setup | [External document subsidiaries](database/migrations/20261107_external_document_subsidiaries.sql), after External Categories |
 | Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
 | Workflow-triggered document locking, Plant Manager defaults, and historical approvals | [Workflow document lock fields](database/migrations/20261110_workflow_document_locks.sql), then [Designate Plant Manager](database/migrations/20261110_designate_plant_manager_document_lock.sql), then [Backfill Plant Manager locks](database/migrations/20261110_backfill_plant_manager_document_locks.sql) |
-| Workflow names matching My Requests tabs | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
+| Workflow names matching request categories | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
 | The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
 | Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
 | Multiple folder-only Softcopy Categories | [Folder category pattern migration](database/migrations/20261107_softcopy_folder_category_patterns.sql), after Softcopy Category Types |

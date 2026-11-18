@@ -11,6 +11,17 @@ $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
 
+$requestRoutes = [
+    'softcopy' => 'Softcopy Request',
+    'external' => 'External Document Request',
+    'scanned' => 'Scanned Document Request',
+    'hardcopy' => 'Hardcopy Request',
+    'hardcopy-transfer' => 'Hardcopy Transfer Request',
+    'hardcopy-disposal' => 'Disposal Request',
+    'access-grant' => 'Document Access Request',
+    'document-assign' => 'Document Assignment Request'
+];
+
 // Show Master Data only when at least one place module is accessible.
 $anyPlace = FALSE;
 
@@ -121,47 +132,45 @@ $navPage = end($navParts);
             <?php if ($visible('requests') || $user): ?>
                 <div class="side-heading">Document Requests</div>
 
-                <?php if ($visible('requests')): ?>
+                <?php foreach ([
+                    'requests' => ['My Requests', 'fa-paper-plane', 'draft or returned requests'],
+                    'tasks' => ['My Tasks', 'fa-list-check', 'pending tasks']
+                ] as $section => [$sectionLabel, $sectionIcon, $countLabel]): ?>
                     <?php
-                    $requestBadge = (int) ($navigation_counts['requests_total'] ?? 0);
+                    if ($section === 'requests' && !$visible('requests')) continue;
+                    $sectionPrefix = 'my-' . $section . '/';
+                    $sectionActive = $active($sectionPrefix) !== '';
+                    $sectionCount = (int) ($navigation_counts[$section . '_total'] ?? 0);
                     ?>
-
-                    <a
-                        class="side-link<?= $active('my-requests/') ?>"
-                        <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?>
-                        href="<?= site_url('my-requests/softcopy') ?>"
-                    >
-                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                        My Requests
-
-                        <span
-                            class="nav-count<?= $requestBadge === 0 ? ' is-zero' : '' ?>"
-                            aria-label="<?= $requestBadge ?> draft or returned requests"
-                        >
-                            <?= $requestBadge ?>
-                        </span>
-                    </a>
-                <?php endif; ?>
-
-                <?php
-                $taskBadge = (int) ($navigation_counts['tasks_total'] ?? 0);
-                ?>
-
-                <a
-                    class="side-link<?= $active('my-tasks/') ?>"
-                    <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?>
-                    href="<?= site_url('my-tasks/softcopy') ?>"
-                >
-                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-                    My Tasks
-
-                    <span
-                        class="nav-count<?= $taskBadge === 0 ? ' is-zero' : '' ?>"
-                        aria-label="<?= $taskBadge ?> pending tasks"
-                    >
-                        <?= $taskBadge ?>
-                    </span>
-                </a>
+                    <details class="side-group" <?= $sectionActive ? 'open' : '' ?>>
+                        <summary class="side-link side-group-toggle<?= $sectionActive ? ' active' : '' ?>"
+                            aria-controls="sidebar-<?= $section ?>-routes">
+                            <i class="fa-solid <?= $sectionIcon ?>" aria-hidden="true"></i>
+                            <span><?= $sectionLabel ?></span>
+                            <span class="nav-count<?= $sectionCount === 0 ? ' is-zero' : '' ?>"
+                                aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
+                            <i class="fa-solid fa-chevron-down side-group-chevron" aria-hidden="true"></i>
+                        </summary>
+                        <ul class="side-submenu" id="sidebar-<?= $section ?>-routes" aria-label="<?= $sectionLabel ?> categories">
+                            <?php foreach ($requestRoutes as $slug => $routeLabel): ?>
+                                <?php
+                                if ($section === 'requests' && $slug === 'hardcopy') continue;
+                                $route = $sectionPrefix . $slug;
+                                $routeActive = $path === $route || strpos($path, $route . '/') === 0;
+                                $routeCount = (int) ($navigation_counts[$section][$slug] ?? 0);
+                                ?>
+                                <li>
+                                    <a class="side-link side-sublink<?= $routeActive ? ' active' : '' ?>"
+                                        href="<?= site_url($route) ?>" <?= $routeActive ? 'aria-current="page"' : '' ?>>
+                                        <span class="side-sublink-label"><?= html_escape($routeLabel) ?></span>
+                                        <span class="nav-count<?= $routeCount === 0 ? ' is-zero' : '' ?>"
+                                            aria-label="<?= $routeCount ?> <?= $countLabel ?>"><?= $routeCount ?></span>
+                                    </a>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </details>
+                <?php endforeach; ?>
             <?php endif; ?>
 
             <!-- Document Control -->

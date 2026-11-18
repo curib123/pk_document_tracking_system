@@ -446,7 +446,7 @@
     toggle.setAttribute("aria-expanded", String(open));
     if (sidebarBackdrop) sidebarBackdrop.hidden = !open;
     document.body.classList.toggle("sidebar-open", open);
-    if (open) sidebar.querySelector("button,a")?.focus();
+    if (open) sidebar.querySelector("button,a,summary")?.focus();
     else if (returnFocus) toggle.focus();
   }
   toggle?.addEventListener("click", function () {
@@ -473,9 +473,11 @@
     }
     if (event.key === "Tab") {
       var focusable = Array.from(
-        sidebar.querySelectorAll("button,a[href]"),
+        sidebar.querySelectorAll("button,a[href],summary"),
       ).filter(function (node) {
-        return node.offsetParent !== null;
+        // Closed details can retain layout boxes for their hidden links.
+        return node.offsetParent !== null &&
+          !node.closest(".side-group:not([open]) .side-submenu");
       });
       var first = focusable[0],
         last = focusable[focusable.length - 1];

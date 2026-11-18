@@ -2,19 +2,6 @@
 require_once APPPATH . 'services/presentation/request_title.php';
 require_once APPPATH . 'services/documents/scanned_file_presentation.php';
 require_once APPPATH . 'services/request/request_policy.php';
-$tabs = [
-  'softcopy' => 'Softcopy Request',
-  'external' => 'External Document Request',
-  'scanned' => 'Scanned Document Request',
-  'hardcopy' => 'Hardcopy Request',
-  'hardcopy-transfer' => 'Hardcopy Transfer Request',
-  'hardcopy-disposal' => 'Disposal Request',
-  'access-grant' => 'Document Access Request',
-  'document-assign' => 'Document Assignment Request'
-];
-if (!$task) {
-  unset($tabs['hardcopy']);
-}
 $typeMap = [
   'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise'],
   'external' => ['external_create' => 'External Create Request', 'external_revise' => 'External Revised Request'],
@@ -403,14 +390,6 @@ $dt_create = !$task && $canRequest('add') && $allowed_request_types ? 'New Reque
 $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
 ?>
 
-<nav class="tab-bar" aria-label="Request category tabs">
-  <?php foreach ($tabs as $slug => $name): ?>
-    <a class="tab-link <?= $tab === $slug ? 'active' : '' ?>"
-      href="<?= site_url(($task ? 'my-tasks/' : 'my-requests/') . $slug) ?>" <?= $tab === $slug ? 'aria-current="page"' : '' ?>><?= html_escape($name) ?><?php $tabCount = (int) ($navigation_counts[$task ? 'tasks' : 'requests'][$slug] ?? 0); ?>
-      <span class="tab-count<?= $tabCount === 0 ? ' is-zero' : '' ?>"
-        aria-label="<?= $tabCount ?> <?= $task ? 'pending tasks' : 'draft or returned requests' ?>"><?= $tabCount ?></span></a>
-  <?php endforeach; ?>
-</nav>
 <?php $this->load->view('reusable_components/reusable_datatable', compact(
   'dt_path',
   'dt_q',
