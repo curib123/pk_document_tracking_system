@@ -3,13 +3,11 @@
 Content lives in the four adjacent JSON files. --verify checks existing exports;
 --check-source checks the route, request and content inventory without exporting.
 Requires the existing pymupdf and python-pptx packages. No application data is read.
-Visio exports include VSDX and VDX copies for older desktop versions.
 Guide screenshots and control positions come from capture_screenshots.py's
-isolated demonstration site. Both guide exports must retain every screenshot.
+isolated demonstration site. The PowerPoint guide must retain every screenshot.
 """
 from pathlib import Path
 import argparse
-import base64
 import copy
 import hashlib
 import io
@@ -25,7 +23,6 @@ from pptx import Presentation
 from pptx.dml.color import RGBColor
 from pptx.enum.shapes import MSO_SHAPE, MSO_CONNECTOR
 from pptx.util import Inches, Pt
-from visio_legacy import legacy_visio, VDX_NS
 
 ROOT = Path(__file__).resolve().parents[2]
 SOURCE = Path(__file__).resolve().parent
@@ -33,7 +30,8 @@ SCREENSHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
-MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  11 NOVEMBER 2026'
+EDITION = '18 November 2026'
+MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITION.upper()
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -67,11 +65,13 @@ GROUPS = [
  ('notifications', ['notifications/tasks', 'notifications/inbox', 'notifications/tasks/claim', 'notifications/inbox/read', 'notifications/retention']),
  ('find-documents', ['documents/(:any)', 'files/download/(:num)', 'files/download-pdf/(:num)', 'files/download-external/(:num)', 'files/preview/(:num)', 'files/preview-content/(:num)/(:any)/(:any)', 'files/print/(:num)', 'files/print-content/(:num)', 'files/review/(:num)', 'files/review-content/(:num)/(:any)/(:any)', 'files/office-setup']),
  ('hardcopy-create', ['documents/(:any)/save']),
- ('disposal-direct', ['documents/(:any)/dispose', 'documents/external/dispose']),
- ('softcopy-direct-create', ['documents/softcopy/direct']),
+ ('disposal-direct', ['documents/(:any)/dispose', 'documents/external/dispose', 'documents/(:any)/hard-delete', 'documents/external/hard-delete']),
+ ('softcopy-direct-create', ['documents/softcopy/direct', 'documents/softcopy/signatories']),
+ ('scanned-requests', ['documents/scanned', 'documents/scanned/file/(:num)']),
+ ('revision-template-download', ['files/revision-template/(:num)']),
  ('external-direct-create', ['documents/external', 'documents/external/direct']),
- ('request-lifecycle', ['my-requests/(:any)', 'my-requests/(:any)/save', 'my-requests/(:any)/submit', 'my-requests/(:any)/cancel', 'my-requests/(:any)/delete', 'files/upload']),
- ('approvals', ['my-tasks/(:any)', 'my-tasks/(:any)/decide']),
+ ('request-lifecycle', ['my-requests', 'my-requests/(:any)', 'my-requests/(:any)/save', 'my-requests/(:any)/save-and-submit', 'my-requests/(:any)/submit', 'my-requests/(:any)/cancel', 'my-requests/(:any)/delete', 'files/upload']),
+ ('approvals', ['my-tasks', 'my-tasks/(:any)', 'my-tasks/(:any)/decide']),
  ('transfer-dispatch', ['my-tasks/hardcopy-transfer/dispatch']),
  ('transfer-accept', ['my-tasks/hardcopy-transfer/accept']),
  ('direct-assignments', ['admin/document-assignments', 'admin/document-assignments/save', 'admin/document-assignments/location', 'admin/document-assignments/category', 'admin/users/(:num)/assigned-documents']),
@@ -93,6 +93,13 @@ REQUESTS = {
  'assignment': 'assignment-request',
  'disposal': 'disposal-request',
 }
+DCO_WORKFLOWS = {
+ 'softcopy_revision_template': 'revision-template',
+ 'scanned_create': 'scanned-requests',
+ 'scanned_update': 'scanned-requests',
+ 'scanned_delete': 'scanned-requests',
+ 'scanned_category_create': 'scanned-requests',
+}
 APPROVAL_EXAMPLES = {
  'softcopy_create': 'approval-return-reject',
  'softcopy_revise': 'approval-softcopy-revise',
@@ -113,11 +120,12 @@ REQUIRED_GUIDE = {
  'approvals', 'transfer-dispatch', 'transfer-accept', 'disposal-direct',
  'direct-assignments', 'places', 'categories', 'users', 'permissions',
  'workflows', 'notifications', 'audit', 'backups', 'restore', 'help',
+ 'revision-template', 'revision-template-approval', 'revision-template-download', 'scanned-requests',
 } | set(REQUESTS.values())
 SPECS = [
  ('dfd', 'PK_DTS_DFD', 'Data Flow Diagram'),
  ('flowchart', 'PK_DTS_Flowchart', 'Flowchart'),
- ('guide', 'PK_DTS_User_Guide', 'User Guide'),
+ ('guide', 'PK_DTS_User_Guide_Step_by_Step', 'User Guide'),
 ]
 BOOKS = {
  'dfd': ('See the whole system', 'Roles, information and records',
@@ -239,8 +247,12 @@ def check_source(content):
     mapped = {route for _, values in GROUPS for route in values}
     assert routes == mapped, f'Route coverage drift: missing={routes-mapped}, stale={mapped-routes}'
     policy = (ROOT / 'application/services/request/request_policy.php').read_text()
-    types = set(re.findall(r"'([^']+)'\s*=>", policy))
-    assert types == set(REQUESTS) | LEGACY, f'Request coverage drift: {types ^ (set(REQUESTS) | LEGACY)}'
+    modules = re.search(r"\$modules = \[(.*?)\];", policy, re.S)[1]
+    types = set(re.findall(r"'([^']+)'\s*=>", modules))
+    if 'self::REVISION_TEMPLATE =>' in modules:
+        types.add(re.search(r"const REVISION_TEMPLATE = '([^']+)'", policy)[1])
+    expected_types = set(REQUESTS) | set(DCO_WORKFLOWS) | LEGACY
+    assert types == expected_types, f'Request coverage drift: {types ^ expected_types}'
     service = (ROOT / 'application/services/request/request_service.php').read_text()
     assert 'Hardcopy create and update requests are no longer available.' in service
     assert 'Softcopy cancellation requests are no longer available.' in service
@@ -255,6 +267,8 @@ def check_source(content):
     for key, _, _ in SPECS:
         examples = [example_id(item) for item in entries(key, content[key]) if example_id(item)]
         assert len(examples) == len(APPROVAL_EXAMPLES) and set(examples) == set(APPROVAL_EXAMPLES.values()), f'Incomplete decision coverage: {key}'
+    for key, data in content.items():
+        assert set(DCO_WORKFLOWS.values()) <= {item['id'] for item in entries(key, data)}, f'Missing workflow coverage: {key}'
     screens = guide_screens()
     screen_sections = {item['id'] for item in content['guide']['sections'] if item.get('kind') != 'approval-example'}
     assert set(screens) == screen_sections, f'Screenshot coverage drift: {set(screens) ^ screen_sections}'
@@ -299,7 +313,7 @@ def check_source(content):
                 assert all(item.get(field) for field in ['start', 'action', 'question', 'yes', 'no', 'result']), item['id']
             if item.get('kind') == 'request-decision-data':
                 assert len(item['operators']) == 3 and len(item['flows']) == 5, item['id']
-    print(f'Source coverage: {len(routes)} route patterns; {len(REQUESTS)} current request actions with decisions in the three books and the Process Flow presentation; {len(LEGACY)} historical actions distinguished.')
+    print(f'Source coverage: {len(routes)} route patterns, {len(REQUESTS) + len(DCO_WORKFLOWS)} current request actions, {len(LEGACY)} historical actions.')
 
 
 def text(page, rect, value, size=16, bold=False, color=INK, align=0, minimum=12):
@@ -774,42 +788,32 @@ def cell(parent, name, value):
     return ET.SubElement(parent, '{'+NS+'}Cell', N=name, V=str(value))
 
 
-def verify_diagram_images(doc, parts, legacy):
-    """Check every placed picture's pixels, size and position in both Visio exports."""
-    legacy_pages = legacy.findall('{'+VDX_NS+'}Pages/{'+VDX_NS+'}Page')
-    assert len(legacy_pages) == len(doc), 'Legacy diagram page count mismatch'
-    for index, (page, compatible) in enumerate(zip(doc, legacy_pages), 1):
+def verify_diagram_images(doc, parts):
+    """Check the pixels and placement of each Visio picture."""
+    for index, page in enumerate(doc, 1):
         expected = diagram_images(page)
         original = ET.fromstring(parts[f'visio/pages/page{index}.xml'])
         original_shapes = [shape for shape in original.iter('{'+NS+'}Shape')
                            if shape.find('{'+NS+'}ForeignData') is not None]
-        compatible_shapes = [shape for shape in compatible.iter('{'+VDX_NS+'}Shape')
-                             if shape.find('{'+VDX_NS+'}ForeignData') is not None]
         assert len(original_shapes) == len(expected), f'Missing VSDX diagram pictures: page {index}'
-        assert len(compatible_shapes) == len(expected), f'Missing VDX diagram pictures: page {index}'
         if not expected:
             continue
         relationships = ET.fromstring(parts[f'visio/pages/_rels/page{index}.xml.rels'])
         targets = {relationship.get('Id'): posixpath.normpath(posixpath.join(
             'visio/pages', relationship.get('Target'))) for relationship in relationships}
-        for image, native, old in zip(expected, original_shapes, compatible_shapes):
+        for image, native in zip(expected, original_shapes):
             foreign = native.find('{'+NS+'}ForeignData')
             relationship_id = foreign.find('{'+NS+'}Rel').get('{'+REL+'}id')
-            payloads = [parts[targets[relationship_id]], base64.b64decode(old.find('{'+VDX_NS+'}ForeignData').text, validate=True)]
             expected_pixels = pdf.Pixmap(image['data'])
-            for payload in payloads:
-                pixels = pdf.Pixmap(payload)
-                assert (pixels.width, pixels.height, pixels.n, pixels.digest) == (
-                    expected_pixels.width, expected_pixels.height, expected_pixels.n, expected_pixels.digest), f'Diagram picture pixels changed: page {index}'
+            pixels = pdf.Pixmap(parts[targets[relationship_id]])
+            assert (pixels.width, pixels.height, pixels.n, pixels.digest) == (
+                expected_pixels.width, expected_pixels.height, expected_pixels.n, expected_pixels.digest), f'Diagram picture pixels changed: page {index}'
             cells = {entry.get('N'): float(entry.get('V')) for entry in native.findall('{'+NS+'}Cell')}
-            old_cells = {entry.tag.rsplit('}', 1)[-1]: float(entry.text) for entry in old.find('{'+VDX_NS+'}XForm')}
-            for values in [cells, old_cells]:
-                width, height = values['Width']*72, values['Height']*72
-                left, top = values['PinX']*72-width/2, page.rect.height-values['PinY']*72-height/2
-                actual = (left, top, left+width, top+height)
-                assert max(abs(a-b) for a, b in zip(actual, image['rect'])) < .01, f'Diagram picture moved or resized: page {index}'
+            width, height = cells['Width']*72, cells['Height']*72
+            left, top = cells['PinX']*72-width/2, page.rect.height-cells['PinY']*72-height/2
+            actual = (left, top, left+width, top+height)
+            assert max(abs(a-b) for a, b in zip(actual, image['rect'])) < .01, f'Diagram picture moved or resized: page {index}'
             assert foreign.get('CompressionType') == image['compression'], f'Picture compression changed: page {index}'
-            assert old.find('{'+VDX_NS+'}ForeignData').get('CompressionType') == image['compression'], f'Legacy picture compression changed: page {index}'
 
 
 def diagram_images(page):
@@ -1023,53 +1027,54 @@ def powerpoint(doc, items=None):
     return prs
 
 
+def render_book(key, kind, items):
+    renderer = {'guide': guide_page, 'flowchart': flowchart_page, 'dfd': dfd_page}[key]
+    doc = pdf.open()
+    for index, item in enumerate(items, 1):
+        if item.get('kind') == 'cover':
+            cover_page(doc, key, item, index, len(items))
+        elif item.get('kind') == 'contents':
+            contents_page(doc, key, item, index, len(items))
+        else:
+            renderer(doc, item, index, len(items))
+    for index, item in enumerate(items):
+        doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(893, 800, 985, 828), 'page': 1})
+        if item.get('kind') == 'contents':
+            for entry, rect in contents_rows(item):
+                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': rect, 'page': entry['page']-1})
+        targets = {example_id(value): position for position, value in enumerate(items) if example_id(value)}
+        if item.get('decision_examples'):
+            text(doc[index], (610, 802, 670, 825), 'Decisions:', 9, True, GREY, minimum=9)
+            for link_index, identifier in enumerate(item['decision_examples']):
+                x = 675+24*link_index
+                target = targets[identifier]
+                text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
+                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
+    doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
+    doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, ' + EDITION, 'author': 'PK Document Tracking System'})
+    return doc
+
+
 def refresh(content):
-    renderers = {'guide': guide_page, 'flowchart': flowchart_page, 'dfd': dfd_page}
-    # Render and validate the complete set before replacing any published file.
+    # Validate the complete set before replacing the published files.
     pending = []
     try:
         for key, base, kind in SPECS:
-            doc = pdf.open()
             items = document_items(key, content[key])
-            for index, item in enumerate(items, 1):
-                if item.get('kind') == 'cover':
-                    cover_page(doc, key, item, index, len(items))
-                elif item.get('kind') == 'contents':
-                    contents_page(doc, key, item, index, len(items))
+            with render_book(key, kind, items) as doc:
+                if key != 'guide':
+                    pdf_path = DOCS / (base+'.pdf.pending')
+                    pending.append((pdf_path, DOCS/(base+'.pdf')))
+                    doc.save(pdf_path, garbage=4, deflate=True)
+                extension = '.pptx' if key == 'guide' else '.vsdx'
+                editable_path = DOCS / (base+extension+'.pending')
+                pending.append((editable_path, DOCS/(base+extension)))
+                if key == 'guide':
+                    powerpoint(doc, items).save(editable_path)
                 else:
-                    renderers[key](doc, item, index, len(items))
-            for index, item in enumerate(items):
-                doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(893, 800, 985, 828), 'page': 1})
-                if item.get('kind') == 'contents':
-                    for entry, rect in contents_rows(item):
-                        doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': rect, 'page': entry['page']-1})
-                targets = {example_id(value): position for position, value in enumerate(items) if example_id(value)}
-                if item.get('decision_examples'):
-                    text(doc[index], (610, 802, 670, 825), 'Decisions:', 9, True, GREY, minimum=9)
-                    for link_index, identifier in enumerate(item['decision_examples']):
-                        x = 675+24*link_index
-                        target = targets[identifier]
-                        text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
-                        doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
-            doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
-            doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, 11 November 2026', 'author': 'PK Document Tracking System'})
-            pdf_path = DOCS / (base+'.pdf.pending')
-            pending.append((pdf_path, DOCS/(base+'.pdf')))
-            doc.save(pdf_path, garbage=4, deflate=True)
-            extension = '.pptx' if key == 'guide' else '.vsdx'
-            editable_path = DOCS / (base+extension+'.pending')
-            pending.append((editable_path, DOCS/(base+extension)))
-            if key == 'guide':
-                powerpoint(doc, items).save(editable_path)
-            else:
-                parts = visio(doc, items, kind)
-                with zipfile.ZipFile(editable_path, 'w', zipfile.ZIP_DEFLATED) as archive:
-                    for name, data in parts.items():
-                        archive.writestr(name, data)
-                legacy_path = DOCS / (base+'.vdx.pending')
-                pending.append((legacy_path, DOCS/(base+'.vdx')))
-                legacy_path.write_bytes(legacy_visio(parts, kind))
-            doc.close()
+                    with zipfile.ZipFile(editable_path, 'w', zipfile.ZIP_DEFLATED) as archive:
+                        for name, data in visio(doc, items, kind).items():
+                            archive.writestr(name, data)
         verify(content, pending=True)
         for temporary, destination in pending:
             temporary.replace(destination)
@@ -1122,10 +1127,10 @@ def source_strings(item):
 
 def verify(content, pending=False):
     suffix = '.pending' if pending else ''
-    for key, base, _ in SPECS:
+    for key, base, kind in SPECS:
         path = DOCS / (base+'.pdf'+suffix)
         items = document_items(key, content[key])
-        with pdf.open(path) as doc:
+        with (render_book(key, kind, items) if key == 'guide' else pdf.open(path)) as doc:
             assert len(doc) == len(items), f'Page count mismatch: {path}'
             all_text = []
             for page, item in zip(doc, items):
@@ -1188,28 +1193,19 @@ def verify(content, pending=False):
                     assert len(pages) == len(doc)
                     page_parts = [ET.fromstring(archive.read(f'visio/pages/page{i+1}.xml')) for i in range(len(pages))]
                     native_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+NS+'}Text')) for page in page_parts]
-                legacy = ET.parse(DOCS / (base+'.vdx'+suffix)).getroot()
-                assert legacy.tag == '{'+VDX_NS+'}VisioDocument', f'Invalid legacy Visio namespace: {base}'
-                legacy_pages = legacy.findall('{'+VDX_NS+'}Pages/{'+VDX_NS+'}Page')
-                assert len(legacy_pages) == len(doc), f'Legacy Visio page count mismatch: {base}'
-                assert [page.get('Name') for page in legacy_pages] == [page.get('Name') for page in pages], f'Legacy Visio page names changed: {base}'
-                for original, compatible in zip(page_parts, legacy_pages):
-                    assert [s.get('ID') for s in original.iter('{'+NS+'}Shape')] == [s.get('ID') for s in compatible.iter('{'+VDX_NS+'}Shape')], f'Legacy Visio shapes changed: {base}'
-                legacy_text = ['\n'.join(''.join(t.itertext()) for t in page.iter('{'+VDX_NS+'}Text')) for page in legacy_pages]
-                assert [normalized(t) for t in legacy_text] == all_text, f'Legacy Visio/PDF text mismatch: {base}'
-                verify_diagram_images(doc, visio_parts, legacy)
+                verify_diagram_images(doc, visio_parts)
             assert [normalized(t) for t in native_text] == all_text, f'Editable/PDF text mismatch: {base}'
         illustrations = f'; {len(guide_screens())} screenshots and their callouts match' if key == 'guide' else ''
         print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid{illustrations}.')
     if not pending:
-        expected = {base+ext for key, base, _ in SPECS for ext in ['.pdf', '.pptx' if key == 'guide' else '.vsdx']}
-        expected.update(base+'.vdx' for key, base, _ in SPECS if key != 'guide')
-        # The Process Flow presentation is built separately by build_process_flow.py;
-        # it replaces the former Process Flow PDF and Visio files.
+        expected = {base+'.pdf' for key, base, _ in SPECS if key != 'guide'}
+        expected.update(base+('.pptx' if key == 'guide' else '.vsdx') for key, base, _ in SPECS)
         expected.add('PK_DTS_Process_Flow.pptx')
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
-        print(f'Verified {len(SPECS)} PDF books with their editable files, {len(SPECS)-1} legacy Visio copies and the Process Flow presentation. Reference notes and Office lock files are not treated as exports.')
+        check_package(DOCS / 'PK_DTS_Process_Flow.pptx')
+        print('Verified the PDF and VSDX diagrams and both PowerPoint packages.')
+
 
 
 if __name__ == '__main__':

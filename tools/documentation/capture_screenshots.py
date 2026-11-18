@@ -1,12 +1,13 @@
 """Capture current PK DTS screens with synthetic records in a disposable site.
 
 Run: python -X utf8 tools/documentation/capture_screenshots.py
-To refresh only some screens: set PK_CAPTURE_ONLY=files,review-file first (supported: those two).
+To refresh selected screens: set PK_CAPTURE_ONLY=files,review-file,workflow-tasks first.
 Requires local PHP/MySQL and Playwright Chromium/Edge. Only DDL and allowlisted
 static role/permission/settings seeds are read from database/pk_dts.sql. Company
 records, source database contents, private files and existing sessions are unused.
 The generated *_documentation_test database and temporary site are removed.
 """
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import hashlib
 import json
@@ -75,7 +76,8 @@ def seed(site):
     assert set(static) == {'roles', 'permissions', 'role_permissions', 'settings'}
     for statement in re.finditer(r'^INSERT INTO `(?:roles|permissions|role_permissions|settings)`\s+.*?;\s*$', source, re.M | re.S):
         sql(statement.group(0))
-    sql((ROOT / 'database/migrations/20261013_user_role_assignments.sql').read_text())
+    for migration in ['20261013_user_role_assignments', '20261112_file_lifecycle_stage']:
+        sql((ROOT / 'database/migrations' / (migration + '.sql')).read_text(encoding='utf-8'))
     hashed = subprocess.run([PHP, '-r', "echo password_hash(getenv('PK_CAPTURE_PASSWORD'), PASSWORD_DEFAULT);"],
                             env=ENV, capture_output=True, check=True).stdout.decode()
     people = [('admin', 'Alex', 'Administrator', 1), ('controller', 'Casey', 'Controller', 2),
@@ -114,7 +116,8 @@ def seed(site):
                             extension='pdf', purpose='creation', domain=domain,
                             document_id=1 if status == 'approved' else None,
                             uploaded_by=1 if status == 'approved' else 5,
-                            approved_by=1 if status == 'approved' else None, status=status))
+                            approved_by=1 if status == 'approved' else None, status=status,
+                            stage='final' if status == 'approved' else 'proposed'))
     insert('softcopy_documents', document_number='QP-001', series_number=None, title='Sample Quality Procedure',
            category_id=category, created_by=1, creation_source='direct', creation_reason='Documentation example')
     revision = insert('softcopy_revisions', document_id=1, revision_number=1, reason='Initial controlled issue',
@@ -128,6 +131,11 @@ def seed(site):
     revision = insert('external_revisions', document_id=1, revision_number=1, revision_level='00',
                       description='Initial reference issue', file_id=files[1], uploaded_by=1, approved_by=1)
     sql('UPDATE external_documents SET current_revision_id=' + str(revision))
+    insert('external_revision_files', revision_id=revision, file_id=files[1])
+    insert('files', original_name='Earlier Quality Procedure.pdf', storage_name=secrets.token_hex(32),
+           size=len(data), mime_type='application/pdf', fingerprint=hashlib.sha256(data).hexdigest(),
+           extension='pdf', purpose='creation', domain='softcopy', document_id=1,
+           uploaded_by=1, status='superseded', stage='final')
     payload = dict(subject='Issue a new quality procedure', title='Sample Revised Procedure', category_id=category,
                    controlled_file_id=files[2], remarks='Synthetic training request')
     leader = {'name': 'Noted By', 'approver': {'type': 'requester_leader', 'value': None, 'label': "Requester's leader"}}
@@ -144,11 +152,12 @@ def seed(site):
                           request_type=kind, active=1, created_by=1)
         insert('workflow_versions', workflow_id=workflow, version_number=1, status='published',
                is_default=1, graph=graph, created_by=1, published_at='2026-11-01 09:00:00')
+        if kind == 'softcopy_create':
+            softcopy_graph = graph
 
-    graph['document_lock_step_key'] = 'step_2'
     insert('requests', reference='DEMO-2026-001', type='softcopy_create', requested_by=1, payload=payload)
     request = insert('requests', reference='DEMO-2026-002', type='softcopy_create', requested_by=5,
-                     payload=payload, status='submitted', workflow_version_id=1, snapshot=graph,
+                     payload=payload, status='submitted', workflow_version_id=1, snapshot=softcopy_graph,
                      current_node='step_1', submitted_at='2026-11-05 09:00:00')
     insert('workflow_steps', request_id=request, node_key='step_1', label='Noted By',
            assignment={'type': 'requester_leader', 'value': None, 'label': "Requester's leader"}, candidates=[],
@@ -159,6 +168,31 @@ def seed(site):
            assignment={'type': 'role', 'value': 2, 'label': 'Document Control Officer'}, candidates=[], status='pending')
     insert('notifications', user_id=1, title='Sample request ready for review',
            message='A synthetic training request is awaiting your review.', request_id=request)
+    for migration in ['20261117_scanned_documents', '20261117_scanned_category_allocations',
+                      '20261117_scanned_document_descriptions', '20261118_softcopy_revision_template']:
+        sql((ROOT / 'database/migrations' / (migration + '.sql')).read_text(encoding='utf-8'))
+    insert('scanned_categories', name='Sample Scanned Records', created_by=2, approved_by=2)
+    template_type = 'softcopy_revision_template'
+    template_payload = {'subject': 'Prepare an editable copy for the next review'}
+    version, snapshot = sql("SELECT v.id,v.graph FROM workflow_versions v JOIN workflows w ON w.id=v.workflow_id "
+                            "WHERE w.workflow_key='softcopy_revision_template' AND v.is_default=1").split('\t', 1)
+    template_request = insert('requests', reference='DEMO-TEMPLATE-001', type=template_type, requested_by=1,
+                              softcopy_id=1, payload=template_payload, status='submitted', workflow_version_id=int(version),
+                              snapshot=json.loads(snapshot), current_node='step_1', submitted_at='2026-11-18 09:00:00')
+    template_step = json.loads(snapshot)['steps'][0]
+    insert('workflow_steps', request_id=template_request, node_key=template_step['key'], label=template_step['name'],
+           assignment=template_step['approver'], candidates=[], status='active')
+    template_data = b'Sample editable revision template\nDocumentation example only.\n'
+    storage = secrets.token_hex(32)
+    (site / 'storage/documents' / storage).write_bytes(template_data)
+    template_file = insert('files', original_name='Sample Quality Procedure.txt', storage_name=storage,
+                           size=len(template_data), mime_type='text/plain', fingerprint=hashlib.sha256(template_data).hexdigest(),
+                           extension='txt', purpose='revision_template', domain='softcopy', document_id=1,
+                           uploaded_by=2, approved_by=2, status='approved', stage='final')
+    expires_on = datetime.now(timezone(timedelta(hours=8))).date() + timedelta(days=30)
+    insert('requests', reference='DEMO-TEMPLATE-002', type=template_type, requested_by=1, softcopy_id=1,
+           payload=template_payload, status='approved', result={'template_file_id': template_file,
+                                                               'template_expires_on': str(expires_on)})
     for hardcopy, requester, holder, recipient, status in [(2, 1, 1, 5, 'for_transfer'), (3, 5, 5, 1, 'in_transit')]:
         req = insert('requests', reference='DEMO-TRANSFER-' + str(hardcopy), type='transfer', hardcopy_id=hardcopy,
                      requested_by=requester, payload={'subject': 'Move sample record', 'recipient_id': recipient},
@@ -166,10 +200,9 @@ def seed(site):
         insert('transfers', request_id=req, hardcopy_id=hardcopy, origin={'location_name': 'Records Cabinet A'},
                destination={'location_id': 2, 'location_name': 'Records Cabinet B'}, current_holder_id=holder,
                recipient_id=recipient, document_copy_number='', reason='Synthetic training handoff', status=status)
-    return request
 
 
-def capture(page, base, review_request):
+def capture(page, base):
     OUTPUT.mkdir(parents=True, exist_ok=True)
     manifest = {}
     control_labels = json.loads((OUTPUT.parent / 'capture_controls.json').read_text())
@@ -196,15 +229,24 @@ def capture(page, base, review_request):
         if selector:
             expect(target).to_be_visible()
         page.wait_for_timeout(200)
-        bounds = target.bounding_box() if selector else {'x': 0, 'y': 0}
+        bounds = target.bounding_box() if selector else dict(x=0, y=0, **page.viewport_size)
         marks = []
+
+        def mark(label, item):
+            if not item.count() or not item.is_visible():
+                return False
+            box = item.bounding_box()
+            if not box or not (bounds['x'] <= box['x'] and bounds['y'] <= box['y'] and
+                               box['x']+box['width'] <= bounds['x']+bounds['width']+1 and
+                               box['y']+box['height'] <= bounds['y']+bounds['height']+1):
+                return False
+            marks.append(dict(label=label, x=round(box['x']-bounds['x'], 1),
+                              y=round(box['y']-bounds['y'], 1), width=round(box['width'], 1),
+                              height=round(box['height'], 1)))
+            return True
+
         for label, locator in controls:
-            item = page.locator(locator).first
-            if item.count() and item.is_visible():
-                box = item.bounding_box()
-                marks.append(dict(label=label, x=round(box['x']-bounds['x'], 1),
-                                  y=round(box['y']-bounds['y'], 1), width=round(box['width'], 1),
-                                  height=round(box['height'], 1)))
+            mark(label, page.locator(locator).first)
         scope = page.locator(selector) if selector else page
         for label in control_labels[identifier]:
             if len(marks) >= 3:
@@ -213,15 +255,8 @@ def capture(page, base, review_request):
                 continue
             candidates = scope.get_by_text(label, exact=True)
             for index in range(candidates.count()):
-                candidate = candidates.nth(index)
-                if candidate.is_visible():
-                    box = candidate.bounding_box()
-                    if (box and box['x'] >= bounds['x'] and box['y'] >= bounds['y'] and
-                            box['x']+box['width'] <= 1440 and box['y']+box['height'] <= 900):
-                        marks.append(dict(label=label, x=round(box['x']-bounds['x'], 1),
-                                          y=round(box['y']-bounds['y'], 1), width=round(box['width'], 1),
-                                          height=round(box['height'], 1)))
-                        break
+                if mark(label, candidates.nth(index)):
+                    break
         assert 1 <= len(marks) <= 3, (identifier, control_labels[identifier])
         filename = identifier + '.png'
         target.screenshot(path=str(OUTPUT / filename), animations='disabled')
@@ -234,6 +269,36 @@ def capture(page, base, review_request):
                                     width=image.width, height=image.height, controls=marks)
         print('Captured ' + identifier, flush=True)
 
+    def workflow_tasks():
+        viewport = page.viewport_size
+        page.set_viewport_size({'width': 1700, 'height': 900})
+        goto('my-tasks?request_category=softcopy&period=all')
+        page.get_by_role('button', name='Review request', exact=True).first.click()
+        extra = OUTPUT / 'workflow'
+        extra.mkdir(exist_ok=True)
+        marks = {}
+        for label in ['Approve', 'Return', 'Reject']:
+            button = page.get_by_role('button', name=label, exact=True).first
+            expect(button).to_be_visible()
+            box = button.bounding_box()
+            marks[label] = {key: round(box[key], 1) for key in ('x', 'y', 'width', 'height')}
+        page.screenshot(path=str(extra / 'my-tasks.png'), animations='disabled')
+        (extra / 'manifest.json').write_text(json.dumps({'my-tasks': {'file': 'my-tasks.png', 'width': 1700,
+                                             'height': 900, 'controls': marks}}, indent=2) + '\n', encoding='utf-8')
+        page.set_viewport_size(viewport)
+        print('Captured workflow-tasks', flush=True)
+
+    def document_files():
+        viewport = page.viewport_size
+        page.set_viewport_size({'width': viewport['width'], 'height': 1080})
+        goto('documents/softcopy?layout=table&folder=all')
+        page.get_by_role('button', name='View', exact=True).first.click()
+        page.get_by_role('tab', name='Document Files', exact=True).click()
+        page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
+        shot('files', 'Document Files shows the current file and permitted revision history.', '#viewModal .modal-content',
+             controls=[('Earlier revision', '.doc-modal-file-item:last-child .doc-modal-file-meta')])
+        page.set_viewport_size(viewport)
+
     if only:
         # Refresh only these screens; everything else in the manifest is kept as is.
         goto('login')
@@ -242,11 +307,7 @@ def capture(page, base, review_request):
         page.locator('button[type="submit"]').click()
         page.wait_for_url('**/dashboard')
         if 'files' in only:
-            goto('documents/softcopy?layout=table&folder=all')
-            page.get_by_role('button', name='View', exact=True).first.click()
-            page.get_by_role('tab', name='Document Files', exact=True).click()
-            page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
-            shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
+            document_files()
         if 'review-file' in only:
             goto('my-tasks?request_category=softcopy&period=all')
             page.get_by_role('button', name='Review request', exact=True).first.click()
@@ -254,21 +315,8 @@ def capture(page, base, review_request):
             page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
             shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
         if 'workflow-tasks' in only:
-            # Extra screen for the Process Flow deck; kept outside the guide manifest.
             only.discard('workflow-tasks')
-            page.set_viewport_size({'width': 1700, 'height': 900})
-            goto('my-tasks?request_category=softcopy&period=all')
-            page.get_by_role('button', name='Review request', exact=True).first.click()
-            extra = OUTPUT / 'workflow'
-            extra.mkdir(exist_ok=True)
-            marks = {}
-            for label in ['Approve', 'Return', 'Reject']:
-                box = page.get_by_role('button', name=label, exact=True).first.bounding_box()
-                marks[label] = {key: round(box[key], 1) for key in ('x', 'y', 'width', 'height')}
-            page.screenshot(path=str(extra / 'my-tasks.png'), animations='disabled')
-            (extra / 'manifest.json').write_text(json.dumps({'my-tasks': {'file': 'my-tasks.png', 'width': 1700,
-                                                 'height': 900, 'controls': marks}}, indent=2) + '\n', encoding='utf-8')
-            print('PASS: refreshed workflow-tasks')
+            workflow_tasks()
             if not only:
                 return
         assert set(manifest) == only, (only-set(manifest), set(manifest)-only)
@@ -292,7 +340,7 @@ def capture(page, base, review_request):
         shot(identifier, caption, '#editModal .modal-content',
              [('Action', '#requestActionPicker'),
               ('Document title', '#editModal form:not([hidden]) [name="title"]'),
-              ('Save', '#requestDraftSave, #editForm button[type="submit"]')])
+              ('Submit Request', '#requestFormSubmit')] if kind else ())
 
     goto('login')
     shot('sign-in', 'Sign in using your own account.', controls=[('Username', '[name="login"]'), ('Password', '[name="password"]')])
@@ -338,10 +386,29 @@ def capture(page, base, review_request):
         form('external-request-' + action, 'my-requests', 'New Request',
              'Prepare an external document ' + action + ' request.', 'external_' + action)
     goto('documents/softcopy?layout=table&folder=all')
-    page.get_by_role('button', name='View', exact=True).first.click()
-    page.get_by_role('tab', name='Document Files', exact=True).click()
-    page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
-    shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
+    page.get_by_role('link', name='Request Template for Revision', exact=True).first.click()
+    shot('revision-template', 'Request an editable template for the selected softcopy.', '#editModal .modal-content',
+         [('Subject / Reason', '#reqSubject'), ('Save Draft', '#requestFormSaveDraft'), ('Submit Request', '#requestFormSubmit')])
+    goto('my-requests?request_category=softcopy&type=softcopy_revision_template')
+    shot('revision-template-download', 'An approved template can be downloaded through its expiry date.',
+         controls=[('Download Template', 'a.record-action-download')])
+    admin_page = page
+    page = page.context.browser.new_page(viewport={'width': 1440, 'height': 900}, reduced_motion='reduce')
+    goto('login')
+    page.locator('[name="login"]').fill('demo-controller')
+    page.locator('[name="password"]').fill(PASSWORD)
+    page.locator('button[type="submit"]').click()
+    page.wait_for_url('**/dashboard')
+    goto('my-tasks?request_category=softcopy&type=softcopy_revision_template')
+    page.get_by_role('button', name='Review request', exact=True).first.click()
+    page.get_by_role('button', name='Approve', exact=True).click()
+    shot('revision-template-approval', 'Upload an editable file and set the download expiry date.', '#actionModal .modal-content',
+         [('Editable revision template', '#actionFinalFile'), ('Download expiry date', '#actionTemplateExpiry'),
+          ('Upload and Approve', '#actionContinue')])
+    page.context.close()
+    page = admin_page
+    form('scanned-requests', 'my-requests', 'New Request', 'Choose the scanned action and complete its required fields.', 'scanned_create')
+    document_files()
     goto('my-tasks?request_category=softcopy&period=all')
     page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('tab', name='Document File', exact=True).click()
@@ -359,7 +426,7 @@ def capture(page, base, review_request):
     page.get_by_role('tab', name='Approval Process Timeline', exact=True).click()
     shot('approval-routes', 'View Details includes the request approval process.', '#viewModal .modal-content')
     for action in ['transfer', 'access', 'assignment', 'disposal']:
-        form(action + '-request', 'my-requests', 'New Request', 'Prepare the request and save it as a draft.', action)
+        form(action + '-request', 'my-requests', 'New Request', 'Save a draft or submit the completed request.', action)
     goto('my-tasks?request_category=hardcopy-transfer&period=all')
     shot('transfer-dispatch', 'The requester dispatches an approved physical transfer.')
     shot('transfer-accept', 'The destination recipient accepts the received hardcopy.')
@@ -391,6 +458,7 @@ def capture(page, base, review_request):
     goto('dashboard')
     page.locator('#notificationBellButton').click()
     shot('notifications', 'Open the bell to inspect your notification inbox.')
+    workflow_tasks()
     expected = {item['id'] for item in json.loads((OUTPUT.parent / 'guide.json').read_text())['sections']
                 if item.get('kind') != 'approval-reference'}
     assert set(manifest) == expected, (expected-set(manifest), set(manifest)-expected)
@@ -410,7 +478,7 @@ def main():
         (site / 'storage/documents').mkdir(parents=True)
         sql('CREATE DATABASE `' + DATABASE + '` CHARACTER SET utf8mb4', None)
         created = True
-        review_request = seed(site)
+        seed(site)
         router = temp / 'router.php'
         router.write_text("<?php $p=parse_url($_SERVER['REQUEST_URI'],PHP_URL_PATH); if(is_file(getcwd().'/public'.$p))return false; $_SERVER['SCRIPT_NAME']='/public/index.php'; require getcwd().'/public/index.php';", encoding='utf-8')
         with socket.socket() as sock:
@@ -431,9 +499,9 @@ def main():
                 with sync_playwright() as playwright:
                     browser = playwright.chromium.launch(channel='msedge', headless=True)
                     context = browser.new_context(viewport={'width': 1440, 'height': 900},
-                                                  device_scale_factor=1, service_workers='block')
+                                                  device_scale_factor=1, service_workers='block', reduced_motion='reduce')
                     context.set_default_timeout(12000)
-                    capture(context.new_page(), base, review_request)
+                    capture(context.new_page(), base)
                     browser.close()
             finally:
                 if server:

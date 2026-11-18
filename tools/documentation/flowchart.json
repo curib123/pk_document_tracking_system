@@ -22,13 +22,13 @@
       "start": "You need a document or its approved file",
       "action": "Open the document register; choose Table or Folder, search or filter, then open the record",
       "question": "Can you view the record and use its file?",
-      "yes": "Read the details and preview the file; Download or Softcopy File History when allowed",
+      "yes": "Open the record. For Softcopy, choose Document Files for downloads and history",
       "no": "Request Hardcopy or Softcopy access when available, or contact document control",
       "result": "You can read the allowed details or use the current approved file",
       "notes": [
         "Page access, document access and file actions are separate permissions. Pending proposal files are for authorized review.",
-        "External Documents use a separate category list and a Download action for the current file.",
-        "Softcopy shows permitted revision history. External revision records remain stored but have no separate File History action.",
+        "The Softcopy table opens history from View and Document Files.",
+        "For External Documents, use Current Attachments to open the approved files.",
         "Word and Excel files preview as PDF. A locked file is preview-only unless the role has Download Locked Files access."
       ]
     },
@@ -59,18 +59,18 @@
       "notes": [
         "Softcopy Categories and External Categories are separate. Files must pass upload checks and be no larger than 15 MB.",
         "A new registration and a revision both require a document file. Revision numbers and levels advance automatically.",
-        "Direct actions apply immediately. External revision records remain stored; a File History action is not provided."
+        "Direct actions apply immediately. In Softcopy Documents, Signatories edits the current revision references."
       ]
     },
     {
       "id": "electronic-request",
       "title": "Request a new electronic document or revision",
       "start": "You need approval to create or revise a Softcopy or External Document",
-      "action": "Choose the Softcopy or External request tab; select create or revise; enter details and upload the file",
+      "action": "Open My Requests and New Request. Choose create or revise, enter details and attach a file",
       "question": "Are the details, file and chosen document valid?",
-      "yes": "Save Draft, review the proposal, then Submit through My Requests",
+      "yes": "Choose Submit Request to start approval or Save Draft to finish later",
       "no": "Correct the reported problem and save again",
-      "result": "The request awaits approval. Its attachment becomes the current file only after final approval",
+      "result": "The request is saved as a draft or sent for approval",
       "notes": [
         "Default route: Requester's leader, then Plant Manager, then Document Control Officer. Published routes can be changed.",
         "Revision requests select an active document in the correct register. The existing approved file remains current during review.",
@@ -85,15 +85,44 @@
       ]
     },
     {
+      "id": "revision-template",
+      "title": "Release and expire an editable template",
+      "start": "An editable template request reaches Document Control",
+      "action": "Review the request. To approve it, upload one editable file and set a download expiry date",
+      "question": "Does Document Control approve the request?",
+      "yes": "Upload and Approve. The requester can download through the selected date",
+      "no": "Reject to close the request",
+      "result": "After the expiry date, the download is blocked",
+      "notes": [
+        "Choose a current or future date. Downloads expire at the end of the day in Philippine time.",
+        "Approval keeps the existing softcopy and its current revision."
+      ]
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Review a scanned document request",
+      "start": "Submit a scanned upload, update, removal, or folder request",
+      "action": "The assigned approver opens Review request in My Tasks. Document Control is the default",
+      "question": "Does the request receive final approval?",
+      "yes": "Apply the upload, update, removal, or folder creation",
+      "no": "Return for correction or reject to close the request",
+      "result": "The scanned register or folder list reflects the change",
+      "notes": [
+        "Save Draft keeps the form for later editing. Submit Request starts the configured workflow.",
+        "Approved records stay in place while changes are under review."
+      ]
+    },
+    {
       "id": "request-submission",
       "title": "Save and submit a request",
-      "start": "Open your Draft or Returned request",
-      "action": "Check the proposal, document, attachments and remarks; save changes, then choose Submit",
+      "start": "Open New Request, a Draft or a Returned request",
+      "action": "Complete the form and choose Submit Request. For a saved draft you can use Submit on the row",
       "question": "Is the request ready, with available approvers?",
       "yes": "Mark Submitted and send the first task to the assigned person or role",
       "no": "Fix the reported details, or ask an Administrator to check the approval route; retry",
       "result": "My Requests shows Submitted and the approval progress",
       "notes": [
+        "Save Draft stores the form for later editing. Approval starts when you submit.",
         "A returned request keeps its original approval route when resubmitted, even after an administrator publishes a newer route.",
         "Cancel is available only for your own Draft. Delete is limited to your own Cancelled draft that was never submitted.",
         "New Hardcopy create/update and Softcopy cancellation requests are unavailable; their past records remain readable."
@@ -112,7 +141,7 @@
     {
       "id": "approval",
       "title": "Approve an assigned request",
-      "start": "Open your assigned request in My Tasks",
+      "start": "Open My Tasks and select Review request",
       "action": "Read the proposal, allowed files, earlier decisions and remarks; choose Approve and confirm",
       "question": "Is this the final approval step?",
       "yes": "Apply the approved change, access, assignment or disposal; prepare any transfer handoff",
@@ -241,7 +270,7 @@
       "start": "Requester chooses Document Access or Document Assignment",
       "action": "Select an active Softcopy or Hardcopy; enter the reason and, for access, a future expiry; save and submit",
       "question": "Have all required approvers approved?",
-      "yes": "Grant access until expiry, add you as a Softcopy assignee, or make you the Hardcopy holder",
+      "yes": "Choose Submit Request for approval or Save Draft to continue later",
       "no": "Wait for remaining reviews, or follow Return or Reject; no new access or assignment is applied",
       "result": "The request is Completed, with access or assignment granted to you",
       "notes": [
@@ -266,7 +295,8 @@
       "notes": [
         "Direct disposal supports Hardcopy, Softcopy and External Documents; both register direct and disposal direct permission are required.",
         "Softcopy disposal retires its files. External disposal keeps stored files and revision records but blocks normal download.",
-        "Direct Hardcopy disposal keeps its recorded location. Approval-based Hardcopy disposal clears the location and personal grants."
+        "Direct Hardcopy disposal keeps its recorded location. Approval-based Hardcopy disposal clears the location and personal grants.",
+        "Hard Delete is separate from Dispose and requires its own permissions and password confirmation."
       ]
     },
     {
@@ -275,7 +305,7 @@
       "start": "You need approval to dispose of an active document",
       "action": "Choose Disposal Request; select Hardcopy or External, the document and disposal reason; save and submit",
       "question": "Have all required approvers approved disposal?",
-      "yes": "Dispose the selected document and preserve its approval and disposal history",
+      "yes": "Choose Submit Request for approval or Save Draft to continue later",
       "no": "Wait for remaining reviews, or follow Return or Reject; the proposed disposal is not applied",
       "result": "The request is Completed and the document is Disposed, with approval and disposal history",
       "notes": [

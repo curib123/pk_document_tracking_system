@@ -8,7 +8,7 @@
       "steps": [
         "Softcopy Documents is the repository of approved softcopy templates. Hardcopy Documents only tracks where each paper document is kept and who holds it.",
         "External Documents keeps scanned copies of documents received from outside the organization, only as a backup.",
-        "Use My Requests to ask for a change. Use My Tasks to review assigned requests or record a physical handoff.",
+        "External Documents stores files from outside the organization. Scanned Documents stores scanned records and their retention dates.",
         "With the required permission, you can add or change documents directly in their document lists.",
         "Read each result message. Select Got it to close it, then check the record or request status."
       ],
@@ -61,8 +61,8 @@
       "audience": "All users",
       "steps": [
         "Open Overview to see your totals and recent activity.",
-        "Under Document Management, choose Hardcopy Documents, Softcopy Documents or External Documents.",
-        "Open My Requests to start or follow a request. Open My Tasks for work assigned to you.",
+        "Under Document Management, choose Hardcopy, Softcopy, External, or Scanned Documents.",
+        "Open My Requests or My Tasks and filter the register by category, action, status or date.",
         "Document controllers with permission use Document Assignments and Master Data.",
         "Administrators also use User Management, Roles & Permissions, Workflow Builder and Backup & Restore."
       ],
@@ -170,7 +170,8 @@
       "notes": [
         "The document keeps its number, series and category.",
         "Earlier revisions remain in the history you can view. Their files are not available as the current approved copy.",
-        "A document with a locked file is read-only: it has no Edit and cannot be picked for revision."
+        "A document with a locked file is read-only: it has no Edit and cannot be picked for revision.",
+        "Use Signatories to edit references for the current revision."
       ]
     },
     {
@@ -178,11 +179,11 @@
       "title": "Request a new softcopy",
       "audience": "Authorized requesters",
       "steps": [
-        "Open My Requests, choose Softcopy Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose Create Softcopy. Enter Subject / Reason and Proposed Document Title, then choose Category.",
         "Check Generated Document Number. To reuse a number with a new series, select Need Series Number?.",
-        "Attach Document File and add optional Remarks. Select Save Draft and Confirm.",
-        "Check View Details, including the file preview on its Document File tab. Select Submit, Continue and Confirm."
+        "Attach Document File and add optional Remarks.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
       ],
       "result": "Final approval creates the Active softcopy template and its approved file at revision 00.",
       "notes": [
@@ -198,11 +199,11 @@
       "title": "Request a softcopy revision",
       "audience": "Authorized requesters with access to the document",
       "steps": [
-        "Open My Requests, choose Softcopy Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose Revise Softcopy and select Existing Softcopy Document.",
         "Check Proposed Document Title. Enter Subject / Reason and Number of Pages.",
-        "Attach the replacement Document File and add optional Remarks. Select Save Draft and Confirm.",
-        "Check the file preview on the Document File tab of View Details, then select Submit, Continue and Confirm."
+        "Attach the replacement Document File and add optional Remarks.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
       ],
       "result": "Final approval makes the replacement file current and increases the revision level.",
       "notes": [
@@ -229,6 +230,65 @@
       "notes": [
         "Each Document No. stores its own series pattern after first approval. Future series increment automatically; revisions keep their series.",
         "If the preview is blank or no number is available, ask the controller to check the category."
+      ]
+    },
+    {
+      "id": "revision-template",
+      "title": "Request an editable revision template",
+      "audience": "Authorized softcopy requesters",
+      "steps": [
+        "In Softcopy Documents, find the active document and select Request Template for Revision.",
+        "Check the selected document and enter Subject / Reason.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
+      ],
+      "result": "The published route sends the request to Document Control for final approval.",
+      "notes": [
+        "You can also choose Request Template for Revision in My Requests under New Request."
+      ]
+    },
+    {
+      "id": "revision-template-approval",
+      "title": "Approve an editable revision template",
+      "audience": "Assigned Document Control Officer",
+      "steps": [
+        "Open My Tasks and select Review request for the template request.",
+        "Select Approve to open Upload Revision Template.",
+        "Attach one Word (.docx), Excel (.xlsx), or text (.txt) file up to 15 MB.",
+        "Set Download expiry date to today or later. Select Upload and Approve."
+      ],
+      "result": "The requester receives access to the editable file through the selected date.",
+      "notes": [
+        "Use Reject to close the request. The approved softcopy and its revision stay in place."
+      ]
+    },
+    {
+      "id": "revision-template-download",
+      "title": "Download an approved revision template",
+      "audience": "The requester",
+      "steps": [
+        "Open My Requests and find the approved request.",
+        "Select Download Template, or open View and select Revision Template to check the expiry and download.",
+        "Download through the end of that date in Philippine time. If it has expired, submit a new request."
+      ],
+      "result": "The approved template downloads in its editable format.",
+      "notes": [
+        "Templates approved before expiry was introduced remain available without a date. Saved links stop working after expiry."
+      ]
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Request changes to scanned documents",
+      "audience": "Authorized scanned document requesters and approvers",
+      "steps": [
+        "In My Requests, choose New Request and select Upload Scanned Document, Update Scanned Document, Delete Scanned Document, or Create Category / Folder.",
+        "Complete the subject and required fields. For uploads, choose an approved folder, set retention dates, and attach files.",
+        "Choose Submit Request to start approval or Save Draft to continue later.",
+        "Open My Tasks and select Review request. The default approval goes to Document Control."
+      ],
+      "result": "Final approval applies the requested change. A new folder then appears in upload forms.",
+      "notes": [
+        "Uploads accept up to 20 PDF, PNG, JPEG, TXT, DOCX or XLSX files at 15 MB each.",
+        "Use Update or Remove on a scanned row to open a prefilled request. An update without new files keeps existing attachments."
       ]
     },
     {
@@ -271,11 +331,11 @@
       "title": "Request a new external document",
       "audience": "Authorized requesters",
       "steps": [
-        "Open My Requests, choose External Document Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Set External Document Action to External Create Request. Enter Subject / Reason.",
         "Enter Document Title, choose External Category and add an optional Description.",
-        "Select Attach Files and choose up to 20 PDF or image files (15 MB each). Add optional Remarks, then Save Draft and Confirm.",
-        "Check View Details and review each attachment. Select Submit, Continue and Confirm."
+        "Select Attach Files and choose up to 20 PDF or image files (15 MB each). Add optional Remarks.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
       ],
       "result": "Final approval registers the Active external document and stores its approved attachments as a backup at revision 00.",
       "notes": [
@@ -291,11 +351,11 @@
       "title": "Request an external document revision",
       "audience": "Authorized requesters with access to the document",
       "steps": [
-        "Open My Requests, choose External Document Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose External Revised Request and select Existing External Document.",
         "Enter Subject / Reason. Check or update Document Title, External Category and Description.",
-        "Attach at least one replacement file (up to 20), add optional Remarks, then Save Draft and Confirm.",
-        "Review each attachment, then select Submit, Continue and Confirm."
+        "Attach at least one replacement file (up to 20), add optional Remarks.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
       ],
       "result": "Final approval updates the external document and makes its next revision current.",
       "notes": [
@@ -315,11 +375,11 @@
         "Word and Excel files are shown as a PDF made by LibreOffice. The file you uploaded is kept unchanged.",
         "Select Fullscreen to enlarge the preview. If the file is not locked, you can also select Download.",
         "For Word or Excel, Download Original saves the uploaded file and Download PDF saves the converted copy.",
-        "Use File History or Document Files for revision details. Open View on an external document to preview its PDF or image attachments."
+        "In Document Files, users with file history permission can read earlier revisions, upload details and lock information."
       ],
       "result": "You can read the current approved file, and download it when it is unlocked or you hold Download Locked Files access.",
       "notes": [
-        "External documents take up to 20 PDF or image files per upload, 15 MB each.",
+        "For External Documents, open View and Current Attachments to preview or download an attachment.",
         "Normal downloads exclude files of superseded, disposed and cancelled documents.",
         "A locked file is read-only: it can be previewed, but Download needs Download Locked Files access.",
         "The first Word or Excel preview takes a few seconds to convert."
@@ -354,16 +414,16 @@
       "title": "Save, submit and track a request",
       "audience": "Authorized requesters",
       "steps": [
-        "Complete the New Request form. Select Save Draft and Confirm.",
-        "Check View Details. Use Edit to change your Draft or Returned request.",
-        "Select Submit, Continue and Confirm to send it for approval.",
-        "Follow Status, Approval Process Timeline and Workflow Activity Log. Correct and resubmit a Returned request.",
-        "Cancel an unwanted Draft. If Delete appears on its Cancelled record, confirm to permanently remove that never-submitted draft."
+        "Open My Requests and select New Request. Pick a Request Action and complete the form.",
+        "Choose Save Draft to continue later or Submit Request to start approval. Confirm your choice.",
+        "Select Submit on a saved draft, or open Edit and choose Submit Request to submit with changes.",
+        "Track the request in Approval Process Timeline and Workflow Activity Log. Edit and resubmit a Returned request.",
+        "Cancel an unwanted draft. Delete is available on eligible cancelled drafts that never entered approval."
       ],
-      "result": "The request moves in order: Draft, Submitted, each approver in turn, then Completed or Rejected.",
+      "result": "Submission starts approval. Drafts stay editable in My Requests.",
       "notes": [
         "You cannot edit or cancel a Submitted request. Rejected requests are closed.",
-        "Most final approvals produce Completed. A transfer still needs Dispatch and Accept.",
+        "Most final approvals produce Completed. A transfer still needs Dispatch and Accept. A template request becomes Approved.",
         "A Returned request keeps its original approval process when resubmitted."
       ],
       "decision_examples": [
@@ -382,10 +442,10 @@
       "title": "Approve, return or reject a request",
       "audience": "Assigned approvers, including requesters asked to confirm",
       "steps": [
-        "Open My Tasks and choose the request tab.",
-        "Open View Details. Check the proposal, Approval Process Timeline and Workflow Activity Log.",
+        "Open My Tasks, filter by category or action, and select Review request.",
+        "Check the proposal, Approval Process Timeline and Workflow Activity Log.",
         "For softcopy or external creation and revision, open View Details and check the Document File preview before deciding.",
-        "Choose Approve, Return or Reject. Add an optional Remark, then select Continue and Confirm.",
+        "Choose an available decision in the review dialog and confirm. Add a remark if the form offers one.",
         "Check the result and the next task or request status."
       ],
       "result": "Approve moves the request forward; Return sends it back for review; Reject closes it.",
@@ -480,11 +540,11 @@
       "title": "Request a hardcopy transfer",
       "audience": "Authorized hardcopy requesters",
       "steps": [
-        "Open My Requests, choose Hardcopy Transfer Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose Hardcopy Document. Check Original Places and Holder.",
         "Choose Destination Area, Specific, optional Asset and Location. Select Receiving User.",
-        "Enter Request Subject and optional Remarks. Select Save Draft and Confirm.",
-        "Check the proposal, then select Submit, Continue and Confirm."
+        "Enter Request Subject and optional Remarks.",
+        "Choose Submit Request to start approval or Save Draft to continue later."
       ],
       "result": "Final approval marks the handoff For Transfer. The requester can then Dispatch it.",
       "notes": [
@@ -541,10 +601,10 @@
       "title": "Request or renew document access",
       "audience": "Authorized requesters",
       "steps": [
-        "Open My Requests, choose Document Access Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose Document Type: Softcopy or Hardcopy. Select the document and enter Subject.",
         "Check that Recipient / Assigned User is your account. Set Access Expires At to a date after today.",
-        "Add optional Remarks. Select Save Draft and Confirm, then Submit, Continue and Confirm.",
+        "Add optional Remarks. Choose Submit Request to start approval or Save Draft to continue later.",
         "After completion, reopen the document list. To extend access, submit a new request with a later expiry date."
       ],
       "result": "Final approval gives your account access through the selected expiry date.",
@@ -562,10 +622,10 @@
       "title": "Request a document assignment",
       "audience": "Authorized requesters",
       "steps": [
-        "Open My Requests, choose Document Assignment Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Choose Document Type: Softcopy or Hardcopy, then select the document.",
         "Enter Subject. Check that Recipient / Assigned User is your account.",
-        "Add optional Remarks. Select Save Draft and Confirm, then Submit, Continue and Confirm.",
+        "Add optional Remarks. Choose Submit Request to start approval or Save Draft to continue later.",
         "After completion, check the document's holder or assignment."
       ],
       "result": "Final approval assigns the document to you. For hardcopies, the holder changes and the location stays the same.",
@@ -583,11 +643,11 @@
       "title": "Request hardcopy or external disposal",
       "audience": "Authorized requesters",
       "steps": [
-        "Open My Requests, choose Disposal Request and select New Request.",
+        "Open My Requests, select New Request, and choose the request action.",
         "Enter Subject / Reason. Choose Document Type: Hardcopy or External Document.",
         "Select the Active document and check its details in the document list.",
         "Choose Disposal Reason: Shred, Scratch or Other. For Other, enter Other Reason. Add optional Remarks.",
-        "Select Save Draft and Confirm, then Submit, Continue and Confirm. After completion, find the record with the Disposed filter."
+        "Choose Submit Request to start approval or Save Draft to continue later. After completion, find the record with the Disposed filter."
       ],
       "result": "Final approval marks the document Disposed and records the disposal details.",
       "notes": [
@@ -614,7 +674,8 @@
       "notes": [
         "You need direct action and disposal permissions, plus access to manage the document.",
         "Normal download actions are unavailable for disposed softcopy and external files.",
-        "Also follow your organization's physical disposal procedure."
+        "Also follow your organization's physical disposal procedure.",
+        "Hard Delete is a separate permission-controlled action for disposed records and requires password confirmation."
       ]
     },
     {

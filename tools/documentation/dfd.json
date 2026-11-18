@@ -50,9 +50,32 @@
         {"from": "Requester", "from_kind": "actor", "input": "Proposed details and file", "process": "5. Save and route request", "output": "Draft or submitted proposal", "to": "Request records", "to_kind": "store"},
         {"from": "Request records", "from_kind": "store", "input": "Approved creation or revision", "process": "3.2 Publish approved change", "output": "Current revision and file", "to": "Softcopy records", "to_kind": "store"},
         {"from": "Softcopy records", "from_kind": "store", "input": "Current file, lock status and access", "process": "3.3 Check permission and lock", "output": "Preview or download access", "to": "Authorized file user", "to_kind": "actor"},
-        {"from": "Softcopy revision history", "from_kind": "store", "input": "Revision details and changes", "process": "3.4 View revision history", "output": "Earlier revisions and changes", "to": "Authorized reviewer", "to_kind": "actor"}
+        {"from": "Softcopy revision history", "from_kind": "store", "input": "Revision details and changes", "process": "3.4 View revision history", "output": "Earlier revisions in Document Files", "to": "Authorized reviewer", "to_kind": "actor"}
       ],
       "note": "New records use Softcopy Categories and automatic numbers; a series is optional. A revision keeps the same document number and adds a revision."
+    },
+    {
+      "id": "revision-template",
+      "title": "Editable revision templates and download expiry",
+      "summary": "The requester selects an active softcopy. Document Control approves and supplies the downloadable file and expiry date.",
+      "flows": [
+        {"from": "Requester", "from_kind": "actor", "input": "Document and subject", "process": "3.5 Request an editable template", "output": "Draft or submitted request", "to": "Request records", "to_kind": "store"},
+        {"from": "Document Control Officer", "from_kind": "actor", "input": "Editable file and expiry date", "process": "3.6 Approve and release template", "output": "File and download expiry", "to": "Approved request and template file", "to_kind": "store"},
+        {"from": "Approved request and template file", "from_kind": "store", "input": "Requester, approval and expiry", "process": "3.7 Check template download", "output": "Editable file or expired response", "to": "Original requester", "to_kind": "actor"}
+      ],
+      "note": "Access lasts through the selected date in Philippine time. The published softcopy revision stays the same."
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Scanned documents and folder operations",
+      "summary": "Document Control is the default approver for uploads, updates, removals and category requests.",
+      "flows": [
+        {"from": "Requester", "from_kind": "actor", "input": "Scanned action and details", "process": "5.1 Save draft or submit", "output": "Draft or submitted request", "to": "Request records", "to_kind": "store"},
+        {"from": "Assigned approver", "from_kind": "actor", "input": "Approval, return or rejection", "process": "5.3 Record scanned decision", "output": "Decision and request status", "to": "Request records", "to_kind": "store"},
+        {"from": "Approved scanned request", "from_kind": "store", "input": "Files, folder or removal details", "process": "5.5 Apply approved change", "output": "Updated record, files or folder", "to": "Scanned register and categories", "to_kind": "store"},
+        {"from": "Scanned register", "from_kind": "store", "input": "Retention dates and file access", "process": "5.6 Show permitted records", "output": "Preview, download and retention", "to": "Authorized document user", "to_kind": "actor"}
+      ],
+      "note": "Only final approval applies a scanned request. Retention alerts prompt review."
     },
     {
       "id": "external-documents",
@@ -72,7 +95,7 @@
       "title": "5. Requests and approval decisions",
       "summary": "The published approval route sets who reviews a request and in what order. PK DTS saves each decision.",
       "flows": [
-        {"from": "Requester", "from_kind": "actor", "input": "Draft details, file and submission", "process": "5.1 Check and submit request", "output": "Submitted request and route", "to": "Request records", "to_kind": "store"},
+        {"from": "Requester", "from_kind": "actor", "input": "Form details, file and chosen action", "process": "5.1 Save draft or submit request", "output": "Draft or submitted request", "to": "Request records", "to_kind": "store"},
         {"from": "Published approval routes", "from_kind": "store", "input": "Review order and requester's leader", "process": "5.2 Assign the active review", "output": "Proposal, review task and file", "to": "Assigned approver", "to_kind": "actor"},
         {"from": "Assigned approver", "from_kind": "actor", "input": "Approve, Return or Reject; remarks", "process": "5.3 Record the decision", "output": "Decision and current stage", "to": "Request records", "to_kind": "store"},
         {"from": "Request records", "from_kind": "store", "input": "First-step Return and remarks", "process": "5.4 Show required corrections", "output": "Request to correct and resubmit", "to": "Requester", "to_kind": "actor"},

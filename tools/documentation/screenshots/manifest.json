@@ -40,7 +40,7 @@
         "label": "Document workspaces",
         "x": 0,
         "y": 0,
-        "width": 264,
+        "width": 300,
         "height": 900
       },
       {
@@ -54,7 +54,7 @@
         "label": "Hardcopy Documents",
         "x": 12,
         "y": 184.8,
-        "width": 240,
+        "width": 276,
         "height": 40.8
       }
     ]
@@ -70,7 +70,7 @@
         "label": "Document workspaces",
         "x": 0,
         "y": 0,
-        "width": 264,
+        "width": 300,
         "height": 900
       },
       {
@@ -84,7 +84,7 @@
         "label": "Overview",
         "x": 12,
         "y": 96,
-        "width": 240,
+        "width": 276,
         "height": 40.8
       }
     ]
@@ -100,7 +100,7 @@
         "label": "Document workspaces",
         "x": 0,
         "y": 0,
-        "width": 264,
+        "width": 300,
         "height": 900
       },
       {
@@ -121,9 +121,9 @@
     "controls": [
       {
         "label": "Administrator",
-        "x": 297,
+        "x": 333,
         "y": 281,
-        "width": 511.9,
+        "width": 492.3,
         "height": 63
       }
     ]
@@ -138,21 +138,21 @@
       {
         "label": "Role Name",
         "x": 46,
-        "y": 129.6,
+        "y": 128.5,
         "width": 693.3,
         "height": 19.8
       },
       {
         "label": "Module Permissions",
         "x": 25,
-        "y": 237.3,
+        "y": 236.3,
         "width": 1090,
         "height": 19.2
       },
       {
         "label": "Save Role",
         "x": 1016.1,
-        "y": 758.6,
+        "y": 757.5,
         "width": 95.9,
         "height": 40
       }
@@ -186,26 +186,26 @@
     "route": "documents/hardcopy?layout=table&folder=all&period=all",
     "caption": "Inspect storage, custody, and history in View Details.",
     "width": 1100,
-    "height": 722,
+    "height": 804,
     "controls": [
       {
         "label": "Current Holder",
         "x": 32,
-        "y": 208.7,
+        "y": 208.5,
         "width": 152,
         "height": 13.5
       },
       {
         "label": "Days until disposal",
         "x": 211,
-        "y": 208.7,
+        "y": 208.5,
         "width": 152,
         "height": 13.5
       },
       {
         "label": "Transfer History",
         "x": 372.9,
-        "y": 434.6,
+        "y": 516.2,
         "width": 96.5,
         "height": 19.8
       }
@@ -216,28 +216,28 @@
     "route": "documents/hardcopy?layout=table&folder=all",
     "caption": "Register a hardcopy directly.",
     "width": 800,
-    "height": 608,
+    "height": 714,
     "controls": [
       {
-        "label": "Document title",
+        "label": "Document Title",
         "x": 25,
-        "y": 114.8,
+        "y": 88,
         "width": 750,
-        "height": 40
-      },
-      {
-        "label": "Save",
-        "x": 635.0,
-        "y": 547.0,
-        "width": 137.0,
-        "height": 40
+        "height": 19.8
       },
       {
         "label": "Current Holder",
         "x": 25,
-        "y": 336.4,
+        "y": 443.4,
         "width": 367,
         "height": 19.8
+      },
+      {
+        "label": "Save Document",
+        "x": 635.0,
+        "y": 654.0,
+        "width": 137.0,
+        "height": 40
       }
     ]
   },
@@ -246,12 +246,12 @@
     "route": "documents/hardcopy?layout=table&folder=all",
     "caption": "Enable retention tracking and specify the storage period.",
     "width": 800,
-    "height": 690,
+    "height": 794,
     "controls": [
       {
         "label": "Track retention period",
         "x": 408,
-        "y": 360.4,
+        "y": 467.4,
         "width": 367,
         "height": 24
       }
@@ -262,26 +262,26 @@
     "route": "documents/hardcopy?layout=table&folder=all",
     "caption": "Update an existing hardcopy record.",
     "width": 800,
-    "height": 690,
+    "height": 794,
     "controls": [
       {
         "label": "Document Title",
         "x": 25,
-        "y": 88.0,
+        "y": 88,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Location",
         "x": 408,
-        "y": 253.6,
+        "y": 360.6,
         "width": 367,
         "height": 19.8
       },
       {
         "label": "Save Document",
         "x": 635.0,
-        "y": 629.8,
+        "y": 734,
         "width": 137.0,
         "height": 40
       }
@@ -292,26 +292,26 @@
     "route": "documents/softcopy?layout=table&folder=all",
     "caption": "Create a controlled softcopy directly.",
     "width": 800,
-    "height": 780,
+    "height": 794,
     "controls": [
       {
-        "label": "Action",
+        "label": "Softcopy Action",
         "x": 25,
-        "y": 115.1,
+        "y": 88,
         "width": 367,
-        "height": 40
+        "height": 19.8
       },
       {
-        "label": "Document title",
-        "x": 25,
-        "y": 197.9,
+        "label": "Generated Document Number",
+        "x": 408,
+        "y": 253.6,
         "width": 367,
-        "height": 40
+        "height": 19.8
       },
       {
-        "label": "Save",
+        "label": "Approve Directly",
         "x": 630.0,
-        "y": 718.8,
+        "y": 734,
         "width": 142.0,
         "height": 40
       }
@@ -320,7 +320,7 @@
   "softcopy-numbering": {
     "file": "softcopy-numbering.png",
     "route": "documents/softcopy?layout=table&folder=all",
-    "caption": "The first Series No. Code Pattern is configured per Document No.",
+    "caption": "The Series No. is typed manually; the previous series is shown as the placeholder.",
     "width": 800,
     "height": 794,
     "controls": [
@@ -337,13 +337,6 @@
         "y": 253.6,
         "width": 367,
         "height": 19.8
-      },
-      {
-        "label": "Series No. Code Pattern (first-time setup)",
-        "x": 25,
-        "y": 336.4,
-        "width": 367,
-        "height": 19.8
       }
     ]
   },
@@ -352,7 +345,7 @@
     "route": "documents/softcopy?layout=table&folder=all",
     "caption": "Create a direct revision of the selected softcopy.",
     "width": 800,
-    "height": 794,
+    "height": 650,
     "controls": [
       {
         "label": "Existing Softcopy Document",
@@ -365,46 +358,16 @@
   },
   "softcopy-request-create": {
     "file": "softcopy-request-create.png",
-    "route": "my-requests/softcopy",
+    "route": "my-requests",
     "caption": "Prepare a softcopy create request.",
     "width": 800,
-    "height": 674,
+    "height": 756,
     "controls": [
       {
         "label": "Action",
         "x": 25,
         "y": 114.8,
-        "width": 367,
-        "height": 40
-      },
-      {
-        "label": "Document title",
-        "x": 25,
-        "y": 197.6,
-        "width": 367,
-        "height": 40
-      },
-      {
-        "label": "Save",
-        "x": 671.4,
-        "y": 612.7,
-        "width": 100.6,
-        "height": 40
-      }
-    ]
-  },
-  "softcopy-request-revise": {
-    "file": "softcopy-request-revise.png",
-    "route": "my-requests/softcopy",
-    "caption": "Prepare a softcopy revise request.",
-    "width": 800,
-    "height": 674,
-    "controls": [
-      {
-        "label": "Action",
-        "x": 25,
-        "y": 114.8,
-        "width": 367,
+        "width": 750,
         "height": 40
       },
       {
@@ -415,10 +378,40 @@
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
+        "label": "Submit Request",
+        "x": 635.4,
+        "y": 695.5,
+        "width": 136.6,
+        "height": 40
+      }
+    ]
+  },
+  "softcopy-request-revise": {
+    "file": "softcopy-request-revise.png",
+    "route": "my-requests",
+    "caption": "Prepare a softcopy revise request.",
+    "width": 800,
+    "height": 674,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 750,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 280.4,
+        "width": 367,
+        "height": 40
+      },
+      {
+        "label": "Submit Request",
+        "x": 635.4,
         "y": 612.7,
-        "width": 100.6,
+        "width": 136.6,
         "height": 40
       }
     ]
@@ -431,25 +424,25 @@
     "height": 650,
     "controls": [
       {
-        "label": "Document title",
+        "label": "Document Title",
         "x": 25,
-        "y": 115.6,
+        "y": 88.0,
         "width": 750,
-        "height": 40.0
-      },
-      {
-        "label": "Save",
-        "x": 653.8,
-        "y": 590.6,
-        "width": 118.2,
-        "height": 40
+        "height": 19.8
       },
       {
         "label": "Attach File",
         "x": 25,
-        "y": 458.7,
+        "y": 457.7,
         "width": 750,
         "height": 19.8
+      },
+      {
+        "label": "Save Directly",
+        "x": 653.8,
+        "y": 589.6,
+        "width": 118.2,
+        "height": 40
       }
     ]
   },
@@ -463,21 +456,21 @@
       {
         "label": "Category",
         "x": 25,
-        "y": 376.8,
+        "y": 374.9,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Attach File",
         "x": 25,
-        "y": 459.9,
+        "y": 457.7,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Save Directly",
         "x": 653.8,
-        "y": 591.8,
+        "y": 589.6,
         "width": 118.2,
         "height": 40
       }
@@ -485,7 +478,7 @@
   },
   "external-request-create": {
     "file": "external-request-create.png",
-    "route": "my-requests/external",
+    "route": "my-requests",
     "caption": "Prepare an external document create request.",
     "width": 800,
     "height": 794,
@@ -493,29 +486,29 @@
       {
         "label": "Action",
         "x": 25,
-        "y": 115.1,
-        "width": 367,
+        "y": 114.8,
+        "width": 750,
         "height": 40
       },
       {
         "label": "Document title",
-        "x": 25,
-        "y": 197.9,
+        "x": 408,
+        "y": 197.6,
         "width": 367,
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
-        "y": 734.3,
-        "width": 100.6,
+        "label": "Submit Request",
+        "x": 635.4,
+        "y": 734,
+        "width": 136.6,
         "height": 40
       }
     ]
   },
   "external-request-revise": {
     "file": "external-request-revise.png",
-    "route": "my-requests/external",
+    "route": "my-requests",
     "caption": "Prepare an external document revise request.",
     "width": 800,
     "height": 794,
@@ -524,21 +517,127 @@
         "label": "Action",
         "x": 25,
         "y": 114.8,
-        "width": 367,
+        "width": 750,
         "height": 40
       },
       {
         "label": "Document title",
         "x": 25,
-        "y": 280.4,
+        "y": 362.7,
         "width": 367,
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
+        "label": "Submit Request",
+        "x": 635.4,
         "y": 734,
+        "width": 136.6,
+        "height": 40
+      }
+    ]
+  },
+  "revision-template": {
+    "file": "revision-template.png",
+    "route": "my-requests?request_category=softcopy&revision_template_for=1",
+    "caption": "Request an editable template for the selected softcopy.",
+    "width": 800,
+    "height": 462,
+    "controls": [
+      {
+        "label": "Subject / Reason",
+        "x": 25,
+        "y": 197.6,
+        "width": 367,
+        "height": 39.5
+      },
+      {
+        "label": "Save Draft",
+        "x": 517.8,
+        "y": 400.9,
         "width": 100.6,
+        "height": 40
+      },
+      {
+        "label": "Submit Request",
+        "x": 635.4,
+        "y": 400.9,
+        "width": 136.6,
+        "height": 40
+      }
+    ]
+  },
+  "revision-template-download": {
+    "file": "revision-template-download.png",
+    "route": "my-requests?request_category=softcopy&type=softcopy_revision_template",
+    "caption": "An approved template can be downloaded through its expiry date.",
+    "width": 1440,
+    "height": 900,
+    "controls": [
+      {
+        "label": "Download Template",
+        "x": 1237.2,
+        "y": 337,
+        "width": 152.8,
+        "height": 34
+      }
+    ]
+  },
+  "revision-template-approval": {
+    "file": "revision-template-approval.png",
+    "route": "my-tasks?request_category=softcopy&type=softcopy_revision_template",
+    "caption": "Upload an editable file and set the download expiry date.",
+    "width": 560,
+    "height": 502,
+    "controls": [
+      {
+        "label": "Editable revision template",
+        "x": 29,
+        "y": 200.9,
+        "width": 502,
+        "height": 44
+      },
+      {
+        "label": "Download expiry date",
+        "x": 29,
+        "y": 336.6,
+        "width": 502,
+        "height": 44
+      },
+      {
+        "label": "Upload and Approve",
+        "x": 285,
+        "y": 425.7,
+        "width": 246,
+        "height": 46
+      }
+    ]
+  },
+  "scanned-requests": {
+    "file": "scanned-requests.png",
+    "route": "my-requests",
+    "caption": "Choose the scanned action and complete its required fields.",
+    "width": 800,
+    "height": 794,
+    "controls": [
+      {
+        "label": "Action",
+        "x": 25,
+        "y": 114.8,
+        "width": 750,
+        "height": 40
+      },
+      {
+        "label": "Document title",
+        "x": 25,
+        "y": 342.6,
+        "width": 750,
+        "height": 40
+      },
+      {
+        "label": "Submit Request",
+        "x": 635.4,
+        "y": 734,
+        "width": 136.6,
         "height": 40
       }
     ]
@@ -546,21 +645,28 @@
   "files": {
     "file": "files.png",
     "route": "documents/softcopy?layout=table&folder=all",
-    "caption": "Preview the current file in View Details. Download appears when the file is unlocked.",
+    "caption": "Document Files shows the current file and permitted revision history.",
     "width": 1100,
-    "height": 852,
+    "height": 962,
     "controls": [
+      {
+        "label": "Earlier revision",
+        "x": 29,
+        "y": 786.8,
+        "width": 1042,
+        "height": 64.8
+      },
       {
         "label": "Fullscreen",
         "x": 841.6,
-        "y": 721.2,
+        "y": 600.2,
         "width": 100.3,
         "height": 44
       },
       {
         "label": "Download",
         "x": 953.9,
-        "y": 721.2,
+        "y": 600.2,
         "width": 117.1,
         "height": 44
       }
@@ -568,7 +674,7 @@
   },
   "review-file": {
     "file": "review-file.png",
-    "route": "my-tasks/softcopy?period=all",
+    "route": "my-tasks?request_category=softcopy&period=all",
     "caption": "Open the Document File tab in View Details to preview the proposed attachment before deciding.",
     "width": 1100,
     "height": 852,
@@ -576,21 +682,21 @@
       {
         "label": "Document File",
         "x": 61.4,
-        "y": 323.0,
+        "y": 403.0,
         "width": 88.4,
         "height": 19.8
       },
       {
         "label": "Fullscreen",
         "x": 841.6,
-        "y": 697.1,
+        "y": 777.1,
         "width": 100.3,
         "height": 44
       },
       {
         "label": "Download",
         "x": 953.9,
-        "y": 697.1,
+        "y": 777.1,
         "width": 117.1,
         "height": 44
       }
@@ -598,7 +704,7 @@
   },
   "request-lifecycle": {
     "file": "request-lifecycle.png",
-    "route": "my-requests/softcopy?period=all",
+    "route": "my-requests?request_category=softcopy&period=all",
     "caption": "A saved draft remains in My Requests until submitted.",
     "width": 1440,
     "height": 900,
@@ -606,21 +712,21 @@
       {
         "label": "New Request",
         "x": 1248.1,
-        "y": 193,
+        "y": 126,
         "width": 138.9,
         "height": 40
       },
       {
         "label": "Submit",
-        "x": 1259.9,
-        "y": 394.1,
+        "x": 1334.9,
+        "y": 619.1,
         "width": 40.3,
         "height": 14.8
       },
       {
         "label": "Status",
-        "x": 908.2,
-        "y": 317,
+        "x": 955.2,
+        "y": 250,
         "width": 51.4,
         "height": 16.5
       }
@@ -628,7 +734,7 @@
   },
   "approvals": {
     "file": "approvals.png",
-    "route": "my-tasks/softcopy?period=all",
+    "route": "my-tasks?request_category=softcopy&period=all",
     "caption": "Review the selected approval decision before confirming.",
     "width": 440,
     "height": 330,
@@ -651,7 +757,7 @@
   },
   "approval-routes": {
     "file": "approval-routes.png",
-    "route": "my-tasks/softcopy?period=all",
+    "route": "my-tasks?request_category=softcopy&period=all",
     "caption": "View Details includes the request approval process.",
     "width": 1100,
     "height": 852,
@@ -659,21 +765,21 @@
       {
         "label": "Approval Process Timeline",
         "x": 201.7,
-        "y": 285.0,
+        "y": 403.0,
         "width": 163.8,
         "height": 19.8
       },
       {
         "label": "Workflow Version",
         "x": 29,
-        "y": 410.9,
+        "y": 528.9,
         "width": 95.4,
         "height": 16.5
       },
       {
         "label": "Workflow Activity Log",
         "x": 418.5,
-        "y": 285.0,
+        "y": 403.0,
         "width": 130.3,
         "height": 19.8
       }
@@ -681,29 +787,29 @@
   },
   "transfer-request": {
     "file": "transfer-request.png",
-    "route": "my-requests/hardcopy-transfer",
-    "caption": "Prepare the request and save it as a draft.",
+    "route": "my-requests",
+    "caption": "Save a draft or submit the completed request.",
     "width": 800,
     "height": 794,
     "controls": [
       {
-        "label": "Save",
-        "x": 671.4,
+        "label": "Submit Request",
+        "x": 635.4,
         "y": 734,
-        "width": 100.6,
+        "width": 136.6,
         "height": 40
       },
       {
         "label": "Destination Location",
         "x": 408,
-        "y": 404.6,
+        "y": 404.4,
         "width": 367,
         "height": 19.8
       },
       {
         "label": "Receiving User",
         "x": 25,
-        "y": 487.4,
+        "y": 487.2,
         "width": 367,
         "height": 19.8
       }
@@ -711,28 +817,28 @@
   },
   "access-request": {
     "file": "access-request.png",
-    "route": "my-requests/access-grant",
-    "caption": "Prepare the request and save it as a draft.",
+    "route": "my-requests",
+    "caption": "Save a draft or submit the completed request.",
     "width": 800,
-    "height": 544,
+    "height": 628,
     "controls": [
       {
         "label": "Action",
         "x": 25,
         "y": 114.8,
-        "width": 367,
+        "width": 750,
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
-        "y": 483.7,
-        "width": 100.6,
+        "label": "Submit Request",
+        "x": 635.4,
+        "y": 566.5,
+        "width": 136.6,
         "height": 40
       },
       {
         "label": "Recipient / Assigned User",
-        "x": 25,
+        "x": 408,
         "y": 253.6,
         "width": 367,
         "height": 19.8
@@ -741,8 +847,8 @@
   },
   "assignment-request": {
     "file": "assignment-request.png",
-    "route": "my-requests/document-assign",
-    "caption": "Prepare the request and save it as a draft.",
+    "route": "my-requests",
+    "caption": "Save a draft or submit the completed request.",
     "width": 800,
     "height": 544,
     "controls": [
@@ -750,19 +856,19 @@
         "label": "Action",
         "x": 25,
         "y": 114.8,
-        "width": 367,
+        "width": 750,
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
+        "label": "Submit Request",
+        "x": 635.4,
         "y": 483.7,
-        "width": 100.6,
+        "width": 136.6,
         "height": 40
       },
       {
         "label": "Recipient / Assigned User",
-        "x": 25,
+        "x": 408,
         "y": 253.6,
         "width": 367,
         "height": 19.8
@@ -771,8 +877,8 @@
   },
   "disposal-request": {
     "file": "disposal-request.png",
-    "route": "my-requests/hardcopy-disposal",
-    "caption": "Prepare the request and save it as a draft.",
+    "route": "my-requests",
+    "caption": "Save a draft or submit the completed request.",
     "width": 800,
     "height": 652,
     "controls": [
@@ -780,19 +886,19 @@
         "label": "Action",
         "x": 25,
         "y": 114.8,
-        "width": 367,
+        "width": 750,
         "height": 40
       },
       {
-        "label": "Save",
-        "x": 671.4,
+        "label": "Submit Request",
+        "x": 635.4,
         "y": 590.7,
-        "width": 100.6,
+        "width": 136.6,
         "height": 40
       },
       {
         "label": "Document Type",
-        "x": 25,
+        "x": 408,
         "y": 170.8,
         "width": 367,
         "height": 19.8
@@ -801,61 +907,47 @@
   },
   "transfer-dispatch": {
     "file": "transfer-dispatch.png",
-    "route": "my-tasks/hardcopy-transfer?period=all",
+    "route": "my-tasks?request_category=hardcopy-transfer&period=all",
     "caption": "The requester dispatches an approved physical transfer.",
     "width": 1440,
     "height": 900,
     "controls": [
       {
-        "label": "Physical Transfer Handoffs",
-        "x": 319,
-        "y": 614,
-        "width": 193.2,
-        "height": 20
-      },
-      {
         "label": "For Transfer",
-        "x": 1121.0,
-        "y": 796.9,
-        "width": 87.8,
-        "height": 26.5
+        "x": 1000.9,
+        "y": 390.8,
+        "width": 71.9,
+        "height": 43
       },
       {
         "label": "Dispatch",
-        "x": 1308.9,
-        "y": 793.1,
-        "width": 81.1,
-        "height": 34.2
+        "x": 1329.0,
+        "y": 404.8,
+        "width": 50.0,
+        "height": 14.8
       }
     ]
   },
   "transfer-accept": {
     "file": "transfer-accept.png",
-    "route": "my-tasks/hardcopy-transfer?period=all",
+    "route": "my-tasks?request_category=hardcopy-transfer&period=all",
     "caption": "The destination recipient accepts the received hardcopy.",
     "width": 1440,
     "height": 900,
     "controls": [
       {
-        "label": "Physical Transfer Handoffs",
-        "x": 319,
-        "y": 614,
-        "width": 193.2,
-        "height": 20
-      },
-      {
         "label": "In Transit",
-        "x": 1121.0,
-        "y": 733.7,
-        "width": 72.9,
-        "height": 26.5
+        "x": 1000.9,
+        "y": 303.2,
+        "width": 71.9,
+        "height": 43
       },
       {
         "label": "Accept",
-        "x": 1321.2,
-        "y": 729.9,
-        "width": 68.8,
-        "height": 34.2
+        "x": 1339.4,
+        "y": 317.3,
+        "width": 39.6,
+        "height": 14.8
       }
     ]
   },
@@ -899,21 +991,21 @@
       {
         "label": "Assign Document",
         "x": 21,
-        "y": 15.3,
+        "y": 15.0,
         "width": 141.3,
         "height": 24
       },
       {
         "label": "Assigned User",
         "x": 328,
-        "y": 74.3,
+        "y": 74.0,
         "width": 291,
         "height": 18.1
       },
       {
         "label": "Save Assignment",
         "x": 467.6,
-        "y": 233.1,
+        "y": 232.8,
         "width": 147.4,
         "height": 40
       }
@@ -924,19 +1016,19 @@
     "route": "places/location",
     "caption": "Maintain the places used by hardcopy storage.",
     "width": 800,
-    "height": 654,
+    "height": 630,
     "controls": [
       {
         "label": "Location Name",
         "x": 25,
-        "y": 148.2,
-        "width": 430.8,
+        "y": 147.4,
+        "width": 750,
         "height": 19.8
       },
       {
         "label": "Save Record",
         "x": 657.8,
-        "y": 593.4,
+        "y": 568.2,
         "width": 114.2,
         "height": 40
       }
@@ -951,7 +1043,7 @@
     "controls": [
       {
         "label": "Folder",
-        "x": 573.2,
+        "x": 582.6,
         "y": 314.5,
         "width": 50.0,
         "height": 16.5
@@ -1006,7 +1098,7 @@
     "controls": [
       {
         "label": "Recorded At",
-        "x": 314,
+        "x": 350,
         "y": 268,
         "width": 84.9,
         "height": 16.5
@@ -1014,7 +1106,7 @@
       {
         "label": "View",
         "x": 1352.0,
-        "y": 323.1,
+        "y": 325.6,
         "width": 27.0,
         "height": 14.8
       }
@@ -1060,21 +1152,21 @@
       {
         "label": "Backup to restore",
         "x": 25,
-        "y": 157.8,
+        "y": 157.5,
         "width": 750,
         "height": 19.8
       },
       {
         "label": "Your password",
         "x": 25,
-        "y": 240.6,
+        "y": 240.3,
         "width": 367,
         "height": 19.8
       },
       {
         "label": "Type RESTORE to confirm",
         "x": 408,
-        "y": 240.6,
+        "y": 240.3,
         "width": 367,
         "height": 19.8
       }

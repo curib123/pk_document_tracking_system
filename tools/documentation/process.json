@@ -28,7 +28,7 @@
         },
         {
           "actor": "Staff member",
-          "text": "Preview the current file in View Details. Use Download when it is unlocked or you hold lock access. External Documents offer Download."
+          "text": "Open View and Document Files for Softcopy downloads and permitted history."
         }
       ],
       "notes": [
@@ -181,7 +181,7 @@
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests. Choose Softcopy Request or External Document Request, then New Request."
+          "text": "Open My Requests and New Request. Choose the softcopy or external action."
         },
         {
           "actor": "Requester",
@@ -193,7 +193,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft and confirm. Review it, then Submit and confirm."
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
         },
         {
           "actor": "Assigned approvers",
@@ -219,17 +219,75 @@
       ]
     },
     {
-      "id": "request-draft-submit",
-      "title": "Save, submit or remove your draft",
-      "summary": "Save and review your proposal, then submit it for approval. Use the linked decision example for your request type.",
+      "id": "revision-template",
+      "title": "Request and release an editable template",
+      "summary": "Document Control provides an editable copy on an approved request. The current softcopy stays in place.",
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open the matching My Requests tab. Choose New Request and complete the form."
+          "text": "On the softcopy row select Request Template for Revision and fill Subject / Reason."
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft and confirm. Use Edit to correct your Draft or Returned request."
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Open Review request in My Tasks. Approve or reject the request."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Upload a Word, Excel, or text file up to 15 MB. Set the required download expiry date and select Upload and Approve."
+        },
+        {
+          "actor": "Requester",
+          "text": "Use Download Template in My Requests through the selected date in Philippine time."
+        }
+      ],
+      "notes": [
+        "The download endpoint blocks saved links after expiry.",
+        "Previously approved templates without a date stay available."
+      ]
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Request a scanned document or folder change",
+      "summary": "Upload, update, removal and folder requests go to Document Control by default.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "In New Request, choose Upload Scanned Document, Update Scanned Document, Delete Scanned Document, or Create Category / Folder."
+        },
+        {
+          "actor": "Requester",
+          "text": "Complete the required details and select Submit Request or Save Draft."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Review in My Tasks. Approve, return for correction, or reject."
+        },
+        {
+          "actor": "PK DTS",
+          "text": "After final approval, apply the change and update the scanned register or available folders."
+        }
+      ],
+      "notes": [
+        "The published workflow determines the approvers.",
+        "Updates without new attachments keep the existing files."
+      ]
+    },
+    {
+      "id": "request-draft-submit",
+      "title": "Save, submit or remove your draft",
+      "summary": "Choose whether to keep a draft or start approval from the request form.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests, select New Request, choose an action, and complete the form."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
         },
         {
           "actor": "Requester",
@@ -237,7 +295,7 @@
         },
         {
           "actor": "Requester",
-          "text": "When ready, choose Submit and confirm. Check Approval Process Timeline for the assigned reviewers."
+          "text": "Use Submit on a saved draft, or use Submit Request from Edit. Check the Approval Process Timeline."
         },
         {
           "actor": "PK DTS",
@@ -929,7 +987,7 @@
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Hardcopy Transfer Request. Choose New Request."
+          "text": "Open My Requests and New Request. Choose the request action."
         },
         {
           "actor": "Requester",
@@ -941,7 +999,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Receiving User. Enter Request Subject and optional Remarks, then Save Draft and Submit."
+          "text": "Choose Receiving User. Enter Request Subject and optional Remarks, then select Submit Request or Save Draft."
         },
         {
           "actor": "Assigned approvers",
@@ -1011,7 +1069,7 @@
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Document Access Request. Choose New Request."
+          "text": "Open My Requests and New Request. Choose the request action."
         },
         {
           "actor": "Requester",
@@ -1023,7 +1081,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft, then Submit. Confirm each action."
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
         },
         {
           "actor": "Assigned approvers",
@@ -1052,7 +1110,7 @@
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Document Assignment Request. Choose New Request."
+          "text": "Open My Requests and New Request. Choose the request action."
         },
         {
           "actor": "Requester",
@@ -1060,7 +1118,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Enter Subject / Reason and optional Remarks. Choose Save Draft, then Submit and confirm."
+          "text": "Enter Subject / Reason and optional Remarks. Choose Submit Request to start approval or Save Draft to continue later."
         },
         {
           "actor": "Assigned approvers",
@@ -1221,7 +1279,7 @@
       "steps": [
         {
           "actor": "Requester",
-          "text": "Open My Requests > Disposal Request. Choose New Request."
+          "text": "Open My Requests and New Request. Choose the request action."
         },
         {
           "actor": "Requester",
@@ -1233,7 +1291,7 @@
         },
         {
           "actor": "Requester",
-          "text": "Choose Save Draft and review it, then Submit. Confirm each action."
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
         },
         {
           "actor": "Assigned approvers",
@@ -1370,7 +1428,7 @@
       "steps": [
         {
           "actor": "Staff member",
-          "text": "Check the counts beside My Requests and My Tasks. Open the matching tab."
+          "text": "Check the counts beside My Requests and My Tasks. Filter the relevant register."
         },
         {
           "actor": "PK DTS",

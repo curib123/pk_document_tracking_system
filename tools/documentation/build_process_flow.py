@@ -1,4 +1,4 @@
-"""Build the Process Flow: an editable PowerPoint that explains the three document types, walks one
+"""Build the editable Process Flow PowerPoint. It explains the document registers and walks one
 request from sign-in to final approval, and shows every scenario and approval route.
 
 Run: python -X utf8 tools/documentation/build_process_flow.py
@@ -31,7 +31,7 @@ OUT = ROOT / 'docs/system-documentation/PK_DTS_Process_Flow.pptx'
 SHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 W, H = 1190, 842
-DATE = '11 NOVEMBER 2026'
+DATE = '18 NOVEMBER 2026'
 
 INK, ACCENT, PALE = '1C2B3D', '92284A', 'F6F7F9'
 GREY, RULE, WHITE = '506377', 'DDE3E9', 'FFFFFF'
@@ -40,7 +40,7 @@ SUCCESS, SUCCESS_PALE, GOLD = '1A685B', 'EFF7F4', 'FFF8EA'
 # Synthetic people of the documentation site (capture_screenshots.py).
 PEOPLE = {
     'Requester': ('Sam Staff', 'Staff', 'icon-person.png'),
-    "Requester's leader": ('Alex Staff', 'Staff, Sam\'s leader (Noted By)', 'icon-review.png'),
+    "Requester's leader": ('Alex Administrator', 'Sam\'s leader (Noted By)', 'icon-review.png'),
     'Plant Manager': ('Morgan Manager', 'Plant Manager', 'icon-review.png'),
     'Document Control Officer': ('Casey Controller', 'Document Control Officer', 'icon-review.png'),
     'Requester account': ('Sam Staff', 'Staff (Requester account)', 'icon-person.png'),
@@ -222,7 +222,7 @@ def cover(prs, number, total):
     s.rect(776, 120, 372, 482, INK, None)
     s.text(800, 144, 300, 14, 'FIVE PARTS', 10, True, WHITE)
     parts = [('01', 'Meet the sample users and their roles'),
-             ('02', 'Learn the three document types'),
+             ('02', 'Learn the four document registers'),
              ('03', 'Follow one softcopy request from start to finish'),
              ('04', 'See every scenario of each document type'),
              ('05', 'See every request type and its approval route')]
@@ -291,7 +291,7 @@ def journey_slide(prs, number, total):
         ('Requester', 'Sign in', 'Sam signs in with their own account.', 'No request yet'),
         ('Requester', 'Start a request', 'My Requests, Softcopy Request, New Request.', 'No request yet'),
         ('Requester', 'Save a draft', 'Complete the form, attach the file, Save Draft.', 'Draft'),
-        ('Requester', 'Submit', 'Check View Details, then Submit and Confirm.', 'Submitted'),
+        ('Requester', 'Submit', 'Submit the saved draft, or use Submit Request from the form.', 'Submitted'),
         ("Requester's leader", 'Noted By', 'Alex reviews and approves.', 'Submitted'),
         ('Plant Manager', 'Plant Manager review', 'Morgan approves. The file is locked.', 'Submitted  /  file locked'),
         ('Document Control Officer', 'Final review', 'Casey approves.', 'Completed'),
@@ -374,8 +374,8 @@ def screen_slide(prs, number, total, section, title, subtitle, actor, status, sh
 
 def matrix_slide(prs, number, total, routes):
     s = Slide(prs)
-    chrome(s, 'Part 5  /  Every request type', 'Every request on one page',
-           'Default routes with the sample users. All eight request types pass three approvals before the result is applied.',
+    chrome(s, 'Part 5  /  Approval routes', 'Default routes with three approval steps',
+           'These examples use the sample users. The revision template and scanned requests are shown separately.',
            number, total)
     cols = [('Request', 170), ('Requester', 118), ('Approval 1', 148), ('Approval 2', 148), ('Approval 3', 148), ('When the last approver approves', 374)]
     x0, y0 = 42, 172
@@ -463,7 +463,7 @@ def remember_slide(prs, number, total):
         ('Status shows the stage',
          'Draft: only the requester can edit.\nSubmitted: in the approval route.\nReturned: back to the requester.\nCompleted or Approved: applied.\nRejected: closed, cannot be resubmitted.'),
         ('Only the assigned approver decides',
-         'The current step names one person or role. Each reviewer chooses Approve, Return or Reject and may add a remark. Administrator status gives no bypass.'),
+         'The current step names one person or role. Check the available decisions. Template requests offer Approve or Reject. Scanned requests omit remarks.'),
         ('A return goes back one step',
          'At the first step it goes to the requester. At a later step it goes to the previous approver and the status stays Submitted. The original route is kept.'),
         ('Approval can lock the file',
@@ -483,27 +483,33 @@ def remember_slide(prs, number, total):
 
 def types_overview_slide(prs, number, total):
     s = Slide(prs)
-    chrome(s, 'Part 2  /  Document types', 'Three kinds of document, three different jobs',
+    chrome(s, 'Part 2  /  Document types', 'Choose the right document register',
            'Each register answers a different question. Pick the register that matches what you need.', number, total)
-    cols = [('Softcopy', 'TEMPLATE REPOSITORY', ACCENT), ('Hardcopy', 'LOCATION TRACKER', INK), ('External', 'SCANNED BACKUP REPOSITORY', SUCCESS)]
+    cols = [('Softcopy', 'CONTROLLED FILES', ACCENT), ('Hardcopy', 'LOCATION TRACKER', INK),
+            ('External', 'OUTSIDE DOCUMENTS', SUCCESS), ('Scanned', 'SCANNED RECORDS', INK)]
     rows = [
         ('In one line', ['The repository of approved softcopy templates.',
                          'A tracker of where each physical document is kept.',
-                         'A repository of scanned outside documents, kept only as backup.']),
+                         'A backup repository for files from outside the organization.',
+                         'A register for scanned records and retention dates.']),
         ('What it stores', ['The approved electronic file, its document number and its revisions.',
                             'No file. Only the record: place, Current Holder and optional retention dates.',
-                            'Attached scans and files (up to 20 per record) with a category and description.']),
+                            'Attached files with a category and description.',
+                            'Files and metadata, organized in approved folders.']),
         ('Sample documents', ['Incident Report Form Template, Inspection Checklist Template',
                               'Sample Inspection Record in Records Cabinet A',
-                              'Supplier Quality Certificate, Signed Delivery Receipt']),
+                              'Supplier Quality Certificate, Signed Delivery Receipt',
+                              'Sample scanned inspection sheets']),
         ('How it is used', ['Staff open the approved template and use it to prepare their own document.',
                             'Staff look up where the paper is and who holds it, then go and get it.',
-                            'Kept as a backup copy of a document that came from outside. Not a template.']),
+                            'Keep a backup copy of a document that came from outside.',
+                            'Review the approved files and their retention status.']),
         ('How it gets in', ['An approved request, or a direct save by a controller.',
                             'Registered directly. Moving the paper needs an approved transfer.',
-                            'An approved request, or a direct save by a controller.']),
+                            'An approved request, or a direct save by a controller.',
+                            'A scanned request takes effect after final approval.']),
     ]
-    lw, cw = 150, (1106 - 150) / 3
+    lw, cw = 150, (1106 - 150) / len(cols)
     y0, hh, rh = 142, 62, 104
     for c, (name, tag, color) in enumerate(cols):
         x = 42 + lw + c * cw
@@ -518,7 +524,7 @@ def types_overview_slide(prs, number, total):
             x = 42 + lw + c * cw
             s.rect(x, y, cw, rh, WHITE if r % 2 == 0 else PALE, RULE)
             s.text(x + 16, y + 12, cw - 32, rh - 24, value, 13.5 if r == 0 else 12.5, r == 0, INK, PP_ALIGN.LEFT, MSO_ANCHOR.MIDDLE, 10)
-    s.notes('Softcopy is the template repository. Hardcopy only tracks where the paper is. External keeps scanned outside documents as backup.')
+    s.notes('Choose Softcopy, Hardcopy, External or Scanned Documents for the task.')
 
 
 def type_slide(prs, number, total, kind):
@@ -563,14 +569,15 @@ def type_slide(prs, number, total, kind):
 def applies_slide(prs, number, total):
     s = Slide(prs)
     chrome(s, 'Part 2  /  Document types', 'What you can do with each type',
-           'Not every action exists for every type. Part 4 shows each action that applies, step by step.', number, total)
-    cols = [('Action', 250, INK), ('Softcopy', 285, ACCENT), ('Hardcopy', 285, INK), ('External', 286, SUCCESS)]
+           'Start in the register for your document. Permission and document status determine the available actions.', number, total)
+    cols = [('Action', 220, INK), ('Softcopy', 221, ACCENT), ('Hardcopy', 221, INK),
+            ('External', 222, SUCCESS), ('Scanned', 222, INK)]
     x = 42
     for head, width, color in cols:
         s.rect(x, 142, width, 34, color, color)
         s.text(x + 14, 151, width - 28, 16, head, 12, True, WHITE)
         x += width
-    rh = 66
+    rh = 59
     for r, row in enumerate(APPLIES):
         y = 176 + r * rh
         x = 42
@@ -581,8 +588,8 @@ def applies_slide(prs, number, total):
                    PP_ALIGN.LEFT, MSO_ANCHOR.MIDDLE, 10)
             x += width
     s.rect(42, 716, 1106, 58, GOLD, RULE)
-    s.text(58, 728, 1074, 36, 'Hardcopy has no create or revise request: register or edit it directly, and use a Hardcopy Transfer Request to move the paper. '
-           'Softcopy disposal is direct only.', 12.5, False, INK, minimum=10)
+    s.text(58, 728, 1074, 36, 'Scanned folder requests also go through approval. Users with Master Data permissions can manage and allocate approved folders.',
+           12.5, False, INK, minimum=10)
     s.notes('Which actions exist for each document type.')
 
 
@@ -714,21 +721,20 @@ def main():
                     'The Overview page opens with totals and recent activity.'],
              after='Sam is signed in as a Staff requester. The menus show only what the Staff role may use.',
              keep='Each person uses their own account. If a menu or action is missing, the role does not have that permission.'),
-        dict(title='Station 2: start a new request', subtitle='Sam opens My Requests and chooses the Softcopy Request tab.',
+        dict(title='Station 2: start a new request', subtitle='Sam opens My Requests and chooses New Request.',
              actor='Requester', status='No request yet', shot=screen('request-lifecycle', labels=['New Request']),
              caption='My Requests lists your requests. Select New Request to start another.',
-             steps=['Under Document Requests, open My Requests.', 'Choose the Softcopy Request tab.', 'Select New Request.',
-                    'The request form opens.'],
-             after='A blank New Request form is ready. Nothing is saved until Sam selects Save Draft.',
-             keep='Saving a draft does not change any document, holder, access or status. Only Submit sends it for approval.'),
+             steps=['Open My Requests in the sidebar.', 'Select New Request.', 'Choose the softcopy action in the Request Action picker.'],
+             after='The form for the selected request action opens.',
+             keep='Save Draft keeps the request for later. Submit Request sends the completed form for approval.'),
         dict(title='Station 3: complete the form and save a draft', subtitle='Sam describes the document and attaches the file.',
-             actor='Requester', status='Draft', shot=screen('softcopy-request-create', labels=['Action', 'Document title', 'Save']),
+             actor='Requester', status='Draft', shot=screen('softcopy-request-create', labels=['Action', 'Document title', 'Submit Request']),
              caption='Prepare a softcopy create request.',
              steps=['Choose Create Softcopy as the action.', 'Enter Subject / Reason and Proposed Document Title, then choose Category.',
                     'Check Generated Document Number. Attach the Document File (up to 15 MB).',
                     'Add optional Remarks. Select Save Draft and Confirm.'],
              after='The request is saved as a Draft with its own reference. Only Sam can edit it.',
-             keep='The final document number is assigned at final approval and may differ from the preview.'),
+             keep='Choose Submit Request to send the form for approval immediately. The final document number is assigned at approval.'),
         dict(title='Station 4: check the draft and submit', subtitle='Sam previews the proposal and sends it into the approval route.',
              actor='Requester', status='Draft  >  Submitted', shot=screen('review-file', labels=['Document File', 'Fullscreen', 'Download']),
              caption='View Details shows the proposal. The Document File tab previews the attachment.',
@@ -738,38 +744,44 @@ def main():
              keep='The route is fixed at submission. If the request is returned and resubmitted, it keeps the original route.'),
         dict(title="Station 5: the requester's leader reviews (Noted By)", subtitle='Alex sees the task in My Tasks and decides.',
              actor="Requester's leader", status='Submitted', shot=screen('my-tasks', folder='workflow', labels=['Approve', 'Reject', 'Return']),
-             caption='My Tasks shows the request assigned to Alex. Each row offers View, Approve, Reject and Return.',
-             steps=['Open My Tasks and the Softcopy Request tab. A badge counts waiting tasks.', 'Select View. Check the proposal, the file preview and the timeline.',
+             caption='The review dialog shows the available decisions for Alex.',
+             steps=['Open My Tasks and filter the register by Softcopy Documents.', 'Select Review request and check the proposal, file preview and timeline.',
                     'Choose Approve, Return or Reject. Add an optional remark.', 'Select Continue and Confirm.'],
              after='Alex\'s approval moves the request to the Plant Manager. The status stays Submitted.',
              keep='Only the assigned user or role can decide. A Return sends the request back to Sam to correct and resubmit.'),
         dict(title='Station 6: the Plant Manager approves and the file locks', subtitle='Morgan reviews next. In this route, this approval locks the attachment.',
-             actor='Plant Manager', status='Submitted, file locked', shot=screen('approval-routes', labels=['Approval Process Timeline'],
-                         extra=[('Locks file on approval badge', 915, 569, 157, 28)]),
+             actor='Plant Manager', status='Submitted, file locked', shot=screen('approval-routes', labels=['Approval Process Timeline']),
              caption='The Approval Process Timeline shows each step. A badge marks the step that locks the file.',
-             steps=['Morgan opens My Tasks, then View on the request.', 'Open Approval Process Timeline. The step shows Locks file on approval.',
+             steps=['Morgan opens My Tasks, then selects Review request.', 'Open Approval Process Timeline. The step shows Locks file on approval.',
                     'Choose Approve, add a remark and Confirm.', 'The step shows Locked. The next reviewer is notified.'],
              after='The attached file is locked as read-only. It can still be previewed; downloads are limited to roles with lock access.',
              keep='A Return here goes back to Alex, the requester\'s leader. The status stays Submitted.'),
         dict(title='Station 7: Document Control gives the final approval', subtitle='Casey approves. The system applies the change.',
              actor='Document Control Officer', status='Completed', shot=screen('files', labels=['Fullscreen', 'Download']),
              caption='The new Active document opens with its approved file on the Document Files tab.',
-             steps=['Casey opens My Tasks, then View on the request.', 'Check the proposal, approval history and file preview.',
+             steps=['Casey opens My Tasks and selects Review request.', 'Check the proposal, approval history and file preview.',
                     'Choose Approve and Confirm.', 'The Active record and file are created at revision 00.'],
              after='The request is Completed. The document appears in Softcopy Documents with its number and file.',
              keep='Sam can check the Workflow Activity Log for every decision, remark and time. A rejection would have closed the request.'),
     ]
+    additional_requests = [
+        ('revision-template', 'revision-template-approval', 'Document Control Officer', 'Approved through expiry',
+         'Set the download expiry before approving.', 'The requester can download through the selected date.'),
+        ('scanned-requests', 'scanned-requests', 'Requester', 'Applies after final approval',
+         'Choose a scanned action in New Request.', 'Final approval updates the scanned register or folder list.'),
+    ]
+    procedures = {item['id']: item for item in process['pages']}
     routes = [dict(name=ROUTES[k]['name'], actors=ROUTES[k]['actors'], result=ROUTES[k]['result']) for k in ROUTES]
 
     scenario_plan = [(kind, i + 1, sc) for kind in ('softcopy', 'hardcopy', 'external') for i, sc in enumerate(SCENARIOS[kind])]
     plan = (['cover', 'users', 'types', 'type-softcopy', 'type-hardcopy', 'type-external', 'applies', 'journey']
             + ['station'] * len(stations) + ['scenario'] * len(scenario_plan)
-            + ['matrix'] + ['route'] * len(ROUTES) + ['remember'])
+            + ['matrix'] + ['route'] * len(ROUTES) + ['additional'] * len(additional_requests) + ['remember'])
     total = len(plan)
     prs = Presentation()
     prs.slide_width, prs.slide_height = Pt(W), Pt(H)
     prs.core_properties.title = 'PK DTS - Process Flow'
-    prs.core_properties.subject = 'Document types, one request from sign-in to final approval, and every scenario, 11 November 2026'
+    prs.core_properties.subject = 'Document registers, request decisions and approvals, ' + DATE
     prs.core_properties.author = 'PK Document Tracking System'
     route_keys = list(ROUTES)
     number = 0
@@ -799,6 +811,12 @@ def main():
         elif kind == 'route':
             key = route_keys.pop(0)
             route_slide(prs, number, total, len(ROUTES) - len(route_keys), ROUTES[key], examples[key])
+        elif kind == 'additional':
+            identifier, screenshot, actor, status, caption, after = additional_requests.pop(0)
+            procedure = procedures[identifier]
+            screen_slide(prs, number, total, 'Part 5  /  Document Control requests', procedure['title'],
+                         procedure['summary'], actor, status, screen(screenshot), caption,
+                         [step['text'] for step in procedure['steps']], after, ' '.join(procedure['notes']))
         elif kind == 'remember':
             remember_slide(prs, number, total)
     OUT.parent.mkdir(parents=True, exist_ok=True)

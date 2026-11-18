@@ -204,5 +204,23 @@
     "Action could not be completed",
     "Got it",
     "My Requests"
+  ],
+  "revision-template": [
+    "Subject / Reason",
+    "Save Draft",
+    "Submit Request"
+  ],
+  "revision-template-approval": [
+    "Editable revision template",
+    "Download expiry date",
+    "Upload and Approve"
+  ],
+  "revision-template-download": [
+    "Download Template"
+  ],
+  "scanned-requests": [
+    "Subject",
+    "Approved Category",
+    "Submit Request"
   ]
 }
