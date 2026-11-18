@@ -162,6 +162,10 @@ try:
 
         page.goto(base + '/documents/scanned')
         expect(page.locator('tbody tr')).to_contain_text('Browser Scanned Document')
+        # The fixture's retention end date has expired; acknowledge its reminder.
+        expect(page.locator('#retentionNotificationModal')).to_be_visible()
+        page.locator('#retentionNotificationModal [data-bs-dismiss=modal]').first.click()
+        expect(page.locator('#retentionNotificationModal')).to_be_hidden()
         page.locator('tbody .js-view').click()
         expect(page.locator('#viewModal')).to_contain_text('Scanned invoices for backup and review.')
         expect(page.locator('#viewModal a[href*="scanned/file"]')).to_have_count(4)
@@ -172,10 +176,20 @@ try:
         assert outside.request.get(approved_url + '?preview=1').status == 403
         assert dco.request.get(file_url + '&preview=1').status == 403
         page.locator('#viewModal [data-bs-dismiss=modal]').first.click()
-        edit_url = page.locator('tbody tr').filter(has_text='Browser Scanned Document').get_by_role('link', name='Request Update').get_attribute('href')
-        page.goto(edit_url)
+        page.locator('tbody tr').filter(has_text='Browser Scanned Document').get_by_role('link', name='Update', exact=True).click()
+        expect(page.locator('#editModal')).to_be_visible()
+        expect(page.locator('#editForm [name=type]')).to_have_value('scanned_update')
         expect(page.locator('#editForm [name=description]')).to_have_value('Scanned invoices for backup and review.')
+        document_id = page.locator('#editForm [name=scanned_document_id]').input_value()
+        assert document_id
         page.goto(base + '/documents/scanned')
+        page.locator('tbody tr').filter(has_text='Browser Scanned Document').get_by_role('link', name='Remove', exact=True).click()
+        expect(page.locator('#editModal')).to_be_visible()
+        expect(page.locator('#editForm [name=type]')).to_have_value('scanned_delete')
+        expect(page.locator('#editForm [name=scanned_document_id]')).to_have_value(document_id)
+        expect(page.locator('#editForm [type=file]')).to_be_hidden()
+        page.goto(base + '/documents/scanned')
+        expect(page.locator('tbody tr').filter(has_text='Browser Scanned Document')).to_have_count(1)
         page.locator('[data-scan-alarm-enable]').first.click()
         assert page.evaluate("localStorage.getItem('pk-scan-alarm-sound')") == 'yes'
         page.get_by_role('link', name='Switch to folder tree view').click()

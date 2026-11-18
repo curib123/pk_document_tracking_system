@@ -59,7 +59,12 @@
                 <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
         <?php elseif ($type === 'link'): ?>
-            <a class="btn-icon record-action" href="<?= html_escape(site_url($button['url'])) ?>"><?= html_escape($label) ?></a>
+            <a class="btn-icon record-action<?= !empty($button['intent']) ? ' record-action-' . html_escape($button['intent']) : '' ?>"
+                title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
+                href="<?= html_escape(site_url($button['url'])) ?>">
+                <?php if (!empty($button['icon'])): ?><i class="<?= html_escape($button['icon']) ?>" aria-hidden="true"></i><?php endif; ?>
+                <span><?= html_escape($label) ?></span>
+            </a>
         <?php elseif ($type === 'download'): ?>
             <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>" href="<?= !empty($button['same_origin'])

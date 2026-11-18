@@ -11,9 +11,19 @@ foreach ($rows as $row) {
         $links[] = Scanned_file_presentation::link($file);
     }
     $buttons = [['type' => 'view']];
-    if ($row['status'] === 'active') foreach (['edit' => ['scanned_update', 'Request Update'], 'delete' => ['scanned_delete', 'Request Deletion']] as $action => [$type, $label])
-        if ($can($action) && (isset($permissions['*']) || !empty($permissions['requests']['add'])))
-            $buttons[] = ['type' => 'link', 'label' => $label, 'url' => 'my-requests/scanned?' . http_build_query(['action' => $type, 'document' => $row['id']])];
+    if ($row['status'] === 'active') {
+        foreach ([
+            'edit' => ['scanned_update', 'Update', 'fa-solid fa-pen', 'edit'],
+            'delete' => ['scanned_delete', 'Remove', 'fa-solid fa-trash', 'danger']
+        ] as $action => [$type, $label, $icon, $intent]) {
+            if ($can($action) && (isset($permissions['*']) || !empty($permissions['requests']['add']))) {
+                $buttons[] = [
+                    'type' => 'link', 'label' => $label, 'icon' => $icon, 'intent' => $intent,
+                    'url' => 'my-requests/scanned?' . http_build_query(['action' => $type, 'document' => $row['id']])
+                ];
+            }
+        }
+    }
     $dt_rows[] = [
         'id' => $row['id'], 'record_path' => ['category_id' => (int) $row['category_id']], 'cells' => [
             'title' => $row['title'], 'status' => $row['status'], 'category' => $paths[$row['category_id']] ?? $row['category_name'],
