@@ -1,10 +1,11 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/request/request_policy.php';
 class Request_model extends CI_Model
 {
     private $groups = [
-        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
+        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel', Request_policy::REVISION_TEMPLATE],
         'external' => ['external_create', 'external_revise'],
         'scanned' => ['scanned_create', 'scanned_update', 'scanned_delete', 'scanned_category_create'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],

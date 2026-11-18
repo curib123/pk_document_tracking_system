@@ -1338,8 +1338,8 @@ INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`
 (17, 10, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:04:34', 1, '2026-10-16 06:03:41'),
 (18, 11, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:05:56', 1, '2026-10-16 06:04:49'),
 (19, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager  Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-16 08:07:49', 1, '2026-10-16 06:06:08'),
-(20, 19, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00'),
-(21, 20, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00');
+(20, 19, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester''s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00'),
+(21, 20, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester''s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00');
 
 UPDATE `workflow_versions` v
 JOIN `workflows` w ON w.`id` = v.`workflow_id`
@@ -2212,3 +2212,30 @@ SET @scanned_description_sql = IF(
 PREPARE scanned_description_stmt FROM @scanned_description_sql;
 EXECUTE scanned_description_stmt;
 DEALLOCATE PREPARE scanned_description_stmt;
+
+-- Seed the permission and default DCO workflow. Safe to rerun.
+INSERT IGNORE INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
+ ('Softcopy: Request Template for Revision','softcopy','Softcopy','request_revision_template','Request Template for Revision',
+  'Request and download a DCO-approved editable revision template for an existing softcopy document.',1);
+SET @seed_revision_template_grants = ROW_COUNT();
+
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT rp.role_id,np.id FROM role_permissions rp
+JOIN permissions p ON p.id=rp.permission_id AND p.module_key='softcopy' AND p.action_key='request'
+JOIN permissions np ON np.module_key='softcopy' AND np.action_key='request_revision_template'
+WHERE @seed_revision_template_grants = 1;
+
+INSERT INTO workflows (workflow_key,name,description,request_type,active,created_by)
+SELECT 'softcopy_revision_template','Request Template for Revision',
+ 'Document Control approves and provides an editable template in the final step.',
+ 'softcopy_revision_template',1,u.id
+FROM (SELECT id FROM users ORDER BY id LIMIT 1) u
+WHERE NOT EXISTS (SELECT 1 FROM workflows WHERE workflow_key='softcopy_revision_template');
+
+INSERT INTO workflow_versions (workflow_id,version_number,status,is_default,graph,created_by,published_at)
+SELECT w.id,1,'published',1,
+ JSON_OBJECT('steps',JSON_ARRAY(JSON_OBJECT('key','step_1','name','DCO Review and Approval',
+ 'approver',JSON_OBJECT('type','role','value',r.id,'label',r.name)))),w.created_by,NOW()
+FROM workflows w JOIN roles r ON r.name='Document Control Officer' AND r.active=1
+WHERE w.workflow_key='softcopy_revision_template'
+ AND NOT EXISTS (SELECT 1 FROM workflow_versions v WHERE v.workflow_id=w.id);

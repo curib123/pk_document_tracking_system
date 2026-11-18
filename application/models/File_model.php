@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/request/request_policy.php';
 
 class File_model extends CI_Model
 {
@@ -92,6 +93,20 @@ class File_model extends CI_Model
             ->limit(1)->get()->row_array();
     }
 
+    public function revision_template(int $requestId, int $requesterId): ?array
+    {
+        return $this->db->select('f.*')->from('requests r')
+            ->join('softcopy_documents d', 'd.id=r.softcopy_id')
+            ->join('files f', "f.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result, '$.template_file_id')) AS UNSIGNED)
+                AND f.document_id=d.id", 'inner', FALSE)
+            ->where([
+                'r.id' => $requestId, 'r.requested_by' => $requesterId,
+                'r.type' => Request_policy::REVISION_TEMPLATE, 'r.status' => 'approved',
+                'd.status' => 'active', 'f.domain' => 'softcopy', 'f.purpose' => 'revision_template',
+                'f.status' => 'approved'
+            ])->get()->row_array() ?: NULL;
+    }
+
     public function allowed($user, $file)
     {
         if (!$user || !$file || $file['document_status'] !== 'active')
@@ -137,6 +152,7 @@ class File_model extends CI_Model
             ->join('users u', 'u.id=f.uploaded_by')
             ->join('users lu', 'lu.id=f.locked_by', 'left')
             ->where('f.domain', 'softcopy')->where_in('f.status', ['approved', 'superseded'])->where('d.status', 'active')
+            ->where('f.purpose !=', 'revision_template')
             ->where_in('f.document_id', array_map('intval', $ids))
             ->where($scope, NULL, FALSE);
         if (!$canHistory)

@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
 require_once APPPATH . 'services/workflow/workflow_graph.php';
+require_once APPPATH . 'services/request/request_policy.php';
 class Request_service
 {
     private $ci;
@@ -13,7 +14,6 @@ class Request_service
         $this->ci->load->model('Document_model');
         $this->ci->load->model('Permission_model');
         $this->ci->load->model('Identity_model');
-        require_once APPPATH . 'services/request/request_policy.php';
     }
 
     private function authorize($type, $softcopyId, $hardcopyId, array $payload, array $user): void
@@ -23,7 +23,8 @@ class Request_service
             (new Scanned_document_service())->authorize($type, $payload, $user);
             return;
         }
-        if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), 'request'))
+        $action = $type === Request_policy::REVISION_TEMPLATE ? Request_policy::REVISION_TEMPLATE_ACTION : 'request';
+        if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), $action))
             throw new DomainException(
                 'You don’t have permission to perform this action on the selected document.'
             );
@@ -443,7 +444,8 @@ class Request_service
 
         $data = [
             'type' => $type,
-            'payload' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            'payload' => json_encode($type === Request_policy::REVISION_TEMPLATE
+                ? array_intersect_key($payload, array_flip(['subject', 'remarks'])) : $payload, JSON_UNESCAPED_UNICODE),
             'softcopy_id' => $softcopyId ?: NULL,
             'hardcopy_id' => $hardcopyId ?: NULL
         ];
@@ -655,6 +657,8 @@ class Request_service
             $steps = $graph['steps'] ?? [];
             require_once APPPATH . 'services/workflow/workflow_graph.php';
             Workflow_graph::validate(is_array($graph) ? $graph : [], TRUE);
+            if ($r['type'] === Request_policy::REVISION_TEMPLATE)
+                Request_policy::revision_template_dco_role($this->ci->db, $graph);
             // Resubmissions do not overwrite old step rows: workflow_history
             // holds foreign keys to those decisions. Only unfinished old steps
             // become superseded, preserving the exact past approval sequence.
@@ -1053,6 +1057,23 @@ class Request_service
 
     private $final_storage = [];
 
+    private function approve_revision_template(array $request, array $graph, array $user, $upload, File_service $files, string $approvedAt): array
+    {
+        $roleId = Request_policy::revision_template_dco_role($this->ci->db, $graph);
+        if (!User_roles::matches($user, $roleId))
+            throw new DomainException('Only the Document Control Officer may approve and release the template.');
+        if (!$this->has_uploaded_attachment($upload) || is_array($upload['name'] ?? NULL))
+            throw new DomainException('Upload one editable revision template to approve this request.');
+        $document = $this->ci->db->query('SELECT id, status FROM softcopy_documents WHERE id=? FOR UPDATE', [
+            (int) $request['softcopy_id']
+        ])->row_array();
+        if (!$document || $document['status'] !== 'active')
+            throw new DomainException('The requested softcopy document is no longer active.');
+        $fileId = $files->stage_revision_template((int) $document['id'], (int) $user['id'], $upload, $approvedAt);
+        $this->final_storage[] = $files->last_storage;
+        return ['template_file_id' => $fileId];
+    }
+
     public function decide($tab, $id, $user, $decision, $comment, $finalUpload = NULL)
     {
         if (!in_array($decision, ['approved', 'rejected', 'returned'], TRUE))
@@ -1086,6 +1107,9 @@ class Request_service
                 ($role === 'role' && User_roles::matches($user, (int) ($assignment['value'] ?? 0)));
             if (!$authorized)
                 throw new DomainException('Only the assigned approver may decide.');
+            $template = $r['type'] === Request_policy::REVISION_TEMPLATE;
+            if ($template && $decision === 'returned')
+                throw new DomainException('Approve or reject the revision template request.');
             $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
             if ($decision !== 'rejected') {
                 $keys = array_column($graph['steps'] ?? [], 'key');
@@ -1125,15 +1149,17 @@ class Request_service
                     ]);
                     $this->ci->db->where('id', $id)->update('requests', ['current_node' => $next['node_key']]);
                 } else {
-                    $result = $this->applyApproved($r, (int) $user['id']);
+                    $result = $template
+                        ? $this->approve_revision_template($r, $graph, $user, $finalUpload, $fileService, $approvedAt)
+                        : $this->applyApproved($r, (int) $user['id']);
                     if (in_array($r['type'], ['softcopy_revise', 'softcopy_cancel'], TRUE))
                         $cleanupDocumentId = (int) $r['softcopy_id'];
-                    $status = $r['type'] === 'transfer' ? 'approved' : 'completed';
+                    $status = $r['type'] === 'transfer' || $template ? 'approved' : 'completed';
                     $this->ci->db->where('id', $id)->update('requests', [
                         'status' => $status,
                         'result' => json_encode($result),
                         'current_node' => NULL,
-                        'completed_at' => $status === 'completed' ? date('Y-m-d H:i:s') : NULL
+                        'completed_at' => $r['type'] === 'transfer' ? NULL : date('Y-m-d H:i:s')
                     ]);
                 }
             } elseif ($decision === 'returned') {

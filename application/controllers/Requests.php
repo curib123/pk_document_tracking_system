@@ -92,6 +92,7 @@ class Requests extends MY_Controller
         $modules = [
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
+            Request_policy::REVISION_TEMPLATE => 'softcopy',
             'scanned_create' => 'scanned_documents',
             'scanned_update' => 'scanned_documents',
             'scanned_delete' => 'scanned_documents',
@@ -103,7 +104,11 @@ class Requests extends MY_Controller
             'assignment' => 'assignment',
             'access' => 'access'
         ];
-        $actions = ['scanned_update' => 'edit', 'scanned_delete' => 'delete'];
+        $actions = [
+            Request_policy::REVISION_TEMPLATE => Request_policy::REVISION_TEMPLATE_ACTION,
+            'scanned_update' => 'edit',
+            'scanned_delete' => 'delete'
+        ];
         return array_keys(array_filter($modules, fn($module, $type) =>
             $this->can($module, $actions[$type] ?? 'request'), ARRAY_FILTER_USE_BOTH));
     }

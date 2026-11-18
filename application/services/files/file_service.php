@@ -403,6 +403,15 @@ class File_service
         return $id;
     }
 
+    public function stage_revision_template(int $documentId, int $actorId, array $upload, string $approvedAt): int
+    {
+        if ((int) ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK)
+            throw new DomainException('The editable revision template could not be uploaded. Choose a file up to 15 MB.');
+        return $this->stage_controlled($documentId, $actorId, $upload, 'revision_template', 'softcopy', [
+            'status' => 'approved', 'approved_by' => $actorId, 'approved_at' => $approvedAt
+        ]);
+    }
+
     /** Pending final file (if any) for a request payload. */
     public function pending_final_file(array $payload): ?array
     {
@@ -451,6 +460,8 @@ class File_service
             ? (($ext === 'pdf' && $mime === 'application/pdf') ||
                 ($ext !== '' && strpos((string) $mime, 'image/') === 0))
             : (isset($allowed[$ext]) && in_array($mime, $allowed[$ext], TRUE));
+        if ($purpose === 'revision_template' && (!$validType || !$this->is_editable_template($ext, $upload['tmp_name'])))
+            throw new DomainException('Upload an editable Word (.docx), Excel (.xlsx), or text (.txt) file.');
         if (!$name || strlen($name) > 255 || !$validType) {
             throw new DomainException('Unsupported Document Fileformat.');
         }
@@ -483,6 +494,21 @@ class File_service
             throw new DomainException('Unable to record Document File.');
         }
         return (int) $this->ci->db->insert_id();
+    }
+
+    private function is_editable_template(string $extension, string $path): bool
+    {
+        if ($extension === 'txt')
+            return TRUE;
+        $officePart = ['docx' => 'word/document.xml', 'xlsx' => 'xl/workbook.xml'][$extension] ?? NULL;
+        if (!$officePart)
+            return FALSE;
+        $archive = new ZipArchive();
+        if ($archive->open($path, ZipArchive::RDONLY) !== TRUE)
+            return FALSE;
+        $valid = $archive->locateName('[Content_Types].xml') !== FALSE && $archive->locateName($officePart) !== FALSE;
+        $archive->close();
+        return $valid;
     }
 
     /** Legacy upload form delegates to the same locked revision transaction as Direct. */

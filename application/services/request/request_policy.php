@@ -1,6 +1,10 @@
 <?php
 final class Request_policy
 {
+    public const REVISION_TEMPLATE = 'softcopy_revision_template';
+    public const REVISION_TEMPLATE_ACTION = 'request_revision_template';
+    public const REVISION_TEMPLATE_LABEL = 'Request Template for Revision';
+
     public static function deletable(?array $request, int $actor): bool
     {
         return $request && (int) $request['requested_by'] === $actor &&
@@ -15,6 +19,7 @@ final class Request_policy
             'softcopy_create' => 'softcopy',
             'softcopy_revise' => 'softcopy',
             'softcopy_cancel' => 'softcopy',
+            self::REVISION_TEMPLATE => 'softcopy',
             'scanned_create' => 'scanned_documents',
             'scanned_update' => 'scanned_documents',
             'scanned_delete' => 'scanned_documents',
@@ -31,6 +36,19 @@ final class Request_policy
         if (!isset($modules[$type]))
             throw new DomainException('Unsupported request type.');
         return $modules[$type];
+    }
+
+    public static function revision_template_dco_role($db, array $graph): int
+    {
+        $role = $db->select('id')->get_where('roles', [
+            'name' => 'Document Control Officer', 'active' => 1
+        ])->row_array();
+        $roleId = (int) ($role['id'] ?? 0);
+        $steps = $graph['steps'] ?? [];
+        $approver = $steps[count($steps) - 1]['approver'] ?? [];
+        if (!$roleId || ($approver['type'] ?? '') !== 'role' || (int) ($approver['value'] ?? 0) !== $roleId)
+            throw new DomainException('Template requests must end with the Document Control Officer role.');
+        return $roleId;
     }
 
     public static function editable(?array $request, int $actor, string $type, array $post): void

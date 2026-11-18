@@ -336,7 +336,7 @@ class Softcopy_operation_service
             // Preserve historical rows/revision links, but only this approved
             // replacement remains controlled. Physical cleanup runs after commit.
             $db->where('domain', 'softcopy')->where('document_id', (int) $softcopyId)
-                ->where('status', 'approved')->where('id !=', $revisionFileId)
+                ->where('status', 'approved')->where('id !=', $revisionFileId)->where('purpose !=', 'revision_template')
                 ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'superseded']);
             if ($requestId === NULL) {
                 $this->audit($softcopyId, 'active', 'active', 'direct_revise', $actorId, $reason);

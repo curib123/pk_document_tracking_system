@@ -413,6 +413,23 @@ class Files extends MY_Controller
             show_error('This file is locked after approval and is read-only. Use Preview to view it, or ask Document Control for a full download.', 403);
             return;
         }
+        $this->send_original_download($file, 'files/download');
+    }
+
+    public function download_revision_template($requestId)
+    {
+        $this->require_permission('requests', 'view');
+        $this->require_permission('softcopy', Request_policy::REVISION_TEMPLATE_ACTION);
+        $file = $this->File_model->revision_template((int) $requestId, (int) $this->user['id']);
+        if (!$file) {
+            show_404();
+            return;
+        }
+        $this->send_original_download($file, 'files/revision-template', ['request_id' => (int) $requestId]);
+    }
+
+    private function send_original_download(array $file, string $action, array $metadata = []): void
+    {
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
             show_404();
             return;
@@ -426,7 +443,7 @@ class Files extends MY_Controller
         // Run deferred cleanup independently, not during a user's download.
         $this->clear_output_buffers();
         header('Content-Type: application/octet-stream');
-        $this->audit_event('files/download', 'files:' . (int) $id);
+        $this->audit_event($action, 'files:' . (int) $file['id'], $metadata);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
         header('Content-Disposition: attachment; filename="' .

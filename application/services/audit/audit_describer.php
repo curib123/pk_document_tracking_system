@@ -69,6 +69,7 @@ final class Audit_describer
             'files/review-download' => 'downloaded a file attached to a request',
             'files/review-download-pdf' => 'downloaded the PDF copy of a request file',
             'files/download' => 'downloaded a document file',
+            'files/revision-template' => 'downloaded a revision template',
             'files/download-pdf' => 'downloaded the PDF copy of a document file',
             'files/download-external' => 'downloaded an external document file',
             'files/print' => 'opened a document file for printing', 'files/print-content' => 'printed a document file',

@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
 require_once APPPATH . 'services/workflow/workflow_graph.php';
+require_once APPPATH . 'services/request/request_policy.php';
 
 /** Mutate draft routes only; serialize publication against edits and cloning. */
 class Workflow_builder_service
@@ -22,8 +23,7 @@ class Workflow_builder_service
             throw new DomainException('Workflow editing permission is required.');
         $this->ci->db->trans_begin();
         try {
-            // There are nine predefined workflow definitions. One consistent
-            // lock order prevents clone/edit/publish races and duplicate drafts.
+            // One lock order prevents clone/edit/publish races and duplicate drafts.
             $this->ci->db->query('SELECT id FROM workflows ORDER BY id FOR UPDATE');
             $result = $operation();
             if ($this->ci->db->trans_status() === FALSE)
@@ -209,6 +209,8 @@ class Workflow_builder_service
             $workflow = $this->ci->db->get_where('workflows', ['id' => $version['workflow_id']])->row_array();
             if (!$workflow)
                 throw new DomainException('Workflow not found.');
+            if ($workflow['request_type'] === Request_policy::REVISION_TEMPLATE)
+                Request_policy::revision_template_dco_role($this->ci->db, $version['decoded']);
             $ids = array_column($this->ci->db->select('id')->get_where('workflows', [
                 'request_type' => $workflow['request_type']
             ])->result_array(), 'id');
