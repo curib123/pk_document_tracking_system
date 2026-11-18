@@ -97,6 +97,13 @@ $navPage = end($navParts);
                         Softcopy Documents
                     </a>
                 <?php endif; ?>
+
+                    <?php if ($visible('scanned_documents')): ?>
+                <a class="side-link<?= $active('documents/scanned') ?>" href="<?= site_url('documents/scanned') ?>">
+                    <i class="fa-solid fa-file-image" aria-hidden="true"></i> Scanned Documents
+                </a>
+            <?php endif; ?>
+            
                 <?php if ($visible('external_documents')): ?>
                     <a
                         class="side-link<?= $active('documents/external') ?>"
@@ -109,11 +116,6 @@ $navPage = end($navParts);
                 <?php endif; ?>
             <?php endif; ?>
 
-            <?php if ($visible('scanned_documents')): ?>
-                <a class="side-link<?= $active('documents/scanned') ?>" href="<?= site_url('documents/scanned') ?>">
-                    <i class="fa-solid fa-file-image" aria-hidden="true"></i> Scanned Documents
-                </a>
-            <?php endif; ?>
 
             <!-- Document Requests -->
             <?php if ($visible('requests') || $user): ?>
