@@ -88,7 +88,7 @@ foreach ($rows as $r) {
             ];
         }
 
-        if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
+        if ($activeLayout === 'folder' && !empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
             $historyEntries = [];
             foreach ($file_histories[$r['id']] ?? [] as $item) {
                 $historyEntries[] = [
@@ -109,7 +109,7 @@ foreach ($rows as $r) {
             }
             if ($canFile('history'))
                 $buttons[] = ['type' => 'history', 'files' => $historyEntries];
-            if ($activeLayout === 'folder' && !empty($latest_files[$r['id']])) {
+            if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
                 // Locked files are read-only: preview them from View Details. The
                 // original download remains with Download Locked Files roles.

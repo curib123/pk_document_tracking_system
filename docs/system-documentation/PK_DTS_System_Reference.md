@@ -71,11 +71,12 @@ the current approval step can decide it.
 1. Open Hardcopy Documents, Softcopy Documents or External Documents.
 2. Choose **Table** or **Folder**, then use **Search** and the available filters.
 3. Open **View Details** where offered and check the record.
-4. In **View Details**, open the **Document Files** tab to preview the file. Then choose the available file action: **Fullscreen**, **Download**, or Softcopy **File History**.
+4. For Softcopy Documents, open **View Details → Document Files** to preview or download the current file.
+   This tab also lists earlier versions and their upload and lock details when you have file history permission.
+   For External Documents, open **Current Attachments** in **View Details**.
 
 Seeing a document title does not automatically allow editing, approval, download
-or printing. Normal file actions use the current approved file. External
-Documents offers Download, with no separate Softcopy File History screen.
+or printing. Normal file actions use the current approved file.
 
 Uploads can be **PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX**, up to **15 MB**. Electronic
 document creation and revision need an attachment before submission or direct

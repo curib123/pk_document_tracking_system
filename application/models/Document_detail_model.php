@@ -181,14 +181,26 @@ class Document_detail_model extends CI_Model
                 $fileFields = [];
                 $links = [];
                 foreach ($fileHistories[$id] ?? [] as $index => $file) {
-                    if (!$can('files', 'history') && empty($file['is_current']))
+                    $current = !empty($file['is_current']);
+                    if (!$can('files', 'history') && !$current)
                         continue;
-                    $fileFields[($index + 1) . '. ' . $file['original_name']] =
-                        number_format((int) $file['size']) . ' bytes · ' . $file['mime_type'] . ' · ' . $file['created_at'] .
-                        ' · ' . (!empty($file['is_current']) ? 'Current' : 'Superseded');
+                    $stage = match ($file['stage'] ?? '') {
+                        'final' => 'Final (Document Control)',
+                        'locked' => 'Locked proposed file',
+                        default => 'Proposed'
+                    };
+                    $metadata = [
+                        ($current ? 'Current' : 'Superseded') . ' · ' . $stage,
+                        'Uploaded by ' . trim($file['first_name'] . ' ' . $file['last_name']) . ' on ' . $file['created_at'],
+                        number_format((int) $file['size']) . ' bytes · ' . $file['mime_type']
+                    ];
+                    if (!empty($file['locked_at'])) {
+                        $lockedBy = trim(($file['locked_first_name'] ?? '') . ' ' . ($file['locked_last_name'] ?? ''));
+                        $metadata[] = 'Locked on ' . $file['locked_at'] . ($lockedBy === '' ? '' : ' by ' . $lockedBy);
+                    }
+                    $fileFields[($index + 1) . '. ' . $file['original_name']] = implode("\n", $metadata);
                     // Locked files are a read-only preview; download/print stay with
                     // roles holding Download Locked Files (e.g. Document Control, admin).
-                    $current = !empty($file['is_current']);
                     $unlocked = empty($file['locked_at']) || $can('files', 'download_locked');
                     $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
                     // Word/Excel are previewed as a PDF rendered from the preserved original.
@@ -208,7 +220,8 @@ class Document_detail_model extends CI_Model
                     'description' => 'Current approved file and revision history · latest 25',
                     'fields' => $fileFields,
                     'links' => $links,
-                    'empty' => 'No Document Filehistory available within your file permissions.'
+                    'show_file_metadata' => TRUE,
+                    'empty' => 'No document files available within your permissions.'
                 ];
                 // Optional; read-only, exactly as recorded with the current revision.
                 $signatoryFields = [];

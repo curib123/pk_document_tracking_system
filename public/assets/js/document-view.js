@@ -620,6 +620,8 @@
         fileInfo.append(pdfAnchor);
       }
       row.append(fileInfo);
+      if (section.show_file_metadata)
+        row.append(node("p", "doc-modal-file-meta", formatDates(entry[1], false)));
       list.append(row);
     });
     return list;
@@ -992,7 +994,9 @@
       panel.append(sectionTitle(section), makeAssignedDocuments(section));
       return;
     }
-    var entries = normalizedEntries(section.fields);
+    var entries = section.key === "files"
+      ? Object.entries(section.fields || {})
+      : normalizedEntries(section.fields);
     var hasSteps =
       section.key === "approvals" &&
       Array.isArray(section.steps) &&
