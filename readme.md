@@ -12,7 +12,7 @@ allows.
 | What you need | Where to go |
 | --- | --- |
 | A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DTS_System_Reference.md) |
-| Instructions with screen examples | [User Guide](docs/system-documentation/PK_DTS_User_Guide.pdf) |
+| Instructions with screen examples | [Step-by-Step User Guide](docs/system-documentation/PK_DTS_User_Guide_Step_by_Step.pptx) |
 | A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DTS_Process_Flow.pptx) |
 | Help choosing the next step | [Flowchart](docs/system-documentation/PK_DTS_Flowchart.pdf) |
 | An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DTS_DFD.pdf) |
@@ -27,9 +27,10 @@ when the application is running; you will be asked to sign in if needed.
 | Area | Main tasks |
 | --- | --- |
 | **Hardcopy Documents** | Register physical records, track their holder and storage location, and review retention dates. |
-| **Softcopy Documents** | Manage approved electronic files, revisions, categories, downloads and printing. |
+| **Softcopy Documents** | Manage approved electronic files and revisions. Open **View → Document Files** for authorized downloads and file history. |
 | **External Documents** | Manage documents received from outside the organization, using separate categories, revisions and downloads. |
-| **My Requests** | Request Softcopy or External creation and revision, Hardcopy transfer, document access, assignment, or eligible disposal. |
+| **Scanned Documents** | Request uploads, updates, removals, or new scanned folders. See the [Scanned Documents guide](docs/scanned-documents.md). |
+| **My Requests** | Submit and track document requests, including requests for editable Softcopy revision templates. |
 | **My Tasks** | Review assigned requests and complete transfer dispatch or receipt. |
 | **Document Assignments** | Assign individual documents, hardcopies at a Location, or softcopies in a category and its subcategories. |
 | **Administration** | Manage accounts, permissions, approval routes, audit records, backups and recovery. |
@@ -43,6 +44,10 @@ Use the category, action, status, or date filters to narrow the results. Select 
 and choose an action. **Save Draft** keeps the request in My Requests for later editing.
 If you have submission permission, **Submit Request** sends it directly to the approval workflow.
 Count badges appear only when there is at least one draft, returned request, or pending task.
+
+To get an editable revision template, choose **Request Template for Revision** on an active softcopy.
+The Document Control Officer uploads a Word, Excel, or text file and sets its download expiry at approval.
+The requester can download it from **My Requests** through the end of that date in Philippine time.
 
 Hardcopy registration and editing use direct actions. New hardcopy creation or
 update requests and new softcopy cancellation requests are unavailable. Eligible
@@ -268,47 +273,37 @@ before restoring; the command-line tool requires its explicit `--confirm` flag.
 
 ## Keep the documentation current
 
-The four content files in [tools/documentation](tools/documentation) supply the
-User Guide and diagrams. The generator creates the PDF, editable PowerPoint,
-and both Visio formats. Guide screen examples and callouts are kept alongside
-the content. Python needs `pymupdf` and `python-pptx` installed.
-
-All four documents cover the eight current request types and their approval,
-return and rejection outcomes. `process.json` owns the shared default workflow
-examples; the Process Flow presentation and the other books reuse their operator
-names and decision details.
-Related procedures link to the matching examples through the PDF footer.
-The Flowchart keeps its existing procedures and adds a connected approval flow
-for each request, with decision diamonds, Return loops and separate Reject ends.
-The DFD uses external entities, numbered processes, record stores and labeled
-information flows. Its symbols and text remain editable in both Visio formats.
+The content files in [tools/documentation](tools/documentation) supply the User
+Guide, Process Flow, Flowchart, and Data Flow Diagram. The diagrams ship as PDF
+and VSDX. The User Guide and Process Flow ship as editable PowerPoints.
+The guides cover the current request actions and their approval outcomes,
+including the revision template and scanned document workflows.
+Python needs `pymupdf` and `python-pptx`. Screenshot capture also needs Playwright,
+Microsoft Edge, local PHP, and MariaDB with permission to create a test database.
 
 ```powershell
 # Check source coverage without generating files.
 python -X utf8 tools/documentation/refresh_documents.py --check-source
 
+# Capture current screens using a disposable site and synthetic records.
+python -X utf8 tools/documentation/capture_screenshots.py
+
 # Rebuild and verify the exported documents.
 python -X utf8 tools/documentation/refresh_documents.py
+python -X utf8 tools/documentation/build_process_flow.py
 
 # Verify existing exports.
 python -X utf8 tools/documentation/refresh_documents.py --verify
 ```
 
-The Process Flow ([PK_DTS_Process_Flow.pptx](docs/system-documentation/PK_DTS_Process_Flow.pptx)), an editable PowerPoint that replaces the former Process Flow PDF and Visio files, 
-explains the three document types (Softcopy: template repository, Hardcopy: location 
-tracker, External: scanned backup repository) with sample documents, follows one softcopy 
-request from sign-in to final approval, walks through every scenario of each type in a 
-linear flow, then shows every request route with the sample users. Slide content for the 
-types and scenarios lives in `tools/documentation/workflow_document_types.py`. Rebuild it 
-after route or screen changes with 
-`python -X utf8 tools/documentation/build_process_flow.py`. Its screens come from 
-`capture_screenshots.py`; refresh the My Tasks screen with `PK_CAPTURE_ONLY=workflow-tasks`.
+The Process Flow uses synthetic requests and sample users. Its document types
+and scenarios are defined in `tools/documentation/workflow_document_types.py`.
 
 These checks cover the documented routes, request actions, content and exported
 packages. They do not prove how the files open in desktop PowerPoint or Visio.
 
-On Windows with Microsoft Visio Viewer installed, also open and render every page
-of the six Visio exports:
+On Windows with Microsoft Visio Viewer installed, open and render every page
+of the two Visio diagrams.
 
 ```powershell
 powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File tools/documentation/verify_visio.ps1
@@ -317,9 +312,7 @@ powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File tools/documentation
 This read-only check fails if a drawing cannot load or render, a page or shape is
 missing, or Viewer reports an error. Its report is saved under
 `storage/visio-verification/`. Add `-RenderPages` to save page images as well.
-Viewer checks do not certify editing and saving in every desktop Visio version.
-See the [format guidance](docs/system-documentation/PK_DTS_System_Reference.md#edit-the-documentation)
-when choosing between the VSDX and older VDX copies.
+Viewer checks cover opening and rendering. The editable diagrams use VSDX.
 
 ## Check application changes
 

@@ -2,7 +2,7 @@
 
 Find the right document, follow the right steps, and know when your work is complete.
 
-**Documentation reviewed: 6 November 2026**
+**Documentation reviewed 18 November 2026**
 
 PK Document Tracking System helps your team find records, manage approved files,
 track who holds physical documents, and review requests. Use your own account so
@@ -12,7 +12,7 @@ the history shows who completed each action.
 
 | Your goal | Open |
 | --- | --- |
-| Follow a task with screen examples | [User Guide](PK_DTS_User_Guide.pdf) |
+| Follow a task with screen examples | [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) |
 | See who acts at each stage | [Process Flow](PK_DTS_Process_Flow.pptx) |
 | Decide what to do next | [Flowchart](PK_DTS_Flowchart.pdf) |
 | Understand how people share information | [Data Flow Diagram](PK_DTS_DFD.pdf) |
@@ -28,14 +28,16 @@ use demonstration records; your menus and available actions depend on your acces
 | --- | --- | --- |
 | Register or edit a physical document | Hardcopy Documents | When the direct save is confirmed |
 | Create or revise a softcopy directly | Softcopy Documents | After **Approve Directly** and confirmation |
-| Request a softcopy creation or revision | My Requests > Softcopy Request | After final approval |
+| Request a softcopy creation or revision | My Requests → New Request | After final approval |
+| Get an editable revision template | Softcopy Documents → Request Template for Revision | After the DCO approves, through the download expiry date |
 | Register or revise an external document directly | External Documents | After **Save Directly** and confirmation |
-| Request an external document creation or revision | My Requests > External Document Request | After final approval |
-| Transfer a physical document | My Requests > Hardcopy Transfer Request | When the named recipient accepts it |
-| Get temporary document access for myself | My Requests > Document Access Request | After final approval, until the approved expiry |
-| Have a document assigned to me | My Requests > Document Assignment Request | After final approval |
+| Request an external document creation or revision | My Requests → New Request | After final approval |
+| Request a scanned upload, update, removal, or folder | Scanned Documents or My Requests → New Request | After final approval |
+| Transfer a physical document | My Requests → New Request → Hardcopy Transfer Request | When the named recipient accepts it |
+| Get temporary document access for myself | My Requests → New Request → Document Access Request | After final approval, until the approved expiry |
+| Have a document assigned to me | My Requests → New Request → Document Assignment Request | After final approval |
 | Assign documents to someone else | Document Assignments | When the direct action is confirmed |
-| Request Hardcopy or External disposal | My Requests > Disposal Request | After final approval |
+| Request Hardcopy or External disposal | My Requests → New Request → Disposal Request | After final approval |
 | Dispose of a document directly | **Dispose** in its document list | When the direct action is confirmed |
 
 Direct actions require permission and access to the record. A missing action can
@@ -68,11 +70,12 @@ the current approval step can decide it.
 
 ## Find a document or open a file
 
-1. Open Hardcopy Documents, Softcopy Documents or External Documents.
+1. Open Hardcopy Documents, Softcopy Documents, External Documents, or Scanned Documents.
 2. Choose **Table** or **Folder**, then use **Search** and the available filters.
 3. Open **View Details** where offered and check the record.
 4. For Softcopy Documents, open **View Details → Document Files** to preview or download the current file.
    This tab also lists earlier versions and their upload and lock details when you have file history permission.
+   For Word and Excel, **Download Original** gives you the editable file and **Download PDF** gives you the converted copy.
    For External Documents, open **Current Attachments** in **View Details**.
 
 Seeing a document title does not automatically allow editing, approval, download
@@ -120,9 +123,9 @@ the document automatically. Dismissing the notice leaves the record unchanged.
 
 | To apply the change directly | To request approval |
 | --- | --- |
-| Open **Softcopy Documents** and choose **Add New Softcopy Document** or **Edit**. | Open **My Requests > Softcopy Request > New Request**. |
+| Open **Softcopy Documents** and choose **Add New Softcopy Document** or **Edit**. | Open **My Requests → New Request** and choose the softcopy action. |
 | Choose **Create Softcopy** or **Revise Softcopy**, complete the details and attach **Document File**. | Prepare the creation or revision details and attach the proposed file. |
-| Choose **Approve Directly**, confirm and check the record. | **Save Draft**, review it, then **Submit** and confirm. |
+| Choose **Approve Directly**, confirm and check the record. | Choose **Submit Request** to send it for approval or **Save Draft** to continue later. |
 
 A direct action applies immediately. A request leaves the current document
 unchanged until final approval.
@@ -152,16 +155,16 @@ For a direct action, choose **Add New External Document** or **Edit**. Enter
 the file. Choose **Save Directly** and confirm. Editing publishes the next
 revision and requires a replacement attachment.
 
-For approval, open **My Requests > External Document Request > New Request**.
+For approval, open **My Requests → New Request** and choose the external action.
 Choose **External Create Request** or **External Revised Request**, complete the
-proposal and attachment, then **Save Draft** and **Submit**. Final approval
+proposal and attachment, then choose **Submit Request** or **Save Draft**. Final approval
 registers the document or publishes its next revision.
 
 ## Submit a request and follow its progress
 
-1. Open the correct **My Requests** tab and choose **New Request**.
-2. Complete the form and **Save Draft**.
-3. Check **View Details** and the attachment, then **Submit** and confirm.
+1. Open **My Requests**, choose **New Request**, and select a **Request Action**.
+2. Complete the form. Choose **Save Draft** to continue later or **Submit Request** to start approval, then confirm.
+3. To submit a saved draft, use **Submit** on its row. To submit with changes, open **Edit** and choose **Submit Request**.
 4. Follow the **Approval Process Timeline** and **Workflow Activity Log**.
 5. If the request is returned to you, correct it and resubmit.
 
@@ -169,8 +172,8 @@ You can edit only your own **Draft** or **Returned** request. **Cancel** applies
 to Drafts; it cannot withdraw a Submitted request. **Delete** permanently removes
 only your own eligible Cancelled drafts that never entered approval.
 
-Approvers open **My Tasks**, review the proposal and file, then choose a decision.
-Remarks are optional, but help explain corrections and rejections.
+Approvers open **My Tasks**, filter by category or action as needed, and select **Review request**.
+Review the proposal and file, then choose an available decision in the details dialog.
 
 | Decision | What happens next |
 | --- | --- |
@@ -183,17 +186,16 @@ While a request is being reviewed, its stored status remains Submitted until the
 workflow ends. **My Requests** shows which approver it is awaiting; My Tasks
 continues to show Submitted for actionable approval tasks.
 
-All four documents include a separate example for each current request: Softcopy
-Create and Revise, External Create and Revise, Hardcopy Transfer, Document Access,
-Document Assignment, and Disposal. Each uses the supplied default workflow's
-exact step names and assigned operators.
+The guides show default workflow examples for Softcopy and External creation and
+revision, Hardcopy Transfer, Access, Assignment, and Disposal. They also cover the
+Scanned Documents and editable revision template approval procedures.
 
 | What you want to see | Decision examples |
 | --- | --- |
-| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DTS_DFD.pdf), pages **9-16** |
-| The Approve, Return and Reject choices and their outcomes | [Flowchart](PK_DTS_Flowchart.pdf), pages **12-19** |
-| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pptx), slides **33-40** |
-| The same decisions alongside the screen instructions | [User Guide](PK_DTS_User_Guide.pdf), pages **27-34** |
+| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DTS_DFD.pdf) |
+| Decision paths and their outcomes | [Flowchart](PK_DTS_Flowchart.pdf) |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pptx) |
+| The same procedures alongside screen instructions | [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) |
 
 On related procedure pages, select a page number beside **Decisions** in the PDF
 footer to open the matching example. Direct actions use their own procedures;
@@ -234,16 +236,28 @@ does not alter submitted workflow snapshots or remaining approval steps.
 | Document Assignment | Plant Manager > Document Control Officer > Requester's leader |
 | Disposal | Plant Manager > Document Control Officer > Requester confirms |
 
+## Request and download an editable revision template
+
+1. In **Softcopy Documents**, find the active document and select **Request Template for Revision**. You can also choose this action in **My Requests → New Request**.
+2. Confirm the document and enter **Subject / Reason**. Choose **Submit Request** to send it for approval or **Save Draft** to continue later.
+3. The assigned Document Control Officer opens **My Tasks → Review request** and selects **Approve**. In **Upload Revision Template**, attach one Word (`.docx`), Excel (`.xlsx`), or text (`.txt`) file up to 15 MB.
+4. Set **Download expiry date** to today or a later date and select **Upload and Approve**. The approved softcopy and its current revision stay in place.
+5. In **My Requests**, choose **Download Template** or open **View → Revision Template** to see the date and download the file. The requester can download through the end of that date in Philippine time. After expiry, saved links stop working. Templates approved before expiry was introduced remain downloadable without a date.
+
+The default route goes to Document Control. It can have earlier approval steps,
+and its final step must be assigned to the Document Control Officer role.
+For a scanned upload, update, removal, or category request, follow the [Scanned Documents guide](../scanned-documents.md).
+
 ## Transfer a physical document
 
-1. Open **My Requests > Hardcopy Transfer Request > New Request**.
+1. Open **My Requests → New Request** and choose **Hardcopy Transfer Request**.
 2. Select the hardcopy. Check its holder and storage, then choose **Receiving
    User** and a different active destination Location with its matching parents.
-3. **Save Draft** and **Submit** for approval.
+3. Choose **Submit Request** for approval or **Save Draft** to continue later.
 4. Final approval creates a **For Transfer** handoff. Holder and storage stay
    unchanged at this stage.
 5. The **original requester** releases the document and selects **Dispatch** in
-   **My Tasks > Hardcopy Transfer Request > Physical Transfer Handoffs**. The
+   **My Tasks**, where the **Hardcopy Transfers** category shows handoffs. The
    handoff becomes **In Transit**.
 6. After receiving the document, the **named receiving user** chooses **Accept**.
    PK DTS checks the holder, document and approved destination, updates the
@@ -257,7 +271,7 @@ the holder, the previous holder's personal hardcopy access grants are revoked.
 ## Request access or assign a document
 
 **Temporary access:** use **Document Access Request** for a Softcopy or Hardcopy.
-Select the document and an expiry after today, then Save Draft and Submit. Access
+Select the document and an expiry after today, then choose **Submit Request** or **Save Draft**. Access
 is for you. The expiry must still be valid at final approval; access lasts through
 the end of that day unless revoked. Submit another request when you need renewal.
 
@@ -282,9 +296,12 @@ permission. An approval-based **Disposal Request** supports Hardcopy or External
 Documents only.
 
 Choose **Shred**, **Scratch** or **Other** and describe Other when selected.
-Confirm a direct action, or Save Draft and Submit a request. Disposal marks the
+Confirm a direct action, or choose **Submit Request** on a request. Disposal marks the
 record **Disposed** and records the method and history. Follow your organization's
 physical disposal procedure as well as recording the action.
+
+When **Hard Delete** appears on a disposed record, authorized users can permanently
+remove it by typing **DELETE** and confirming with their password.
 
 Direct hardcopy disposal keeps the recorded place and access grants. Approved
 hardcopy disposal requests clear Location and revoke grants. Disposed status
@@ -357,27 +374,11 @@ password private.
 
 ## Edit the documentation
 
-The [User Guide PowerPoint](PK_DTS_User_Guide.pptx) contains the same screen examples
-as the PDF. The [Process Flow](PK_DTS_Process_Flow.pptx) is itself an editable PowerPoint.
-Diagrams are available as editable Visio files:
+The [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) and
+[Process Flow](PK_DTS_Process_Flow.pptx) are editable PowerPoints. Use the VSDX
+files to edit the diagrams in Visio or the matching PDFs to read or print them.
 
-| Diagram | Visio 2013 or newer | Older Visio XML format |
+| Diagram | Editable Visio | PDF |
 | --- | --- | --- |
-| Data Flow Diagram | [VSDX](PK_DTS_DFD.vsdx) | [VDX](PK_DTS_DFD.vdx) |
-| Flowchart | [VSDX](PK_DTS_Flowchart.vsdx) | [VDX](PK_DTS_Flowchart.vdx) |
-
-For an older Visio installation, or if VSDX will not open, use the matching
-**VDX** copy. It uses the Visio 2003 XML format. Both copies contain the same
-editable pages, text, shapes and illustrations. Open the file from **File > Open**
-inside Visio; changing its filename extension does not convert it.
-
-VSDX was introduced with Visio 2013. Visio 2010 needs additional compatibility
-software to open it, so the VDX copy avoids that requirement.
-[Microsoft's file-format guide](https://learn.microsoft.com/en-us/office/client-developer/visio/introduction-to-the-visio-file-formatvsdx)
-and [Visio 2010 compatibility notes](https://support.microsoft.com/en-us/topic/you-cannot-open-vsdx-or-vsdm-files-in-visio-2010-3cf95a92-a9f5-85db-187b-4e7f56e591bd)
-explain the difference.
-
-**Opening check, 6 November 2026:** all six diagram files opened and every page
-rendered in Microsoft Visio Viewer 16.0.20228, with no reported errors. This checks
-viewing; opening, editing and saving in every desktop Visio release has not been
-verified. Use the matching PDF if you only need to read or print the diagram.
+| Data Flow Diagram | [VSDX](PK_DTS_DFD.vsdx) | [PDF](PK_DTS_DFD.pdf) |
+| Flowchart | [VSDX](PK_DTS_Flowchart.vsdx) | [PDF](PK_DTS_Flowchart.pdf) |
