@@ -1203,6 +1203,7 @@ CREATE TABLE `workflows` (
 INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_type`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
 (10, 'softcopy_create', 'Softcopy Request', NULL, 'softcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
 (11, 'softcopy_revise', 'Softcopy Request', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(12, 'softcopy_cancel', 'Softcopy Request', NULL, 'softcopy_cancel', 0, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
 (13, 'hardcopy_create', 'Hardcopy Request', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
 (14, 'hardcopy_update', 'Hardcopy Request', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
 (15, 'transfer', 'Hardcopy Transfer Request', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
