@@ -37,8 +37,8 @@ a {
 }
 
 .app-sidebar {
-  width: 350px;
-  min-width: 350px;
+  width: 380px;
+  min-width: 380px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -1094,7 +1094,7 @@ a {
   .app-sidebar {
     position: fixed;
     left: 0;
-    width: min(288px, calc(100vw - 52px));
+    width: min(380px, calc(100vw - 52px));
     min-width: 0;
     transform: translateX(-101%);
     transition: transform 0.2s ease;
@@ -1155,7 +1155,7 @@ a {
     left: 0;
     top: 0;
     height: 100dvh;
-    width: min(288px, calc(100vw - 52px));
+    width: min(380px, calc(100vw - 52px));
     min-width: 0;
     transform: translateX(-101%);
     transition: transform 0.2s ease;

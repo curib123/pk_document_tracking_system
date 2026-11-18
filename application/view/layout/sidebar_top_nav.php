@@ -13,13 +13,13 @@ $active = function ($prefix) use ($path) {
 
 $requestRoutes = [
     'softcopy' => 'Softcopy Request',
-    'external' => 'External Document Request',
-    'scanned' => 'Scanned Document Request',
+    'external' => 'External Request',
+    'scanned' => 'Scanned Request',
     'hardcopy' => 'Hardcopy Request',
-    'hardcopy-transfer' => 'Hardcopy Transfer Request',
+    'hardcopy-transfer' => 'Transfer Request',
     'hardcopy-disposal' => 'Disposal Request',
-    'access-grant' => 'Document Access Request',
-    'document-assign' => 'Document Assignment Request'
+    'access-grant' => ' Access Request',
+    'document-assign' => ' Assignment Request'
 ];
 
 // Show Master Data only when at least one place module is accessible.
