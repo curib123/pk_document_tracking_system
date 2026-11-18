@@ -9,6 +9,7 @@ isolated demonstration site. The PowerPoint guide must retain every screenshot.
 from pathlib import Path
 import argparse
 import copy
+from datetime import datetime, timezone
 import hashlib
 import io
 import json
@@ -31,6 +32,7 @@ ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
 EDITION = '18 November 2026'
+GUIDE_TITLE = 'Step-by-Step User Guide'
 MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITION.upper()
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
@@ -136,7 +138,7 @@ BOOKS = {
                ['Clear decisions', 'Yes and No paths', 'Practical outcomes']),
  'guide': ('Complete everyday tasks', 'A practical guide for every role',
            'Find the task you need, follow the numbered instructions, and check the result before continuing.',
-           ['Find and manage documents', 'Request, review and receive', 'Set up and maintain PK DTS']),
+         ['Save drafts and submit requests', 'Find downloads and file history', 'Approve revision templates with expiry']),
 }
 
 
@@ -166,7 +168,8 @@ def document_items(key, data):
     body = entries(key, data)
     contents_count = math.ceil(len(body)/24)
     offset = 1+contents_count
-    front = [{'id': 'book-cover', 'kind': 'cover', 'title': dict((k, title) for k, _, title in SPECS)[key]}]
+    title = GUIDE_TITLE if key == 'guide' else dict((k, title) for k, _, title in SPECS)[key]
+    front = [{'id': 'book-cover', 'kind': 'cover', 'title': title}]
     for index in range(contents_count):
         listing = [{'title': item['title'], 'page': position+offset+1}
                    for position, item in enumerate(body) if index*24 <= position < (index+1)*24]
@@ -735,6 +738,8 @@ def cover_page(doc, key, item, number, total):
     lead, subtitle, description, topics = BOOKS[key]
     text(page, (42, 124, 775, 158), 'PK DOCUMENT TRACKING SYSTEM', 13, True, GREY)
     page.draw_line((42, 175), (133, 175), color=ACCENT, width=4)
+    if key == 'guide':
+        text(page, (150, 162, 755, 194), EDITION.upper() + ' EDITION', 15, True, ACCENT)
     text(page, (42, 207, 755, 356), item['title'], 62, True, minimum=48)
     text(page, (42, 376, 755, 427), subtitle, 24, True, minimum=20)
     text(page, (42, 450, 737, 561), description, 20, minimum=18)
@@ -766,8 +771,9 @@ def contents_rows(item):
 
 def contents_page(doc, key, item, number, total):
     kind = next(title for value, _, title in SPECS if value == key)
-    page = header(doc, kind, item['title'], number, total,
-                  'Choose a topic to jump to its page in the PDF. Page numbers also help you find it in the editable copy.', 'Find your task')
+    instruction = ('Select a topic or slide number to jump to that slide.' if key == 'guide' else
+                   'Choose a topic to jump to its page in the PDF. Page numbers also help you find it in the editable copy.')
+    page = header(doc, kind, item['title'], number, total, instruction, 'Find your task')
     for entry, rect in contents_rows(item):
         if int((rect.y0-190)/46) % 2 == 0:
             panel(page, rect, PALE, PALE)
@@ -971,11 +977,16 @@ def visio(doc, items, title):
 def powerpoint(doc, items=None):
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
-    prs.core_properties.title = 'PK DTS - User Guide'
-    prs.core_properties.subject = 'Everyday document control, 11 November 2026'
+    prs.core_properties.title = 'PK DTS - ' + GUIDE_TITLE
+    prs.core_properties.subject = 'Everyday document control, ' + EDITION
+    prs.core_properties.author = 'PK Document Tracking System'
+    edition_date = datetime.strptime(EDITION, '%d %B %Y').replace(tzinfo=timezone.utc)
+    prs.core_properties.created = edition_date
+    prs.core_properties.modified = edition_date
     items = items or [{} for _ in doc]
-    for page, item in zip(doc, items):
-        slide = prs.slides.add_slide(prs.slide_layouts[6])
+    slides = [prs.slides.add_slide(prs.slide_layouts[6]) for _ in doc]
+    for page, item, slide in zip(doc, items, slides):
+        links = [(link['from'], slides[link['page']]) for link in page.get_links()]
         illustrated_example = item.get('kind') == 'approval-example'
         if not illustrated_example:
             for block in page.get_text('dict')['blocks']:
@@ -1024,6 +1035,11 @@ def powerpoint(doc, items=None):
                     run.text, run.font.name, run.font.size = span['text'], 'Arial', Pt(span['size'])
                     run.font.bold = 'bold' in span['font'].lower()
                     run.font.color.rgb = RGBColor.from_string(f'{span["color"]:06X}')
+                    center = (r.tl + r.br) / 2
+                    for area, destination in links:
+                        if area.contains(center):
+                            node.click_action.target_slide = destination
+                            break
     return prs
 
 
@@ -1175,7 +1191,13 @@ def verify(content, pending=False):
             if key == 'guide':
                 prs = Presentation(editable)
                 assert len(prs.slides) == len(doc)
+                assert prs.core_properties.title == 'PK DTS - ' + GUIDE_TITLE
+                assert prs.core_properties.subject == 'Everyday document control, ' + EDITION
+                assert prs.core_properties.modified.date() == datetime.strptime(EDITION, '%d %B %Y').date()
                 for slide, page, item in zip(prs.slides, doc, items):
+                    destinations = {target.slide_id for shape in slide.shapes if (target := shape.click_action.target_slide)}
+                    expected_destinations = {prs.slides[link['page']].slide_id for link in page.get_links()}
+                    assert destinations == expected_destinations, f'PowerPoint navigation mismatch: {item["id"]}'
                     pictures = [shape for shape in slide.shapes if shape.shape_type == 13]
                     assert len(pictures) == len(page.get_image_info()), f'PowerPoint screenshot mismatch: {item["id"]}'
                     if pictures and item.get('kind') == 'approval-example':
