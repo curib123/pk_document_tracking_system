@@ -54,12 +54,12 @@ def login(browser, base, username):
     return page
 
 
-def post(page, path, *, upload=None, **data):
+def post(page, path, *, files=None, statuses=(302, 303), **data):
     csrf = next(cookie['value'] for cookie in page.context.cookies() if cookie['name'] == 'pk_csrf_cookie')
     fields = dict(data, pk_csrf_token=csrf, confirmed='yes')
-    body = {'multipart': dict(fields, final_file=upload)} if upload else {'form': fields}
+    body = {'multipart': dict(fields, **files)} if files else {'form': fields}
     response = page.request.post(path, **body, max_redirects=0)
-    assert response.status in (302, 303), (path, response.status, response.text()[:500])
+    assert response.status in statuses, (path, response.status, response.text()[:500])
 
 
 def document_template():
@@ -95,15 +95,13 @@ def exercise(browser, base):
     expect(modal.locator('#reqSoftcopy')).to_have_value('1')
     expect(modal.locator('#revisionFile')).to_be_hidden()
     modal.get_by_label('Subject / Reason').fill('Editable copy for procedure changes')
-    modal.get_by_role('button', name='Save Draft').click()
+    modal.get_by_role('button', name='Submit Request').click()
     requester.locator('#confirmProceed').click()
-    dismiss(requester)
-    row = requester.get_by_role('row').filter(has_text='Editable copy for procedure changes')
-    row.get_by_role('button', name='Submit', exact=True).click()
-    requester.locator('#confirmProceed').click()
+    expect(requester.locator('#appAlertModal')).to_contain_text('Request submitted for approval')
     dismiss(requester)
 
     request_id = sql(f"SELECT id FROM requests WHERE type='{ACTION}' AND status='submitted'")
+    assert sql(f"SELECT COUNT(*) FROM requests WHERE type='{ACTION}' AND status='draft'") == '0'
     download_url = base + '/files/revision-template/' + request_id
     assert requester.request.get(download_url).status == 404
     dco = login(browser, base, 'template_dco')
@@ -116,7 +114,7 @@ def exercise(browser, base):
     post(outsider, decision_url, id=request_id, decision='approved')
     post(dco, decision_url, id=request_id, decision='approved')
     post(dco, decision_url, id=request_id, decision='approved',
-         upload={'name': 'readonly.pdf', 'mimeType': 'application/pdf', 'buffer': b'%PDF-1.4\n'})
+         files={'final_file': {'name': 'readonly.pdf', 'mimeType': 'application/pdf', 'buffer': b'%PDF-1.4\n'}})
     assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'submitted'
     assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '0'
 
@@ -151,11 +149,56 @@ def exercise(browser, base):
     post(requester, base + '/my-requests/softcopy/save', type=ACTION, softcopy_id=1,
          subject='Reject this template request')
     rejected = sql(f"SELECT id FROM requests WHERE type='{ACTION}' AND status='draft'")
-    post(requester, base + '/my-requests/softcopy/submit', id=rejected)
+    submit_url = base + '/my-requests/softcopy/save-and-submit'
+    sql(f'UPDATE workflows SET active=0 WHERE id={workflow_id}')
+    for post_data in ({}, {'id': rejected}):
+        post(requester, submit_url, type=ACTION, softcopy_id=1, subject='Failed direct submission', **post_data)
+    assert sql(f"SELECT COUNT(*) FROM requests WHERE type='{ACTION}'") == '2'
+    assert sql(f"SELECT status,JSON_UNQUOTE(JSON_EXTRACT(payload,'$.subject')) FROM requests WHERE id={rejected}") == (
+        'draft\tReject this template request')
+    sql(f'UPDATE workflows SET active=1 WHERE id={workflow_id}')
+
+    requester.goto(base + '/my-requests?request_category=softcopy')
+    dismiss(requester)
+    row = requester.get_by_role('row').filter(has_text='Reject this template request')
+    row.get_by_role('button', name='Edit', exact=True).click()
+    expect(modal.locator('#requestActionPicker')).to_be_disabled()
+    expect(modal.get_by_label('Subject / Reason')).to_have_value('Reject this template request')
+    modal.get_by_role('button', name='Submit Request').click()
+    requester.locator('#confirmProceed').click()
+    expect(requester.locator('#appAlertModal')).to_contain_text('Request submitted for approval')
+    assert sql(f'SELECT status FROM requests WHERE id={rejected}') == 'submitted'
     post(dco, decision_url, id=rejected, decision='rejected', remark='Fixture rejection')
     assert sql(f'SELECT status FROM requests WHERE id={rejected}') == 'rejected'
     assert requester.request.get(base + '/files/revision-template/' + rejected).status == 404
     assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '1'
+
+    storage = ROOT / 'storage/documents'
+    existing_files = set(storage.iterdir())
+    contents = ('Rollback fixture ' + secrets.token_hex(12)).encode()
+    sql("UPDATE workflows SET active=0 WHERE request_type='scanned_create'")
+    post(requester, base + '/my-requests/scanned/save-and-submit',
+         type='scanned_create', subject='Rollback uploaded request', title='Rollback upload',
+         scanned_category_id=50, retention_start_date='2026-11-01', retention_end_date='2026-12-01',
+         files={'scanned_attachment[]': {'name': 'rollback.txt', 'mimeType': 'text/plain', 'buffer': contents}})
+    requester.goto(base + '/my-requests')
+    expect(requester.locator('#appAlertModal')).to_contain_text('A published default workflow is required')
+    dismiss(requester)
+    assert sql("SELECT COUNT(*) FROM requests WHERE type='scanned_create'") == '0'
+    assert sql("SELECT COUNT(*) FROM files WHERE original_name='rollback.txt'") == '0'
+    leftover = [path for path in set(storage.iterdir()) - existing_files
+                if path.is_file() and path.stat().st_size == len(contents) and path.read_bytes() == contents]
+    for path in leftover:
+        path.unlink()
+    assert not leftover, 'Failed submission left the uploaded file on disk.'
+
+    sql("DELETE rp FROM role_permissions rp JOIN permissions p ON p.id=rp.permission_id "
+        "WHERE rp.role_id=50 AND p.module_key='requests' AND p.action_key='submit'")
+    post(requester, submit_url, statuses=(403,), type=ACTION, softcopy_id=1, subject='Missing permission')
+    requester.goto(base + '/my-requests')
+    requester.get_by_role('button', name='New Request').click()
+    modal.locator('#requestActionPicker').select_option(ACTION)
+    expect(modal.get_by_role('button', name='Save Draft')).to_be_enabled()
 
 
 def main():
@@ -175,9 +218,11 @@ def main():
               (103,'template_dco','DCO','Fixture','Document Control Officer',2,'{password_hash}',0),
               (104,'template_admin','Admin','Fixture','Administrator',1,'{password_hash}',0);
             INSERT INTO role_permissions (role_id,permission_id)
-            SELECT 50,id FROM permissions WHERE (module_key='requests' AND action_key IN ('view','add','submit'))
+            SELECT 50,id FROM permissions WHERE (module_key='requests' AND action_key IN ('view','add','edit','submit'))
               OR (module_key='softcopy' AND action_key IN ('view','request_revision_template'))
+              OR (module_key='scanned_documents' AND action_key='request')
               OR (module_key='dashboard' AND action_key='view');
+            INSERT INTO scanned_categories (id,name,created_by,approved_by) VALUES (50,'Rollback fixture',101,103);
             UPDATE softcopy_documents SET created_by=101 WHERE id=1;
             UPDATE files SET locked_at=NOW() WHERE id=(SELECT file_id FROM softcopy_revisions WHERE id=1);
         """)
