@@ -39,7 +39,8 @@ with daily work. A browser installation option is available when supported;
 the system still needs a network connection.
 
 Expand **My Requests** or **My Tasks** in the sidebar to open a request category.
-Each category has its own route and count badge; the current category stays highlighted.
+Each category has its own route; the current category stays highlighted.
+Count badges appear only when there is at least one draft, returned request, or pending task.
 
 Hardcopy registration and editing use direct actions. New hardcopy creation or
 update requests and new softcopy cancellation requests are unavailable. Eligible

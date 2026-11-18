@@ -146,9 +146,11 @@ $navPage = end($navParts);
                         <summary class="side-link side-group-toggle<?= $sectionActive ? ' active' : '' ?>"
                             aria-controls="sidebar-<?= $section ?>-routes">
                             <i class="fa-solid <?= $sectionIcon ?>" aria-hidden="true"></i>
-                            <span><?= $sectionLabel ?></span>
-                            <span class="nav-count<?= $sectionCount === 0 ? ' is-zero' : '' ?>"
-                                aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
+                            <span class="side-group-label"><?= $sectionLabel ?></span>
+                            <?php if ($sectionCount > 0): ?>
+                                <span class="nav-count"
+                                    aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
+                            <?php endif; ?>
                             <i class="fa-solid fa-chevron-down side-group-chevron" aria-hidden="true"></i>
                         </summary>
                         <ul class="side-submenu" id="sidebar-<?= $section ?>-routes" aria-label="<?= $sectionLabel ?> categories">
@@ -163,8 +165,10 @@ $navPage = end($navParts);
                                     <a class="side-link side-sublink<?= $routeActive ? ' active' : '' ?>"
                                         href="<?= site_url($route) ?>" <?= $routeActive ? 'aria-current="page"' : '' ?>>
                                         <span class="side-sublink-label"><?= html_escape($routeLabel) ?></span>
-                                        <span class="nav-count<?= $routeCount === 0 ? ' is-zero' : '' ?>"
-                                            aria-label="<?= $routeCount ?> <?= $countLabel ?>"><?= $routeCount ?></span>
+                                        <?php if ($routeCount > 0): ?>
+                                            <span class="nav-count"
+                                                aria-label="<?= $routeCount ?> <?= $countLabel ?>"><?= $routeCount ?></span>
+                                        <?php endif; ?>
                                     </a>
                                 </li>
                             <?php endforeach; ?>
