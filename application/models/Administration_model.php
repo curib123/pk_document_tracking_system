@@ -210,7 +210,7 @@ class Administration_model extends CI_Model
     public function permissions()
     {
         return $this->db->select('id,module_key,module_label,action_key,action_label')
-            ->from('permissions')->order_by('module_label')->order_by('action_label')
+            ->from('permissions')->where('module_key !=', 'subsidiaries')->order_by('module_label')->order_by('action_label')
             ->get()->result_array();
     }
     public function grants($roleIds)

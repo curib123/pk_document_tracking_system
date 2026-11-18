@@ -370,7 +370,7 @@ class Request_service
                 if ($type === 'external_revise')
                     $externalService->assert_document_unlocked((int) $payload['external_document_id']);
                 $externalService->validate_document_number($payload['external_document_number']);
-                $payload['subsidiary_id'] = $externalService->validate_subsidiary($payload['subsidiary_id']) ?? 0;
+                $payload = array_replace($payload, $externalService->subsidiary_input($post));
                 $payload['external_category_id'] = $externalService->validate_category(
                     (int) $payload['external_category_id']
                 );

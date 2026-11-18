@@ -123,7 +123,7 @@
     rowsShown = [];
     active = -1;
     current.removeAttribute("aria-activedescendant");
-    var section = current.closest(SECTION);
+    var section = current.closest(SECTION + ", [data-editable-options]");
     var all = section ? optionsFor(section, current.dataset.combobox, current) : [];
     if (!all.length) {
       // No saved values yet: typing a new one is all that is needed.

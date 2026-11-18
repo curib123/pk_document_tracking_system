@@ -28,12 +28,6 @@ class Place_model extends CI_Model
             'table' => 'scanned_categories', 'label' => 'Scanned Categories',
             'key' => 'name', 'fields' => ['name', 'parent_id']
         ],
-        'subsidiary' => [
-            'table' => 'subsidiaries',
-            'label' => 'Subsidiaries',
-            'key' => 'name',
-            'fields' => ['name']
-        ],
     ];
     public function config($slug)
     {
@@ -119,7 +113,6 @@ class Place_model extends CI_Model
             'categories' => 'name',
             'numbered_categories' => 'name',
             'external_categories' => 'name',
-            'subsidiaries' => 'name'
         ];
         if (!isset($defs[$table]))
             throw new DomainException('Unknown option list.');

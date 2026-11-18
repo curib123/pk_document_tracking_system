@@ -32,15 +32,9 @@
     <label class="form-label" for="externalRequestNumber">Document No. <span class="optional-label">(optional)</span></label>
     <input class="form-control" id="externalRequestNumber" name="external_document_number" maxlength="150" autocomplete="off">
 </div>
-<div class="col-md-6" data-external-subsidiary>
-    <label class="form-label" for="externalRequestSubsidiary">Subsidiary <span class="optional-label">(optional)</span></label>
-    <select class="form-select" id="externalRequestSubsidiary" name="subsidiary_id" data-searchable autocomplete="off">
-        <option value="">Select a subsidiary</option>
-        <?php foreach ($subsidiary_options as $subsidiary): ?>
-            <option value="<?= (int) $subsidiary['id'] ?>"><?= html_escape($subsidiary['name']) ?></option>
-        <?php endforeach; ?>
-    </select>
-</div>
+<?php $this->load->view('reusable_components/subsidiary_field', [
+    'subsidiary_field_id' => 'externalRequestSubsidiary', 'subsidiary_options' => $subsidiary_options
+]); ?>
 <div class="col-md-6" data-external-category>
     <label class="form-label" for="externalRequestCategory">External Category</label>
     <select class="form-select" id="externalRequestCategory" name="external_category_id" data-searchable autocomplete="off">

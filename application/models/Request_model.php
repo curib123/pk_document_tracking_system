@@ -291,6 +291,7 @@ class Request_model extends CI_Model
                 'description' => 'Description',
                 'document_number' => 'Proposed Document Number',
                 'external_document_number' => 'Proposed Document Number',
+                'subsidiary_name' => 'Proposed Subsidiary',
                 'series_number' => 'Series',
                 'retention_period' => 'Retention Period',
                 'retention_start_date' => 'Retention Start Date',

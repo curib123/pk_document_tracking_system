@@ -72,7 +72,7 @@ class External_document_service
         $documentNumber = trim((string) ($post['external_document_number'] ?? ''));
         $this->validate_metadata($title, $description);
         $this->validate_document_number($documentNumber);
-        $subsidiaryId = $this->validate_subsidiary((int) ($post['subsidiary_id'] ?? 0));
+        $subsidiary = $this->subsidiary_input($post);
         require_once APPPATH . 'services/files/file_service.php';
         $files = new File_service();
         $fileIds = $type === 'external_create'
@@ -86,10 +86,9 @@ class External_document_service
                 'external_document_number' => $documentNumber,
                 'description' => $description,
                 'external_category_id' => (int) ($post['external_category_id'] ?? 0),
-                'subsidiary_id' => $subsidiaryId,
                 ($type === 'external_create' ? 'controlled_file_id' : 'revision_file_id') => $fileIds[0] ?? 0,
                 ($type === 'external_create' ? 'controlled_file_ids' : 'revision_file_ids') => $fileIds
-            ];
+            ] + $subsidiary;
             $result = $this->apply($type, $payload, $documentId, $actorId, $actorId, NULL);
             if ($this->ci->db->trans_status() === FALSE || $this->ci->db->trans_commit() === FALSE) {
                 throw new DomainException('External document could not be saved.');
@@ -119,18 +118,55 @@ class External_document_service
         return $categoryId;
     }
 
-    public function validate_subsidiary(int $subsidiaryId): ?int
+    public function subsidiary_names(): array
+    {
+        return array_column($this->ci->db->distinct()->select('name')->order_by('name')
+            ->get('subsidiaries')->result_array(), 'name');
+    }
+
+    public function subsidiary_input(array $input): array
+    {
+        if (!array_key_exists('subsidiary_name', $input))
+            return ['subsidiary_id' => $this->validate_subsidiary((int) ($input['subsidiary_id'] ?? 0))];
+        if (!is_string($input['subsidiary_name']))
+            throw new DomainException('Enter a valid subsidiary name.');
+        $name = trim(preg_replace('/[\s\p{Z}]+/u', ' ', $input['subsidiary_name']) ?? '');
+        if (!mb_check_encoding($input['subsidiary_name'], 'UTF-8') || mb_strlen($name) > 150)
+            throw new DomainException('Subsidiary name cannot exceed 150 characters.');
+        return ['subsidiary_name' => $name, 'subsidiary_id' => NULL];
+    }
+
+    private function validate_subsidiary(int $subsidiaryId): ?int
     {
         if ($subsidiaryId === 0) {
             return NULL;
         }
         if (!$this->ci->db->get_where('subsidiaries', [
-            'id' => $subsidiaryId,
-            'active' => 1
+            'id' => $subsidiaryId
         ])->row_array()) {
-            throw new DomainException('Choose an active subsidiary.');
+            throw new DomainException('The selected subsidiary is unavailable.');
         }
         return $subsidiaryId;
+    }
+
+    private function resolve_subsidiary(array $payload): ?int
+    {
+        $input = $this->subsidiary_input($payload);
+        if (!isset($input['subsidiary_name']))
+            return $input['subsidiary_id'];
+        $name = $input['subsidiary_name'];
+        if ($name === '')
+            return NULL;
+        // Approval and direct save both call this inside their write transaction.
+        $existing = $this->ci->db->query(
+            'SELECT id FROM subsidiaries WHERE active IN (0,1) AND name=? ORDER BY active DESC,id LIMIT 1 FOR UPDATE',
+            [$name]
+        )->row_array();
+        if ($existing)
+            return (int) $existing['id'];
+        if (!$this->ci->db->insert('subsidiaries', ['name' => $name]))
+            throw new DomainException('Unable to save the subsidiary.');
+        return (int) $this->ci->db->insert_id();
     }
 
     public function dispose_direct(int $documentId, int $actorId, string $reason, string $action): void
@@ -202,7 +238,7 @@ class External_document_service
         $this->validate_document_number($documentNumber);
         $creation = $type === 'external_create';
         $categoryId = (int) ($payload['external_category_id'] ?? 0);
-        $subsidiaryId = $this->validate_subsidiary((int) ($payload['subsidiary_id'] ?? 0));
+        $subsidiaryId = $this->resolve_subsidiary($payload);
         $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
         $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
         $fileIds = array_values(array_unique(array_filter(array_map(

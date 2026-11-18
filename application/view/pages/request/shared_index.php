@@ -302,7 +302,7 @@ foreach ($rows as $row) {
     'external_document_id' => $payload['external_document_id'] ?? '',
     'external_document_number' => $payload['external_document_number'] ?? '',
     'external_category_id' => $payload['external_category_id'] ?? '',
-    'subsidiary_id' => $payload['subsidiary_id'] ?? '',
+    'subsidiary_name' => $payload['subsidiary_name'] ?? ($detail['Proposed Subsidiary'] ?? ''),
     'retention_period' => $payload['retention_period'] ?? '',
     'hardcopy_id' => $row['hardcopy_id'] ?? '',
     'recipient_id' => $payload['recipient_id'] ?? '',

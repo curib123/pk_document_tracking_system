@@ -129,7 +129,8 @@ class Requests extends MY_Controller
         }
         if (array_intersect($types, $this->Request_model->types('external'))) {
             $data['external_category_options'] = $this->Place_model->options('external_categories');
-            $data['subsidiary_options'] = $this->Place_model->options('subsidiaries');
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $data['subsidiary_options'] = (new External_document_service())->subsidiary_names();
         }
         if (array_intersect($types, ['external_create', 'external_revise', 'disposal']))
             $data['external_options'] = $this->external_document_options();
@@ -160,12 +161,13 @@ class Requests extends MY_Controller
             $this->can('documents', 'view_all');
         $this->db->select(
             'd.id,d.title,d.description,d.document_number AS external_document_number,
-            d.subsidiary_id,d.category_id,r.revision_level,
+            s.name AS subsidiary_name,d.category_id,r.revision_level,
             EXISTS(SELECT 1 FROM external_revision_files rf JOIN files f ON f.id=rf.file_id
                 WHERE rf.revision_id=d.current_revision_id AND f.locked_at IS NOT NULL) AS has_locked_file',
             FALSE
         )
             ->from('external_documents d')
+            ->join('subsidiaries s', 's.id=d.subsidiary_id', 'left')
             ->join('external_revisions r', 'r.id=d.current_revision_id', 'left')
             ->where('d.status', 'active');
         if (!$canViewAll)

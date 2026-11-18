@@ -122,7 +122,7 @@ foreach ($rows as $row) {
             'external_category_id' => (int) $row['category_id'],
             'title' => $row['title'],
             'external_document_number' => $row['document_number'] ?? '',
-            'subsidiary_id' => (int) ($row['subsidiary_id'] ?? 0),
+            'subsidiary_name' => $row['subsidiary_name'] ?? '',
             'description' => $row['description'] ?? ''
         ],
         'display' => $display,
@@ -228,16 +228,9 @@ $layoutLink = static function ($target) use ($folder_params, $folder_value) {
                                 <input class="form-control" id="externalDocumentNumber" name="external_document_number"
                                     maxlength="150" autocomplete="off">
                             </div>
-                            <div class="col-md-6">
-                                <label class="form-label" for="externalSubsidiary">Subsidiary <span class="optional-label">(optional)</span></label>
-                                <select class="form-select" id="externalSubsidiary" name="subsidiary_id"
-                                    data-searchable autocomplete="off">
-                                    <option value="">Select a subsidiary</option>
-                                    <?php foreach ($subsidiary_options as $subsidiary): ?>
-                                        <option value="<?= (int) $subsidiary['id'] ?>"><?= html_escape($subsidiary['name']) ?></option>
-                                    <?php endforeach; ?>
-                                </select>
-                            </div>
+                            <?php $this->load->view('reusable_components/subsidiary_field', [
+                                'subsidiary_field_id' => 'externalSubsidiary', 'subsidiary_options' => $subsidiary_options
+                            ]); ?>
                             <div class="col-12">
                                 <label class="form-label" for="externalDescription">Description</label>
                                 <textarea class="form-control" id="externalDescription" name="description"

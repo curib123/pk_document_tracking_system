@@ -119,13 +119,14 @@ class External_documents extends MY_Controller
         }
         unset($row);
 
+        require_once APPPATH . 'services/documents/external_document_service.php';
         $this->render('External Documents', 'pages/external_document/index', [
             'rows' => $rows,
             'table' => $state,
             'total' => $total,
             'owner_options' => $ownerOptions,
             'external_category_options' => $this->Place_model->options('external_categories'),
-            'subsidiary_options' => $this->Place_model->options('subsidiaries'),
+            'subsidiary_options' => (new External_document_service())->subsidiary_names(),
             'folder_browser' => $browser,
             'folder_params' => [
                 'q' => $state['q'],

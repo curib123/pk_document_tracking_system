@@ -1131,8 +1131,8 @@
     });
     var category = form.querySelector('[name="external_category_id"]');
     if (category && record.category_id) category.value = record.category_id;
-    var subsidiary = form.querySelector('[name="subsidiary_id"]');
-    if (subsidiary) subsidiary.value = record.subsidiary_id || "";
+    var subsidiary = form.querySelector('[name="subsidiary_name"]');
+    if (subsidiary) subsidiary.value = record.subsidiary_name || "";
     var subject = form.querySelector('[name="subject"]');
     if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
       var isDisposal = form.querySelector('[name="type"]')?.value === "disposal";
