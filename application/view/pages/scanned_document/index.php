@@ -19,7 +19,7 @@ foreach ($rows as $row) {
             if ($can($action) && (isset($permissions['*']) || !empty($permissions['requests']['add']))) {
                 $buttons[] = [
                     'type' => 'link', 'label' => $label, 'icon' => $icon, 'intent' => $intent,
-                    'url' => 'my-requests/scanned?' . http_build_query(['action' => $type, 'document' => $row['id']])
+                    'url' => 'my-requests?' . http_build_query(['request_category' => 'scanned', 'action' => $type, 'document' => $row['id']])
                 ];
             }
         }
@@ -60,9 +60,9 @@ $layoutLink = static fn($target) => site_url('documents/scanned') . '?' . http_b
   <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
     <h2 class="h5 mb-0 me-auto">Scanned Documents</h2>
     <?php if (isset($permissions['*']) || (!empty($permissions['requests']['add']) && ($can('request') || !empty($permissions['scanned_categories']['request'])))): ?>
-      <a class="btn btn-primary" href="<?= site_url('my-requests/scanned?action=scanned_create') ?>">Upload / Request Category</a>
+      <a class="btn btn-primary" href="<?= site_url('my-requests?request_category=scanned&action=scanned_create') ?>">Upload / Request Category</a>
     <?php endif; ?>
-    <a class="btn btn-light" href="<?= site_url('my-requests/scanned') ?>">My Scanned Requests</a>
+    <a class="btn btn-light" href="<?= site_url('my-requests?request_category=scanned') ?>">My Scanned Requests</a>
     <button class="btn btn-light" type="button" data-scan-alarm-enable>Enable reminder sound</button>
   </div>
 </section>

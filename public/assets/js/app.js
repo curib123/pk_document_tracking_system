@@ -489,9 +489,7 @@
       var focusable = Array.from(
         sidebar.querySelectorAll("button,a[href],summary"),
       ).filter(function (node) {
-        // Closed details can retain layout boxes for their hidden links.
-        return node.offsetParent !== null &&
-          !node.closest(".side-group:not([open]) .side-submenu");
+        return node.offsetParent !== null;
       });
       var first = focusable[0],
         last = focusable[focusable.length - 1];
@@ -569,84 +567,118 @@
     setTimeout(function () { updateSoftcopyCategoryKind(event.target); }, 0);
   });
 
+  function populateEditForm(target, record, title) {
+    target.reset();
+    // Hidden input values survive reset; a new record must clear the edited ID.
+    target.querySelectorAll('input[type="hidden"][name="id"], input[type="hidden"][name="version"]').forEach(function (field) {
+      field.value = record[field.name] ?? "";
+    });
+    var lockedAttachment = !!record.locked_attachment;
+    target
+      .querySelectorAll('[name="revision_attachment"], [name="external_attachment[]"]')
+      .forEach(function (field) {
+        field.disabled = lockedAttachment;
+        var message = field.parentElement?.querySelector(
+          "[data-locked-attachment-message]",
+        );
+        if (message) message.hidden = !lockedAttachment;
+      });
+    target
+      .querySelectorAll('input[name="permissions[]"]')
+      .forEach(function (field) {
+        field.checked = (record.permission_ids || [])
+          .map(Number)
+          .includes(Number(field.value));
+      });
+    target
+      .querySelectorAll('input[name="specific_ids[]"]')
+      .forEach(function (field) {
+        field.checked = (record.specific_ids || [])
+          .map(Number)
+          .includes(Number(field.value));
+      });
+    target.querySelectorAll('input[name="user_ids[]"]').forEach(function (field) {
+      field.checked = (record.user_ids || []).map(Number).includes(Number(field.value));
+    });
+    target.querySelectorAll("[name]").forEach(function (field) {
+      if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
+      if (
+        field.name === "document_number" &&
+        field.tagName === "SELECT" &&
+        record[field.name] != null
+      ) {
+        field.dataset.pendingValue = record[field.name];
+      }
+      if (field.type === "checkbox")
+        field.checked = !!Number(record[field.name]);
+      else field.value = record[field.name] == null ? "" : record[field.name];
+    });
+    syncUserRoles(target, record.role_ids || [record.role_id]);
+    var heading = document.getElementById(
+      target.id === "stepForm"
+        ? "stepTitle"
+        : target.id === "assignmentForm"
+          ? "assignmentModalTitle"
+          : "editTitle",
+    );
+    if (heading)
+      heading.textContent = title;
+    target.dataset.confirmed = "";
+    updateRequestActionFields(target);
+    if (target.id === "stepForm") updateStepApprover();
+    if (target.hasAttribute("data-location-upsert"))
+      updateLocationHierarchy();
+    if (target.hasAttribute("data-hardcopy-upsert"))
+      updateHardcopyHierarchy();
+    updateDocumentDomain();
+    updateDisposalReason();
+    updateHardcopyRequestAction();
+    updateSoftcopyCategoryKind(target);
+    updateHardcopyRetention();
+    updateHardcopyTransfer();
+    if (target.hasAttribute("data-scanned-form")) {
+      target.elements.type.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    syncSearchableControls(target);
+  }
+
+  var requestPicker = document.getElementById("requestActionPicker");
+  var requestSave = document.getElementById("requestDraftSave");
+  function showRequestForm(action, editing) {
+    requestPicker.value = action;
+    requestPicker.disabled = editing;
+    var option = requestPicker.selectedOptions[0];
+    var formId = option?.dataset.requestForm || "";
+    var form = formId ? document.getElementById(formId) : null;
+    document.querySelectorAll("form[data-request-form]").forEach(function (candidate) {
+      candidate.hidden = candidate !== form;
+    });
+    requestSave.disabled = !formId;
+    requestSave.setAttribute("form", formId);
+    if (form) form.action = option.dataset.saveUrl;
+    return form;
+  }
+
+  requestPicker?.addEventListener("change", function () {
+    var form = showRequestForm(requestPicker.value, false);
+    if (form) populateEditForm(form, { type: requestPicker.value }, "New Request");
+  });
+
   document.addEventListener("click", function (event) {
+    if (requestPicker && event.target.closest("[data-new-request]")) {
+      showRequestForm("", false);
+      document.getElementById("editTitle").textContent = "New Request";
+    }
     var edit = event.target.closest(".js-edit");
     if (edit) {
       var target = document.querySelector(
         edit.getAttribute("data-target") || "#editForm",
       );
       if (!target) return;
-      target.reset();
       var record = parse(edit, "record");
-      // Hidden input values survive reset; a new record must clear the edited ID.
-      target.querySelectorAll('input[type="hidden"][name="id"], input[type="hidden"][name="version"]').forEach(function (field) {
-        field.value = record[field.name] ?? "";
-      });
-      var lockedAttachment = !!record.locked_attachment;
-      target
-        .querySelectorAll('[name="revision_attachment"], [name="external_attachment[]"]')
-        .forEach(function (field) {
-          field.disabled = lockedAttachment;
-          var message = field.parentElement?.querySelector(
-            "[data-locked-attachment-message]",
-          );
-          if (message) message.hidden = !lockedAttachment;
-        });
-      target
-        .querySelectorAll('input[name="permissions[]"]')
-        .forEach(function (field) {
-          field.checked = (record.permission_ids || [])
-            .map(Number)
-            .includes(Number(field.value));
-        });
-      target
-        .querySelectorAll('input[name="specific_ids[]"]')
-        .forEach(function (field) {
-          field.checked = (record.specific_ids || [])
-            .map(Number)
-            .includes(Number(field.value));
-        });
-      target.querySelectorAll('input[name="user_ids[]"]').forEach(function (field) {
-        field.checked = (record.user_ids || []).map(Number).includes(Number(field.value));
-      });
-      target.querySelectorAll("[name]").forEach(function (field) {
-        if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
-        if (
-          field.name === "document_number" &&
-          field.tagName === "SELECT" &&
-          record[field.name] != null
-        ) {
-          field.dataset.pendingValue = record[field.name];
-        }
-        if (field.type === "checkbox")
-          field.checked = !!Number(record[field.name]);
-        else field.value = record[field.name] == null ? "" : record[field.name];
-      });
-      syncUserRoles(target, record.role_ids || [record.role_id]);
-      var heading = document.getElementById(
-        target.id === "stepForm"
-          ? "stepTitle"
-          : target.id === "assignmentForm"
-            ? "assignmentModalTitle"
-            : "editTitle",
-      );
-      if (heading)
-        heading.textContent = edit.getAttribute("data-title") || "Edit Record";
-      target.dataset.confirmed = "";
-      updateRequestActionFields();
-      if (target.id === "stepForm") updateStepApprover();
-      if (target.hasAttribute("data-location-upsert"))
-        updateLocationHierarchy();
-      if (target.hasAttribute("data-hardcopy-upsert"))
-        updateHardcopyHierarchy();
-      updateDocumentDomain();
-      updateDisposalReason();
-      updateHardcopyRequestAction();
-      if (target.id === "assignmentForm") updateDocumentDomain();
-      updateSoftcopyCategoryKind(target);
-      updateHardcopyRetention();
-      updateHardcopyTransfer();
-      syncSearchableControls(target);
+      var request = target.hasAttribute("data-request-form");
+      if (request) showRequestForm(record.type, true);
+      populateEditForm(target, record, request ? "Edit Request" : edit.getAttribute("data-title") || "Edit Record");
     }
 
     var view = event.target.closest(".js-view");
@@ -723,9 +755,10 @@
     }
   });
 
-  // One request modal is reused across all request types; hide irrelevant fields.
-  function updateRequestActionFields() {
-    var select = document.getElementById("reqType");
+  function updateRequestActionFields(form) {
+    var select = form?.hasAttribute("data-request-form")
+      ? form.querySelector('select[name="type"]')
+      : document.getElementById("reqType");
     if (!select || select.form.hasAttribute("data-scanned-form")) return;
     var allowed;
     try {
@@ -1083,7 +1116,7 @@
     }
   });
   document.addEventListener("change", function (event) {
-    if (event.target?.id !== "reqExternal") return;
+    if (!event.target?.matches("[data-request-external-source]")) return;
     var select = event.target;
     var record = {};
     try {
@@ -1150,7 +1183,8 @@
     if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
       updateRetentionPeriod(event.target.form);
     }
-    if (event.target?.id === "reqType") updateRequestActionFields();
+    if (event.target?.matches('#reqType, form[data-request-form] select[name="type"]'))
+      updateRequestActionFields(event.target.form);
     if (event.target?.id === "reqCategory" ||
         event.target?.matches("[data-series-number-checker]") ||
         event.target?.id === "reqNumber") {
@@ -1163,7 +1197,7 @@
     }
     if (event.target?.name === "document_domain") {
       updateDocumentDomain();
-      updateRequestActionFields();
+      updateRequestActionFields(event.target.form);
     }
     if (event.target?.hasAttribute("data-disposal-reason"))
       updateDisposalReason();
@@ -1171,6 +1205,7 @@
   updateDocumentDomain();
   updateDisposalReason();
   updateRequestActionFields();
+  document.querySelectorAll("form[data-request-form]").forEach(updateRequestActionFields);
   document.querySelectorAll("[data-softcopy-category-setup]").forEach(updateSoftcopyCategoryKind);
   document.querySelectorAll("form").forEach(updateRetentionPeriod);
 
@@ -1531,7 +1566,7 @@
   updateHardcopyHierarchy();
 
   function updateHardcopyTransfer(changed) {
-    var form = document.querySelector("#editForm[data-hardcopy-transfer]");
+    var form = document.querySelector("form[data-hardcopy-transfer]");
     if (!form) return;
     var source = form.querySelector("[data-transfer-source]");
     var area = form.querySelector('[data-transfer-level="area"]');

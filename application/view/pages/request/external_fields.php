@@ -1,18 +1,18 @@
-<div class="col-md-6">
-    <label class="form-label" for="reqType">External Document Action</label>
-    <select class="form-select" name="type" id="reqType" required autocomplete="off">
+<div class="d-none">
+    <label class="form-label" for="externalRequestType">External Document Action</label>
+    <select class="form-select" name="type" id="externalRequestType" required autocomplete="off">
         <option value="external_create">External Create Request</option>
         <option value="external_revise">External Revised Request</option>
     </select>
 </div>
 <div class="col-md-6">
-    <label class="form-label" for="reqSubject">Subject / Reason</label>
-    <textarea class="form-control" name="subject" id="reqSubject" rows="1" maxlength="255" required
+    <label class="form-label" for="externalRequestSubject">Subject / Reason</label>
+    <textarea class="form-control" name="subject" id="externalRequestSubject" rows="1" maxlength="255" required
         autocomplete="off"></textarea>
 </div>
 <div class="col-12" data-external-existing hidden>
     <label class="form-label" for="reqExternal">Existing External Document</label>
-    <select class="form-select" name="external_document_id" id="reqExternal" data-searchable disabled autocomplete="off">
+    <select class="form-select" name="external_document_id" id="reqExternal" data-request-external-source data-searchable disabled autocomplete="off">
         <option value="">Choose an external document</option>
         <?php foreach ($external_options as $item): ?>
             <option value="<?= (int) $item['id'] ?>"

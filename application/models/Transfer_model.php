@@ -15,10 +15,15 @@ class Transfer_model extends CI_Model
             ->group_end();
     }
 
-    public function pending($user, $page = 1, $limit = 10)
+    public function pending_count($user)
     {
         $this->scope($user);
-        $total = (int) $this->db->count_all_results();
+        return (int) $this->db->count_all_results();
+    }
+
+    public function pending($user, $page = 1, $limit = 10)
+    {
+        $total = $this->pending_count($user);
         $page = min(max(1, (int) $page), max(1, (int) ceil($total / $limit)));
         $this->scope($user);
         $rows = $this->details_query()

@@ -11,7 +11,7 @@ if ($softcopyDirect && !isset($signatory_options)) {
     $signatory_options = (new Signatory_reference_service())->options();
 }
 ?>
-<div class="col-md-6">
+<div class="<?= $softcopyDirect ? 'col-md-6' : 'd-none' ?>">
     <label class="form-label" for="reqType">Softcopy Action</label>
     <select class="form-select" name="type" id="reqType" required autocomplete="off">
         <option value="softcopy_create">Create Softcopy</option>

@@ -87,7 +87,7 @@
     var taskPrefix = new URL(
       modal.dataset.pendingUrl,
       window.location.origin,
-    ).pathname.replace(/notifications\/tasks$/, "my-tasks/");
+    ).pathname.replace(/notifications\/tasks$/, "my-tasks");
     tasks.forEach(function (task) {
       var item = document.createElement("li");
       item.className = "task-notification-item";
@@ -98,7 +98,7 @@
       var safe =
         url &&
         url.origin === window.location.origin &&
-        url.pathname.startsWith(taskPrefix);
+        (url.pathname === taskPrefix || url.pathname.startsWith(taskPrefix + "/"));
       var body = document.createElement(safe ? "a" : "div");
       body.className = "task-notification-link";
       if (safe) body.href = url.href;

@@ -41,9 +41,14 @@
     document.getElementById('editModal')?.addEventListener('show.bs.modal', update);
     form.addEventListener('reset', function () { setTimeout(update, 0); });
     var params = new URLSearchParams(window.location.search);
-    if (params.has('action')) {
-      var action = Array.from(type.options).find(function (option) { return option.value === params.get('action'); });
-      if (action) type.value = action.value;
+    var action = params.get('action');
+    var picker = document.getElementById('requestActionPicker');
+    var allowed = Array.from(type.options, function (option) { return option.value; });
+    if (action === 'scanned_create' && !allowed.includes(action))
+      action = 'scanned_category_create';
+    if (picker && allowed.includes(action)) {
+      picker.value = action;
+      picker.dispatchEvent(new Event('change', { bubbles: true }));
       doc.value = params.get('document') || '';
       fillDocument();
       update();
@@ -52,6 +57,4 @@
     update();
   }
   initialize();
-  // Register refreshes replace their content without a full page load.
-  new MutationObserver(initialize).observe(document.body, { childList: true, subtree: true });
 })();

@@ -140,6 +140,7 @@ $route['places/(:any)/deactivate']['POST'] = 'Places/deactivate/$1';
 */
 
 // View and manage the current user's requests.
+$route['my-requests']['GET'] = 'Requests/mine';
 $route['my-requests/(:any)']['GET'] = 'Requests/mine/$1';
 $route['my-requests/(:any)/save']['POST'] = 'Requests/save/$1';
 $route['my-requests/(:any)/submit']['POST'] = 'Requests/submit/$1';
@@ -154,6 +155,7 @@ $route['my-requests/(:any)/delete']['POST'] = 'Requests/delete/$1';
 */
 
 // View assigned tasks and submit workflow decisions.
+$route['my-tasks']['GET'] = 'Requests/tasks';
 $route['my-tasks/(:any)']['GET'] = 'Requests/tasks/$1';
 $route['my-tasks/(:any)/decide']['POST'] = 'Requests/decide/$1';
 

@@ -49,9 +49,9 @@
       var prefix = new URL(
         root.dataset.notificationList,
         window.location.href,
-      ).pathname.replace(/notifications\/inbox$/, "my-tasks/");
+      ).pathname.replace(/notifications\/inbox$/, "my-tasks");
       return url.origin === window.location.origin &&
-        url.pathname.startsWith(prefix)
+        (url.pathname === prefix || url.pathname.startsWith(prefix + "/"))
         ? url.href
         : null;
     } catch (_) {

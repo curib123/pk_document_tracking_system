@@ -69,12 +69,9 @@ class Notification_model extends CI_Model
                 $tasks[$tab] += (int) $row['total'];
         }
 
-        // Physical handoffs also live under My Tasks > Hardcopy Transfer.
-        $handoffs = $this->db->from('transfers')->group_start()
-            ->group_start()->where('status', 'for_transfer')->where('current_holder_id', $userId)->group_end()
-            ->or_group_start()->where('status', 'in_transit')->where('recipient_id', $userId)->group_end()
-            ->group_end()->count_all_results();
-        $tasks['hardcopy-transfer'] += (int) $handoffs;
+        // Physical handoffs are listed in My Tasks alongside workflow approvals.
+        $this->load->model('Transfer_model');
+        $tasks['hardcopy-transfer'] += $this->Transfer_model->pending_count($user);
 
         return [
             'requests' => $requests,
@@ -132,7 +129,7 @@ class Notification_model extends CI_Model
                 'title' => $this->taskTitle($row),
                 'request_reference' => $row['reference'],
                 'label' => $row['label'],
-                'url' => 'my-tasks/' . $tab . '?' . http_build_query(['q' => $row['reference']])
+                'url' => 'my-tasks?' . http_build_query(['request_category' => $tab, 'q' => $row['reference']])
             ];
         }
         return [

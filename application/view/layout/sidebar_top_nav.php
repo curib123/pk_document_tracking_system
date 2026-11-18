@@ -11,17 +11,6 @@ $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
 
-$requestRoutes = [
-    'softcopy' => 'Softcopy Request',
-    'external' => 'External Request',
-    'scanned' => 'Scanned Request',
-    'hardcopy' => 'Hardcopy Request',
-    'hardcopy-transfer' => 'Transfer Request',
-    'hardcopy-disposal' => 'Disposal Request',
-    'access-grant' => ' Access Request',
-    'document-assign' => ' Assignment Request'
-];
-
 // Show Master Data only when at least one place module is accessible.
 $anyPlace = FALSE;
 
@@ -38,8 +27,8 @@ $navModule = 'Overview';
 foreach ([
     'documents/'   => 'Document Management',
     'places'       => 'Master Data',
-    'my-requests/' => 'Requests & Workflow',
-    'my-tasks/'    => 'Requests & Workflow',
+    'my-requests' => 'Requests & Workflow',
+    'my-tasks'    => 'Requests & Workflow',
     'admin/'       => 'System Administration',
 ] as $prefix => $label) {
     if (strpos($path, $prefix) === 0) {
@@ -138,42 +127,19 @@ $navPage = end($navParts);
                 ] as $section => [$sectionLabel, $sectionIcon, $countLabel]): ?>
                     <?php
                     if ($section === 'requests' && !$visible('requests')) continue;
-                    $sectionPrefix = 'my-' . $section . '/';
-                    $sectionActive = $active($sectionPrefix) !== '';
+                    $sectionPath = 'my-' . $section;
+                    $sectionActive = $active($sectionPath);
                     $sectionCount = (int) ($navigation_counts[$section . '_total'] ?? 0);
                     ?>
-                    <details class="side-group" <?= $sectionActive ? 'open' : '' ?>>
-                        <summary class="side-link side-group-toggle<?= $sectionActive ? ' active' : '' ?>"
-                            aria-controls="sidebar-<?= $section ?>-routes">
-                            <i class="fa-solid <?= $sectionIcon ?>" aria-hidden="true"></i>
-                            <span class="side-group-label"><?= $sectionLabel ?></span>
-                            <?php if ($sectionCount > 0): ?>
-                                <span class="nav-count"
-                                    aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
-                            <?php endif; ?>
-                            <i class="fa-solid fa-chevron-down side-group-chevron" aria-hidden="true"></i>
-                        </summary>
-                        <ul class="side-submenu" id="sidebar-<?= $section ?>-routes" aria-label="<?= $sectionLabel ?> categories">
-                            <?php foreach ($requestRoutes as $slug => $routeLabel): ?>
-                                <?php
-                                if ($section === 'requests' && $slug === 'hardcopy') continue;
-                                $route = $sectionPrefix . $slug;
-                                $routeActive = $path === $route || strpos($path, $route . '/') === 0;
-                                $routeCount = (int) ($navigation_counts[$section][$slug] ?? 0);
-                                ?>
-                                <li>
-                                    <a class="side-link side-sublink<?= $routeActive ? ' active' : '' ?>"
-                                        href="<?= site_url($route) ?>" <?= $routeActive ? 'aria-current="page"' : '' ?>>
-                                        <span class="side-sublink-label"><?= html_escape($routeLabel) ?></span>
-                                        <?php if ($routeCount > 0): ?>
-                                            <span class="nav-count"
-                                                aria-label="<?= $routeCount ?> <?= $countLabel ?>"><?= $routeCount ?></span>
-                                        <?php endif; ?>
-                                    </a>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                    </details>
+                    <a class="side-link<?= $sectionActive ?>" href="<?= site_url($sectionPath) ?>"
+                        <?= $sectionActive ? 'aria-current="page"' : '' ?>>
+                        <i class="fa-solid <?= $sectionIcon ?>" aria-hidden="true"></i>
+                        <?= $sectionLabel ?>
+                        <?php if ($sectionCount > 0): ?>
+                            <span class="nav-count"
+                                aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
+                        <?php endif; ?>
+                    </a>
                 <?php endforeach; ?>
             <?php endif; ?>
 

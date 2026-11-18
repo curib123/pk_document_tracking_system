@@ -8,6 +8,8 @@ $dt_filter_values = $dt_filter_values ?? ['status' => $dt_filter];
 $dt_sort = $dt_sort ?? '';
 $dt_dir = $dt_dir ?? 'asc';
 $dt_sortable = $dt_sortable ?? [];
+$dt_create_form = $dt_create_form ?? '#editForm';
+$dt_filter_labels = $dt_filter_labels ?? [];
 $dt_extra_params = $dt_extra_params ?? [];
 $requestedLayout = $dt_extra_params['layout'] ?? 'table';
 $dt_layout = $requestedLayout === 'grid' ? 'grid' :
@@ -43,8 +45,8 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
             <?php endforeach; ?>
         </form>
         <?php if (!empty($dt_create)): ?>
-            <button type="button" class="btn btn-primary js-edit  text-nowrap" data-bs-toggle="modal"
-                data-bs-target="#editModal" data-target="#editForm" data-record="{}"
+            <button type="button" class="btn btn-primary text-nowrap<?= $dt_create_form === '' ? '' : ' js-edit' ?>" data-bs-toggle="modal"
+                data-bs-target="#editModal" <?= $dt_create_form === '' ? 'data-new-request' : 'data-target="' . html_escape($dt_create_form) . '" data-record="{}"' ?>
                 data-title="<?= html_escape($dt_create) ?>">
                 <i class="fa-solid fa-plus me-1"></i> <?= html_escape($dt_create) ?>
             </button>
@@ -53,7 +55,7 @@ $dt_label = $dt_total ? (($dt_page - 1) * $dt_limit + 1) . '–' . min($dt_page 
     <div class="table-filters">
         <?php foreach ($dt_filters as $field => $options): ?>
             <select form="tableFilter" class="form-select" name="<?= html_escape($field) ?>"
-                aria-label="<?= html_escape(ucfirst($field)) ?>" data-auto-submit autocomplete="off">
+                aria-label="<?= html_escape($dt_filter_labels[$field] ?? ucfirst($field)) ?>" data-auto-submit autocomplete="off">
                 <?php foreach ($options as $value => $label): ?>
                     <option value="<?= html_escape((string) $value) ?>" <?= (string) ($dt_filter_values[$field] ?? '') === (string) $value ? 'selected' : '' ?>><?= html_escape($label) ?></option>
                 <?php endforeach; ?>

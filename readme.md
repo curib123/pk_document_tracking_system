@@ -38,8 +38,9 @@ Search, Table and Folder views, filters, notifications, and light/dark mode help
 with daily work. A browser installation option is available when supported;
 the system still needs a network connection.
 
-Expand **My Requests** or **My Tasks** in the sidebar to open a request category.
-Each category has its own route; the current category stays highlighted.
+Open **My Requests** or **My Tasks** in the sidebar to see all your records in one table.
+Use the category, action, status, or date filters to narrow the results. Select **New Request**
+and choose an action to open the corresponding draft form.
 Count badges appear only when there is at least one draft, returned request, or pending task.
 
 Hardcopy registration and editing use direct actions. New hardcopy creation or

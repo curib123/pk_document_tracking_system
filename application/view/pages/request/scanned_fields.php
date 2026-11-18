@@ -1,13 +1,13 @@
 <div class="col-12"><p class="text-secondary mb-0">Every upload, update, deletion and new category requires approval through the configured workflow (DCO by default). Save a draft, then submit it. Approved records stay unchanged while a request is pending.</p></div>
-<div class="col-md-6">
-  <label class="form-label" for="reqType">Request Action</label>
-  <select class="form-select" name="type" id="reqType" required>
+<div class="d-none">
+  <label class="form-label" for="scannedRequestType">Request Action</label>
+  <select class="form-select" name="type" id="scannedRequestType" required>
     <?php foreach (['scanned_create' => 'Upload Scanned Document', 'scanned_update' => 'Update Scanned Document', 'scanned_delete' => 'Delete Scanned Document', 'scanned_category_create' => 'Create Category / Folder'] as $value => $label): ?>
       <?php if (in_array($value, $allowed_request_types, TRUE)): ?><option value="<?= $value ?>"><?= $label ?></option><?php endif; ?>
     <?php endforeach; ?>
   </select>
 </div>
-<div class="col-md-6"><label class="form-label" for="reqSubject">Subject</label><input class="form-control" id="reqSubject" name="subject" maxlength="255" required></div>
+<div class="col-md-6"><label class="form-label" for="scannedRequestSubject">Subject</label><input class="form-control" id="scannedRequestSubject" name="subject" maxlength="255" required></div>
 <div class="col-12" data-scanned-for="scanned_update scanned_delete">
   <label class="form-label" for="scanDocument">Existing Scanned Document</label>
   <select class="form-select" id="scanDocument" name="scanned_document_id" data-scanned-required>
