@@ -124,6 +124,7 @@ try:
         page.get_by_role('button', name='New Request').click()
         picker = page.locator('#requestActionPicker')
         expect(picker).to_have_value('')
+        expect(page.get_by_role('button', name='Save Draft', exact=True)).to_be_disabled()
         expect(page.get_by_role('button', name='Submit Request', exact=True)).to_be_disabled()
         expect(picker.locator('option[value=external_create]')).to_have_count(0)
         picker.select_option('softcopy_create')
@@ -339,7 +340,9 @@ try:
             modal.locator('#requestActionPicker').select_option(action)
             active_form = modal.locator('form[data-request-form]:visible')
             expect(active_form).to_have_attribute('id', 'request-form-' + form_category)
-            expect(active_form).to_have_attribute('action', re.compile('/my-requests/' + category + '/save-and-submit$'))
+            expect(active_form).to_have_attribute('action', re.compile('/my-requests/' + category + '/save$'))
+            expect(modal.get_by_role('button', name='Submit Request')).to_have_attribute(
+                'formaction', re.compile('/my-requests/' + category + '/save-and-submit$'))
             expect(active_form.locator('[name=type]')).to_have_value(action)
         assert not errors, errors
         browser.close()

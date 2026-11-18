@@ -643,6 +643,7 @@
   }
 
   var requestPicker = document.getElementById("requestActionPicker");
+  var requestFormSaveDraft = document.getElementById("requestFormSaveDraft");
   var requestFormSubmit = document.getElementById("requestFormSubmit");
   function showRequestForm(action, editing) {
     requestPicker.value = action;
@@ -653,9 +654,14 @@
     document.querySelectorAll("form[data-request-form]").forEach(function (candidate) {
       candidate.hidden = candidate !== form;
     });
-    requestFormSubmit.disabled = !formId;
-    requestFormSubmit.setAttribute("form", formId);
-    if (form) form.action = option.dataset.requestUrl;
+    requestFormSaveDraft.disabled = !form;
+    requestFormSaveDraft.setAttribute("form", formId);
+    if (requestFormSubmit) {
+      requestFormSubmit.disabled = !form;
+      requestFormSubmit.setAttribute("form", formId);
+      requestFormSubmit.setAttribute("formaction", option?.dataset.requestSubmitUrl || "");
+    }
+    if (form) form.action = option.dataset.requestDraftUrl;
     return form;
   }
 
@@ -1922,6 +1928,7 @@
 
   var pendingForm = null;
   var pendingParent = null;
+  var pendingSubmitter = null;
   function showConfirmation() {
     window.bootstrap.Modal.getOrCreateInstance(
       document.getElementById("confirmModal"),
@@ -1935,6 +1942,7 @@
       }
       pendingParent = null;
       pendingForm = null;
+      pendingSubmitter = null;
     });
   // Forms that must return to the current register view (table/folder layout,
   // open folder, filters) carry it in return_query.
@@ -1949,8 +1957,9 @@
     if (!window.bootstrap) return; // Server also checks confirmed=yes.
     event.preventDefault();
     pendingForm = form;
+    pendingSubmitter = event.submitter;
     document.getElementById("confirmMessage").textContent =
-      form.getAttribute("data-confirm") || "Continue?";
+      pendingSubmitter?.dataset.confirm || form.dataset.confirm || "Continue?";
     pendingParent = form.closest(".modal.show");
     if (pendingParent) {
       pendingParent.addEventListener("hidden.bs.modal", showConfirmation, {
@@ -1967,6 +1976,7 @@
     confirmButton.addEventListener("click", function () {
       if (!pendingForm) return;
       var form = pendingForm;
+      var submitter = pendingSubmitter;
       pendingForm = null;
       window.bootstrap.Modal.getOrCreateInstance(
         document.getElementById("confirmModal"),
@@ -1974,7 +1984,7 @@
       form.dataset.confirmed = "yes";
       var flag = form.querySelector('[name="confirmed"]');
       if (flag) flag.value = "yes";
-      form.requestSubmit();
+      form.requestSubmit(submitter || undefined);
     });
 
   // A saved workflow returns to the same editor, refreshed with the latest

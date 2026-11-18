@@ -38,7 +38,8 @@ foreach ($allowed_request_types as $type) {
                 <?php foreach ($options as $type): ?>
                   <option value="<?= html_escape($type) ?>"
                     data-request-form="request-form-<?= $category === 'document-assign' ? 'access-grant' : $category ?>"
-                    data-request-url="<?= site_url('my-requests/' . $category . ($submitFromModal ? '/save-and-submit' : '/save')) ?>">
+                    data-request-draft-url="<?= site_url('my-requests/' . $category . '/save') ?>"
+                    <?php if ($submitFromModal): ?>data-request-submit-url="<?= site_url('my-requests/' . $category . '/save-and-submit') ?>"<?php endif; ?>>
                     <?= html_escape($actionLabels[$type]) ?>
                   </option>
                 <?php endforeach; ?>
@@ -50,7 +51,7 @@ foreach ($allowed_request_types as $type) {
           <form id="request-form-<?= $group ?>" method="post" enctype="multipart/form-data" hidden
             data-request-form data-allowed-request-types="<?= html_escape(json_encode($formTypes)) ?>"
             <?= $group === 'scanned' ? 'data-scanned-form' : ($group === 'hardcopy-transfer' ? 'data-hardcopy-transfer' : '') ?>
-            data-confirm="<?= $submitFromModal ? 'Submit this request for approval?' : 'Save request draft?' ?>" autocomplete="off">
+            data-confirm="Save request draft?" autocomplete="off">
             <div class="row g-3">
               <?php
               $fieldData = match ($group) {
@@ -77,7 +78,12 @@ foreach ($allowed_request_types as $type) {
       </div>
       <div class="modal-footer">
         <button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-        <button class="btn btn-primary" id="requestFormSubmit" type="submit" disabled><?= $submitFromModal ? 'Submit Request' : 'Save Draft' ?></button>
+        <button class="btn <?= $submitFromModal ? 'btn-outline-primary' : 'btn-primary' ?>" id="requestFormSaveDraft"
+          type="submit" disabled>Save Draft</button>
+        <?php if ($submitFromModal): ?>
+          <button class="btn btn-primary" id="requestFormSubmit" type="submit"
+            data-confirm="Submit this request for approval?" disabled>Submit Request</button>
+        <?php endif; ?>
       </div>
     </div>
   </div>

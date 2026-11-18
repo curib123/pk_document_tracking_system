@@ -94,8 +94,10 @@ def exercise(browser, base):
     expect(modal.locator('#requestActionPicker')).to_have_value(ACTION)
     expect(modal.locator('#reqSoftcopy')).to_have_value('1')
     expect(modal.locator('#revisionFile')).to_be_hidden()
+    expect(modal.get_by_role('button', name='Save Draft', exact=True)).to_be_enabled()
     modal.get_by_label('Subject / Reason').fill('Editable copy for procedure changes')
     modal.get_by_role('button', name='Submit Request').click()
+    expect(requester.locator('#confirmMessage')).to_have_text('Submit this request for approval?')
     requester.locator('#confirmProceed').click()
     expect(requester.locator('#appAlertModal')).to_contain_text('Request submitted for approval')
     dismiss(requester)
@@ -146,9 +148,19 @@ def exercise(browser, base):
     template_id = sql("SELECT id FROM files WHERE purpose='revision_template'")
     assert dco.request.get(base + '/files/download/' + template_id).status == 403
 
-    post(requester, base + '/my-requests/softcopy/save', type=ACTION, softcopy_id=1,
-         subject='Reject this template request')
+    requester.goto(base + '/documents/softcopy?layout=table&folder=all&q=Handwashing')
+    requester.get_by_role('link', name=LABEL, exact=True).first.click()
+    modal.get_by_label('Subject / Reason').fill('Reject this template request')
+    modal.get_by_role('button', name='Submit Request').click()
+    requester.locator('#confirmModal').get_by_role('button', name='Cancel', exact=True).click()
+    expect(modal).to_be_visible()
+    modal.get_by_role('button', name='Save Draft', exact=True).click()
+    expect(requester.locator('#confirmMessage')).to_have_text('Save request draft?')
+    requester.locator('#confirmProceed').click()
+    expect(requester.locator('#appAlertModal')).to_contain_text('Request draft saved.')
+    dismiss(requester)
     rejected = sql(f"SELECT id FROM requests WHERE type='{ACTION}' AND status='draft'")
+    assert sql(f'SELECT COUNT(*) FROM workflow_history WHERE request_id={rejected}') == '0'
     submit_url = base + '/my-requests/softcopy/save-and-submit'
     sql(f'UPDATE workflows SET active=0 WHERE id={workflow_id}')
     for post_data in ({}, {'id': rejected}):
@@ -164,6 +176,14 @@ def exercise(browser, base):
     row.get_by_role('button', name='Edit', exact=True).click()
     expect(modal.locator('#requestActionPicker')).to_be_disabled()
     expect(modal.get_by_label('Subject / Reason')).to_have_value('Reject this template request')
+    modal.get_by_label('Subject / Reason').fill('Updated template draft')
+    modal.get_by_role('button', name='Save Draft', exact=True).click()
+    requester.locator('#confirmProceed').click()
+    expect(requester.locator('#appAlertModal')).to_contain_text('Request draft saved.')
+    dismiss(requester)
+    assert sql(f"SELECT status,JSON_UNQUOTE(JSON_EXTRACT(payload,'$.subject')) FROM requests WHERE id={rejected}") == (
+        'draft\tUpdated template draft')
+    requester.get_by_role('row').filter(has_text='Updated template draft').get_by_role('button', name='Edit', exact=True).click()
     modal.get_by_role('button', name='Submit Request').click()
     requester.locator('#confirmProceed').click()
     expect(requester.locator('#appAlertModal')).to_contain_text('Request submitted for approval')
@@ -199,6 +219,7 @@ def exercise(browser, base):
     requester.get_by_role('button', name='New Request').click()
     modal.locator('#requestActionPicker').select_option(ACTION)
     expect(modal.get_by_role('button', name='Save Draft')).to_be_enabled()
+    expect(modal.get_by_role('button', name='Submit Request')).to_have_count(0)
 
 
 def main():

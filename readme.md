@@ -40,8 +40,8 @@ the system still needs a network connection.
 
 Open **My Requests** or **My Tasks** in the sidebar to see all your records in one table.
 Use the category, action, status, or date filters to narrow the results. Select **New Request**
-and choose an action. **Submit Request** sends the form directly to the approval workflow.
-Roles without submission permission can save a draft.
+and choose an action. **Save Draft** keeps the request in My Requests for later editing.
+If you have submission permission, **Submit Request** sends it directly to the approval workflow.
 Count badges appear only when there is at least one draft, returned request, or pending task.
 
 Hardcopy registration and editing use direct actions. New hardcopy creation or
