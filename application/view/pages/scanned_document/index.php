@@ -56,18 +56,17 @@ $layoutLink = static fn($target) => site_url('documents/scanned') . '?' . http_b
     'sort' => $dt_sort, 'dir' => $dt_dir, 'folder' => $folder_browser['folder'], 'layout' => $target, 'page' => 1
 ]);
 ?>
-<section class="workspace-card p-3 mb-3">
-  <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-    <h2 class="h5 mb-0 me-auto">Scanned Documents</h2>
+
+<div class="document-layout-bar">
+  <div class="document-layout-description">
+    <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
     <?php if (isset($permissions['*']) || (!empty($permissions['requests']['add']) && ($can('request') || !empty($permissions['scanned_categories']['request'])))): ?>
       <a class="btn btn-primary" href="<?= site_url('my-requests?request_category=scanned&action=scanned_create') ?>">Upload / Request Category</a>
     <?php endif; ?>
     <a class="btn btn-light" href="<?= site_url('my-requests?request_category=scanned') ?>">My Scanned Requests</a>
     <button class="btn btn-light" type="button" data-scan-alarm-enable>Enable reminder sound</button>
   </div>
-</section>
-<div class="document-layout-bar">
-  <div class="document-layout-description"><strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Scanned Document Browser</strong></div>
+  </div>
   <?php $this->load->view('reusable_components/document_layout_switcher', compact('activeLayout', 'layoutLink')); ?>
 </div>
 <div class="document-register-listing" data-doc-domain="scanned" data-layout="<?= html_escape($activeLayout) ?>">
