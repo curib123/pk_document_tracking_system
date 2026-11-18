@@ -266,7 +266,8 @@ class Requests extends MY_Controller
                 $this->user,
                 (string) $this->input->post('decision'),
                 (string) $this->input->post('remark'),
-                $_FILES['final_file'] ?? NULL
+                $_FILES['final_file'] ?? NULL,
+                $this->input->post('template_expires_on')
             );
             foreach ($lockedFiles as $file) {
                 $this->audit_event('files/document-lock', 'files:' . $file['file_id'], [

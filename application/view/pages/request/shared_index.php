@@ -79,11 +79,17 @@ foreach ($rows as $row) {
   $tab = $type_tabs[$row['type']];
   $isTemplate = $row['type'] === Request_policy::REVISION_TEMPLATE;
   $templateDownload = '';
+  $templateExpiresOn = NULL;
+  $templateExpired = FALSE;
   if ($isTemplate && !$task && $row['status'] === 'approved' && $row['softcopy_status'] === 'active' &&
       (isset($permissions['*']) || !empty($permissions['softcopy'][Request_policy::REVISION_TEMPLATE_ACTION]))) {
     $result = json_decode((string) $row['result'], TRUE);
-    if (!empty($result['template_file_id']))
-      $templateDownload = 'files/revision-template/' . (int) $row['id'];
+    if (!empty($result['template_file_id'])) {
+      $templateExpiresOn = $result['template_expires_on'] ?? NULL;
+      $templateExpired = Request_policy::revision_template_expired($templateExpiresOn);
+      if (!$templateExpired)
+        $templateDownload = 'files/revision-template/' . (int) $row['id'];
+    }
   }
   $decodedPayload = json_decode((string) ($row['payload'] ?? ''), TRUE);
   $payload = is_array($decodedPayload) ? $decodedPayload : [];
@@ -230,10 +236,14 @@ foreach ($rows as $row) {
     ];
   if ($isTemplate) {
     $requestSections[1]['title'] = 'Selected Softcopy Document';
-    if ($templateDownload)
+    if ($templateDownload || $templateExpired)
       $requestSections[] = [
         'key' => 'files', 'title' => 'Revision Template',
-        'links' => [['label' => 'Revision Template', 'url' => site_url($templateDownload)]]
+        'description' => $templateDownload && $templateExpiresOn
+          ? "Download available through {$templateExpiresOn} (Philippine time)." : '',
+        'fields' => $templateDownload ? ['Editable revision template' => ''] : [],
+        'links' => $templateDownload ? [['url' => site_url($templateDownload)]] : [],
+        'empty' => $templateExpired ? "The download expired after {$templateExpiresOn} (Philippine time)." : ''
       ];
   } elseif (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
     $filesSection = [

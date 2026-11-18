@@ -51,6 +51,22 @@ final class Request_policy
         return $roleId;
     }
 
+    public static function validate_revision_template_expiry($value): string
+    {
+        if (!is_string($value) || !preg_match('/\A\d{4}-\d{2}-\d{2}\z/', $value) ||
+            !($date = DateTimeImmutable::createFromFormat('!Y-m-d', $value)) ||
+            $date->format('Y-m-d') !== $value || self::revision_template_expired($value)) {
+            throw new DomainException('Choose a valid download expiry date of today or later.');
+        }
+        return $value;
+    }
+
+    public static function revision_template_expired(?string $expiresOn): bool
+    {
+        // Older approvals have no expiry. New approvals include the whole selected day.
+        return $expiresOn !== NULL && $expiresOn < date('Y-m-d');
+    }
+
     public static function editable(?array $request, int $actor, string $type, array $post): void
     {
         if (

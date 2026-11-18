@@ -167,6 +167,12 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                             <span data-final-document-copy>Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed.</span>
                             <span data-template-copy hidden>Word (.docx), Excel (.xlsx), or text (.txt), up to 15 MB. The requester can download it after approval.</span>
                         </small>
+                        <div class="mt-3" id="actionTemplateExpiryFields" hidden>
+                            <label for="actionTemplateExpiry" class="form-label">Download expiry date <span class="text-danger">(required)</span></label>
+                            <input class="form-control" type="date" id="actionTemplateExpiry" name="template_expires_on"
+                                min="<?= date('Y-m-d') ?>" aria-describedby="actionTemplateExpiryHelp" disabled>
+                            <small class="form-text" id="actionTemplateExpiryHelp">The requester can download the template through this date, Philippine time.</small>
+                        </div>
                     </div>
                     <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                         <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'directDisposal']); ?>

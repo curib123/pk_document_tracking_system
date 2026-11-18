@@ -95,7 +95,8 @@ class File_model extends CI_Model
 
     public function revision_template(int $requestId, int $requesterId): ?array
     {
-        return $this->db->select('f.*')->from('requests r')
+        return $this->db->select("f.*, JSON_UNQUOTE(JSON_EXTRACT(r.result, '$.template_expires_on')) AS template_expires_on", FALSE)
+            ->from('requests r')
             ->join('softcopy_documents d', 'd.id=r.softcopy_id')
             ->join('files f', "f.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result, '$.template_file_id')) AS UNSIGNED)
                 AND f.document_id=d.id", 'inner', FALSE)

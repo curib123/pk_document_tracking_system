@@ -1,4 +1,5 @@
 """Exercise revision template approval and download in an isolated MariaDB database."""
+from datetime import datetime, timedelta, timezone
 import io
 import os
 from pathlib import Path
@@ -113,9 +114,17 @@ def exercise(browser, base):
     task_notice.get_by_role('button', name='Close notification').click()
     expect(task_notice).to_be_hidden()
     decision_url = base + '/my-tasks/softcopy/decide'
+    today = datetime.now(timezone(timedelta(hours=8))).date()
+    yesterday = today - timedelta(days=1)
+    template = document_template()
+    template_upload = {'name': 'revision-template.docx', 'mimeType': 'application/octet-stream', 'buffer': template}
     post(outsider, decision_url, id=request_id, decision='approved')
     post(dco, decision_url, id=request_id, decision='approved')
-    post(dco, decision_url, id=request_id, decision='approved',
+    for expiry_fields in ({}, {'template_expires_on': str(yesterday)}, {'template_expires_on': '2099-02-30'}):
+        post(dco, decision_url, id=request_id, decision='approved', files={'final_file': template_upload}, **expiry_fields)
+        assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'submitted'
+        assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '0'
+    post(dco, decision_url, id=request_id, decision='approved', template_expires_on=str(today),
          files={'final_file': {'name': 'readonly.pdf', 'mimeType': 'application/pdf', 'buffer': b'%PDF-1.4\n'}})
     assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'submitted'
     assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '0'
@@ -131,11 +140,16 @@ def exercise(browser, base):
     upload = approval.get_by_label('Editable revision template')
     expect(upload).to_have_attribute('required', '')
     expect(approval.locator('#actionFinalDownload')).to_be_hidden()
-    template = document_template()
-    upload.set_input_files({'name': 'revision-template.docx', 'mimeType': 'application/octet-stream', 'buffer': template})
+    expiry = approval.get_by_label('Download expiry date')
+    expect(expiry).to_have_attribute('required', '')
+    expect(expiry).to_have_attribute('min', str(today))
+    upload.set_input_files(template_upload)
+    assert not approval.locator('form').evaluate('(form) => form.checkValidity()')
+    expiry.fill(str(today))
     approval.get_by_role('button', name='Upload and Approve').click()
     expect(dco.locator('#appAlertModal')).to_contain_text('Approval decision recorded.')
     assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'approved'
+    assert sql(f"SELECT JSON_UNQUOTE(JSON_EXTRACT(result,'$.template_expires_on')) FROM requests WHERE id={request_id}") == str(today)
     assert sql('SELECT current_revision_id FROM softcopy_documents WHERE id=1') == '1'
     requester.reload()
     download = requester.get_by_role('link', name='Download Template', exact=True)
@@ -147,6 +161,27 @@ def exercise(browser, base):
     assert dco.request.get(download_url).status == 404
     template_id = sql("SELECT id FROM files WHERE purpose='revision_template'")
     assert dco.request.get(base + '/files/download/' + template_id).status == 403
+
+    approved_row = requester.get_by_role('row').filter(has_text='Editable copy for procedure changes')
+    approved_row.get_by_role('button', name='View', exact=True).click()
+    details = requester.locator('#viewModal')
+    details.get_by_role('tab', name='Revision Template').click()
+    expect(details.get_by_role('tabpanel', name='Revision Template')).to_contain_text(f'Download available through {today}')
+    expect(details.get_by_role('link', name='Download Editable revision template')).to_be_visible()
+
+    # A previously shared URL is blocked even if the requester kept it open.
+    sql(f"UPDATE requests SET result=JSON_SET(result,'$.template_expires_on','{yesterday}') WHERE id={request_id}")
+    assert requester.request.get(download_url).status == 410
+    assert outsider.request.get(download_url).status == 404
+    requester.reload()
+    expect(download).to_have_count(0)
+    approved_row.get_by_role('button', name='View', exact=True).click()
+    details.get_by_role('tab', name='Revision Template').click()
+    expect(details.get_by_role('tabpanel', name='Revision Template')).to_contain_text(f'The download expired after {yesterday}')
+    expect(details.get_by_role('link', name='Download Editable revision template')).to_have_count(0)
+
+    sql(f"UPDATE requests SET result=JSON_REMOVE(result,'$.template_expires_on') WHERE id={request_id}")
+    assert requester.request.get(download_url).body() == template
 
     requester.goto(base + '/documents/softcopy?layout=table&folder=all&q=Handwashing')
     requester.get_by_role('link', name=LABEL, exact=True).first.click()

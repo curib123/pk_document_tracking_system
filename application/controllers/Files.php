@@ -425,6 +425,10 @@ class Files extends MY_Controller
             show_404();
             return;
         }
+        if (Request_policy::revision_template_expired($file['template_expires_on'])) {
+            show_error('This revision template download has expired.', 410);
+            return;
+        }
         $this->send_original_download($file, 'files/revision-template', ['request_id' => (int) $requestId]);
     }
 

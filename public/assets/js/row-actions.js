@@ -64,6 +64,10 @@
         copy.hidden = needsTemplate;
       });
       finalBox.querySelector("[data-template-copy]").hidden = !needsTemplate;
+      document.getElementById("actionTemplateExpiryFields").hidden = !needsTemplate;
+      var expiry = document.getElementById("actionTemplateExpiry");
+      expiry.disabled = !needsTemplate;
+      expiry.required = needsTemplate;
       var dl = document.getElementById("actionFinalDownload");
       if (dl) {
         var url = action.getAttribute("data-final-url") || "";

@@ -1066,13 +1066,16 @@ class Request_service
 
     private $final_storage = [];
 
-    private function approve_revision_template(array $request, array $graph, array $user, $upload, File_service $files, string $approvedAt): array
+    private function approve_revision_template(
+        array $request, array $graph, array $user, $upload, File_service $files, string $approvedAt, $templateExpiry
+    ): array
     {
         $roleId = Request_policy::revision_template_dco_role($this->ci->db, $graph);
         if (!User_roles::matches($user, $roleId))
             throw new DomainException('Only the Document Control Officer may approve and release the template.');
         if (!$this->has_uploaded_attachment($upload) || is_array($upload['name'] ?? NULL))
             throw new DomainException('Upload one editable revision template to approve this request.');
+        $expiresOn = Request_policy::validate_revision_template_expiry($templateExpiry);
         $document = $this->ci->db->query('SELECT id, status FROM softcopy_documents WHERE id=? FOR UPDATE', [
             (int) $request['softcopy_id']
         ])->row_array();
@@ -1080,10 +1083,10 @@ class Request_service
             throw new DomainException('The requested softcopy document is no longer active.');
         $fileId = $files->stage_revision_template((int) $document['id'], (int) $user['id'], $upload, $approvedAt);
         $this->final_storage[] = $files->last_storage;
-        return ['template_file_id' => $fileId];
+        return ['template_file_id' => $fileId, 'template_expires_on' => $expiresOn];
     }
 
-    public function decide($tab, $id, $user, $decision, $comment, $finalUpload = NULL)
+    public function decide($tab, $id, $user, $decision, $comment, $finalUpload = NULL, $templateExpiry = NULL)
     {
         if (!in_array($decision, ['approved', 'rejected', 'returned'], TRUE))
             throw new DomainException('Invalid decision.');
@@ -1159,7 +1162,7 @@ class Request_service
                     $this->ci->db->where('id', $id)->update('requests', ['current_node' => $next['node_key']]);
                 } else {
                     $result = $template
-                        ? $this->approve_revision_template($r, $graph, $user, $finalUpload, $fileService, $approvedAt)
+                        ? $this->approve_revision_template($r, $graph, $user, $finalUpload, $fileService, $approvedAt, $templateExpiry)
                         : $this->applyApproved($r, (int) $user['id']);
                     if (in_array($r['type'], ['softcopy_revise', 'softcopy_cancel'], TRUE))
                         $cleanupDocumentId = (int) $r['softcopy_id'];
