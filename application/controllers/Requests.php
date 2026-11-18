@@ -77,8 +77,15 @@ class Requests extends MY_Controller
             'show_request_modal' => !$tableOnly && $requestTypes &&
                 ($this->can('requests', 'add') || $this->can('requests', 'edit'))
         ];
-        if ($data['show_request_modal'])
+        if ($data['show_request_modal']) {
             $data += $this->request_form_data($requestTypes);
+            $documentId = (int) $this->input->get('revision_template_for');
+            if ($documentId > 0 && in_array(Request_policy::REVISION_TEMPLATE, $requestTypes, TRUE) &&
+                $this->can('requests', 'add') &&
+                in_array($documentId, array_map('intval', array_column($data['softcopy_options'], 'id')), TRUE)) {
+                $data['revision_template_document_id'] = $documentId;
+            }
+        }
 
         $this->render(
             $task ? 'My Tasks' : 'My Requests',

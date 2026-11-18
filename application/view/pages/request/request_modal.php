@@ -15,7 +15,10 @@ foreach ($allowed_request_types as $type) {
 }
 ?>
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
-  aria-labelledby="editTitle" aria-hidden="true">
+  aria-labelledby="editTitle" aria-hidden="true"
+  <?php if (!empty($revision_template_document_id)): ?>
+    data-revision-template-document="<?= (int) $revision_template_document_id ?>"
+  <?php endif; ?>>
   <div class="modal-dialog modal-dialog-centered modal-lg">
     <div class="modal-content">
       <div class="modal-header">

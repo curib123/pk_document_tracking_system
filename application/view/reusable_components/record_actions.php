@@ -94,7 +94,10 @@
                 data-skip-remarks="<?= !empty($button['skip_remarks']) ? 'yes' : 'no' ?>"
                 data-remark-required="<?= !empty($button['remark_required']) ? 'yes' : 'no' ?>"
                 data-disposal="<?= !empty($button['disposal']) ? 'yes' : 'no' ?>"
-                data-final-upload="<?= !empty($button['final_upload']) ? 'yes' : 'no' ?>" data-title="<?= html_escape(!empty($button['final_upload']) ? 'Upload Final Document' : $label) ?>"
+                data-final-upload="<?= !empty($button['final_upload']) ? 'yes' : 'no' ?>"
+                data-template-upload="<?= !empty($button['template_upload']) ? 'yes' : 'no' ?>"
+                data-title="<?= html_escape(!empty($button['template_upload']) ? 'Upload Revision Template' :
+                    (!empty($button['final_upload']) ? 'Upload Final Document' : $label)) ?>"
                 data-password-confirm="<?= !empty($button['password_confirm']) ? 'yes' : 'no' ?>"
                 data-final-url="<?= html_escape($button['final_source_url'] ?? '') ?>"
                 data-description="<?= html_escape($button['description'] ?? '') ?>">

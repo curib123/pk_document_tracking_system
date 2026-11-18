@@ -1,7 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH . 'services/request/request_policy.php';
 $canEdit = isset($permissions['*']) || !empty($permissions['workflows']['edit']);
 $esc = static fn($value) => html_escape((string) $value);
+$typeLabel = static fn($type) => $type === Request_policy::REVISION_TEMPLATE
+  ? Request_policy::REVISION_TEMPLATE_LABEL : ucwords(str_replace('_', ' ', $type));
 $dt_columns = ['name' => 'Workflow', 'type' => 'Request Type', 'current' => 'Current Version', 'publication' => 'Publication', 'steps' => 'Steps'];
 $dt_rows = [];
 foreach ($rows as $workflow) {
@@ -19,14 +22,14 @@ foreach ($rows as $workflow) {
     'id' => $workflow['id'],
     'cells' => [
       'name' => $workflow['name'],
-      'type' => ucwords(str_replace('_', ' ', $workflow['request_type'])),
+      'type' => $typeLabel($workflow['request_type']),
       'current' => $current,
       'publication' => $draft ? 'Draft in progress' : ($published ? 'Published' : 'Needs setup'),
       'steps' => count($graph['steps'] ?? [])
     ],
     'display' => [
       'Workflow' => $workflow['name'],
-      'Request Type' => ucwords(str_replace('_', ' ', $workflow['request_type'])),
+      'Request Type' => $typeLabel($workflow['request_type']),
       'Published Default' => $current,
       'Draft' => $draft ? 'Version ' . $draft['version_number'] : 'None',
       'Published Steps' => count($graph['steps'] ?? [])
@@ -96,8 +99,13 @@ $dt_create = '';
               <p class="workflow-modal-eyebrow">Approval workflow</p>
               <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
               </h2>
-              <p class="small text-secondary mb-0">Approval Process Timeline for
-                <?= $esc(ucwords(str_replace('_', ' ', $workflow['request_type']))) ?> requests</p>
+              <p class="small text-secondary mb-0">
+                <?php if ($workflow['request_type'] === Request_policy::REVISION_TEMPLATE): ?>
+                  The Document Control Officer role must be last. Its approval requires an editable template upload.
+                <?php else: ?>
+                  Approval Process Timeline for <?= $esc($typeLabel($workflow['request_type'])) ?> requests
+                <?php endif; ?>
+              </p>
             </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>

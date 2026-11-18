@@ -25,6 +25,7 @@ $dt_columns = $cfg['domain'] === 'hardcopy'
     ];
 $signatoriesByDoc = [];
 if ($cfg['domain'] === 'softcopy') {
+    require_once APPPATH . 'services/request/request_policy.php';
     require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
     $signatoriesByDoc = (new Signatory_reference_service())
         ->current_for_documents(array_map('intval', array_column($rows, 'id')));
@@ -75,7 +76,17 @@ foreach ($rows as $r) {
     if ($cfg['domain'] === 'softcopy' && $can && !empty($r['can_write']) && $r['status'] === 'active')
         $buttons[] = ['type' => 'edit', 'label' => 'Signatories', 'modal' => '#signatoryModal', 'form' => '#signatoryForm'];
     if ($cfg['domain'] === 'softcopy') {
-      
+        if ($r['status'] === 'active' && (isset($permissions['*']) ||
+            (!empty($permissions['softcopy'][Request_policy::REVISION_TEMPLATE_ACTION]) &&
+                !empty($permissions['requests']['view']) && !empty($permissions['requests']['add'])))) {
+            $buttons[] = [
+                'type' => 'link',
+                'label' => Request_policy::REVISION_TEMPLATE_LABEL,
+                'url' => 'my-requests?request_category=softcopy&revision_template_for=' . (int) $r['id'],
+                'icon' => 'fa-solid fa-file-pen'
+            ];
+        }
+
         if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
             $historyEntries = [];
             foreach ($file_histories[$r['id']] ?? [] as $item) {

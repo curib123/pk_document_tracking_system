@@ -155,13 +155,18 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                         <input class="form-control" type="password" id="actionConfirmPassword" name="confirm_password" autocomplete="current-password" disabled>
                     </div>
                     <div id="actionFinalFields" hidden>
-                        <p class="mb-2"><strong>Step 1.</strong> Download the locked approved file and edit it.
-                            <a class="btn btn-sm btn-outline-primary ms-1" id="actionFinalDownload" href="#"><i class="fa-solid fa-download" aria-hidden="true"></i> Download locked file</a></p>
-                        <p class="mb-2"><strong>Step 2.</strong> Upload your edited file. The requester’s proposed file is then removed.</p>
-                        <label for="actionFinalFile" class="form-label">Final edited file <span class="text-danger">(required)</span></label>
+                        <div data-final-document-copy>
+                            <p class="mb-2"><strong>Step 1.</strong> Download the locked approved file and edit it.
+                                <a class="btn btn-sm btn-outline-primary ms-1" id="actionFinalDownload" href="#"><i class="fa-solid fa-download" aria-hidden="true"></i> Download locked file</a></p>
+                            <p class="mb-2"><strong>Step 2.</strong> Upload your edited file. The requester’s proposed file is then removed.</p>
+                        </div>
+                        <label for="actionFinalFile" class="form-label"><span id="actionFinalFileLabel">Final edited file</span> <span class="text-danger">(required)</span></label>
                         <input class="form-control" type="file" id="actionFinalFile" name="final_file" disabled
-                            accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg">
-                        <small class="form-text">Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed.</small>
+                            accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" aria-describedby="actionFinalFileHelp">
+                        <small class="form-text" id="actionFinalFileHelp">
+                            <span data-final-document-copy>Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed.</span>
+                            <span data-template-copy hidden>Word (.docx), Excel (.xlsx), or text (.txt), up to 15 MB. The requester can download it after approval.</span>
+                        </small>
                     </div>
                     <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                         <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'directDisposal']); ?>
@@ -177,7 +182,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                     value="<?= $this->security->get_csrf_hash() ?>">
                 <div class="modal-footer"><button type="button" class="btn btn-light"
                         data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger"
-                        type="submit">Continue</button></div>
+                        type="submit" id="actionContinue">Continue</button></div>
             </form>
         </div>
     </div>

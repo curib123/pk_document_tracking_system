@@ -6,6 +6,7 @@ $actionLabels = [
   'softcopy_create' => 'Create Softcopy Document',
   'softcopy_revise' => 'Revise Softcopy Document',
   'softcopy_cancel' => 'Cancel Softcopy Document',
+  Request_policy::REVISION_TEMPLATE => Request_policy::REVISION_TEMPLATE_LABEL,
   'external_create' => 'Create External Document',
   'external_revise' => 'Revise External Document',
   'scanned_create' => 'Upload Scanned Document',
@@ -76,6 +77,14 @@ foreach ($rows as $row) {
     continue;
   }
   $tab = $type_tabs[$row['type']];
+  $isTemplate = $row['type'] === Request_policy::REVISION_TEMPLATE;
+  $templateDownload = '';
+  if ($isTemplate && !$task && $row['status'] === 'approved' && $row['softcopy_status'] === 'active' &&
+      (isset($permissions['*']) || !empty($permissions['softcopy'][Request_policy::REVISION_TEMPLATE_ACTION]))) {
+    $result = json_decode((string) $row['result'], TRUE);
+    if (!empty($result['template_file_id']))
+      $templateDownload = 'files/revision-template/' . (int) $row['id'];
+  }
   $decodedPayload = json_decode((string) ($row['payload'] ?? ''), TRUE);
   $payload = is_array($decodedPayload) ? $decodedPayload : [];
   $entries = $history[$row['id']] ?? [];
@@ -173,7 +182,7 @@ foreach ($rows as $row) {
   );
   $requestOverview = [
     'Request Reference' => $row['reference'],
-    'Request Action' => ucwords(str_replace('_', ' ', $row['type'])),
+    'Request Action' => $isTemplate ? Request_policy::REVISION_TEMPLATE_LABEL : ucwords(str_replace('_', ' ', $row['type'])),
     'Subject / Reason' => $payload['subject'] ?? '',
     'Requested By' => $row['requester_name'],
     'Submitted At' => $row['submitted_at'] ?? '',
@@ -219,7 +228,14 @@ foreach ($rows as $row) {
       'title' => 'Disposal Details',
       'fields' => $detail
     ];
-  if (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
+  if ($isTemplate) {
+    $requestSections[1]['title'] = 'Selected Softcopy Document';
+    if ($templateDownload)
+      $requestSections[] = [
+        'key' => 'files', 'title' => 'Revision Template',
+        'links' => [['label' => 'Revision Template', 'url' => site_url($templateDownload)]]
+      ];
+  } elseif (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
     $filesSection = [
       'key' => 'files',
       'title' => 'Document File',
@@ -334,6 +350,8 @@ foreach ($rows as $row) {
   $buttons = [$task
     ? ['type' => 'view', 'label' => 'Review request', 'primary' => TRUE, 'icon' => 'fa-solid fa-file-circle-check']
     : ['type' => 'view']];
+  if ($templateDownload)
+    $buttons[] = ['type' => 'download', 'url' => $templateDownload, 'label' => 'Download Template'];
   $reviewButtons = [];
   $canEdit = isset($permissions['*']) || !empty($permissions['requests']['edit']);
   if (!$task && in_array($row['status'], ['draft', 'returned'], TRUE) && in_array($row['type'], $allowed_request_types, TRUE)) {
@@ -390,8 +408,13 @@ foreach ($rows as $row) {
         $returnDescription = 'Return this request to ' . ($previous['approver_label'] ?: $previous['label']) . ' for review.';
     }
   }
+  $templateSteps = $isTemplate ? ($snapshot['steps'] ?? []) : [];
+  $needsTemplate = $templateSteps && $row['current_node'] === $templateSteps[count($templateSteps) - 1]['key'];
+  $decisions = ['approved' => 'Approve', 'rejected' => 'Reject'];
+  if (!$isTemplate)
+    $decisions['returned'] = 'Return';
   if ($task && $row['status'] === 'submitted')
-    foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
+    foreach ($decisions as $decision => $label) {
       $reviewButtons[] = [
         'type' => 'action',
         'url' => "my-tasks/{$tab}/decide",
@@ -408,7 +431,8 @@ foreach ($rows as $row) {
             ? 'fa-solid fa-circle-xmark'
             : 'fa-solid fa-arrow-rotate-left'),
         'show_text' => TRUE,
-        'final_upload' => $needsFinalFile && $decision === 'approved',
+        'final_upload' => ($needsFinalFile || $needsTemplate) && $decision === 'approved',
+        'template_upload' => $needsTemplate && $decision === 'approved',
         'final_source_url' => $needsFinalFile && $decision === 'approved' && ($finalSourceId ?? 0)
           ? site_url('files/review/' . (int) $row['id'] . '?file_id=' . (int) $finalSourceId . '&download=1') : ''
       ];

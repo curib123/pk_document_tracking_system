@@ -18,6 +18,8 @@ if ($softcopyDirect && !isset($signatory_options)) {
         <option value="softcopy_revise">Revise Softcopy</option>
         <?php if ($softcopyDirect): ?>
             <option value="softcopy_correct">Correct Details (typo fix)</option>
+        <?php else: ?>
+            <option value="softcopy_revision_template">Request Template for Revision</option>
         <?php endif; ?>
     </select>
 </div>
@@ -32,7 +34,7 @@ if ($softcopyDirect && !isset($signatory_options)) {
         <option value="">Choose a document</option>
         <?php foreach ($softcopy_options as $item): ?>
             <option value="<?= (int) $item['id'] ?>" data-softcopy-record="<?= html_escape(json_encode($item)) ?>"
-                <?= !empty($item['file_locked_at']) ? 'disabled' : '' ?>>
+                <?= !empty($item['file_locked_at']) ? 'data-softcopy-locked disabled' : '' ?>>
                 <?= html_escape($item['document_number'] . ' · ' . $item['title'] .
                     (!empty($item['file_locked_at']) ? ' (Locked - read-only)' : '')) ?>
             </option>

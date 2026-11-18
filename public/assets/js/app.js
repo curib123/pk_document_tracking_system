@@ -787,6 +787,7 @@
       softcopy_id: [
         "softcopy_revise",
         "softcopy_correct",
+        "softcopy_revision_template",
         "assignment",
         "access",
       ],
@@ -852,6 +853,9 @@
     var directSeriesWrap = select.form.querySelector("[data-direct-series-edit]");
     var directSeriesField = select.form.querySelector('[name="series_number"]');
     var selectedSoftcopy = select.form.querySelector('[name="softcopy_id"]');
+    selectedSoftcopy?.querySelectorAll("[data-softcopy-locked]").forEach(function (option) {
+      option.disabled = operation !== "softcopy_revision_template";
+    });
     var editSeries = select.form.dataset.softcopyDirect === "yes" &&
       (operation === "softcopy_revise" || operation === "softcopy_correct") &&
       !!selectedSoftcopy?.value;
@@ -2027,6 +2031,16 @@
     if (heading) heading.textContent = "Add New Hardcopy Document";
     window.bootstrap.Modal.getOrCreateInstance(modal).show();
   }
+  function openRevisionTemplateRequest() {
+    var modal = document.querySelector("#editModal[data-revision-template-document]");
+    if (!modal || !requestPicker) return;
+    var action = "softcopy_revision_template";
+    var form = showRequestForm(action, false);
+    if (!form) return;
+    populateEditForm(form, { type: action, softcopy_id: modal.dataset.revisionTemplateDocument },
+      "Request Template for Revision");
+    window.bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
   var noticeModal = document.getElementById("appAlertModal");
   if (noticeModal) {
     noticeModal.addEventListener(
@@ -2034,6 +2048,7 @@
       function () {
         reopenWorkflow();
         reopenHardcopyAdd();
+        openRevisionTemplateRequest();
       },
       { once: true },
     );
@@ -2041,6 +2056,7 @@
   } else {
     reopenWorkflow();
     reopenHardcopyAdd();
+    openRevisionTemplateRequest();
   }
 
   document.addEventListener("change", function (event) {

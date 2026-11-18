@@ -154,7 +154,7 @@ class Request_model extends CI_Model
             ->select(
                 'COALESCE(sd.title,hd.title,ed.title) AS source_title,' .
                 'COALESCE(sd.document_number,hd.sequence_number,ed.document_number,ed.title) AS source_reference,' .
-                'ed.document_number AS external_source_number',
+                'ed.document_number AS external_source_number,sd.status AS softcopy_status',
                 FALSE
             );
         if ($task)

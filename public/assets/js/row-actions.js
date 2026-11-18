@@ -3,6 +3,8 @@
   "use strict";
   var form = document.getElementById("actionForm");
   if (!form) return;
+  var finalFile = document.getElementById("actionFinalFile");
+  var finalFileTypes = finalFile?.accept;
   document.addEventListener("click", function (event) {
     var action = event.target.closest(".js-action");
     if (!action) return;
@@ -18,6 +20,7 @@
     var decision = action.getAttribute("data-decision");
     var isDisposal = action.getAttribute("data-disposal") === "yes";
     var needsFinal = action.getAttribute("data-final-upload") === "yes";
+    var needsTemplate = action.getAttribute("data-template-upload") === "yes";
     var needsPassword = action.getAttribute("data-password-confirm") === "yes";
     var skipRemarks = action.getAttribute("data-skip-remarks") === "yes";
     var needsRemark = action.getAttribute("data-remark-required") === "yes";
@@ -50,11 +53,17 @@
       });
     }
     var finalBox = document.getElementById("actionFinalFields");
-    var finalFile = document.getElementById("actionFinalFile");
     if (finalBox && finalFile) {
       finalBox.hidden = !needsFinal;
       finalFile.disabled = !needsFinal;
       finalFile.required = needsFinal;
+      finalFile.accept = needsTemplate ? ".docx,.xlsx,.txt" : finalFileTypes;
+      document.getElementById("actionFinalFileLabel").textContent =
+        needsTemplate ? "Editable revision template" : "Final edited file";
+      finalBox.querySelectorAll("[data-final-document-copy]").forEach(function (copy) {
+        copy.hidden = needsTemplate;
+      });
+      finalBox.querySelector("[data-template-copy]").hidden = !needsTemplate;
       var dl = document.getElementById("actionFinalDownload");
       if (dl) {
         var url = action.getAttribute("data-final-url") || "";
@@ -62,6 +71,7 @@
         dl.setAttribute("href", url || "#");
       }
     }
+    document.getElementById("actionContinue").textContent = needsTemplate ? "Upload and Approve" : "Continue";
     form.enctype = needsFinal ? "multipart/form-data" : "";
     if (!needsFinal) form.removeAttribute("enctype");
     var disposal = form.querySelector("#actionDisposalFields");
