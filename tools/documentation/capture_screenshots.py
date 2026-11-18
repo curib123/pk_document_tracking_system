@@ -248,7 +248,7 @@ def capture(page, base, review_request):
             page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
             shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
         if 'review-file' in only:
-            goto('my-tasks/softcopy?period=all')
+            goto('my-tasks?request_category=softcopy&period=all')
             page.get_by_role('button', name='Review request', exact=True).first.click()
             page.get_by_role('tab', name='Document File', exact=True).click()
             page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
@@ -257,7 +257,7 @@ def capture(page, base, review_request):
             # Extra screen for the Process Flow deck; kept outside the guide manifest.
             only.discard('workflow-tasks')
             page.set_viewport_size({'width': 1700, 'height': 900})
-            goto('my-tasks/softcopy?period=all')
+            goto('my-tasks?request_category=softcopy&period=all')
             page.get_by_role('button', name='Review request', exact=True).first.click()
             extra = OUTPUT / 'workflow'
             extra.mkdir(exist_ok=True)
@@ -282,7 +282,7 @@ def capture(page, base, review_request):
         page.locator('[data-title="' + button + '"]').click()
         expect(page.locator('#editModal')).to_be_visible()
         if kind:
-            page.locator('#reqType').select_option(kind)
+            page.locator('#requestActionPicker').select_option(kind)
         if identifier == 'transfer-request':
             page.locator('#transferSource').select_option('1', force=True)
             page.locator('#transfer-location').select_option('2', force=True)
@@ -290,8 +290,9 @@ def capture(page, base, review_request):
             page.locator('#transferSubject').fill('Move sample record to Records Cabinet B')
             page.locator('#editModal .modal-body').evaluate('(element) => element.scrollTop=element.scrollHeight')
         shot(identifier, caption, '#editModal .modal-content',
-             [('Action', '#reqType'), ('Document title', '#reqTitle, #externalTitle, [name="title"]'),
-              ('Save', '#editForm button[type="submit"]')])
+             [('Action', '#requestActionPicker'),
+              ('Document title', '#editModal form:not([hidden]) [name="title"]'),
+              ('Save', '#requestDraftSave, #editForm button[type="submit"]')])
 
     goto('login')
     shot('sign-in', 'Sign in using your own account.', controls=[('Username', '[name="login"]'), ('Password', '[name="password"]')])
@@ -327,40 +328,39 @@ def capture(page, base, review_request):
     page.get_by_role('button', name='Edit', exact=True).first.click()
     shot('softcopy-direct-revise', 'Create a direct revision of the selected softcopy.', '#editModal .modal-content')
     for action in ['create', 'revise']:
-        form('softcopy-request-' + action, 'my-requests/softcopy', 'New Request',
+        form('softcopy-request-' + action, 'my-requests', 'New Request',
              'Prepare a softcopy ' + action + ' request.', 'softcopy_' + action)
     form('external-direct-create', 'documents/external?layout=table&folder=all', 'Add New External Document', 'Register an external document directly.')
     goto('documents/external?layout=table&folder=all')
     page.get_by_role('button', name='Edit', exact=True).first.click()
     shot('external-direct-revise', 'Revise an existing external document.', '#editModal .modal-content')
     for action in ['create', 'revise']:
-        form('external-request-' + action, 'my-requests/external', 'New Request',
+        form('external-request-' + action, 'my-requests', 'New Request',
              'Prepare an external document ' + action + ' request.', 'external_' + action)
     goto('documents/softcopy?layout=table&folder=all')
     page.get_by_role('button', name='View', exact=True).first.click()
     page.get_by_role('tab', name='Document Files', exact=True).click()
     page.add_style_tag(content='.doc-modal-file-pdf{height:150px !important}')
     shot('files', 'Preview the current file in View Details. Download appears when the file is unlocked.', '#viewModal .modal-content')
-    goto('my-tasks/softcopy?period=all')
+    goto('my-tasks?request_category=softcopy&period=all')
     page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('tab', name='Document File', exact=True).click()
     page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
     shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
-    goto('my-requests/softcopy?period=all')
+    goto('my-requests?request_category=softcopy&period=all')
     shot('request-lifecycle', 'A saved draft remains in My Requests until submitted.')
-    goto('my-tasks/softcopy?period=all')
+    goto('my-tasks?request_category=softcopy&period=all')
     page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('button', name='Approve', exact=True).first.click()
     shot('approvals', 'Review the selected approval decision before confirming.',
          '#confirmModal .modal-content', controls=[('Approval decision', '#confirmMessage'), ('Confirm', '#confirmProceed')])
-    goto('my-tasks/softcopy?period=all')
+    goto('my-tasks?request_category=softcopy&period=all')
     page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('tab', name='Approval Process Timeline', exact=True).click()
     shot('approval-routes', 'View Details includes the request approval process.', '#viewModal .modal-content')
-    for identifier, route in [('transfer-request', 'hardcopy-transfer'), ('access-request', 'access-grant'),
-                              ('assignment-request', 'document-assign'), ('disposal-request', 'hardcopy-disposal')]:
-        form(identifier, 'my-requests/' + route, 'New Request', 'Prepare the request and save it as a draft.')
-    goto('my-tasks/hardcopy-transfer?period=all')
+    for action in ['transfer', 'access', 'assignment', 'disposal']:
+        form(action + '-request', 'my-requests', 'New Request', 'Prepare the request and save it as a draft.', action)
+    goto('my-tasks?request_category=hardcopy-transfer&period=all')
     shot('transfer-dispatch', 'The requester dispatches an approved physical transfer.')
     shot('transfer-accept', 'The destination recipient accepts the received hardcopy.')
     goto('documents/hardcopy?layout=table&folder=all')

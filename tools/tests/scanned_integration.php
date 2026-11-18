@@ -194,6 +194,18 @@ try {
     denied(fn() => $folders->save(['id'=>$creatorFolder, 'version'=>2, 'name'=>'Renamed without permission', 'user_ids'=>[3]], $allocator), 'allocate-only account cannot rename folders');
     echo "$count integration checks passed\n";
     if (in_array('--keep', $argv, TRUE)) {
+        $fixture->query("INSERT INTO requests(reference,type,requested_by,payload)
+            VALUES('REGISTER-SOFTCOPY','softcopy_create',3,'{\"title\":\"Register Softcopy Draft\"}')");
+        $fixture->query("INSERT INTO locations(name) VALUES('Register Destination')");
+        $locationId = $fixture->insert_id;
+        $fixture->query("INSERT INTO hardcopy_documents(title,holder_id,created_by,creation_source,creation_reason)
+            VALUES('Register Hardcopy',3,3,'direct','Browser fixture')");
+        $hardcopyId = $fixture->insert_id;
+        $fixture->query("INSERT INTO requests(reference,type,requested_by,hardcopy_id,status,payload)
+            VALUES('REGISTER-TRANSFER','transfer',2,$hardcopyId,'approved','{\"subject\":\"Register Transfer\"}')");
+        $transferRequestId = $fixture->insert_id;
+        $fixture->query("INSERT INTO transfers(request_id,hardcopy_id,origin,destination,current_holder_id,recipient_id,document_copy_number,reason)
+            VALUES($transferRequestId,$hardcopyId,'{}','{\"location_id\":$locationId}',3,3,'001','Register Transfer')");
         $keepFixture = TRUE;
         file_put_contents($root . '/storage/scanned-test-database.txt', $name); echo "Fixture database: $name\n"; exit(0);
     }
