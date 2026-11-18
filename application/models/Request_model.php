@@ -26,7 +26,7 @@ class Request_model extends CI_Model
     private function scope($tab, $user, $task, $q, $status, $filters = [])
     {
         $this->db->from('requests r');
-        $this->db->where_in('r.type', $this->types($tab));
+        $this->db->where_in('r.type', $tab === '' ? array_merge(...array_values($this->groups)) : $this->types($tab));
         if ($task) {
             $this->db->where('r.status', 'submitted');
             $this->db->join(
@@ -64,6 +64,80 @@ class Request_model extends CI_Model
         $total = (int) $this->db->count_all_results();
         $page = min(max(1, $page), max(1, (int) ceil($total / $limit)));
         $this->scope($tab, $user, $task, $q, $status, $filters);
+        $sort = $this->register_sort($filters);
+        $direction = ($filters['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+        $this->db->order_by($sort, $direction)->order_by('r.id', $direction)
+            ->limit($limit, ($page - 1) * $limit);
+        return [$this->register_rows($task), $total, $page];
+    }
+
+    public function task_listing($tab, $user, $state)
+    {
+        if (($tab !== '' && $tab !== 'hardcopy-transfer') ||
+            !in_array($state['type'], ['', 'transfer'], TRUE) ||
+            !in_array($state['status'], ['', 'for_transfer', 'in_transit'], TRUE)) {
+            return $this->listing($tab, $user, TRUE, $state['q'], $state['status'], $state['page'], $state['limit'], $state);
+        }
+
+        $this->load->model('Transfer_model');
+        $handoffs = $this->Transfer_model->register_query($user, $state);
+        $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
+        $approvals = $this->db->select(
+            'ws.id AS task_id, 0 AS handoff, r.id AS request_id, r.reference, r.type, r.status,
+             r.created_at, r.updated_at, CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
+            FALSE
+        )->join('users u', 'u.id=r.requested_by')->get_compiled_select();
+        $source = "($approvals UNION ALL $handoffs) AS task_register";
+        $total = (int) $this->db->query("SELECT COUNT(*) AS total FROM $source")->row()->total;
+        $limit = (int) $state['limit'];
+        $page = min($state['page'], max(1, (int) ceil($total / $limit)));
+        $offset = ($page - 1) * $limit;
+        $sort = $this->register_sort($state, '');
+        $direction = $state['dir'] === 'ASC' ? 'ASC' : 'DESC';
+        $keys = $this->db->query(
+            "SELECT task_id, handoff FROM $source
+             ORDER BY $sort $direction, request_id $direction, handoff $direction, task_id $direction
+             LIMIT $limit OFFSET $offset"
+        )->result_array();
+        $stepIds = $handoffIds = [];
+        foreach ($keys as $key) {
+            if ($key['handoff'])
+                $handoffIds[] = (int) $key['task_id'];
+            else
+                $stepIds[] = (int) $key['task_id'];
+        }
+        $approvalRows = [];
+        if ($stepIds) {
+            $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
+            $this->db->where_in('ws.id', $stepIds);
+            $approvalRows = array_column($this->register_rows(TRUE), NULL, 'step_id');
+        }
+        $handoffRows = array_column($this->Transfer_model->register_rows($user, $handoffIds), NULL, 'id');
+        $rows = [];
+        foreach ($keys as $key) {
+            $row = ($key['handoff'] ? $handoffRows : $approvalRows)[$key['task_id']] ?? NULL;
+            if ($row !== NULL)
+                $rows[] = $row;
+        }
+        return [$rows, $total, $page];
+    }
+
+    private function register_sort($filters, $prefix = 'r.')
+    {
+        $sorts = [
+            'reference' => 'reference',
+            'type' => 'type',
+            'status' => 'status',
+            'updated' => 'updated_at',
+            'updated_at' => 'updated_at',
+            'created_at' => 'created_at'
+        ];
+        return ($filters['sort'] ?? '') === 'requester'
+            ? 'requester_name' : $prefix . ($sorts[$filters['sort'] ?? ''] ?? 'updated_at');
+    }
+
+    private function register_rows($task)
+    {
         $this->db->select(
             'r.*,CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
             FALSE
@@ -84,22 +158,9 @@ class Request_model extends CI_Model
             );
         if ($task)
             $this->db->select('ws.label AS step_label,ws.id AS step_id');
-        $sorts = [
-            'reference' => 'r.reference',
-            'type' => 'r.type',
-            'status' => 'r.status',
-            'updated' => 'r.updated_at',
-            'updated_at' => 'r.updated_at',
-            'created_at' => 'r.created_at',
-            'requester' => 'requester_name'
-        ];
-        $sort = $sorts[$filters['sort'] ?? ''] ?? 'r.updated_at';
-        $direction = ($filters['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $rows = $this->db->order_by($sort, $direction)->order_by('r.id', $direction)
-            ->limit($limit, ($page - 1) * $limit)->get()->result_array();
-        $rows = $this->details($rows);
+        $rows = $this->details($this->db->get()->result_array());
         $this->mark_locked_attachments($rows);
-        return [$rows, $total, $page];
+        return $rows;
     }
 
     private function mark_locked_attachments(array &$rows): void
