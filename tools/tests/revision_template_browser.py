@@ -1,0 +1,215 @@
+"""Exercise revision template approval and download in an isolated MariaDB database."""
+import io
+import os
+from pathlib import Path
+import re
+import secrets
+import socket
+import subprocess
+import time
+from urllib.request import urlopen
+import zipfile
+
+from playwright.sync_api import expect, sync_playwright
+
+
+ROOT = Path(__file__).resolve().parents[2]
+PHP = os.environ.get('TEST_PHP', 'php')
+MYSQL = os.environ.get('TEST_MYSQL', 'mysql')
+DATABASE = 'revision_template_' + secrets.token_hex(5) + '_test'
+PASSWORD = 'Revision-Template-Test-2026!'
+ACTION = 'softcopy_revision_template'
+LABEL = 'Request Template for Revision'
+
+
+def sql(statement, database=DATABASE):
+    command = [
+        MYSQL, '--binary-mode', '--batch', '--skip-column-names',
+        '-h', os.environ.get('DB_HOST', '127.0.0.1'),
+        '-P', os.environ.get('DB_PORT', '3306'),
+        '-u', os.environ.get('DB_USERNAME', 'root')
+    ]
+    if database:
+        command.append(database)
+    env = dict(os.environ, MYSQL_PWD=os.environ.get('DB_PASSWORD', ''))
+    return subprocess.run(command, input=statement, capture_output=True, encoding='utf-8',
+                          check=True, env=env).stdout.strip()
+
+
+def dismiss(page):
+    alert = page.locator('#appAlertModal')
+    if alert.count():
+        alert.locator('[data-bs-dismiss=modal]').first.click()
+        expect(alert).to_be_hidden()
+
+
+def login(browser, base, username):
+    context = browser.new_context(reduced_motion='reduce')
+    page = context.new_page()
+    page.goto(base + '/login')
+    page.locator('[name=login]').fill(username)
+    page.locator('[name=password]').fill(PASSWORD)
+    page.locator('button[type=submit]').click()
+    page.wait_for_url('**/dashboard')
+    return page
+
+
+def post(page, path, *, upload=None, **data):
+    csrf = next(cookie['value'] for cookie in page.context.cookies() if cookie['name'] == 'pk_csrf_cookie')
+    fields = dict(data, pk_csrf_token=csrf, confirmed='yes')
+    body = {'multipart': dict(fields, final_file=upload)} if upload else {'form': fields}
+    response = page.request.post(path, **body, max_redirects=0)
+    assert response.status in (302, 303), (path, response.status, response.text()[:500])
+
+
+def document_template():
+    template = io.BytesIO()
+    with zipfile.ZipFile(template, 'w', zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr('[Content_Types].xml', '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/></Types>')
+        archive.writestr('_rels/.rels', '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>')
+        archive.writestr('word/document.xml', '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body><w:p><w:r><w:t>Editable revision fixture</w:t></w:r></w:p></w:body></w:document>')
+    return template.getvalue()
+
+
+def exercise(browser, base):
+    requester = login(browser, base, 'template_requester')
+    outsider = login(browser, base, 'template_outsider')
+    admin = login(browser, base, 'template_admin')
+    admin.goto(base + '/admin/workflows?q=softcopy_revision_template')
+    expect(admin.get_by_role('button', name=f'Step Actions for {LABEL}')).to_be_visible()
+    workflow_id = sql(f"SELECT id FROM workflows WHERE workflow_key='{ACTION}'")
+    post(admin, base + '/admin/workflows/clone', id=workflow_id)
+    draft = sql(f"SELECT id FROM workflow_versions WHERE workflow_id={workflow_id} AND status='draft'")
+    sql(f"UPDATE workflow_versions SET graph=JSON_SET(graph,'$.steps[0].approver.type','requester') WHERE id={draft}")
+    post(admin, base + '/admin/workflows/publish', id=draft)
+    assert sql(f'SELECT status FROM workflow_versions WHERE id={draft}') == 'draft'
+
+    post(outsider, base + '/my-requests/softcopy/save', type=ACTION, softcopy_id=1, subject='Out of scope')
+    assert sql(f"SELECT COUNT(*) FROM requests WHERE type='{ACTION}'") == '0'
+    document_page = requester.goto(base + '/documents/softcopy?layout=table&folder=all&q=Handwashing')
+    assert document_page.ok, requester.locator('body').inner_text()[:600]
+    requester.get_by_role('link', name=LABEL, exact=True).first.click(timeout=5000)
+    modal = requester.locator('#editModal')
+    expect(modal).to_be_visible()
+    expect(modal.locator('#requestActionPicker')).to_have_value(ACTION)
+    expect(modal.locator('#reqSoftcopy')).to_have_value('1')
+    expect(modal.locator('#revisionFile')).to_be_hidden()
+    modal.get_by_label('Subject / Reason').fill('Editable copy for procedure changes')
+    modal.get_by_role('button', name='Save Draft').click()
+    requester.locator('#confirmProceed').click()
+    dismiss(requester)
+    row = requester.get_by_role('row').filter(has_text='Editable copy for procedure changes')
+    row.get_by_role('button', name='Submit', exact=True).click()
+    requester.locator('#confirmProceed').click()
+    dismiss(requester)
+
+    request_id = sql(f"SELECT id FROM requests WHERE type='{ACTION}' AND status='submitted'")
+    download_url = base + '/files/revision-template/' + request_id
+    assert requester.request.get(download_url).status == 404
+    dco = login(browser, base, 'template_dco')
+    task_notice = dco.locator('#taskNotificationModal')
+    expect(task_notice).to_be_visible()
+    expect(task_notice).to_contain_text('Editable copy for procedure changes')
+    task_notice.get_by_role('button', name='Close notification').click()
+    expect(task_notice).to_be_hidden()
+    decision_url = base + '/my-tasks/softcopy/decide'
+    post(outsider, decision_url, id=request_id, decision='approved')
+    post(dco, decision_url, id=request_id, decision='approved')
+    post(dco, decision_url, id=request_id, decision='approved',
+         upload={'name': 'readonly.pdf', 'mimeType': 'application/pdf', 'buffer': b'%PDF-1.4\n'})
+    assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'submitted'
+    assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '0'
+
+    dco.goto(base + f'/my-tasks?request_category=softcopy&type={ACTION}')
+    expect(dco.locator('#appAlertModal')).to_contain_text('Upload an editable Word')
+    dismiss(dco)
+    dco.get_by_role('button', name='Review request').click()
+    review = dco.locator('#viewModal')
+    expect(review.get_by_role('button', name='Return', exact=True)).to_have_count(0)
+    review.get_by_role('button', name='Approve', exact=True).click()
+    approval = dco.locator('#actionModal')
+    upload = approval.get_by_label('Editable revision template')
+    expect(upload).to_have_attribute('required', '')
+    expect(approval.locator('#actionFinalDownload')).to_be_hidden()
+    template = document_template()
+    upload.set_input_files({'name': 'revision-template.docx', 'mimeType': 'application/octet-stream', 'buffer': template})
+    approval.get_by_role('button', name='Upload and Approve').click()
+    expect(dco.locator('#appAlertModal')).to_contain_text('Approval decision recorded.')
+    assert sql(f'SELECT status FROM requests WHERE id={request_id}') == 'approved'
+    assert sql('SELECT current_revision_id FROM softcopy_documents WHERE id=1') == '1'
+    requester.reload()
+    download = requester.get_by_role('link', name='Download Template', exact=True)
+    expect(download).to_be_visible()
+    response = requester.request.get(download.get_attribute('href'))
+    assert response.ok and response.body() == template
+    assert 'revision-template.docx' in response.headers['content-disposition']
+    assert outsider.request.get(download_url).status == 404
+    assert dco.request.get(download_url).status == 404
+    template_id = sql("SELECT id FROM files WHERE purpose='revision_template'")
+    assert dco.request.get(base + '/files/download/' + template_id).status == 403
+
+    post(requester, base + '/my-requests/softcopy/save', type=ACTION, softcopy_id=1,
+         subject='Reject this template request')
+    rejected = sql(f"SELECT id FROM requests WHERE type='{ACTION}' AND status='draft'")
+    post(requester, base + '/my-requests/softcopy/submit', id=rejected)
+    post(dco, decision_url, id=rejected, decision='rejected', remark='Fixture rejection')
+    assert sql(f'SELECT status FROM requests WHERE id={rejected}') == 'rejected'
+    assert requester.request.get(base + '/files/revision-template/' + rejected).status == 404
+    assert sql("SELECT COUNT(*) FROM files WHERE purpose='revision_template'") == '1'
+
+
+def main():
+    sql(f'CREATE DATABASE {DATABASE} CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci', database=None)
+    server = None
+    try:
+        sql((ROOT / 'database/pk_dts.sql').read_text(encoding='utf-8'))
+        sql((ROOT / 'database/migrations/20261112_file_lifecycle_stage.sql').read_text(encoding='utf-8'))
+        sql((ROOT / 'database/migrations/20261118_softcopy_revision_template.sql').read_text(encoding='utf-8'))
+        password_hash = subprocess.check_output(
+            [PHP, '-r', f"echo password_hash('{PASSWORD}', PASSWORD_DEFAULT);"], text=True)
+        sql(f"""
+            INSERT INTO roles (id,name) VALUES (50,'Revision Fixture Requester');
+            INSERT INTO users (id,username,first_name,last_name,position_title,role_id,password_hash,require_password_change)
+            VALUES (101,'template_requester','Requester','Fixture','Requester',50,'{password_hash}',0),
+              (102,'template_outsider','Outsider','Fixture','Requester',50,'{password_hash}',0),
+              (103,'template_dco','DCO','Fixture','Document Control Officer',2,'{password_hash}',0),
+              (104,'template_admin','Admin','Fixture','Administrator',1,'{password_hash}',0);
+            INSERT INTO role_permissions (role_id,permission_id)
+            SELECT 50,id FROM permissions WHERE (module_key='requests' AND action_key IN ('view','add','submit'))
+              OR (module_key='softcopy' AND action_key IN ('view','request_revision_template'))
+              OR (module_key='dashboard' AND action_key='view');
+            UPDATE softcopy_documents SET created_by=101 WHERE id=1;
+            UPDATE files SET locked_at=NOW() WHERE id=(SELECT file_id FROM softcopy_revisions WHERE id=1);
+        """)
+        with socket.socket() as sock:
+            sock.bind(('127.0.0.1', 0))
+            port = sock.getsockname()[1]
+        base = f'http://127.0.0.1:{port}'
+        env = dict(os.environ, PK_TEST_DB='1', DB_DATABASE=DATABASE, CI_ENV='development')
+        server = subprocess.Popen([PHP, '-S', f'127.0.0.1:{port}', '-t', str(ROOT / 'public')],
+                                  cwd=ROOT, env=env, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+        for _ in range(60):
+            try:
+                urlopen(base + '/login', timeout=1).close()
+                break
+            except OSError:
+                time.sleep(.1)
+        with sync_playwright() as playwright:
+            browser = playwright.chromium.launch(channel=os.environ.get('PK_TEST_BROWSER', 'msedge'))
+            exercise(browser, base)
+            browser.close()
+        print('Revision template browser workflow passed.')
+    finally:
+        if server:
+            server.terminate()
+            server.wait()
+        try:
+            for storage in sql("SELECT storage_name FROM files WHERE purpose='revision_template'").splitlines():
+                if re.fullmatch('[a-f0-9]{64}', storage):
+                    (ROOT / 'storage/documents' / storage).unlink(missing_ok=True)
+        finally:
+            sql(f'DROP DATABASE {DATABASE}', database=None)
+
+
+if __name__ == '__main__':
+    main()
