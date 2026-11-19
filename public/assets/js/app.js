@@ -1063,6 +1063,9 @@
       autoField.value = suggested;
       autoField.dataset.userEdited = "";
       autoField.dataset.forCategory = category.value;
+      // Hidden inputs survive form.reset(), so clear the flag explicitly.
+      var editedFlag = form.querySelector("[data-document-number-edited]");
+      if (editedFlag) editedFlag.value = "";
     }
 
     // The Series No. is typed in manually. The most recent series of the chosen
@@ -1090,6 +1093,10 @@
     var field = event.target;
     if (field?.name === "generated_document_number" && !field.readOnly) {
       field.dataset.userEdited = "1";
+      // Tells the server to use this exact number. An untouched field is only
+      // a preview, and the next free number is assigned when approving.
+      var editedFlag = field.form?.querySelector("[data-document-number-edited]");
+      if (editedFlag) editedFlag.value = "1";
     }
   });
   // Selecting a different softcopy starts from that record, never a previous

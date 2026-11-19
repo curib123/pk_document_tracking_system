@@ -70,6 +70,8 @@ if ($softcopyDirect && !isset($signatory_options)) {
     <input class="form-control" name="generated_document_number" id="generatedDocumentNumber"
         maxlength="100" autocomplete="off" <?= $softcopyDirect ? '' : 'readonly' ?>>
     <?php if ($softcopyDirect): ?>
+        <?php // Set to 1 by app.js only when the user types over the generated number. ?>
+        <input type="hidden" name="document_number_edited" value="" data-document-number-edited>
         <small class="form-text">Auto-generated; you may type a different Document Number if needed.</small>
     <?php endif; ?>
 </div>
