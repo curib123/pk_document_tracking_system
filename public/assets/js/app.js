@@ -1048,13 +1048,21 @@
         width = Math.max(width, suffix.length);
       }
     });
+    var suggested = "";
     if (selected?.dataset.nextNumber) {
-      autoField.value = selected.dataset.nextNumber;
+      suggested = selected.dataset.nextNumber;
     } else if (prefix && initial > 0) {
       var nextDocument = String(hasMatching ? Math.max(initial, maximum + 1) : initial);
-      autoField.value = prefix + nextDocument.padStart(Math.max(width, nextDocument.length), "0");
-    } else {
-      autoField.value = "";
+      suggested = prefix + nextDocument.padStart(Math.max(width, nextDocument.length), "0");
+    }
+    // Direct softcopy lets the user overwrite the generated number; keep a typed
+    // value until the category changes. Requests stay read-only and always refresh.
+    var typed = !autoField.readOnly && autoField.dataset.userEdited === "1" &&
+      autoField.dataset.forCategory === category.value;
+    if (!typed) {
+      autoField.value = suggested;
+      autoField.dataset.userEdited = "";
+      autoField.dataset.forCategory = category.value;
     }
 
     // The Series No. is typed in manually. The most recent series of the chosen
@@ -1078,6 +1086,12 @@
         : "Type the Series No. This Document No. has no series yet.";
     }
   }
+  document.addEventListener("input", function (event) {
+    var field = event.target;
+    if (field?.name === "generated_document_number" && !field.readOnly) {
+      field.dataset.userEdited = "1";
+    }
+  });
   // Selecting a different softcopy starts from that record, never a previous
   // document's proposed title, revision attachment or effective date.
   // Programmatic changes (e.g. file auto-fill) must refresh the searchable box text.

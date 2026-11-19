@@ -53,6 +53,8 @@ class Softcopy_direct_service
         ];
         if (!$payload['series_number_checker']) {
             $payload['document_number'] = '';
+            // Direct softcopy only: the auto-generated number may be typed over.
+            $payload['manual_document_number'] = $payload['generated_document_number'];
         }
         // Optional Signatories References; all three fields are required per entry.
         if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {

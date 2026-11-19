@@ -106,9 +106,20 @@ class Softcopy_operation_service
             $categoryId = (int) ($payload['category_id'] ?? 0);
             require_once APPPATH . 'services/softcopy/document_number_generator.php';
             $reuseNumber = !empty($payload['series_number_checker']);
+            // manual_document_number is only ever set by the direct service.
+            $typedNumber = !$reuseNumber ? trim((string) ($payload['manual_document_number'] ?? '')) : '';
             $number = $reuseNumber
                 ? trim((string) ($payload['document_number'] ?? ''))
                 : Document_number_generator::next($db, $categoryId);
+            if ($typedNumber !== '' && $typedNumber !== $number) {
+                if (mb_strlen($typedNumber) > 100) {
+                    throw new DomainException('Document number must be 100 characters or fewer.');
+                }
+                if ($db->get_where('softcopy_documents', ['document_number' => $typedNumber])->row_array()) {
+                    throw new DomainException('That document number is already in use. Use "Need Series Number?" to add a series to an existing number.');
+                }
+                $number = $typedNumber;
+            }
             // The Series No. is typed in by the requester; there is no code pattern.
             $series = $reuseNumber ? trim((string) ($payload['generated_series_number'] ?? '')) : '';
             if ($reuseNumber) {

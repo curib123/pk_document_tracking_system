@@ -67,8 +67,11 @@ if ($softcopyDirect && !isset($signatory_options)) {
 </div>
 <div class="col-md-6" data-document-number-auto hidden>
     <label class="form-label" for="generatedDocumentNumber">Generated Document Number</label>
-    <input class="form-control" name="generated_document_number" id="generatedDocumentNumber" readonly
-        autocomplete="off">
+    <input class="form-control" name="generated_document_number" id="generatedDocumentNumber"
+        maxlength="100" autocomplete="off" <?= $softcopyDirect ? '' : 'readonly' ?>>
+    <?php if ($softcopyDirect): ?>
+        <small class="form-text">Auto-generated; you may type a different Document Number if needed.</small>
+    <?php endif; ?>
 </div>
 <div class="col-md-6" data-document-number-manual hidden>
     <label class="form-label" for="reqNumber">Document Number</label>
