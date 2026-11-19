@@ -1,10 +1,10 @@
-# PK DTS | Everyday reference
+# PK DCS | Everyday reference
 
 Find the right document, follow the right steps, and know when your work is complete.
 
-**Documentation reviewed 18 November 2026**
+**Documentation reviewed 19 November 2026**
 
-PK Document Tracking System helps your team find records, manage approved files,
+PK Document Control System helps your team find records, manage approved files,
 track who holds physical documents, and review requests. Use your own account so
 the history shows who completed each action.
 
@@ -12,10 +12,10 @@ the history shows who completed each action.
 
 | Your goal | Open |
 | --- | --- |
-| Follow a task with screen examples | [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) |
-| See who acts at each stage | [Process Flow](PK_DTS_Process_Flow.pptx) |
-| Decide what to do next | [Flowchart](PK_DTS_Flowchart.pdf) |
-| Understand how people share information | [Data Flow Diagram](PK_DTS_DFD.pdf) |
+| Follow a task with screen examples | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
+| See who acts at each stage | [Process Flow](PK_DCS_Process_Flow.pptx) |
+| Decide what to do next | [Flowchart](PK_DCS_Flowchart.pdf) |
+| Understand how people share information | [Data Flow Diagram](PK_DCS_DFD.pdf) |
 
 Each document has a cover, contents, section labels and page numbers. In a PDF,
 select a contents entry to jump to that topic. The User Guide combines screen
@@ -135,7 +135,23 @@ document number. Softcopy Category setup also offers **Folder** categories,
 which can be nested as parents of further folders and numbered categories,
 but cannot generate a document number themselves. Numbered category code
 patterns increment their final dash-separated numeric segment
-(e.g. `PPM-001 → PPM-002`). **Series No. has no code pattern.** When **Need Series Number?** is selected, choose an
+(e.g. `PPM-001 → PPM-002`).
+
+On **Add New Softcopy Document** (a direct creation), **Generated Document
+Number** shows the category's next number and can be typed over:
+
+- Left unchanged, it is a preview. The next free number is assigned when you
+  approve, so it can differ if another document took that number meanwhile.
+- A number you type (up to 100 characters) is used as entered. It must not
+  already exist; otherwise the action stops with *That document number is
+  already in use*. A typed number that follows the pattern, such as `PPM-050`,
+  makes the next automatic number `PPM-051`.
+- Changing **Category** refills the box. A request cannot change the number;
+  it is assigned at final approval.
+
+The success message shows the number that was saved.
+
+**Series No. has no code pattern.** When **Need Series Number?** is selected, choose an
 existing Document No. and type the **Series Number** manually; its placeholder
 shows the previous series of that Document No. as a guide. Regular revisions
 retain their existing Series No. Complete **Number of Pages** and the
@@ -192,10 +208,10 @@ Scanned Documents and editable revision template approval procedures.
 
 | What you want to see | Decision examples |
 | --- | --- |
-| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DTS_DFD.pdf) |
-| Decision paths and their outcomes | [Flowchart](PK_DTS_Flowchart.pdf) |
-| Who acts next and when the requested change takes effect | [Process Flow](PK_DTS_Process_Flow.pptx) |
-| The same procedures alongside screen instructions | [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) |
+| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DCS_DFD.pdf) |
+| Decision paths and their outcomes | [Flowchart](PK_DCS_Flowchart.pdf) |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DCS_Process_Flow.pptx) |
+| The same procedures alongside screen instructions | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
 
 On related procedure pages, select a page number beside **Decisions** in the PDF
 footer to open the matching example. Direct actions use their own procedures;
@@ -260,7 +276,7 @@ For a scanned upload, update, removal, or category request, follow the [Scanned 
    **My Tasks**, where the **Hardcopy Transfers** category shows handoffs. The
    handoff becomes **In Transit**.
 6. After receiving the document, the **named receiving user** chooses **Accept**.
-   PK DTS checks the holder, document and approved destination, updates the
+   PK DCS checks the holder, document and approved destination, updates the
    holder and storage, marks the handoff **Accepted**, and completes the request.
 
 The requester may be different from the holder. Only the requester can Dispatch;
@@ -341,7 +357,7 @@ operation with affected users before starting.
 1. Choose **Restore system data** and select **Backup to restore**.
 2. Enter **Your password** and type **RESTORE**.
 3. Choose **Restore selected backup**, then **Confirm**.
-4. Wait for the result. PK DTS first creates a recovery backup and temporarily
+4. Wait for the result. PK DCS first creates a recovery backup and temporarily
    blocks normal use.
 5. After a successful restore signs you out, sign in again and check the recovered
    records and attachments.
@@ -374,11 +390,11 @@ password private.
 
 ## Edit the documentation
 
-The [Step-by-Step User Guide](PK_DTS_User_Guide_Step_by_Step.pptx) and
-[Process Flow](PK_DTS_Process_Flow.pptx) are editable PowerPoints. Use the VSDX
+The [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) and
+[Process Flow](PK_DCS_Process_Flow.pptx) are editable PowerPoints. Use the VSDX
 files to edit the diagrams in Visio or the matching PDFs to read or print them.
 
 | Diagram | Editable Visio | PDF |
 | --- | --- | --- |
-| Data Flow Diagram | [VSDX](PK_DTS_DFD.vsdx) | [PDF](PK_DTS_DFD.pdf) |
-| Flowchart | [VSDX](PK_DTS_Flowchart.vsdx) | [PDF](PK_DTS_Flowchart.pdf) |
+| Data Flow Diagram | [VSDX](PK_DCS_DFD.vsdx) | [PDF](PK_DCS_DFD.pdf) |
+| Flowchart | [VSDX](PK_DCS_Flowchart.vsdx) | [PDF](PK_DCS_Flowchart.pdf) |

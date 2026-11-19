@@ -1,5 +1,5 @@
 {
-  "title": "PK Document Tracking System - Process Flow",
+  "title": "PK Document Control System - Process Flow",
   "pages": [
     {
       "id": "sign-in-and-find-documents",
@@ -23,7 +23,7 @@
           "text": "Use folders, Search and filters. Open View Details to read the full record."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Show the records and actions allowed for this account."
         },
         {
@@ -60,7 +60,7 @@
           "text": "Choose Save Document and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check the storage, holder and dates; save the active record and its history."
         }
       ],
@@ -88,7 +88,7 @@
           "text": "When editing, enable Track retention period. Enter Retention Start and Retention End."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Show days remaining, Due today or an overdue message using office dates."
         },
         {
@@ -132,12 +132,12 @@
           "text": "Choose Approve Directly and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Create the active document or publish its next revision with the replacement file."
         }
       ],
       "notes": [
-        "Pattern categories increment the number after the final dash; Folder categories are nested parents only. Series No. Code Pattern is set per existing Document No. For sample-series-002, the original becomes sample-series-001, the new record sample-series-002, then sample-series-003.",
+        "Pattern categories increment the number after the final dash; Folder categories are nested parents only. A direct creation may type over the generated number with one not yet in use. Series No. has no pattern: it is typed for an existing Document No.",
         "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
         "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
       ]
@@ -164,7 +164,7 @@
           "text": "Choose Save Directly and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Create an active record at revision 00, or publish the next revision and its replacement file."
         }
       ],
@@ -200,7 +200,7 @@
           "text": "Review in the displayed order. At each step, choose Approve, Return or Reject and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Final approval creates an Active record and file at revision 00, or publishes the next revision and file. Request: Completed."
         }
       ],
@@ -267,7 +267,7 @@
           "text": "Review in My Tasks. Approve, return for correction, or reject."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "After final approval, apply the change and update the scanned register or available folders."
         }
       ],
@@ -298,11 +298,11 @@
           "text": "Use Submit on a saved draft, or use Submit Request from Edit. Check the Approval Process Timeline."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check permission, active choices and files. Mark Submitted and notify the first approver."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Apply changes only after final approval. A transfer stays Approved until Dispatch and Accept complete it."
         }
       ],
@@ -1006,7 +1006,7 @@
           "text": "Choose Approve, Return or Reject in the displayed order. Requester account completes Requester Confirmation in My Tasks."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "After final approval: request Approved; handoff For Transfer. Holder and location stay unchanged until Accept."
         }
       ],
@@ -1035,7 +1035,7 @@
           "text": "For a For Transfer handoff, release the document. Choose Dispatch and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Mark In Transit. Record who dispatched the document and when."
         },
         {
@@ -1043,11 +1043,11 @@
           "text": "After receiving the document, open Physical Transfer Handoffs. Choose Accept and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check that the document and Location are active, the holder is unchanged and storage matches approval."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Make the receiver the holder and update storage. Mark the handoff Accepted and the request Completed."
         }
       ],
@@ -1088,7 +1088,7 @@
           "text": "Review in the displayed order. Choose Approve, Return or Reject; Requester account has the final confirmation."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Final approval grants access through the approved expiry date. Request: Completed. Holder and assignments stay unchanged."
         }
       ],
@@ -1125,11 +1125,11 @@
           "text": "Choose Approve, Return or Reject in order. The requester's leader completes Requester Approval."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "On final approval for Softcopy, add the requester as an assignee and keep existing assignees. Request: Completed."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "On final approval for Hardcopy, make the requester Current Holder. Keep storage unchanged. Request: Completed."
         }
       ],
@@ -1162,11 +1162,11 @@
           "text": "Choose Save Assignment and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check the active document and user, and any active hardcopy transfer."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Change the hardcopy holder or add the softcopy assignee. Keep storage unchanged."
         }
       ],
@@ -1194,11 +1194,11 @@
           "text": "Choose Assign All and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check the user, active records, 2,000-document limit and any active transfers."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Change the holder for every selected document. Keep each storage location unchanged."
         }
       ],
@@ -1226,11 +1226,11 @@
           "text": "Choose Assign All and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check the active user, selected records and 2,000-document limit."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Add the user to every selected document. Keep the existing assignees."
         }
       ],
@@ -1258,11 +1258,11 @@
           "text": "Confirm the direct disposal."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check both required direct permissions, the reason and whether the document can be disposed of."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Mark Disposed. Save the method, responsible person and disposal history."
         }
       ],
@@ -1298,7 +1298,7 @@
           "text": "Follow Approval Process Timeline. Choose Approve, Return or Reject; Requester account has the final confirmation."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "After final approval, mark the document Disposed and the request Completed. Keep approval and disposal history."
         }
       ],
@@ -1339,7 +1339,7 @@
           "text": "Save and confirm. Use Edit or Deactivate when allowed."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check parent choices, category nesting and unique codes. Update the available choices."
         }
       ],
@@ -1411,7 +1411,7 @@
           "text": "Choose Validate & Publish and confirm."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Publish the checked route for future submissions. Keep the route already saved for existing requests."
         }
       ],
@@ -1431,7 +1431,7 @@
           "text": "Check the counts beside My Requests and My Tasks. Filter the relevant register."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Highlight your Draft or Returned requests, assigned approvals and physical handoff tasks."
         },
         {
@@ -1471,7 +1471,7 @@
           "text": "Choose Backup now and confirm to create a protected backup."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "List the completed backup with its type, creation time and size."
         },
         {
@@ -1511,11 +1511,11 @@
           "text": "Choose Restore selected backup. Confirm replacement of current records and private files."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Check the backup and permission. Save a recovery backup before replacing current data."
         },
         {
-          "actor": "PK DTS",
+          "actor": "PK DCS",
           "text": "Pause normal use, restore records and private files, then sign out the operator."
         },
         {

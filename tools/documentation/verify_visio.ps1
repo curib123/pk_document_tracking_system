@@ -10,7 +10,7 @@ Reports and optional PNGs must stay under the repository's ignored storage folde
 .EXAMPLE
 powershell.exe -NoProfile -STA -ExecutionPolicy Bypass -File tools/documentation/verify_visio.ps1
 .EXAMPLE
-& ./tools/documentation/verify_visio.ps1 -Paths @('docs/system-documentation/PK_DTS_DFD.vsdx') -RenderPages
+& ./tools/documentation/verify_visio.ps1 -Paths @('docs/system-documentation/PK_DCS_DFD.vsdx') -RenderPages
 #>
 [CmdletBinding()]
 param(
@@ -142,7 +142,7 @@ public interface PkDtsViewerDraw {
     [void][IO.Directory]::CreateDirectory($outputRoot)
     if (-not $Paths) {
         $Paths = foreach ($name in @('DFD', 'Flowchart')) {
-            "docs/system-documentation/PK_DTS_$name.vsdx"
+            "docs/system-documentation/PK_DCS_$name.vsdx"
         }
     }
     $reports = New-Object 'Collections.Generic.List[object]'

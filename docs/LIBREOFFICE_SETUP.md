@@ -1,6 +1,6 @@
 # LibreOffice setup for PDF previews
 
-PK DTS uses LibreOffice (headless) to turn Word (`.docx`) and Excel (`.xlsx`)
+PK DCS uses LibreOffice (headless) to turn Word (`.docx`) and Excel (`.xlsx`)
 attachments into PDF. The PDF is what users see in the read-only preview and
 what the print page prints. The uploaded original is never changed; authorized
 roles (for example Administrator, or Document Control with the *Download

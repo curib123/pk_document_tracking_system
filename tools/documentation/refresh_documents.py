@@ -1,10 +1,10 @@
-"""Build the current illustrated PDF, Visio and PowerPoint documentation.
+"""Build the Data Flow Diagram and Flowchart (PDF and Visio) and check documentation coverage.
 
 Content lives in the four adjacent JSON files. --verify checks existing exports;
 --check-source checks the route, request and content inventory without exporting.
 Requires the existing pymupdf and python-pptx packages. No application data is read.
-Guide screenshots and control positions come from capture_screenshots.py's
-isolated demonstration site. The PowerPoint guide must retain every screenshot.
+guide.json is the procedure inventory used by the coverage check. The Step-by-Step User
+Guide itself is built by capture_guide.py and build_user_guide.py, never by this script.
 """
 from pathlib import Path
 import argparse
@@ -30,8 +30,8 @@ SCREENSHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
-EDITION = '18 November 2026'
-MARKER = 'PK DTS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITION.upper()
+EDITION = '19 November 2026'
+MARKER = 'PK DCS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITION.upper()
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -123,10 +123,15 @@ REQUIRED_GUIDE = {
  'revision-template', 'revision-template-approval', 'revision-template-download', 'scanned-requests',
 } | set(REQUESTS.values())
 SPECS = [
- ('dfd', 'PK_DTS_DFD', 'Data Flow Diagram'),
- ('flowchart', 'PK_DTS_Flowchart', 'Flowchart'),
- ('guide', 'PK_DTS_User_Guide_Step_by_Step', 'User Guide'),
+ ('dfd', 'PK_DCS_DFD', 'Data Flow Diagram'),
+ ('flowchart', 'PK_DCS_Flowchart', 'Flowchart'),
+ ('guide', 'PK_DCS_User_Guide_Step_by_Step', 'User Guide'),
 ]
+# The Step-by-Step User Guide is built from live screens by capture_guide.py and build_user_guide.py.
+# guide.json remains the procedure inventory for the route coverage check, but is no longer exported
+# here, so a refresh can never overwrite that deck.
+EXPORTED = [spec for spec in SPECS if spec[0] != 'guide']
+GUIDE_DECK = 'PK_DCS_User_Guide_Step_by_Step.pptx'
 BOOKS = {
  'dfd': ('See the whole system', 'Roles, information and records',
          'Understand who provides information, how it moves through each activity, and where the result is recorded.',
@@ -136,7 +141,7 @@ BOOKS = {
                ['Clear decisions', 'Yes and No paths', 'Practical outcomes']),
  'guide': ('Complete everyday tasks', 'A practical guide for every role',
            'Find the task you need, follow the numbered instructions, and check the result before continuing.',
-           ['Find and manage documents', 'Request, review and receive', 'Set up and maintain PK DTS']),
+           ['Find and manage documents', 'Request, review and receive', 'Set up and maintain PK DCS']),
 }
 
 
@@ -365,7 +370,7 @@ def header(doc, kind, title, number, total, subtitle='', section=''):
     page = doc.new_page(width=W, height=H)
     page.draw_rect((0, 0, W, 5), fill=INK, color=INK)
     page.draw_rect((0, 0, 170, 5), fill=ACCENT, color=ACCENT)
-    text(page, (42, 28, 795, 50), 'PK DTS  /  ' + kind.upper(), 11, True, ACCENT, minimum=11)
+    text(page, (42, 28, 795, 50), 'PK DCS  /  ' + kind.upper(), 11, True, ACCENT, minimum=11)
     if section:
         text(page, (800, 28, 1148, 50), section.upper(), 10, True, GREY, align=2, minimum=10)
     text(page, (42, 67, 1148, 111), title, 29, True, minimum=20)
@@ -652,7 +657,7 @@ def dfd_page(doc, item, number, total):
         # Level 0 has one system and five external roles; records stay on detail pages.
         rounded_panel(page, (435, 180, 755, 681), PALE, INK, radius=28)
         page.draw_line((435, 244), (755, 244), color=INK, width=1)
-        text(page, (451, 198, 739, 235), '0. PK DTS', 23, True, align=1)
+        text(page, (451, 198, 739, 235), '0. PK DCS', 23, True, align=1)
         text(page, (457, 358, 733, 566), 'Find and track documents\n\nManage requests and approvals\n\nRecord handoffs and history', 18, align=1)
         positions = [(42, 180, 298, 329), (42, 356, 298, 505), (42, 532, 298, 681),
                      (892, 268, 1148, 417), (892, 532, 1148, 681)]
@@ -733,7 +738,7 @@ def dfd_page(doc, item, number, total):
 def cover_page(doc, key, item, number, total):
     page = header(doc, item['title'], '', number, total, section='Practical reference series')
     lead, subtitle, description, topics = BOOKS[key]
-    text(page, (42, 124, 775, 158), 'PK DOCUMENT TRACKING SYSTEM', 13, True, GREY)
+    text(page, (42, 124, 775, 158), 'PK DOCUMENT CONTROL SYSTEM', 13, True, GREY)
     page.draw_line((42, 175), (133, 175), color=ACCENT, width=4)
     text(page, (42, 207, 755, 356), item['title'], 62, True, minimum=48)
     text(page, (42, 376, 755, 427), subtitle, 24, True, minimum=20)
@@ -971,7 +976,7 @@ def visio(doc, items, title):
 def powerpoint(doc, items=None):
     prs = Presentation()
     prs.slide_width, prs.slide_height = Inches(W/72), Inches(H/72)
-    prs.core_properties.title = 'PK DTS - User Guide'
+    prs.core_properties.title = 'PK DCS - User Guide'
     prs.core_properties.subject = 'Everyday document control, 11 November 2026'
     items = items or [{} for _ in doc]
     for page, item in zip(doc, items):
@@ -1051,7 +1056,7 @@ def render_book(key, kind, items):
                 text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
                 doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
     doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
-    doc.set_metadata({'title': 'PK DTS - '+kind, 'subject': 'Everyday document control, ' + EDITION, 'author': 'PK Document Tracking System'})
+    doc.set_metadata({'title': 'PK DCS - '+kind, 'subject': 'Everyday document control, ' + EDITION, 'author': 'PK Document Control System'})
     return doc
 
 
@@ -1059,7 +1064,7 @@ def refresh(content):
     # Validate the complete set before replacing the published files.
     pending = []
     try:
-        for key, base, kind in SPECS:
+        for key, base, kind in EXPORTED:
             items = document_items(key, content[key])
             with render_book(key, kind, items) as doc:
                 if key != 'guide':
@@ -1127,7 +1132,7 @@ def source_strings(item):
 
 def verify(content, pending=False):
     suffix = '.pending' if pending else ''
-    for key, base, kind in SPECS:
+    for key, base, kind in EXPORTED:
         path = DOCS / (base+'.pdf'+suffix)
         items = document_items(key, content[key])
         with (render_book(key, kind, items) if key == 'guide' else pdf.open(path)) as doc:
@@ -1198,12 +1203,13 @@ def verify(content, pending=False):
         illustrations = f'; {len(guide_screens())} screenshots and their callouts match' if key == 'guide' else ''
         print(f'{base}: {len(items)} pages; all source instructions and editable text match; package links valid{illustrations}.')
     if not pending:
-        expected = {base+'.pdf' for key, base, _ in SPECS if key != 'guide'}
-        expected.update(base+('.pptx' if key == 'guide' else '.vsdx') for key, base, _ in SPECS)
-        expected.add('PK_DTS_Process_Flow.pptx')
+        expected = {base+'.pdf' for key, base, _ in EXPORTED}
+        expected.update(base+'.vsdx' for key, base, _ in EXPORTED)
+        expected.update({'PK_DCS_Process_Flow.pptx', GUIDE_DECK})
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
-        check_package(DOCS / 'PK_DTS_Process_Flow.pptx')
+        check_package(DOCS / 'PK_DCS_Process_Flow.pptx')
+        check_package(DOCS / GUIDE_DECK)
         print('Verified the PDF and VSDX diagrams and both PowerPoint packages.')
 
 

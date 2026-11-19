@@ -1,12 +1,13 @@
-"""Capture current PK DTS screens with synthetic records in a disposable site.
+"""Capture current PK DCS screens with synthetic records in a disposable site.
 
 Run: python -X utf8 tools/documentation/capture_screenshots.py
-To refresh selected screens: set PK_CAPTURE_ONLY=files,review-file,workflow-tasks first.
+To refresh selected screens: set PK_CAPTURE_ONLY=sign-in,files,review-file,workflow-tasks first.
 Requires local PHP/MySQL and Playwright Chromium/Edge. Only DDL and allowlisted
 static role/permission/settings seeds are read from database/pk_dts.sql. Company
 records, source database contents, private files and existing sessions are unused.
 The generated *_documentation_test database and temporary site are removed.
 """
+from contextlib import contextmanager
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 import hashlib
@@ -299,9 +300,14 @@ def capture(page, base):
              controls=[('Earlier revision', '.doc-modal-file-item:last-child .doc-modal-file-meta')])
         page.set_viewport_size(viewport)
 
+    def sign_in_screen():
+        shot('sign-in', 'Sign in using your own account.',
+             controls=[('Username', '[name="login"]'), ('Password', '[name="password"]')])
+
     if only:
         # Refresh only these screens; everything else in the manifest is kept as is.
         goto('login')
+        sign_in_screen()  # Captured only when 'sign-in' is selected.
         page.locator('[name="login"]').fill('demo-admin')
         page.locator('[name="password"]').fill(PASSWORD)
         page.locator('button[type="submit"]').click()
@@ -343,7 +349,7 @@ def capture(page, base):
               ('Submit Request', '#requestFormSubmit')] if kind else ())
 
     goto('login')
-    shot('sign-in', 'Sign in using your own account.', controls=[('Username', '[name="login"]'), ('Password', '[name="password"]')])
+    sign_in_screen()
     page.locator('[name="login"]').fill('demo-admin')
     page.locator('[name="password"]').fill(PASSWORD)
     page.locator('button[type="submit"]').click()
@@ -466,7 +472,9 @@ def capture(page, base):
     print(f'PASS: {len(manifest)} current guide screens captured from synthetic records.')
 
 
-def main():
+@contextmanager
+def demo_site():
+    """Yield (browser, base_url) for a disposable seeded copy of the site; always cleaned up."""
     server = None
     created = False
     temp = Path(tempfile.mkdtemp(prefix='pk-dts-documentation-')).resolve()
@@ -486,28 +494,21 @@ def main():
             port = sock.getsockname()[1]
         base = f'http://127.0.0.1:{port}/'
         with (temp / 'server.log').open('w', encoding='utf-8') as log:
-            try:
-                server = subprocess.Popen([PHP, '-S', '127.0.0.1:' + str(port), '-t', str(site / 'public'), str(router)],
-                                          cwd=site, env=ENV, stdout=log, stderr=log,
-                                          creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
-                for _ in range(100):
-                    try:
-                        if urlopen(base + 'login', timeout=1).status == 200:
-                            break
-                    except OSError:
-                        time.sleep(.1)
-                with sync_playwright() as playwright:
-                    browser = playwright.chromium.launch(channel='msedge', headless=True)
-                    context = browser.new_context(viewport={'width': 1440, 'height': 900},
-                                                  device_scale_factor=1, service_workers='block', reduced_motion='reduce')
-                    context.set_default_timeout(12000)
-                    capture(context.new_page(), base)
+            server = subprocess.Popen([PHP, '-S', '127.0.0.1:' + str(port), '-t', str(site / 'public'), str(router)],
+                                      cwd=site, env=ENV, stdout=log, stderr=log,
+                                      creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
+            for _ in range(100):
+                try:
+                    if urlopen(base + 'login', timeout=1).status == 200:
+                        break
+                except OSError:
+                    time.sleep(.1)
+            with sync_playwright() as playwright:
+                browser = playwright.chromium.launch(channel='msedge', headless=True)
+                try:
+                    yield browser, base
+                finally:
                     browser.close()
-            finally:
-                if server:
-                    server.terminate()
-                    server.wait(timeout=10)
-                    server = None
     finally:
         if server:
             server.terminate()
@@ -518,6 +519,14 @@ def main():
         finally:
             assert temp.parent == Path(tempfile.gettempdir()).resolve() and temp.name.startswith('pk-dts-documentation-')
             shutil.rmtree(temp)
+
+
+def main():
+    with demo_site() as (browser, base):
+        context = browser.new_context(viewport={'width': 1440, 'height': 900},
+                                      device_scale_factor=1, service_workers='block', reduced_motion='reduce')
+        context.set_default_timeout(12000)
+        capture(context.new_page(), base)
 
 
 if __name__ == '__main__':

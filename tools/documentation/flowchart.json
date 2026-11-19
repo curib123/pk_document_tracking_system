@@ -1,10 +1,10 @@
 {
-  "title": "PK Document Tracking System - Flowchart",
+  "title": "PK Document Control System - Flowchart",
   "pages": [
     {
       "id": "account-entry",
       "title": "Sign in and set your password",
-      "start": "Open PK DTS",
+      "start": "Open PK DCS",
       "action": "Enter Username and Password; replace a temporary password when asked",
       "question": "Are your sign-in details accepted?",
       "yes": "Open Overview and the pages available to your account",
@@ -58,7 +58,7 @@
       "result": "The current file is ready to use; permitted Softcopy history shows earlier revisions",
       "notes": [
         "Softcopy Categories and External Categories are separate. Files must pass upload checks and be no larger than 15 MB.",
-        "A new registration and a revision both require a document file. Revision numbers and levels advance automatically.",
+        "A new registration and a revision both require a document file. Revision numbers and levels advance automatically. A direct Softcopy creation may type its own unused document number.",
         "Direct actions apply immediately. In Softcopy Documents, Signatories edits the current revision references."
       ]
     },

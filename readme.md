@@ -1,21 +1,28 @@
-# PK Document Tracking System
+# PK Document Control System
 
 Keep documents easy to find, track who holds the originals, and guide changes
 through the right approvals.
 
-PK DTS brings physical records, approved electronic files and external documents
+PK DCS brings physical records, approved electronic files and external documents
 into one workspace. Each person sees the documents and actions their account
 allows.
+
+> **Name change:** the system was previously called PK Document Tracking System
+> (PK DTS). Technical identifiers keep the old abbreviation so existing
+> installations, links and backups keep working: the `pk_document_tracking_system`
+> folder and URL, the `pk_dts` database, `pk-dts-*.zip` backup files, the
+> `PKDTS-*` scheduled tasks and the WPS opener's `pk-dts-office` link and
+> `%LOCALAPPDATA%\PK DTS` folder.
 
 ## Start here
 
 | What you need | Where to go |
 | --- | --- |
-| A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DTS_System_Reference.md) |
-| Instructions with screen examples | [Step-by-Step User Guide](docs/system-documentation/PK_DTS_User_Guide_Step_by_Step.pptx) |
-| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DTS_Process_Flow.pptx) |
-| Help choosing the next step | [Flowchart](docs/system-documentation/PK_DTS_Flowchart.pdf) |
-| An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DTS_DFD.pdf) |
+| A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DCS_System_Reference.md) |
+| Instructions with screen examples | [Step-by-Step User Guide](docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx) |
+| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DCS_Process_Flow.pptx) |
+| Help choosing the next step | [Flowchart](docs/system-documentation/PK_DCS_Flowchart.pdf) |
+| An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DCS_DFD.pdf) |
 
 The documentation folder also includes editable PowerPoint and Visio copies. The Process Flow is a
 PowerPoint presentation.
@@ -55,7 +62,7 @@ unsubmitted drafts can be cancelled; older request histories remain readable.
 
 ## Set up a local copy
 
-The following sections are for the person installing or maintaining PK DTS.
+The following sections are for the person installing or maintaining PK DCS.
 The application uses PHP 8, CodeIgniter 3 and MySQL/MariaDB. XAMPP is the Windows
 setup used by the supplied helper scripts.
 
@@ -92,7 +99,7 @@ Check the static dependency set with `php tools/tests/offline_assets.php`.
 For an end-to-end offline-internet test, disconnect **only the public internet**
 while leaving the office LAN connected, then verify sign-in, icons, modals,
 dashboard charts, requests and document downloads in a client browser.
-The PHP server and MySQL still need LAN connectivity: PK DTS is not a
+The PHP server and MySQL still need LAN connectivity: PK DCS is not a
 fully offline browser database.
 
 ### Install with XAMPP
@@ -198,13 +205,38 @@ new nested categories cannot be placed beneath a numbered category. Numbered
 categories holding documents cannot be converted to Folder, and Folders with
 children cannot be converted to numbered categories.
 
-### Softcopy series numbers (manual, per Document No.)
+### Softcopy document and series numbers
 
 In **Places → Softcopy Categories**, configure only **Document No. Code Pattern**
 (for example `PPM-001`). Series numbers have **no code pattern**; they are typed in.
 
 To create a new document, select its category and leave **Need Series Number?**
 unchecked. The usual next Document No. is generated, without a Series No.
+
+#### Type a different Document No. (Softcopy Direct only)
+
+On **Softcopy Documents → Add New Softcopy Document**, the **Generated Document
+Number** box is filled with the category's next number and can be typed over.
+
+- **Left unchanged**, the number is a preview. The next free number is assigned
+  when the action is approved, so it can differ if another document took the
+  previewed number in the meantime.
+- **Typed over**, the number (up to 100 characters) is used exactly as entered.
+  It is rejected with *That document number is already in use* if any softcopy
+  already has that Document No.; use **Need Series Number?** to share an
+  existing number instead.
+- Changing **Category** refills the box with that category's next number.
+- A typed number that follows the category pattern moves the sequence: after
+  `PPM-050` is typed, the next automatic number is `PPM-051`.
+- Requests (**My Requests → New Request**) keep the box read-only. Their final
+  number is assigned at final approval.
+
+The form sends `document_number_edited=1` only after the user types in the box,
+and the server ignores the previewed value otherwise. Check this behavior with
+`python tools/tests/softcopy_manual_number_browser.py` (Playwright, Microsoft
+Edge, PHP and MariaDB; the test creates and drops its own database).
+
+#### Add a series to an existing Document No.
 
 To add a series to an existing document:
 
@@ -216,11 +248,10 @@ To add a series to an existing document:
    that Document No. Existing records are never renumbered. Regular revisions
    **do not** change the series; they retain the existing one.
 
-Historic softcopy numbers and revisions remain unchanged except for the
-original unnumbered document, which is explicitly assigned the preceding
-series on first-time setup. That change updates its revision metadata and
-adds an audit event. Concurrent approvals are serialized through the category
-lock and database unique index; the displayed series is only a preview.
+Existing softcopy numbers, series and revisions are never renumbered. Adding a
+series does not change the original document's record. Concurrent creations in
+the same category are serialized through the category lock and the database
+unique index on Document No. and Series No.
 
 **Database upgrade:** Back up the database, then ensure the
 [document-series unique index](database/migrations/20261104_softcopy_series_number_index.sql)
@@ -285,10 +316,12 @@ Microsoft Edge, local PHP, and MariaDB with permission to create a test database
 # Check source coverage without generating files.
 python -X utf8 tools/documentation/refresh_documents.py --check-source
 
-# Capture current screens using a disposable site and synthetic records.
-python -X utf8 tools/documentation/capture_screenshots.py
+# Step-by-Step User Guide: capture the current screens, then rebuild the deck.
+python -X utf8 tools/documentation/capture_guide.py
+python -X utf8 tools/documentation/build_user_guide.py
 
-# Rebuild and verify the exported documents.
+# Screens for the Process Flow, then the diagrams and the Process Flow.
+python -X utf8 tools/documentation/capture_screenshots.py
 python -X utf8 tools/documentation/refresh_documents.py
 python -X utf8 tools/documentation/build_process_flow.py
 
@@ -298,6 +331,17 @@ python -X utf8 tools/documentation/refresh_documents.py --verify
 
 The Process Flow uses synthetic requests and sample users. Its document types
 and scenarios are defined in `tools/documentation/workflow_document_types.py`.
+
+The **Step-by-Step User Guide** is generated from the running application, so
+it can be refreshed whenever the screens change. `capture_guide.py` drives the
+real flows on a disposable copy of the site (sample people and records only)
+and saves each screen with the positions of its numbered callouts and its visible
+text. `build_user_guide.py` lays out the deck from `user_guide_content.py` with
+the look of `templates/user_guide_template.pptx`, writes it to both
+`docs/system-documentation/` and `docs/`, and stops if a bold UI label in the
+guide is not on its screenshot, a numbered step has no marker, or text does not
+fit. Change the wording in `user_guide_content.py`, not in PowerPoint: edits
+made in PowerPoint are replaced on the next build.
 
 These checks cover the documented routes, request actions, content and exported
 packages. They do not prove how the files open in desktop PowerPoint or Visio.

@@ -2,7 +2,7 @@
 request from sign-in to final approval, and shows every scenario and approval route.
 
 Run: python -X utf8 tools/documentation/build_process_flow.py
-Output: docs/system-documentation/PK_DTS_Process_Flow.pptx
+Output: docs/system-documentation/PK_DCS_Process_Flow.pptx
 
 Facts (routes, results, return and reject outcomes) come from process.json so the deck
 cannot drift from the Process Flow. Screens come from screenshots/ (guide screens plus
@@ -27,11 +27,11 @@ from workflow_document_types import TYPES, SCENARIOS, APPLIES  # noqa: E402
 
 SOURCE = Path(__file__).resolve().parent
 ROOT = SOURCE.parents[1]
-OUT = ROOT / 'docs/system-documentation/PK_DTS_Process_Flow.pptx'
+OUT = ROOT / 'docs/system-documentation/PK_DCS_Process_Flow.pptx'
 SHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 W, H = 1190, 842
-DATE = '18 NOVEMBER 2026'
+DATE = '19 NOVEMBER 2026'
 
 INK, ACCENT, PALE = '1C2B3D', '92284A', 'F6F7F9'
 GREY, RULE, WHITE = '506377', 'DDE3E9', 'FFFFFF'
@@ -46,7 +46,7 @@ PEOPLE = {
     'Requester account': ('Sam Staff', 'Staff (Requester account)', 'icon-person.png'),
     'Administrator': ('Administrator', 'Any Administrator account', 'icon-review.png'),
     'Receiving user': ('Receiving user', 'Named on the transfer', 'icon-person.png'),
-    'PK DTS': ('PK DTS', 'The system', 'icon-database.jpeg'),
+    'PK DCS': ('PK DCS', 'The system', 'icon-database.jpeg'),
 }
 FIRST = {'Requester': 'Sam', "Requester's leader": 'Alex', 'Plant Manager': 'Morgan',
          'Document Control Officer': 'Casey', 'Requester account': 'Sam', 'Requester': 'Sam'}
@@ -184,13 +184,13 @@ class Slide:
 def chrome(s, section, title, subtitle, number, total):
     s.rect(0, 0, W, 5, INK, None)
     s.rect(0, 0, 170, 5, ACCENT, None)
-    s.text(42, 27, 400, 14, 'PK DTS  /  PROCESS FLOW', 10, True, ACCENT)
+    s.text(42, 27, 400, 14, 'PK DCS  /  PROCESS FLOW', 10, True, ACCENT)
     s.text(640, 28, 508, 14, section.upper(), 9.5, True, GREY, PP_ALIGN.RIGHT)
     s.text(42, 60, 1106, 40, title, 28, True, INK, minimum=22)
     if subtitle:
         s.text(42, 104, 1106, 20, subtitle, 13, False, GREY)
     s.line(42, 790, 1148, 790, RULE, .75)
-    s.text(42, 802, 600, 12, 'PK DTS  /  PROCESS FLOW  /  ' + DATE, 8, False, GREY)
+    s.text(42, 802, 600, 12, 'PK DCS  /  PROCESS FLOW  /  ' + DATE, 8, False, GREY)
     s.text(1050, 802, 98, 12, '%d / %d' % (number, total), 8, False, GREY, PP_ALIGN.RIGHT)
 
 
@@ -211,7 +211,7 @@ def person_card(s, x, y, w, h, actor, step_text, status, number=None, highlight=
 def cover(prs, number, total):
     s = Slide(prs)
     chrome(s, 'Process flow series', '', '', number, total)
-    s.text(42, 128, 600, 16, 'PK DOCUMENT TRACKING SYSTEM', 11, True, GREY)
+    s.text(42, 128, 600, 16, 'PK DOCUMENT CONTROL SYSTEM', 11, True, GREY)
     s.rect(42, 168, 88, 3, ACCENT, None)
     s.text(42, 212, 700, 80, 'Process Flow', 58, True, INK, minimum=44)
     s.text(42, 338, 700, 34, 'One request, from sign-in to final approval', 24, True, INK)
@@ -717,7 +717,7 @@ def main():
         dict(title='Station 1: sign in as the requester', subtitle='Sam Staff starts with their own account.',
              actor='Requester', status='No request yet', shot=screen('sign-in', labels=['Username', 'Password', 'Sign In']),
              caption='Sign in using your own account.',
-             steps=['Open PK DTS in the browser.', 'Enter Sam\'s Username and Password.', 'Select Sign In. Replace a temporary password first if asked.',
+             steps=['Open PK DCS in the browser.', 'Enter Sam\'s Username and Password.', 'Select Sign In. Replace a temporary password first if asked.',
                     'The Overview page opens with totals and recent activity.'],
              after='Sam is signed in as a Staff requester. The menus show only what the Staff role may use.',
              keep='Each person uses their own account. If a menu or action is missing, the role does not have that permission.'),
@@ -780,9 +780,9 @@ def main():
     total = len(plan)
     prs = Presentation()
     prs.slide_width, prs.slide_height = Pt(W), Pt(H)
-    prs.core_properties.title = 'PK DTS - Process Flow'
+    prs.core_properties.title = 'PK DCS - Process Flow'
     prs.core_properties.subject = 'Document registers, request decisions and approvals, ' + DATE
-    prs.core_properties.author = 'PK Document Tracking System'
+    prs.core_properties.author = 'PK Document Control System'
     route_keys = list(ROUTES)
     number = 0
     for kind in plan:

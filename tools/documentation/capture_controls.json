@@ -62,9 +62,7 @@
   "softcopy-numbering": [
     "Need Series Number?",
     "Document Number",
-    "Series No. Code Pattern (first-time setup)",
-    "Original Document Series No.",
-    "Generated Series Number"
+    "Series Number"
   ],
   "external-direct-create": [
     "Document Title",

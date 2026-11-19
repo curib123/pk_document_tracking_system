@@ -1,4 +1,4 @@
-These are the original PK DTS documentation illustrations, recovered unchanged
+These are the original PK DCS documentation illustrations, recovered unchanged
 from the DFD and Process Flow Visio files in commit `680275d`.
 
 The document renderer reuses them for people, review tasks, the system and stored
