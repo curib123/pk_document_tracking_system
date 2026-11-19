@@ -19,8 +19,8 @@ header('Cache-Control: no-cache');
 
 echo json_encode([
     'id' => $identity,
-    'name' => 'PK Document Tracking System',
-    'short_name' => 'PK DTS',
+    'name' => 'PK Document Control System',
+    'short_name' => 'PK DCS',
     'description' => 'Manage your documents, requests and approval tasks.',
     'start_url' => "{$scope}dashboard",
     'scope' => $scope,

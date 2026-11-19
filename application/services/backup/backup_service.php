@@ -76,10 +76,10 @@ final class Backup_service
             try {
                 $result['retention']=$this->retentionService()->cleanup();
                 if ($result['retention']['failed'])
-                    error_log('PK DTS retention cleanup is incomplete; retry tools/backup.php retention.');
+                    error_log('PK DCS retention cleanup is incomplete; retry tools/backup.php retention.');
             } catch (Throwable $error) {
                 $result['retention']=NULL;
-                error_log('PK DTS retention cleanup failed: '.$error->getMessage());
+                error_log('PK DCS retention cleanup failed: '.$error->getMessage());
             }
             return $result;
         }
@@ -309,7 +309,7 @@ final class Backup_service
                 } catch (Throwable $rollback) {
                     // Fail closed if automatic rollback cannot complete.
                     $leaveMaintenance=TRUE;
-                    error_log('PK DTS RESTORE rollback needs intervention: '.$rollback->getMessage());
+                    error_log('PK DCS RESTORE rollback needs intervention: '.$rollback->getMessage());
                     throw new DomainException('Restore failed and automatic recovery was incomplete. Use the recovery ZIP offline.');
                 } finally {
                     // Decrypted staging must not survive a failed rollback.

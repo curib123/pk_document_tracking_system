@@ -1,6 +1,8 @@
 #Requires -RunAsAdministrator
 <#
- Register daily PK DTS maintenance and encrypted backup on an XAMPP Windows host.
+ Register daily PK DCS maintenance and encrypted backup on an XAMPP Windows host.
+ The task names keep their original PKDTS-* identifiers so re-running this script
+ updates the existing tasks instead of adding duplicates.
  Run once in elevated PowerShell. Jobs are scheduled for 16:45 and 17:00 LOCAL
  machine time. Philippines time is UTC+8, with no daylight-saving time.
  Environment variables must be available to the SYSTEM service account.
@@ -31,11 +33,11 @@ $action = New-ScheduledTaskAction -Execute $PhpExe -Argument ('"' + $ScriptPath 
 $trigger = New-ScheduledTaskTrigger -Daily -At '5:00PM'
 $settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 6)
 $principal = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest
-Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description 'Full signed AES-256 PK Document Tracking System snapshot every day at 5:00 PM Philippine time' -Force | Out-Null
+Register-ScheduledTask -TaskName $TaskName -Action $action -Trigger $trigger -Settings $settings -Principal $principal -Description 'Full signed AES-256 PK Document Control System snapshot every day at 5:00 PM Philippine time' -Force | Out-Null
 Write-Host ("Registered {0} for 5:00 PM Asia/Manila host time." -f $TaskName)
 $maintenanceAction = New-ScheduledTaskAction -Execute $PhpExe -Argument ('"' + $MaintenanceEntry + '" maintenance run') -WorkingDirectory $ProjectRoot
 $maintenanceTrigger = New-ScheduledTaskTrigger -Daily -At '4:45PM'
-Register-ScheduledTask -TaskName $MaintenanceTaskName -Action $maintenanceAction -Trigger $maintenanceTrigger -Settings $settings -Principal $principal -Description 'Daily PK DTS retention and controlled-file reconciliation at 4:45 PM Philippine time' -Force | Out-Null
+Register-ScheduledTask -TaskName $MaintenanceTaskName -Action $maintenanceAction -Trigger $maintenanceTrigger -Settings $settings -Principal $principal -Description 'Daily PK DCS retention and controlled-file reconciliation at 4:45 PM Philippine time' -Force | Out-Null
 Write-Host ("Registered {0} for 4:45 PM Asia/Manila host time." -f $MaintenanceTaskName)
 Write-Host "Verify Machine-scope DB_* and PK_BACKUP_* environment variables, then run the task manually once."
 Write-Host ("Test with: Start-ScheduledTask -TaskName '{0}'" -f $TaskName)

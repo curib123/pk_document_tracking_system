@@ -36,11 +36,11 @@
             <div class="login-intro">
 
                 <span class="login-kicker">
-                    PEANUT KISSES · DOCUMENT TRACKING SYSTEM
+                    PEANUT KISSES · DOCUMENT CONTROL SYSTEM
                 </span>
 
                 <h1 id="loginWelcomeHeading" class="login-welcome">
-                    Secure access for your document tracking control center.
+                    Secure access for your document control center.
                 </h1>
 
                 <p>

@@ -4,8 +4,8 @@
 function unavailableResponse() {
   return new Response(
     '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-      '<title>Office network unavailable · PK DTS</title><body><h1>Office network unavailable</h1>' +
-      '<p>Reconnect to the office LAN or check that the PK DTS server is running, then refresh.</p></body></html>',
+      '<title>Office network unavailable · PK DCS</title><body><h1>Office network unavailable</h1>' +
+      '<p>Reconnect to the office LAN or check that the PK DCS server is running, then refresh.</p></body></html>',
     {
       status: 503,
       headers: {

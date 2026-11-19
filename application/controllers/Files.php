@@ -181,7 +181,7 @@ class Files extends MY_Controller
         $this->audit_event('files/office-setup');
         header('Content-Type: application/zip');
         header('Cache-Control: private, no-store');
-        header('Content-Disposition: attachment; filename="PK-DTS-WPS-Opener.zip"');
+        header('Content-Disposition: attachment; filename="PK-DCS-WPS-Opener.zip"');
         header('Content-Length: ' . filesize($path));
         try { readfile($path); } finally { unlink($path); }
         exit;

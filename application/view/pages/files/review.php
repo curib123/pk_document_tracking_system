@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Review File · PK DTS</title>
+  <title>Review File · PK DCS</title>
   <link rel="stylesheet" href="<?= base_url('assets/css/office-review.css') ?>">
 </head>
 <body>
@@ -20,7 +20,7 @@
     </div>
     <p class="hint">App links expire after 10 minutes. Refresh this page to renew them. Changes to a review copy do not update the system document.</p>
     <details><summary>Opening WPS for the first time?</summary>
-      <p>Install the PK DTS opener once on your Windows computer. Download and extract the setup package, then follow its README instructions.</p>
+      <p>Install the PK DCS opener once on your Windows computer. Download and extract the setup package, then follow its README instructions.</p>
       <a href="<?= site_url('files/office-setup') ?>">Download WPS opener setup</a>
     </details>
     <p class="hint"><?= !empty($download_url)

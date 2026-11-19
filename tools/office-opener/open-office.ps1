@@ -5,7 +5,7 @@ param(
 )
 $ErrorActionPreference = 'Stop'
 try {
-    if ($Uri.Length -gt 4096 -or $Uri -notmatch '^pk-dts-office://wps/([A-Za-z0-9_-]+)$') { throw 'Invalid PK DTS app link.' }
+    if ($Uri.Length -gt 4096 -or $Uri -notmatch '^pk-dts-office://wps/([A-Za-z0-9_-]+)$') { throw 'Invalid PK DCS app link.' }
     $encoded = $Matches[1].Replace('-', '+').Replace('_', '/')
     $encoded = $encoded.PadRight($encoded.Length + ((4 - $encoded.Length % 4) % 4), '=')
     $documentUri = [Uri][Text.Encoding]::UTF8.GetString([Convert]::FromBase64String($encoded))
@@ -18,10 +18,10 @@ try {
         $documentUri.UserInfo -or $documentUri.Query -or $documentUri.Fragment -or
         !$matchedPrefix -or
         $documentUri.AbsolutePath.Substring($matchedPrefix.Length) -notmatch '^[1-9][0-9]*/[A-Za-z0-9_-]+\.[a-f0-9]{64}/review\.(docx|xlsx)$') {
-        throw 'This link is outside the configured PK DTS review service.'
+        throw 'This link is outside the configured PK DCS review service.'
     }
     $extension = $Matches[1]
-    if ($ValidateOnly) { Write-Output ('Validated PK DTS review link for .' + $extension); exit }
+    if ($ValidateOnly) { Write-Output ('Validated PK DCS review link for .' + $extension); exit }
     $exeName = if ($extension -eq 'xlsx') { 'et.exe' } else { 'wps.exe' }
     $executable = $null
     foreach ($hive in @('HKEY_CURRENT_USER', 'HKEY_LOCAL_MACHINE')) {
@@ -55,10 +55,11 @@ try {
     $client.Timeout = [TimeSpan]::FromSeconds(60)
     try {
         $response = $client.GetAsync($documentUri).GetAwaiter().GetResult()
-        if ([int]$response.StatusCode -ne 200) { throw 'Review access expired. Reopen Review File in PK DTS and try again.' }
+        if ([int]$response.StatusCode -ne 200) { throw 'Review access expired. Reopen Review File in PK DCS and try again.' }
         $bytes = $response.Content.ReadAsByteArrayAsync().GetAwaiter().GetResult()
         if ($bytes.Length -lt 4 -or $bytes[0] -ne 80 -or $bytes[1] -ne 75) { throw 'The server did not return an Office review file.' }
     } finally { $client.Dispose(); $handler.Dispose() }
+    # Keeps the original folder name used by existing installations.
     $reviewDirectory = Join-Path $env:LOCALAPPDATA ('PK DTS\ReviewCopies\' + [Guid]::NewGuid().ToString('N'))
     New-Item -ItemType Directory -Path $reviewDirectory -Force | Out-Null
     $reviewFile = Join-Path $reviewDirectory ('review.' + $extension)
@@ -68,6 +69,6 @@ try {
 } catch {
     if ($ValidateOnly) { throw }
     Add-Type -AssemblyName System.Windows.Forms
-    [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'PK DTS - Open in WPS') | Out-Null
+    [System.Windows.Forms.MessageBox]::Show($_.Exception.Message, 'PK DCS - Open in WPS') | Out-Null
     exit 1
 }

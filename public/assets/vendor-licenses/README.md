@@ -1,4 +1,4 @@
-# Browser dependencies shipped with PK DTS
+# Browser dependencies shipped with PK DCS
 
 These files are hosted by the office web server, not loaded from the public
 internet. Do not replace their asset URLs with CDN URLs.
@@ -8,7 +8,7 @@ internet. Do not replace their asset URLs with CDN URLs.
 - **Font Awesome Free 6.7.2**: official `FortAwesome/Font-Awesome` tag 6.7.2
   all.min.css and WOFF2 fonts. The CSS paths are changed to `../../fonts/`
   and unused TTF fallbacks are omitted; the original solid WOFF2 font already
-  shipped with PK DTS. Font Awesome license:
+  shipped with PK DCS. Font Awesome license:
   `../fonts/fontawesome-LICENSE.txt`.
 - **Chart.js 4.4.7**: the UMD browser distribution of the same version used by
   the prior CDN URL. The bundle was fetched from a checked-in copy at
