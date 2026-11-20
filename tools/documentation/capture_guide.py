@@ -169,15 +169,23 @@ class Screen:
         """Contexts stay open until the browser closes: closing one mid-run once stalled the driver."""
 
 
-def attempt(sid, action):
-    print(time.strftime('%H:%M:%S'), 'start', sid, flush=True)
-    # Restart the stall watchdog: it only reports when one step takes over three minutes.
-    faulthandler.dump_traceback_later(180, repeat=True, file=sys.stderr)
-    try:
-        action()
-    except Exception as error:  # Keep capturing; report everything at the end.
-        failures.append(f'{sid}: {type(error).__name__}: {str(error).splitlines()[0][:220]}')
-        print('FAILED ' + sid, flush=True)
+def attempt(sid, action, retry=True):
+    """Run one capture step. Read-only steps retry once after a timeout: php -S is single-threaded
+    and sometimes stalls. Steps that submit or decide something pass retry=False."""
+    for tries_left in ((1, 0) if retry else (0,)):
+        print(time.strftime('%H:%M:%S'), 'start', sid, flush=True)
+        # Restart the stall watchdog: it only reports when one step takes over three minutes.
+        faulthandler.dump_traceback_later(180, repeat=True, file=sys.stderr)
+        try:
+            action()
+            return
+        except Exception as error:  # Keep capturing; report everything at the end.
+            if tries_left and 'Timeout' in type(error).__name__:
+                print('RETRY ' + sid, flush=True)
+                continue
+            failures.append(f'{sid}: {type(error).__name__}: {str(error).splitlines()[0][:220]}')
+            print('FAILED ' + sid, flush=True)
+            return
 
 
 def extra_seed():
@@ -221,8 +229,16 @@ def capture(browser, base):
     admin = Screen(browser, base, 'admin')
 
     def retention_popup():
-        # The reminder opens on top of any approval alert; its own region is captured either way.
-        expect(admin.page.locator('#retentionNotificationModal')).to_be_visible(timeout=20000)
+        # The reminder and the approval pop-up wait for each other; close the approval one if it wins.
+        reminder = admin.page.locator('#retentionNotificationModal')
+        for _ in range(60):
+            if reminder.is_visible():
+                break
+            if admin.page.locator('#taskNotificationModal').is_visible():
+                admin.page.evaluate("bootstrap.Modal.getOrCreateInstance("
+                                    "document.querySelector('#taskNotificationModal')).hide()")
+            admin.page.wait_for_timeout(500)
+        expect(reminder).to_be_visible(timeout=5000)
         admin.shot('retention-popup', '#retentionNotificationModal .modal-content', marks={
             'list': '#retentionNotificationList, #retentionNotificationModal ol, #retentionNotificationModal ul',
             'sound': 'button:Enable reminder sound', 'done': '#retentionNotificationModal button.btn-primary'})
@@ -294,13 +310,18 @@ def capture(browser, base):
         page = admin.page
         admin.go('documents/softcopy?layout=table&folder=all')
         page.get_by_role('button', name='View', exact=True).first.click()
-        page.wait_for_timeout(800)
+        page.wait_for_timeout(3000)  # The file preview opens first; let it render.
         admin.shot('view-details', VIEW_MODAL, marks={
             'header': '#viewModal .modal-header', 'tabs': 'tab:Related Requests', 'close': 'button:Close'})
-        page.get_by_role('tab', name='Document Files', exact=True).click()
-        page.wait_for_timeout(2000)
+        # Document Files is already open. Clicking it again reloads the preview, and two preview
+        # loads at once can stall the single-threaded test server.
+        files_tab = page.get_by_role('tab', name='Document Files', exact=True)
+        if files_tab.get_attribute('aria-selected') != 'true':
+            files_tab.click()
+            page.wait_for_timeout(2000)
         admin.shot('view-files', VIEW_MODAL, marks={
-            'files': 'tab:Document Files', 'fullscreen': 'text:Fullscreen', 'download': 'text:Download'})
+            'files': 'tab:Document Files', 'fullscreen': 'text:Fullscreen', 'download': 'text:Download'},
+            scroll='#viewModal >> text=Fullscreen')
         page.get_by_role('tab', name='Approval History', exact=True).click()
         page.wait_for_timeout(500)
         admin.shot('view-history', VIEW_MODAL, marks={'history': 'tab:Approval History'})
@@ -345,8 +366,10 @@ def capture(browser, base):
     attempt('hc-edit', hardcopy_edit)
 
     def hardcopy_view():
+        # The first row can be the disposed sample; open an active record.
         admin.go('documents/hardcopy?layout=table&folder=all')
-        admin.page.get_by_role('button', name='View', exact=True).first.click()
+        admin.page.get_by_role('row').filter(has_text='Sample Inspection Record').get_by_role(
+            'button', name='View', exact=True).first.click()
         admin.page.wait_for_timeout(600)
         admin.shot('hc-view', VIEW_MODAL, marks={'holder': 'text:Current Holder', 'history': 'tab:Transfer History'})
     attempt('hc-view', hardcopy_view)
@@ -386,7 +409,7 @@ def capture(browser, base):
         page.wait_for_load_state('networkidle')
         admin.shot('result', ALERT_MODAL, marks={'message': '#appAlertMessage', 'done': 'button:Got it'})
         admin.settle()
-    attempt('sc-create', softcopy_create)
+    attempt('sc-create', softcopy_create, retry=False)
 
     def softcopy_series():
         page = admin.page
@@ -401,14 +424,23 @@ def capture(browser, base):
     attempt('sc-series', softcopy_series)
 
     def softcopy_revise():
+        # Table Edit only corrects details. A direct revision starts from Add New Softcopy Document.
         page = admin.page
+        admin.go('documents/softcopy?layout=table&folder=all')
+        admin.click('dt:Add New Softcopy Document')
+        expect(page.locator('#editModal')).to_be_visible()
+        page.locator('#reqType').select_option('softcopy_revise', force=True)
+        page.wait_for_timeout(400)
+        page.locator('#reqSoftcopy').select_option(index=1, force=True)
+        page.locator('#reqSoftcopy').dispatch_event('change')
+        page.wait_for_timeout(600)
+        admin.shot('sc-revise', EDIT_MODAL, marks={
+            'action': 'field:#reqType', 'document': 'field:#reqSoftcopy', 'revision': 'field:#directRevisionLevel',
+            'title': 'field:#reqTitle', 'pages': 'field:#revisionPages', 'file': 'field:#revisionFile'},
+            scroll='#editModal #revisionPages')
         admin.go('documents/softcopy?layout=table&folder=all&q=Sample%20Quality')
         page.get_by_role('button', name='Edit', exact=True).first.click()
         expect(page.locator('#editModal')).to_be_visible()
-        admin.shot('sc-revise', EDIT_MODAL, marks={
-            'document': 'field:#reqSoftcopy', 'revision': 'field:#directRevisionLevel', 'title': 'field:#reqTitle',
-            'pages': 'field:#revisionPages', 'file': 'field:#revisionFile'}, scroll='#editModal #revisionPages')
-        page.locator('#reqType').select_option('softcopy_correct', force=True)
         page.wait_for_timeout(400)
         admin.shot('sc-correct', EDIT_MODAL, marks={
             'action': 'field:#reqType', 'title': 'field:#reqTitle', 'series': 'field:#directSeriesNumber',
@@ -429,7 +461,7 @@ def capture(browser, base):
         page.get_by_role('link', name='Request Template for Revision', exact=True).first.click()
         expect(page.locator('#editModal')).to_be_visible()
         admin.shot('sc-template-request', EDIT_MODAL, marks={
-            'subject': f'field:{REQUEST_FORM} #reqSubject', 'draft': '#requestFormSaveDraft', 'submit': '#requestFormSubmit'})
+            'subject': 'field:#reqSubject', 'draft': '#requestFormSaveDraft', 'submit': '#requestFormSubmit'})
         admin.go('my-requests?request_category=softcopy&type=softcopy_revision_template')
         admin.shot('sc-template-download', marks={'download': 'text:Download Template', 'status': 'text:Approved'})
     attempt('sc-template', template_request)
@@ -482,7 +514,7 @@ def capture(browser, base):
             'type': 'field:[name="category_type"]', 'pattern': 'field:[name="code_pattern"]',
             'parent': 'field:[name="parent_id"]', 'save': '#editModal button[type="submit"]'})
         admin.go('places/external-categories')
-        admin.shot('external-categories', marks={'tabs': 'text:External Categories'})
+        admin.shot('external-categories', marks={'tabs': '.tab-bar', 'active': '.tab-bar .tab-link.active'})
     attempt('master-data', master_data)
 
     def administration():
@@ -497,7 +529,7 @@ def capture(browser, base):
         admin.go('admin/roles')
         admin.shot('roles-page', marks={'add': 'dt:Add Role', 'edit': 'button:Edit'})
         page.get_by_role('button', name='Edit', exact=True).first.click()
-        admin.shot('role-modal', EDIT_MODAL, marks={'name': '#editModal input[type="text"] >> nth=0',
+        admin.shot('role-modal', EDIT_MODAL, marks={'name': '#roleName',
                                                     'permissions': '#editModal input[name="permissions[]"] >> nth=0',
                                                     'save': '#editModal button[type="submit"]'})
         admin.go('admin/workflows')
@@ -535,20 +567,36 @@ def capture(browser, base):
         open_request(None)
         staff.shot('req-picker', EDIT_MODAL, marks={
             'action': '#requestActionPicker', 'draft': '#requestFormSaveDraft', 'submit': '#requestFormSubmit'})
+        # Hidden forms repeat some ids; the shot helper keeps only the visible match.
         forms = {
             'req-softcopy-create': ('softcopy_create', ['#reqSubject', '#reqTitle', '#reqCategory', '#revisionFile']),
             'req-softcopy-revise': ('softcopy_revise', ['#reqSoftcopy', '#reqTitle', '#revisionPages', '#revisionFile']),
-            'req-external-create': ('external_create', []), 'req-external-revise': ('external_revise', []),
-            'req-transfer': ('transfer', []), 'req-access': ('access', []), 'req-assignment': ('assignment', []),
-            'req-disposal': ('disposal', []), 'req-scanned': ('scanned_create', [])}
+            'req-external-create': ('external_create', ['#externalRequestSubject', '#externalRequestTitle',
+                                                        '#externalRequestNumber', '#externalRequestCategory',
+                                                        '#externalRequestAttachment']),
+            'req-external-revise': ('external_revise', ['#reqExternal', '#externalRequestTitle',
+                                                        '#externalRequestAttachment']),
+            'req-transfer': ('transfer', ['#transferSource']),
+            'req-access': ('access', ['#accessRequestSubject', '#accessRequestSoftcopy', '#accessRequestExpires']),
+            'req-assignment': ('assignment', ['#accessRequestSubject', '#accessRequestSoftcopy']),
+            'req-disposal': ('disposal', ['#disposalRequestSubject', '#disposalDocumentDomain']),
+            'req-scanned': ('scanned_create', ['#scannedRequestSubject', '#scanTitle', '#scanCategory', '#scanFiles'])}
         for sid, (action, fields) in forms.items():
             def one(sid=sid, action=action, fields=fields):
                 open_request(action)
                 marks = {'action': '#requestActionPicker'}
-                marks.update({f'f{i}': f'field:{REQUEST_FORM} {sel}' for i, sel in enumerate(fields, 1)})
+                marks.update({f'f{i}': f'field:{sel}' for i, sel in enumerate(fields, 1)})
                 marks['submit'] = '#requestFormSubmit'
                 staff.shot(sid, EDIT_MODAL, marks=marks)
             attempt(sid, one)
+
+        def transfer_destination():
+            open_request('transfer')
+            staff.shot('req-transfer-destination', EDIT_MODAL, marks={
+                'destination': 'field:#transfer-location',
+                'f1': 'field:#transferRecipient', 'f2': 'field:#transferSubject', 'submit': '#requestFormSubmit'},
+                scroll='#editModal #transferSubject')
+        attempt('req-transfer-destination', transfer_destination)
         # Submit a real softcopy request; Alex returns it later.
         page = staff.page
         open_request('softcopy_create')
@@ -569,7 +617,7 @@ def capture(browser, base):
         staff.shot('req-timeline', VIEW_MODAL, marks={'tab': 'tab:Approval Process Timeline'})
         page.get_by_role('tab', name='Workflow Activity Log', exact=True).click()
         staff.shot('req-log', VIEW_MODAL, marks={'tab': 'tab:Workflow Activity Log'})
-    attempt('requests', requests)
+    attempt('requests', requests, retry=False)
 
     # ---------------------------------------------------------------- decisions (Alex, Morgan, Casey)
     def decisions():
@@ -594,11 +642,11 @@ def capture(browser, base):
         page.get_by_role('button', name='Return', exact=True).click()
         expect(page.locator('#actionModal')).to_be_visible()
         page.locator('#actionRemark').fill('Please attach the signed version.')
-        admin.shot('task-return', ACTION_MODAL, marks={'remark': 'field:#actionRemark', 'continue': '#actionContinue'})
+        admin.shot('task-return', ACTION_MODAL, marks={'remark': '#actionRemarkFields', 'continue': '#actionContinue'})
         page.locator('#actionContinue').click()
         page.wait_for_load_state('networkidle')
         admin.settle()
-    attempt('decisions', decisions)
+    attempt('decisions', decisions, retry=False)
 
     def handoffs():
         for sid, button in [('handoff-dispatch', 'Dispatch'), ('handoff-accept', 'Accept')]:
@@ -619,7 +667,16 @@ def capture(browser, base):
         page.wait_for_load_state('networkidle')
         manager.close()
         controller = Screen(browser, base, 'controller')
-        controller.page.wait_for_timeout(1500)
+        # The task pop-up waits while another modal is open; the officer's retention reminder comes first.
+        task_modal = controller.page.locator('#taskNotificationModal')
+        for _ in range(60):
+            if task_modal.is_visible():
+                break
+            if controller.page.locator('#retentionNotificationModal').is_visible():
+                controller.page.evaluate("bootstrap.Modal.getOrCreateInstance("
+                                         "document.querySelector('#retentionNotificationModal')).hide()")
+            controller.page.wait_for_timeout(500)
+        expect(task_modal).to_be_visible(timeout=5000)
         attempt('task-popup', lambda: controller.shot('task-popup', '#taskNotificationModal .modal-content', marks={
             'list': '#taskNotificationList', 'done': '#taskNotificationModal .btn-primary'}))
         controller.settle()
@@ -629,14 +686,14 @@ def capture(browser, base):
         page.get_by_role('button', name='Approve', exact=True).click()
         expect(page.locator('#actionFinalFile')).to_be_visible()
         controller.shot('task-final-file', ACTION_MODAL, marks={
-            'download': '#actionFinalDownload', 'file': 'field:#actionFinalFile', 'continue': '#actionContinue'})
+            'download': '#actionFinalDownload', 'file': '#actionFinalFile', 'continue': '#actionContinue'})
         controller.go('my-tasks?request_category=softcopy&type=softcopy_revision_template')
         page.get_by_role('button', name='Review request', exact=True).first.click()
         page.get_by_role('button', name='Approve', exact=True).click()
         controller.shot('task-template', ACTION_MODAL, marks={
-            'file': 'field:#actionFinalFile', 'expiry': 'field:#actionTemplateExpiry', 'continue': '#actionContinue'})
+            'file': '#actionFinalFile', 'expiry': '#actionTemplateExpiryFields', 'continue': '#actionContinue'})
         controller.close()
-    attempt('controller', manager_and_controller)
+    attempt('controller', manager_and_controller, retry=False)
 
     def returned():
         page = staff.page
@@ -644,7 +701,7 @@ def capture(browser, base):
         staff.shot('req-returned', marks={'status': 'text:Returned', 'edit': 'button:Edit'})
         page.get_by_role('row').filter(has_text='Warehouse Visitor Log').get_by_role('button', name='Edit', exact=True).click()
         expect(page.locator('#editModal')).to_be_visible()
-        staff.shot('req-returned-edit', EDIT_MODAL, marks={'file': f'field:{REQUEST_FORM} #revisionFile',
+        staff.shot('req-returned-edit', EDIT_MODAL, marks={'file': 'field:#revisionFile',
                                                           'submit': '#requestFormSubmit'})
     attempt('returned', returned)
 
@@ -658,7 +715,7 @@ def capture(browser, base):
         admin.go('documents/hardcopy?layout=table&folder=all')
         page.get_by_role('row').filter(has_text='Sample Dispatch Record').get_by_role('button', name='Dispose', exact=True).click()
         expect(page.locator('#actionModal')).to_be_visible()
-        admin.shot('dispose-modal', ACTION_MODAL, marks={'reason': 'field:#actionModal [data-disposal-reason]',
+        admin.shot('dispose-modal', ACTION_MODAL, marks={'reason': '#actionDisposalFields',
                                                          'continue': '#actionContinue'})
         admin.go('documents/hardcopy?layout=table&folder=all&status=disposed')
         page.get_by_role('button', name='Hard Delete', exact=True).first.click()

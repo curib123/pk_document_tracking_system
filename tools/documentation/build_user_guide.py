@@ -4,7 +4,9 @@ Run (after capture_guide.py): python -X utf8 tools/documentation/build_user_guid
 Inputs:  user_guide_content.py                  sections, tasks and steps (the words)
          screenshots/guide/manifest.json        screens, callout boxes and captured UI text
          templates/user_guide_template.pptx     theme, master and layouts (no slides)
-Output:  docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx (and the copy in docs/)
+Output:  tools/documentation/build/PK_DCS_User_Guide_Step_by_Step.pptx (a draft to review).
+         With --publish it replaces docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx
+         and the copy in docs/. Publish only after checking the draft in PowerPoint.
 
 The build stops when a bold UI label in the guide is not on its screenshot, when a numbered
 instruction has no marker, or when text does not fit its box (measured with the Calibri fonts).
@@ -21,7 +23,7 @@ from lxml import etree
 from PIL import ImageFont
 from pptx import Presentation
 from pptx.dml.color import RGBColor
-from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
+from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE, PP_PLACEHOLDER
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.oxml.ns import qn
 from pptx.util import Pt
@@ -33,14 +35,16 @@ import user_guide_content as content  # noqa: E402
 
 SHOTS = HERE / 'screenshots' / 'guide'
 TEMPLATE = HERE / 'templates' / 'user_guide_template.pptx'
-OUTPUTS = [ROOT / 'docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx',
-           ROOT / 'docs/PK_DCS_User_Guide_Step_by_Step.pptx']
+DRAFT = HERE / 'build' / 'PK_DCS_User_Guide_Step_by_Step.pptx'
+PUBLISHED = [ROOT / 'docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx',
+             ROOT / 'docs/PK_DCS_User_Guide_Step_by_Step.pptx']
 EDITION = date.today().strftime('%d %B %Y').lstrip('0')
 
 INK, RUBY, MAROON, GREY = '241B22', '99062F', '590018', '635361'
 PALE, LINE, PINK, ROSE = 'F6F2F4', 'E6DDE3', 'F1A6B6', 'FFF0F3'
 BOXES = {'next': ('WHAT HAPPENS NEXT', 'E8F3EF', '1A685B'), 'keep': ('KEEP IN MIND', 'FDF3E1', '7A4F00'),
          'good': ('GOOD TO KNOW', 'EAF1F8', '2E5E8C'), 'important': ('IMPORTANT', 'FDEBEE', RUBY)}
+NAVIGATION_SHOTS = ['menu', 'sc-register', 'hc-register', 'req-register', 'task-register']
 FONT_DIR = Path(r'C:\Windows\Fonts')
 _fonts = {}
 
@@ -148,8 +152,14 @@ def eyebrow(slide, text):
     write(slide, 36, 19, 760, 16, text, 10.5, RUBY, bold=True, caps=True, letter=2, fit=False)
 
 
+def title_placeholder(slide):
+    """The layout's title. python-pptx shapes.title only finds idx 0; this template uses idx 100/101."""
+    return next(shape for shape in slide.placeholders
+                if shape.placeholder_format.type in (PP_PLACEHOLDER.TITLE, PP_PLACEHOLDER.CENTER_TITLE))
+
+
 def title(slide, text, size=26):
-    shape = slide.shapes.title
+    shape = title_placeholder(slide)
     if width_of(text, size, True) > 880:
         problems.append('Title too long: ' + text)
     shape.text_frame.text = ''
@@ -275,11 +285,12 @@ def build_roles(plan):
     every = set(roles['Administrator'])
     rows = []
     for label, keys in content.ROLE_CAPABILITIES:
-        unknown = [key for key in keys if key not in every]
+        unknown = [key for key in keys if key not in every and key != '*']
         if unknown:
             problems.append(f'Who does what: unknown permission {unknown}')
-        rows.append([label] + ['✓' if any(key in roles.get(role, []) for key in keys) else '–'
-                               for role in content.ROLE_NAMES])
+        # The Administrator role is a wildcard in Permission_model; '*' rows are Administrator only.
+        rows.append([label] + ['✓' if role == 'Administrator' or any(key in roles.get(role, []) for key in keys)
+                               else '–' for role in content.ROLE_NAMES])
     table(slide, 36, 128, 888, ['What you can do'] + content.ROLE_NAMES, rows, [288] + [120] * 5, 9.5, center_from=1)
     pill(slide, 'Everyone')
 
@@ -305,24 +316,43 @@ def build_role_tasks(plan):
             problems.append('Role column too long: ' + role)
 
 
-def build_contents(plan, entries, part, parts):
+CONTENTS_TOP, CONTENTS_BOTTOM, SECTION_H, TASK_H = 130, 495, 22, 17.5
+
+
+def contents_pages(entries):
+    """Split contents entries into columns that fit, two columns per slide.
+    A section heading never ends a column: it moves on with its first task."""
+    columns, column, height = [], [], 0
+    room = CONTENTS_BOTTOM - CONTENTS_TOP
+    for entry in entries:
+        own = SECTION_H if entry[0] == 'section' else TASK_H
+        need = own + (TASK_H if entry[0] == 'section' else 0)
+        if column and height + need > room:
+            columns.append(column)
+            column, height = [], 0
+        column.append(entry)
+        height += own
+    columns.append(column)
+    return [columns[i:i + 2] for i in range(0, len(columns), 2)]
+
+
+def build_contents(plan, columns, part, parts):
     slide = content_slide()
     eyebrow(slide, 'Find your task')
     title(slide, 'Contents' if part == 1 else 'Contents (continued)')
     write(slide, 36, 96, 888, 20, 'Select a task to jump to it. Every task lists its steps and who can do it.', 13, GREY)
-    half = (len(entries) + 1) // 2
-    for column, chunk in enumerate([entries[:half], entries[half:]]):
-        x, y = 36 + column * 456, 130
+    for column, chunk in enumerate(columns):
+        x, y = 36 + column * 456, CONTENTS_TOP
         for kind, label, target in chunk:
             if kind == 'section':
                 write(slide, x, y + 4, 420, 14, label, 9, RUBY, bold=True, caps=True, letter=1.5, fit=False)
-                y += 22
+                y += SECTION_H
                 continue
             shape = write(slide, x, y, 360, 15, label, 11, INK, underline=True)
             link(shape, target)
             write(slide, x + 368, y, 52, 15, str(target_numbers[target]), 10, GREY, align=PP_ALIGN.RIGHT, fit=False)
-            y += 17.5
-        if y > 495:
+            y += TASK_H
+        if y > CONTENTS_BOTTOM:
             problems.append('Contents column too long')
 
 
@@ -330,7 +360,7 @@ def build_section(section, index):
     slide = prs.slides.add_slide(layouts['GUIDE_SECTION'])
     slide_number(slide)
     write(slide, 65, 112, 300, 80, f'{index:02d}', 64, PINK, bold=True, fit=False)
-    shape = slide.shapes.title
+    shape = title_placeholder(slide)
     shape.text_frame.text = section['title']
     write(slide, 65, 318, 460, 70, section['summary'], 15, 'F6D9E0')
     write(slide, 620, 107, 300, 14, 'In this section', 8.5, PINK, bold=True, caps=True, letter=2, fit=False)
@@ -387,8 +417,10 @@ def build_overview(section, task):
     if top + result_h > 494:
         problems.append('Overview steps too long: ' + task['title'])
     pill(slide, task['who'])
-    check_terms([task['intro'], task['start'], task['result']] + task.get('before', []),
-                [s['shot'] for s in steps if s.get('shot')], task['title'], task.get('allow', ()))
+    shots = [s['shot'] for s in steps if s.get('shot')]
+    check_terms([task['intro'], task['result']] + task.get('before', []), shots, task['title'], task.get('allow', ()))
+    # "Start" names the menu item or row button that opens the task; those are on the full-page screens.
+    check_terms([task['start']], shots + NAVIGATION_SHOTS, task['title'] + ' / Start', task.get('allow', ()))
 
 
 def place_screen(slide, sid, marks, area=(36, 100, 560, 392)):
@@ -538,9 +570,7 @@ def build_reference(section, ref):
 # ---------------------------------------------------------------------------- plan and build
 def plan_slides():
     """Assign slide numbers first so contents, sections and overviews can name and link them."""
-    order = [('cover', None), ('cards', None), ('roles', None), ('role-tasks', None)]
-    parts = 2
-    order += [('contents', part) for part in range(1, parts + 1)]
+    order = []
     for section_index, section in enumerate(content.SECTIONS, 1):
         order.append(('section', section_index))
         for task in section['tasks']:
@@ -563,11 +593,14 @@ def plan_slides():
         entries.append(('section', section['title'], None))
         for task in section['tasks']:
             entries.append(('task', task['title'], task['first']))
+    pages = contents_pages(entries)
+    order = [('cover', None), ('cards', None), ('roles', None), ('role-tasks', None)] + \
+            [('contents', part) for part in range(1, len(pages) + 1)] + order
     numbers = {}
     for position, (kind, key) in enumerate(order, 1):
         if kind in ('overview', 'reference', 'step'):
             numbers[key] = position
-    return order, entries, numbers
+    return order, pages, numbers
 
 
 def main():
@@ -575,7 +608,7 @@ def main():
     manifest = json.loads((SHOTS / 'manifest.json').read_text(encoding='utf-8'))
     problems, pending_links = [], []
     tasks = {task['id']: task for section in content.SECTIONS for task in section['tasks']}
-    order, entries, target_numbers = plan_slides()
+    order, contents, target_numbers = plan_slides()
     for task in tasks.values():
         for step in task.get('steps', []):
             if step.get('shot') and step['shot'] not in manifest:
@@ -587,10 +620,6 @@ def main():
     plan = {'total': len(order)}
     sections = {index: section for index, section in enumerate(content.SECTIONS, 1)}
     slides_by_key = {}
-    contents_parts = [entry for entry in order if entry[0] == 'contents']
-    half = len(entries) // 2
-    split = next(i for i in range(half, len(entries)) if entries[i][0] == 'section')
-    contents_chunks = [entries[:split], entries[split:]]
     for kind, key in order:
         if kind == 'cover':
             build_cover(plan)
@@ -601,7 +630,7 @@ def main():
         elif kind == 'role-tasks':
             build_role_tasks(plan)
         elif kind == 'contents':
-            build_contents(plan, contents_chunks[key - 1], key, len(contents_parts))
+            build_contents(plan, contents[key - 1], key, len(contents))
         elif kind == 'section':
             build_section(sections[key], key)
         elif kind == 'overview':
@@ -628,13 +657,14 @@ def main():
     prs.core_properties.title = 'PK DCS Step-by-Step User Guide'
     prs.core_properties.subject = 'Step-by-step user guide for the PK Document Control System, ' + EDITION
     prs.core_properties.author = 'PK Document Control System'
-    OUTPUTS[0].parent.mkdir(parents=True, exist_ok=True)
-    pending = OUTPUTS[0].with_suffix('.pptx.pending')
+    outputs = PUBLISHED if '--publish' in sys.argv[1:] else [DRAFT]
+    outputs[0].parent.mkdir(parents=True, exist_ok=True)
+    pending = outputs[0].with_suffix('.pptx.pending')
     prs.save(str(pending))
-    for output in OUTPUTS:
+    for output in outputs:
         shutil.copyfile(pending, output)
     pending.unlink()
-    print(f'Saved {len(prs.slides)} slides to ' + ', '.join(str(o.relative_to(ROOT)) for o in OUTPUTS))
+    print(f'Saved {len(prs.slides)} slides to ' + ', '.join(str(o.relative_to(ROOT)) for o in outputs))
 
 
 if __name__ == '__main__':

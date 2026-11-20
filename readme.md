@@ -316,9 +316,11 @@ Microsoft Edge, local PHP, and MariaDB with permission to create a test database
 # Check source coverage without generating files.
 python -X utf8 tools/documentation/refresh_documents.py --check-source
 
-# Step-by-Step User Guide: capture the current screens, then rebuild the deck.
+# Step-by-Step User Guide: capture the current screens, build a draft to review,
+# then publish it to docs/.
 python -X utf8 tools/documentation/capture_guide.py
 python -X utf8 tools/documentation/build_user_guide.py
+python -X utf8 tools/documentation/build_user_guide.py --publish
 
 # Screens for the Process Flow, then the diagrams and the Process Flow.
 python -X utf8 tools/documentation/capture_screenshots.py
@@ -337,8 +339,10 @@ it can be refreshed whenever the screens change. `capture_guide.py` drives the
 real flows on a disposable copy of the site (sample people and records only)
 and saves each screen with the positions of its numbered callouts and its visible
 text. `build_user_guide.py` lays out the deck from `user_guide_content.py` with
-the look of `templates/user_guide_template.pptx`, writes it to both
-`docs/system-documentation/` and `docs/`, and stops if a bold UI label in the
+the look of `templates/user_guide_template.pptx` and writes a draft to
+`tools/documentation/build/` (not committed). Open the draft in PowerPoint; when
+it is right, `--publish` writes the same deck to both `docs/system-documentation/`
+and `docs/`. The build stops if a bold UI label in the
 guide is not on its screenshot, a numbered step has no marker, or text does not
 fit. Change the wording in `user_guide_content.py`, not in PowerPoint: edits
 made in PowerPoint are replaced on the next build.

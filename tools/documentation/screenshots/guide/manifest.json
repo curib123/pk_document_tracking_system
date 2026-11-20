@@ -1,0 +1,2618 @@
+{
+ "_roles": {
+  "Administrator": [
+   "access.direct",
+   "access.manage",
+   "access.request",
+   "access.revoke",
+   "access.view",
+   "access.view_all",
+   "areas.add",
+   "areas.delete",
+   "areas.edit",
+   "areas.view",
+   "assets.add",
+   "assets.delete",
+   "assets.edit",
+   "assets.view",
+   "assignment.direct",
+   "assignment.manage",
+   "assignment.request",
+   "assignment.view",
+   "assignment.view_all",
+   "audit.view",
+   "categories.add",
+   "categories.delete",
+   "categories.edit",
+   "categories.view",
+   "dashboard.view",
+   "disposal.direct",
+   "disposal.request",
+   "disposal.view",
+   "disposal.view_all",
+   "documents.access_all",
+   "documents.request_catalog",
+   "documents.view_all",
+   "documents.view_assigned",
+   "documents.view_granted",
+   "external_categories.add",
+   "external_categories.delete",
+   "external_categories.edit",
+   "external_categories.view",
+   "external_documents.direct",
+   "external_documents.request",
+   "external_documents.view",
+   "files.approve",
+   "files.generate",
+   "files.history",
+   "files.print",
+   "files.upload",
+   "files.view",
+   "files.view_all",
+   "hardcopy.direct",
+   "hardcopy.request",
+   "hardcopy.view",
+   "locations.add",
+   "locations.delete",
+   "locations.edit",
+   "locations.view",
+   "notifications.edit",
+   "notifications.view",
+   "permissions.add",
+   "permissions.delete",
+   "permissions.edit",
+   "permissions.view",
+   "requests.add",
+   "requests.cancel",
+   "requests.edit",
+   "requests.manage",
+   "requests.submit",
+   "requests.view",
+   "requests.view_all",
+   "roles.add",
+   "roles.delete",
+   "roles.edit",
+   "roles.view",
+   "scanned_categories.request",
+   "scanned_documents.request",
+   "scanned_documents.view",
+   "settings.edit",
+   "settings.view",
+   "softcopy.direct",
+   "softcopy.request",
+   "softcopy.request_revision_template",
+   "softcopy.view",
+   "specifics.add",
+   "specifics.delete",
+   "specifics.edit",
+   "specifics.view",
+   "subsidiaries.add",
+   "subsidiaries.delete",
+   "subsidiaries.edit",
+   "subsidiaries.view",
+   "transfer.direct",
+   "transfer.manage",
+   "transfer.request",
+   "transfer.view",
+   "transfer.view_all",
+   "users.add",
+   "users.delete",
+   "users.edit",
+   "users.view",
+   "workflows.edit",
+   "workflows.reassign",
+   "workflows.view"
+  ],
+  "Document Control Officer": [
+   "access.direct",
+   "access.manage",
+   "access.request",
+   "access.revoke",
+   "access.view",
+   "areas.add",
+   "areas.delete",
+   "areas.edit",
+   "areas.view",
+   "assets.add",
+   "assets.delete",
+   "assets.edit",
+   "assets.view",
+   "assignment.direct",
+   "assignment.manage",
+   "assignment.request",
+   "assignment.view",
+   "audit.view",
+   "categories.add",
+   "categories.delete",
+   "categories.edit",
+   "categories.view",
+   "dashboard.view",
+   "disposal.direct",
+   "disposal.request",
+   "disposal.view",
+   "documents.access_all",
+   "documents.request_catalog",
+   "documents.view_assigned",
+   "documents.view_granted",
+   "external_categories.add",
+   "external_categories.delete",
+   "external_categories.edit",
+   "external_categories.view",
+   "external_documents.direct",
+   "external_documents.request",
+   "external_documents.view",
+   "files.approve",
+   "files.download",
+   "files.generate",
+   "files.history",
+   "files.print",
+   "files.upload",
+   "files.view",
+   "hardcopy.direct",
+   "hardcopy.request",
+   "hardcopy.view",
+   "locations.add",
+   "locations.delete",
+   "locations.edit",
+   "locations.view",
+   "notifications.edit",
+   "notifications.view",
+   "requests.add",
+   "requests.cancel",
+   "requests.edit",
+   "requests.manage",
+   "requests.submit",
+   "requests.view",
+   "requests.view_all",
+   "scanned_categories.add",
+   "scanned_categories.allocate",
+   "scanned_categories.edit",
+   "scanned_categories.request",
+   "scanned_categories.view",
+   "scanned_documents.request",
+   "scanned_documents.view",
+   "softcopy.direct",
+   "softcopy.request",
+   "softcopy.request_revision_template",
+   "softcopy.view",
+   "specifics.add",
+   "specifics.delete",
+   "specifics.edit",
+   "specifics.view",
+   "subsidiaries.add",
+   "subsidiaries.delete",
+   "subsidiaries.edit",
+   "subsidiaries.view",
+   "transfer.direct",
+   "transfer.manage",
+   "transfer.request",
+   "transfer.view"
+  ],
+  "Internal Auditor": [
+   "access.view",
+   "access.view_all",
+   "assignment.view",
+   "assignment.view_all",
+   "audit.view",
+   "categories.view",
+   "dashboard.view",
+   "disposal.view",
+   "disposal.view_all",
+   "documents.access_all",
+   "external_categories.view",
+   "external_documents.view",
+   "files.history",
+   "files.print",
+   "files.view",
+   "files.view_all",
+   "hardcopy.view",
+   "notifications.edit",
+   "notifications.view",
+   "requests.view",
+   "requests.view_all",
+   "scanned_documents.view",
+   "softcopy.view",
+   "subsidiaries.view",
+   "transfer.view",
+   "transfer.view_all"
+  ],
+  "Plant Manager": [
+   "access.request",
+   "access.view",
+   "assignment.request",
+   "assignment.view",
+   "categories.view",
+   "dashboard.view",
+   "disposal.request",
+   "disposal.view",
+   "documents.access_all",
+   "documents.request_catalog",
+   "documents.view_assigned",
+   "documents.view_granted",
+   "external_categories.view",
+   "external_documents.request",
+   "external_documents.view",
+   "files.history",
+   "files.print",
+   "files.upload",
+   "files.view",
+   "hardcopy.request",
+   "hardcopy.view",
+   "notifications.edit",
+   "notifications.view",
+   "requests.add",
+   "requests.cancel",
+   "requests.edit",
+   "requests.submit",
+   "requests.view",
+   "requests.view_all",
+   "scanned_categories.request",
+   "scanned_documents.request",
+   "scanned_documents.view",
+   "softcopy.request",
+   "softcopy.request_revision_template",
+   "softcopy.view",
+   "subsidiaries.view",
+   "transfer.request",
+   "transfer.view"
+  ],
+  "Staff": [
+   "access.request",
+   "access.view",
+   "assignment.request",
+   "assignment.view",
+   "categories.view",
+   "dashboard.view",
+   "disposal.request",
+   "disposal.view",
+   "documents.request_catalog",
+   "documents.view_assigned",
+   "documents.view_granted",
+   "external_categories.view",
+   "external_documents.request",
+   "external_documents.view",
+   "files.history",
+   "files.print",
+   "files.upload",
+   "files.view",
+   "hardcopy.request",
+   "hardcopy.view",
+   "notifications.edit",
+   "notifications.view",
+   "requests.add",
+   "requests.cancel",
+   "requests.edit",
+   "requests.submit",
+   "requests.view",
+   "scanned_categories.request",
+   "scanned_documents.request",
+   "scanned_documents.view",
+   "softcopy.request",
+   "softcopy.request_revision_template",
+   "softcopy.view",
+   "subsidiaries.view",
+   "transfer.request",
+   "transfer.view"
+  ]
+ },
+ "account-menu": {
+  "file": "account-menu.png",
+  "height": 900,
+  "marks": {
+   "password": {
+    "height": 32,
+    "width": 203.9,
+    "x": 1201.1,
+    "y": 74
+   },
+   "signout": {
+    "height": 32,
+    "width": 203.9,
+    "x": 1201.1,
+    "y": 123
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Overview Dashboard A Alex Administrator Administrator Change Password Sign Out PK DOCUMENT CONTROL WORKSPACE Good morning, Alex! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 5 All authorized records Created by you 5 Within your document access Pending approvals 1 Assigned to you or your role Outstanding handoffs 2 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers TYPE COUNT SHARE Hardcopy 4 80% Softcopy 1 20% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 1 Submitted: 1 Pending: 0 Approved: 2 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 1440
+ },
+ "assign-modal": {
+  "file": "assign-modal.png",
+  "height": 292,
+  "marks": {
+   "document": {
+    "height": 61.1,
+    "width": 291,
+    "x": 21,
+    "y": 74.0
+   },
+   "save": {
+    "height": 40.0,
+    "width": 147.4,
+    "x": 467.6,
+    "y": 232.8
+   },
+   "user": {
+    "height": 61.1,
+    "width": 291,
+    "x": 328,
+    "y": 74.0
+   }
+  },
+  "text": "Assign Document Hardcopy Document Choose hardcopy from this folder Sample Dispatch Record Sample Incoming Record Sample Inspection Record Assigned User Choose an active user Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Use the page search or a specific folder to narrow the document choices. Cancel Save Assignment Choose hardcopy from this folder Choose hardcopy from this folder Choose an active user",
+  "width": 640
+ },
+ "assign-page": {
+  "file": "assign-page.png",
+  "height": 900,
+  "marks": {
+   "all": {
+    "height": 38.0,
+    "width": 112.2,
+    "x": 1278.8,
+    "y": 255.5
+   },
+   "single": {
+    "height": 40,
+    "width": 148.9,
+    "x": 1259.1,
+    "y": 163
+   },
+   "tabs": {
+    "height": 34,
+    "width": 156.9,
+    "x": 476.5,
+    "y": 110
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Assign Documents A Alex Administrator Administrator Hardcopy / Places Softcopy / Categories Assign Document Location Choose Location Records Cabinet A Records Cabinet B Assigned User Choose active user Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Assign All All Assigned Users Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Clear Document Assigned To Updated Actions Sample Dispatch Record Alex Administrator Nov 20, 2026 \u00b7 9:43:20 AM View Edit Sample Incoming Record Alex Administrator Nov 20, 2026 \u00b7 9:43:20 AM View Edit Sample Inspection Record Alex Administrator Nov 20, 2026 \u00b7 9:43:26 AM View Edit Showing 1\u20133 of 3 records Rows per page 10 25 50 100 Page 1 of 1 Choose Location Choose Location Choose active user Choose active user Search records... All Assigned Users 10",
+  "width": 1440
+ },
+ "audit-page": {
+  "file": "audit-page.png",
+  "height": 900,
+  "marks": {
+   "search": {
+    "height": 40,
+    "width": 1034,
+    "x": 353,
+    "y": 144
+   },
+   "view": {
+    "height": 34,
+    "width": 68.5,
+    "x": 1321.5,
+    "y": 316
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Audit Trail A Alex Administrator Administrator All Results Done Not completed All time Today This week This month This year Custom range Recorded At User What Happened Result Actions Nov 20, 2026 \u00b7 9:45:00 AM Alex Administrator Alex Administrator opened the page for admin/workflows. Success View Nov 20, 2026 \u00b7 9:44:57 AM Alex Administrator Alex Administrator opened the page for admin/roles. Success View Nov 20, 2026 \u00b7 9:44:55 AM Alex Administrator Alex Administrator opened the page for admin/users. Success View Nov 20, 2026 \u00b7 9:44:53 AM Alex Administrator Alex Administrator opened the page for places/external categories. Success View Nov 20, 2026 \u00b7 9:44:51 AM Alex Administrator Alex Administrator opened the page for places/softcopy categories. Success View Nov 20, 2026 \u00b7 9:44:48 AM Alex Administrator Alex Administrator opened the page for places/location. Success View Nov 20, 2026 \u00b7 9:44:45 AM Alex Administrator Alex Administrator opened the page for admin/document assignments. Success View Nov 20, 2026 \u00b7 9:44:43 AM Alex Administrator Alex Administrator opened the page for documents/scanned. Success View Nov 20, 2026 \u00b7 9:44:41 AM Alex Administrator Alex Administrator opened the page for documents/external. Success View Nov 20, 2026 \u00b7 9:44:39 AM Alex Administrator Alex Administrator opened the page for documents/external. Success View Showing 1\u201310 of 41 records Rows per page 10 25 50 100 Page 1 of 5 Search records... All Results All time 10",
+  "width": 1440
+ },
+ "backups-page": {
+  "file": "backups-page.png",
+  "height": 900,
+  "marks": {
+   "cleanup": {
+    "height": 40.0,
+    "width": 91.5,
+    "x": 1176.1,
+    "y": 110.2
+   },
+   "import": {
+    "height": 40.0,
+    "width": 149.2,
+    "x": 819.5,
+    "y": 110.2
+   },
+   "now": {
+    "height": 40.0,
+    "width": 130.3,
+    "x": 1277.7,
+    "y": 110.2
+   },
+   "restore": {
+    "height": 40.0,
+    "width": 187.5,
+    "x": 978.7,
+    "y": 110.2
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Backup & Restore A Alex Administrator Administrator Backup & Restore Daily schedule: 5:00 PM \u00b7 Asia/Manila Import backup Restore system data Clean up Backup now All types Manual Automatic Recovery Archive Type Created Size Actions No records yet Records will appear here when they are added. Showing 0 of 0 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All types 10",
+  "width": 1440
+ },
+ "bell": {
+  "file": "bell.png",
+  "height": 900,
+  "marks": {
+   "bell": {
+    "height": 42,
+    "width": 42.0,
+    "x": 1134.5,
+    "y": 17
+   },
+   "panel": {
+    "height": 16.8,
+    "width": 94.0,
+    "x": 817.5,
+    "y": 90.1
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Overview Dashboard Notifications No unread notifications Previous 1 / 1 Next Rows 5 10 20 50 A Alex Administrator Administrator PK DOCUMENT CONTROL WORKSPACE Good morning, Alex! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 5 All authorized records Created by you 5 Within your document access Pending approvals 1 Assigned to you or your role Outstanding handoffs 2 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers TYPE COUNT SHARE Hardcopy 4 80% Softcopy 1 20% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 1 Submitted: 1 Pending: 0 Approved: 2 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 10",
+  "width": 1440
+ },
+ "category-modal": {
+  "file": "category-modal.png",
+  "height": 484,
+  "marks": {
+   "parent": {
+    "height": 85.8,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "pattern": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "save": {
+    "height": 40.0,
+    "width": 114.2,
+    "x": 657.8,
+    "y": 423.4
+   },
+   "type": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 88.0
+   }
+  },
+  "text": "Add Softcopy Categories Name Category Type Document Number Pattern Folder Folder Document No. Code Pattern Description Parent Folder (optional) No parent (root) Quality Procedures (Legacy pattern category) Active Cancel Save Record Document Number Pattern For example PPM-001 No parent (root) No parent (root) 1",
+  "width": 800
+ },
+ "confirm": {
+  "file": "confirm.png",
+  "height": 306,
+  "marks": {
+   "confirm": {
+    "height": 46.0,
+    "width": 186,
+    "x": 225,
+    "y": 229.8
+   },
+   "message": {
+    "height": 58.5,
+    "width": 382,
+    "x": 29,
+    "y": 149.3
+   }
+  },
+  "text": "Confirm Action Approve and apply this softcopy action directly? Cancel Confirm ",
+  "width": 440
+ },
+ "dispose-modal": {
+  "file": "dispose-modal.png",
+  "height": 528,
+  "marks": {
+   "continue": {
+    "height": 46.0,
+    "width": 246,
+    "x": 285,
+    "y": 451.4
+   },
+   "reason": {
+    "height": 108.4,
+    "width": 518,
+    "x": 21,
+    "y": 320.9
+   }
+  },
+  "text": "Dispose Choose a disposal reason and confirm this action. Remark (optional) Disposal Reason Select disposal reason Shred Scratch Other Cancel Continue Select disposal reason",
+  "width": 560
+ },
+ "ext-add": {
+  "file": "ext-add.png",
+  "height": 650,
+  "marks": {
+   "category": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 374.9
+   },
+   "files": {
+    "height": 89.9,
+    "width": 766,
+    "x": 17,
+    "y": 457.7
+   },
+   "number": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "save": {
+    "height": 40.0,
+    "width": 118.2,
+    "x": 653.8,
+    "y": 589.6
+   },
+   "subsidiary": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "title": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 88.0
+   }
+  },
+  "text": "Add New External Document Document Title Document No. (optional) Subsidiary (optional) Description Category Supplier References Attach File Select up to 20 PDF or image files (15 MB each). Image formats are detected from the file content. Cancel Save Directly Select or type a subsidiary Supplier References Supplier References",
+  "width": 800
+ },
+ "ext-edit": {
+  "file": "ext-edit.png",
+  "height": 650,
+  "marks": {
+   "files": {
+    "height": 89.9,
+    "width": 766,
+    "x": 17,
+    "y": 457.7
+   },
+   "save": {
+    "height": 40.0,
+    "width": 118.2,
+    "x": 653.8,
+    "y": 589.6
+   },
+   "title": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 88.0
+   }
+  },
+  "text": "Edit Record Document Title Document No. (optional) Subsidiary (optional) Description Category Supplier References Attach File Select up to 20 PDF or image files (15 MB each). Image formats are detected from the file content. Cancel Save Directly Sample Supplier Reference Select or type a subsidiary Synthetic external reference for training. Supplier References Supplier References",
+  "width": 800
+ },
+ "ext-register": {
+  "file": "ext-register.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40,
+    "width": 240.7,
+    "x": 1146.3,
+    "y": 242
+   },
+   "download": {
+    "height": 14.8,
+    "width": 73.1,
+    "x": 1155.6,
+    "y": 417.6
+   },
+   "edit": {
+    "height": 34,
+    "width": 60.6,
+    "x": 1244.7,
+    "y": 408
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management External Documents A Alex Administrator Administrator External Document Browser Choose a layout to browse external document categories. Table Folder Add New External Document All Statuses Active Disposed All Categories Supplier References All Owners Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff All time Today This week This month This year Custom range Clear Document Title Document No. Subsidiary Category Status Revision Level Actions Sample Supplier Reference \u2014 \u2014 Supplier References Active 00 View Download All Edit Dispose Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... Active All Categories All Owners All time 10",
+  "width": 1440
+ },
+ "external-categories": {
+  "file": "external-categories.png",
+  "height": 900,
+  "marks": {
+   "active": {
+    "height": 43.5,
+    "width": 163.3,
+    "x": 833.1,
+    "y": 105
+   },
+   "tabs": {
+    "height": 44.5,
+    "width": 1076,
+    "x": 332,
+    "y": 105
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Master Data External Categories A Alex Administrator Administrator Area Specific Asset Location Softcopy Categories External Categories Scanned Categories Add External Categories All Statuses Active Inactive All Parent Folders Supplier References Name Folder Description Parent Status Actions Supplier References Supplier References \u2014 \u2014 Active View Edit Deactivate Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Parent Folders 10",
+  "width": 1440
+ },
+ "first-password": {
+  "file": "first-password.png",
+  "height": 568,
+  "marks": {
+   "confirm": {
+    "height": 44.0,
+    "width": 450,
+    "x": 25,
+    "y": 409.0
+   },
+   "current": {
+    "height": 44.0,
+    "width": 450,
+    "x": 25,
+    "y": 183.0
+   },
+   "new": {
+    "height": 44.0,
+    "width": 450,
+    "x": 25,
+    "y": 269.8
+   },
+   "save": {
+    "height": 40.0,
+    "width": 199.1,
+    "x": 272.9,
+    "y": 507.0
+   }
+  },
+  "text": "Change your temporary password Set a permanent password before accessing documents, requests, or administration. Current or temporary password New password Use more than 8 characters, up to 72 bytes. Do not reuse your temporary password. Confirm new password Sign out Set permanent password ",
+  "width": 500
+ },
+ "fullscreen": {
+  "file": "fullscreen.png",
+  "height": 900,
+  "marks": {
+   "close": {
+    "height": 36,
+    "width": 65.9,
+    "x": 1362.1,
+    "y": 8
+   },
+   "zoom": {
+    "height": 36,
+    "width": 36.0,
+    "x": 1267.4,
+    "y": 8
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Softcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Softcopy Document All Statuses Active Disposed Cancelled All Categories Quality Procedures All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Document Number Category Status Actions Sample Quality Procedure QP-001 Quality Procedures Active View Edit Signatories Request Template for Revision Dispose Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 CONTROLLED DIGITAL DOCUMENT Sample Quality Procedure Document Number QP-001 Category / Folder Quality Procedures Series Not specified Revision Level 00 Effective Date Nov 1, 2026 Pages 1 Date Received Nov 1, 2026 Date Released Nov 1, 2026 Status Active Created By Alex Administrator Created Nov 20, 2026 \u00b7 9:43:20 AM Modified Nov 20, 2026 \u00b7 9:43:20 AM Record Version 1 Active Document Files Related Requests Approval History Document Files Current approved file and revision history \u00b7 latest 25 Sample Quality Procedure.pdf Fullscreen Download Current \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:20 AM 1,060 bytes \u00b7 application/pdf Earlier Quality Procedure.pdf Superseded \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:21 AM 1,060 bytes \u00b7 application/pdf Read-only details within your access permissions Close Sample Quality Procedure.pdf Page 1 of 1 \u2212 100% + Fit Close Scroll to zoom. Drag to move. Double-click to fit. Search records... All Statuses All Categories All Owners All time 10",
+  "width": 1440
+ },
+ "handoff-accept": {
+  "file": "handoff-accept.png",
+  "height": 354,
+  "marks": {
+   "confirm": {
+    "height": 46.0,
+    "width": 186,
+    "x": 225,
+    "y": 278.8
+   },
+   "message": {
+    "height": 107.5,
+    "width": 438,
+    "x": 1,
+    "y": 149.3
+   }
+  },
+  "text": "Confirm Action Accept? Confirm physical receipt of the document and update its custodian and location. Cancel Confirm ",
+  "width": 440
+ },
+ "handoff-dispatch": {
+  "file": "handoff-dispatch.png",
+  "height": 330,
+  "marks": {
+   "confirm": {
+    "height": 46.0,
+    "width": 186,
+    "x": 225,
+    "y": 254.3
+   },
+   "message": {
+    "height": 83.0,
+    "width": 438,
+    "x": 1,
+    "y": 149.3
+   }
+  },
+  "text": "Confirm Action Dispatch? Confirm physical release of this document to the intended recipient. Cancel Confirm ",
+  "width": 440
+ },
+ "hard-delete": {
+  "file": "hard-delete.png",
+  "height": 498,
+  "marks": {
+   "continue": {
+    "height": 46.0,
+    "width": 246,
+    "x": 285,
+    "y": 421.3
+   },
+   "password": {
+    "height": 44.0,
+    "width": 502,
+    "x": 29,
+    "y": 355.3
+   },
+   "typed": {
+    "height": 44.0,
+    "width": 502,
+    "x": 29,
+    "y": 273.8
+   }
+  },
+  "text": "Hard Delete This permanently deletes the disposed document, its files and related records. It cannot be undone. This permanently erases the document, its files and records. Recommended: download a full backup first (Administration > Backups). Type DELETE to confirm Your password Cancel Continue ",
+  "width": 560
+ },
+ "hc-edit": {
+  "file": "hc-edit.png",
+  "height": 794,
+  "marks": {
+   "location": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 360.6
+   },
+   "save": {
+    "height": 40,
+    "width": 137.0,
+    "x": 635.0,
+    "y": 734
+   },
+   "title": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 88
+   }
+  },
+  "text": "Edit Record Document Title Sequence (next number if empty) Belongs to this document, not its Location. Several documents may share one Sequence. Area No area selected Sample Office Specific No specific selected Records Section Asset (optional \u2014 can be empty) No asset / not assigned Location No location selected Records Cabinet A Records Cabinet B Current Holder Select holder Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Track retention period Retention Start (optional) Retention End (optional) Reason / Notes (optional) Cancel Save Document Sample Inspection Record e.g. 1 Sample Office Sample Office Records Section Records Section No asset / not assigned No asset / not assigned Records Cabinet A Records Cabinet A Alex Administrator Alex Administrator 1 2026-01-01 2026-11-17 Optional document notes",
+  "width": 800
+ },
+ "hc-form-holder": {
+  "file": "hc-form-holder.png",
+  "height": 714,
+  "marks": {
+   "holder": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 443.4
+   },
+   "notes": {
+    "height": 85.8,
+    "width": 766,
+    "x": 17,
+    "y": 526.2
+   },
+   "sequence": {
+    "height": 91.0,
+    "width": 766,
+    "x": 17,
+    "y": 170.8
+   }
+  },
+  "text": "Add New Hardcopy Document Document Title Sequence (next number if empty) Belongs to this document, not its Location. Several documents may share one Sequence. Area No area selected Sample Office Specific No specific selected Records Section Asset (optional \u2014 can be empty) No asset / not assigned Location No location selected Records Cabinet A Records Cabinet B Current Holder Select holder Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Track retention period Reason / Notes (optional) Cancel Save Document Enter the hardcopy document title e.g. 1 No area selected No area selected No specific selected No specific selected No asset / not assigned No asset / not assigned No location selected No location selected Alex Administrator Alex Administrator 1 Optional document notes",
+  "width": 800
+ },
+ "hc-form-place": {
+  "file": "hc-form-place.png",
+  "height": 714,
+  "marks": {
+   "area": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 277.8
+   },
+   "location": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 360.6
+   },
+   "specific": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 277.8
+   },
+   "title": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 88
+   }
+  },
+  "text": "Add New Hardcopy Document Document Title Sequence (next number if empty) Belongs to this document, not its Location. Several documents may share one Sequence. Area No area selected Sample Office Specific No specific selected Records Section Asset (optional \u2014 can be empty) No asset / not assigned Location No location selected Records Cabinet A Records Cabinet B Current Holder Select holder Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Track retention period Reason / Notes (optional) Cancel Save Document Enter the hardcopy document title e.g. 1 No area selected No area selected No specific selected No specific selected No asset / not assigned No asset / not assigned No location selected No location selected Alex Administrator Alex Administrator 1 Optional document notes",
+  "width": 800
+ },
+ "hc-form-retention": {
+  "file": "hc-form-retention.png",
+  "height": 794,
+  "marks": {
+   "end": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 523.2
+   },
+   "save": {
+    "height": 40,
+    "width": 137.0,
+    "x": 635.0,
+    "y": 734
+   },
+   "start": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 523.2
+   },
+   "track": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 440.4
+   }
+  },
+  "text": "Add New Hardcopy Document Document Title Sequence (next number if empty) Belongs to this document, not its Location. Several documents may share one Sequence. Area No area selected Sample Office Specific No specific selected Records Section Asset (optional \u2014 can be empty) No asset / not assigned Location No location selected Records Cabinet A Records Cabinet B Current Holder Select holder Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Track retention period Retention Start (optional) Retention End (optional) Reason / Notes (optional) Cancel Save Document Enter the hardcopy document title e.g. 1 No area selected No area selected No specific selected No specific selected No asset / not assigned No asset / not assigned No location selected No location selected Alex Administrator Alex Administrator 1 Optional document notes",
+  "width": 800
+ },
+ "hc-register": {
+  "file": "hc-register.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40,
+    "width": 252.5,
+    "x": 1134.5,
+    "y": 242
+   },
+   "dispose": {
+    "height": 34.0,
+    "width": 82.7,
+    "x": 1310.3,
+    "y": 464.5
+   },
+   "edit": {
+    "height": 34.0,
+    "width": 60.6,
+    "x": 1244.7,
+    "y": 464.5
+   },
+   "view": {
+    "height": 34.0,
+    "width": 68.5,
+    "x": 1215.6,
+    "y": 405.5
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Hardcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Hardcopy Document All Statuses Active Disposed Cancelled All Retention Due Today Overdue Due in the Next 7 Days Due in 8-30 Days All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Sequence Location Holder Status Actions Sample Obsolete Record \u2014 Records Cabinet A Alex Administrator Disposed View Hard Delete Sample Inspection Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Sample Incoming Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Sample Dispatch Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Showing 1\u20134 of 4 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Retention All Owners All time 10",
+  "width": 1440
+ },
+ "hc-retention": {
+  "file": "hc-retention.png",
+  "height": 900,
+  "marks": {
+   "filter": {
+    "height": 40,
+    "width": 180,
+    "x": 543,
+    "y": 294
+   },
+   "row": {
+    "height": 59,
+    "width": 243.9,
+    "x": 333,
+    "y": 393
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Hardcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Hardcopy Document All Statuses Active Disposed Cancelled All Retention Due Today Overdue Due in the Next 7 Days Due in 8-30 Days All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Sequence Location Holder Status Actions Sample Inspection Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses Overdue All Owners All time 10",
+  "width": 1440
+ },
+ "hc-view": {
+  "file": "hc-view.png",
+  "height": 852,
+  "marks": {
+   "history": {
+    "height": 40.0,
+    "width": 141.9,
+    "x": 340.5,
+    "y": 506.1
+   },
+   "holder": {
+    "height": 13.5,
+    "width": 152,
+    "x": 32,
+    "y": 208.5
+   }
+  },
+  "text": "PHYSICAL DOCUMENT Sample Inspection Record Status Active Created By Alex Administrator Created Nov 20, 2026 \u00b7 9:43:20 AM Modified Nov 20, 2026 \u00b7 9:43:26 AM Record Version 1 Current Holder Alex Administrator Days until disposal Overdue by 3 days Active 1 Area Sample Office 2 Specific Records Section 3 Location Records Cabinet A Sequence Not specified Related Requests Approval History Transfer History Related Requests Document requests visible to your account \u00b7 latest 25 No entries to display No related requests available within your permissions. Read-only details within your access permissions Close ",
+  "width": 1100
+ },
+ "list-tools": {
+  "file": "list-tools.png",
+  "height": 900,
+  "marks": {
+   "clear": {
+    "height": 40,
+    "width": 67.7,
+    "x": 1113,
+    "y": 294
+   },
+   "filters": {
+    "height": 40,
+    "width": 180,
+    "x": 353,
+    "y": 294
+   },
+   "layout": {
+    "height": 15,
+    "width": 39.0,
+    "x": 1321,
+    "y": 155
+   },
+   "pages": {
+    "height": 18.4,
+    "width": 91.2,
+    "x": 1063.8,
+    "y": 655.3
+   },
+   "search": {
+    "height": 40,
+    "width": 769.5,
+    "x": 353,
+    "y": 242
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Hardcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Hardcopy Document All Statuses Active Disposed Cancelled All Retention Due Today Overdue Due in the Next 7 Days Due in 8-30 Days All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Sequence Location Holder Status Actions Sample Obsolete Record \u2014 Records Cabinet A Alex Administrator Disposed View Hard Delete Sample Inspection Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Sample Incoming Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Sample Dispatch Record \u2014 Records Cabinet A Alex Administrator Active View Edit Dispose Showing 1\u20134 of 4 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Retention All Owners All time 10",
+  "width": 1440
+ },
+ "menu": {
+  "file": "menu.png",
+  "height": 900,
+  "marks": {
+   "admin": {
+    "height": 15,
+    "width": 252,
+    "x": 24,
+    "y": 696
+   },
+   "control": {
+    "height": 15.0,
+    "width": 252,
+    "x": 24,
+    "y": 519.8
+   },
+   "documents": {
+    "height": 15.0,
+    "width": 252,
+    "x": 24,
+    "y": 160.8
+   },
+   "requests": {
+    "height": 15.0,
+    "width": 252,
+    "x": 24,
+    "y": 380.8
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Overview Dashboard A Alex Administrator Administrator PK DOCUMENT CONTROL WORKSPACE Good morning, Alex! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 5 All authorized records Created by you 5 Within your document access Pending approvals 1 Assigned to you or your role Outstanding handoffs 2 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers TYPE COUNT SHARE Hardcopy 4 80% Softcopy 1 20% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 1 Submitted: 1 Pending: 0 Approved: 2 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 1440
+ },
+ "mobile": {
+  "file": "mobile.png",
+  "height": 900,
+  "marks": {
+   "toggle": {
+    "height": 40,
+    "width": 40,
+    "x": 10,
+    "y": 12
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests My Tasks DOCUMENT CONTROL Master Data Document Control System Overview Dashboard S PK DOCUMENT CONTROL WORKSPACE Good morning, Sam! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 0 All authorized records Created by you 0 Within your document access Pending approvals 0 Assigned to you or your role Outstanding handoffs 0 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers No accessible documents yet. TYPE COUNT SHARE Hardcopy 0 0% Softcopy 0 0% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 0 Submitted: 1 Pending: 0 Approved: 1 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 430
+ },
+ "mobile-menu": {
+  "file": "mobile-menu.png",
+  "height": 900,
+  "marks": {
+   "menu": {
+    "height": 900,
+    "width": 378,
+    "x": 0,
+    "y": 0
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests My Tasks DOCUMENT CONTROL Master Data Document Control System Overview Dashboard S PK DOCUMENT CONTROL WORKSPACE Good morning, Sam! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 0 All authorized records Created by you 0 Within your document access Pending approvals 0 Assigned to you or your role Outstanding handoffs 0 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers No accessible documents yet. TYPE COUNT SHARE Hardcopy 0 0% Softcopy 0 0% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 0 Submitted: 1 Pending: 0 Approved: 1 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 430
+ },
+ "overview": {
+  "file": "overview.png",
+  "height": 900,
+  "marks": {
+   "cards": {
+    "height": 166.5,
+    "width": 1076,
+    "x": 332,
+    "y": 305.2
+   },
+   "hero": {
+    "height": 176.2,
+    "width": 1076,
+    "x": 332,
+    "y": 105
+   },
+   "register": {
+    "height": 216.2,
+    "width": 440,
+    "x": 332,
+    "y": 495.7
+   },
+   "status": {
+    "height": 216.2,
+    "width": 616,
+    "x": 792,
+    "y": 495.7
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Overview Dashboard A Alex Administrator Administrator PK DOCUMENT CONTROL WORKSPACE Good morning, Alex! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 5 All authorized records Created by you 5 Within your document access Pending approvals 1 Assigned to you or your role Outstanding handoffs 2 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers TYPE COUNT SHARE Hardcopy 4 80% Softcopy 1 20% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 1 Submitted: 1 Pending: 0 Approved: 2 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 1440
+ },
+ "password-modal": {
+  "file": "password-modal.png",
+  "height": 468,
+  "marks": {
+   "confirm": {
+    "height": 40.0,
+    "width": 450,
+    "x": 25,
+    "y": 324.8
+   },
+   "current": {
+    "height": 40.0,
+    "width": 450,
+    "x": 25,
+    "y": 114.8
+   },
+   "new": {
+    "height": 40.0,
+    "width": 450,
+    "x": 25,
+    "y": 197.6
+   },
+   "save": {
+    "height": 40.0,
+    "width": 147.9,
+    "x": 324.1,
+    "y": 406.8
+   }
+  },
+  "text": "Change Password Current or temporary password New password Use more than 8 characters, up to 72 bytes. Do not reuse your temporary password. Confirm new password Cancel Update Password ",
+  "width": 500
+ },
+ "places-modal": {
+  "file": "places-modal.png",
+  "height": 630,
+  "marks": {
+   "area": {
+    "height": 131.0,
+    "width": 255.3,
+    "x": 17,
+    "y": 230.2
+   },
+   "name": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 147.4
+   },
+   "save": {
+    "height": 40.0,
+    "width": 114.2,
+    "x": 657.8,
+    "y": 568.2
+   },
+   "specific": {
+    "height": 131.0,
+    "width": 255.3,
+    "x": 272.3,
+    "y": 230.2
+   }
+  },
+  "text": "Add Locations Location details Name the Location and set its order within the selected Specific. Location Name Area No area Sample Office Specific No specific Records Section Asset Number (optional \u2014 can be empty) No asset / not assigned A Location can be saved without an Asset Number. Select an Area and Specific. Asset Number is optional. Archive Date (optional) Active Cancel Save Record e.g. Location A No area No area No specific No specific No asset / not assigned No asset / not assigned 1",
+  "width": 800
+ },
+ "places-page": {
+  "file": "places-page.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40.0,
+    "width": 146.9,
+    "x": 1240.1,
+    "y": 190.5
+   },
+   "tabs": {
+    "height": 43.5,
+    "width": 86.1,
+    "x": 401.4,
+    "y": 105
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Master Data Locations A Alex Administrator Administrator Area Specific Asset Location Softcopy Categories External Categories Scanned Categories Add Locations All Statuses Active Inactive All Parent Folders Sample Office Name Area Specific Asset Archive Date Status Actions Records Cabinet A Sample Office Records Section \u2014 \u2014 Active View Edit Deactivate Records Cabinet B Sample Office Records Section \u2014 \u2014 Active View Edit Deactivate Showing 1\u20132 of 2 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Parent Folders 10",
+  "width": 1440
+ },
+ "req-access": {
+  "file": "req-access.png",
+  "height": 628,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "f3": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 336.4
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 566.5
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject Softcopy Document Not selected QP-001 \u00b7 Sample Quality Procedure QP-002 \u00b7 Visitor Log Template Document Number Recipient / Assigned User Access Expires At Remarks (optional) Cancel Save Draft Submit Request Request Document Access Not selected Not selected Sam Staff",
+  "width": 800
+ },
+ "req-assignment": {
+  "file": "req-assignment.png",
+  "height": 544,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 483.7
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject Softcopy Document Not selected QP-001 \u00b7 Sample Quality Procedure QP-002 \u00b7 Visitor Log Template Document Number Recipient / Assigned User Remarks (optional) Cancel Save Draft Submit Request Request Document Assignment Not selected Not selected Sam Staff",
+  "width": 800
+ },
+ "req-confirm": {
+  "file": "req-confirm.png",
+  "height": 306,
+  "marks": {
+   "confirm": {
+    "height": 46.0,
+    "width": 186,
+    "x": 225,
+    "y": 229.8
+   },
+   "message": {
+    "height": 58.5,
+    "width": 382,
+    "x": 29,
+    "y": 149.3
+   }
+  },
+  "text": "Confirm Action Submit this request for approval? Cancel Confirm ",
+  "width": 440
+ },
+ "req-disposal": {
+  "file": "req-disposal.png",
+  "height": 652,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 590.7
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Document Type Hardcopy External Document Hardcopy Document Choose an active document Disposal Reason Select disposal reason Shred Scratch Other Remarks (optional) The document is disposed only after the approval workflow is completed. Cancel Save Draft Submit Request Dispose Document Hardcopy Choose an active document Choose an active document Select disposal reason",
+  "width": 800
+ },
+ "req-draft": {
+  "file": "req-draft.png",
+  "height": 900,
+  "marks": {
+   "cancel": {
+    "height": 34.0,
+    "width": 76.7,
+    "x": 1363.2,
+    "y": 317.5
+   },
+   "edit": {
+    "height": 34.0,
+    "width": 60.6,
+    "x": 1212.2,
+    "y": 317.5
+   },
+   "submit": {
+    "height": 34.0,
+    "width": 80.3,
+    "x": 1277.9,
+    "y": 317.5
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 2 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Requests & Workflow My Requests A Alex Administrator Administrator New Request All Categories Softcopy Documents External Documents Scanned Documents Hardcopy Documents Hardcopy Transfers Disposal Document Access Document Assignment All Actions Create Softcopy Document Revise Softcopy Document Cancel Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Create Hardcopy Document Update Hardcopy Document Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment All Statuses Draft In Progress Completed Approved Rejected Returned Cancelled All time Today This week This month This year Custom range Clear Request Reference Document Title Action Subject Requester Status Updated Actions DEMO-2026-001 Sample Revised Procedure Create Softcopy Document Issue a new quality procedure Alex Administrator Draft Nov 20, 2026 \u00b7 9:43:21 AM View Edit Submit Cancel Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Categories All Actions Draft All time 10",
+  "width": 1440
+ },
+ "req-external-create": {
+  "file": "req-external-create.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "f3": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "f4": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 336.4
+   },
+   "f5": {
+    "height": 89.9,
+    "width": 766,
+    "x": 17,
+    "y": 540.5
+   },
+   "submit": {
+    "height": 40,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 734
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Document Title Document No. (optional) Subsidiary (optional) External Category Supplier References Description Attach Files (up to 20 files, 15 MB each) PDF and image files only (up to 20 files, 15 MB each). The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level. Remarks (optional) Cancel Save Draft Submit Request Create External Document Select or type a subsidiary Supplier References Supplier References",
+  "width": 800
+ },
+ "req-external-revise": {
+  "file": "req-external-revise.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 253.1
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 335.9
+   },
+   "f3": {
+    "height": 89.9,
+    "width": 766,
+    "x": 17,
+    "y": 622.8
+   },
+   "submit": {
+    "height": 40,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 734
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Existing External Document Choose an external document Document Title Document No. (optional) Subsidiary (optional) External Category Supplier References Description Attach Files (up to 20 files, 15 MB each) PDF and image files only (up to 20 files, 15 MB each). The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level. Remarks (optional) Cancel Save Draft Submit Request Revise External Document Choose an external document Choose an external document Select or type a subsidiary Supplier References Supplier References",
+  "width": 800
+ },
+ "req-log": {
+  "file": "req-log.png",
+  "height": 808,
+  "marks": {
+   "tab": {
+    "height": 40.0,
+    "width": 180.4,
+    "x": 382.2,
+    "y": 455.8
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Warehouse Visitor Log Pages 1 Requested By Sam Staff Created At Nov 20, 2026 \u00b7 9:45:41 AM Last Updated Nov 20, 2026 \u00b7 9:45:41 AM Request Version 2 Awaiting alex administrator Request Reference REQ-20261120-C1BCB453D1 Request Action Softcopy Create Subject / Reason Add a visitor log for the warehouse Submitted At Nov 20, 2026 \u00b7 9:45:41 AM Remarks Not specified Proposed Title Warehouse Visitor Log Received Date Nov 20, 2026 Proposed Category Quality Procedures Document File Approval Process Timeline Workflow Activity Log Approval Workflow Sort by timestamp Oldest first Newest first Nov 20, 2026 Submitted Submitted 9:45:41 AM Sam Staff \u00b7 Documentation Example Read-only details within your access permissions Close Oldest first",
+  "width": 1100
+ },
+ "req-picker": {
+  "file": "req-picker.png",
+  "height": 274,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "draft": {
+    "height": 40.0,
+    "width": 100.6,
+    "x": 517.8,
+    "y": 212.8
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 212.8
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Cancel Save Draft Submit Request Choose a request action",
+  "width": 800
+ },
+ "req-register": {
+  "file": "req-register.png",
+  "height": 900,
+  "marks": {
+   "category": {
+    "height": 40,
+    "width": 180,
+    "x": 353,
+    "y": 178
+   },
+   "new": {
+    "height": 40,
+    "width": 138.9,
+    "x": 1248.1,
+    "y": 126
+   },
+   "status": {
+    "height": 40,
+    "width": 180,
+    "x": 733,
+    "y": 178
+   },
+   "view": {
+    "height": 34.0,
+    "width": 68.5,
+    "x": 1321.5,
+    "y": 307.8
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests My Tasks DOCUMENT CONTROL Master Data Document Control System Requests & Workflow My Requests S Sam Staff Staff New Request All Categories Softcopy Documents External Documents Scanned Documents Hardcopy Documents Hardcopy Transfers Disposal Document Access Document Assignment All Actions Create Softcopy Document Revise Softcopy Document Cancel Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Create Hardcopy Document Update Hardcopy Document Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment All Statuses Draft In Progress Completed Approved Rejected Returned Cancelled All time Today This week This month This year Custom range Clear Request Reference Document Title Action Subject Requester Status Updated Actions DEMO-2026-002 Sample Revised Procedure Create Softcopy Document Issue a new quality procedure Sam Staff Awaiting Alex Administrator Nov 20, 2026 \u00b7 9:43:26 AM View DEMO-TRANSFER-3 Sample Incoming Record Transfer Hardcopy Document Move sample record Sam Staff Approved Nov 20, 2026 \u00b7 9:43:22 AM View Showing 1\u20132 of 2 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Categories All Actions All Statuses All time 10",
+  "width": 1440
+ },
+ "req-result": {
+  "file": "req-result.png",
+  "height": 266,
+  "marks": {
+   "message": {
+    "height": 24.5,
+    "width": 390,
+    "x": 25,
+    "y": 141.3
+   }
+  },
+  "text": "Operation successful Request submitted for approval. Got it ",
+  "width": 440
+ },
+ "req-returned": {
+  "file": "req-returned.png",
+  "height": 900,
+  "marks": {
+   "edit": {
+    "height": 34.0,
+    "width": 60.6,
+    "x": 1244.1,
+    "y": 424.5
+   },
+   "status": {
+    "height": 26.5,
+    "width": 72.2,
+    "x": 953.4,
+    "y": 428.2
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks DOCUMENT CONTROL Master Data Document Control System Requests & Workflow My Requests S Sam Staff Staff New Request All Categories Softcopy Documents External Documents Scanned Documents Hardcopy Documents Hardcopy Transfers Disposal Document Access Document Assignment All Actions Create Softcopy Document Revise Softcopy Document Cancel Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Create Hardcopy Document Update Hardcopy Document Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment All Statuses Draft In Progress Completed Approved Rejected Returned Cancelled All time Today This week This month This year Custom range Clear Request Reference Document Title Action Subject Requester Status Updated Actions DEMO-2026-002 Sample Revised Procedure Create Softcopy Document Issue a new quality procedure Sam Staff Awaiting Document Control Officer Nov 20, 2026 \u00b7 9:46:08 AM View REQ-20261120-C1BCB453D1 Warehouse Visitor Log Create Softcopy Document Add a visitor log for the warehouse Sam Staff Returned Nov 20, 2026 \u00b7 9:45:56 AM View Edit Submit DEMO-TRANSFER-3 Sample Incoming Record Transfer Hardcopy Document Move sample record Sam Staff Approved Nov 20, 2026 \u00b7 9:43:22 AM View Showing 1\u20133 of 3 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Categories All Actions All Statuses All time 10",
+  "width": 1440
+ },
+ "req-returned-edit": {
+  "file": "req-returned-edit.png",
+  "height": 756,
+  "marks": {
+   "file": {
+    "height": 113.0,
+    "width": 766,
+    "x": 17,
+    "y": 419.2
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 695.5
+   }
+  },
+  "text": "Edit Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Generated Document Number Document File(required for Create and Revise \u00b7 15 MB maximum) Attach the file for approver review. An existing uploaded file can be retained when editing the draft. Approved locked documents remain available to view and download, but cannot be revised. Remarks (optional) Cancel Save Draft Submit Request Create Softcopy Document Add a visitor log for the warehouse Warehouse Visitor Log Quality Procedures Quality Procedures 1 QP-003",
+  "width": 800
+ },
+ "req-scanned": {
+  "file": "req-scanned.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 233.0
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 315.8
+   },
+   "f3": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 543.0
+   },
+   "f4": {
+    "height": 62.3,
+    "width": 766,
+    "x": 17,
+    "y": 731.7
+   },
+   "submit": {
+    "height": 40,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 734
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Every upload, update, deletion and new category requires approval through the configured workflow (DCO by default). Approved records stay unchanged while a request is pending. Subject Document Title / Category Name Document Description (optional) Describe the document's contents or purpose (up to 2000 characters). Approved Category Choose an approved folder Sample Scanned Records Retention Start Date Retention End Date Includes the full end date in Philippine time. Files / Scanned Documents Up to 20 files, 15 MB each: PDF, PNG, JPEG, TXT, DOCX or XLSX. For updates, leave blank to keep current files. Choosing files replaces the current set after approval. Cancel Save Draft Submit Request Upload Scanned Document Choose an approved folder",
+  "width": 800
+ },
+ "req-softcopy-create": {
+  "file": "req-softcopy-create.png",
+  "height": 756,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "f3": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "f4": {
+    "height": 113.0,
+    "width": 766,
+    "x": 17,
+    "y": 419.2
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 695.5
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Generated Document Number Document File(required for Create and Revise \u00b7 15 MB maximum) Attach the file for approver review. An existing uploaded file can be retained when editing the draft. Approved locked documents remain available to view and download, but cannot be revised. Remarks (optional) Cancel Save Draft Submit Request Create Softcopy Document Choose a category Choose a category 1",
+  "width": 800
+ },
+ "req-softcopy-revise": {
+  "file": "req-softcopy-revise.png",
+  "height": 674,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "f3": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "f4": {
+    "height": 113.0,
+    "width": 766,
+    "x": 17,
+    "y": 336.4
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 612.7
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Existing Softcopy Document Choose a document Proposed Document Title Number of Pages Document File(required for Create and Revise \u00b7 15 MB maximum) Attach the file for approver review. An existing uploaded file can be retained when editing the draft. Approved locked documents remain available to view and download, but cannot be revised. Remarks (optional) Cancel Save Draft Submit Request Revise Softcopy Document Choose a document Choose a document 1",
+  "width": 800
+ },
+ "req-timeline": {
+  "file": "req-timeline.png",
+  "height": 852,
+  "marks": {
+   "tab": {
+    "height": 40.0,
+    "width": 210.8,
+    "x": 167.7,
+    "y": 455.8
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Warehouse Visitor Log Pages 1 Requested By Sam Staff Created At Nov 20, 2026 \u00b7 9:45:41 AM Last Updated Nov 20, 2026 \u00b7 9:45:41 AM Request Version 2 Awaiting alex administrator Request Reference REQ-20261120-C1BCB453D1 Request Action Softcopy Create Subject / Reason Add a visitor log for the warehouse Submitted At Nov 20, 2026 \u00b7 9:45:41 AM Remarks Not specified Proposed Title Warehouse Visitor Log Received Date Nov 20, 2026 Proposed Category Quality Procedures Document File Approval Process Timeline Workflow Activity Log Approval Workflow Sort by timestamp Oldest first Newest first Workflow Version Assigned at submission 1 Noted By Active Alex Administrator 2 Plant Manager Review & Approval Pending Locks file on approval Plant Manager 3 Document Control Officer Review & Approval Pending Document Control Officer Read-only details within your access permissions Close Oldest first",
+  "width": 1100
+ },
+ "req-transfer": {
+  "file": "req-transfer.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 40.0,
+    "width": 750,
+    "x": 25,
+    "y": 114.8
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 766,
+    "x": 17,
+    "y": 170.8
+   },
+   "submit": {
+    "height": 40,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 734
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Hardcopy Document Select hardcopy document Original Places and Holder Automatically loaded from the selected hardcopy record. Document Title Area Specific Asset Sequence Location Current Holder Transfer Destination Area \u2192 Specific \u2192 Asset \u2192 Location. Selecting a child fills its parents. Destination Area All Area Sample Office Destination Specific All Specific Records Section Destination Asset (optional) No asset / not assigned Destination Location Choose a location Records Cabinet A Records Cabinet B Receiving User Select receiving user Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Request Subject Select Area, Specific and a destination Location. Asset is optional. Remarks (optional) Cancel Save Draft Submit Request Transfer Hardcopy Document Select hardcopy document Select hardcopy document Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first All Area All Area All Specific All Specific No asset / not assigned No asset / not assigned Choose a location Choose a location Select receiving user Select receiving user",
+  "width": 800
+ },
+ "req-transfer-destination": {
+  "file": "req-transfer-destination.png",
+  "height": 794,
+  "marks": {
+   "destination": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 404.4
+   },
+   "f1": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 487.2
+   },
+   "f2": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 487.2
+   },
+   "submit": {
+    "height": 40,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 734
+   }
+  },
+  "text": "New Request Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Hardcopy Document Select hardcopy document Original Places and Holder Automatically loaded from the selected hardcopy record. Document Title Area Specific Asset Sequence Location Current Holder Transfer Destination Area \u2192 Specific \u2192 Asset \u2192 Location. Selecting a child fills its parents. Destination Area All Area Sample Office Destination Specific All Specific Records Section Destination Asset (optional) No asset / not assigned Destination Location Choose a location Records Cabinet A Records Cabinet B Receiving User Select receiving user Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Request Subject Select Area, Specific and a destination Location. Asset is optional. Remarks (optional) Cancel Save Draft Submit Request Transfer Hardcopy Document Select hardcopy document Select hardcopy document Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first Select a hardcopy first All Area All Area All Specific All Specific No asset / not assigned No asset / not assigned Choose a location Choose a location Select receiving user Select receiving user",
+  "width": 800
+ },
+ "restore-modal": {
+  "file": "restore-modal.png",
+  "height": 410,
+  "marks": {},
+  "text": "Restore system data Replaces live records and private files. A recovery backup is created first. Backup to restore Select backup Your password Type RESTORE to confirm Cancel Restore selected backup Select backup",
+  "width": 800
+ },
+ "result": {
+  "file": "result.png",
+  "height": 290,
+  "marks": {
+   "done": {
+    "height": 46.0,
+    "width": 392,
+    "x": 24,
+    "y": 227.3
+   },
+   "message": {
+    "height": 49.0,
+    "width": 390,
+    "x": 25,
+    "y": 141.3
+   }
+  },
+  "text": "Operation successful Softcopy action approved and applied directly. Generated document number: QP-002. Got it ",
+  "width": 440
+ },
+ "retention-popup": {
+  "file": "retention-popup.png",
+  "height": 494,
+  "marks": {
+   "done": {
+    "height": 46.0,
+    "width": 392,
+    "x": 24,
+    "y": 430.5
+   },
+   "list": {
+    "height": 105.7,
+    "width": 390,
+    "x": 25,
+    "y": 232.8
+   },
+   "sound": {
+    "height": 46.0,
+    "width": 392,
+    "x": 24,
+    "y": 375.5
+   }
+  },
+  "text": "Document reminders Review expired retention periods. A daily alarm from 4:00 PM Philippine time reminds you to upload scanned documents as a backup. Sample Inspection Record \u00b7 Sample Inspection Record Overdue by 3 days Enable reminder sound Got it ",
+  "width": 440
+ },
+ "role-modal": {
+  "file": "role-modal.png",
+  "height": 818,
+  "marks": {
+   "name": {
+    "height": 40.0,
+    "width": 693.3,
+    "x": 46,
+    "y": 155.3
+   },
+   "permissions": {
+    "height": 40.0,
+    "width": 85.9,
+    "x": 43,
+    "y": 333.7
+   },
+   "save": {
+    "height": 40.0,
+    "width": 95.9,
+    "x": 1016.1,
+    "y": 757.5
+   }
+  },
+  "text": "ACCESS MANAGEMENT Edit Record Role Name Status Active role Module Permissions Select the actions this role can use. Access Direct Manage Request Revoke View View All Areas Add Delete Edit View Assets Add Delete Edit View Assignment Direct Manage Request View View All Audit View Categories Add Delete Edit View Dashboard View Disposal Direct Request View View All Documents Access All Request Catalog View All View Assigned View Granted External Categories Add Delete Edit View External Documents Direct Request View Files Approve Download File History Generate Print Upload View View All Hardcopy Direct Request View Locations Add Delete Edit View Notifications Edit View Permissions Add Delete Edit View Requests Add Cancel Edit Manage Submit View View All Roles Add Delete Edit View Scanned Categories Allocate to Users Create Edit Request Category View Scanned Documents Request Deletion Request Update Upload View Settings Edit View Softcopy Direct Request Request Template for Revision View Specifics Add Delete Edit View Transfer Direct Manage Request View View All Users Add Delete Edit View Workflows Edit Reassign View Cancel Save Role Document Control Officer 1 70 69 67 68 65 66 14 16 15 13 22 24 23 21 75 74 73 71 72 82 30 32 31 29 33 79 78 76 77 40 44 43 41 42 93 95 94 92 91 90 89 48 88 86 49 87 47 45 46 39 38 37 26 28 27 25 81 80 10 12 11 9 51 54 52 55 53 50 56 6 8 7 5 108 106 107 104 105 103 102 101 100 85 84 36 35 109 34 18 20 19 17 64 63 62 60 61 2 4 3 1 58 59 57",
+  "width": 1140
+ },
+ "roles-page": {
+  "file": "roles-page.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40,
+    "width": 111.7,
+    "x": 1275.3,
+    "y": 126
+   },
+   "edit": {
+    "height": 34.0,
+    "width": 60.6,
+    "x": 1329.4,
+    "y": 358.5
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Roles A Alex Administrator Administrator Add Role All Statuses Active Inactive Role Status Actions Actions Administrator Active 101 View Document Control Officer Active 83 View Edit Internal Auditor Active 26 View Edit Plant Manager Active 38 View Edit Staff Active 36 View Edit Showing 1\u20135 of 5 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses 10",
+  "width": 1440
+ },
+ "sc-add-bottom": {
+  "file": "sc-add-bottom.png",
+  "height": 794,
+  "marks": {
+   "approve": {
+    "height": 40,
+    "width": 142.0,
+    "x": 630.0,
+    "y": 734
+   },
+   "effective": {
+    "height": 89.9,
+    "width": 383,
+    "x": 400,
+    "y": 187.6
+   },
+   "file": {
+    "height": 136.1,
+    "width": 766,
+    "x": 17,
+    "y": 293.5
+   },
+   "revision": {
+    "height": 89.9,
+    "width": 383,
+    "x": 17,
+    "y": 187.6
+   },
+   "signatory": {
+    "height": 34.2,
+    "width": 116.2,
+    "x": 658.8,
+    "y": 445.5
+   }
+  },
+  "text": "Add New Softcopy Document Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Generated Document Number Auto-generated; you may type a different Document Number if needed. Revision Level Set the revision level to apply during direct approval. Effective Date (optional) If blank, effective date defaults to approval day. Document File(required for Create and Revise \u00b7 15 MB maximum) Required for direct creation or revision; the Document Fileis approved as part of the transaction. No document title, revision level or effectivity date could be read from this file; enter them manually. Approved locked documents remain available to view and download, but cannot be revised. Signatories References (optional) Add Signatory No signatories added. Use Add Signatory to list who signed or approved this revision. Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Remarks (optional) Cancel Approve Directly Create Softcopy New visitor log for the front desk Visitor Log Template Quality Procedures Quality Procedures 1 QP-002 00 C:\\fakepath\\Sample Visitor Log.pdf",
+  "width": 800
+ },
+ "sc-add-top": {
+  "file": "sc-add-top.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 88
+   },
+   "category": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   },
+   "number": {
+    "height": 113.0,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "subject": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 88
+   },
+   "title": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   }
+  },
+  "text": "Add New Softcopy Document Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Generated Document Number Auto-generated; you may type a different Document Number if needed. Revision Level Set the revision level to apply during direct approval. Effective Date (optional) If blank, effective date defaults to approval day. Document File(required for Create and Revise \u00b7 15 MB maximum) Required for direct creation or revision; the Document Fileis approved as part of the transaction. Approved locked documents remain available to view and download, but cannot be revised. Signatories References (optional) Add Signatory No signatories added. Use Add Signatory to list who signed or approved this revision. Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Remarks (optional) Cancel Approve Directly Create Softcopy New visitor log for the front desk Visitor Log Template Quality Procedures Quality Procedures 1 QP-002 00",
+  "width": 800
+ },
+ "sc-correct": {
+  "file": "sc-correct.png",
+  "height": 650,
+  "marks": {
+   "action": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 88.0
+   },
+   "pages": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 359.5
+   },
+   "revision": {
+    "height": 89.9,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "series": {
+    "height": 89.9,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "title": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   }
+  },
+  "text": "Edit Record Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Existing Softcopy Document Choose a document QP-001 \u00b7 Sample Quality Procedure QP-002 \u00b7 Visitor Log Template Proposed Document Title Series No. Correct the Series No. for this document. Revision Level Set the revision level to apply during direct approval. Number of Pages Remarks (optional) Cancel Approve Directly Correct Details (typo fix) Correction: Sample Quality Procedure QP-001 \u00b7 Sample Quality Procedure QP-001 \u00b7 Sample Quality Procedure Sample Quality Procedure 00 1",
+  "width": 800
+ },
+ "sc-folder": {
+  "file": "sc-folder.png",
+  "height": 900,
+  "marks": {
+   "expand": {
+    "height": 35.0,
+    "width": 99.9,
+    "x": 1174.0,
+    "y": 357.5
+   },
+   "folder": {
+    "height": 17.4,
+    "width": 119.7,
+    "x": 436,
+    "y": 479.8
+   },
+   "layout": {
+    "height": 15,
+    "width": 39.0,
+    "x": 1321,
+    "y": 155
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Softcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Softcopy Document All Statuses Active Disposed Cancelled All Categories Quality Procedures All Owners Alex Administrator All time Today This week This month This year Custom range Clear All Documents Expand all Collapse all Open each folder to follow the hierarchy to its documents. Recent A\u2013Z Z\u2013A Quality Procedures Category 1 on page Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Categories All Owners All time 10",
+  "width": 1440
+ },
+ "sc-register": {
+  "file": "sc-register.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40,
+    "width": 246,
+    "x": 1141,
+    "y": 242
+   },
+   "nav": {
+    "height": 40.8,
+    "width": 276,
+    "x": 12,
+    "y": 228.5
+   },
+   "search": {
+    "height": 40,
+    "width": 776,
+    "x": 353,
+    "y": 242
+   },
+   "view": {
+    "height": 34,
+    "width": 68.5,
+    "x": 854.9,
+    "y": 408
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Softcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Softcopy Document All Statuses Active Disposed Cancelled All Categories Quality Procedures All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Document Number Category Status Actions Sample Quality Procedure QP-001 Quality Procedures Active View Edit Signatories Request Template for Revision Dispose Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Categories All Owners All time 10",
+  "width": 1440
+ },
+ "sc-revise": {
+  "file": "sc-revise.png",
+  "height": 794,
+  "marks": {
+   "action": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 88
+   },
+   "document": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "file": {
+    "height": 113.0,
+    "width": 766,
+    "x": 17,
+    "y": 465.4
+   },
+   "pages": {
+    "height": 89.9,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "revision": {
+    "height": 89.9,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "title": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   }
+  },
+  "text": "Add New Softcopy Document Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Existing Softcopy Document Choose a document QP-001 \u00b7 Sample Quality Procedure QP-002 \u00b7 Visitor Log Template Proposed Document Title Revision Level Set the revision level to apply during direct approval. Number of Pages Effective Date (optional) If blank, effective date defaults to approval day. Document File(required for Create and Revise \u00b7 15 MB maximum) Required for direct creation or revision; the Document Fileis approved as part of the transaction. Approved locked documents remain available to view and download, but cannot be revised. Signatories References (optional) Add Signatory No signatories added. Use Add Signatory to list who signed or approved this revision. Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Remarks (optional) Cancel Approve Directly Revise Softcopy Document action: Sample Quality Procedure QP-001 \u00b7 Sample Quality Procedure QP-001 \u00b7 Sample Quality Procedure Sample Quality Procedure 01 1",
+  "width": 800
+ },
+ "sc-row-actions": {
+  "file": "sc-row-actions.png",
+  "height": 900,
+  "marks": {
+   "dispose": {
+    "height": 34,
+    "width": 82.7,
+    "x": 1318.2,
+    "y": 408
+   },
+   "edit": {
+    "height": 34,
+    "width": 60.6,
+    "x": 928.3,
+    "y": 408
+   },
+   "signatories": {
+    "height": 34,
+    "width": 103.5,
+    "x": 994.0,
+    "y": 408
+   },
+   "template": {
+    "height": 34,
+    "width": 210.8,
+    "x": 1102.5,
+    "y": 408
+   },
+   "view": {
+    "height": 34,
+    "width": 68.5,
+    "x": 854.9,
+    "y": 408
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Softcopy Documents A Alex Administrator Administrator Document Browser Choose a layout to browse or manage your records. Table Folder Add New Softcopy Document All Statuses Active Disposed Cancelled All Categories Quality Procedures All Owners Alex Administrator All time Today This week This month This year Custom range Clear Document Title Document Number Category Status Actions Sample Quality Procedure QP-001 Quality Procedures Active View Edit Signatories Request Template for Revision Dispose Showing 1\u20131 of 1 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Categories All Owners All time 10",
+  "width": 1440
+ },
+ "sc-series": {
+  "file": "sc-series.png",
+  "height": 794,
+  "marks": {
+   "checker": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 253.6
+   },
+   "number": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 253.6
+   },
+   "series": {
+    "height": 89.9,
+    "width": 383,
+    "x": 17,
+    "y": 336.4
+   }
+  },
+  "text": "Add New Softcopy Document Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Document Number Choose an existing document number QP-001 QP-002 Series Number Type the Series No. This Document No. has no series yet. Revision Level Set the revision level to apply during direct approval. Effective Date (optional) If blank, effective date defaults to approval day. Document File(required for Create and Revise \u00b7 15 MB maximum) Required for direct creation or revision; the Document Fileis approved as part of the transaction. Approved locked documents remain available to view and download, but cannot be revised. Signatories References (optional) Add Signatory No signatories added. Use Add Signatory to list who signed or approved this revision. Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Remarks (optional) Cancel Approve Directly Create Softcopy Quality Procedures Quality Procedures 1 QP-001 QP-001 SER-002 00",
+  "width": 800
+ },
+ "sc-signatories": {
+  "file": "sc-signatories.png",
+  "height": 652,
+  "marks": {
+   "add": {
+    "height": 34.2,
+    "width": 116.2,
+    "x": 658.8,
+    "y": 217.0
+   },
+   "save": {
+    "height": 40.0,
+    "width": 142.7,
+    "x": 629.3,
+    "y": 592.0
+   }
+  },
+  "text": "Signatories References Document Only the signatories change. The file, revision and other details are not touched, and the previous list is kept in the audit history. Signatories References (optional) Add Signatory Signatory 1 Remove Signatory Title Signatory Full Name Signatory Position Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Reason (optional) Cancel Save Signatories Visitor Log Template Prepared by Casey Controller Document Control Officer",
+  "width": 800
+ },
+ "sc-signatory-row": {
+  "file": "sc-signatory-row.png",
+  "height": 794,
+  "marks": {
+   "name": {
+    "height": 231.2,
+    "width": 766,
+    "x": 17,
+    "y": 339.5
+   },
+   "position": {
+    "height": 231.2,
+    "width": 766,
+    "x": 17,
+    "y": 339.5
+   },
+   "remove": {
+    "height": 34.0,
+    "width": 56.1,
+    "x": 705.9,
+    "y": 394.7
+   },
+   "title": {
+    "height": 231.2,
+    "width": 766,
+    "x": 17,
+    "y": 339.5
+   }
+  },
+  "text": "Add New Softcopy Document Softcopy Action Create Softcopy Revise Softcopy Correct Details (typo fix) Subject / Reason Proposed Document Title Category Choose a category Quality Procedures Need Series Number? Generated Document Number Auto-generated; you may type a different Document Number if needed. Revision Level Set the revision level to apply during direct approval. Effective Date (optional) If blank, effective date defaults to approval day. Document File(required for Create and Revise \u00b7 15 MB maximum) Required for direct creation or revision; the Document Fileis approved as part of the transaction. No document title, revision level or effectivity date could be read from this file; enter them manually. Approved locked documents remain available to view and download, but cannot be revised. Signatories References (optional) Add Signatory Signatory 1 Remove Signatory Title Signatory Full Name Signatory Position Each field lets you pick a previously saved value or type a new one. The fields work independently, so choosing a name never changes the title or position. Remarks (optional) Cancel Approve Directly Create Softcopy New visitor log for the front desk Visitor Log Template Quality Procedures Quality Procedures 1 QP-002 00 C:\\fakepath\\Sample Visitor Log.pdf Prepared by Casey Controller Document Control Officer",
+  "width": 800
+ },
+ "sc-template-download": {
+  "file": "sc-template-download.png",
+  "height": 900,
+  "marks": {
+   "download": {
+    "height": 14.8,
+    "width": 112.8,
+    "x": 1266.2,
+    "y": 346.6
+   },
+   "status": {
+    "height": 26.5,
+    "width": 75.9,
+    "x": 946.5,
+    "y": 340.8
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Requests & Workflow My Requests A Alex Administrator Administrator New Request All Categories Softcopy Documents External Documents Scanned Documents Hardcopy Documents Hardcopy Transfers Disposal Document Access Document Assignment All Actions Create Softcopy Document Revise Softcopy Document Cancel Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Create Hardcopy Document Update Hardcopy Document Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment All Statuses Draft In Progress Completed Approved Rejected Returned Cancelled All time Today This week This month This year Custom range Clear Request Reference Document Title Action Subject Requester Status Updated Actions DEMO-TEMPLATE-002 Sample Quality Procedure Request Template for Revision Prepare an editable copy for the next review Alex Administrator Approved Nov 20, 2026 \u00b7 9:43:22 AM View Download Template DEMO-TEMPLATE-001 Sample Quality Procedure Request Template for Revision Prepare an editable copy for the next review Alex Administrator Awaiting Document Control Officer Nov 20, 2026 \u00b7 9:43:22 AM View Showing 1\u20132 of 2 records Rows per page 10 25 50 100 Page 1 of 1 Search records... Softcopy Documents Request Template for Revision All Statuses All time 10",
+  "width": 1440
+ },
+ "sc-template-request": {
+  "file": "sc-template-request.png",
+  "height": 462,
+  "marks": {
+   "draft": {
+    "height": 40.0,
+    "width": 100.6,
+    "x": 517.8,
+    "y": 400.9
+   },
+   "subject": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 170.8
+   },
+   "submit": {
+    "height": 40.0,
+    "width": 136.6,
+    "x": 635.4,
+    "y": 400.9
+   }
+  },
+  "text": "Request Template for Revision Request Action Choose a request action Create Softcopy Document Revise Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment Subject / Reason Existing Softcopy Document Choose a document QP-001 \u00b7 Sample Quality Procedure QP-002 \u00b7 Visitor Log Template Remarks (optional) Cancel Save Draft Submit Request Request Template for Revision QP-002 \u00b7 Visitor Log Template QP-002 \u00b7 Visitor Log Template",
+  "width": 800
+ },
+ "scan-register": {
+  "file": "scan-register.png",
+  "height": 900,
+  "marks": {
+   "layout": {
+    "height": 15,
+    "width": 39.0,
+    "x": 1321,
+    "y": 155
+   },
+   "mine": {
+    "height": 40.0,
+    "width": 177.3,
+    "x": 572.0,
+    "y": 138.5
+   },
+   "sound": {
+    "height": 40.0,
+    "width": 185.5,
+    "x": 757.3,
+    "y": 138.5
+   },
+   "upload": {
+    "height": 40.0,
+    "width": 211.0,
+    "x": 353,
+    "y": 138.5
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Document Management Scanned Documents A Alex Administrator Administrator Upload / Request Category My Scanned Requests Enable reminder sound Table Folder Active Deleted after approval All Approved Folders Sample Scanned Records Clear Title Category / Folder Created Updated Retention Start Retention End Days / Hours Actions No matching records Try another search or clear the filters above. Showing 0 of 0 records Rows per page 10 25 50 100 Page 1 of 1 Search records... Active All Approved Folders 10",
+  "width": 1440
+ },
+ "signin": {
+  "file": "signin.png",
+  "height": 900,
+  "marks": {
+   "password": {
+    "height": 48.0,
+    "width": 450.3,
+    "x": 838.7,
+    "y": 591.8
+   },
+   "signin": {
+    "height": 48.0,
+    "width": 450.3,
+    "x": 838.7,
+    "y": 658.8
+   },
+   "username": {
+    "height": 48.0,
+    "width": 450.3,
+    "x": 838.7,
+    "y": 498.8
+   }
+  },
+  "text": "PEANUT KISSES \u00b7 DOCUMENT CONTROL SYSTEM SECURE ACCESS FOR YOUR DOCUMENT CONTROL CENTER. Keep every document organized and every task on track. Easily manage documents, track approvals, organize files, and control who can access important information\u2014all in one secure, easy-to-use workspace. Track records Manage documents Locate faster Find files easily Work securely Secure access WELCOME BACK Sign in to your account Enter your credentials to continue. Username Password Sign In Account access is managed by your system administrator. Enter your username Enter your password",
+  "width": 1440
+ },
+ "task-confirm": {
+  "file": "task-confirm.png",
+  "height": 330,
+  "marks": {
+   "confirm": {
+    "height": 46.0,
+    "width": 186,
+    "x": 225,
+    "y": 254.3
+   },
+   "message": {
+    "height": 83.0,
+    "width": 382,
+    "x": 29,
+    "y": 149.3
+   }
+  },
+  "text": "Confirm Action Approve? Approve this workflow step for Sample Revised Procedure. Cancel Confirm ",
+  "width": 440
+ },
+ "task-final-file": {
+  "file": "task-final-file.png",
+  "height": 508,
+  "marks": {
+   "continue": {
+    "height": 46.0,
+    "width": 246,
+    "x": 285,
+    "y": 432.6
+   },
+   "download": {
+    "height": 34.2,
+    "width": 177.8,
+    "x": 33,
+    "y": 194.6
+   },
+   "file": {
+    "height": 44.0,
+    "width": 502,
+    "x": 29,
+    "y": 320.4
+   }
+  },
+  "text": "Upload Final Document Approve this workflow step for Sample Revised Procedure. Step 1. Download the locked approved file and edit it. Download locked file Step 2. Upload your edited file. The requester\u2019s proposed file is then removed. Final edited file (required) Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed. Cancel Continue ",
+  "width": 560
+ },
+ "task-popup": {
+  "file": "task-popup.png",
+  "height": 492,
+  "marks": {
+   "done": {
+    "height": 46.0,
+    "width": 392,
+    "x": 24,
+    "y": 428.8
+   },
+   "list": {
+    "height": 191.9,
+    "width": 390,
+    "x": 25,
+    "y": 199.8
+   }
+  },
+  "text": "Approval needed New tasks are waiting for your approval. DEMO-2026-002 \u00b7 Issue a new quality procedure Document Control Officer Review & Approval DEMO-TEMPLATE-001 \u00b7 Prepare an editable copy for the next review DCO Review and Approval Got it ",
+  "width": 440
+ },
+ "task-register": {
+  "file": "task-register.png",
+  "height": 900,
+  "marks": {
+   "accept": {
+    "height": 34.0,
+    "width": 78.1,
+    "x": 1311.9,
+    "y": 517.8
+   },
+   "dispatch": {
+    "height": 34.0,
+    "width": 93.0,
+    "x": 1297.0,
+    "y": 605.2
+   },
+   "review": {
+    "height": 34.2,
+    "width": 142.3,
+    "x": 1247.7,
+    "y": 316.4
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 4 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Requests & Workflow My Tasks 1 A Alex Administrator Administrator All Categories Softcopy Documents External Documents Scanned Documents Hardcopy Documents Hardcopy Transfers Disposal Document Access Document Assignment All Actions Create Softcopy Document Revise Softcopy Document Cancel Softcopy Document Request Template for Revision Create External Document Revise External Document Upload Scanned Document Update Scanned Document Delete Scanned Document Create Scanned Category Create Hardcopy Document Update Hardcopy Document Transfer Hardcopy Document Dispose Document Request Document Access Request Document Assignment All Statuses Pending Approval For Transfer In Transit All time Today This week This month This year Custom range Clear Request Reference Document Title Action Subject Requester Status Updated Actions REQ-20261120-C1BCB453D1 Warehouse Visitor Log Create Softcopy Document Add a visitor log for the warehouse Sam Staff Pending Your Approval: Noted By Nov 20, 2026 \u00b7 9:45:41 AM Review request DEMO-2026-002 Sample Revised Procedure Create Softcopy Document Issue a new quality procedure Sam Staff Pending Your Approval: Noted By Nov 20, 2026 \u00b7 9:43:26 AM Review request DEMO-TRANSFER-3 Sample Incoming Record Physical Transfer Handoff Synthetic training handoff Sam Staff In Transit Nov 20, 2026 \u00b7 9:43:22 AM View Accept DEMO-TRANSFER-2 Sample Dispatch Record Physical Transfer Handoff Synthetic training handoff Alex Administrator For Transfer Nov 20, 2026 \u00b7 9:43:22 AM View Dispatch Showing 1\u20134 of 4 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Categories All Actions All Statuses All time 10",
+  "width": 1440
+ },
+ "task-result": {
+  "file": "task-result.png",
+  "height": 266,
+  "marks": {
+   "message": {
+    "height": 24.5,
+    "width": 390,
+    "x": 25,
+    "y": 141.3
+   }
+  },
+  "text": "Operation successful Approval decision recorded. Got it ",
+  "width": 440
+ },
+ "task-return": {
+  "file": "task-return.png",
+  "height": 410,
+  "marks": {
+   "continue": {
+    "height": 46.0,
+    "width": 246,
+    "x": 285,
+    "y": 334.9
+   },
+   "remark": {
+    "height": 141.4,
+    "width": 502,
+    "x": 29,
+    "y": 171.5
+   }
+  },
+  "text": "Return Return this request to the requester for changes. Remark (optional) Cancel Continue Please attach the signed version.",
+  "width": 560
+ },
+ "task-review": {
+  "file": "task-review.png",
+  "height": 852,
+  "marks": {
+   "approve": {
+    "height": 44,
+    "width": 106.5,
+    "x": 338.9,
+    "y": 789
+   },
+   "file": {
+    "height": 40.0,
+    "width": 133.7,
+    "x": 29,
+    "y": 392.9
+   },
+   "reject": {
+    "height": 44,
+    "width": 93.7,
+    "x": 453.4,
+    "y": 789
+   },
+   "return": {
+    "height": 44,
+    "width": 96.5,
+    "x": 555.1,
+    "y": 789
+   },
+   "timeline": {
+    "height": 40.0,
+    "width": 208.5,
+    "x": 168.7,
+    "y": 392.9
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Sample Revised Procedure Requested By Sam Staff Created At Nov 20, 2026 \u00b7 9:43:21 AM Last Updated Nov 20, 2026 \u00b7 9:43:26 AM Request Version 1 Pending your approval: noted by Request Reference DEMO-2026-002 Request Action Softcopy Create Subject / Reason Issue a new quality procedure Submitted At Nov 5, 2026 \u00b7 9:00:00 AM Remarks Synthetic training request Proposed Title Sample Revised Procedure Proposed Category Quality Procedures Document File Approval Process Timeline Workflow Activity Log Document File Sample Quality Procedure.pdf Fullscreen Download Read-only details within your access permissions Approve Reject Return Close ",
+  "width": 1100
+ },
+ "task-template": {
+  "file": "task-template.png",
+  "height": 502,
+  "marks": {
+   "continue": {
+    "height": 46.0,
+    "width": 246,
+    "x": 285,
+    "y": 425.7
+   },
+   "expiry": {
+    "height": 96.5,
+    "width": 502,
+    "x": 29,
+    "y": 307.1
+   },
+   "file": {
+    "height": 44.0,
+    "width": 502,
+    "x": 29,
+    "y": 200.9
+   }
+  },
+  "text": "Upload Revision Template Approve this workflow step for Sample Quality Procedure. Editable revision template (required) Word (.docx), Excel (.xlsx), or text (.txt), up to 15 MB. The requester can download it after approval. Download expiry date (required) The requester can download the template through this date, Philippine time. Cancel Upload and Approve ",
+  "width": 560
+ },
+ "topbar": {
+  "file": "topbar.png",
+  "height": 900,
+  "marks": {
+   "account": {
+    "height": 50,
+    "width": 213.5,
+    "x": 1192.5,
+    "y": 13
+   },
+   "bell": {
+    "height": 42,
+    "width": 42.0,
+    "x": 1134.5,
+    "y": 17
+   },
+   "theme": {
+    "height": 42,
+    "width": 42.0,
+    "x": 1076.5,
+    "y": 17
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System Overview Dashboard A Alex Administrator Administrator PK DOCUMENT CONTROL WORKSPACE Good morning, Alex! Welcome back. Here's your document activity and requests at a glance. Friday November 20, 2026 Accessible documents 5 All authorized records Created by you 5 Within your document access Pending approvals 1 Assigned to you or your role Outstanding handoffs 2 Your dispatch / receipt tasks Your document register All time \u00b7 same access rules as the document registers TYPE COUNT SHARE Hardcopy 4 80% Softcopy 1 20% My request status All time \u00b7 100% of finalized requests approved or completed Draft: 1 Submitted: 1 Pending: 0 Approved: 2 Rejected: 0 Completed: 0 Returned: 0 Cancelled: 0 ",
+  "width": 1440
+ },
+ "user-modal": {
+  "file": "user-modal.png",
+  "height": 758,
+  "marks": {
+   "leader": {
+    "height": 66.8,
+    "width": 383,
+    "x": 17,
+    "y": 336.4
+   },
+   "role": {
+    "height": 62.8,
+    "width": 766,
+    "x": 17,
+    "y": 419.2
+   },
+   "save": {
+    "height": 40.0,
+    "width": 97.1,
+    "x": 674.9,
+    "y": 696.2
+   },
+   "username": {
+    "height": 66.8,
+    "width": 383,
+    "x": 400,
+    "y": 170.8
+   }
+  },
+  "text": "Add User First Name Middle Name Last Name Username Position Title Primary role Select role Administrator Document Control Officer Internal Auditor Plant Manager Staff Leader (optional) No leader Alex Administrator Avery Auditor Casey Controller Morgan Manager Riley Newstaff Sam Staff Assigned roles Administrator Document Control Officer Internal Auditor Plant Manager Staff A secure temporary password is generated automatically for new accounts and shown once after saving. Generate a new temporary password for this existing account Active account Cancel Save User Select role No leader No leader 1 2 4 3 5 1 1",
+  "width": 800
+ },
+ "users-page": {
+  "file": "users-page.png",
+  "height": 900,
+  "marks": {
+   "add": {
+    "height": 40,
+    "width": 112.8,
+    "x": 1274.2,
+    "y": 126
+   },
+   "assigned": {
+    "height": 14.8,
+    "width": 109.5,
+    "x": 1330.5,
+    "y": 307.6
+   },
+   "deactivate": {
+    "height": 14.8,
+    "width": 51.5,
+    "x": 1388.5,
+    "y": 375.6
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Users A Alex Administrator Administrator Add User All Statuses Active Inactive All Roles Administrator Document Control Officer Internal Auditor Plant Manager Staff Clear Full Name Username Position Role Leader Status Actions Alex Administrator demo-admin Documentation Example Administrator \u2014 Active View Edit Assigned Documents Avery Auditor demo-auditor Documentation Example Internal Auditor \u2014 Active View Edit Assigned Documents Deactivate Casey Controller demo-controller Documentation Example Document Control Officer \u2014 Active View Edit Assigned Documents Deactivate Morgan Manager demo-manager Documentation Example Plant Manager \u2014 Active View Edit Assigned Documents Deactivate Riley Newstaff demo-newstaff Documentation Example Staff \u2014 Active View Edit Assigned Documents Deactivate Sam Staff demo-staff Documentation Example Staff Alex Administrator Active View Edit Assigned Documents Deactivate Showing 1\u20136 of 6 records Rows per page 10 25 50 100 Page 1 of 1 Search records... All Statuses All Roles 10",
+  "width": 1440
+ },
+ "view-details": {
+  "file": "view-details.png",
+  "height": 852,
+  "marks": {
+   "close": {
+    "height": 34,
+    "width": 34,
+    "x": 1049,
+    "y": 15
+   },
+   "header": {
+    "height": 290.9,
+    "width": 1098,
+    "x": 1,
+    "y": 1
+   },
+   "tabs": {
+    "height": 40.0,
+    "width": 149.7,
+    "x": 175.4,
+    "y": 300.9
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Sample Quality Procedure Document Number QP-001 Category / Folder Quality Procedures Series Not specified Revision Level 00 Effective Date Nov 1, 2026 Pages 1 Date Received Nov 1, 2026 Date Released Nov 1, 2026 Status Active Created By Alex Administrator Created Nov 20, 2026 \u00b7 9:43:20 AM Modified Nov 20, 2026 \u00b7 9:43:20 AM Record Version 1 Active Document Files Related Requests Approval History Document Files Current approved file and revision history \u00b7 latest 25 Sample Quality Procedure.pdf Fullscreen Download Current \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:20 AM 1,060 bytes \u00b7 application/pdf Earlier Quality Procedure.pdf Superseded \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:21 AM 1,060 bytes \u00b7 application/pdf Read-only details within your access permissions Close ",
+  "width": 1100
+ },
+ "view-files": {
+  "file": "view-files.png",
+  "height": 852,
+  "marks": {
+   "download": {
+    "height": 44.0,
+    "width": 117.1,
+    "x": 953.9,
+    "y": 552.2
+   },
+   "files": {
+    "height": 40.0,
+    "width": 140.4,
+    "x": 29,
+    "y": 300.9
+   },
+   "fullscreen": {
+    "height": 44.0,
+    "width": 100.3,
+    "x": 841.6,
+    "y": 552.2
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Sample Quality Procedure Document Number QP-001 Category / Folder Quality Procedures Series Not specified Revision Level 00 Effective Date Nov 1, 2026 Pages 1 Date Received Nov 1, 2026 Date Released Nov 1, 2026 Status Active Created By Alex Administrator Created Nov 20, 2026 \u00b7 9:43:20 AM Modified Nov 20, 2026 \u00b7 9:43:20 AM Record Version 1 Active Document Files Related Requests Approval History Document Files Current approved file and revision history \u00b7 latest 25 Sample Quality Procedure.pdf Fullscreen Download Current \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:20 AM 1,060 bytes \u00b7 application/pdf Earlier Quality Procedure.pdf Superseded \u00b7 Final (Document Control) Uploaded by Alex Administrator on Nov 20, 2026 \u00b7 9:43:21 AM 1,060 bytes \u00b7 application/pdf Read-only details within your access permissions Close ",
+  "width": 1100
+ },
+ "view-history": {
+  "file": "view-history.png",
+  "height": 704,
+  "marks": {
+   "history": {
+    "height": 40.0,
+    "width": 150.9,
+    "x": 329.9,
+    "y": 300.9
+   }
+  },
+  "text": "CONTROLLED DIGITAL DOCUMENT Sample Quality Procedure Document Number QP-001 Category / Folder Quality Procedures Series Not specified Revision Level 00 Effective Date Nov 1, 2026 Pages 1 Date Received Nov 1, 2026 Date Released Nov 1, 2026 Status Active Created By Alex Administrator Created Nov 20, 2026 \u00b7 9:43:20 AM Modified Nov 20, 2026 \u00b7 9:43:20 AM Record Version 1 Active Document Files Related Requests Approval History Approval History Sort by timestamp Oldest first Newest first No entries to display No approval history available for these requests. Read-only details within your access permissions Close Oldest first",
+  "width": 1100
+ },
+ "workflow-modal": {
+  "file": "workflow-modal.png",
+  "height": 840,
+  "marks": {},
+  "text": "APPROVAL WORKFLOW Access Approval Process Timeline for Access requests Workflow Version Version 1 \u00b7 Published \u00b7 Default Create Next Draft Setup stage Published version Approval steps 3 / 30 Next action Create a draft to revise Published Published default 3 approval steps Plant Manager Review & Approval Role Plant Manager Document Control Officer Review & Approval Role Document Control Officer Requester Confirmation Requester Requester account Published versions are read-only. Create a new draft to change future requests. Close Version 1 \u00b7 Published \u00b7 Default",
+  "width": 1100
+ },
+ "workflows-page": {
+  "file": "workflows-page.png",
+  "height": 900,
+  "marks": {
+   "steps": {
+    "height": 14.8,
+    "width": 70.0,
+    "x": 1309.0,
+    "y": 305.1
+   },
+   "view": {
+    "height": 34.0,
+    "width": 68.5,
+    "x": 1206.6,
+    "y": 295.5
+   }
+  },
+  "text": "PK Document Control Record Workspace Overview DOCUMENT MANAGEMENT Hardcopy Documents Softcopy Documents Scanned Documents External Documents DOCUMENT REQUESTS My Requests 1 My Tasks 3 DOCUMENT CONTROL Document Assignments Workflow Builder Master Data SYSTEM ADMINISTRATION User Management Roles & Permissions Internal Audit Trail Backup & Restore Document Control System System Administration Workflows A Alex Administrator Administrator All Workflows Active Inactive All Versions With Draft With Published Version Workflow Request Type Current Version Publication Steps Actions Access Access Version 1 Published 3 View Step Actions Assignment Assignment Version 1 Published 3 View Step Actions Disposal Disposal Version 1 Published 3 View Step Actions External Create External Create Version 1 Published 3 View Step Actions External Revise External Revise Version 1 Published 3 View Step Actions Request Template for Revision Request Template for Revision Version 1 Published 1 View Step Actions Scanned Category Approval Scanned Category Create Version 1 Published 1 View Step Actions Scanned Document Deletion Scanned Delete Version 1 Published 1 View Step Actions Scanned Document Update Scanned Update Version 1 Published 1 View Step Actions Scanned Document Upload Scanned Create Version 1 Published 1 View Step Actions Showing 1\u201310 of 13 records Rows per page 10 25 50 100 Page 1 of 2 Search records... All Workflows All Versions 10",
+  "width": 1440
+ }
+}

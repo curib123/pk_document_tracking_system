@@ -390,8 +390,11 @@ password private.
 
 ## Edit the documentation
 
-The [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) and
-[Process Flow](PK_DCS_Process_Flow.pptx) are editable PowerPoints. Use the VSDX
+The [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) is generated
+from the running application: change its wording in
+`tools/documentation/user_guide_content.py` and rebuild it (see the README), because
+edits made in PowerPoint are replaced on the next build. The
+[Process Flow](PK_DCS_Process_Flow.pptx) is an editable PowerPoint. Use the VSDX
 files to edit the diagrams in Visio or the matching PDFs to read or print them.
 
 | Diagram | Editable Visio | PDF |
