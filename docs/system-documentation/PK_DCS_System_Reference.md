@@ -12,6 +12,7 @@ the history shows who completed each action.
 
 | Your goal | Open |
 | --- | --- |
+| Get a short introduction to document types, My Requests and My Tasks | [Quick Guide](PK_DCS_Quick_Guide.pptx) |
 | Follow a task with screen examples | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
 | See who acts at each stage | [Process Flow](PK_DCS_Process_Flow.pptx) |
 | Decide what to do next | [Flowchart](PK_DCS_Flowchart.pdf) |

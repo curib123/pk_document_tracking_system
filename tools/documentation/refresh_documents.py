@@ -132,6 +132,7 @@ SPECS = [
 # here, so a refresh can never overwrite that deck.
 EXPORTED = [spec for spec in SPECS if spec[0] != 'guide']
 GUIDE_DECK = 'PK_DCS_User_Guide_Step_by_Step.pptx'
+QUICK_DECK = 'PK_DCS_Quick_Guide.pptx'  # Built by build_quick_guide.py.
 BOOKS = {
  'dfd': ('See the whole system', 'Roles, information and records',
          'Understand who provides information, how it moves through each activity, and where the result is recorded.',
@@ -1205,12 +1206,13 @@ def verify(content, pending=False):
     if not pending:
         expected = {base+'.pdf' for key, base, _ in EXPORTED}
         expected.update(base+'.vsdx' for key, base, _ in EXPORTED)
-        expected.update({'PK_DCS_Process_Flow.pptx', GUIDE_DECK})
+        expected.update({'PK_DCS_Process_Flow.pptx', GUIDE_DECK, QUICK_DECK})
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
         check_package(DOCS / 'PK_DCS_Process_Flow.pptx')
         check_package(DOCS / GUIDE_DECK)
-        print('Verified the PDF and VSDX diagrams and both PowerPoint packages.')
+        check_package(DOCS / QUICK_DECK)
+        print('Verified the PDF and VSDX diagrams and the PowerPoint packages.')
 
 
 

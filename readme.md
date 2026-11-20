@@ -19,6 +19,7 @@ allows.
 | What you need | Where to go |
 | --- | --- |
 | A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DCS_System_Reference.md) |
+| A short introduction: document types, My Requests and My Tasks | [Quick Guide](docs/system-documentation/PK_DCS_Quick_Guide.pptx) |
 | Instructions with screen examples | [Step-by-Step User Guide](docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx) |
 | A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DCS_Process_Flow.pptx) |
 | Help choosing the next step | [Flowchart](docs/system-documentation/PK_DCS_Flowchart.pdf) |
@@ -321,6 +322,9 @@ python -X utf8 tools/documentation/refresh_documents.py --check-source
 python -X utf8 tools/documentation/capture_guide.py
 python -X utf8 tools/documentation/build_user_guide.py
 python -X utf8 tools/documentation/build_user_guide.py --publish
+# Quick Guide: the short summary built from the same screens and steps.
+python -X utf8 tools/documentation/build_quick_guide.py
+python -X utf8 tools/documentation/build_quick_guide.py --publish
 
 # Screens for the Process Flow, then the diagrams and the Process Flow.
 python -X utf8 tools/documentation/capture_screenshots.py
