@@ -436,6 +436,10 @@ class Request_service
                     $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] = $fileIds;
                     $payload[$fileField] = $fileIds[0];
                 }
+            } elseif ($fileId) {
+                // A new softcopy request keeps its staged file; without this the
+                // first Save and Submit fails with "Upload a Document File".
+                $payload[$fileField] = $fileId;
             }
         }
         if (in_array($type, ['hardcopy_create', 'hardcopy_update'], TRUE)) {
