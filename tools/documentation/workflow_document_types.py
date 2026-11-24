@@ -99,7 +99,7 @@ SCENARIOS = {
                     ('PK DCS', 'Template published', 'Creates the Active document at revision 00 with its final number and the approved file.', 'Completed')],
              result=('RESULT', 'A new softcopy template exists in Softcopy Documents. Anyone with access can open the approved file and use it.'),
              middle=RETURN_REJECT,
-             keep=('KEEP IN MIND', 'The final number is assigned at approval and may differ from the preview. Screen-by-screen steps are in Part 3.')),
+             keep=('KEEP IN MIND', 'The final number is assigned at approval and may differ from the preview. The Step-by-Step User Guide shows every screen.')),
         dict(name='Revise a template by request', kind='Request',
              title='Softcopy scenario 2: revise a template by request',
              subtitle='Sam proposes a replacement file for an Active template. The document number is kept.',

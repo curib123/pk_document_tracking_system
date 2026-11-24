@@ -1,16 +1,20 @@
-"""Build the editable Process Flow PowerPoint. It explains the document registers and walks one
-request from sign-in to final approval, and shows every scenario and approval route.
+"""Build the Process Flow as a PDF and an editable PowerPoint. It explains the document registers,
+walks one request from sign-in to final approval, and shows every scenario and approval route.
 
-Run: python -X utf8 tools/documentation/build_process_flow.py
-Output: docs/system-documentation/PK_DCS_Process_Flow.pptx
+Run: python -X utf8 tools/documentation/build_process_flow.py [--out FOLDER]
+Output: docs/system-documentation/PK_DCS_Process_Flow.pdf and .pptx (or FOLDER for a draft).
+The PDF is exported by PowerPoint itself (Windows), so it matches the slides exactly.
 
 Facts (routes, results, return and reject outcomes) come from process.json so the deck
-cannot drift from the Process Flow. Screens come from screenshots/ (guide screens plus
-screenshots/workflow/, captured with PK_CAPTURE_ONLY=workflow-tasks). Sample users are
+cannot drift from the Process Flow. Each scenario and route slide shows its app screen from
+screenshots/guide/ (the Step-by-Step guide captures); the two Document Control request slides
+use screenshots/. The one-request journey is a single overview slide. Sample users are
 the synthetic people of the documentation capture site. The design follows the User Guide.
 """
 from pathlib import Path
+import argparse
 import json
+import subprocess
 import sys
 
 import pymupdf
@@ -47,6 +51,49 @@ PEOPLE = {
     'Administrator': ('Administrator', 'Any Administrator account', 'icon-review.png'),
     'Receiving user': ('Receiving user', 'Named on the transfer', 'icon-person.png'),
     'PK DCS': ('PK DCS', 'The system', 'icon-database.jpeg'),
+}
+GUIDE_SCREENS = json.loads((SHOTS / 'guide' / 'manifest.json').read_text(encoding='utf-8'))
+
+# One app screen per flow: (guide capture, caption, highlighted control or None).
+REQUEST_SCREENS = {
+    'Create Softcopy Document': 'req-softcopy-create', 'Revise Softcopy Document': 'req-softcopy-revise',
+    'Create External Document': 'req-external-create', 'Revise External Document': 'req-external-revise',
+    'Transfer Hardcopy Document': 'req-transfer', 'Request Document Access': 'req-access',
+    'Request Document Assignment': 'req-assignment', 'Dispose Document': 'req-disposal',
+}
+
+
+def request_screen(action):
+    return (REQUEST_SCREENS[action], 'My Requests, New Request: the %s form.' % action, 'action')
+
+
+SCENARIO_SCREENS = {
+    ('softcopy', 'Create a template by request'): request_screen('Create Softcopy Document'),
+    ('softcopy', 'Revise a template by request'): request_screen('Revise Softcopy Document'),
+    ('softcopy', 'Create or revise directly'): ('sc-add-top', 'Add New Softcopy Document: choose the Softcopy Action, then Approve Directly.', 'action'),
+    ('softcopy', 'Request temporary access'): request_screen('Request Document Access'),
+    ('softcopy', 'Request an assignment'): request_screen('Request Document Assignment'),
+    ('softcopy', 'Dispose of a template'): ('dispose-modal', 'Dispose: choose the Disposal Reason, then Continue and Confirm.', None),
+    ('hardcopy', 'Register a hardcopy'): ('hc-form-place', 'Add New Hardcopy Document: title, Area, Specific and Location.', 'area'),
+    ('hardcopy', 'Locate and check retention'): ('hc-view', 'View Details: status, Current Holder, storage path and retention.', 'holder'),
+    ('hardcopy', 'Transfer to a new place'): request_screen('Transfer Hardcopy Document'),
+    ('hardcopy', 'Request temporary access'): request_screen('Request Document Access'),
+    ('hardcopy', 'Request an assignment'): request_screen('Request Document Assignment'),
+    ('hardcopy', 'Request disposal'): request_screen('Dispose Document'),
+    ('external', 'Register by request'): request_screen('Create External Document'),
+    ('external', 'Revise by request'): request_screen('Revise External Document'),
+    ('external', 'Register or revise directly'): ('ext-add', 'Add New External Document: complete the form, then Save Directly.', 'save'),
+    ('external', 'Request disposal'): request_screen('Dispose Document'),
+}
+ROUTE_SCREENS = {
+    'approval-return-reject': ('req-timeline', 'View Details, Approval Process Timeline: every step of the route and who acts next.', 'tab'),
+    'approval-softcopy-revise': request_screen('Revise Softcopy Document'),
+    'approval-external-create': request_screen('Create External Document'),
+    'approval-external-revise': request_screen('Revise External Document'),
+    'approval-transfer': ('handoff-dispatch', 'After approval, Sam confirms Dispatch. The named receiver then accepts.', 'confirm'),
+    'approval-access': request_screen('Request Document Access'),
+    'approval-assignment': request_screen('Request Document Assignment'),
+    'approval-disposal': request_screen('Dispose Document'),
 }
 FIRST = {'Requester': 'Sam', "Requester's leader": 'Alex', 'Plant Manager': 'Morgan',
          'Document Control Officer': 'Casey', 'Requester account': 'Sam', 'Requester': 'Sam'}
@@ -194,6 +241,26 @@ def chrome(s, section, title, subtitle, number, total):
     s.text(1050, 802, 98, 12, '%d / %d' % (number, total), 8, False, GREY, PP_ALIGN.RIGHT)
 
 
+def screen_panel(s, x, y, w, h, screen):
+    """A real PK DCS screen for the flow, from the Step-by-Step guide captures."""
+    name, caption, mark = screen
+    item = GUIDE_SCREENS[name]
+    s.rect(x, y, w, h, PALE, RULE)
+    s.text(x + 14, y + 12, w - 28, 12, 'ON SCREEN', 9.5, True, ACCENT)
+    s.text(x + 14, y + 30, w - 28, 30, caption, 10.5, False, GREY, minimum=9)
+    top, bottom = y + 68, y + h - 14
+    iw, ih = item['width'], item['height']
+    scale = min((w - 28) / iw, (bottom - top) / ih)
+    pw, ph = iw * scale, ih * scale
+    px, py = x + (w - pw) / 2, top + (bottom - top - ph) / 2
+    s.rect(px - 1, py - 1, pw + 2, ph + 2, RULE, None)
+    s.picture(SHOTS / 'guide' / item['file'], px, py, pw, ph)
+    if mark:
+        region = item['marks'][mark]
+        s.rect(px + region['x'] * scale - 2, py + region['y'] * scale - 2,
+               region['width'] * scale + 4, region['height'] * scale + 4, None, ACCENT, 1.5)
+
+
 def person_card(s, x, y, w, h, actor, step_text, status, number=None, highlight=False):
     name, role, icon = PEOPLE[actor]
     s.rect(x, y, w, h, GOLD if highlight else PALE, RULE)
@@ -331,7 +398,7 @@ def screen_slide(prs, number, total, section, title, subtitle, actor, status, sh
     name, role, icon = PEOPLE[actor]
     s.icon(icon, 42, 134, 36)
     s.text(88, 135, 520, 18, name + '  /  ' + role, 13, True, INK)
-    s.text(88, 154, 520, 14, 'Acts in this station', 10, False, GREY)
+    s.text(88, 154, 520, 14, 'Acts in this step', 10, False, GREY)
     s.text(760, 140, 120, 14, 'REQUEST STATUS', 9, True, GREY, PP_ALIGN.RIGHT)
     s.pill(890, 134, 258, 28, status, GOLD, ACCENT, 12, RULE)
     # Screen panel
@@ -428,13 +495,18 @@ def route_slide(prs, number, total, index, route, source):
         s.text(x + 60, 173, cw - 72, 28, 'Sam Staff and the named receiver', 10.5, False, GREY, minimum=8.5)
         s.text(x + 14, 210, cw - 28, 58, route['handoff'], 11.5, False, INK, minimum=9)
         s.pill(x + 14, 278, cw - 28, 22, route['handoff_status'], WHITE, SUCCESS, 10, RULE)
+    # The app screen for this route sits beside the result and the decisions.
+    sw = 296
+    screen_panel(s, 1148 - sw, 330, sw, 380, ROUTE_SCREENS[route['key']])
+    left = 1106 - sw - 18
     # Result bar
-    s.rect(42, 330, 1106, 62, SUCCESS_PALE, SUCCESS)
+    s.rect(42, 330, left, 62, SUCCESS_PALE, SUCCESS)
     s.text(58, 340, 300, 14, 'WHEN THE LAST APPROVER APPROVES', 10, True, SUCCESS)
-    s.text(58, 358, 1072, 30, source['paths'][0]['cases'][-1]['next'], 15, True, INK, minimum=11)
+    s.text(58, 358, left - 32, 30, source['paths'][0]['cases'][-1]['next'], 15, True, INK, minimum=11)
     # Approve / Return / Reject
     heads = [('Approve', SUCCESS), ('Return', ACCENT), ('Reject', INK)]
-    pw, pg = 350, 28
+    pg = 16
+    pw = (left - 2 * pg) / 3
     for i, ((label, color), path) in enumerate(zip(heads, source['paths'])):
         x = 42 + i * (pw + pg)
         s.rect(x, 412, pw, 30, color, None)
@@ -447,8 +519,8 @@ def route_slide(prs, number, total, index, route, source):
                 when = when.replace(role, '%s (%s)' % (first, role), 1) if role in when and role != 'Requester' and role != 'Requester account' else when
             if when.startswith('Requester ') and ('approves' in when or 'returns' in when):
                 when = when.replace('Requester', 'Sam (Requester)', 1)
-            s.text(x + 14, y, pw - 28, 28, when, 12, True, color if color != INK else INK, minimum=9.5)
-            s.text(x + 14, y + 30, pw - 28, 50, case['next'], 11.5, False, INK, minimum=9.5)
+            s.text(x + 14, y, pw - 28, 30, when, 12, True, color if color != INK else INK, minimum=9.5)
+            s.text(x + 14, y + 34, pw - 28, 44, case['next'], 11.5, False, INK, minimum=9.5)
             if j < 2:
                 s.line(x + 14, y + 80, x + pw - 14, y + 80, RULE, .6)
     s.rect(42, 724, 1106, 50, PALE, None)
@@ -608,14 +680,16 @@ def scenario_slide(prs, number, total, kind, index, sc):
         s.line(x - 10, 146, x - 10, 190, RULE, .75)
         s.text(x, 146, fw - 12, 12, label.upper(), 8.5, True, GREY)
         s.text(x, 162, fw - 12, 30, value, 12, True, INK, minimum=9)
-    # Linear flow
+    # Linear flow, with the app screen for this flow in the right-hand column
     steps = sc['steps']
     n = len(steps)
     cols = 3 if n <= 6 else 4
-    gap = 40.7 if cols == 4 else 40
-    cw = (1106 - gap * (cols - 1)) / cols
+    gap = 26 if cols == 4 else 34
+    sw = 296
+    cw = (1106 - sw - 18 - gap * (cols - 1)) / cols
     ch, y0, rgap = 204, 216, 36
     rows = -(-n // cols)
+    screen_panel(s, 1148 - sw, y0, sw, rows * ch + (rows - 1) * rgap, SCENARIO_SCREENS[(kind, sc['name'])])
     for i, (actor, head, body, status) in enumerate(steps):
         row, col = divmod(i, cols)
         x, y = 42 + col * (cw + gap), y0 + row * (ch + rgap)
@@ -703,67 +777,44 @@ ROUTES = {
 }
 
 
+# PowerPoint's own export (ppSaveAsPDF = 32). An already-running PowerPoint is reused and is
+# closed only when this export was the only open presentation, so a deck the user has open stays.
+EXPORT_PDF = r"""
+$ErrorActionPreference = 'Stop'
+$app = New-Object -ComObject PowerPoint.Application
+$deck = $app.Presentations.Open($env:PK_PPTX, -1, 0, 0)
+try { $deck.SaveAs($env:PK_PDF, 32) } finally { $deck.Close() }
+if ($app.Presentations.Count -eq 0) { $app.Quit() }
+"""
+
+
+def export_pdf(pptx, target):
+    import os
+    env = dict(os.environ, PK_PPTX=str(pptx.resolve()), PK_PDF=str(target.resolve()))
+    subprocess.run(['powershell.exe', '-NoProfile', '-NonInteractive', '-Command', EXPORT_PDF],
+                   env=env, check=True)
+    with pymupdf.open(target) as doc:
+        assert len(doc) == len(Presentation(pptx).slides), 'PDF and PowerPoint page counts differ'
+        assert all(page.get_text().strip() for page in doc), 'Blank page in the Process Flow PDF'
+        return len(doc)
+
+
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--out', type=Path, default=OUT.parent, help='Folder for the PDF and PPTX')
+    out = parser.parse_args().out / OUT.name
     process = json.loads((SOURCE / 'process.json').read_text(encoding='utf-8'))
     examples = {p['id']: p for p in process['pages'] if p.get('kind') == 'approval-example'}
     assert set(ROUTES) == set(examples), 'Every approval example needs a route slide'
+    assert set(ROUTE_SCREENS) == set(ROUTES), 'Every route slide needs an app screen'
+    assert set(SCENARIO_SCREENS) == {(kind, sc['name']) for kind in ('softcopy', 'hardcopy', 'external')
+                                     for sc in SCENARIOS[kind]}, 'Every scenario slide needs an app screen'
     for key, route in ROUTES.items():
+        route['key'] = key
         source = examples[key]
         assert [step['actor'] for step in source['steps']] == route['actors'], key
         route['result'] = source['paths'][0]['cases'][-1]['next']
 
-    section = 'Part 3  /  One request start to finish'
-    stations = [
-        dict(title='Station 1: sign in as the requester', subtitle='Sam Staff starts with their own account.',
-             actor='Requester', status='No request yet', shot=screen('sign-in', labels=['Username', 'Password', 'Sign In']),
-             caption='Sign in using your own account.',
-             steps=['Open PK DCS in the browser.', 'Enter Sam\'s Username and Password.', 'Select Sign In. Replace a temporary password first if asked.',
-                    'The Overview page opens with totals and recent activity.'],
-             after='Sam is signed in as a Staff requester. The menus show only what the Staff role may use.',
-             keep='Each person uses their own account. If a menu or action is missing, the role does not have that permission.'),
-        dict(title='Station 2: start a new request', subtitle='Sam opens My Requests and chooses New Request.',
-             actor='Requester', status='No request yet', shot=screen('request-lifecycle', labels=['New Request']),
-             caption='My Requests lists your requests. Select New Request to start another.',
-             steps=['Open My Requests in the sidebar.', 'Select New Request.', 'Choose the softcopy action in the Request Action picker.'],
-             after='The form for the selected request action opens.',
-             keep='Save Draft keeps the request for later. Submit Request sends the completed form for approval.'),
-        dict(title='Station 3: complete the form and save a draft', subtitle='Sam describes the document and attaches the file.',
-             actor='Requester', status='Draft', shot=screen('softcopy-request-create', labels=['Action', 'Document title', 'Submit Request']),
-             caption='Prepare a softcopy create request.',
-             steps=['Choose Create Softcopy as the action.', 'Enter Subject / Reason and Proposed Document Title, then choose Category.',
-                    'Check Generated Document Number. Attach the Document File (up to 15 MB).',
-                    'Add optional Remarks. Select Save Draft and Confirm.'],
-             after='The request is saved as a Draft with its own reference. Only Sam can edit it.',
-             keep='Choose Submit Request to send the form for approval immediately. The final document number is assigned at approval.'),
-        dict(title='Station 4: check the draft and submit', subtitle='Sam previews the proposal and sends it into the approval route.',
-             actor='Requester', status='Draft  >  Submitted', shot=screen('review-file', labels=['Document File', 'Fullscreen', 'Download']),
-             caption='View Details shows the proposal. The Document File tab previews the attachment.',
-             steps=['In My Requests, select View on the draft.', 'Open the Document File tab and check the preview. Use Fullscreen to enlarge it.',
-                    'Close View Details. Select Submit, then Continue and Confirm.', 'The status changes to Submitted and the first approver is notified.'],
-             after='The request is Submitted. Sam can no longer edit or cancel it, but can follow it in My Requests.',
-             keep='The route is fixed at submission. If the request is returned and resubmitted, it keeps the original route.'),
-        dict(title="Station 5: the requester's leader reviews (Noted By)", subtitle='Alex sees the task in My Tasks and decides.',
-             actor="Requester's leader", status='Submitted', shot=screen('my-tasks', folder='workflow', labels=['Approve', 'Reject', 'Return']),
-             caption='The review dialog shows the available decisions for Alex.',
-             steps=['Open My Tasks and filter the register by Softcopy Documents.', 'Select Review request and check the proposal, file preview and timeline.',
-                    'Choose Approve, Return or Reject. Add an optional remark.', 'Select Continue and Confirm.'],
-             after='Alex\'s approval moves the request to the Plant Manager. The status stays Submitted.',
-             keep='Only the assigned user or role can decide. A Return sends the request back to Sam to correct and resubmit.'),
-        dict(title='Station 6: the Plant Manager approves and the file locks', subtitle='Morgan reviews next. In this route, this approval locks the attachment.',
-             actor='Plant Manager', status='Submitted, file locked', shot=screen('approval-routes', labels=['Approval Process Timeline']),
-             caption='The Approval Process Timeline shows each step. A badge marks the step that locks the file.',
-             steps=['Morgan opens My Tasks, then selects Review request.', 'Open Approval Process Timeline. The step shows Locks file on approval.',
-                    'Choose Approve, add a remark and Confirm.', 'The step shows Locked. The next reviewer is notified.'],
-             after='The attached file is locked as read-only. It can still be previewed; downloads are limited to roles with lock access.',
-             keep='A Return here goes back to Alex, the requester\'s leader. The status stays Submitted.'),
-        dict(title='Station 7: Document Control gives the final approval', subtitle='Casey approves. The system applies the change.',
-             actor='Document Control Officer', status='Completed', shot=screen('files', labels=['Fullscreen', 'Download']),
-             caption='The new Active document opens with its approved file on the Document Files tab.',
-             steps=['Casey opens My Tasks and selects Review request.', 'Check the proposal, approval history and file preview.',
-                    'Choose Approve and Confirm.', 'The Active record and file are created at revision 00.'],
-             after='The request is Completed. The document appears in Softcopy Documents with its number and file.',
-             keep='Sam can check the Workflow Activity Log for every decision, remark and time. A rejection would have closed the request.'),
-    ]
     additional_requests = [
         ('revision-template', 'revision-template-approval', 'Document Control Officer', 'Approved through expiry',
          'Set the download expiry before approving.', 'The requester can download through the selected date.'),
@@ -775,7 +826,7 @@ def main():
 
     scenario_plan = [(kind, i + 1, sc) for kind in ('softcopy', 'hardcopy', 'external') for i, sc in enumerate(SCENARIOS[kind])]
     plan = (['cover', 'users', 'types', 'type-softcopy', 'type-hardcopy', 'type-external', 'applies', 'journey']
-            + ['station'] * len(stations) + ['scenario'] * len(scenario_plan)
+            + ['scenario'] * len(scenario_plan)
             + ['matrix'] + ['route'] * len(ROUTES) + ['additional'] * len(additional_requests) + ['remember'])
     total = len(plan)
     prs = Presentation()
@@ -801,11 +852,6 @@ def main():
             scenario_slide(prs, number, total, *scenario_plan.pop(0))
         elif kind == 'journey':
             journey_slide(prs, number, total)
-        elif kind == 'station':
-            station = stations.pop(0)
-            screen_slide(prs, number, total, section, station['title'], station['subtitle'], station['actor'],
-                         station['status'], station['shot'], station['caption'], station['steps'],
-                         station['after'], station['keep'])
         elif kind == 'matrix':
             matrix_slide(prs, number, total, routes)
         elif kind == 'route':
@@ -819,9 +865,11 @@ def main():
                          [step['text'] for step in procedure['steps']], after, ' '.join(procedure['notes']))
         elif kind == 'remember':
             remember_slide(prs, number, total)
-    OUT.parent.mkdir(parents=True, exist_ok=True)
-    prs.save(OUT)
-    print('Saved %s (%d slides)' % (OUT, len(prs.slides)))
+    out.parent.mkdir(parents=True, exist_ok=True)
+    prs.save(out)
+    print('Saved %s (%d slides)' % (out, len(prs.slides)))
+    pages = export_pdf(out, out.with_suffix('.pdf'))
+    print('Saved %s (%d pages)' % (out.with_suffix('.pdf'), pages))
 
 
 if __name__ == '__main__':

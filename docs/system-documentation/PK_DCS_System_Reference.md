@@ -14,7 +14,7 @@ the history shows who completed each action.
 | --- | --- |
 | Get a short introduction to document types, My Requests and My Tasks | [Quick Guide](PK_DCS_Quick_Guide.pptx) |
 | Follow a task with screen examples | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
-| See who acts at each stage | [Process Flow](PK_DCS_Process_Flow.pptx) |
+| See who acts at each stage | [Process Flow](PK_DCS_Process_Flow.pdf) |
 | Decide what to do next | [Flowchart](PK_DCS_Flowchart.pdf) |
 | Understand how people share information | [Data Flow Diagram](PK_DCS_DFD.pdf) |
 
@@ -211,7 +211,7 @@ Scanned Documents and editable revision template approval procedures.
 | --- | --- |
 | Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DCS_DFD.pdf) |
 | Decision paths and their outcomes | [Flowchart](PK_DCS_Flowchart.pdf) |
-| Who acts next and when the requested change takes effect | [Process Flow](PK_DCS_Process_Flow.pptx) |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DCS_Process_Flow.pdf) |
 | The same procedures alongside screen instructions | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
 
 On related procedure pages, select a page number beside **Decisions** in the PDF
@@ -395,7 +395,8 @@ The [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) is generated
 from the running application: change its wording in
 `tools/documentation/user_guide_content.py` and rebuild it (see the README), because
 edits made in PowerPoint are replaced on the next build. The
-[Process Flow](PK_DCS_Process_Flow.pptx) is an editable PowerPoint. Use the VSDX
+[Process Flow](PK_DCS_Process_Flow.pdf) is a PDF with an editable
+[PowerPoint copy](PK_DCS_Process_Flow.pptx). Use the VSDX
 files to edit the diagrams in Visio or the matching PDFs to read or print them.
 
 | Diagram | Editable Visio | PDF |

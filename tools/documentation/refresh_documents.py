@@ -651,6 +651,36 @@ def diagram_icon(page, rect, kind):
     page.insert_image(pdf.Rect(rect), filename=str(ICONS/('icon-'+kind+suffix)))
 
 
+DFD_ICONS = {'actor': 'icon-person.png', 'reviewer': 'icon-review.png',
+             'process': 'icon-account.png', 'store': 'icon-database.jpeg'}
+_DFD_ICON_DATA = {}
+
+
+def dfd_icon(page, rect, kind):
+    """Illustrate a DFD symbol: a person for an entity, the system screen for a process,
+    the database for a data store. The white backdrop is made transparent so the
+    picture sits cleanly on tinted process symbols; Visio keeps the transparency."""
+    if kind not in _DFD_ICON_DATA:
+        from PIL import Image, ImageDraw
+        image = Image.open(ICONS/DFD_ICONS[kind]).convert('RGBA')
+        for corner in [(0, 0), (image.width-1, 0), (0, image.height-1), (image.width-1, image.height-1)]:
+            if min(image.getpixel(corner)[:3]) >= 240:
+                ImageDraw.floodfill(image, corner, (255, 255, 255, 0), thresh=24)
+        image = image.crop(image.getchannel('A').getbbox())  # Trim the empty margin.
+        image.thumbnail((192, 192))
+        buffer = io.BytesIO()
+        image.save(buffer, 'PNG')
+        _DFD_ICON_DATA[kind] = buffer.getvalue()
+    page.insert_image(pdf.Rect(rect), stream=_DFD_ICON_DATA[kind], keep_proportion=True)
+
+
+def dfd_icon_count(item):
+    if item.get('kind') == 'context':
+        return len(item['actors'])+1
+    reviewers = len(item['operators']) if item.get('kind') == 'request-decision-data' else 0
+    return reviewers+sum(4 if row.get('context_from') else 3 for row in item['flows'])
+
+
 def dfd_page(doc, item, number, total):
     summary = (item['workflow']+' ' if item.get('workflow') else '') + item['summary']
     page = header(doc, 'Data Flow Diagram', item['title'], number, total, summary, chapter('dfd', item['id']))
@@ -659,14 +689,16 @@ def dfd_page(doc, item, number, total):
         rounded_panel(page, (435, 180, 755, 681), PALE, INK, radius=28)
         page.draw_line((435, 244), (755, 244), color=INK, width=1)
         text(page, (451, 198, 739, 235), '0. PK DCS', 23, True, align=1)
+        dfd_icon(page, (550, 262, 640, 342), 'process')
         text(page, (457, 358, 733, 566), 'Find and track documents\n\nManage requests and approvals\n\nRecord handoffs and history', 18, align=1)
         positions = [(42, 180, 298, 329), (42, 356, 298, 505), (42, 532, 298, 681),
                      (892, 268, 1148, 417), (892, 532, 1148, 681)]
         for actor, rect in zip(item['actors'], positions):
             r = pdf.Rect(rect)
             panel(page, r, WHITE, INK)
-            text(page, (r.x0+15, r.y0+29, r.x1-15, r.y0+72), actor['role'], 16, True, align=1, minimum=14)
-            text(page, (r.x0+17, r.y0+85, r.x1-17, r.y1-16), actor['responsibility'], 13, color=GREY, align=1, minimum=12)
+            dfd_icon(page, ((r.x0+r.x1)/2-21, r.y0+10, (r.x0+r.x1)/2+21, r.y0+52), 'actor')
+            text(page, (r.x0+10, r.y0+57, r.x1-10, r.y0+82), actor['role'], 16, True, align=1, minimum=14)
+            text(page, (r.x0+17, r.y0+88, r.x1-17, r.y1-8), actor['responsibility'], 13, color=GREY, align=1, minimum=12)
             cy = (r.y0+r.y1)/2
             if r.x0 < 400:
                 left, right = r.x1, 435
@@ -689,8 +721,9 @@ def dfd_page(doc, item, number, total):
         for index, operator in enumerate(item['operators']):
             x = 42+381*index
             panel(page, (x, 174, x+344, 263), PALE)
-            text(page, (x+12, 184, x+332, 212), operator['actor'], 15, True, ACCENT, minimum=13)
-            text(page, (x+12, 225, x+332, 258), operator['text'], 13, minimum=12)
+            dfd_icon(page, (x+12, 182, x+52, 222), 'reviewer')
+            text(page, (x+62, 191, x+332, 219), operator['actor'], 15, True, ACCENT, minimum=13)
+            text(page, (x+12, 228, x+332, 260), operator['text'], 13, minimum=12)
     caption_y = 276 if decision_data else 176
     row_height = 67 if decision_data else 80
     for left, right, caption in [(42, 286, 'SOURCE'), (286, 467, 'INPUT DATA'),
@@ -704,9 +737,11 @@ def dfd_page(doc, item, number, total):
                 # A decision alone cannot supply the proposal or saved route.
                 # Show both the operator and request record as process inputs.
                 panel(page, (x0, y, x1, y+28), WHITE, INK)
-                text(page, (x0+9, y+5, x1-9, y+26), row['from'], 12, align=1, minimum=11)
+                dfd_icon(page, (x0+6, y+4, x0+26, y+24), 'actor')
+                text(page, (x0+30, y+5, x1-9, y+26), row['from'], 12, align=1, minimum=11)
                 page.draw_polyline([(x1, y+37), (x0, y+37), (x0, y+67), (x1, y+67)], color=INK, width=1)
-                text(page, (x0+9, y+43, x1-9, y+65), row['context_from'], 12, align=1, minimum=11)
+                dfd_icon(page, (x0+6, y+41, x0+26, y+63), 'store')
+                text(page, (x0+30, y+43, x1-9, y+65), row['context_from'], 12, align=1, minimum=11)
                 continue
             if kind == 'store':
                 page.draw_polyline([(x1, y), (x0, y), (x0, y+row_height), (x1, y+row_height)], color=INK, width=1)
@@ -715,7 +750,8 @@ def dfd_page(doc, item, number, total):
             else:
                 panel(page, (x0, y, x1, y+row_height), WHITE, INK)
             center = y+row_height/2
-            rect = pdf.Rect(x0+15, y+10, x1-15, y+row_height-10)
+            dfd_icon(page, (x0+10, center-17, x0+44, center+17), kind)
+            rect = pdf.Rect(x0+50, y+8, x1-10, y+row_height-8)
             size = 14 if kind == 'process' else 13.5
             spare = page.new_shape().insert_textbox(rect, plain(row[field]), fontsize=size,
                 fontname='hebo' if kind == 'process' else 'helv', align=1)
@@ -1152,7 +1188,10 @@ def verify(content, pending=False):
                 else:
                     for value in source_strings(item):
                         assert normalized(value) in page_text, f'Missing or altered instructions in {path}, page {page.number+1}: {value}'
-                    if key == 'dfd' or item.get('kind') == 'approval-flowchart':
+                    if key == 'dfd':
+                        # Symbols stay editable shapes; each one also carries its illustration.
+                        assert len(page.get_image_info()) == dfd_icon_count(item), f'Missing DFD illustrations: {item["id"]}'
+                    if item.get('kind') == 'approval-flowchart':
                         assert not page.get_image_info(), f'Diagram symbols must be editable shapes: {item["id"]}'
                     if item.get('kind') == 'approval-example':
                         assert len(page.get_image_info()) == len(item['steps']), f'Missing operator illustrations: {item["id"]}'
@@ -1206,10 +1245,12 @@ def verify(content, pending=False):
     if not pending:
         expected = {base+'.pdf' for key, base, _ in EXPORTED}
         expected.update(base+'.vsdx' for key, base, _ in EXPORTED)
-        expected.update({'PK_DCS_Process_Flow.pptx', GUIDE_DECK, QUICK_DECK})
+        expected.update({'PK_DCS_Process_Flow.pdf', 'PK_DCS_Process_Flow.pptx', GUIDE_DECK, QUICK_DECK})
         actual = {path.name for path in DOCS.iterdir() if path.suffix in {'.pdf', '.pptx', '.vsdx', '.vdx'} and not path.name.startswith('~$')}
         assert actual == expected, f'Unexpected exports: {actual ^ expected}'
         check_package(DOCS / 'PK_DCS_Process_Flow.pptx')
+        with pdf.open(DOCS / 'PK_DCS_Process_Flow.pdf') as flow:
+            assert len(flow) == len(Presentation(DOCS / 'PK_DCS_Process_Flow.pptx').slides), 'Stale Process Flow PDF'
         check_package(DOCS / GUIDE_DECK)
         check_package(DOCS / QUICK_DECK)
         print('Verified the PDF and VSDX diagrams and the PowerPoint packages.')

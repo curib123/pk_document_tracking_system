@@ -21,12 +21,12 @@ allows.
 | A quick explanation of everyday tasks | [Everyday reference](docs/system-documentation/PK_DCS_System_Reference.md) |
 | A short introduction: document types, My Requests and My Tasks | [Quick Guide](docs/system-documentation/PK_DCS_Quick_Guide.pptx) |
 | Instructions with screen examples | [Step-by-Step User Guide](docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx) |
-| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DCS_Process_Flow.pptx) |
+| A view of who does what, from start to finish | [Process Flow](docs/system-documentation/PK_DCS_Process_Flow.pdf) |
 | Help choosing the next step | [Flowchart](docs/system-documentation/PK_DCS_Flowchart.pdf) |
 | An overview of people, information and records | [Data Flow Diagram](docs/system-documentation/PK_DCS_DFD.pdf) |
 
-The documentation folder also includes editable PowerPoint and Visio copies. The Process Flow is a
-PowerPoint presentation.
+The documentation folder also includes editable PowerPoint and Visio copies. The Process Flow PDF has
+an editable PowerPoint copy.
 Use the local [dashboard](http://localhost/pk_document_tracking_system/dashboard)
 when the application is running; you will be asked to sign in if needed.
 
@@ -307,7 +307,9 @@ before restoring; the command-line tool requires its explicit `--confirm` flag.
 
 The content files in [tools/documentation](tools/documentation) supply the User
 Guide, Process Flow, Flowchart, and Data Flow Diagram. The diagrams ship as PDF
-and VSDX. The User Guide and Process Flow ship as editable PowerPoints.
+and VSDX. The Process Flow ships as PDF and PowerPoint, exported by PowerPoint
+itself, so building it needs Windows with PowerPoint. The User Guide ships as
+an editable PowerPoint.
 The guides cover the current request actions and their approval outcomes,
 including the revision template and scanned document workflows.
 Python needs `pymupdf` and `python-pptx`. Screenshot capture also needs Playwright,
@@ -326,7 +328,8 @@ python -X utf8 tools/documentation/build_user_guide.py --publish
 python -X utf8 tools/documentation/build_quick_guide.py
 python -X utf8 tools/documentation/build_quick_guide.py --publish
 
-# Screens for the Process Flow, then the diagrams and the Process Flow.
+# Screens for the Process Flow (it also uses the User Guide screens), then the
+# diagrams and the Process Flow. Add --out FOLDER to build a Process Flow draft.
 python -X utf8 tools/documentation/capture_screenshots.py
 python -X utf8 tools/documentation/refresh_documents.py
 python -X utf8 tools/documentation/build_process_flow.py
