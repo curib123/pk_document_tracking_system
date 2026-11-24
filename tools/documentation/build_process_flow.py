@@ -43,13 +43,14 @@ SUCCESS, SUCCESS_PALE, GOLD = '1A685B', 'EFF7F4', 'FFF8EA'
 
 # Synthetic people of the documentation site (capture_screenshots.py).
 PEOPLE = {
-    'Requester': ('Sam Staff', 'Staff', 'icon-person.png'),
-    "Requester's leader": ('Alex Administrator', 'Sam\'s leader (Noted By)', 'icon-review.png'),
-    'Plant Manager': ('Morgan Manager', 'Plant Manager', 'icon-review.png'),
-    'Document Control Officer': ('Casey Controller', 'Document Control Officer', 'icon-review.png'),
-    'Requester account': ('Sam Staff', 'Staff (Requester account)', 'icon-person.png'),
-    'Administrator': ('Administrator', 'Any Administrator account', 'icon-review.png'),
-    'Receiving user': ('Receiving user', 'Named on the transfer', 'icon-person.png'),
+    'Requester': ('Josephine Dagum', 'Staff', 'icon-person.png'),
+    "Requester's leader": ('Arnel Labadlabd', 'Staff (Noted By)', 'icon-review.png'),
+    'Plant Manager': ('Dennis Gabato', 'Plant Manager', 'icon-review.png'),
+    'Document Control Officer': ('Nova Mae Magallen', 'Document Control Officer', 'icon-review.png'),
+    'Requester account': ('Josephine Dagum', 'Staff (Requester account)', 'icon-person.png'),
+    'Administrator': ('John Paul Curib', 'Administrator', 'icon-review.png'),
+    'Internal Auditor': ('Avery Auditor', 'Internal Auditor', 'icon-person.png'),
+    'Receiving user': ('Arnel Labadlabd', 'Receiving user', 'icon-person.png'),
     'PK DCS': ('PK DCS', 'The system', 'icon-database.jpeg'),
 }
 GUIDE_SCREENS = json.loads((SHOTS / 'guide' / 'manifest.json').read_text(encoding='utf-8'))
@@ -76,7 +77,7 @@ SCENARIO_SCREENS = {
     ('softcopy', 'Dispose of a template'): ('dispose-modal', 'Dispose: choose the Disposal Reason, then Continue and Confirm.', None),
     ('hardcopy', 'Register a hardcopy'): ('hc-form-place', 'Add New Hardcopy Document: title, Area, Specific and Location.', 'area'),
     ('hardcopy', 'Locate and check retention'): ('hc-view', 'View Details: status, Current Holder, storage path and retention.', 'holder'),
-    ('hardcopy', 'Transfer to a new place'): request_screen('Transfer Hardcopy Document'),
+    ('hardcopy', 'Transfer to a new place'): ('req-transfer-destination', 'Send the Sample Dispatch Record to Arnel at Records Cabinet B.', 'f1'),
     ('hardcopy', 'Request temporary access'): request_screen('Request Document Access'),
     ('hardcopy', 'Request an assignment'): request_screen('Request Document Assignment'),
     ('hardcopy', 'Request disposal'): request_screen('Dispose Document'),
@@ -90,13 +91,12 @@ ROUTE_SCREENS = {
     'approval-softcopy-revise': request_screen('Revise Softcopy Document'),
     'approval-external-create': request_screen('Create External Document'),
     'approval-external-revise': request_screen('Revise External Document'),
-    'approval-transfer': ('handoff-dispatch', 'After approval, Sam confirms Dispatch. The named receiver then accepts.', 'confirm'),
+    'approval-transfer': ('handoff-dispatch', 'Josephine confirms Dispatch. Arnel accepts after receiving the paper.', 'confirm'),
     'approval-access': request_screen('Request Document Access'),
     'approval-assignment': request_screen('Request Document Assignment'),
     'approval-disposal': request_screen('Dispose Document'),
 }
-FIRST = {'Requester': 'Sam', "Requester's leader": 'Alex', 'Plant Manager': 'Morgan',
-         'Document Control Officer': 'Casey', 'Requester account': 'Sam', 'Requester': 'Sam'}
+FIRST = {"Requester's leader": 'Arnel', 'Plant Manager': 'Dennis', 'Document Control Officer': 'Nova'}
 
 
 def rgb(value):
@@ -268,7 +268,7 @@ def person_card(s, x, y, w, h, actor, step_text, status, number=None, highlight=
     if number is not None:
         s.rect(x + w - 34, y + 12, 22, 22, ACCENT, ACCENT, shape=MSO_SHAPE.OVAL)
         s.text(x + w - 34, y + 15, 22, 16, str(number), 11, True, WHITE, PP_ALIGN.CENTER)
-    s.text(x + 60, y + 10, w - 100, 20, name, 14, True, INK, minimum=11)
+    s.text(x + 60, y + 10, w - 100, 20, name, 14, True, INK, minimum=10)
     s.text(x + 60, y + 31, w - 100, 28, role, 10.5, False, GREY, minimum=8.5)
     s.text(x + 14, y + 68, w - 28, h - 112, step_text, 12, False, INK, minimum=9.5)
     s.pill(x + 14, y + h - 32, w - 28, 22, status, WHITE, ACCENT, 10, RULE)
@@ -312,21 +312,23 @@ def cover(prs, number, total):
 def users_slide(prs, number, total):
     s = Slide(prs)
     chrome(s, 'Part 1  /  Sample users', 'Meet the sample users',
-           'Five sample accounts play the roles used in every route. Your own people and routes come from Workflow Builder.',
+           'Six sample accounts show who can act in PK DCS. Your request routes come from Workflow Builder.',
            number, total)
     cast = [
-        ('Sam Staff', 'Staff', 'icon-person.png', 'REQUESTER', 'Signs in, creates the request, saves the draft and submits it.'),
-        ('Alex Staff', "Staff  /  Sam's leader", 'icon-review.png', 'NOTED BY LEADER',
-         'First reviewer ("Noted By"). Also confirms assignment requests as Sam\'s leader.'),
-        ('Morgan Manager', 'Plant Manager', 'icon-review.png', 'PLANT MANAGER',
+        ('Requester', 'REQUESTER', 'Creates the request, saves the draft and submits it.'),
+        ("Requester's leader", 'NOTED BY LEADER',
+         'Reviews as Josephine\'s leader and gives final approval on her assignment requests.'),
+        ('Plant Manager', 'PLANT MANAGER',
          'Second reviewer. In document requests, this approval locks the attached file.'),
-        ('Casey Controller', 'Document Control Officer', 'icon-review.png', 'DOCUMENT CONTROL',
+        ('Document Control Officer', 'DOCUMENT CONTROL',
          'Final reviewer. Approval creates or updates the document.'),
-        ('Avery Auditor', 'Internal Auditor', 'icon-person.png', 'READS ONLY',
-         'Reads documents, history and the audit trail. Does not approve requests.'),
+        ('Administrator', 'ADMINISTRATOR', 'Manages users, roles, workflow routes and system settings.'),
+        ('Internal Auditor', 'READS ONLY', 'Reads documents, history and the audit trail.'),
     ]
-    cw, gap = 206, 19
-    for i, (name, role, icon, tag, body) in enumerate(cast):
+    gap = 14
+    cw = (1106 - (len(cast) - 1) * gap) / len(cast)
+    for i, (actor, tag, body) in enumerate(cast):
+        name, role, icon = PEOPLE[actor]
         x = 42 + i * (cw + gap)
         s.rect(x, 176, cw, 330, PALE, RULE)
         s.rect(x, 176, cw, 30, ACCENT if i == 0 else INK, None)
@@ -355,13 +357,13 @@ def journey_slide(prs, number, total):
            'A softcopy creation request: eight stations in order. The status shows where the request stands after each one.',
            number, total)
     stations = [
-        ('Requester', 'Sign in', 'Sam signs in with their own account.', 'No request yet'),
+        ('Requester', 'Sign in', 'Josephine signs in with their own account.', 'No request yet'),
         ('Requester', 'Start a request', 'My Requests, Softcopy Request, New Request.', 'No request yet'),
         ('Requester', 'Save a draft', 'Complete the form, attach the file, Save Draft.', 'Draft'),
         ('Requester', 'Submit', 'Submit the saved draft, or use Submit Request from the form.', 'Submitted'),
-        ("Requester's leader", 'Noted By', 'Alex reviews and approves.', 'Submitted'),
-        ('Plant Manager', 'Plant Manager review', 'Morgan approves. The file is locked.', 'Submitted  /  file locked'),
-        ('Document Control Officer', 'Final review', 'Casey approves.', 'Completed'),
+        ("Requester's leader", 'Noted By', 'Arnel reviews and approves.', 'Submitted'),
+        ('Plant Manager', 'Plant Manager review', 'Dennis approves. The file is locked.', 'Submitted  /  file locked'),
+        ('Document Control Officer', 'Final review', 'Nova approves.', 'Completed'),
         ('Requester', 'Result', 'Active document and file at revision 00.', 'Completed'),
     ]
     cw, gap = 246, 40.7
@@ -387,7 +389,7 @@ def journey_slide(prs, number, total):
     s.line(42 + cw / 2, 438, 42 + cw / 2, 466, ACCENT, 1.6, arrow=True)
     s.rect(42, 724, 1106, 48, PALE, None)
     s.text(60, 738, 1070, 24,
-           'If an approver returns the request it goes back one step (or to Sam at the first step). A rejection ends the route.',
+           'If an approver returns the request it goes back one step (or to Josephine at the first step). A rejection ends the route.',
            13, False, INK)
     s.notes('Walk the eight stations left to right, then continue on the second row.')
 
@@ -492,7 +494,7 @@ def route_slide(prs, number, total, index, route, source):
         s.rect(x + cw - 34, 154, 22, 22, ACCENT, ACCENT, shape=MSO_SHAPE.OVAL)
         s.text(x + cw - 34, 157, 22, 16, str(count), 11, True, WHITE, PP_ALIGN.CENTER)
         s.text(x + 60, 152, cw - 100, 20, 'Handoff', 14, True, INK)
-        s.text(x + 60, 173, cw - 72, 28, 'Sam Staff and the named receiver', 10.5, False, GREY, minimum=8.5)
+        s.text(x + 60, 173, cw - 72, 28, 'Josephine and Arnel', 10.5, False, GREY, minimum=8.5)
         s.text(x + 14, 210, cw - 28, 58, route['handoff'], 11.5, False, INK, minimum=9)
         s.pill(x + 14, 278, cw - 28, 22, route['handoff_status'], WHITE, SUCCESS, 10, RULE)
     # The app screen for this route sits beside the result and the decisions.
@@ -516,9 +518,9 @@ def route_slide(prs, number, total, index, route, source):
             y = 452 + j * 86
             when = case['when']
             for role, first in FIRST.items():
-                when = when.replace(role, '%s (%s)' % (first, role), 1) if role in when and role != 'Requester' and role != 'Requester account' else when
+                when = when.replace(role, '%s (%s)' % (first, role), 1)
             if when.startswith('Requester ') and ('approves' in when or 'returns' in when):
-                when = when.replace('Requester', 'Sam (Requester)', 1)
+                when = when.replace('Requester', 'Josephine (Requester)', 1)
             s.text(x + 14, y, pw - 28, 30, when, 12, True, color if color != INK else INK, minimum=9.5)
             s.text(x + 14, y + 34, pw - 28, 44, case['next'], 11.5, False, INK, minimum=9.5)
             if j < 2:
@@ -741,37 +743,37 @@ def screen(name, folder=None, labels=None, extra=()):
 
 ROUTES = {
     'approval-return-reject': dict(
-        name='Softcopy creation', subtitle='Sam asks for a new controlled document. Three reviewers approve it in turn.',
+        name='Softcopy creation', subtitle='Josephine asks for a new controlled document. Three reviewers approve it in turn.',
         actors=['Requester', "Requester's leader", 'Plant Manager', 'Document Control Officer'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted, file locked', 'Completed']),
     'approval-softcopy-revise': dict(
-        name='Softcopy revision', subtitle='Sam proposes a replacement file for an Active document. The document number is kept.',
+        name='Softcopy revision', subtitle='Josephine proposes a replacement file for an Active document. The document number is kept.',
         actors=['Requester', "Requester's leader", 'Plant Manager', 'Document Control Officer'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted, file locked', 'Completed']),
     'approval-external-create': dict(
-        name='External document creation', subtitle='Sam registers a document received from outside the organization.',
+        name='External document creation', subtitle='Josephine registers a document received from outside the organization.',
         actors=['Requester', "Requester's leader", 'Plant Manager', 'Document Control Officer'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted, file locked', 'Completed']),
     'approval-external-revise': dict(
-        name='External document revision', subtitle='Sam proposes replacement attachments for an Active external document.',
+        name='External document revision', subtitle='Josephine proposes replacement attachments for an Active external document.',
         actors=['Requester', "Requester's leader", 'Plant Manager', 'Document Control Officer'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted, file locked', 'Completed']),
     'approval-transfer': dict(
-        name='Hardcopy transfer', subtitle='Sam asks to move a paper document. Approval prepares the handoff; Dispatch and Accept finish it.',
+        name='Hardcopy transfer', subtitle='Josephine asks to move a paper document. Approval prepares the handoff; Dispatch and Accept finish it.',
         actors=['Requester', 'Plant Manager', 'Document Control Officer', 'Requester account'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted', 'Approved, For Transfer'],
-        handoff='Sam dispatches the document. The named receiver accepts it. Holder and location change after Accept.',
+        handoff='Josephine dispatches the document. Arnel accepts it at Records Cabinet B and becomes its holder.',
         handoff_status='In Transit, then Accepted'),
     'approval-access': dict(
-        name='Document access', subtitle='Sam asks for temporary access to a document. Sam gives the final confirmation.',
+        name='Document access', subtitle='Josephine asks for temporary access to a document. Josephine gives the final confirmation.',
         actors=['Requester', 'Plant Manager', 'Document Control Officer', 'Requester account'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted', 'Completed']),
     'approval-assignment': dict(
-        name='Document assignment', subtitle="Sam asks to be assigned a document. Sam's leader gives the final approval.",
+        name='Document assignment', subtitle="Josephine asks to be assigned a document. Josephine's leader gives the final approval.",
         actors=['Requester', 'Plant Manager', 'Document Control Officer', "Requester's leader"],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted', 'Completed']),
     'approval-disposal': dict(
-        name='Disposal', subtitle='Sam asks to dispose of a document. Sam gives the final confirmation.',
+        name='Disposal', subtitle='Josephine asks to dispose of a document. Josephine gives the final confirmation.',
         actors=['Requester', 'Plant Manager', 'Document Control Officer', 'Requester account'],
         statuses=['Draft, then Submitted', 'Submitted', 'Submitted', 'Completed']),
 }
