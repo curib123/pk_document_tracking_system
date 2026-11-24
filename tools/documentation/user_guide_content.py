@@ -637,7 +637,7 @@ SECTIONS = [
              rows=[
                  ['Create or revise a softcopy', 'Noted By (requester\'s leader) › Plant Manager › Document Control Officer',
                   'Plant Manager approval locks the file; Document Control uploads the final file'],
-                 ['External create or revision', 'Plant Manager › Document Control Officer',
+                 ['External create or revision', 'Noted By (requester\'s leader) › Plant Manager › Document Control Officer',
                   'The document is registered or revised'],
                  ['Hardcopy transfer', 'Plant Manager › Document Control Officer › Requester confirmation',
                   'Then the requester dispatches and the recipient accepts'],
