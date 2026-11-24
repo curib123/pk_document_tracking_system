@@ -81,27 +81,30 @@ def seed(site):
         sql((ROOT / 'database/migrations' / (migration + '.sql')).read_text(encoding='utf-8'))
     hashed = subprocess.run([PHP, '-r', "echo password_hash(getenv('PK_CAPTURE_PASSWORD'), PASSWORD_DEFAULT);"],
                             env=ENV, capture_output=True, check=True).stdout.decode()
-    people = [('admin', 'Alex', 'Administrator', 1), ('controller', 'Casey', 'Controller', 2),
-              ('manager', 'Morgan', 'Manager', 3), ('auditor', 'Avery', 'Auditor', 4),
-              ('staff', 'Sam', 'Staff', 5)]
+    # Ids 1-6 in this order. Josephine (Staff 1) requests; Arnel (Staff 2) is her leader (Noted By).
+    people = [('admin', 'John Paul', 'Curib', 1), ('controller', 'Nova Mae', 'Magallen', 2),
+              ('manager', 'Dennis', 'Gabato', 3), ('auditor', 'Avery', 'Auditor', 4),
+              ('staff', 'Josephine', 'Dagum', 5), ('leader', 'Arnel', 'Labadlabd', 5)]
     for username, first, last, role in people:
         insert('users', username='demo-' + username, first_name=first, last_name=last,
                position_title='Documentation Example', role_id=role, password_hash=hashed,
                require_password_change=0)
-    sql('UPDATE users SET leader_id=1 WHERE id=5')
+    sql('UPDATE users SET leader_id=6 WHERE id=5')
     area = insert('areas', name='Sample Office')
     specific = insert('specifics', name='Records Section', area_id=area)
     location = insert('locations', name='Records Cabinet A', sequence_number=1, area_id=area, specific_id=specific)
-    insert('locations', name='Records Cabinet B', sequence_number=2, area_id=area, specific_id=specific)
+    destination = insert('locations', name='Records Cabinet B', sequence_number=2, area_id=area, specific_id=specific)
     category = insert('categories', name='Quality Procedures', folder_name='Quality Procedures',
                       code_pattern='QP-001', created_by=1)
     external_category = insert('external_categories', name='Supplier References',
                                folder_name='Supplier References', created_by=1)
-    for title in ['Sample Inspection Record', 'Sample Dispatch Record', 'Sample Incoming Record']:
-        insert('hardcopy_documents', title=title, area_id=area, specific_id=specific,
-               location_id=location, holder_id=1, created_by=1, creation_source='direct',
-               creation_reason='Synthetic documentation example', retention_enabled=1,
-               retention_start_date='2026-01-01', retention_end_date='2027-01-01')
+    hardcopies = {}
+    for title, holder in [('Sample Inspection Record', 1), ('Sample Dispatch Record', 5),
+                          ('Sample Incoming Record', 5), ('Sample Outbound Record', 6)]:
+        hardcopies[title] = insert('hardcopy_documents', title=title, area_id=area, specific_id=specific,
+                                  location_id=location, holder_id=holder, created_by=1, creation_source='direct',
+                                  creation_reason='Synthetic documentation example', retention_enabled=1,
+                                  retention_start_date='2026-01-01', retention_end_date='2027-01-01')
     document = pymupdf.open()
     page = document.new_page()
     page.insert_text((60, 80), 'Sample Quality Procedure', fontsize=22)
@@ -162,12 +165,12 @@ def seed(site):
                      current_node='step_1', submitted_at='2026-11-05 09:00:00')
     insert('workflow_steps', request_id=request, node_key='step_1', label='Noted By',
            assignment={'type': 'requester_leader', 'value': None, 'label': "Requester's leader"}, candidates=[],
-           assigned_user_id=1, assigned_name='Alex Administrator', assigned_position='Documentation Example', status='active')
+           assigned_user_id=6, assigned_name='Arnel Labadlabd', assigned_position='Documentation Example', status='active')
     insert('workflow_steps', request_id=request, node_key='step_2', label='Plant Manager Review & Approval',
            assignment={'type': 'role', 'value': 3, 'label': 'Plant Manager'}, candidates=[], status='pending')
     insert('workflow_steps', request_id=request, node_key='step_3', label='Document Control Officer Review & Approval',
            assignment={'type': 'role', 'value': 2, 'label': 'Document Control Officer'}, candidates=[], status='pending')
-    insert('notifications', user_id=1, title='Sample request ready for review',
+    insert('notifications', user_id=6, title='Sample request ready for review',
            message='A synthetic training request is awaiting your review.', request_id=request)
     for migration in ['20261117_scanned_documents', '20261117_scanned_category_allocations',
                       '20261117_scanned_document_descriptions', '20261118_softcopy_revision_template']:
@@ -194,18 +197,24 @@ def seed(site):
     insert('requests', reference='DEMO-TEMPLATE-002', type=template_type, requested_by=1, softcopy_id=1,
            payload=template_payload, status='approved', result={'template_file_id': template_file,
                                                                'template_expires_on': str(expires_on)})
-    for hardcopy, requester, holder, recipient, status in [(2, 1, 1, 5, 'for_transfer'), (3, 5, 5, 1, 'in_transit')]:
+    # Arnel's own pending dispatch lets his task register show both kinds of handoff.
+    for title, requester, recipient, status in [('Sample Dispatch Record', 5, 6, 'for_transfer'),
+                                                ('Sample Incoming Record', 5, 6, 'in_transit'),
+                                                ('Sample Outbound Record', 6, 5, 'for_transfer')]:
+        hardcopy = hardcopies[title]
         req = insert('requests', reference='DEMO-TRANSFER-' + str(hardcopy), type='transfer', hardcopy_id=hardcopy,
                      requested_by=requester, payload={'subject': 'Move sample record', 'recipient_id': recipient},
                      status='approved')
         insert('transfers', request_id=req, hardcopy_id=hardcopy, origin={'location_name': 'Records Cabinet A'},
-               destination={'location_id': 2, 'location_name': 'Records Cabinet B'}, current_holder_id=holder,
+               destination={'area_id': area, 'specific_id': specific, 'location_id': destination,
+                            'location_name': 'Records Cabinet B'}, current_holder_id=requester,
                recipient_id=recipient, document_copy_number='', reason='Synthetic training handoff', status=status)
 
 
 def capture(page, base):
     OUTPUT.mkdir(parents=True, exist_ok=True)
     manifest = {}
+    browser = page.context.browser
     control_labels = json.loads((OUTPUT.parent / 'capture_controls.json').read_text())
     # PK_CAPTURE_ONLY=files,review-file refreshes just those screens and merges them into the manifest.
     only = {name for name in os.environ.get('PK_CAPTURE_ONLY', '').split(',') if name}
@@ -273,8 +282,7 @@ def capture(page, base):
     def workflow_tasks():
         viewport = page.viewport_size
         page.set_viewport_size({'width': 1700, 'height': 900})
-        goto('my-tasks?request_category=softcopy&period=all')
-        page.get_by_role('button', name='Review request', exact=True).first.click()
+        review_request()
         extra = OUTPUT / 'workflow'
         extra.mkdir(exist_ok=True)
         marks = {}
@@ -304,22 +312,43 @@ def capture(page, base):
         shot('sign-in', 'Sign in using your own account.',
              controls=[('Username', '[name="login"]'), ('Password', '[name="password"]')])
 
+    def sign_in(account):
+        page.locator('[name="login"]').fill('demo-' + account)
+        page.locator('[name="password"]').fill(PASSWORD)
+        page.locator('button[type="submit"]').click()
+        page.wait_for_url('**/dashboard')
+
+    def account_page():
+        context = browser.new_context(viewport={'width': 1440, 'height': 900}, device_scale_factor=1,
+                                      service_workers='block', reduced_motion='reduce')
+        context.set_default_timeout(12000)
+        return context.new_page()
+
+    def review_request():
+        goto('my-tasks?request_category=softcopy&period=all')
+        row = page.get_by_role('row').filter(has_text='DEMO-2026-002')
+        row.get_by_role('button', name='Review request', exact=True).click()
+
+    def review_file():
+        review_request()
+        page.get_by_role('tab', name='Document File', exact=True).click()
+        page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
+        shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
+
     if only:
         # Refresh only these screens; everything else in the manifest is kept as is.
         goto('login')
         sign_in_screen()  # Captured only when 'sign-in' is selected.
-        page.locator('[name="login"]').fill('demo-admin')
-        page.locator('[name="password"]').fill(PASSWORD)
-        page.locator('button[type="submit"]').click()
-        page.wait_for_url('**/dashboard')
         if 'files' in only:
+            sign_in('admin')
             document_files()
+        if only & {'review-file', 'workflow-tasks'}:
+            if 'files' in only:
+                page = account_page()
+                goto('login')
+            sign_in('leader')
         if 'review-file' in only:
-            goto('my-tasks?request_category=softcopy&period=all')
-            page.get_by_role('button', name='Review request', exact=True).first.click()
-            page.get_by_role('tab', name='Document File', exact=True).click()
-            page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
-            shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
+            review_file()
         if 'workflow-tasks' in only:
             only.discard('workflow-tasks')
             workflow_tasks()
@@ -338,9 +367,9 @@ def capture(page, base):
         if kind:
             page.locator('#requestActionPicker').select_option(kind)
         if identifier == 'transfer-request':
-            page.locator('#transferSource').select_option('1', force=True)
-            page.locator('#transfer-location').select_option('2', force=True)
-            page.locator('#transferRecipient').select_option('5', force=True)
+            page.locator('#transferSource').select_option(label='Sample Dispatch Record', force=True)
+            page.locator('#transfer-location').select_option(label='Records Cabinet B', force=True)
+            page.locator('#transferRecipient').select_option(label='Arnel Labadlabd', force=True)
             page.locator('#transferSubject').fill('Move sample record to Records Cabinet B')
             page.locator('#editModal .modal-body').evaluate('(element) => element.scrollTop=element.scrollHeight')
         shot(identifier, caption, '#editModal .modal-content',
@@ -350,10 +379,7 @@ def capture(page, base):
 
     goto('login')
     sign_in_screen()
-    page.locator('[name="login"]').fill('demo-admin')
-    page.locator('[name="password"]').fill(PASSWORD)
-    page.locator('button[type="submit"]').click()
-    page.wait_for_url('**/dashboard')
+    sign_in('admin')
     goto('dashboard')
     for identifier in ['welcome', 'navigation', 'help']:
         shot(identifier, 'Overview and the role-based navigation menu.', controls=[('Document workspaces', '#appSidebar'), ('Account menu', '.user-menu, .topbar-user')])
@@ -399,12 +425,9 @@ def capture(page, base):
     shot('revision-template-download', 'An approved template can be downloaded through its expiry date.',
          controls=[('Download Template', 'a.record-action-download')])
     admin_page = page
-    page = page.context.browser.new_page(viewport={'width': 1440, 'height': 900}, reduced_motion='reduce')
+    page = account_page()
     goto('login')
-    page.locator('[name="login"]').fill('demo-controller')
-    page.locator('[name="password"]').fill(PASSWORD)
-    page.locator('button[type="submit"]').click()
-    page.wait_for_url('**/dashboard')
+    sign_in('controller')
     goto('my-tasks?request_category=softcopy&type=softcopy_revision_template')
     page.get_by_role('button', name='Review request', exact=True).first.click()
     page.get_by_role('button', name='Approve', exact=True).click()
@@ -415,27 +438,31 @@ def capture(page, base):
     page = admin_page
     form('scanned-requests', 'my-requests', 'New Request', 'Choose the scanned action and complete its required fields.', 'scanned_create')
     document_files()
-    goto('my-tasks?request_category=softcopy&period=all')
-    page.get_by_role('button', name='Review request', exact=True).first.click()
-    page.get_by_role('tab', name='Document File', exact=True).click()
-    page.add_style_tag(content='.doc-modal-file-pdf{height:260px !important}')
-    shot('review-file', 'Open the Document File tab in View Details to preview the proposed attachment before deciding.', '#viewModal .modal-content')
     goto('my-requests?request_category=softcopy&period=all')
     shot('request-lifecycle', 'A saved draft remains in My Requests until submitted.')
-    goto('my-tasks?request_category=softcopy&period=all')
-    page.get_by_role('button', name='Review request', exact=True).first.click()
+    leader_page = page = account_page()
+    goto('login')
+    sign_in('leader')
+    review_file()
+    review_request()
     page.get_by_role('button', name='Approve', exact=True).first.click()
     shot('approvals', 'Review the selected approval decision before confirming.',
          '#confirmModal .modal-content', controls=[('Approval decision', '#confirmMessage'), ('Confirm', '#confirmProceed')])
-    goto('my-tasks?request_category=softcopy&period=all')
-    page.get_by_role('button', name='Review request', exact=True).first.click()
+    review_request()
     page.get_by_role('tab', name='Approval Process Timeline', exact=True).click()
     shot('approval-routes', 'View Details includes the request approval process.', '#viewModal .modal-content')
-    for action in ['transfer', 'access', 'assignment', 'disposal']:
-        form(action + '-request', 'my-requests', 'New Request', 'Save a draft or submit the completed request.', action)
+    page = account_page()
+    goto('login')
+    sign_in('staff')
+    form('transfer-request', 'my-requests', 'New Request', 'Save a draft or submit the completed request.', 'transfer')
     goto('my-tasks?request_category=hardcopy-transfer&period=all')
     shot('transfer-dispatch', 'The requester dispatches an approved physical transfer.')
+    page = leader_page
+    goto('my-tasks?request_category=hardcopy-transfer&period=all')
     shot('transfer-accept', 'The destination recipient accepts the received hardcopy.')
+    page = admin_page
+    for action in ['access', 'assignment', 'disposal']:
+        form(action + '-request', 'my-requests', 'New Request', 'Save a draft or submit the completed request.', action)
     goto('documents/hardcopy?layout=table&folder=all')
     page.get_by_role('button', name='Dispose', exact=True).first.click()
     shot('disposal-direct', 'Choose the disposal reason before confirming.', '#actionModal .modal-content')
@@ -461,6 +488,7 @@ def capture(page, base):
             shot(identifier, caption)
     page.locator('[data-bs-target="#backupRestoreModal"]').click()
     shot('restore', 'Choose the archive and enter the required password and confirmation.', '#backupRestoreModal .modal-content')
+    page = leader_page
     goto('dashboard')
     page.locator('#notificationBellButton').click()
     shot('notifications', 'Open the bell to inspect your notification inbox.')

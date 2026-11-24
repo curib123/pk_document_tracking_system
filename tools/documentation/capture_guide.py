@@ -270,10 +270,13 @@ def capture(browser, base):
         admin.page.locator('#passwordModal .btn-close').click()
     attempt('account-menu', account_menu)
 
+    # Arnel, Josephine's leader (Staff), holds the Noted By task and notification.
+    leader = Screen(browser, base, 'leader')
+
     def bell():
-        admin.go('dashboard')
-        admin.page.locator('#notificationBellButton').click()
-        admin.shot('bell', marks={'bell': '#notificationBellButton', 'panel': 'text:Notifications'})
+        leader.go('dashboard')
+        leader.page.locator('#notificationBellButton').click()
+        leader.shot('bell', marks={'bell': '#notificationBellButton', 'panel': 'text:Notifications'})
     attempt('bell', bell)
 
     def mobile():
@@ -396,7 +399,7 @@ def capture(browser, base):
         page.wait_for_timeout(400)
         row = page.locator('#editModal [data-signatory-row]').first
         row.locator('[name="signatory_title[]"]').fill('Prepared by')
-        row.locator('[name="signatory_full_name[]"]').fill('Casey Controller')
+        row.locator('[name="signatory_full_name[]"]').fill('Nova Mae Magallen')
         row.locator('[name="signatory_position[]"]').fill('Document Control Officer')
         page.locator('#editModal .modal-title').click()
         admin.shot('sc-signatory-row', EDIT_MODAL, marks={
@@ -547,7 +550,7 @@ def capture(browser, base):
         admin.shot('restore-modal', '#backupRestoreModal .modal-content', marks={})
     attempt('administration', administration)
 
-    # ---------------------------------------------------------------- requests (Sam)
+    # ---------------------------------------------------------------- requests (Josephine)
     staff = Screen(browser, base, 'staff')
 
     def open_request(action):
@@ -592,12 +595,17 @@ def capture(browser, base):
 
         def transfer_destination():
             open_request('transfer')
+            page = staff.page
+            page.locator(f'{REQUEST_FORM} #transferSource').select_option(label='Sample Dispatch Record', force=True)
+            page.locator(f'{REQUEST_FORM} #transfer-location').select_option(label='Records Cabinet B', force=True)
+            page.locator(f'{REQUEST_FORM} #transferRecipient').select_option(label='Arnel Labadlabd', force=True)
+            page.locator(f'{REQUEST_FORM} #transferSubject').fill('Move sample record to Records Cabinet B')
             staff.shot('req-transfer-destination', EDIT_MODAL, marks={
                 'destination': 'field:#transfer-location',
                 'f1': 'field:#transferRecipient', 'f2': 'field:#transferSubject', 'submit': '#requestFormSubmit'},
                 scroll='#editModal #transferSubject')
         attempt('req-transfer-destination', transfer_destination)
-        # Submit a real softcopy request; Alex returns it later.
+        # Submit a real softcopy request; Arnel returns it later.
         page = staff.page
         open_request('softcopy_create')
         page.locator(f'{REQUEST_FORM} #reqSubject').fill('Add a visitor log for the warehouse')
@@ -619,43 +627,51 @@ def capture(browser, base):
         staff.shot('req-log', VIEW_MODAL, marks={'tab': 'tab:Workflow Activity Log'})
     attempt('requests', requests, retry=False)
 
-    # ---------------------------------------------------------------- decisions (Alex, Morgan, Casey)
+    # ---------------------------------------------------------------- decisions (Arnel, Dennis, Nova)
     def decisions():
-        page = admin.page
-        admin.go('my-tasks')
-        admin.shot('task-register', marks={'review': 'button:Review request', 'dispatch': 'button:Dispatch',
+        page = leader.page
+        leader.go('my-tasks')
+        leader.shot('task-register', marks={'review': 'button:Review request', 'dispatch': 'button:Dispatch',
                                            'accept': 'button:Accept'})
         page.get_by_role('row').filter(has_text='DEMO-2026-002').get_by_role('button', name='Review request', exact=True).click()
         expect(page.locator('#viewModal')).to_be_visible()
         page.wait_for_timeout(1200)
-        admin.shot('task-review', VIEW_MODAL, marks={'file': 'tab:Document File', 'timeline': 'tab:Approval Process Timeline',
+        leader.shot('task-review', VIEW_MODAL, marks={'file': 'tab:Document File', 'timeline': 'tab:Approval Process Timeline',
                                                      'approve': 'button:Approve', 'reject': 'button:Reject', 'return': 'button:Return'})
         # Approve goes through the shared confirmation; Return and Reject ask for a remark instead.
         page.get_by_role('button', name='Approve', exact=True).click()
-        admin.shot('task-confirm', CONFIRM_MODAL, marks={'message': '#confirmMessage', 'confirm': '#confirmProceed'})
+        leader.shot('task-confirm', CONFIRM_MODAL, marks={'message': '#confirmMessage', 'confirm': '#confirmProceed'})
         page.locator('#confirmProceed').click()
         page.wait_for_load_state('networkidle')
-        admin.shot('task-result', ALERT_MODAL, marks={'message': '#appAlertMessage'})
-        admin.settle()
-        admin.go('my-tasks')
+        leader.shot('task-result', ALERT_MODAL, marks={'message': '#appAlertMessage'})
+        leader.settle()
+        leader.go('my-tasks')
         page.get_by_role('row').filter(has_text='Warehouse Visitor Log').get_by_role('button', name='Review request', exact=True).click()
         page.get_by_role('button', name='Return', exact=True).click()
         expect(page.locator('#actionModal')).to_be_visible()
         page.locator('#actionRemark').fill('Please attach the signed version.')
-        admin.shot('task-return', ACTION_MODAL, marks={'remark': '#actionRemarkFields', 'continue': '#actionContinue'})
+        leader.shot('task-return', ACTION_MODAL, marks={'remark': '#actionRemarkFields', 'continue': '#actionContinue'})
         page.locator('#actionContinue').click()
         page.wait_for_load_state('networkidle')
-        admin.settle()
+        leader.settle()
     attempt('decisions', decisions, retry=False)
 
     def handoffs():
-        for sid, button in [('handoff-dispatch', 'Dispatch'), ('handoff-accept', 'Accept')]:
-            admin.go('my-tasks')
-            admin.page.get_by_role('button', name=button, exact=True).first.click()
-            admin.page.wait_for_timeout(500)
-            admin.shot(sid, '.modal.show .modal-content', marks={'message': '.modal.show .modal-body',
-                                                                 'confirm': '#confirmProceed'})
-    attempt('handoffs', handoffs)
+        task_register = 'my-tasks?request_category=hardcopy-transfer&period=all'
+        staff.go(task_register)
+        dispatch = staff.page.get_by_role('row').filter(has_text='Sample Dispatch Record')
+        dispatch.get_by_role('button', name='Dispatch', exact=True).click()
+        marks = {'message': '#confirmMessage', 'confirm': '#confirmProceed'}
+        staff.shot('handoff-dispatch', CONFIRM_MODAL, marks=marks)
+        staff.page.locator('#confirmProceed').click()
+        staff.page.wait_for_load_state('networkidle')
+        staff.settle()
+
+        leader.go(task_register)
+        receipt = leader.page.get_by_role('row').filter(has_text='Sample Dispatch Record')
+        receipt.get_by_role('button', name='Accept', exact=True).click()
+        leader.shot('handoff-accept', CONFIRM_MODAL, marks=marks)
+    attempt('handoffs', handoffs, retry=False)
 
     def manager_and_controller():
         manager = Screen(browser, base, 'manager')
