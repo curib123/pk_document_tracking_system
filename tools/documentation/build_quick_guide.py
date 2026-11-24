@@ -160,7 +160,7 @@ def cover(total):
     slide = b.prs.slides.add_slide(b.layouts['GUIDE_COVER'])
     b.write(slide, 72, 72, 520, 16, 'PEANUT KISSES  ·  DOCUMENT CONTROL SYSTEM', 11, b.PINK, bold=True, letter=3,
             fit=False)
-    b.write(slide, 72, 118, 520, 150, 'PK DCS\nQuick Guide', 56, 'FFFFFF', bold=True, fit=False)
+    b.write(slide, 72, 148, 520, 82, 'PK DCS', 56, 'FFFFFF', bold=True, fit=False)
     b.write(slide, 72, 282, 480, 60, 'For Operation: filing and making documents. The four document types, '
                                      'My Requests and My Tasks in one short guide.', 17, 'F6D9E0')
     x = 72

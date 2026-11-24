@@ -30,8 +30,15 @@ SCREENSHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 DOCS = ROOT / 'docs/system-documentation'
 W, H = 1190, 842
-EDITION = '19 November 2026'
-MARKER = 'PK DCS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITION.upper()
+# Each book carries the date its content last changed.
+EDITIONS = {'Data Flow Diagram': '24 November 2026', 'Flowchart': '19 November 2026',
+            'User Guide': '19 November 2026'}
+
+
+def marker(kind):
+    return 'PK DCS  /  EVERYDAY DOCUMENT CONTROL  /  ' + EDITIONS[kind].upper()
+
+
 NS = 'http://schemas.microsoft.com/office/visio/2012/main'
 REL = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships'
 PKG = 'http://schemas.openxmlformats.org/package/2006/relationships'
@@ -378,7 +385,7 @@ def header(doc, kind, title, number, total, subtitle='', section=''):
     if subtitle:
         text(page, (42, 118, 1148, 157), subtitle, 14, color=GREY, minimum=12)
     page.draw_line((42, 787), (1148, 787), color=RULE, width=.7)
-    text(page, (42, 802, 880, 825), MARKER, 9, color=GREY, minimum=9)
+    text(page, (42, 802, 880, 825), marker(kind), 9, color=GREY, minimum=9)
     text(page, (893, 802, 980, 825), 'Back to contents', 10, True, ACCENT, align=2, minimum=10)
     text(page, (1020, 802, 1148, 825), f'{number} / {total}', 10, color=GREY, align=2, minimum=10)
     return page
@@ -1093,7 +1100,7 @@ def render_book(key, kind, items):
                 text(doc[index], (x, 802, x+22, 825), str(target+1), 9, True, ACCENT, align=1, minimum=9)
                 doc[index].insert_link({'kind': pdf.LINK_GOTO, 'from': pdf.Rect(x, 800, x+22, 828), 'page': target})
     doc.set_toc([[1, plain(item['title']), index] for index, item in enumerate(items, 1)])
-    doc.set_metadata({'title': 'PK DCS - '+kind, 'subject': 'Everyday document control, ' + EDITION, 'author': 'PK Document Control System'})
+    doc.set_metadata({'title': 'PK DCS - '+kind, 'subject': 'Everyday document control, ' + EDITIONS[kind], 'author': 'PK Document Control System'})
     return doc
 
 
@@ -1177,7 +1184,7 @@ def verify(content, pending=False):
             all_text = []
             for page, item in zip(doc, items):
                 page_text = normalized(page.get_text())
-                assert normalized(MARKER) in page_text
+                assert normalized(marker(kind)) in page_text
                 if item.get('kind') in {'cover', 'contents'}:
                     assert normalized(item['title']) in page_text
                     if item['kind'] == 'contents':

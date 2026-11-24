@@ -35,7 +35,7 @@ OUT = ROOT / 'docs/system-documentation/PK_DCS_Process_Flow.pptx'
 SHOTS = SOURCE / 'screenshots'
 ICONS = SOURCE / 'icons'
 W, H = 1190, 842
-DATE = '19 NOVEMBER 2026'
+DATE = '24 NOVEMBER 2026'
 
 INK, ACCENT, PALE = '1C2B3D', '92284A', 'F6F7F9'
 GREY, RULE, WHITE = '506377', 'DDE3E9', 'FFFFFF'
