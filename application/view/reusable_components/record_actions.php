@@ -2,8 +2,13 @@
 // Single source of truth for row actions in table, grid and folder layouts.
 // Text labels are always visible; icons are decorative only.
 ?>
-<div class="record-actions-horizontal">
-    <?php foreach ($dt_row['buttons'] ?? [] as $button):
+<?php foreach (['buttons', 'review_buttons'] as $group): ?>
+<?php if (empty($dt_row[$group])) continue; ?>
+<?php if ($group === 'review_buttons'): ?>
+<template data-review-actions>
+<?php endif; ?>
+<div class="<?= $group === 'review_buttons' ? 'd-flex flex-wrap gap-2' : 'record-actions-horizontal' ?>">
+    <?php foreach ($dt_row[$group] as $button):
         $type = $button['type'] ?? '';
         $label = $button['label'] ?? [
             'view' => 'View',
@@ -12,13 +17,11 @@
             'grants' => 'Manage Access',
             'history' => 'File History',
             'upload' => 'Upload',
-            'review' => 'Review File',
-            'download' => 'Download',
-            'print' => 'Print'
+            'download' => 'Download'
         ][$type] ?? 'Action';
         ?>
         <?php if ($type === 'view'): ?>
-            <button type="button" class="btn-icon record-action record-action-view js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
+            <button type="button" class="<?= empty($button['primary']) ? 'btn-icon record-action record-action-view' : 'btn btn-primary btn-sm text-nowrap' ?> js-view" data-bs-toggle="modal" data-bs-target="#viewModal" title="<?= html_escape($label) ?>"
                 aria-label="<?= html_escape($label) ?>"
                 <?php if (!empty($button['view_url'])): ?>data-view-url="<?= html_escape($button['view_url']) ?>"<?php endif; ?>
                 data-display="<?= html_escape(json_encode($dt_row['display'], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>"
@@ -60,19 +63,18 @@
                 data-document-name="<?= html_escape($dt_row['cells']['title'] ?? '') ?>">
                 <i class="fa-solid fa-cloud-arrow-up" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </button>
-        <?php elseif ($type === 'review'): ?>
-            <a class="btn-icon record-action record-action-review" title="<?= html_escape($label) ?>"
-                aria-label="<?= html_escape($label) ?>" target="_blank" rel="noopener" href="<?= site_url($button['url']) ?>">
-                <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
-            </a>
-        <?php elseif ($type === 'print'): ?>
-            <a class="btn-icon record-action record-action-print" href="<?= site_url($button['url']) ?>" target="_blank"
-                rel="noopener" title="Print Document File" aria-label="Print Document File">
-                <i class="fa-solid fa-print" aria-hidden="true"></i><span>Print</span>
+        <?php elseif ($type === 'link'): ?>
+            <a class="btn-icon record-action<?= !empty($button['intent']) ? ' record-action-' . html_escape($button['intent']) : '' ?>"
+                title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
+                href="<?= html_escape(site_url($button['url'])) ?>">
+                <?php if (!empty($button['icon'])): ?><i class="<?= html_escape($button['icon']) ?>" aria-hidden="true"></i><?php endif; ?>
+                <span><?= html_escape($label) ?></span>
             </a>
         <?php elseif ($type === 'download'): ?>
             <a class="btn-icon record-action record-action-download" title="<?= html_escape($label) ?>"
-                aria-label="<?= html_escape($label) ?>" href="<?= site_url($button['url']) ?>">
+                aria-label="<?= html_escape($label) ?>" href="<?= !empty($button['same_origin'])
+                    ? html_escape($button['url'])
+                    : site_url($button['url']) ?>">
                 <i class="fa-solid fa-download" aria-hidden="true"></i><span><?= html_escape($label) ?></span>
             </a>
         <?php elseif ($type === 'action'): ?>
@@ -82,11 +84,22 @@
                 in_array(strtolower((string) $label), ['cancel', 'deactivate', 'remove', 'delete', 'reject', 'return'], TRUE)
                 ? 'danger' : 'primary';
             ?>
-            <button type="button" class="btn-icon record-action record-action-<?= $intent ?> js-action"
+            <?php $actionClass = $group === 'review_buttons'
+                ? 'btn btn-sm ' . ['approved' => 'btn-primary', 'returned' => 'btn-outline-secondary', 'rejected' => 'btn-outline-danger'][$button['decision']]
+                : 'btn-icon record-action record-action-' . $intent; ?>
+            <button type="button" class="<?= $actionClass ?> js-action"
                 title="<?= html_escape($label) ?>" aria-label="<?= html_escape($label) ?>"
                 data-url="<?= site_url($button['url']) ?>" data-id="<?= (int) $dt_row['id'] ?>"
                 data-decision="<?= html_escape($button['decision'] ?? '') ?>"
-                data-disposal="<?= !empty($button['disposal']) ? 'yes' : 'no' ?>" data-title="<?= html_escape($label) ?>"
+                data-skip-remarks="<?= !empty($button['skip_remarks']) ? 'yes' : 'no' ?>"
+                data-remark-required="<?= !empty($button['remark_required']) ? 'yes' : 'no' ?>"
+                data-disposal="<?= !empty($button['disposal']) ? 'yes' : 'no' ?>"
+                data-final-upload="<?= !empty($button['final_upload']) ? 'yes' : 'no' ?>"
+                data-template-upload="<?= !empty($button['template_upload']) ? 'yes' : 'no' ?>"
+                data-title="<?= html_escape(!empty($button['template_upload']) ? 'Upload Revision Template' :
+                    (!empty($button['final_upload']) ? 'Upload Final Document' : $label)) ?>"
+                data-password-confirm="<?= !empty($button['password_confirm']) ? 'yes' : 'no' ?>"
+                data-final-url="<?= html_escape($button['final_source_url'] ?? '') ?>"
                 data-description="<?= html_escape($button['description'] ?? '') ?>">
                 <i class="<?= html_escape($button['icon'] ?? 'fa-solid fa-check') ?>" aria-hidden="true"></i>
                 <span><?= html_escape($label) ?></span>
@@ -94,3 +107,7 @@
         <?php endif; ?>
     <?php endforeach; ?>
 </div>
+<?php if ($group === 'review_buttons'): ?>
+</template>
+<?php endif; ?>
+<?php endforeach; ?>

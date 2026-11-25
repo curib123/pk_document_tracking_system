@@ -1,0 +1,456 @@
+{
+  "title": "PK Document Control System - Flowchart",
+  "pages": [
+    {
+      "id": "account-entry",
+      "title": "Sign in and set your password",
+      "start": "Open PK DCS",
+      "action": "Enter Username and Password; replace a temporary password when asked",
+      "question": "Are your sign-in details accepted?",
+      "yes": "Open Overview and the pages available to your account",
+      "no": "Read the message; correct your details or ask an Administrator for help, then retry",
+      "result": "You can use the pages and actions your account allows",
+      "notes": [
+        "New and reset accounts must replace their temporary password before continuing.",
+        "Choose a different password with at least 9 characters. Enter it twice to confirm.",
+        "Your active roles combine their permissions. Sign out when finished on a shared device."
+      ]
+    },
+    {
+      "id": "browse-and-files",
+      "title": "Find a document and its current file",
+      "start": "You need a document or its approved file",
+      "action": "Open the document register; choose Table or Folder, search or filter, then open the record",
+      "question": "Can you view the record and use its file?",
+      "yes": "Open the record. For Softcopy, choose Document Files for downloads and history",
+      "no": "Request Hardcopy or Softcopy access when available, or contact document control",
+      "result": "You can read the allowed details or use the current approved file",
+      "notes": [
+        "Page access, document access and file actions are separate permissions. Pending proposal files are for authorized review.",
+        "The Softcopy table opens history from View and Document Files.",
+        "For External Documents, use Current Attachments to open the approved files.",
+        "Word and Excel files preview as PDF. A locked file is preview-only unless the role has Download Locked Files access."
+      ]
+    },
+    {
+      "id": "hardcopy-direct",
+      "title": "Register or update a hardcopy",
+      "start": "Open Hardcopy Documents with the required permission",
+      "action": "Add or edit the record, storage place and retention dates; choose Save Document and confirm",
+      "question": "Are you allowed to save these details?",
+      "yes": "Save the record and show its holder, location, status and retention dates",
+      "no": "Correct the reported problem and retry; the record stays unchanged",
+      "result": "The record shows what the physical document is and where it is held",
+      "notes": [
+        "Only an Administrator or the current holder with direct permission can edit. Only an Administrator can select a different holder.",
+        "New Hardcopy creation and update requests are unavailable; authorized users maintain records directly.",
+        "Choose matching Area, Specific, optional Asset and Location. Tracking retention requires both dates in order."
+      ]
+    },
+    {
+      "id": "electronic-direct",
+      "title": "Create or revise an electronic document directly",
+      "start": "Open Softcopy Documents or External Documents with direct permission",
+      "action": "Enter details and attach a file; confirm Approve Directly (Softcopy) or Save Directly (External)",
+      "question": "Do your permission, details and file pass the checks?",
+      "yes": "Create the record or make the replacement revision available immediately",
+      "no": "Correct the details or upload and retry; the approved record stays unchanged",
+      "result": "The current file is ready to use; permitted Softcopy history shows earlier revisions",
+      "notes": [
+        "Softcopy Categories and External Categories are separate. Files must pass upload checks and be no larger than 15 MB.",
+        "A new registration and a revision both require a document file. Revision numbers and levels advance automatically. A direct Softcopy creation may type its own unused document number.",
+        "Direct actions apply immediately. In Softcopy Documents, Signatories edits the current revision references."
+      ]
+    },
+    {
+      "id": "electronic-request",
+      "title": "Request a new electronic document or revision",
+      "start": "You need approval to create or revise a Softcopy or External Document",
+      "action": "Open My Requests and New Request. Choose create or revise, enter details and attach a file",
+      "question": "Are the details, file and chosen document valid?",
+      "yes": "Choose Submit Request to start approval or Save Draft to finish later",
+      "no": "Correct the reported problem and save again",
+      "result": "The request is saved as a draft or sent for approval",
+      "notes": [
+        "Default route: Requester's leader, then Plant Manager, then Document Control Officer. Published routes can be changed.",
+        "Revision requests select an active document in the correct register. The existing approved file remains current during review.",
+        "New Softcopy cancellation requests are unavailable. Retained historical requests may still appear.",
+        "Approval at the document-locking step locks the attachment as read-only; the timeline shows a Locked badge on that step."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise"
+      ]
+    },
+    {
+      "id": "revision-template",
+      "title": "Release and expire an editable template",
+      "start": "An editable template request reaches Document Control",
+      "action": "Review the request. To approve it, upload one editable file and set a download expiry date",
+      "question": "Does Document Control approve the request?",
+      "yes": "Upload and Approve. The requester can download through the selected date",
+      "no": "Reject to close the request",
+      "result": "After the expiry date, the download is blocked",
+      "notes": [
+        "Choose a current or future date. Downloads expire at the end of the day in Philippine time.",
+        "Approval keeps the existing softcopy and its current revision."
+      ]
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Review a scanned document request",
+      "start": "Submit a scanned upload, update, removal, or folder request",
+      "action": "The assigned approver opens Review request in My Tasks. Document Control is the default",
+      "question": "Does the request receive final approval?",
+      "yes": "Apply the upload, update, removal, or folder creation",
+      "no": "Return for correction or reject to close the request",
+      "result": "The scanned register or folder list reflects the change",
+      "notes": [
+        "Save Draft keeps the form for later editing. Submit Request starts the configured workflow.",
+        "Approved records stay in place while changes are under review."
+      ]
+    },
+    {
+      "id": "request-submission",
+      "title": "Save and submit a request",
+      "start": "Open New Request, a Draft or a Returned request",
+      "action": "Complete the form and choose Submit Request. For a saved draft you can use Submit on the row",
+      "question": "Is the request ready, with available approvers?",
+      "yes": "Mark Submitted and send the first task to the assigned person or role",
+      "no": "Fix the reported details, or ask an Administrator to check the approval route; retry",
+      "result": "My Requests shows Submitted and the approval progress",
+      "notes": [
+        "Save Draft stores the form for later editing. Approval starts when you submit.",
+        "A returned request keeps its original approval route when resubmitted, even after an administrator publishes a newer route.",
+        "Cancel is available only for your own Draft. Delete is limited to your own Cancelled draft that was never submitted.",
+        "New Hardcopy create/update and Softcopy cancellation requests are unavailable; their past records remain readable."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "approval",
+      "title": "Approve an assigned request",
+      "start": "Open My Tasks and select Review request",
+      "action": "Read the proposal, allowed files, earlier decisions and remarks; choose Approve and confirm",
+      "question": "Is this the final approval step?",
+      "yes": "Apply the approved change, access, assignment or disposal; prepare any transfer handoff",
+      "no": "Send the request to the next approver for review",
+      "result": "The request is Completed; a transfer stays Approved until the named receiver accepts",
+      "notes": [
+        "Only the currently assigned user or an active member of the assigned role can decide that step.",
+        "The approved operation takes effect at final approval. An approved transfer still requires Dispatch and Accept.",
+        "If a decision cannot be saved or applied, read the error and refresh before retrying."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "return-or-reject",
+      "title": "Return or reject a request",
+      "start": "You find a problem while reviewing an assigned request",
+      "action": "Check the issue; choose Return or Reject, add remarks if useful, then confirm",
+      "question": "Return the request for another review?",
+      "yes": "Send it to the previous approver; at the first step, send it back to the requester",
+      "no": "Mark Rejected and end the route; keep history without applying the proposed change",
+      "result": "Review resumes where needed. Only a first-step Return lets the requester edit and resubmit",
+      "notes": [
+        "A return from a later step leaves the request Submitted and gives the task back to the previous approver.",
+        "After that approver approves again, the returned step must review again before approval can advance.",
+        "A first-step return marks the request Returned. The requester corrects it and resubmits using the original route."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "decision-softcopy-create",
+      "kind": "approval-reference",
+      "example": "approval-return-reject"
+    },
+    {
+      "id": "decision-softcopy-revise",
+      "kind": "approval-reference",
+      "example": "approval-softcopy-revise"
+    },
+    {
+      "id": "decision-external-create",
+      "kind": "approval-reference",
+      "example": "approval-external-create"
+    },
+    {
+      "id": "decision-external-revise",
+      "kind": "approval-reference",
+      "example": "approval-external-revise"
+    },
+    {
+      "id": "decision-transfer",
+      "kind": "approval-reference",
+      "example": "approval-transfer"
+    },
+    {
+      "id": "decision-access",
+      "kind": "approval-reference",
+      "example": "approval-access"
+    },
+    {
+      "id": "decision-assignment",
+      "kind": "approval-reference",
+      "example": "approval-assignment"
+    },
+    {
+      "id": "decision-disposal",
+      "kind": "approval-reference",
+      "example": "approval-disposal"
+    },
+    {
+      "id": "transfer-approval",
+      "title": "Request a hardcopy transfer",
+      "start": "You need to move an active hardcopy",
+      "action": "Select the document, receiving user, destination storage and remarks; save and submit the transfer request",
+      "question": "Have all required approvers approved?",
+      "yes": "Mark the request Approved and the handoff For Transfer; wait for Dispatch and Accept",
+      "no": "Wait for remaining reviews, or follow Return or Reject. Dispatch requires final approval",
+      "result": "The original requester can Dispatch; approval alone does not change the holder or location",
+      "notes": [
+        "Default route: Plant Manager, Document Control Officer, then Requester account (Requester Confirmation).",
+        "The source and destination must be valid and the receiving account active; conflicting pending requests or transfers can block it.",
+        "Approval alone does not change the current holder or complete physical receipt."
+      ],
+      "decision_examples": [
+        "approval-transfer"
+      ]
+    },
+    {
+      "id": "transfer-handoff",
+      "title": "Dispatch and receive a hardcopy",
+      "start": "The approved transfer shows For Transfer",
+      "action": "The requester confirms Dispatch. After the document arrives, the named receiver opens the handoff task",
+      "question": "Has the named receiver confirmed Accept?",
+      "yes": "Mark the transfer Accepted and the request Completed; update the holder and destination location",
+      "no": "Leave In Transit until the receiver confirms physical receipt",
+      "result": "The record shows the new holder, location and completed handoff history",
+      "notes": [
+        "Only the requester dispatches. Only the named receiving user accepts that transfer.",
+        "Dispatch marks In Transit. Custody and location change after acceptance.",
+        "Direct reassignment is a separate immediate action and is blocked while a transfer is active."
+      ],
+      "decision_examples": [
+        "approval-transfer"
+      ]
+    },
+    {
+      "id": "access-assignment-request",
+      "title": "Request access or assignment for yourself",
+      "start": "Requester chooses Document Access or Document Assignment",
+      "action": "Select an active Softcopy or Hardcopy; enter the reason and, for access, a future expiry; save and submit",
+      "question": "Have all required approvers approved?",
+      "yes": "Choose Submit Request for approval or Save Draft to continue later",
+      "no": "Wait for remaining reviews, or follow Return or Reject; no new access or assignment is applied",
+      "result": "The request is Completed, with access or assignment granted to you",
+      "notes": [
+        "Access default: Plant Manager, Document Control Officer, Requester account. Assignment ends with Requester's leader.",
+        "These requests are for the requester; they do not select another recipient. External Documents are not supported here.",
+        "Access expires at the end of the chosen day. Assignment is separate from an access grant; file permissions still apply."
+      ],
+      "decision_examples": [
+        "approval-access",
+        "approval-assignment"
+      ]
+    },
+    {
+      "id": "direct-disposal",
+      "title": "Dispose of a document directly",
+      "start": "Select an active document you are allowed to dispose of directly",
+      "action": "Choose Dispose; select Shred, Scratch or Other; describe Other when used; confirm disposal",
+      "question": "Do you have both permissions and a valid reason?",
+      "yes": "Mark Disposed; save the reason, person, date and earlier record details",
+      "no": "Correct the reason, or ask an Administrator to review your permissions; retry",
+      "result": "The document register shows Disposed and its disposal history",
+      "notes": [
+        "Direct disposal supports Hardcopy, Softcopy and External Documents; both register direct and disposal direct permission are required.",
+        "Softcopy disposal retires its files. External disposal keeps stored files and revision records but blocks normal download.",
+        "Direct Hardcopy disposal keeps its recorded location. Approval-based Hardcopy disposal clears the location and personal grants.",
+        "Hard Delete is separate from Dispose and requires its own permissions and password confirmation."
+      ]
+    },
+    {
+      "id": "disposal-request",
+      "title": "Request hardcopy or external disposal",
+      "start": "You need approval to dispose of an active document",
+      "action": "Choose Disposal Request; select Hardcopy or External, the document and disposal reason; save and submit",
+      "question": "Have all required approvers approved disposal?",
+      "yes": "Choose Submit Request for approval or Save Draft to continue later",
+      "no": "Wait for remaining reviews, or follow Return or Reject; the proposed disposal is not applied",
+      "result": "The request is Completed and the document is Disposed, with approval and disposal history",
+      "notes": [
+        "Example: Plant Manager > Document Control Officer > Requester account. Check your timeline. Softcopy disposal requests are unavailable.",
+        "Choose Shred, Scratch or Other. Other needs a description of up to 250 characters.",
+        "Approved Hardcopy disposal clears Location and personal access grants. External disposal keeps files and revision records."
+      ],
+      "decision_examples": [
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "direct-assignment",
+      "title": "Assign documents directly",
+      "start": "Authorized controller opens Document Assignments",
+      "action": "Choose a document, Hardcopy location or Softcopy category branch; select the receiving user and confirm",
+      "question": "Are the active documents and user eligible?",
+      "yes": "Add the Softcopy assignee or change the Hardcopy holder immediately",
+      "no": "Resolve active transfers, choose valid records or reduce the selection; retry",
+      "result": "The assignment list and document details show the updated assignee or holder",
+      "notes": [
+        "Softcopy category assignment includes its subcategories. Location assignment includes all active Hardcopies stored there.",
+        "Bulk assignment supports up to 2,000 active documents. An active Hardcopy transfer blocks reassignment.",
+        "Direct assignment needs no approval, Dispatch or Accept. It changes records without moving documents or granting personal access."
+      ]
+    },
+    {
+      "id": "places-categories",
+      "title": "Set up storage places and categories",
+      "start": "Authorized maintainer opens Master Data",
+      "action": "Choose the place or category tab; add or edit its name, folder and parent details; confirm Save",
+      "question": "Are the details, parent choices and permission valid?",
+      "yes": "Save the entry for use in the matching document register",
+      "no": "Correct the name or parent choices shown in the message and retry",
+      "result": "The updated choices appear in document forms and Folder view",
+      "notes": [
+        "Areas, Specifics, optional Assets and Locations describe Hardcopy storage. Maintain their valid parent relationships.",
+        "Softcopy Categories and External Categories are separate trees. Categories can contain subcategories.",
+        "Deactivate an entry to stop new selection while retaining historical links; existing relationships can restrict changes."
+      ]
+    },
+    {
+      "id": "accounts",
+      "title": "Create or update a user account",
+      "start": "Authorized account administrator opens User Management",
+      "action": "Enter user details, Primary role, Assigned roles and leader; save, reset the password or choose Deactivate",
+      "question": "Are the role, leader and account changes allowed?",
+      "yes": "Save the account; give any temporary password securely to the intended user",
+      "no": "Correct the role or leader choices, or the protected account change; retry",
+      "result": "The account has the chosen roles and leader. New or reset users change password at next sign-in",
+      "notes": [
+        "Primary and assigned active roles combine permissions. The leader receives steps configured as Requester's leader.",
+        "Users cannot deactivate themselves or change their own roles. The final active Administrator cannot be removed.",
+        "Account and role changes can require a fresh sign-in. Assigned Documents requires both user-view and direct-assignment permission."
+      ]
+    },
+    {
+      "id": "roles",
+      "title": "Set roles and permissions",
+      "start": "Authorized role administrator opens Roles & Permissions",
+      "action": "Add or edit a role name and allowed actions; save, deactivate or remove the selected role",
+      "question": "Is the change allowed, with no blocking links?",
+      "yes": "Save the allowed actions, or deactivate or remove the unused role",
+      "no": "Check linked users, approval steps and unfinished requests; correct the issue and retry",
+      "result": "Users can open the pages and use the actions allowed by their active roles",
+      "notes": [
+        "Supplied roles: Administrator, Document Control Officer, Plant Manager, Internal Auditor and Staff. Custom roles can be added.",
+        "Administrator privileges are fixed. Other roles can be configured; an administrator cannot delegate actions they lack.",
+        "A role cannot be deactivated or removed while assigned to users, used by current workflows or needed by unfinished requests."
+      ]
+    },
+    {
+      "id": "workflows",
+      "title": "Publish an approval route",
+      "start": "Authorized workflow administrator opens Workflow Builder",
+      "action": "Create Next Draft; add or edit approvers; move or remove steps; choose Validate & Publish",
+      "question": "Does the route have 1-30 valid steps in order?",
+      "yes": "Publish the route for future submissions of this request type",
+      "no": "Add missing steps or replace unavailable users and roles, then validate again",
+      "result": "Future submissions use the new route. Previously submitted requests keep their original route",
+      "notes": [
+        "Approvers can be a specific user, any active member of a role, the Requester's leader or the Requester account.",
+        "Published versions are read-only. Use Create Next Draft, or Start First Draft when no version exists.",
+        "Only one draft per workflow is available. The request types are predefined; configuring a route does not enable retired request types."
+      ]
+    },
+    {
+      "id": "notifications-retention",
+      "title": "Follow task and retention reminders",
+      "start": "You see a task notice, unread bell entry or retention reminder",
+      "action": "Open the notice; inspect the linked request, handoff or Hardcopy record",
+      "question": "Is there an action you need and are allowed to take?",
+      "yes": "Complete the assigned task, or arrange the appropriate hardcopy review or disposal",
+      "no": "Close the notice. Reading or dismissing it does not change the document",
+      "result": "The notice leads you to the record or task that needs attention",
+      "notes": [
+        "Selecting an unread bell entry acknowledges that entry. Opening the panel does not mark every entry read.",
+        "Retention reminders concern visible active Hardcopies with retention enabled and an end date today or earlier, using Manila dates.",
+        "Retention reminders are shown once per document and end date in the browser session; dismissing one leaves the record unchanged."
+      ]
+    },
+    {
+      "id": "audit-trail",
+      "title": "Trace an action in the audit trail",
+      "start": "An authorized audit reviewer needs to trace a recorded action",
+      "action": "Open Internal Audit Trail; search or filter by date and result; review who acted and what happened",
+      "question": "Did you find the action you need?",
+      "yes": "Check the time, person, result and details against the document or request history",
+      "no": "Change the search or dates; ask the Administrator to investigate missing records",
+      "result": "The reviewer understands the recorded action and any follow-up needed",
+      "notes": [
+        "The supplied Administrator, Document Control Officer and Internal Auditor roles can view the audit trail; custom grants may differ.",
+        "Use success or failed outcomes to narrow the list. Audit review does not change a document or reverse an approval.",
+        "Document details and request approval history provide related context for the recorded action."
+      ]
+    },
+    {
+      "id": "backup-management",
+      "title": "Create and manage backups",
+      "start": "Authorized backup operator opens Backup & Restore",
+      "action": "Choose Backup now, Import backup, Download or Clean up; confirm the selected operation",
+      "question": "Are backup setup and the selected file ready?",
+      "yes": "Create or import a checked, protected backup, download it, or remove eligible older archives",
+      "no": "Read the setup or backup error and correct it before retrying",
+      "result": "The backup list and completion message show what happened",
+      "notes": [
+        "Viewing backups and managing or downloading them require different permissions. Check the success message and resulting archive.",
+        "The displayed daily target is 5:00 PM Asia/Manila. Automatic backup runs require separate administrator setup and verification.",
+        "Clean up removes expired backup and log archives under the configured retention rules. Import verifies the supplied backup ZIP."
+      ]
+    },
+    {
+      "id": "restore",
+      "title": "Restore records and private files",
+      "start": "Authorized backup operator chooses Restore system data",
+      "action": "Select Backup to restore; enter Your password; type RESTORE; confirm Restore selected backup",
+      "question": "Do the password, confirmation and backup checks pass?",
+      "yes": "Save a recovery backup, restore the chosen records and private files, then sign out the operator",
+      "no": "Read the error; correct the password, confirmation or backup problem before retrying",
+      "result": "Sign in again and check the restored records, users and files",
+      "notes": [
+        "Restore replaces live records and private files. Normal use is temporarily blocked during the maintenance operation.",
+        "A recovery backup is created before replacement. Keep the selected backup and recovery archive available for follow-up checks.",
+        "Application code recovery is an offline maintenance task; it is not performed by the Restore system data button."
+      ]
+    }
+  ]
+}

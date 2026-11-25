@@ -1,6 +1,8 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/workflow/workflow_graph.php';
+require_once APPPATH . 'services/request/request_policy.php';
 class Request_service
 {
     private $ci;
@@ -12,17 +14,38 @@ class Request_service
         $this->ci->load->model('Document_model');
         $this->ci->load->model('Permission_model');
         $this->ci->load->model('Identity_model');
-        require_once APPPATH . 'services/request/request_policy.php';
     }
 
     private function authorize($type, $softcopyId, $hardcopyId, array $payload, array $user): void
     {
-        if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), 'request'))
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            (new Scanned_document_service())->authorize($type, $payload, $user);
+            return;
+        }
+        $action = $type === Request_policy::REVISION_TEMPLATE ? Request_policy::REVISION_TEMPLATE_ACTION : 'request';
+        if (!$this->ci->Permission_model->allowed($user, Request_policy::module($type), $action))
             throw new DomainException(
                 'You don’t have permission to perform this action on the selected document.'
             );
-        if (in_array($type, ['softcopy_create', 'hardcopy_create'], TRUE))
+        if (in_array($type, ['softcopy_create', 'hardcopy_create', 'external_create'], TRUE))
             return;
+        if ($type === 'external_revise') {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $externalId = (int) ($payload['external_document_id'] ?? 0);
+            if (!(new External_document_service())->manageable($externalId, $user)) {
+                throw new DomainException('The selected external document is unavailable or outside your authorized scope.');
+            }
+            return;
+        }
+        if ($type === 'disposal' && ($payload['document_domain'] ?? '') === 'external') {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            $externalId = (int) ($payload['external_document_id'] ?? 0);
+            if (!(new External_document_service())->manageable($externalId, $user)) {
+                throw new DomainException('The selected external document is unavailable or outside your authorized scope.');
+            }
+            return;
+        }
         $catalog = in_array($type, ['access', 'assignment'], TRUE);
         $domain = $catalog ? ($payload['document_domain'] ?? 'softcopy') :
             (str_starts_with($type, 'softcopy_') ? 'softcopy' : 'hardcopy');
@@ -37,9 +60,12 @@ class Request_service
             );
     }
 
-    public function save($tab, $post, $user, $attachment = NULL)
+    public function save($tab, $post, $user, $attachment = NULL, bool $submit = FALSE)
     {
         $type = (string) ($post['type'] ?? '');
+        if (in_array($type, ['hardcopy_create', 'hardcopy_update'], TRUE)) {
+            throw new DomainException('Hardcopy create and update requests are no longer available.');
+        }
         if (!in_array($type, $this->ci->Request_model->types($tab), TRUE))
             throw new DomainException(
                 'This request type is not valid for the selected tab. Please select the correct tab and try again.'
@@ -49,8 +75,11 @@ class Request_service
             throw new DomainException(
                 'You don’t have permission to create or edit this request.'
             );
+        if ($submit && !$this->ci->Permission_model->allowed($user, 'requests', 'submit'))
+            throw new DomainException('Request submission permission is required.');
         $this->stagedPaths = [];
-        $this->ci->db->trans_begin();
+        if (!$this->ci->db->trans_begin())
+            throw new DomainException('Could not save the request. Please try again.');
         try {
             if ($id) {
                 $request = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->row_array();
@@ -63,7 +92,11 @@ class Request_service
                 throw new DomainException(
                     'We couldn’t save your request. Please try again.'
                 );
-            $this->ci->db->trans_commit();
+            // The nested submission transaction shares this commit and upload rollback.
+            if ($submit)
+                $this->submit($tab, $result, $user);
+            if (!$this->ci->db->trans_commit())
+                throw new DomainException('Could not save the request. Please try again.');
             $this->stagedPaths = [];
             return $result;
         } catch (Throwable $e) {
@@ -74,7 +107,7 @@ class Request_service
             $this->stagedPaths = [];
             if ($e instanceof DomainException)
                 throw $e;
-            log_message('error', 'Request draft transaction failed.');
+            log_message('error', 'Request save transaction failed.');
             throw new DomainException('Request could not be saved. Refresh and try again.');
         }
     }
@@ -117,11 +150,34 @@ class Request_service
     {
         $allowed = $this->ci->Request_model->types($tab);
         $type = trim((string) ($post['type'] ?? $allowed[0]));
+        if ($tab === 'softcopy' && $type === 'softcopy_cancel') {
+            throw new DomainException('Softcopy cancellation requests are no longer available.');
+        }
         if (!in_array($type, $allowed, TRUE))
             throw new DomainException(
                 'This request type is not valid for the selected tab. Please select the correct tab and try again.'
             );
         $id = (int) ($post['id'] ?? 0);
+        if ($id && $this->has_uploaded_attachment($attachment)) {
+            $existing = $this->ci->db->get_where('requests', ['id' => $id])->row_array();
+            if ($existing && in_array($existing['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+            ], TRUE)) {
+                $oldPayload = json_decode($existing['payload'], TRUE) ?: [];
+                $creation = in_array($existing['type'], ['softcopy_create', 'external_create'], TRUE);
+                $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+                $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                $fileIds = array_values(array_unique(array_filter(array_map(
+                    'intval',
+                    (array) ($oldPayload[$filesField] ?? [$oldPayload[$fileField] ?? 0])
+                ))));
+                if ($fileIds && $this->ci->db->where_in('id', $fileIds)
+                    ->where('locked_at IS NOT NULL', NULL, FALSE)
+                    ->limit(1)->get('files')->row_array()) {
+                    throw new DomainException('The approved file is locked and cannot be replaced.');
+                }
+            }
+        }
         $subject = trim((string) ($post['subject'] ?? ''));
         if ($subject === '' || mb_strlen($subject) > 255)
             throw new DomainException(
@@ -131,16 +187,24 @@ class Request_service
             'subject' => $subject,
             'remarks' => trim((string) ($post['remarks'] ?? '')),
             'title' => trim((string) ($post['title'] ?? '')),
+            'description' => trim((string) ($post['description'] ?? '')),
             'document_number' => trim((string) ($post['document_number'] ?? '')),
-            'series_number' => trim((string) ($post['series_number'] ?? '')),
+            'external_document_number' => trim((string) ($post['external_document_number'] ?? '')),
+            'subsidiary_id' => (int) ($post['subsidiary_id'] ?? 0),
+            'generated_document_number' => trim((string) ($post['generated_document_number'] ?? '')),
+            'series_number' => '', // Generated when the request is approved.
+            // The Series No. is typed in manually (no code pattern).
+            'generated_series_number' => trim((string) ($post['generated_series_number'] ?? '')),
+            'series_number_checker' => !empty($post['series_number_checker']) ? 1 : 0,
             'category_id' => (int) ($post['category_id'] ?? 0),
+            'external_category_id' => (int) ($post['external_category_id'] ?? 0),
+            'external_document_id' => (int) ($post['external_document_id'] ?? 0),
             'recipient_id' => (int) ($post['recipient_id'] ?? 0),
             'expires_at' => trim((string) ($post['expires_at'] ?? '')),
             'destination_location_id' => (int) ($post['destination_location_id'] ?? 0),
             'destination_area_id' => (int) ($post['destination_area_id'] ?? 0),
             'destination_specific_id' => (int) ($post['destination_specific_id'] ?? 0),
             'destination_asset_id' => (int) ($post['destination_asset_id'] ?? 0),
-            'new_revision_level' => trim((string) ($post['new_revision_level'] ?? '')),
             'effective_date' => trim((string) ($post['effective_date'] ?? '')),
             'date_received' => (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d'),
             'date_released' => '',
@@ -159,15 +223,39 @@ class Request_service
             'retention_end_date' => trim((string) ($post['retention_end_date'] ?? '')),
             'creation_reason' => trim((string) ($post['creation_reason'] ?? ''))
         ];
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            $payload = (new Scanned_document_service())->prepare($type, $post, $user, $attachment, $this->stagedPaths);
+        }
+        if (str_starts_with($type, 'external_')) {
+            unset(
+                $payload['retention_enabled'],
+                $payload['retention_period'],
+                $payload['retention_start_date'],
+                $payload['retention_end_date']
+            );
+        }
         $softcopyId = (int) ($post['softcopy_id'] ?? 0);
         $hardcopyId = (int) ($post['hardcopy_id'] ?? 0);
         $domain = $payload['document_domain'];
         // Unrelated posted IDs must never attach a request to another document.
-        if (str_starts_with($type, 'softcopy_')) {
+        if (str_starts_with($type, 'scanned_') || str_starts_with($type, 'external_')) {
+            $softcopyId = 0;
+            $hardcopyId = 0;
+        } elseif ($type === 'disposal') {
+            if (!in_array($domain, ['hardcopy', 'external'], TRUE)) {
+                throw new DomainException('Choose whether this disposal request applies to a hardcopy or external document.');
+            }
+            $softcopyId = 0;
+            if ($domain === 'external')
+                $hardcopyId = 0;
+            else
+                $payload['external_document_id'] = 0;
+        } elseif (str_starts_with($type, 'softcopy_')) {
             $hardcopyId = 0;
             if ($type === 'softcopy_create')
                 $softcopyId = 0;
-        } elseif (in_array($type, ['hardcopy_create', 'hardcopy_update', 'transfer', 'disposal'], TRUE)) {
+        } elseif (in_array($type, ['hardcopy_create', 'hardcopy_update', 'transfer'], TRUE)) {
             $softcopyId = 0;
             if ($type === 'hardcopy_create')
                 $hardcopyId = 0;
@@ -196,11 +284,14 @@ class Request_service
             !$softcopyId
         )
             throw new DomainException('Select a softcopy document.');
-        if (
-            in_array($type, ['hardcopy_update', 'transfer', 'disposal'], TRUE) &&
-            !$hardcopyId
-        )
+        if (in_array($type, ['hardcopy_update', 'transfer'], TRUE) && !$hardcopyId)
             throw new DomainException('Select a hardcopy document.');
+        if ($type === 'disposal') {
+            if ($domain === 'hardcopy' && !$hardcopyId)
+                throw new DomainException('Select a hardcopy document.');
+            if ($domain === 'external' && !(int) ($payload['external_document_id'] ?? 0))
+                throw new DomainException('Select an external document.');
+        }
         if (in_array($type, ['assignment', 'access', 'transfer'], TRUE) && !$payload['recipient_id'])
             throw new DomainException('Select a recipient or assigned user.');
         if (
@@ -231,9 +322,13 @@ class Request_service
             $id ?: NULL
         );
         $fileId = NULL;
-        $fileField = $type === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id';
-        if (in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+        $creation = in_array($type, ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($type, 'external_');
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        if (in_array($type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) {
             if ($type === 'softcopy_revise') {
+                require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
+                (new Softcopy_operation_service())->assert_document_unlocked($softcopyId);
                 if (
                     !$this->ci->db->get_where('softcopy_documents', [
                         'id' => $softcopyId,
@@ -243,13 +338,73 @@ class Request_service
                     throw new DomainException('Choose an active softcopy to revise.');
                 require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
                 (new Softcopy_operation_service())->validate_revision($payload);
+            } elseif ($type === 'softcopy_create') {
+                require_once APPPATH . 'services/softcopy/softcopy_operation_service.php';
+                (new Softcopy_operation_service())->validate_effective_date($payload);
+                // Folder-only categories are for nesting; they cannot create documents.
+                if (!$this->ci->db->get_where('categories', [
+                    'id' => (int) ($payload['category_id'] ?? 0),
+                    'active' => 1,
+                    'category_type' => 'pattern'
+                ])->row_array()) {
+                    throw new DomainException('Choose an active Document Number Pattern category, not a folder.');
+                }
+                // Validate initial per-Document-No. setup before queuing approvals.
+                // The authoritative number and original-series assignment remain
+                // deferred until final approval inside the shared transaction.
+                if (!empty($payload['series_number_checker'])) {
+                    $seriesCategoryId = (int) ($payload['category_id'] ?? 0);
+                    $seriesDocumentNo = trim((string) ($payload['document_number'] ?? ''));
+                    if ($seriesDocumentNo === '' || !$seriesCategoryId ||
+                        !$this->ci->db->get_where('softcopy_documents', [
+                            'category_id' => $seriesCategoryId,
+                            'document_number' => $seriesDocumentNo
+                        ])->row_array()) {
+                        throw new DomainException('Choose an existing Document No. from the selected category.');
+                    }
+                    $typedSeries = trim((string) ($payload['generated_series_number'] ?? ''));
+                    if ($typedSeries === '' || mb_strlen($typedSeries) > 100) {
+                        throw new DomainException('Enter the Series No. (maximum 100 characters).');
+                    }
+                }
             }
-            if (!empty($attachment['name'])) {
+            if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
+                require_once APPPATH . 'services/documents/external_document_service.php';
+                $externalService = new External_document_service();
+                $externalService->validate_metadata(
+                    $payload['title'],
+                    $payload['description']
+                );
+                if ($type === 'external_revise')
+                    $externalService->assert_document_unlocked((int) $payload['external_document_id']);
+                $externalService->validate_document_number($payload['external_document_number']);
+                $payload = array_replace($payload, $externalService->subsidiary_input($post));
+                $payload['external_category_id'] = $externalService->validate_category(
+                    (int) $payload['external_category_id']
+                );
+                if ($type === 'external_revise' && !$externalService->manageable($payload['external_document_id'], $user)) {
+                    throw new DomainException('Choose an active external document to revise.');
+                }
+            }
+            if ($external) {
                 require_once APPPATH . 'services/files/file_service.php';
                 $files = new File_service();
-                $fileId = $type === 'softcopy_create'
-                    ? $files->stage_creation((int) $user['id'], $attachment)
-                    : $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
+                $fileIds = $type === 'external_create'
+                    ? $files->stage_external_creation((int) $user['id'], $attachment)
+                    : $files->stage_external_revision((int) $payload['external_document_id'], (int) $user['id'], $attachment);
+                foreach ($fileIds as $stagedId) {
+                    $staged = $this->ci->db->select('storage_name')->get_where('files', ['id' => $stagedId])->row_array();
+                    if ($staged && preg_match('/^[a-f0-9]{64}$/', $staged['storage_name']))
+                        $this->stagedPaths[] = PK_ROOT . '/storage/documents/' . $staged['storage_name'];
+                }
+            } elseif (!empty($attachment['name'])) {
+                require_once APPPATH . 'services/files/file_service.php';
+                $files = new File_service();
+                if ($type === 'softcopy_create') {
+                    $fileId = $files->stage_creation((int) $user['id'], $attachment);
+                } else {
+                    $fileId = $files->stage_revision($softcopyId, (int) $user['id'], $attachment);
+                }
                 $staged = $this->ci->db->select('storage_name')->get_where('files', ['id' => $fileId])->row_array();
                 if ($staged && preg_match('/^[a-f0-9]{64}$/', $staged['storage_name']))
                     $this->stagedPaths[] = PK_ROOT . '/storage/documents/' . $staged['storage_name'];
@@ -264,8 +419,26 @@ class Request_service
                 ) {
                     throw new DomainException('Only your matching draft may be edited.');
                 }
-                $payload[$fileField] = $fileId ?: ((int) ($old[$fileField] ?? 0));
+                if ($external) {
+                    $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                    $oldFileIds = $old[$filesField] ?? [$old[$fileField] ?? 0];
+                    $fileIds = array_values(array_unique(array_filter(array_map(
+                        'intval',
+                        array_merge((array) $oldFileIds, $fileIds ?? [])
+                    ))));
+                    $payload[$filesField] = $fileIds;
+                    $payload[$fileField] = $fileIds[0] ?? 0;
+                } else {
+                    $payload[$fileField] = $fileId ?: ((int) ($old[$fileField] ?? 0));
+                }
+            } elseif ($external) {
+                if (!empty($fileIds)) {
+                    $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] = $fileIds;
+                    $payload[$fileField] = $fileIds[0];
+                }
             } elseif ($fileId) {
+                // A new softcopy request keeps its staged file; without this the
+                // first Save and Submit fails with "Upload a Document File".
                 $payload[$fileField] = $fileId;
             }
         }
@@ -282,7 +455,8 @@ class Request_service
 
         $data = [
             'type' => $type,
-            'payload' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+            'payload' => json_encode($type === Request_policy::REVISION_TEMPLATE
+                ? array_intersect_key($payload, array_flip(['subject', 'remarks'])) : $payload, JSON_UNESCAPED_UNICODE),
             'softcopy_id' => $softcopyId ?: NULL,
             'hardcopy_id' => $hardcopyId ?: NULL
         ];
@@ -350,15 +524,15 @@ class Request_service
             }
         }
         if (!empty($location['asset_id'])) {
-            $asset = $this->ci->db->select('b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $location['asset_id'])->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)->get()->row_array();
-            if (
-                !$asset || (int) $asset['specific_id'] !== (int) $location['specific_id'] ||
-                (int) $asset['area_id'] !== (int) $location['area_id']
-            ) {
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            try {
+                Asset_specific_policy::resolve(
+                    $this->ci->db,
+                    $location['asset_id'],
+                    $location['specific_id'],
+                    $location['area_id']
+                );
+            } catch (DomainException $e) {
                 throw new DomainException('Destination location has an invalid hierarchy.');
             }
         } elseif (!empty($location['specific_id'])) {
@@ -392,7 +566,8 @@ class Request_service
 
     public function submit($tab, $id, $user)
     {
-        $this->ci->db->trans_begin();
+        if (!$this->ci->db->trans_begin())
+            throw new DomainException('Could not submit the request. Please try again.');
         try {
             $rows = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->result_array();
             $r = $rows[0] ?? NULL;
@@ -402,6 +577,8 @@ class Request_service
                 !in_array($r['type'], $this->ci->Request_model->types($tab), TRUE)
             )
                 throw new DomainException('Request cannot be submitted.');
+            if (in_array($r['type'], ['hardcopy_create', 'hardcopy_update'], TRUE))
+                throw new DomainException('Hardcopy create and update requests are no longer available.');
             if (!$this->ci->Permission_model->allowed($user, 'requests', 'submit'))
                 throw new DomainException('Request submission permission is required.');
             $currentPayload = json_decode($r['payload'], TRUE) ?: [];
@@ -423,6 +600,12 @@ class Request_service
 
 
             $this->authorize($r['type'], (int) $r['softcopy_id'], (int) $r['hardcopy_id'], $currentPayload, $user);
+            if (str_starts_with($r['type'], 'scanned_')) {
+                require_once APPPATH . 'services/documents/scanned_document_service.php';
+                $scanned = new Scanned_document_service();
+                $scanned->validate($r['type'], $currentPayload, (int) $r['requested_by']);
+                $scanned->assert_current($r['type'], $currentPayload);
+            }
             if ($r['type'] === 'transfer')
                 $this->validate_transfer_destination((int) $r['hardcopy_id'], $currentPayload);
             $this->assert_no_submitted_related_request(
@@ -437,18 +620,25 @@ class Request_service
                 !$this->ci->Identity_model->active_user((int) ($currentPayload['recipient_id'] ?? 0))
             )
                 throw new DomainException('The recipient is no longer active.');
-            if (in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            if (in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) {
                 $payload = json_decode($r['payload'], TRUE) ?: [];
-                $creation = $r['type'] === 'softcopy_create';
-                $file = $this->ci->db->get_where('files', [
-                    'id' => (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0),
-                    'document_id' => $creation ? NULL : (int) $r['softcopy_id'],
+                $creation = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
+                $external = str_starts_with($r['type'], 'external_');
+                $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+                $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+                $fileIds = array_values(array_unique(array_filter(array_map(
+                    'intval',
+                    (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+                ))));
+                $files = $fileIds ? $this->ci->db->where_in('id', $fileIds)->where([
+                    'document_id' => $creation ? NULL : (int) ($external
+                        ? ($payload['external_document_id'] ?? 0) : $r['softcopy_id']),
                     'uploaded_by' => (int) $r['requested_by'],
                     'status' => 'pending',
-                    'domain' => 'softcopy',
+                    'domain' => $external ? 'external' : 'softcopy',
                     'purpose' => $creation ? 'creation' : 'revision'
-                ])->row_array();
-                if (!$file)
+                ])->get('files')->result_array() : [];
+                if (!$fileIds || count($files) !== count($fileIds))
                     throw new DomainException('Upload a Document Filefor review before submitting.');
             }
             if (in_array($r['type'], ['hardcopy_create', 'hardcopy_update'], TRUE)) {
@@ -479,6 +669,8 @@ class Request_service
             $steps = $graph['steps'] ?? [];
             require_once APPPATH . 'services/workflow/workflow_graph.php';
             Workflow_graph::validate(is_array($graph) ? $graph : [], TRUE);
+            if ($r['type'] === Request_policy::REVISION_TEMPLATE)
+                Request_policy::revision_template_dco_role($this->ci->db, $graph);
             // Resubmissions do not overwrite old step rows: workflow_history
             // holds foreign keys to those decisions. Only unfinished old steps
             // become superseded, preserving the exact past approval sequence.
@@ -538,7 +730,8 @@ class Request_service
             $this->history($id, NULL, 'submitted', $user, NULL);
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Workflow submission failed.');
-            $this->ci->db->trans_commit();
+            if (!$this->ci->db->trans_commit())
+                throw new DomainException('Could not submit the request. Please try again.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
             if ($e instanceof DomainException)
@@ -571,6 +764,10 @@ class Request_service
         $soft = (int) $request['softcopy_id'];
         $hard = (int) $request['hardcopy_id'];
         $reason = trim((string) ($payload['remarks'] ?? ''));
+        if (str_starts_with($type, 'scanned_')) {
+            require_once APPPATH . 'services/documents/scanned_document_service.php';
+            return (new Scanned_document_service())->apply($request, (int) $actor);
+        }
         $title = trim((string) ($payload['title'] ?? ''));
         $recipient = (int) ($payload['recipient_id'] ?? 0);
         if ($type === 'softcopy_create') {
@@ -579,6 +776,17 @@ class Request_service
                 $type,
                 $payload,
                 $soft,
+                $actor,
+                $owner,
+                $id
+            );
+        }
+        if (in_array($type, ['external_create', 'external_revise'], TRUE)) {
+            require_once APPPATH . 'services/documents/external_document_service.php';
+            return (new External_document_service())->apply(
+                $type,
+                $payload,
+                (int) ($payload['external_document_id'] ?? 0),
                 $actor,
                 $owner,
                 $id
@@ -673,39 +881,60 @@ class Request_service
             return ['transfer_id' => $this->ci->db->insert_id()];
         }
         if ($type === 'disposal') {
-            $doc = $this->ci->db->query('SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE', [$hard])->row_array();
-            if (!$doc || $doc['status'] !== 'active')
-                throw new DomainException(
-                    'This hardcopy is no longer available for disposal. It may have already been disposed of or deactivated.'
-                );
+            $documentDomain = $payload['document_domain'] ?? 'hardcopy';
+            if ($documentDomain === 'external') {
+                $documentId = (int) ($payload['external_document_id'] ?? 0);
+                $doc = $this->ci->db->query(
+                    'SELECT * FROM external_documents WHERE id=? FOR UPDATE',
+                    [$documentId]
+                )->row_array();
+                if (!$doc || $doc['status'] !== 'active')
+                    throw new DomainException('This external document is no longer available for disposal.');
+                $table = 'external_documents';
+            } else {
+                $doc = $this->ci->db->query(
+                    'SELECT * FROM hardcopy_documents WHERE id=? FOR UPDATE',
+                    [$hard]
+                )->row_array();
+                if (!$doc || $doc['status'] !== 'active')
+                    throw new DomainException(
+                        'This hardcopy is no longer available for disposal. It may have already been disposed of or deactivated.'
+                    );
+                $documentId = $hard;
+                $table = 'hardcopy_documents';
+            }
             require_once APPPATH . 'services/documents/disposal_service.php';
             $description = (new Disposal_service())->reason($payload);
-            $this->ci->db->insert('disposals', [
+            if (!$this->ci->db->insert('disposals', [
                 'request_id' => $id,
-                'domain' => 'hardcopy',
-                'document_id' => $hard,
+                'domain' => $documentDomain,
+                'document_id' => $documentId,
                 'previous_status' => $doc['status'],
                 'previous_state' => json_encode($doc),
                 'disposal_action' => $payload['disposal_reason'],
                 'remarks' => $description,
                 'disposed_by' => $actor
-            ]);
-            $this->ci->db->where('id', $hard)->update('hardcopy_documents', [
+            ]))
+                throw new DomainException('Unable to record the disposal request.');
+            $documentUpdate = [
                 'previous_status' => $doc['status'],
                 'status' => 'disposed',
-                'location_id' => NULL,
                 'version' => (int) $doc['version'] + 1
-            ]);
-            $this->ci->db->insert('status_history', [
-                'domain' => 'hardcopy',
-                'document_id' => $hard,
+            ];
+            if ($documentDomain === 'hardcopy')
+                $documentUpdate['location_id'] = NULL;
+            $this->ci->db->where('id', $documentId)->update($table, $documentUpdate);
+            if (!$this->ci->db->insert('status_history', [
+                'domain' => $documentDomain,
+                'document_id' => $documentId,
                 'previous_status' => $doc['status'],
                 'new_status' => 'disposed',
                 'action' => 'disposed',
                 'user_id' => $actor,
                 'remarks' => $description
-            ]);
-            $this->ci->db->where('domain', 'hardcopy')->where('document_id', $hard)
+            ]))
+                throw new DomainException('Unable to record the disposal history.');
+            $this->ci->db->where('domain', $documentDomain)->where('document_id', $documentId)
                 ->where('revoked_at IS NULL', NULL, FALSE)->update('access_grants', [
                         'revoked_at' => date('Y-m-d H:i:s'),
                         'revoked_by' => $actor,
@@ -716,12 +945,162 @@ class Request_service
         throw new DomainException('Unsupported request action.');
     }
 
-    public function decide($tab, $id, $user, $decision, $comment)
+    private function has_uploaded_attachment($attachment): bool
+    {
+        if (!is_array($attachment) || !isset($attachment['name']))
+            return FALSE;
+        $names = is_array($attachment['name']) ? $attachment['name'] : [$attachment['name']];
+        foreach ($names as $name)
+            if (is_string($name) && $name !== '')
+                return TRUE;
+        return FALSE;
+    }
+
+    private function lock_approved_attachments(array $request, array $graph, array $step, array $user, string $approvedAt): array
+    {
+        if (!Workflow_graph::is_document_lock_step($graph, (string) $step['node_key']) ||
+            !in_array($request['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+            ], TRUE))
+            return [];
+
+        $payload = json_decode($request['payload'], TRUE) ?: [];
+        $creation = in_array($request['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($request['type'], 'external_');
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+        $fileIds = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+        ))));
+        if (!$fileIds)
+            return [];
+
+        $designatedApprover = 'Configured workflow approver';
+        foreach ($graph['steps'] ?? [] as $configuredStep) {
+            if (($configuredStep['key'] ?? NULL) === $step['node_key']) {
+                $designatedApprover = (string) ($configuredStep['approver']['label'] ?? $configuredStep['name']);
+                break;
+            }
+        }
+        $db = $this->ci->db;
+        $db->select('id,extension')->from('files')->where_in('id', $fileIds)->where([
+            'document_id' => $creation ? NULL : (int) ($external
+                ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
+            'uploaded_by' => (int) $request['requested_by'],
+            'status' => 'pending',
+            'domain' => $external ? 'external' : 'softcopy',
+            'purpose' => $creation ? 'creation' : 'revision'
+        ])->where_in('extension', ['pdf', 'docx', 'xlsx'])
+            ->where('locked_at IS NULL', NULL, FALSE);
+        $files = $db->query($db->get_compiled_select() . ' FOR UPDATE')->result_array();
+        $locked = [];
+        foreach ($files as $file) {
+            if (!$db->where('id', (int) $file['id'])->where('locked_at IS NULL', NULL, FALSE)->update('files', [
+                'locked_by' => (int) $user['id'],
+                'locked_at' => $approvedAt,
+                'lock_request_id' => (int) $request['id'],
+                'stage' => 'locked'
+            ])) {
+                throw new DomainException('The approved file could not be locked.');
+            }
+            if ($db->affected_rows() === 1) {
+                $locked[] = [
+                    'file_id' => (int) $file['id'],
+                    'extension' => $file['extension'],
+                    'request_id' => (int) $request['id'],
+                    'step_key' => $step['node_key'],
+                    'step_name' => $step['label'],
+                    'designated_approver' => $designatedApprover,
+                    'approver_id' => (int) $user['id'],
+                    'approver_name' => (string) $user['name'],
+                    'approved_at' => $approvedAt
+                ];
+            }
+        }
+        return $locked;
+    }
+
+    /**
+     * Approval at the designated finalize step requires the DCO's edited file.
+     * It replaces any earlier pending final file and is recorded on the request.
+     */
+    private function stage_final_file(array &$r, array $step, array $user, $upload, File_service $files): void
+    {
+        $payload = json_decode($r['payload'], TRUE) ?: [];
+        if (!$this->has_uploaded_attachment($upload))
+            throw new DomainException('Upload the edited final file to approve this step. The final controlled copy comes from the Document Control Officer.');
+        if (is_array($upload['name'] ?? NULL))
+            throw new DomainException('Upload one final file.');
+        $creation = $r['type'] === 'softcopy_create';
+        $sourceId = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
+        $source = $this->ci->db->get_where('files', ['id' => $sourceId, 'domain' => 'softcopy'])->row_array();
+        if (!$source || empty($source['locked_at']))
+            throw new DomainException('The locked proposed file is required before a final file can be uploaded.');
+        $old = $files->pending_final_file($payload);
+        $newId = $files->stage_final($r, $sourceId, (int) $user['id'], $upload);
+        $this->final_storage[] = $files->last_storage;
+        if ($old)
+            $this->ci->db->where('id', (int) $old['id'])->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
+        $payload['final_file_id'] = $newId;
+        $r['payload'] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $this->ci->db->where('id', (int) $r['id'])->update('requests', ['payload' => $r['payload']]);
+        $this->ci->db->insert('workflow_history', [
+            'request_id' => (int) $r['id'], 'step_id' => (int) $step['id'], 'action' => 'document_finalized',
+            'user_id' => (int) $user['id'], 'user_name' => (string) $user['name'],
+            'position_title' => (string) ($user['position_title'] ?? ''),
+            'after_state' => json_encode(['file_id' => $newId, 'source_file_id' => $sourceId]),
+            'comments' => 'Final controlled file uploaded by Document Control.'
+        ]);
+    }
+
+    /** Return/reject: the DCO's uploaded final file no longer applies. */
+    private function discard_final_file(array &$r): int
+    {
+        $payload = json_decode($r['payload'], TRUE) ?: [];
+        $id = (int) ($payload['final_file_id'] ?? 0);
+        if (!$id) return 0;
+        $this->ci->db->where(['id' => $id, 'status' => 'pending', 'purpose' => 'dco_final'])
+            ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
+        unset($payload['final_file_id']);
+        $r['payload'] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+        $this->ci->db->where('id', (int) $r['id'])->update('requests', ['payload' => $r['payload']]);
+        return $id;
+    }
+
+    private $final_storage = [];
+
+    private function approve_revision_template(
+        array $request, array $graph, array $user, $upload, File_service $files, string $approvedAt, $templateExpiry
+    ): array
+    {
+        $roleId = Request_policy::revision_template_dco_role($this->ci->db, $graph);
+        if (!User_roles::matches($user, $roleId))
+            throw new DomainException('Only the Document Control Officer may approve and release the template.');
+        if (!$this->has_uploaded_attachment($upload) || is_array($upload['name'] ?? NULL))
+            throw new DomainException('Upload one editable revision template to approve this request.');
+        $expiresOn = Request_policy::validate_revision_template_expiry($templateExpiry);
+        $document = $this->ci->db->query('SELECT id, status FROM softcopy_documents WHERE id=? FOR UPDATE', [
+            (int) $request['softcopy_id']
+        ])->row_array();
+        if (!$document || $document['status'] !== 'active')
+            throw new DomainException('The requested softcopy document is no longer active.');
+        $fileId = $files->stage_revision_template((int) $document['id'], (int) $user['id'], $upload, $approvedAt);
+        $this->final_storage[] = $files->last_storage;
+        return ['template_file_id' => $fileId, 'template_expires_on' => $expiresOn];
+    }
+
+    public function decide($tab, $id, $user, $decision, $comment, $finalUpload = NULL, $templateExpiry = NULL)
     {
         if (!in_array($decision, ['approved', 'rejected', 'returned'], TRUE))
             throw new DomainException('Invalid decision.');
         $cleanupDocumentId = 0;
         $cleanupFileId = 0;
+        $lockedFiles = [];
+        $discardedFinalId = 0;
+        $this->final_storage = [];
+        require_once APPPATH . 'services/files/file_service.php';
+        $fileService = new File_service();
         $this->ci->db->trans_begin();
         try {
             $locked = $this->ci->db->query('SELECT * FROM requests WHERE id=? FOR UPDATE', [$id])->result_array();
@@ -744,13 +1123,17 @@ class Request_service
                 ($role === 'role' && User_roles::matches($user, (int) ($assignment['value'] ?? 0)));
             if (!$authorized)
                 throw new DomainException('Only the assigned approver may decide.');
+            $template = $r['type'] === Request_policy::REVISION_TEMPLATE;
+            if ($template && $decision === 'returned')
+                throw new DomainException('Approve or reject the revision template request.');
+            $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
             if ($decision !== 'rejected') {
-                $graph = json_decode($r['snapshot'] ?? '', TRUE) ?: [];
                 $keys = array_column($graph['steps'] ?? [], 'key');
                 $index = array_search($step['node_key'], $keys, TRUE);
                 if ($index === FALSE)
                     throw new DomainException('Current step is not in the submitted workflow.');
             }
+            $approvedAt = date('Y-m-d H:i:s');
             $this->ci->db->where('id', $step['id'])->update('workflow_steps', [
                 'status' => $decision,
                 'decision' => $decision,
@@ -758,10 +1141,14 @@ class Request_service
                 'acting_user_id' => $user['id'],
                 'acting_name' => $user['name'],
                 'acting_position' => $user['position_title'] ?: '',
-                'acted_at' => date('Y-m-d H:i:s')
+                'acted_at' => $approvedAt
             ]);
             $this->history($id, $step['id'], $decision, $user, trim($comment));
             if ($decision === 'approved') {
+                if (in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE) &&
+                    Workflow_graph::is_finalize_step($graph, (string) $step['node_key']))
+                    $this->stage_final_file($r, $step, $user, $finalUpload, $fileService);
+                $lockedFiles = $this->lock_approved_attachments($r, $graph, $step, $user, $approvedAt);
                 if ($index < count($keys) - 1) {
                     // A returned step must be revisited in this submission,
                     // before any later pending step can receive the request.
@@ -778,18 +1165,21 @@ class Request_service
                     ]);
                     $this->ci->db->where('id', $id)->update('requests', ['current_node' => $next['node_key']]);
                 } else {
-                    $result = $this->applyApproved($r, (int) $user['id']);
+                    $result = $template
+                        ? $this->approve_revision_template($r, $graph, $user, $finalUpload, $fileService, $approvedAt, $templateExpiry)
+                        : $this->applyApproved($r, (int) $user['id']);
                     if (in_array($r['type'], ['softcopy_revise', 'softcopy_cancel'], TRUE))
                         $cleanupDocumentId = (int) $r['softcopy_id'];
-                    $status = $r['type'] === 'transfer' ? 'approved' : 'completed';
+                    $status = $r['type'] === 'transfer' || $template ? 'approved' : 'completed';
                     $this->ci->db->where('id', $id)->update('requests', [
                         'status' => $status,
                         'result' => json_encode($result),
                         'current_node' => NULL,
-                        'completed_at' => $status === 'completed' ? date('Y-m-d H:i:s') : NULL
+                        'completed_at' => $r['type'] === 'transfer' ? NULL : date('Y-m-d H:i:s')
                     ]);
                 }
             } elseif ($decision === 'returned') {
+                $discardedFinalId = $this->discard_final_file($r);
                 if ($index === 0) {
                     $this->ci->db->where('id', $id)->update('requests', [
                         'status' => 'returned',
@@ -825,6 +1215,7 @@ class Request_service
                 ]);
                 require_once APPPATH . 'services/files/file_service.php';
                 $r['status'] = 'rejected';
+                $discardedFinalId = $this->discard_final_file($r);
                 $cleanupFileId = (new File_service())->retire_request_attachment($r, (int) $user['id'], trim($comment));
             }
             if ($this->ci->db->trans_status() === FALSE)
@@ -833,6 +1224,8 @@ class Request_service
                 throw new DomainException('Approval decision could not be committed.');
         } catch (Throwable $e) {
             $this->ci->db->trans_rollback();
+            foreach ($this->final_storage as $storage)
+                $fileService->discard_storage($storage);
             if ($e instanceof DomainException)
                 throw $e;
             log_message('error', 'Workflow decision error ' . $e->getMessage());
@@ -843,7 +1236,10 @@ class Request_service
             (new File_service())->cleanup_retired($cleanupDocumentId);
         }
         if ($cleanupFileId)
-            (new File_service())->cleanup_retired(0, $cleanupFileId);
+            (new File_service())->cleanup_retired(0, $cleanupFileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
+        if ($discardedFinalId)
+            $fileService->cleanup_retired(0, $discardedFinalId, ['deleted'], 'softcopy');
+        return $lockedFiles;
     }
 
     public function delete($tab, $id, $user)
@@ -874,7 +1270,7 @@ class Request_service
             throw new DomainException('Request could not be deleted. Refresh and try again.');
         }
         if ($fileId)
-            (new File_service())->cleanup_retired(0, $fileId);
+            (new File_service())->cleanup_retired(0, $fileId, ['deleted', 'rejected'], str_starts_with($request['type'], 'external_') ? 'external' : 'softcopy');
     }
 
     public function cancel($tab, $id, $user)
@@ -904,6 +1300,6 @@ class Request_service
             throw new DomainException('Request could not be cancelled. Refresh and try again.');
         }
         if ($fileId)
-            (new File_service())->cleanup_retired(0, $fileId);
+            (new File_service())->cleanup_retired(0, $fileId, ['deleted', 'rejected'], str_starts_with($r['type'], 'external_') ? 'external' : 'softcopy');
     }
 }

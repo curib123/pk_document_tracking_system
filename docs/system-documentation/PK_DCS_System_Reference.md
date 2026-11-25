@@ -1,0 +1,405 @@
+# PK DCS | Everyday reference
+
+Find the right document, follow the right steps, and know when your work is complete.
+
+**Documentation reviewed 19 November 2026**
+
+PK Document Control System helps your team find records, manage approved files,
+track who holds physical documents, and review requests. Use your own account so
+the history shows who completed each action.
+
+## Start with the help you need
+
+| Your goal | Open |
+| --- | --- |
+| Get a short introduction to document types, My Requests and My Tasks | [Quick Guide](PK_DCS_Quick_Guide.pptx) |
+| Follow a task with screen examples | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
+| See who acts at each stage | [Process Flow](PK_DCS_Process_Flow.pdf) |
+| Decide what to do next | [Flowchart](PK_DCS_Flowchart.pdf) |
+| Understand how people share information | [Data Flow Diagram](PK_DCS_DFD.pdf) |
+
+Each document has a cover, contents, section labels and page numbers. In a PDF,
+select a contents entry to jump to that topic. The User Guide combines screen
+examples, lettered callouts, numbered steps and expected results. Its examples
+use demonstration records; your menus and available actions depend on your access.
+
+## Choose a task
+
+| I need to... | Start here | The change takes effect... |
+| --- | --- | --- |
+| Register or edit a physical document | Hardcopy Documents | When the direct save is confirmed |
+| Create or revise a softcopy directly | Softcopy Documents | After **Approve Directly** and confirmation |
+| Request a softcopy creation or revision | My Requests → New Request | After final approval |
+| Get an editable revision template | Softcopy Documents → Request Template for Revision | After the DCO approves, through the download expiry date |
+| Register or revise an external document directly | External Documents | After **Save Directly** and confirmation |
+| Request an external document creation or revision | My Requests → New Request | After final approval |
+| Request a scanned upload, update, removal, or folder | Scanned Documents or My Requests → New Request | After final approval |
+| Transfer a physical document | My Requests → New Request → Hardcopy Transfer Request | When the named recipient accepts it |
+| Get temporary document access for myself | My Requests → New Request → Document Access Request | After final approval, until the approved expiry |
+| Have a document assigned to me | My Requests → New Request → Document Assignment Request | After final approval |
+| Assign documents to someone else | Document Assignments | When the direct action is confirmed |
+| Request Hardcopy or External disposal | My Requests → New Request → Disposal Request | After final approval |
+| Dispose of a document directly | **Dispose** in its document list | When the direct action is confirmed |
+
+Direct actions require permission and access to the record. A missing action can
+mean your account or the document's status does not allow it.
+
+Register and edit hardcopies in **Hardcopy Documents**; new hardcopy creation and
+update requests are unavailable. New softcopy cancellation requests are also
+unavailable. You can still cancel an eligible request draft, and older requests
+remain available for reference.
+
+## Know your responsibilities
+
+| Role | Usual responsibility |
+| --- | --- |
+| Staff | Find permitted documents, submit requests, and hold or receive documents when assigned |
+| Document Control Officer | Maintain documents, assignments, places and categories; review assigned requests and audit records |
+| Plant Manager | Review assigned requests and use the document information allowed for the account |
+| Internal Auditor | Review permitted documents, histories and audit records |
+| Administrator | Manage accounts, permissions, approval routes, setup, backups and recovery |
+
+These describe the supplied roles. An Administrator can change permissions or add
+roles. **Primary role** and **Assigned roles** work together. The supplied Document
+Control Officer role does not automatically manage accounts, roles, approval
+routes or backups.
+
+The **requester** submitted a request. The **requester's leader** is the leader
+listed on that account. The **receiving user** is the person named on a transfer.
+These are responsibilities within a task. Only the person or role assigned to
+the current approval step can decide it.
+
+## Find a document or open a file
+
+1. Open Hardcopy Documents, Softcopy Documents, External Documents, or Scanned Documents.
+2. Choose **Table** or **Folder**, then use **Search** and the available filters.
+3. Open **View Details** where offered and check the record.
+4. For Softcopy Documents, open **View Details → Document Files** to preview or download the current file.
+   This tab also lists earlier versions and their upload and lock details when you have file history permission.
+   For Word and Excel, **Download Original** gives you the editable file and **Download PDF** gives you the converted copy.
+   For External Documents, open **Current Attachments** in **View Details**.
+
+Seeing a document title does not automatically allow editing, approval, download
+or printing. Normal file actions use the current approved file.
+
+Uploads can be **PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX**, up to **15 MB**. Electronic
+document creation and revision need an attachment before submission or direct
+approval. A proposed file becomes the current file only when the change is approved.
+
+Requesters and assigned reviewers preview a proposed attachment on the **Document File**
+tab of **View Details** in My Requests or My Tasks. Previews are read-only: the
+requester must attach any corrected file in the form.
+
+Word (`.docx`) and Excel (`.xlsx`) files are previewed as a PDF that
+the server converts with LibreOffice (see the
+[LibreOffice setup guide](../LIBREOFFICE_SETUP.md)). The uploaded original is kept
+unchanged. Users who may download a file can choose **Download Original** or
+**Download PDF**. **Fullscreen** enlarges any preview.
+
+## Register and maintain a hardcopy
+
+1. In Hardcopy Documents, choose **Add New Hardcopy Document**.
+2. Enter **Document Title** and choose **Area > Specific > optional Asset > Location**.
+3. Check **Current Holder**. Administrators can select another active user; other
+   users register themselves as holder.
+4. Leave **Sequence** blank to take the next number, or enter a Sequence that other
+   documents share. Add **Reason / Notes** if needed. Set retention dates if you need to
+   track them.
+5. Choose **Save Document**, then confirm and check the record.
+
+Several documents can share one Location. The **Sequence** belongs to each hardcopy
+document, not to its Location, and several documents may share the same Sequence. The current holder with direct
+permission, or an Administrator, can **Edit** an active record's title, storage
+details and retention dates. Reason / Notes is saved during registration;
+changes to that field during Edit are not saved. Use a transfer when the move
+needs an approved physical handoff.
+
+For retention, turn on **Track retention period** and enter **Retention Start**
+and **Retention End**. The end must be on or after the start. Use the retention
+filters to check remaining days, Due today and overdue records. Dates use Manila
+time. A retention notice asks you to review the document; it never disposes of
+the document automatically. Dismissing the notice leaves the record unchanged.
+
+## Create or revise a softcopy
+
+| To apply the change directly | To request approval |
+| --- | --- |
+| Open **Softcopy Documents** and choose **Add New Softcopy Document** or **Edit**. | Open **My Requests → New Request** and choose the softcopy action. |
+| Choose **Create Softcopy** or **Revise Softcopy**, complete the details and attach **Document File**. | Prepare the creation or revision details and attach the proposed file. |
+| Choose **Approve Directly**, confirm and check the record. | Choose **Submit Request** to send it for approval or **Save Draft** to continue later. |
+
+A direct action applies immediately. A request leaves the current document
+unchanged until final approval.
+
+New softcopies use **Document Number Pattern** categories and a generated
+document number. Softcopy Category setup also offers **Folder** categories,
+which can be nested as parents of further folders and numbered categories,
+but cannot generate a document number themselves. Numbered category code
+patterns increment their final dash-separated numeric segment
+(e.g. `PPM-001 → PPM-002`).
+
+On **Add New Softcopy Document** (a direct creation), **Generated Document
+Number** shows the category's next number and can be typed over:
+
+- Left unchanged, it is a preview. The next free number is assigned when you
+  approve, so it can differ if another document took that number meanwhile.
+- A number you type (up to 100 characters) is used as entered. It must not
+  already exist; otherwise the action stops with *That document number is
+  already in use*. A typed number that follows the pattern, such as `PPM-050`,
+  makes the next automatic number `PPM-051`.
+- Changing **Category** refills the box. A request cannot change the number;
+  it is assigned at final approval.
+
+The success message shows the number that was saved.
+
+**Series No. has no code pattern.** When **Need Series Number?** is selected, choose an
+existing Document No. and type the **Series Number** manually; its placeholder
+shows the previous series of that Document No. as a guide. Regular revisions
+retain their existing Series No. Complete **Number of Pages** and the
+other required fields.
+
+A revision needs a replacement file. It keeps the document number, series and
+category, and advances the revision automatically. An older revision can appear
+in history even when its file is no longer available to download.
+
+## Create or revise an external document
+
+External Documents uses its own **External Categories**, separate from Softcopy
+Categories. External documents do not have retention dates.
+
+For a direct action, choose **Add New External Document** or **Edit**. Enter
+**Document Title** and **Category**, add an optional **Description**, and attach
+the file. Choose **Save Directly** and confirm. Editing publishes the next
+revision and requires a replacement attachment.
+
+For approval, open **My Requests → New Request** and choose the external action.
+Choose **External Create Request** or **External Revised Request**, complete the
+proposal and attachment, then choose **Submit Request** or **Save Draft**. Final approval
+registers the document or publishes its next revision.
+
+## Submit a request and follow its progress
+
+1. Open **My Requests**, choose **New Request**, and select a **Request Action**.
+2. Complete the form. Choose **Save Draft** to continue later or **Submit Request** to start approval, then confirm.
+3. To submit a saved draft, use **Submit** on its row. To submit with changes, open **Edit** and choose **Submit Request**.
+4. Follow the **Approval Process Timeline** and **Workflow Activity Log**.
+5. If the request is returned to you, correct it and resubmit.
+
+You can edit only your own **Draft** or **Returned** request. **Cancel** applies
+to Drafts; it cannot withdraw a Submitted request. **Delete** permanently removes
+only your own eligible Cancelled drafts that never entered approval.
+
+Approvers open **My Tasks**, filter by category or action as needed, and select **Review request**.
+Review the proposal and file, then choose an available decision in the details dialog.
+
+| Decision | What happens next |
+| --- | --- |
+| **Approve** | The next reviewer receives the task. Final approval applies the action; most requests become Completed. |
+| **Return** at the first step | The requester can correct the proposal and resubmit it. |
+| **Return** at a later step | The previous approver's task reopens. The request stays Submitted. |
+| **Reject** | Approval ends and the request becomes Rejected. |
+
+While a request is being reviewed, its stored status remains Submitted until the
+workflow ends. **My Requests** shows which approver it is awaiting; My Tasks
+continues to show Submitted for actionable approval tasks.
+
+The guides show default workflow examples for Softcopy and External creation and
+revision, Hardcopy Transfer, Access, Assignment, and Disposal. They also cover the
+Scanned Documents and editable revision template approval procedures.
+
+| What you want to see | Decision examples |
+| --- | --- |
+| Information sent, received and recorded for each decision | [Data Flow Diagram](PK_DCS_DFD.pdf) |
+| Decision paths and their outcomes | [Flowchart](PK_DCS_Flowchart.pdf) |
+| Who acts next and when the requested change takes effect | [Process Flow](PK_DCS_Process_Flow.pdf) |
+| The same procedures alongside screen instructions | [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) |
+
+On related procedure pages, select a page number beside **Decisions** in the PDF
+footer to open the matching example. Direct actions use their own procedures;
+they do not go through these approval routes.
+
+Submitted and Returned requests keep their original approval route, even when
+an Administrator publishes a new default. Opening a notification does not
+approve a request or complete a task.
+
+The following approval orders are the documented **5 November 2026 snapshot**.
+An Administrator can change future routes. Check **Workflow Builder** for a new
+submission and the request's timeline for work already submitted.
+
+For Softcopy and External Create or Revise workflows, a draft can designate one
+configured approval step as the document-locking approver. That step locks
+eligible Excel (`.xlsx`), PDF, and Word (`.docx`) attachments when approved;
+later workflow steps continue as usual. A locked file is read-only: everyone with
+file access can preview it, but Download and Download PDF are offered only to roles with the **Download
+Locked Files** permission (the Administrator has it; it can be granted to other
+roles such as Document Control Officer). Locked files cannot be replaced or deleted.
+The Approval Process Timeline and Workflow Activity Log mark the approval that
+locked the file with a **Locked** badge. The lock and approver are
+recorded in the audit trail. The initial document workflow defaults designate
+the configured Plant Manager step.
+
+For installations with earlier requests, the
+[Plant Manager lock backfill migration](../../database/migrations/20261110_backfill_plant_manager_document_locks.sql)
+also locks eligible Excel, PDF, and Word files whose request history records
+Plant Manager approval. It records the backfilled lock in request history and
+does not alter submitted workflow snapshots or remaining approval steps.
+
+| Request | Approval order in the snapshot |
+| --- | --- |
+| Softcopy Create or Revise | Requester's leader > Plant Manager > Document Control Officer |
+| External Create or Revise | Requester's leader > Plant Manager > Document Control Officer |
+| Hardcopy Transfer | Plant Manager > Document Control Officer > Requester confirms |
+| Document Access | Plant Manager > Document Control Officer > Requester confirms |
+| Document Assignment | Plant Manager > Document Control Officer > Requester's leader |
+| Disposal | Plant Manager > Document Control Officer > Requester confirms |
+
+## Request and download an editable revision template
+
+1. In **Softcopy Documents**, find the active document and select **Request Template for Revision**. You can also choose this action in **My Requests → New Request**.
+2. Confirm the document and enter **Subject / Reason**. Choose **Submit Request** to send it for approval or **Save Draft** to continue later.
+3. The assigned Document Control Officer opens **My Tasks → Review request** and selects **Approve**. In **Upload Revision Template**, attach one Word (`.docx`), Excel (`.xlsx`), or text (`.txt`) file up to 15 MB.
+4. Set **Download expiry date** to today or a later date and select **Upload and Approve**. The approved softcopy and its current revision stay in place.
+5. In **My Requests**, choose **Download Template** or open **View → Revision Template** to see the date and download the file. The requester can download through the end of that date in Philippine time. After expiry, saved links stop working. Templates approved before expiry was introduced remain downloadable without a date.
+
+The default route goes to Document Control. It can have earlier approval steps,
+and its final step must be assigned to the Document Control Officer role.
+For a scanned upload, update, removal, or category request, follow the [Scanned Documents guide](../scanned-documents.md).
+
+## Transfer a physical document
+
+1. Open **My Requests → New Request** and choose **Hardcopy Transfer Request**.
+2. Select the hardcopy. Check its holder and storage, then choose **Receiving
+   User** and a different active destination Location with its matching parents.
+3. Choose **Submit Request** for approval or **Save Draft** to continue later.
+4. Final approval creates a **For Transfer** handoff. Holder and storage stay
+   unchanged at this stage.
+5. The **original requester** releases the document and selects **Dispatch** in
+   **My Tasks**, where the **Hardcopy Transfers** category shows handoffs. The
+   handoff becomes **In Transit**.
+6. After receiving the document, the **named receiving user** chooses **Accept**.
+   PK DCS checks the holder, document and approved destination, updates the
+   holder and storage, marks the handoff **Accepted**, and completes the request.
+
+The requester may be different from the holder. Only the requester can Dispatch;
+only the named receiver can Accept. If the holder or destination has changed, or
+the destination is unavailable, contact document control. When acceptance changes
+the holder, the previous holder's personal hardcopy access grants are revoked.
+
+## Request access or assign a document
+
+**Temporary access:** use **Document Access Request** for a Softcopy or Hardcopy.
+Select the document and an expiry after today, then choose **Submit Request** or **Save Draft**. Access
+is for you. The expiry must still be valid at final approval; access lasts through
+the end of that day unless revoked. Submit another request when you need renewal.
+
+**Assignment to yourself:** use **Document Assignment Request** to become a
+Softcopy assignee or the Hardcopy Current Holder. Hardcopy assignment keeps the
+storage location and does not use Dispatch or Accept.
+
+**Assignment to someone else:** an authorized controller uses **Document
+Assignments**. Choose one document, all active hardcopies at a Location, or all
+active softcopies in a category and its subcategories. Bulk assignment supports
+up to 2,000 records. An active handoff blocks direct hardcopy reassignment.
+
+Assignment does not create a separate temporary access grant. Document and file
+permissions still apply. A Submitted Access, Assignment or Transfer request
+blocks another of these requests for the same requester and document.
+
+## Record disposal
+
+Direct **Dispose** is available for Hardcopy, Softcopy and External Documents
+when you have both the register's direct permission and direct disposal
+permission. An approval-based **Disposal Request** supports Hardcopy or External
+Documents only.
+
+Choose **Shred**, **Scratch** or **Other** and describe Other when selected.
+Confirm a direct action, or choose **Submit Request** on a request. Disposal marks the
+record **Disposed** and records the method and history. Follow your organization's
+physical disposal procedure as well as recording the action.
+
+When **Hard Delete** appears on a disposed record, authorized users can permanently
+remove it by typing **DELETE** and confirming with their password.
+
+Direct hardcopy disposal keeps the recorded place and access grants. Approved
+hardcopy disposal requests clear Location and revoke grants. Disposed status
+restricts document use. External disposal keeps stored files and revision
+records, but prevents normal download.
+
+## Maintain the system
+
+Use these areas only when your account has the required permission.
+
+| Area | Main actions and checks |
+| --- | --- |
+| **Setup Places** | Maintain Areas, Specifics, optional Assets and Locations under the correct parents. One Asset Number is a single record that can belong to many Specifics. Maintain Softcopy and External Categories separately; both allow subcategories. Deactivation stops new selection while keeping historical links. |
+| **User Management** | Set account details, Primary role, Assigned roles and leader. Share temporary passwords securely. New or reset users replace them at sign-in. You cannot deactivate yourself or remove the last active Administrator. |
+| **Roles & Permissions** | Set allowed actions. Administrator access is fixed. Resolve account and workflow dependencies before deactivating or removing a role. |
+| **Workflow Builder** | Choose **Step Actions > Create Next Draft**, or **Start First Draft**. Arrange 1-30 steps and select approvers. For Softcopy or External workflows, optionally select one configured step as the document-locking approver. Then choose **Validate & Publish**. Future submissions use the new default. |
+| **Internal Audit Trail** | Search actions and filter by date or **All Results**, **Success** and **Failed**. Compare the user, time and action with the document or request history. |
+| **Notifications** | Open the bell or task notice to reach the work. Acknowledging one notice does not complete the task or mark every notice as read. |
+
+## Back up or restore records
+
+In **Backup & Restore**, check setup warnings, choose **Backup now**, and confirm
+that the backup succeeded and appears in the list.
+
+| Action | What it does |
+| --- | --- |
+| **Download** | Saves an available backup archive. |
+| **Import backup** | Checks a backup ZIP and stores it for later use. |
+| **Clean up** | Removes eligible old archives under the retention rules. |
+
+The daily backup target is **5:00 PM Asia/Manila**. Automatic backups require
+separate Administrator setup; check for a recent successful run.
+
+**Restore system data replaces live records and private files.** Coordinate the
+operation with affected users before starting.
+
+1. Choose **Restore system data** and select **Backup to restore**.
+2. Enter **Your password** and type **RESTORE**.
+3. Choose **Restore selected backup**, then **Confirm**.
+4. Wait for the result. PK DCS first creates a recovery backup and temporarily
+   blocks normal use.
+5. After a successful restore signs you out, sign in again and check the recovered
+   records and attachments.
+
+## Get help
+
+| Problem | First check |
+| --- | --- |
+| A document seems missing | Clear filters, return to All Documents, and confirm you have access. |
+| An action or task is unavailable | Check the document status and the assigned reviewer in the request timeline. |
+| A file will not upload | Check its type and the 15 MB limit, then attach it again. |
+| Access has expired | Submit a new Document Access Request if offered. |
+| A save or approval fails | Read the full message and refresh the record before trying again. |
+
+If you still need help, contact document control or an Administrator. Include the
+document or request reference, the action, the message and the time. Keep your
+password private.
+
+## Common terms
+
+| Term | Meaning |
+| --- | --- |
+| Hardcopy | A physical document tracked by holder and storage location. |
+| Softcopy | A controlled electronic document with an approved file and revisions. |
+| External document | A document received from outside the organization, with its own categories. |
+| Register | The list where you find and manage a document type. |
+| Draft | A saved request that has not been submitted for approval. |
+| Approval route | The order of people or roles that review a request. |
+| Retention | The period used to remind you when a hardcopy needs review. |
+
+## Edit the documentation
+
+The [Step-by-Step User Guide](PK_DCS_User_Guide_Step_by_Step.pptx) is generated
+from the running application: change its wording in
+`tools/documentation/user_guide_content.py` and rebuild it (see the README), because
+edits made in PowerPoint are replaced on the next build. The
+[Process Flow](PK_DCS_Process_Flow.pdf) is a PDF with an editable
+[PowerPoint copy](PK_DCS_Process_Flow.pptx). Use the VSDX
+files to edit the diagrams in Visio or the matching PDFs to read or print them.
+
+| Diagram | Editable Visio | PDF |
+| --- | --- | --- |
+| Data Flow Diagram | [VSDX](PK_DCS_DFD.vsdx) | [PDF](PK_DCS_DFD.pdf) |
+| Flowchart | [VSDX](PK_DCS_Flowchart.vsdx) | [PDF](PK_DCS_Flowchart.pdf) |

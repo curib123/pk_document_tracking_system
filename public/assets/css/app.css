@@ -1,6 +1,4 @@
 
-@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap');
-
 /* =========================================================
    CSS VARIABLES
 ========================================================= */
@@ -39,8 +37,8 @@ a {
 }
 
 .app-sidebar {
-  width: 264px;
-  min-width: 264px;
+  width: 300px;
+  min-width: 300px;
   position: sticky;
   top: 0;
   height: 100vh;
@@ -726,6 +724,8 @@ a {
 
 .status-pending,
 .status-submitted,
+.status-for-transfer,
+.status-in-transit,
 .status-draft {
   color: var(--ui-amber-900);
   background: var(--ui-amber-100);
@@ -1043,7 +1043,7 @@ a {
   .app-sidebar {
     position: fixed;
     left: 0;
-    width: min(288px, calc(100vw - 52px));
+    width: min(380px, calc(100vw - 52px));
     min-width: 0;
     transform: translateX(-101%);
     transition: transform 0.2s ease;
@@ -1092,6 +1092,37 @@ a {
 
   .login-card {
     max-width: 480px;
+  }
+}
+
+/* Touch tablets in landscape (e.g. 1024-1366px): no fixed sidebar, use the
+   same off-canvas drawer as phones. Keep this query identical to the one in
+   app.js (mobileNavigation). Desktop and laptop windows keep the sidebar. */
+@media (min-width: 992px) and (max-width: 1366px) and (hover: none) and (pointer: coarse) {
+  .app-sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100dvh;
+    width: min(380px, calc(100vw - 52px));
+    min-width: 0;
+    transform: translateX(-101%);
+    transition: transform 0.2s ease;
+  }
+
+  .app-sidebar.is-open {
+    transform: translateX(0);
+    box-shadow: 10px 0 35px
+      color-mix(in srgb, var(--ui-black) 26.67%, transparent);
+  }
+
+  /* Bootstrap's d-lg-none hides the menu button from 992px up. */
+  #sidebarToggle {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
   }
 }
 
@@ -2067,6 +2098,29 @@ a {
   white-space: nowrap;
 }
 
+.nav-count:not(.is-zero),
+.tab-count:not(.is-zero) {
+  transform-origin: center;
+  animation: notification-count-shake 1.6s ease-in-out infinite;
+}
+
+@keyframes notification-count-shake {
+  0%, 42%, 100% {
+    transform: translateX(0) rotate(0) scale(1);
+    box-shadow: 0 0 0 0 color-mix(in srgb, var(--ui-brand-500) 0%, transparent);
+  }
+  46% { transform: translateX(-3px) rotate(-20deg) scale(1.28); }
+  50% { transform: translateX(3px) rotate(20deg) scale(1.28); }
+  54% { transform: translateX(-3px) rotate(-17deg) scale(1.24); }
+  58% { transform: translateX(3px) rotate(15deg) scale(1.2); }
+  62% { transform: translateX(-2px) rotate(-10deg) scale(1.14); }
+  66% { transform: translateX(1px) rotate(6deg) scale(1.08); }
+  70% {
+    transform: translateX(0) rotate(0) scale(1);
+    box-shadow: 0 0 0 5px color-mix(in srgb, var(--ui-brand-500) 35%, transparent);
+  }
+}
+
 .nav-count {
   margin-left: auto;
   color: var(--ui-on-accent);
@@ -2088,6 +2142,13 @@ a {
 .tab-link.active .tab-count {
   background: var(--ui-brand-50);
   color: var(--ui-brand-600);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nav-count:not(.is-zero),
+  .tab-count:not(.is-zero) {
+    animation: none;
+  }
 }
 
 .document-detail-section {
@@ -2163,5 +2224,47 @@ a {
   .workflow-step-row > .d-flex {
     width: 100%;
     justify-content: flex-end;
+  }
+}
+
+/* Signatories References: repeatable rows of three editable searchable dropdowns. */
+.signatory-references-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 6px;
+}
+
+.signatory-rows {
+  display: grid;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.signatory-row {
+  padding: 12px;
+  border: 1px solid var(--ui-line-soft);
+  border-radius: 10px;
+  background: var(--surface);
+}
+
+.signatory-row-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 13px;
+}
+
+.signatory-row-fields {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+@media (max-width: 767px) {
+  .signatory-row-fields {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

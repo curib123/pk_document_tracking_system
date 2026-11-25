@@ -1,7 +1,10 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
+require_once APPPATH . 'services/request/request_policy.php';
 $canEdit = isset($permissions['*']) || !empty($permissions['workflows']['edit']);
 $esc = static fn($value) => html_escape((string) $value);
+$typeLabel = static fn($type) => $type === Request_policy::REVISION_TEMPLATE
+  ? Request_policy::REVISION_TEMPLATE_LABEL : ucwords(str_replace('_', ' ', $type));
 $dt_columns = ['name' => 'Workflow', 'type' => 'Request Type', 'current' => 'Current Version', 'publication' => 'Publication', 'steps' => 'Steps'];
 $dt_rows = [];
 foreach ($rows as $workflow) {
@@ -19,14 +22,14 @@ foreach ($rows as $workflow) {
     'id' => $workflow['id'],
     'cells' => [
       'name' => $workflow['name'],
-      'type' => ucwords(str_replace('_', ' ', $workflow['request_type'])),
+      'type' => $typeLabel($workflow['request_type']),
       'current' => $current,
       'publication' => $draft ? 'Draft in progress' : ($published ? 'Published' : 'Needs setup'),
       'steps' => count($graph['steps'] ?? [])
     ],
     'display' => [
       'Workflow' => $workflow['name'],
-      'Request Type' => ucwords(str_replace('_', ' ', $workflow['request_type'])),
+      'Request Type' => $typeLabel($workflow['request_type']),
       'Published Default' => $current,
       'Draft' => $draft ? 'Version ' . $draft['version_number'] : 'None',
       'Published Steps' => count($graph['steps'] ?? [])
@@ -96,8 +99,13 @@ $dt_create = '';
               <p class="workflow-modal-eyebrow">Approval workflow</p>
               <h2 class="modal-title h6 mb-1" id="workflowTitle-<?= (int) $workflow['id'] ?>"><?= $esc($workflow['name']) ?>
               </h2>
-              <p class="small text-secondary mb-0">Approval Process Timeline for
-                <?= $esc(ucwords(str_replace('_', ' ', $workflow['request_type']))) ?> requests</p>
+              <p class="small text-secondary mb-0">
+                <?php if ($workflow['request_type'] === Request_policy::REVISION_TEMPLATE): ?>
+                  The Document Control Officer role must be last. Its approval requires an editable template upload.
+                <?php else: ?>
+                  Approval Process Timeline for <?= $esc($typeLabel($workflow['request_type'])) ?> requests
+                <?php endif; ?>
+              </p>
             </div>
           </div>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -176,7 +184,6 @@ $dt_create = '';
                     <li class="workflow-step-row <?= $i === count($steps) - 1 ? 'is-final-step' : '' ?>"
                       style="--workflow-step-index: <?= min($i, 8) ?>">
                       <div class="workflow-step-content flex-grow-1">
-                        <span class="workflow-step-stage"><?= $i === count($steps) - 1 ? 'Final approval' : 'Approval step' ?></span>
                         <strong class="workflow-step-name d-block"><?= $esc($step['name'] ?? 'Unnamed Step') ?></strong>
                         <span class="workflow-step-assignee">
                           <span class="workflow-step-assignee-type"><?= $esc(ucwords(str_replace('_', ' ', $type))) ?></span>
@@ -223,6 +230,72 @@ $dt_create = '';
                     </li>
                   <?php endforeach; ?>
                 </ol>
+              <?php endif; ?>
+              <?php if ($isDraft && $canEdit && in_array($workflow['request_type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+              ], TRUE)): ?>
+                <form method="post" action="<?= site_url('admin/workflows/document-lock-approver') ?>"
+                  data-confirm="Save the designated document-locking approver?" autocomplete="off"
+                  class="border rounded p-3 mb-3">
+                  <input type="hidden" name="workflow_version_id" value="<?= (int) $version['id'] ?>">
+                  <input type="hidden" name="workflow_id" value="<?= (int) $workflow['id'] ?>">
+                  <input type="hidden" name="graph_hash" value="<?= $graphHash ?>">
+                  <input type="hidden" name="confirmed" value="no">
+                  <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                    value="<?= $this->security->get_csrf_hash() ?>">
+                  <label class="form-label" for="documentLockStep-<?= (int) $version['id'] ?>">
+                    Document-locking approver
+                  </label>
+                  <div class="d-flex gap-2 flex-wrap">
+                    <select class="form-select" id="documentLockStep-<?= (int) $version['id'] ?>"
+                      name="document_lock_step_key" autocomplete="off" style="max-width: 32rem">
+                      <option value="">No locking approver selected</option>
+                      <?php foreach ($steps as $step): ?>
+                        <option value="<?= $esc($step['key']) ?>"
+                          <?= ($graph['document_lock_step_key'] ?? NULL) === $step['key'] ? 'selected' : '' ?>>
+                          <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <button class="btn btn-outline-primary" type="submit">Save Approver</button>
+                  </div>
+                  <small class="form-text d-block mt-2">
+                    Only this step’s approval locks eligible Excel, PDF, or Word attachments. Later workflow steps continue normally.
+                  </small>
+                  <?php if (in_array($workflow['request_type'], ['softcopy_create', 'softcopy_revise'], TRUE)): ?>
+                    <label class="form-label mt-3" for="finalizeStep-<?= (int) $version['id'] ?>">
+                      Final-file approver (uploads the final controlled file)
+                    </label>
+                    <select class="form-select" id="finalizeStep-<?= (int) $version['id'] ?>"
+                      name="finalize_step_key" autocomplete="off" style="max-width: 32rem">
+                      <option value="">No final-file step selected</option>
+                      <?php foreach ($steps as $step): ?>
+                        <option value="<?= $esc($step['key']) ?>"
+                          <?= ($graph['finalize_step_key'] ?? NULL) === $step['key'] ? 'selected' : '' ?>>
+                          <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?>
+                        </option>
+                      <?php endforeach; ?>
+                    </select>
+                    <small class="form-text d-block mt-2">
+                      This approver must upload their edited file to approve. It becomes the final controlled document; the requester’s locked file is kept as history. Must come after the locking step.
+                    </small>
+                  <?php endif; ?>
+                </form>
+              <?php elseif (!$isDraft && in_array($workflow['request_type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'
+              ], TRUE) && !empty($graph['document_lock_step_key'])): ?>
+                <p class="small text-secondary">Document-locking approver:
+                  <?php foreach ($steps as $step)
+                    if ($step['key'] === $graph['document_lock_step_key']) {
+                      echo $esc($step['name']) . ' — ' . $esc($step['approver']['label'] ?? 'Configured approver');
+                      break;
+                    } ?>
+                </p>
+                <?php if (!empty($graph['finalize_step_key'])): foreach ($steps as $step)
+                  if ($step['key'] === $graph['finalize_step_key']) { ?>
+                    <p class="small text-secondary">Final-file approver:
+                      <?= $esc($step['name']) ?> — <?= $esc($step['approver']['label'] ?? 'Configured approver') ?></p>
+                  <?php break; } endif; ?>
               <?php endif; ?>
               <?php if ($isDraft && $canEdit): ?>
                 <div class="workflow-version-actions d-flex flex-wrap gap-2 justify-content-between border-top pt-3">

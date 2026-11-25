@@ -11,10 +11,10 @@ $active = function ($prefix) use ($path) {
     return strpos($path, $prefix) === 0 ? ' active' : '';
 };
 
-// Show Setup Places only when at least one place module is accessible.
+// Show Master Data only when at least one place module is accessible.
 $anyPlace = FALSE;
 
-foreach (['areas', 'specifics', 'assets', 'locations', 'categories'] as $placeModule) {
+foreach (['areas', 'specifics', 'assets', 'locations', 'categories', 'external_categories', 'scanned_categories'] as $placeModule) {
     if ($visible($placeModule)) {
         $anyPlace = TRUE;
         break;
@@ -27,8 +27,8 @@ $navModule = 'Overview';
 foreach ([
     'documents/'   => 'Document Management',
     'places'       => 'Master Data',
-    'my-requests/' => 'Requests & Workflow',
-    'my-tasks/'    => 'Requests & Workflow',
+    'my-requests' => 'Requests & Workflow',
+    'my-tasks'    => 'Requests & Workflow',
     'admin/'       => 'System Administration',
 ] as $prefix => $label) {
     if (strpos($path, $prefix) === 0) {
@@ -73,7 +73,7 @@ $navPage = end($navParts);
             <?php endif; ?>
 
             <!-- Document Management -->
-            <?php if ($visible('hardcopy') || $visible('softcopy')): ?>
+            <?php if ($visible('hardcopy') || $visible('softcopy') || $visible('external_documents') || $visible('scanned_documents')): ?>
                 <div class="side-heading">Document Management</div>
 
                 <?php if ($visible('hardcopy')): ?>
@@ -97,67 +97,66 @@ $navPage = end($navParts);
                         Softcopy Documents
                     </a>
                 <?php endif; ?>
+
+                    <?php if ($visible('scanned_documents')): ?>
+                <a class="side-link<?= $active('documents/scanned') ?>" href="<?= site_url('documents/scanned') ?>">
+                    <i class="fa-solid fa-file-image" aria-hidden="true"></i> Scanned Documents
+                </a>
             <?php endif; ?>
+            
+                <?php if ($visible('external_documents')): ?>
+                    <a
+                        class="side-link<?= $active('documents/external') ?>"
+                        <?= $active('documents/external') === ' active' ? 'aria-current="page"' : '' ?>
+                        href="<?= site_url('documents/external') ?>"
+                    >
+                        <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
+                        External Documents
+                    </a>
+                <?php endif; ?>
+            <?php endif; ?>
+
 
             <!-- Document Requests -->
             <?php if ($visible('requests') || $user): ?>
                 <div class="side-heading">Document Requests</div>
 
-                <?php if ($visible('requests')): ?>
+                <?php foreach ([
+                    'requests' => ['My Requests', 'fa-paper-plane', 'draft or returned requests'],
+                    'tasks' => ['My Tasks', 'fa-list-check', 'pending tasks']
+                ] as $section => [$sectionLabel, $sectionIcon, $countLabel]): ?>
                     <?php
-                    $requestBadge = (int) ($navigation_counts['requests_total'] ?? 0);
+                    if ($section === 'requests' && !$visible('requests')) continue;
+                    $sectionPath = 'my-' . $section;
+                    $sectionActive = $active($sectionPath);
+                    $sectionCount = (int) ($navigation_counts[$section . '_total'] ?? 0);
                     ?>
-
-                    <a
-                        class="side-link<?= $active('my-requests/') ?>"
-                        <?= $active('my-requests/') === ' active' ? 'aria-current="page"' : '' ?>
-                        href="<?= site_url('my-requests/softcopy') ?>"
-                    >
-                        <i class="fa-solid fa-paper-plane" aria-hidden="true"></i>
-                        My Requests
-
-                        <span
-                            class="nav-count<?= $requestBadge === 0 ? ' is-zero' : '' ?>"
-                            aria-label="<?= $requestBadge ?> draft or returned requests"
-                        >
-                            <?= $requestBadge ?>
-                        </span>
+                    <a class="side-link<?= $sectionActive ?>" href="<?= site_url($sectionPath) ?>"
+                        <?= $sectionActive ? 'aria-current="page"' : '' ?>>
+                        <i class="fa-solid <?= $sectionIcon ?>" aria-hidden="true"></i>
+                        <?= $sectionLabel ?>
+                        <?php if ($sectionCount > 0): ?>
+                            <span class="nav-count"
+                                aria-label="<?= $sectionCount ?> <?= $countLabel ?>"><?= $sectionCount ?></span>
+                        <?php endif; ?>
                     </a>
-                <?php endif; ?>
-
-                <?php
-                $taskBadge = (int) ($navigation_counts['tasks_total'] ?? 0);
-                ?>
-
-                <a
-                    class="side-link<?= $active('my-tasks/') ?>"
-                    <?= $active('my-tasks/') === ' active' ? 'aria-current="page"' : '' ?>
-                    href="<?= site_url('my-tasks/softcopy') ?>"
-                >
-                    <i class="fa-solid fa-list-check" aria-hidden="true"></i>
-                    My Tasks
-
-                    <span
-                        class="nav-count<?= $taskBadge === 0 ? ' is-zero' : '' ?>"
-                        aria-label="<?= $taskBadge ?> pending tasks"
-                    >
-                        <?= $taskBadge ?>
-                    </span>
-                </a>
+                <?php endforeach; ?>
             <?php endif; ?>
 
             <!-- Document Control -->
-            <?php if ($visible('assignment', 'direct')): ?>
+            <?php if ($visible('assignment', 'direct') || $visible('workflows') || $anyPlace): ?>
                 <div class="side-heading">Document Control</div>
 
-                <a
-                    class="side-link<?= $active('admin/document-assignments') ?>"
-                    <?= $active('admin/document-assignments') === ' active' ? 'aria-current="page"' : '' ?>
-                    href="<?= site_url('admin/document-assignments') ?>"
-                >
-                    <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
-                    Document Assignments
-                </a>
+                <?php if ($visible('assignment', 'direct')): ?>
+                    <a
+                        class="side-link<?= $active('admin/document-assignments') ?>"
+                        <?= $active('admin/document-assignments') === ' active' ? 'aria-current="page"' : '' ?>
+                        href="<?= site_url('admin/document-assignments') ?>"
+                    >
+                        <i class="fa-solid fa-file-circle-check" aria-hidden="true"></i>
+                        Document Assignments
+                    </a>
+                <?php endif; ?>
 
                 <?php if ($visible('workflows')): ?>
                     <a
@@ -177,7 +176,7 @@ $navPage = end($navParts);
                         href="<?= site_url('places') ?>"
                     >
                         <i class="fa-solid fa-map-location-dot" aria-hidden="true"></i>
-                        Setup Places
+                        Master Data
                     </a>
                 <?php endif; ?>
             <?php endif; ?>

@@ -19,6 +19,15 @@ class Files extends MY_Controller
         return $name !== '' && $name !== '.' ? $name : 'document';
     }
 
+    private function clear_output_buffers(): void
+    {
+        while (ob_get_level() > 0) {
+            if (!@ob_end_clean()) {
+                break;
+            }
+        }
+    }
+
     public function upload()
     {
         $this->require_permission('files', 'upload');
@@ -45,44 +54,75 @@ class Files extends MY_Controller
     public function review($requestId)
     {
         $this->authenticate();
-        $file = $this->File_model->review_file((int) $requestId, $this->user);
+        $file = $this->File_model->review_file(
+            (int) $requestId,
+            $this->user,
+            (int) $this->input->get('file_id')
+        );
         if (!$file) {
             show_error('Document Fileis not available for your review.', 403);
             return;
         }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
+        if ($this->input->get('download') === 'pdf') {
+            // The LibreOffice-rendered PDF copy; same access rule as the original.
+            if ($this->locked_for_user($file) || !$this->can('files', 'download')) {
+                show_error('PDF download is not permitted for this file.', 403);
+                return;
+            }
+            $this->audit_event('files/review-download-pdf', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+            $this->send_pdf_copy($file);
             return;
         }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
-            return;
-        }
-        $extension = strtolower(pathinfo($file['original_name'], PATHINFO_EXTENSION));
-        if (in_array($extension, ['docx', 'xlsx'], TRUE) && $this->input->get('download') !== '1') {
-            require_once APPPATH . 'services/files/office_review_ticket.php';
-            $ticket = (new Office_review_ticket())->issue($this->user, (int) $requestId, (int) $file['id']);
-            $contentUrl = site_url('files/review-content/' . (int) $requestId . '/' . $ticket . '/review.' . $extension);
-            $this->audit_event('files/review-open', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+        if ($this->input->get('download') === '1') {
+            // The original upload, for roles that may open locked files.
+            if ($this->locked_for_user($file)) {
+                show_error('This file is locked after Plant Manager approval and is read-only. Ask Document Control for a full download.', 403);
+                return;
+            }
+            if (empty($file['finalizer_access']) && !$this->can('files', 'download')) {
+                show_error('File download is not permitted.', 403);
+                return;
+            }
+            if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+                show_404();
+                return;
+            }
+            $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+            if (!is_file($path) || is_link($path)) {
+                show_404();
+                return;
+            }
+            $this->audit_event('files/review-download', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
+            $this->clear_output_buffers();
+            header('Content-Type: application/octet-stream');
             header('Cache-Control: private, no-store');
-            header('Referrer-Policy: no-referrer');
-            $this->load->view('pages/files/review', ['file' => $file, 'request_id' => (int) $requestId,
-                'app' => $extension === 'xlsx' ? 'Excel' : 'Word',
-                'office_url' => ($extension === 'xlsx' ? 'ms-excel' : 'ms-word') . ':ofv|u|' . $contentUrl,
-                'wps_url' => 'pk-dts-office://wps/' . rtrim(strtr(base64_encode($contentUrl), '+/', '-_'), '=')]);
+            header('X-Content-Type-Options: nosniff');
+            header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
+            header('Content-Length: ' . filesize($path));
+            readfile($path);
+            exit;
+        }
+        // Read-only inline preview; Word/Excel are shown as a LibreOffice-rendered PDF.
+        $source = $this->display_source($file);
+        if (!$source) {
             return;
         }
-        $inline = in_array($file['mime_type'], ['application/pdf', 'image/png', 'image/jpeg', 'text/plain'], TRUE);
+        if ($source['mime'] !== 'application/pdf' && $source['mime'] !== 'text/plain' &&
+            strpos($source['mime'], 'image/') !== 0) {
+            show_error('Preview is available for PDF, image, text, Word, and Excel attachments only.', 415);
+            return;
+        }
         $this->audit_event('files/review', 'requests:' . (int) $requestId, ['file_id' => (int) $file['id']]);
-        header('Content-Type: ' . ($inline ? $file['mime_type'] : 'application/octet-stream'));
+        $this->clear_output_buffers();
+        header('Content-Type: ' . $source['mime']);
         header('Cache-Control: private, no-store');
         header('X-Content-Type-Options: nosniff');
-        header('Content-Security-Policy: sandbox');
-        header('Content-Disposition: ' . ($inline ? 'inline' : 'attachment') . '; filename="' .
-            $this->safe_download_name($file['original_name']) . '"');
-        header('Content-Length: ' . filesize($path));
-        readfile($path);
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
+            ? "frame-ancestors 'self'"
+            : "sandbox allow-same-origin; frame-ancestors 'self'"));
+        header('Content-Disposition: inline; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
         exit;
     }
 
@@ -96,7 +136,7 @@ class Files extends MY_Controller
         if (!$viewer || (int) $viewer['session_version'] !== (int) $claims['session_version'] || !empty($viewer['require_password_change'])) {
             show_error('Review access has expired. Reopen Review File.', 403); return;
         }
-        $file = $this->File_model->review_file((int) $requestId, $viewer);
+        $file = $this->File_model->review_file((int) $requestId, $viewer, (int) $claims['file_id']);
         if (!$file || (int) $file['id'] !== (int) $claims['file_id']) { show_error('Review access is no longer available.', 403); return; }
         if (!preg_match('/^[a-f0-9]{64}$/D', (string) $file['storage_name'])) { show_404(); return; }
         $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
@@ -107,13 +147,16 @@ class Files extends MY_Controller
         if (!$mime) { show_404(); return; }
         $this->audit_event('files/review-content', 'requests:' . (int) $requestId,
             ['file_id'=>(int)$file['id']], (int)$viewer['id']);
+        $this->clear_output_buffers();
         header('Content-Type: ' . $mime);
         header('Cache-Control: private, no-store');
         header('Referrer-Policy: no-referrer');
         header('X-Content-Type-Options: nosniff');
         header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
-        readfile($path);
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+            readfile($path);
+        }
         exit;
     }
 
@@ -138,10 +181,86 @@ class Files extends MY_Controller
         $this->audit_event('files/office-setup');
         header('Content-Type: application/zip');
         header('Cache-Control: private, no-store');
-        header('Content-Disposition: attachment; filename="PK-DTS-WPS-Opener.zip"');
+        header('Content-Disposition: attachment; filename="PK-DCS-WPS-Opener.zip"');
         header('Content-Length: ' . filesize($path));
         try { readfile($path); } finally { unlink($path); }
         exit;
+    }
+
+    /** Locked files are read-only except for roles holding Download Locked Files. */
+    private function locked_for_user(array $file): bool
+    {
+        return !empty($file['locked_at']) && empty($file['finalizer_access']) && !$this->can('files', 'download_locked');
+    }
+
+    /**
+     * What a viewer or printer receives for a file: the original bytes for PDF/image/text,
+     * or a LibreOffice-rendered PDF for Word/Excel. The original upload is never altered.
+     *
+     * @return array{path:string,mime:string,name:string}|null NULL after an error response was sent.
+     */
+    private function display_source(array $file): ?array
+    {
+        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+            show_404();
+            return NULL;
+        }
+        $original = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($original) || is_link($original)) {
+            show_404();
+            return NULL;
+        }
+        require_once APPPATH . 'services/files/pdf_preview_service.php';
+        if (Pdf_preview_service::office_extension($file) !== '') {
+            try {
+                $pdf = (new Pdf_preview_service())->pdf_path($file);
+            } catch (DomainException $error) {
+                show_error($error->getMessage(), 503);
+                return NULL;
+            }
+            return ['path' => $pdf, 'mime' => 'application/pdf',
+                'name' => pathinfo((string) $file['original_name'], PATHINFO_FILENAME) . '.pdf'];
+        }
+        return ['path' => $original, 'mime' => (string) $file['mime_type'], 'name' => (string) $file['original_name']];
+    }
+
+    /** Send the rendered PDF of a Word/Excel file as a download, then exit (or emit an error and return). */
+    private function send_pdf_copy(array $file): void
+    {
+        require_once APPPATH . 'services/files/pdf_preview_service.php';
+        if (Pdf_preview_service::office_extension($file) === '') {
+            show_error('A PDF copy is only available for Word and Excel files. Download the original instead.', 415);
+            return;
+        }
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        $this->clear_output_buffers();
+        header('Content-Type: application/pdf');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Content-Disposition: attachment; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
+        exit;
+    }
+
+    /** Download the converted PDF of a Word/Excel file; the original stays available via download(). */
+    public function download_pdf($id)
+    {
+        $this->require_permission('files', 'download');
+        $file = $this->File_model->approved_file((int) $id);
+        if (!$file || !$this->File_model->allowed($this->user, $file)) {
+            show_error('File download is not permitted.', 403);
+            return;
+        }
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Ask Document Control for a full download.', 403);
+            return;
+        }
+        $this->audit_event('files/download-pdf', 'files:' . (int) $id);
+        $this->send_pdf_copy($file);
     }
 
     /** Accessible print viewer; every file response repeats the access check. */
@@ -153,13 +272,16 @@ class Files extends MY_Controller
             show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Printing is limited to Document Control.', 403);
             return;
         }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        if (!in_array($source['mime'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
+            show_error('Download this file to print it in its native application.', 415);
             return;
         }
         header('Cache-Control: private, no-store');
@@ -167,7 +289,11 @@ class Files extends MY_Controller
         $this->audit_event('files/print', 'files:' . (int) $id);
         $this->load->view('pages/files/print', [
             'file' => $file,
-            'text' => $file['mime_type'] === 'text/plain' ? file_get_contents($path) : NULL
+            'print_mime' => $source['mime'],
+            'text' => $source['mime'] === 'text/plain' ? file_get_contents($source['path']) : NULL,
+            'download_url' => $this->can('files', 'download') ? site_url('files/download/' . (int) $file['id']) : NULL,
+            'download_pdf_url' => $this->can('files', 'download') && Pdf_preview_service::office_extension($file) !== ''
+                ? site_url('files/download-pdf/' . (int) $file['id']) : NULL
         ]);
     }
 
@@ -179,32 +305,99 @@ class Files extends MY_Controller
             show_error('Document Fileprinting is not permitted.', 403);
             return;
         }
-        if (!in_array($file['mime_type'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
+        if ($this->locked_for_user($file)) {
+            show_error('This file is locked after approval and is read-only. Printing is limited to Document Control.', 403);
+            return;
+        }
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        if (!in_array($source['mime'], ['application/pdf', 'image/jpeg', 'image/png', 'text/plain'], TRUE)) {
             show_error('Download this file to print it in its native application.', 415);
             return;
         }
-        if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
-            show_404();
-            return;
-        }
-        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
-        if (!is_file($path) || is_link($path)) {
-            show_404();
-            return;
-        }
-        header('Content-Type: ' . $file['mime_type']);
+        $this->clear_output_buffers();
+        header('Content-Type: ' . $source['mime']);
         $this->audit_event('files/print-content', 'files:' . (int) $id);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store');
         // Native PDF viewers use a browser plugin, which CSP sandbox disables.
         // Text and image responses keep the sandbox; PDFs remain MIME-scoped.
-        header('Content-Security-Policy: ' . ($file['mime_type'] === 'application/pdf'
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
             ? "frame-ancestors 'self'"
             : "sandbox allow-same-origin allow-modals; frame-ancestors 'self'"));
         header('Content-Disposition: inline; filename="' .
-            $this->safe_download_name($file['original_name']) . '"');
+            $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
+        exit;
+    }
+
+    /** Read-only inline preview. Word/Excel are shown as a PDF rendered by LibreOffice. */
+    public function preview($id)
+    {
+        $this->require_permission('files', 'view');
+        $id = (int) $id;
+        $file = $this->File_model->approved_file($id);
+        if (!$file || !$this->File_model->allowed($this->user, $file)) {
+            show_error('File preview is not permitted.', 403);
+            return;
+        }
+        $source = $this->display_source($file);
+        if (!$source) {
+            return;
+        }
+        if ($source['mime'] !== 'application/pdf' && $source['mime'] !== 'text/plain' &&
+            strpos($source['mime'], 'image/') !== 0) {
+            show_error('Preview is available for PDF, image, text, Word, and Excel attachments only.', 415);
+            return;
+        }
+        $this->clear_output_buffers();
+        $this->audit_event('files/preview', 'files:' . $id);
+        header('Content-Type: ' . $source['mime']);
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: private, no-store, max-age=0');
+        header('Content-Security-Policy: ' . ($source['mime'] === 'application/pdf'
+            ? "frame-ancestors 'self'"
+            : "sandbox allow-same-origin; frame-ancestors 'self'"));
+        header('Content-Disposition: inline; filename="' . $this->safe_download_name($source['name']) . '"');
+        header('Content-Length: ' . filesize($source['path']));
+        readfile($source['path']);
+        exit;
+    }
+
+    /** Native apps have no browser session: validate the short-lived capability and current access again. */
+    public function preview_content($id, $ticket, $filename = '')
+    {
+        $id = (int) $id;
+        require_once APPPATH . 'services/files/locked_file_ticket.php';
+        try { $claims = (new Locked_file_ticket())->verify((string) $ticket, $id); }
+        catch (DomainException $error) { show_error($error->getMessage(), 403); return; }
+        $viewer = $this->Identity_model->active_user((int) $claims['user_id']);
+        if (!$viewer || (int) $viewer['session_version'] !== (int) $claims['session_version'] || !empty($viewer['require_password_change'])) {
+            show_error('Preview access has expired. Reopen Preview.', 403); return;
+        }
+        $file = $this->File_model->approved_file($id);
+        if (!$file || !$this->File_model->allowed($viewer, $file)) { show_error('Preview access is no longer available.', 403); return; }
+        if (!preg_match('/^[a-f0-9]{64}$/D', (string) $file['storage_name'])) { show_404(); return; }
+        $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+        if (!is_file($path) || is_link($path)) { show_404(); return; }
+        $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
+        $mime = ['docx'=>'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'xlsx'=>'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'][$extension] ?? NULL;
+        if (!$mime) { show_404(); return; }
+        $this->audit_event('files/preview-content', 'files:' . $id, [], (int) $viewer['id']);
+        $this->clear_output_buffers();
+        header('Content-Type: ' . $mime);
+        header('Cache-Control: private, no-store');
+        header('Referrer-Policy: no-referrer');
+        header('X-Content-Type-Options: nosniff');
+        header('Content-Disposition: attachment; filename="' . $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($path));
-        readfile($path);
+        if (strtoupper($_SERVER['REQUEST_METHOD'] ?? 'GET') !== 'HEAD') {
+            readfile($path);
+        }
         exit;
     }
 
@@ -216,6 +409,31 @@ class Files extends MY_Controller
             show_error('File download is not permitted.', 403);
             return;
         }
+        if (!empty($file['locked_at']) && !$this->can('files', 'download_locked')) {
+            show_error('This file is locked after approval and is read-only. Use Preview to view it, or ask Document Control for a full download.', 403);
+            return;
+        }
+        $this->send_original_download($file, 'files/download');
+    }
+
+    public function download_revision_template($requestId)
+    {
+        $this->require_permission('requests', 'view');
+        $this->require_permission('softcopy', Request_policy::REVISION_TEMPLATE_ACTION);
+        $file = $this->File_model->revision_template((int) $requestId, (int) $this->user['id']);
+        if (!$file) {
+            show_404();
+            return;
+        }
+        if (Request_policy::revision_template_expired($file['template_expires_on'])) {
+            show_error('This revision template download has expired.', 410);
+            return;
+        }
+        $this->send_original_download($file, 'files/revision-template', ['request_id' => (int) $requestId]);
+    }
+
+    private function send_original_download(array $file, string $action, array $metadata = []): void
+    {
         if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
             show_404();
             return;
@@ -227,14 +445,129 @@ class Files extends MY_Controller
         }
         // File delivery must not depend on maintenance cleanup succeeding.
         // Run deferred cleanup independently, not during a user's download.
+        $this->clear_output_buffers();
         header('Content-Type: application/octet-stream');
-        $this->audit_event('files/download', 'files:' . (int) $id);
+        $this->audit_event($action, 'files:' . (int) $file['id'], $metadata);
         header('X-Content-Type-Options: nosniff');
         header('Cache-Control: private, no-store, max-age=0');
         header('Content-Disposition: attachment; filename="' .
             $this->safe_download_name($file['original_name']) . '"');
         header('Content-Length: ' . filesize($filePath));
         readfile($filePath);
+        exit;
+    }
+
+    public function download_external($documentId)
+    {
+        $this->require_permission('files', 'download');
+        $documentId = (int) $documentId;
+        $document = $this->db->select('id,title,status')
+            ->get_where('external_documents', ['id' => $documentId])
+            ->row_array();
+        if (!$document || $document['status'] !== 'active') {
+            show_404();
+            return;
+        }
+
+        $filesByDocument = $this->File_model->current_external_files([$documentId]);
+        $files = $filesByDocument[$documentId] ?? [];
+        if (!$files) {
+            show_404();
+            return;
+        }
+
+        $downloadFiles = [];
+        foreach ($files as $listedFile) {
+            $file = $this->File_model->approved_file((int) $listedFile['id']);
+            if (!$file || !$this->File_model->allowed($this->user, $file)) {
+                show_error('File download is not permitted.', 403);
+                return;
+            }
+            if (!empty($file['locked_at']) && !$this->can('files', 'download_locked')) {
+                show_error('One or more files are locked after approval and read-only. Preview them individually, or ask Document Control for a full download.', 403);
+                return;
+            }
+            if (!preg_match('/^[a-f0-9]{64}$/', (string) $file['storage_name'])) {
+                show_404();
+                return;
+            }
+            $path = PK_ROOT . '/storage/documents/' . $file['storage_name'];
+            if (!is_file($path) || is_link($path)) {
+                show_404();
+                return;
+            }
+            $downloadFiles[] = ['path' => $path, 'name' => $this->safe_download_name($file['original_name'])];
+        }
+
+        if (!class_exists('ZipArchive')) {
+            show_error('ZIP downloads are unavailable on this server.', 503);
+            return;
+        }
+        $archivePath = tempnam(PK_ROOT . '/storage', '.external-download-');
+        if ($archivePath === FALSE) {
+            show_error('The external document archive could not be created.', 500);
+            return;
+        }
+        $archive = new ZipArchive();
+        $opened = $archive->open($archivePath, ZipArchive::OVERWRITE);
+        if ($opened !== TRUE) {
+            unlink($archivePath);
+            show_error('The external document archive could not be created.', 500);
+            return;
+        }
+
+        $archiveOpen = TRUE;
+        $usedNames = [];
+        $archiveError = NULL;
+        try {
+            foreach ($downloadFiles as $file) {
+                $name = $file['name'];
+                $extension = pathinfo($name, PATHINFO_EXTENSION);
+                $stem = $extension === '' ? $name : substr($name, 0, -(strlen($extension) + 1));
+                $candidate = $name;
+                $suffix = 2;
+                while (isset($usedNames[strtolower($candidate)])) {
+                    $candidate = $stem . ' (' . $suffix++ . ')' . ($extension === '' ? '' : '.' . $extension);
+                }
+                $usedNames[strtolower($candidate)] = TRUE;
+                if (!$archive->addFile($file['path'], $candidate)) {
+                    $archiveError = 'An attachment could not be added to the archive.';
+                    break;
+                }
+            }
+            if ($archiveError === NULL && !$archive->close()) {
+                $archiveOpen = FALSE;
+                $archiveError = 'The external document archive could not be finalized.';
+            } elseif ($archiveError === NULL) {
+                $archiveOpen = FALSE;
+            }
+            if ($archiveError === NULL) {
+                $this->audit_event('files/download-external', 'external_documents:' . $documentId, [
+                    'file_ids' => array_column($files, 'id')
+                ]);
+                while (ob_get_level() > 0) {
+                    ob_end_clean();
+                }
+                header('Content-Type: application/zip');
+                header('X-Content-Type-Options: nosniff');
+                header('Cache-Control: private, no-store, max-age=0');
+                header('Content-Disposition: attachment; filename="' .
+                    $this->safe_download_name($document['title']) . '-attachments.zip"');
+                header('Content-Length: ' . filesize($archivePath));
+                readfile($archivePath);
+            }
+        } finally {
+            if ($archiveOpen) {
+                $archive->close();
+            }
+            if (is_file($archivePath)) {
+                unlink($archivePath);
+            }
+        }
+        if ($archiveError !== NULL) {
+            show_error($archiveError, 500);
+            return;
+        }
         exit;
     }
 }

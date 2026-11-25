@@ -10,7 +10,7 @@ class Audit_context
     private $targets = [];
     private $before;
     private $truncated = FALSE;
-    private const FIELDS = ['id','title','name','username','asset_number','folder_name','version','status','active',
+    private const FIELDS = ['id','title','description','name','username','asset_number','folder_name','version','status','active',
         'holder_id','area_id','specific_id','asset_id','location_id','category_id','parent_id',
         'role_id','leader_id','position_title','document_id','softcopy_id','hardcopy_id','user_id',
         'recipient_id','current_holder_id','destination','recipient_status','transferred_by','accepted_by',
@@ -21,7 +21,7 @@ class Audit_context
         'document_number','sequence_number','series_number','retention_enabled','retention_start_date','retention_end_date',
         'archive_date','previous_status','new_revision_level','new_effective_date','effective_date','date_received','date_released','page_number',
         'first_name','middle_name','last_name','require_password_change','domain','original_name','extension','mime_type','size','fingerprint',
-        'approved_by','approved_at','rejected_by','rejected_at','rejection_reason','uploaded_by','created_by','source_request_id',
+        'allocated_by','allocated_at','approved_by','approved_at','rejected_by','rejected_at','rejection_reason','uploaded_by','created_by','source_request_id',
         'granted_by','granted_at','revoked_by','disposal_action','disposed_by','disposed_at'];
 
     public function __construct($db, string $route, array $post)
@@ -35,12 +35,16 @@ class Audit_context
         $id = (int) ($post['id'] ?? 0);
         $table = NULL;
         if ($route === 'change-password') $table = 'users';
-        if (($parts[0] ?? '') === 'documents') $table = ($parts[1] ?? '') === 'hardcopy' ? 'hardcopy_documents' : 'softcopy_documents';
+        if (($parts[0] ?? '') === 'documents') $table = ($parts[1] ?? '') === 'hardcopy'
+            ? 'hardcopy_documents'
+            : (($parts[1] ?? '') === 'external' ? 'external_documents' : 'softcopy_documents');
         if (in_array($parts[0] ?? '', ['my-requests','my-tasks'], TRUE))
             $table = in_array($parts[2] ?? '', ['accept','dispatch'], TRUE) ? 'transfers' : 'requests';
-        if (($parts[0] ?? '') === 'places') $table = ['area'=>'areas','specific'=>'specifics','asset'=>'assets','location'=>'locations','softcopy-categories'=>'categories'][$parts[1] ?? ''] ?? NULL;
+        if (($parts[0] ?? '') === 'places') $table = ['area'=>'areas','specific'=>'specifics','asset'=>'assets','location'=>'locations','softcopy-categories'=>'categories','external-categories'=>'external_categories','scanned-categories'=>'scanned_categories'][$parts[1] ?? ''] ?? NULL;
         if (($parts[0] ?? '') === 'admin') $table = ['users'=>'users','roles'=>'roles','workflows'=>'workflow_versions'][$parts[1] ?? ''] ?? NULL;
         if ($table && $id) $this->add($table, $id);
+        if (($parts[0] ?? '') === 'documents' && ($parts[1] ?? '') === 'external' && !empty($post['external_document_id']))
+            $this->add('external_documents', (int) $post['external_document_id']);
         foreach (['hardcopy_id'=>'hardcopy_documents','softcopy_id'=>'softcopy_documents','document_id'=>'softcopy_documents','request_id'=>'requests','workflow_id'=>'workflows','version_id'=>'workflow_versions','step_id'=>'workflow_steps'] as $key=>$target)
             if (!empty($post[$key])) $this->add($target, (int) $post[$key]);
         $this->before = $this->snapshot();
@@ -104,6 +108,7 @@ class Audit_context
             ['softcopy_revisions','document_id',$this->targets['softcopy_documents'] ?? []],
             ['access_grants','request_id',$this->targets['requests'] ?? []],
             ['workflow_steps','request_id',$this->targets['requests'] ?? []],
+            ['scanned_category_allocations','category_id',$this->targets['scanned_categories'] ?? []],
             ['workflow_versions','workflow_id',$this->targets['workflows'] ?? []],
             ['transfers','request_id',$this->targets['requests'] ?? []],
             ['user_roles','user_id',$this->targets['users'] ?? []],

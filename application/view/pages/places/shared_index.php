@@ -13,6 +13,8 @@ $labels = [
     'sequence_number' => 'Sequence',
     'description' => 'Description',
     'folder_name' => 'Folder',
+    'code_pattern' => 'Document No. Code Pattern',
+    'category_type' => 'Category Type',
     'area_name' => 'Area',
     'specific_name' => 'Specific',
     'asset_name' => 'Asset',
@@ -25,10 +27,16 @@ foreach ($cfg['fields'] as $field) {
             $key = 'parent_name';
         if (isset($labels[$key]))
             $dt_columns[$key] = $labels[$key];
-    } else {
+    } elseif ($field !== 'sequence_number') {
+        // A Location's internal order is never shown: Sequence belongs to hardcopy documents.
         $dt_columns[$field] = $labels[$field] ?? ucwords(str_replace('_', ' ', $field));
     }
 }
+if ($cfg['slug'] === 'scanned-categories') {
+    $dt_columns = ['path' => 'Folder Path', 'allocated_users' => 'Allocated Users'];
+}
+if ($cfg['slug'] === 'asset')
+    $dt_columns['specific_name'] = 'Specifics';
 if ($cfg['active'])
     $dt_columns['active'] = 'Status';
 $dt_rows = [];
@@ -36,8 +44,12 @@ foreach ($rows as $row) {
     $cells = [];
     foreach ($dt_columns as $field => $label) {
         $value = $row[$field] ?? '';
-        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0') : $value;
+        $cells[$field] = $field === 'active' ? ($value ? 'active' : '0')
+            : ($field === 'category_type'
+                ? ($value === 'folder' ? 'Folder' : 'Document Number Pattern')
+                : $value);
     }
+    if ($cfg['slug'] === 'scanned-categories') $cells += ['title' => $row['name'], 'status' => 'Folder'];
     $display = [];
     foreach ($dt_columns as $field => $label)
         $display[$label] = $cells[$field];
@@ -46,11 +58,16 @@ foreach ($rows as $row) {
         if (array_key_exists($field, $row))
             $record[$field] = $row[$field];
     }
+    if ($cfg['slug'] === 'asset') {
+        // One Asset Number can belong to many Specifics.
+        $record['specific_ids'] = array_values(array_filter(array_map('intval', explode(',', (string) ($row['specific_ids'] ?? '')))));
+    }
+    if ($cfg['slug'] === 'scanned-categories') $record['user_ids'] = $row['user_ids'];
     // Area, Specific and Asset are simple reference records: use Edit, not View Details.
     $buttons = in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE)
         ? [] : [['type' => 'view']];
-    if ($can('edit'))
-        $buttons[] = ['type' => 'edit'];
+    if ($can('edit') || ($cfg['slug'] === 'scanned-categories' && $can('allocate')))
+        $buttons[] = ['type' => 'edit', 'label' => $cfg['slug'] === 'scanned-categories' ? 'Edit / Allocate' : 'Edit'];
     if ($cfg['active'] && $can('delete') && !empty($row['active'])) {
         $buttons[] = [
             'type' => 'action',
@@ -62,6 +79,8 @@ foreach ($rows as $row) {
     }
     $dt_rows[] = [
         'id' => $row['id'] ?? 0,
+        'record_kind' => $cfg['slug'] === 'scanned-categories' ? 'folder' : 'document',
+        'record_path' => $cfg['slug'] === 'scanned-categories' ? ['category_id' => (int) $row['id']] : [],
         'cells' => $cells,
         'record' => $record,
         'display' => in_array($cfg['slug'], ['area', 'specific', 'asset'], TRUE) ? [] : $display,
@@ -75,7 +94,13 @@ $dt_page = $table['page'];
 $dt_limit = $table['limit'];
 $dt_total = $total;
 $dt_filters = $cfg['active'] ? ['status' => ['' => 'All Statuses', '1' => 'Active', '0' => 'Inactive']] : [];
-$parentSources = ['specific' => 'areas', 'asset' => 'specifics', 'location' => 'areas', 'softcopy-categories' => 'categories'];
+$parentSources = [
+    'specific' => 'areas',
+    'asset' => 'specifics',
+    'location' => 'areas',
+    'softcopy-categories' => 'categories',
+    'external-categories' => 'external_categories'
+];
 if (isset($parentSources[$cfg['slug']])) {
     $dt_filters['parent'] = ['' => 'All Parent Folders'];
     foreach ($options[$parentSources[$cfg['slug']]] as $option)
@@ -98,21 +123,31 @@ $dt_sortable = array_values(array_intersect(
         'specific' => 'Specific',
         'asset' => 'Asset',
         'location' => 'Location',
-        'softcopy-categories' => 'Softcopy Categories'
+        'softcopy-categories' => 'Softcopy Categories',
+        'external-categories' => 'External Categories',
+        'scanned-categories' => 'Scanned Categories',
     ] as $slug => $label):
         $perm = [
             'area' => 'areas',
             'specific' => 'specifics',
             'asset' => 'assets',
             'location' => 'locations',
-            'softcopy-categories' => 'categories'
+            'softcopy-categories' => 'categories',
+            'external-categories' => 'external_categories',
+            'scanned-categories' => 'scanned_categories',
         ][$slug];
         if (isset($permissions['*']) || !empty($permissions[$perm]['view'])): ?>
             <a href="<?= site_url('places/' . $slug) ?>" class="tab-link <?= $cfg['slug'] === $slug ? 'active' : '' ?>">
                 <?= html_escape($label) ?></a>
         <?php endif; endforeach; ?>
 </nav>
-<?php $this->load->view('reusable_components/reusable_datatable', compact(
+<?php
+if ($cfg['slug'] === 'scanned-categories') {
+    $activeLayout = $table['layout'] === 'folder' ? 'folder' : 'table';
+    $layoutLink = static fn($layout) => site_url($dt_path) . '?' . http_build_query(['layout' => $layout, 'q' => $dt_q]);
+    $this->load->view('reusable_components/document_layout_switcher', compact('activeLayout', 'layoutLink'));
+}
+$dtArgs = compact(
     'dt_path',
     'dt_q',
     'dt_filter',
@@ -128,13 +163,18 @@ $dt_sortable = array_values(array_intersect(
     'dt_sort',
     'dt_dir',
     'dt_sortable'
-)); ?>
+);
+if ($cfg['slug'] === 'scanned-categories') $dtArgs += [
+    'dt_folder_browser' => $folder_browser, 'dt_folder_domain' => 'scanned',
+    'dt_extra_params' => ['layout' => $activeLayout, 'folder' => $folder_browser['folder']]
+];
+$this->load->view('reusable_components/reusable_datatable', $dtArgs); ?>
 <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
     aria-labelledby="editTitle" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered modal-lg">
         <div class="modal-content">
             <form id="editForm" method="post" action="<?= site_url('places/' . $cfg['slug'] . '/save') ?>"
-                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?> autocomplete="off">
+                data-confirm="Save these changes?" <?= $cfg['slug'] === 'location' ? 'data-location-upsert' : '' ?> <?= $cfg['slug'] === 'softcopy-categories' ? 'data-softcopy-category-setup' : '' ?> autocomplete="off">
                 <div class="modal-header">
                     <h2 class="modal-title fs-6" id="editTitle">Add Place</h2>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
@@ -144,35 +184,66 @@ $dt_sortable = array_values(array_intersect(
                         <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
                         <?php if ($cfg['slug'] === 'location'): ?>
                             <?php $this->load->view('pages/places/location/modal_action/upsert', ['options' => $options]); ?>
+                        <?php elseif ($cfg['slug'] === 'scanned-categories'): ?>
+                            <?php $this->load->view('pages/places/scanned_category/fields', ['options' => $options, 'can' => $can]); ?>
                         <?php else: ?>
                             <?php foreach ($cfg['fields'] as $field):
-                                $references = ['area_id' => 'areas', 'specific_id' => 'specifics', 'asset_id' => 'assets', 'parent_id' => 'categories'];
+                                $references = [
+                                    'area_id' => 'areas',
+                                    'specific_id' => 'specifics',
+                                    'asset_id' => 'assets',
+                                    'parent_id' => $cfg['slug'] === 'external-categories'
+                                        ? 'external_categories'
+                                        : 'categories'
+                                ];
                                 if (isset($references[$field])):
                                     $optName = $references[$field]; ?>
                                     <div class="col-md-6">
                                         <label class="form-label"
-                                            for="f-<?= html_escape($field) ?>"><?= html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
+                                            for="f-<?= html_escape($field) ?>"><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'Parent Folder (optional)' : html_escape(ucwords(str_replace('_', ' ', $field))) ?></label>
                                         <select class="form-select" id="f-<?= html_escape($field) ?>"
                                             name="<?= html_escape($field) ?>" data-searchable autocomplete="off">
-                                            <option value="">Select <?= html_escape(str_replace('_id', '', $field)) ?></option>
+                                            <option value="">No parent (root)</option>
                                             <?php foreach ($options[$optName] as $option): ?>
-                                                <option value="<?= (int) $option['id'] ?>"><?= html_escape($option['name']) ?></option>
+                                                <option value="<?= (int) $option['id'] ?>" <?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-parent-kind="' . html_escape($option['category_type'] ?? 'pattern') . '"' : '' ?>><?= html_escape($field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? ($option['display_path'] ?? $option['name']) : $option['name']) ?><?= $field === 'parent_id' && $cfg['slug'] === 'softcopy-categories' ? html_escape(($option['category_type'] ?? 'pattern') === 'folder' ? ' (Folder)' : ' (Legacy pattern category)') : '' ?></option>
                                             <?php endforeach; ?>
                                         </select>
                                     </div>
                                 <?php else: ?>
-                                    <div class="col-md-6">
+                                    <div class="col-md-6" <?= $field === 'code_pattern' && $cfg['slug'] === 'softcopy-categories' ? 'data-category-number-pattern' : '' ?>>
                                         <label class="form-label"
                                             for="f-<?= html_escape($field) ?>"><?= html_escape($labels[$field] ?? ucwords(str_replace('_', ' ', $field))) ?></label>
-                                        <?php if ($field === 'description'): ?>
+                                        <?php if ($field === 'category_type' && $cfg['slug'] === 'softcopy-categories'): ?>
+                                            <select class="form-select" id="f-category_type" name="category_type" data-softcopy-category-type required autocomplete="off">
+                                                <option value="pattern">Document Number Pattern</option>
+                                                <option value="folder">Folder</option>
+                                            </select>
+                                        <?php elseif ($field === 'description'): ?>
                                             <textarea class="form-control" id="f-<?= html_escape($field) ?>"
                                                 name="<?= html_escape($field) ?>" rows="2" autocomplete="off"></textarea>
                                         <?php else: ?>
                                             <input class="form-control" id="f-<?= html_escape($field) ?>"
-                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' ? 'required' : '' ?>                 maxlength="150" autocomplete="off">
+                                                name="<?= html_escape($field) ?>" <?= $field === $cfg['key'] || $field === 'folder_name' || $field === 'code_pattern' ? 'required' : '' ?> maxlength="<?= $field === 'code_pattern' ? '100' : '150' ?>" autocomplete="off"
+                                                <?= $field === 'code_pattern' ? 'placeholder="For example PPM-001"' : '' ?>>
                                         <?php endif; ?>
                                     </div>
                                 <?php endif; endforeach; ?>
+                            <?php if ($cfg['slug'] === 'asset'): ?>
+                                <div class="col-12">
+                                    <span class="form-label d-block" id="asset-specifics-label">Specifics <span class="optional-label">(choose every Specific this Asset Number is used under)</span></span>
+                                    <div class="border rounded p-2" style="max-height: 14rem; overflow-y: auto;" role="group" aria-labelledby="asset-specifics-label">
+                                        <?php foreach ($options['specifics'] as $option): ?>
+                                            <label class="form-check d-block">
+                                                <input class="form-check-input" type="checkbox" name="specific_ids[]"
+                                                    value="<?= (int) $option['id'] ?>" autocomplete="off">
+                                                <?= html_escape($option['name']) ?>
+                                                <span class="text-secondary small">(<?= html_escape($option['area_name'] ?? '') ?>)</span>
+                                            </label>
+                                        <?php endforeach; ?>
+                                    </div>
+                                    <div class="form-text">One Asset Number is a single record, however many Specifics it is linked to.</div>
+                                </div>
+                            <?php endif; ?>
                         <?php endif; ?>
                         <?php if ($cfg['active']): ?>
                             <div class="col-12"><label class="form-check"><input class="form-check-input" type="checkbox"

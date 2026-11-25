@@ -1,21 +1,24 @@
 <?php
 require_once APPPATH . 'services/presentation/request_title.php';
+require_once APPPATH . 'services/documents/scanned_file_presentation.php';
 require_once APPPATH . 'services/request/request_policy.php';
-$tabs = [
-  'softcopy' => 'Softcopy Requests',
-  'hardcopy' => 'Hardcopy Requests',
-  'hardcopy-transfer' => 'Hardcopy Transfer',
-  'hardcopy-disposal' => 'Hardcopy Disposal',
-  'access-grant' => 'Document Access Grants',
-  'document-assign' => 'Document Assignments'
-];
-$typeMap = [
-  'softcopy' => ['softcopy_create' => 'Create', 'softcopy_revise' => 'Revise', 'softcopy_cancel' => 'Cancel'],
-  'hardcopy' => ['hardcopy_create' => 'Create', 'hardcopy_update' => 'Update'],
-  'hardcopy-transfer' => ['transfer' => 'Transfer'],
-  'hardcopy-disposal' => ['disposal' => 'Dispose'],
-  'access-grant' => ['access' => 'Grant Access'],
-  'document-assign' => ['assignment' => 'Assign']
+$actionLabels = [
+  'softcopy_create' => 'Create Softcopy Document',
+  'softcopy_revise' => 'Revise Softcopy Document',
+  'softcopy_cancel' => 'Cancel Softcopy Document',
+  Request_policy::REVISION_TEMPLATE => Request_policy::REVISION_TEMPLATE_LABEL,
+  'external_create' => 'Create External Document',
+  'external_revise' => 'Revise External Document',
+  'scanned_create' => 'Upload Scanned Document',
+  'scanned_update' => 'Update Scanned Document',
+  'scanned_delete' => 'Delete Scanned Document',
+  'scanned_category_create' => 'Create Scanned Category',
+  'hardcopy_create' => 'Create Hardcopy Document',
+  'hardcopy_update' => 'Update Hardcopy Document',
+  'transfer' => 'Transfer Hardcopy Document',
+  'disposal' => 'Dispose Document',
+  'access' => 'Request Document Access',
+  'assignment' => 'Request Document Assignment'
 ];
 $dt_columns = [
   'reference' => 'Request Reference',
@@ -28,9 +31,66 @@ $dt_columns = [
 ];
 $canRequest = fn($action) => isset($permissions['*']) || !empty($permissions['requests'][$action]);
 
-$allowed_request_types = $allowed_request_types ?? array_keys($typeMap[$tab]);
 $dt_rows = [];
 foreach ($rows as $row) {
+  if (!empty($row['handoff'])) {
+    $dispatch = $row['status'] === 'for_transfer';
+    $dt_rows[] = [
+      'id' => $row['id'],
+      'cells' => [
+        'reference' => $row['reference'],
+        'title' => $row['document_title'],
+        'type' => 'Physical Transfer Handoff',
+        'subject' => $row['reason'],
+        'requester' => $row['requester_name'],
+        'status' => $row['status'],
+        'updated' => $row['updated_at']
+      ],
+      'display' => [
+        'kind' => 'record',
+        'header' => ['title' => $row['document_title'], 'status' => $row['status']],
+        'sections' => [[
+          'key' => 'overview',
+          'title' => 'Physical Transfer Handoff',
+          'fields' => [
+            'Request Reference' => $row['reference'],
+            'Requester / Dispatcher' => $row['requester_name'],
+            'Current Holder' => $row['holder_name'],
+            'Recipient' => $row['recipient_name'],
+            'Reason' => $row['reason']
+          ]
+        ]]
+      ],
+      'buttons' => [
+        ['type' => 'view'],
+        [
+          'type' => 'action',
+          'url' => 'my-tasks/hardcopy-transfer/' . ($dispatch ? 'dispatch' : 'accept'),
+          'label' => $dispatch ? 'Dispatch' : 'Accept',
+          'description' => $dispatch
+            ? 'Confirm physical release of this document to the intended recipient.'
+            : 'Confirm physical receipt of the document and update its custodian and location.',
+          'icon' => $dispatch ? 'fa-solid fa-truck' : 'fa-solid fa-check'
+        ]
+      ]
+    ];
+    continue;
+  }
+  $tab = $type_tabs[$row['type']];
+  $isTemplate = $row['type'] === Request_policy::REVISION_TEMPLATE;
+  $templateDownload = '';
+  $templateExpiresOn = NULL;
+  $templateExpired = FALSE;
+  if ($isTemplate && !$task && $row['status'] === 'approved' && $row['softcopy_status'] === 'active' &&
+      (isset($permissions['*']) || !empty($permissions['softcopy'][Request_policy::REVISION_TEMPLATE_ACTION]))) {
+    $result = json_decode((string) $row['result'], TRUE);
+    if (!empty($result['template_file_id'])) {
+      $templateExpiresOn = $result['template_expires_on'] ?? NULL;
+      $templateExpired = Request_policy::revision_template_expired($templateExpiresOn);
+      if (!$templateExpired)
+        $templateDownload = 'files/revision-template/' . (int) $row['id'];
+    }
+  }
   $decodedPayload = json_decode((string) ($row['payload'] ?? ''), TRUE);
   $payload = is_array($decodedPayload) ? $decodedPayload : [];
   $entries = $history[$row['id']] ?? [];
@@ -38,6 +98,24 @@ foreach ($rows as $row) {
   foreach ($approval_routes[$row['id']] ?? [] as $step)
     if (!empty($step['step_id']))
       $stepLabels[(int) $step['step_id']] = $step['label'];
+  // The workflow snapshot names the step whose approval locks the attached file.
+  $snapshot = json_decode((string) ($row['snapshot'] ?? ''), TRUE);
+  $lockNodeKey = is_array($snapshot) && is_string($snapshot['document_lock_step_key'] ?? NULL)
+    && in_array($row['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)
+    ? $snapshot['document_lock_step_key'] : NULL;
+  $lockStepIds = [];
+  foreach ($approval_routes[$row['id']] ?? [] as $step)
+    if ($lockNodeKey !== NULL && ($step['node_key'] ?? NULL) === $lockNodeKey)
+      $lockStepIds[(int) $step['step_id']] = TRUE;
+  // Older requests may lack the key in their snapshot: the locking step is then the
+  // approved step whose approval time equals the file's lock time.
+  if (!$lockStepIds && !empty($row['locked_attachment']) && !empty($row['attachment_locked_at']))
+    foreach ($approval_routes[$row['id']] ?? [] as $step)
+      if ($step['status'] === 'approved' && ($step['acted_at'] ?? NULL) === $row['attachment_locked_at'])
+        $lockStepIds[(int) $step['step_id']] = TRUE;
+  // An approval at the lock step is the event that locked the file.
+  $lockedByEvent = static fn($event) => !empty($row['locked_attachment']) &&
+    ($event['action'] ?? '') === 'approved' && !empty($lockStepIds[(int) ($event['step_id'] ?? 0)]);
   $decisionEvents = [];
   foreach ($entries as $event) {
     $decisionEvents[] = [
@@ -47,7 +125,8 @@ foreach ($rows as $row) {
       'user_name' => $event['user_name'],
       'position_title' => $event['position_title'] ?? '',
       'comments' => $event['comments'] ?? '',
-      'created_at' => $event['created_at']
+      'created_at' => $event['created_at'],
+      'locked' => $lockedByEvent($event)
     ];
   }
   $historyByStep = [];
@@ -58,7 +137,8 @@ foreach ($rows as $row) {
         'user_name' => $event['user_name'],
         'position_title' => $event['position_title'] ?? '',
         'comments' => $event['comments'] ?? '',
-        'created_at' => $event['created_at']
+        'created_at' => $event['created_at'],
+        'locked' => $lockedByEvent($event)
       ];
     }
   $historyText = [];
@@ -70,17 +150,35 @@ foreach ($rows as $row) {
   $routeSteps = [];
   foreach ($approval_routes[$row['id']] ?? [] as $step) {
     $tile = ['label' => $step['label'], 'approver_label' => $step['approver_label'], 'status' => $step['status']];
+    if (!empty($lockStepIds[(int) ($step['step_id'] ?? 0)]))
+      // 'locked' once this step's approval has locked the file; otherwise it is the step that will.
+      $tile['lock'] = $step['status'] === 'approved' && !empty($row['locked_attachment']) ? 'locked' : 'locks';
     if (!empty($historyByStep[(int) ($step['step_id'] ?? 0)]))
       $tile['history'] = $historyByStep[(int) $step['step_id']];
     $routeSteps[] = $tile;
     $routeText[] = $step['label'] . ' → ' . $step['approver_label'] .
       ' [' . ucwords(str_replace('_', ' ', $step['status'])) . ']';
   }
+  $requestStatus = (string) $row['status'];
+  if (!$task && $requestStatus === 'submitted') {
+    $requestStatus = 'In Progress';
+    foreach ($approval_routes[$row['id']] ?? [] as $step) {
+      if ($step['status'] === 'active') {
+        $requestStatus = 'Awaiting ' . ($step['approver_label'] ?: $step['label']);
+        break;
+      }
+    }
+  }
+  // Approver task list: show the approver's own pending step, not the generic request status.
+  if ($task && $requestStatus === 'submitted' && !empty($row['step_label']))
+    $requestStatus = 'Pending your approval: ' . $row['step_label'];
   // The request viewer uses the same document renderer as System Documents,
   // but presents only submitted proposal metadata and visible approval history.
   // Never pretend an unapproved proposal is already the stored document.
-  $isDocumentRequest = in_array($tab, ['softcopy', 'hardcopy', 'hardcopy-disposal'], TRUE);
-  $documentDomain = $tab === 'softcopy' ? 'softcopy' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record');
+  $isDocumentRequest = in_array($tab, ['softcopy', 'external', 'scanned', 'hardcopy', 'hardcopy-disposal'], TRUE);
+  $documentDomain = in_array($tab, ['softcopy', 'scanned'], TRUE) ? $tab : ($tab === 'external' ? 'external' :
+    ($tab === 'hardcopy-disposal' && ($payload['document_domain'] ?? '') === 'external'
+      ? 'external' : (in_array($tab, ['hardcopy', 'hardcopy-disposal'], TRUE) ? 'hardcopy' : 'record')));
   $detail = is_array($row['detail_labels'] ?? NULL) ? $row['detail_labels'] : [];
   $headerTitle = Request_title::resolve(
     (string) $row['type'],
@@ -90,7 +188,7 @@ foreach ($rows as $row) {
   );
   $requestOverview = [
     'Request Reference' => $row['reference'],
-    'Request Action' => ucwords(str_replace('_', ' ', $row['type'])),
+    'Request Action' => $isTemplate ? Request_policy::REVISION_TEMPLATE_LABEL : ucwords(str_replace('_', ' ', $row['type'])),
     'Subject / Reason' => $payload['subject'] ?? '',
     'Requested By' => $row['requester_name'],
     'Submitted At' => $row['submitted_at'] ?? '',
@@ -99,11 +197,16 @@ foreach ($rows as $row) {
     'Remarks' => $payload['remarks'] ?? '',
     'Request Version' => $row['version']
   ];
+  if ($tab === 'scanned') {
+    unset($requestOverview['Remarks'], $requestOverview['Subject / Reason']);
+    $requestOverview['Subject'] = $payload['subject'] ?? '';
+  }
   $requestSections = [
     ['key' => 'overview', 'title' => 'Request & Ownership', 'fields' => $requestOverview],
     [
       'key' => $documentDomain === 'hardcopy' ? 'storage' : 'revision',
-      'title' => $documentDomain === 'hardcopy' ? 'Proposed Storage & Custody' : 'Proposed Classification & Revision',
+      'title' => $documentDomain === 'hardcopy' ? 'Proposed Storage & Custody' :
+        ($documentDomain === 'external' ? 'Proposed External Document' : 'Proposed Classification & Revision'),
       'fields' => $detail,
       'empty' => 'No additional proposed metadata recorded.'
     ],
@@ -131,24 +234,72 @@ foreach ($rows as $row) {
       'title' => 'Disposal Details',
       'fields' => $detail
     ];
-  if ($documentDomain === 'softcopy') {
-    array_splice($requestSections, 2, 0, [
-      [
-        'key' => 'files',
-        'title' => 'Document File',
-        'fields' => [
-          'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
-            ? 'Attached to this request for review' : 'No attachment'
-        ]
+  if ($isTemplate) {
+    $requestSections[1]['title'] = 'Selected Softcopy Document';
+    if ($templateDownload || $templateExpired)
+      $requestSections[] = [
+        'key' => 'files', 'title' => 'Revision Template',
+        'description' => $templateDownload && $templateExpiresOn
+          ? "Download available through {$templateExpiresOn} (Philippine time)." : '',
+        'fields' => $templateDownload ? ['Editable revision template' => ''] : [],
+        'links' => $templateDownload ? [['url' => site_url($templateDownload)]] : [],
+        'empty' => $templateExpired ? "The download expired after {$templateExpiresOn} (Philippine time)." : ''
+      ];
+  } elseif (in_array($documentDomain, ['softcopy', 'external'], TRUE)) {
+    $filesSection = [
+      'key' => 'files',
+      'title' => 'Document File',
+      'fields' => [
+        'Attachment' => !empty($payload['controlled_file_id']) || !empty($payload['revision_file_id'])
+          ? (!empty($row['locked_attachment'])
+            ? 'Locked by the designated approver; read-only preview only unless you hold Download Locked Files permission'
+            : 'Attached to this request for review')
+          : 'No attachment'
       ]
-    ]);
+    ];
+    // Same read-only preview as the document modals. The endpoint re-checks that the
+    // viewer is the requester or an active approver, so only offer it to them.
+    $canPreviewAttachment = in_array($row['status'], ['draft', 'returned', 'submitted'], TRUE) &&
+      ((int) ($row['requested_by'] ?? 0) === (int) ($user['id'] ?? 0) || ($task && $row['status'] === 'submitted'));
+    if (!empty($row['attachment_files']) && $canPreviewAttachment) {
+      $canBypassLock = isset($permissions['*']) || !empty($permissions['files']['download_locked']);
+      $canDownloadFile = isset($permissions['*']) || !empty($permissions['files']['download']);
+      $filesSection['fields'] = [];
+      $filesSection['links'] = [];
+      foreach ($row['attachment_files'] as $index => $attachment) {
+        $unlocked = empty($attachment['locked_at']) || $canBypassLock;
+        $extension = strtolower(pathinfo((string) $attachment['original_name'], PATHINFO_EXTENSION));
+        $previewUrl = site_url('files/review/' . (int) $row['id'] . '?file_id=' . (int) $attachment['id']);
+        $filesSection['fields'][($index + 1) . '. ' . $attachment['original_name']] =
+          number_format((int) $attachment['size']) . ' bytes' .
+          (!empty($attachment['locked_at']) ? ' · Locked' : '');
+        $filesSection['links'][] = [
+          'label' => $attachment['original_name'],
+          'url' => $canDownloadFile && $unlocked ? $previewUrl . '&download=1' : '',
+          'pdf_url' => $canDownloadFile && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
+            ? $previewUrl . '&download=pdf' : '',
+          'preview_url' => $previewUrl,
+          'preview_type' => in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $attachment['mime_type']
+        ];
+      }
+    }
+    array_splice($requestSections, 2, 0, [$filesSection]);
+  }
+  if ($tab === 'scanned' && !empty($payload['scanned_file_ids'])) {
+    $scanLinks = []; $scanFields = [];
+    foreach ($row['attachment_files'] ?? [] as $index => $attachment) {
+      $scanFields[($index + 1) . '. ' . $attachment['original_name']] = number_format((int) $attachment['size']) . ' bytes';
+      $scanLinks[] = Scanned_file_presentation::link($attachment, (int) $row['id']);
+    }
+    $requestSections[] = ['key' => 'files', 'title' => 'Scanned Attachments', 'fields' => $scanFields, 'links' => $scanLinks];
   }
   $display = [
+    'review' => $task,
     'kind' => $isDocumentRequest ? 'document' : 'record',
     'domain' => $documentDomain,
     'header' => [
       'title' => $headerTitle,
-      'status' => $row['status'],
+      'status' => $requestStatus,
       'record_version' => $row['version'],
       'context_label' => 'Requested By',
       'context_value' => $row['requester_name'],
@@ -160,20 +311,32 @@ foreach ($rows as $row) {
     'id' => $row['id'],
     'version' => $row['version'],
     'type' => $row['type'],
+    'locked_attachment' => !empty($row['locked_attachment']),
     'subject' => $payload['subject'] ?? '',
     'remarks' => $payload['remarks'] ?? '',
     'title' => $payload['title'] ?? '',
-    'series_number' => $payload['series_number'] ?? '',
+    'description' => $payload['description'] ?? '',
+    'generated_series_number' => $payload['generated_series_number'] ?? '',
+    'series_number_checker' => !empty($payload['series_number_checker']) ? 1 : 0,
     'document_number' => $payload['document_number'] ?? '',
     'category_id' => $payload['category_id'] ?? '',
     'softcopy_id' => $row['softcopy_id'] ?? '',
+    'scanned_document_id' => $payload['scanned_document_id'] ?? '',
+    'scanned_category_id' => $payload['scanned_category_id'] ?? '',
+    'document_version' => $payload['document_version'] ?? '',
+    'parent_id' => $payload['parent_id'] ?? '',
+    'external_document_id' => $payload['external_document_id'] ?? '',
+    'external_document_number' => $payload['external_document_number'] ?? '',
+    'external_category_id' => $payload['external_category_id'] ?? '',
+    'subsidiary_name' => $payload['subsidiary_name'] ?? ($detail['Proposed Subsidiary'] ?? ''),
+    'retention_period' => $payload['retention_period'] ?? '',
     'hardcopy_id' => $row['hardcopy_id'] ?? '',
     'recipient_id' => $payload['recipient_id'] ?? '',
     'expires_at' => $payload['expires_at'] ?? '',
-    'document_domain' => $payload['document_domain'] ?? ($row['hardcopy_id'] ? 'hardcopy' : 'softcopy'),
+    'document_domain' => $payload['document_domain'] ?? ($tab === 'external'
+      ? 'external' : ($row['hardcopy_id'] ? 'hardcopy' : 'softcopy')),
     'disposal_reason' => $payload['disposal_reason'] ?? '',
     'disposal_other' => $payload['disposal_other'] ?? '',
-    'new_revision_level' => $payload['new_revision_level'] ?? '',
     'effective_date' => $payload['effective_date'] ?? '',
     'date_received' => $payload['date_received'] ?? '',
     'date_released' => $payload['date_released'] ?? '',
@@ -194,18 +357,16 @@ foreach ($rows as $row) {
     'destination_specific_id' => $payload['destination_specific_id'] ?? '',
     'destination_asset_id' => $payload['destination_asset_id'] ?? ''
   ];
-  $buttons = [['type' => 'view']];
-  if (
-    in_array($row['type'], ['softcopy_create', 'softcopy_revise'], TRUE) &&
-    !empty($payload[$row['type'] === 'softcopy_create' ? 'controlled_file_id' : 'revision_file_id']) &&
-    in_array($row['status'], ['draft', 'returned', 'submitted'], TRUE)
-  ) {
-    $buttons[] = ['type' => 'review', 'url' => 'files/review/' . $row['id']];
-  }
+  $buttons = [$task
+    ? ['type' => 'view', 'label' => 'Review request', 'primary' => TRUE, 'icon' => 'fa-solid fa-file-circle-check']
+    : ['type' => 'view']];
+  if ($templateDownload)
+    $buttons[] = ['type' => 'download', 'url' => $templateDownload, 'label' => 'Download Template'];
+  $reviewButtons = [];
   $canEdit = isset($permissions['*']) || !empty($permissions['requests']['edit']);
   if (!$task && in_array($row['status'], ['draft', 'returned'], TRUE) && in_array($row['type'], $allowed_request_types, TRUE)) {
     if ($canEdit)
-      $buttons[] = ['type' => 'edit'];
+      $buttons[] = ['type' => 'edit', 'form' => '#request-form-' . ($tab === 'document-assign' ? 'access-grant' : $tab)];
     if ($canRequest('submit'))
       $buttons[] = [
         'type' => 'action',
@@ -232,20 +393,58 @@ foreach ($rows as $row) {
       'icon' => 'fa-solid fa-trash-can'
     ];
   // Rows are already scoped to this user's exact active approval assignment.
+  // The DCO's approval at the designated step must carry the edited final file.
+  $needsFinalFile = FALSE;
+  if ($task && $row['status'] === 'submitted' && in_array($row['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) {
+    $routeGraph = json_decode((string) ($row['snapshot'] ?? ''), TRUE) ?: [];
+    $needsFinalFile = is_string($routeGraph['finalize_step_key'] ?? NULL) &&
+      $routeGraph['finalize_step_key'] === ($row['current_node'] ?? NULL);
+  }
+  $finalSourceId = 0;
+  if ($needsFinalFile)
+    $finalSourceId = (int) ($payload['controlled_file_id'] ?? $payload['revision_file_id'] ?? 0);
+  $returnDescription = 'Send this request back for review or changes.';
+  if ($task && !empty($row['step_id'])) {
+    $route = $approval_routes[$row['id']] ?? [];
+    $stepKeys = array_column((array) ($snapshot['steps'] ?? []), 'key');
+    $stepIndex = array_search($row['current_node'], $stepKeys, TRUE);
+    if ($stepIndex === 0) {
+      $returnDescription = 'Return this request to the requester for changes.';
+    } elseif ($stepIndex !== FALSE) {
+      $returnDescription = 'Return this request to the previous reviewer.';
+      $routeIndex = array_search((int) $row['step_id'], array_map('intval', array_column($route, 'step_id')), TRUE);
+      $previous = $routeIndex ? $route[$routeIndex - 1] : [];
+      if (($previous['node_key'] ?? NULL) === $stepKeys[$stepIndex - 1])
+        $returnDescription = 'Return this request to ' . ($previous['approver_label'] ?: $previous['label']) . ' for review.';
+    }
+  }
+  $templateSteps = $isTemplate ? ($snapshot['steps'] ?? []) : [];
+  $needsTemplate = $templateSteps && $row['current_node'] === $templateSteps[count($templateSteps) - 1]['key'];
+  $decisions = ['approved' => 'Approve', 'rejected' => 'Reject'];
+  if (!$isTemplate)
+    $decisions['returned'] = 'Return';
   if ($task && $row['status'] === 'submitted')
-    foreach (['approved' => 'Approve', 'rejected' => 'Reject', 'returned' => 'Return'] as $decision => $label) {
-      $buttons[] = [
+    foreach ($decisions as $decision => $label) {
+      $reviewButtons[] = [
         'type' => 'action',
         'url' => "my-tasks/{$tab}/decide",
         'decision' => $decision,
+        'skip_remarks' => $tab === 'scanned',
         'label' => $label,
-        'description' => "Record {$record['title']} for this workflow step.",
+        'description' => $decision === 'returned' ? $returnDescription : match ($decision) {
+          'approved' => 'Approve this workflow step for ' . $headerTitle . '.',
+          'rejected' => 'Reject this request and end its approval workflow.'
+        },
         'icon' => $decision === 'approved'
           ? 'fa-solid fa-check'
           : ($decision === 'rejected'
             ? 'fa-solid fa-circle-xmark'
             : 'fa-solid fa-arrow-rotate-left'),
-        'show_text' => TRUE
+        'show_text' => TRUE,
+        'final_upload' => ($needsFinalFile || $needsTemplate) && $decision === 'approved',
+        'template_upload' => $needsTemplate && $decision === 'approved',
+        'final_source_url' => $needsFinalFile && $decision === 'approved' && ($finalSourceId ?? 0)
+          ? site_url('files/review/' . (int) $row['id'] . '?file_id=' . (int) $finalSourceId . '&download=1') : ''
       ];
     }
 
@@ -255,15 +454,16 @@ foreach ($rows as $row) {
     'cells' => [
       'reference' => $row['reference'],
       'title' => $headerTitle,
-      'type' => ucwords(str_replace('_', ' ', $row['type'])),
+      'type' => $actionLabels[$row['type']],
       'subject' => $payload['subject'] ?? '',
       'requester' => $row['requester_name'],
-      'status' => $row['status'],
+      'status' => $requestStatus,
       'updated' => $row['updated_at']
     ],
     'display' => $display,
     'record' => $record,
-    'buttons' => $buttons
+    'buttons' => $buttons,
+    'review_buttons' => $reviewButtons
   ];
 }
 $dt_q = $table['q'];
@@ -277,37 +477,39 @@ $dt_sortable = ['reference', 'type', 'requester', 'status', 'updated'];
 $dt_date_filters = TRUE;
 $dt_filter_values = [
   'status' => $dt_filter,
+  'request_category' => $table['request_category'],
   'type' => $table['type'],
   'period' => $table['period'] ?? 'all',
   'from' => $table['from'],
   'to' => $table['to']
 ];
 $dt_filters = [
-  'status' => [
+  'request_category' => ['' => 'All Categories'] + $categories,
+  'type' => ['' => 'All Actions'] + $actionLabels
+];
+$dt_filters['status'] = $task ? [
+  '' => 'All Statuses',
+  'submitted' => 'Pending Approval',
+  'for_transfer' => 'For Transfer',
+  'in_transit' => 'In Transit'
+] :
+  [
     '' => 'All Statuses',
     'draft' => 'Draft',
-    'submitted' => 'Submitted',
+    'submitted' => 'In Progress',
     'completed' => 'Completed',
     'approved' => 'Approved',
     'rejected' => 'Rejected',
     'returned' => 'Returned',
     'cancelled' => 'Cancelled'
-  ]
-];
-$dt_filters['type'] = ['' => 'All Actions'] + $typeMap[$tab];
+  ];
 $dt_badges = ['status'];
 $dt_create = !$task && $canRequest('add') && $allowed_request_types ? 'New Request' : '';
-$dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
+$dt_path = $path;
+$dt_create_form = '';
+$dt_filter_labels = ['request_category' => 'Category', 'type' => 'Action'];
 ?>
 
-<nav class="tab-bar" aria-label="Request category tabs">
-  <?php foreach ($tabs as $slug => $name): ?>
-    <a class="tab-link <?= $tab === $slug ? 'active' : '' ?>"
-      href="<?= site_url(($task ? 'my-tasks/' : 'my-requests/') . $slug) ?>" <?= $tab === $slug ? 'aria-current="page"' : '' ?>><?= html_escape($name) ?><?php $tabCount = (int) ($navigation_counts[$task ? 'tasks' : 'requests'][$slug] ?? 0); ?>
-      <span class="tab-count<?= $tabCount === 0 ? ' is-zero' : '' ?>"
-        aria-label="<?= $tabCount ?> <?= $task ? 'pending tasks' : 'draft or returned requests' ?>"><?= $tabCount ?></span></a>
-  <?php endforeach; ?>
-</nav>
 <?php $this->load->view('reusable_components/reusable_datatable', compact(
   'dt_path',
   'dt_q',
@@ -323,262 +525,9 @@ $dt_path = ($task ? 'my-tasks/' : 'my-requests/') . $tab;
   'dt_date_filters',
   'dt_badges',
   'dt_create',
+  'dt_create_form',
+  'dt_filter_labels',
   'dt_columns',
   'dt_rows'
 )); ?>
-<?php if (!$task): ?>
-  <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="editModal" tabindex="-1"
-    aria-labelledby="editTitle" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <form id="editForm" method="post" enctype="multipart/form-data"
-          action="<?= site_url("my-requests/{$tab}/save") ?>"
-          data-allowed-request-types="<?= html_escape(json_encode($allowed_request_types)) ?>" <?= $tab === 'hardcopy' ? ' data-hardcopy-upsert="yes" ' : ($tab === 'hardcopy-transfer' ? ' data-hardcopy-transfer="yes" ' : '') ?>
-          data-confirm="Save request draft?" autocomplete="off">
-          <div class="modal-header">
-            <h2 class="modal-title fs-6" id="editTitle">New Request</h2>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <div class="row g-3">
-              <input type="hidden" name="id" value=""><input type="hidden" name="version" value="">
-              <?php if ($tab === 'softcopy'): ?>
-                <?php $this->load->view('pages/request/softcopy_fields', [
-                  'softcopy_options' => $softcopy_options,
-                  'category_options' => $category_options,
-                  'softcopyDirect' => FALSE
-                ]); ?>
-              <?php elseif ($tab === 'hardcopy'): ?>
-                <div class="col-md-6">
-                  <label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
-                    <option value="hardcopy_create">Create Hardcopy</option>
-                    <option value="hardcopy_update">Update Hardcopy</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
-                </div>
-                <div class="col-12" data-hardcopy-existing>
-                  <label class="form-label" for="reqHardcopy">Existing Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable autocomplete="off">
-                    <option value="">Choose a document</option>
-                    <?php foreach ($hardcopy_options as $item): ?>
-                      <option value="<?= (int) $item['id'] ?>"
-                        data-hardcopy="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_INVALID_UTF8_SUBSTITUTE | JSON_PARTIAL_OUTPUT_ON_ERROR)) ?>">
-                        <?= html_escape($item['title']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <div class="col-12" data-hardcopy-details>
-                  <div class="row g-3">
-                    <?php $this->load->view('pages/hardcopy_document/modal_action/upsert', [
-                      'options' => $hardcopy_form_options,
-                      'user' => $user,
-                      'is_administrator' => $is_administrator
-                    ]); ?>
-                  </div>
-                </div>
-              <?php elseif ($tab === 'hardcopy-transfer'): ?>
-                <?php $this->load->view('pages/request/hardcopy_transfer_fields', [
-                  'transfer_sources' => $transfer_sources,
-                  'transfer_options' => $transfer_options
-                ]); ?>
-              <?php elseif ($tab === 'hardcopy-disposal'): ?>
-                <div class="col-md-6">
-                  <label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
-                    <option value="disposal">Dispose Hardcopy</option>
-                  </select>
-                </div>
-                <div class="col-md-6">
-                  <label class="form-label" for="reqSubject">Subject / Reason</label>
-                  <input class="form-control" id="reqSubject" name="subject" maxlength="255" required autocomplete="off">
-                </div>
-                <div class="col-12">
-                  <label class="form-label" for="reqHardcopy">Hardcopy Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable required
-                    autocomplete="off">
-                    <option value="">Choose an active document</option>
-                    <?php foreach ($hardcopy_options as $item): ?>
-                      <option value="<?= (int) $item['id'] ?>">
-                        <?= html_escape($item['title']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'requestDisposal']); ?>
-                <div class="col-12">
-                  <label class="form-label" for="reqRemark">Remarks <span class="optional-label">(optional)</span></label>
-                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3" autocomplete="off"></textarea>
-                  <p class="form-text mb-0">The document is disposed only after the approval workflow is completed.</p>
-                </div>
-              <?php else: ?>
-
-                <div class="col-md-6"><label class="form-label" for="reqType">Request Action</label>
-                  <select class="form-select" name="type" id="reqType" required autocomplete="off">
-                    <?php foreach ($typeMap[$tab] as $key => $name): ?>
-                      <option value="<?= html_escape($key) ?>"><?= html_escape($name) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <div class="col-md-6"><label class="form-label" for="reqSubject">Subject</label>
-                  <input class="form-control" name="subject" id="reqSubject" maxlength="255" required autocomplete="off">
-                </div>
-                <?php if (in_array($tab, ['access-grant', 'document-assign'], TRUE)): ?>
-                  <div class="col-md-6" data-domain-picker>
-                    <label class="form-label" for="requestDocumentDomain">Document Type</label>
-                    <select class="form-select" id="requestDocumentDomain" name="document_domain" required autocomplete="off">
-                      <option value="softcopy">Softcopy</option>
-                      <option value="hardcopy">Hardcopy</option>
-                    </select>
-                  </div>
-                <?php endif; ?>
-                <div class="col-md-6" data-document-domain="softcopy"><label class="form-label" for="reqSoftcopy">Softcopy
-                    Document</label>
-                  <select class="form-select" name="softcopy_id" id="reqSoftcopy" data-searchable autocomplete="off">
-                    <option value="">Not selected</option>
-                    <?php foreach ($softcopy_options as $item): ?>
-                      <option value="<?= (int) $item['id'] ?>">
-                        <?= html_escape($item['document_number'] . ' · ' . $item['title']) ?>
-                      </option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <div class="col-md-6" data-document-domain="hardcopy"><label class="form-label" for="reqHardcopy">Hardcopy
-                    Document</label>
-                  <select class="form-select" name="hardcopy_id" id="reqHardcopy" data-searchable autocomplete="off">
-                    <option value="">Not selected</option>
-                    <?php foreach ($hardcopy_options as $item): ?>
-                      <option value="<?= (int) $item['id'] ?>"><?= html_escape($item['title']) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <div class="col-md-6"><label class="form-label" for="reqTitle">Proposed Document Title</label>
-                  <input class="form-control" name="title" id="reqTitle" maxlength="255" autocomplete="off">
-                </div>
-                <div class="col-md-6"><label class="form-label" for="reqNumber">Document Number</label>
-                  <input class="form-control" name="document_number" id="reqNumber" maxlength="100" autocomplete="off">
-                </div>
-                <div class="col-md-6"><label class="form-label" for="reqCategory">Category</label>
-                  <select class="form-select" name="category_id" id="reqCategory" data-searchable autocomplete="off">
-                    <option value="">No category</option><?php foreach ($category_options as $opt): ?>
-                      <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-                <?php if (in_array($tab, ['access-grant', 'document-assign'], TRUE)): ?>
-                  <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
-                    <input class="form-control" id="reqUser" type="text" value="<?= html_escape($user['name']) ?>" readonly
-                      autocomplete="off">
-                    <input type="hidden" name="recipient_id" value="<?= (int) $user['id'] ?>">
-                  </div>
-                <?php else: ?>
-                  <div class="col-md-6"><label class="form-label" for="reqUser">Recipient / Assigned User</label>
-                    <select class="form-select" name="recipient_id" id="reqUser" data-searchable autocomplete="off">
-                      <option value="">Not selected</option><?php foreach ($users as $opt): ?>
-                        <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
-                      <?php endforeach; ?>
-                    </select>
-                  </div>
-                <?php endif; ?>
-                <div class="col-md-6"><label class="form-label" for="reqExpires">Access Expires At</label>
-                  <input class="form-control" name="expires_at" type="date" id="reqExpires" autocomplete="off">
-                </div>
-                <div class="col-md-6"><label class="form-label" for="reqDest">Destination Location</label>
-                  <select class="form-select" name="destination_location_id" id="reqDest" data-searchable
-                    autocomplete="off">
-                    <option value="">Not selected</option><?php foreach ($location_options as $opt): ?>
-                      <option value="<?= (int) $opt['id'] ?>"><?= html_escape($opt['name']) ?></option>
-                    <?php endforeach; ?>
-                  </select>
-                </div>
-
-                <div class="col-12"><label class="form-label" for="reqRemark">Remarks <span
-                      class="optional-label">(optional)</span></label>
-                  <textarea class="form-control" id="reqRemark" name="remarks" rows="3" autocomplete="off"></textarea>
-                </div>
-
-              <?php endif; ?>
-            </div>
-          </div>
-          <input type="hidden" name="confirmed" value="no">
-          <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
-            value="<?= $this->security->get_csrf_hash() ?>">
-          <div class="modal-footer"><button class="btn btn-light" type="button" data-bs-dismiss="modal">Cancel</button>
-            <button class="btn btn-primary" type="submit">Save Draft</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  </div>
-<?php endif; ?>
-
-<?php if ($task && $tab === 'hardcopy-transfer'): ?>
-  <section class="workspace-card mt-4">
-    <div class="workspace-card-header">
-      <strong>Physical Transfer Handoffs</strong>
-      <p class="small text-secondary mb-0">Only the transfer requester can dispatch; only the destination recipient can
-        accept.
-      </p>
-    </div>
-    <div class="table-responsive">
-      <table class="table align-middle">
-        <thead>
-          <tr>
-            <th scope="col">Hardcopy</th>
-            <th scope="col">Requester / Dispatcher</th>
-            <th scope="col">Current Holder</th>
-            <th scope="col">Recipient</th>
-            <th scope="col">Stage</th>
-            <th scope="col" class="text-end">Action</th>
-          </tr>
-        </thead>
-        <tbody>
-          <?php if (!$handoffs): ?>
-            <tr>
-              <td colspan="6" class="empty-state">No physical handoffs assigned to you.</td>
-            </tr><?php endif; ?>
-          <?php foreach ($handoffs as $handoff): ?>
-            <tr>
-              <td><?= html_escape($handoff['document_title']) ?></td>
-              <td><?= html_escape($handoff['requester_name']) ?></td>
-              <td><?= html_escape($handoff['holder_name']) ?></td>
-              <td><?= html_escape($handoff['recipient_name']) ?></td>
-              <td><span
-                  class="badge-status status-pending"><?= html_escape(ucwords(str_replace('_', ' ', $handoff['status']))) ?></span>
-              </td>
-              <td class="text-end">
-                <?php $isRequester = (int) $handoff['requester_id'] === (int) $user['id'];
-                $isRecipient = (int) $handoff['recipient_id'] === (int) $user['id']; ?>
-                <?php if ($isRequester && $handoff['status'] === 'for_transfer'): ?>
-                  <button class="btn btn-outline-primary btn-sm js-action" type="button"
-                    data-url="<?= site_url('my-tasks/hardcopy-transfer/dispatch') ?>" data-id="<?= (int) $handoff['id'] ?>"
-                    data-title="Dispatch Hardcopy"
-                    data-description="Confirm physical release of this document to the intended recipient.">Dispatch</button>
-                <?php elseif ($isRecipient && $handoff['status'] === 'in_transit'): ?>
-                  <button class="btn btn-primary btn-sm js-action" type="button"
-                    data-url="<?= site_url('my-tasks/hardcopy-transfer/accept') ?>" data-id="<?= (int) $handoff['id'] ?>"
-                    data-title="Accept Hardcopy"
-                    data-description="Confirm physical receipt of the document and update its custodian and location.">Accept</button>
-                <?php else: ?><span class="text-secondary small">Awaiting next party</span><?php endif; ?>
-              </td>
-            </tr>
-          <?php endforeach; ?>
-        </tbody>
-      </table>
-    </div>
-    <?php $handoffPages = max(1, (int) ceil($handoff_total / 10)); ?>
-    <div class="table-footer"><small>Assigned handoffs: <?= (int) $handoff_total ?></small>
-      <div class="d-flex align-items-center gap-2">
-        <a class="btn btn-light btn-sm <?= $handoff_page <= 1 ? 'disabled' : '' ?>"
-          href="<?= site_url('my-tasks/hardcopy-transfer') . '?handoff_page=' . max(1, $handoff_page - 1) ?>">Previous</a>
-        <span class="small"><?= (int) $handoff_page ?> / <?= $handoffPages ?></span>
-        <a class="btn btn-light btn-sm <?= $handoff_page >= $handoffPages ? 'disabled' : '' ?>"
-          href="<?= site_url('my-tasks/hardcopy-transfer') . '?handoff_page=' . min($handoffPages, $handoff_page + 1) ?>">Next</a>
-      </div>
-    </div>
-  </section>
-<?php endif; ?>
+<?php if ($show_request_modal) require __DIR__ . '/request_modal.php'; ?>

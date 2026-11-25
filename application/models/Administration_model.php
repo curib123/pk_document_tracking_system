@@ -186,7 +186,7 @@ class Administration_model extends CI_Model
     /** Current assignments across every folder; fetched only when a user's modal opens. */
     public function user_assigned_documents($userId)
     {
-        $hardcopy = $this->db->select('d.id,d.title,d.sequence_number AS code,l.name AS location_name,l.sequence_number AS location_sequence')
+        $hardcopy = $this->db->select('d.id,d.title,d.sequence_number AS code,l.name AS location_name')
             ->from('hardcopy_documents d')->join('locations l', 'l.id=d.location_id', 'left')
             ->where('d.holder_id', (int) $userId)
             ->where('d.status', 'active')->order_by('d.title')->order_by('d.id')->get()->result_array();
@@ -210,7 +210,7 @@ class Administration_model extends CI_Model
     public function permissions()
     {
         return $this->db->select('id,module_key,module_label,action_key,action_label')
-            ->from('permissions')->order_by('module_label')->order_by('action_label')
+            ->from('permissions')->where('module_key !=', 'subsidiaries')->order_by('module_label')->order_by('action_label')
             ->get()->result_array();
     }
     public function grants($roleIds)

@@ -1,10 +1,13 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/request/request_policy.php';
 class Request_model extends CI_Model
 {
     private $groups = [
-        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
+        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel', Request_policy::REVISION_TEMPLATE],
+        'external' => ['external_create', 'external_revise'],
+        'scanned' => ['scanned_create', 'scanned_update', 'scanned_delete', 'scanned_category_create'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'hardcopy-disposal' => ['disposal'],
@@ -24,7 +27,7 @@ class Request_model extends CI_Model
     private function scope($tab, $user, $task, $q, $status, $filters = [])
     {
         $this->db->from('requests r');
-        $this->db->where_in('r.type', $this->types($tab));
+        $this->db->where_in('r.type', $tab === '' ? array_merge(...array_values($this->groups)) : $this->types($tab));
         if ($task) {
             $this->db->where('r.status', 'submitted');
             $this->db->join(
@@ -62,31 +65,162 @@ class Request_model extends CI_Model
         $total = (int) $this->db->count_all_results();
         $page = min(max(1, $page), max(1, (int) ceil($total / $limit)));
         $this->scope($tab, $user, $task, $q, $status, $filters);
+        $sort = $this->register_sort($filters);
+        $direction = ($filters['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
+        $this->db->order_by($sort, $direction)->order_by('r.id', $direction)
+            ->limit($limit, ($page - 1) * $limit);
+        return [$this->register_rows($task), $total, $page];
+    }
+
+    public function task_listing($tab, $user, $state)
+    {
+        if (($tab !== '' && $tab !== 'hardcopy-transfer') ||
+            !in_array($state['type'], ['', 'transfer'], TRUE) ||
+            !in_array($state['status'], ['', 'for_transfer', 'in_transit'], TRUE)) {
+            return $this->listing($tab, $user, TRUE, $state['q'], $state['status'], $state['page'], $state['limit'], $state);
+        }
+
+        $this->load->model('Transfer_model');
+        $handoffs = $this->Transfer_model->register_query($user, $state);
+        $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
+        $approvals = $this->db->select(
+            'ws.id AS task_id, 0 AS handoff, r.id AS request_id, r.reference, r.type, r.status,
+             r.created_at, r.updated_at, CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
+            FALSE
+        )->join('users u', 'u.id=r.requested_by')->get_compiled_select();
+        $source = "($approvals UNION ALL $handoffs) AS task_register";
+        $total = (int) $this->db->query("SELECT COUNT(*) AS total FROM $source")->row()->total;
+        $limit = (int) $state['limit'];
+        $page = min($state['page'], max(1, (int) ceil($total / $limit)));
+        $offset = ($page - 1) * $limit;
+        $sort = $this->register_sort($state, '');
+        $direction = $state['dir'] === 'ASC' ? 'ASC' : 'DESC';
+        $keys = $this->db->query(
+            "SELECT task_id, handoff FROM $source
+             ORDER BY $sort $direction, request_id $direction, handoff $direction, task_id $direction
+             LIMIT $limit OFFSET $offset"
+        )->result_array();
+        $stepIds = $handoffIds = [];
+        foreach ($keys as $key) {
+            if ($key['handoff'])
+                $handoffIds[] = (int) $key['task_id'];
+            else
+                $stepIds[] = (int) $key['task_id'];
+        }
+        $approvalRows = [];
+        if ($stepIds) {
+            $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
+            $this->db->where_in('ws.id', $stepIds);
+            $approvalRows = array_column($this->register_rows(TRUE), NULL, 'step_id');
+        }
+        $handoffRows = array_column($this->Transfer_model->register_rows($user, $handoffIds), NULL, 'id');
+        $rows = [];
+        foreach ($keys as $key) {
+            $row = ($key['handoff'] ? $handoffRows : $approvalRows)[$key['task_id']] ?? NULL;
+            if ($row !== NULL)
+                $rows[] = $row;
+        }
+        return [$rows, $total, $page];
+    }
+
+    private function register_sort($filters, $prefix = 'r.')
+    {
+        $sorts = [
+            'reference' => 'reference',
+            'type' => 'type',
+            'status' => 'status',
+            'updated' => 'updated_at',
+            'updated_at' => 'updated_at',
+            'created_at' => 'created_at'
+        ];
+        return ($filters['sort'] ?? '') === 'requester'
+            ? 'requester_name' : $prefix . ($sorts[$filters['sort'] ?? ''] ?? 'updated_at');
+    }
+
+    private function register_rows($task)
+    {
         $this->db->select(
             'r.*,CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
             FALSE
         )->join('users u', 'u.id=r.requested_by')
             ->join('softcopy_documents sd', 'sd.id=r.softcopy_id', 'left')
             ->join('hardcopy_documents hd', 'hd.id=r.hardcopy_id', 'left')
-            ->select('COALESCE(sd.title,hd.title) AS source_title,COALESCE(sd.document_number,hd.sequence_number) AS source_reference', FALSE);
+            ->join(
+                'external_documents ed',
+                "ed.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)",
+                'left',
+                FALSE
+            )
+            ->select(
+                'COALESCE(sd.title,hd.title,ed.title) AS source_title,' .
+                'COALESCE(sd.document_number,hd.sequence_number,ed.document_number,ed.title) AS source_reference,' .
+                'ed.document_number AS external_source_number,sd.status AS softcopy_status',
+                FALSE
+            );
         if ($task)
             $this->db->select('ws.label AS step_label,ws.id AS step_id');
-        $sorts = [
-            'reference' => 'r.reference',
-            'type' => 'r.type',
-            'status' => 'r.status',
-            'updated' => 'r.updated_at',
-            'updated_at' => 'r.updated_at',
-            'created_at' => 'r.created_at',
-            'requester' => 'requester_name'
-        ];
-        $sort = $sorts[$filters['sort'] ?? ''] ?? 'r.updated_at';
-        $direction = ($filters['dir'] ?? 'DESC') === 'ASC' ? 'ASC' : 'DESC';
-        $rows = $this->db->order_by($sort, $direction)->order_by('r.id', $direction)
-            ->limit($limit, ($page - 1) * $limit)->get()->result_array();
-        $rows = $this->details($rows);
-        return [$rows, $total, $page];
+        $rows = $this->details($this->db->get()->result_array());
+        $this->mark_locked_attachments($rows);
+        return $rows;
     }
+
+    private function mark_locked_attachments(array &$rows): void
+    {
+        $fileIdsByRequest = [];
+        $fileIds = [];
+        foreach ($rows as $row) {
+            if (!in_array($row['type'], [
+                'softcopy_create', 'softcopy_revise', 'external_create', 'external_revise', 'scanned_create', 'scanned_update'
+            ], TRUE))
+                continue;
+            $payload = json_decode((string) ($row['payload'] ?? ''), TRUE) ?: [];
+            $creation = in_array($row['type'], ['softcopy_create', 'external_create'], TRUE);
+            $ids = array_values(array_unique(array_filter(array_map('intval', (array) (
+                $payload[$creation ? 'controlled_file_ids' : 'revision_file_ids'] ??
+                [$payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0]
+            )))));
+            if (str_starts_with($row['type'], 'scanned_'))
+                $ids = array_values(array_unique(array_map('intval', $payload['scanned_file_ids'] ?? [])));
+            // The DCO's final file replaces the proposed file in the request view.
+            $finalId = (int) ($payload['final_file_id'] ?? 0);
+            if ($finalId && str_starts_with($row['type'], 'softcopy_'))
+                $ids = [$finalId];
+            if ($ids) {
+                $fileIdsByRequest[(int) $row['id']] = $ids;
+                $fileIds = array_merge($fileIds, $ids);
+            }
+        }
+        $fileIds = array_values(array_unique($fileIds));
+        $lockedIds = [];
+        $filesById = [];
+        if ($fileIds) {
+            foreach ($this->db->select('id,original_name,mime_type,size,locked_at,lock_request_id')
+                ->where_in('id', $fileIds)->get('files')->result_array() as $file) {
+                $filesById[(int) $file['id']] = $file;
+                if (!empty($file['locked_at'])) {
+                    $lockedIds[(int) $file['lock_request_id']][(int) $file['id']] = $file['locked_at'];
+                }
+            }
+        }
+        foreach ($rows as &$row) {
+            $requestId = (int) $row['id'];
+            $row['locked_attachment'] = FALSE;
+            $row['attachment_locked_at'] = NULL;
+            // Attachment details for the read-only preview in the request view modal.
+            $row['attachment_files'] = [];
+            foreach ($fileIdsByRequest[$requestId] ?? [] as $fileId) {
+                if (isset($filesById[$fileId]))
+                    $row['attachment_files'][] = $filesById[$fileId];
+                if (!empty($lockedIds[$requestId][$fileId])) {
+                    $row['locked_attachment'] = TRUE;
+                    // Approval time of the locking step (used to identify it in the timeline).
+                    $row['attachment_locked_at'] ??= $lockedIds[$requestId][$fileId];
+                }
+            }
+        }
+        unset($row);
+    }
+
     /** Resolve the selected request's proposal into human-readable labels in batches. */
     private function details($rows)
     {
@@ -94,6 +228,10 @@ class Request_model extends CI_Model
         require_once APPPATH . 'services/presentation/disposal_details.php';
         $references = [
             'categories' => ['name', ['category_id' => 'Proposed Category']],
+            'external_documents' => ['title', ['external_document_id' => 'Selected External Document']],
+            'scanned_documents' => ['title', ['scanned_document_id' => 'Selected Scanned Document']],
+            'scanned_categories' => ['name', ['scanned_category_id' => 'Approved Category', 'parent_id' => 'Approved Parent Folder']],
+            'subsidiaries' => ['name', ['subsidiary_id' => 'Proposed Subsidiary']],
             'areas' => ['name', ['area_id' => 'Proposed Area', 'destination_area_id' => 'Destination Area']],
             'specifics' => ['name', ['specific_id' => 'Proposed Specific', 'destination_specific_id' => 'Destination Specific']],
             'assets' => ['asset_number', ['asset_id' => 'Proposed Asset', 'destination_asset_id' => 'Destination Asset']],
@@ -126,9 +264,12 @@ class Request_model extends CI_Model
                 SELECT p.request_id,p.document_id,p.disposal_action,p.remarks,p.previous_status,p.disposed_at,
                     CONCAT_WS(' ',actor.first_name,actor.last_name) AS disposed_by_name,
                     ROW_NUMBER() OVER (PARTITION BY p.request_id ORDER BY p.id DESC) AS disposal_rank
-                FROM disposals p JOIN requests r ON r.id=p.request_id AND r.hardcopy_id=p.document_id
+                FROM disposals p JOIN requests r ON r.id=p.request_id
                 LEFT JOIN users actor ON actor.id=p.disposed_by
-                WHERE p.domain='hardcopy' AND r.type='disposal' AND p.request_id IN ($slots)
+                WHERE r.type='disposal' AND p.request_id IN ($slots) AND (
+                    (p.domain='hardcopy' AND r.hardcopy_id=p.document_id) OR
+                    (p.domain='external' AND CAST(JSON_UNQUOTE(JSON_EXTRACT(r.payload,'$.external_document_id')) AS UNSIGNED)=p.document_id)
+                )
                 ) recent WHERE disposal_rank=1", $disposalIds)->result_array();
             foreach ($records as $record)
                 $disposals[$record['request_id']] = $record;
@@ -138,13 +279,25 @@ class Request_model extends CI_Model
             $details = [];
             if (!empty($row['source_title']))
                 $details['Selected Document'] = $row['source_title'];
-            if (empty($row['hardcopy_id']) && !empty($row['source_reference']))
+            if (
+                empty($row['hardcopy_id']) &&
+                empty($payload['external_document_id']) &&
+                !empty($row['source_reference'])
+            )
                 $details['Document Number'] = $row['source_reference'];
+            if (!empty($payload['external_document_id']) && !empty($row['external_source_number']))
+                $details['Document Number'] = $row['external_source_number'];
             foreach ([
                 'title' => 'Proposed Title',
+                'description' => 'Description',
                 'document_number' => 'Proposed Document Number',
+                'external_document_number' => 'Proposed Document Number',
+                'subsidiary_name' => 'Proposed Subsidiary',
                 'series_number' => 'Series',
-                'new_revision_level' => 'Proposed Revision Level',
+                'retention_period' => 'Retention Period',
+                'retention_start_date' => 'Retention Start Date',
+                'retention_end_date' => 'Retention End Date',
+                'revision_level' => 'Revision Level',
                 'effective_date' => 'Effective Date (optional)',
                 'date_received' => 'Received Date',
                 'date_released' => 'Released Date',
@@ -154,6 +307,12 @@ class Request_model extends CI_Model
                 'disposal_reason' => 'Disposal Reason',
                 'disposal_other' => 'Other Disposal Details'
             ] as $key => $label) {
+                if (
+                    str_starts_with($row['type'], 'external_') &&
+                    in_array($key, ['retention_period', 'retention_start_date', 'retention_end_date'], TRUE)
+                ) {
+                    continue;
+                }
                 if (isset($payload[$key]) && is_scalar($payload[$key]) && (string) $payload[$key] !== '')
                     $details[$label] = $key === 'disposal_reason' ? Disposal_details::reason($payload[$key]) : $payload[$key];
             }

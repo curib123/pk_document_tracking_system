@@ -76,10 +76,6 @@ class Document_service
         foreach (['area_id', 'specific_id', 'asset_id', 'location_id'] as $field)
             $data[$field] = !empty($payload[$field]) ? (int) $payload[$field] : NULL;
         $this->validate_hardcopy_location($data, (int) $documentId);
-        $sequence = trim((string) ($payload['sequence_number'] ?? ''));
-        if (mb_strlen($sequence) > 100)
-            throw new DomainException('Sequence number is too long.');
-        $data['sequence_number'] = $sequence ?: NULL;
         $data['retention_enabled'] = !empty($payload['retention_enabled']) ? 1 : 0;
         $data['retention_start_date'] = $data['retention_enabled']
             ? $this->valid_date($payload['retention_start_date'] ?? '') : NULL;
@@ -97,6 +93,17 @@ class Document_service
             throw new DomainException('Hardcopy is not available for update.');
         if ($existing && !$admin && (int) $existing['holder_id'] !== $ownerId)
             throw new DomainException('Only the current holder may request this update.');
+        // The Sequence belongs to the hardcopy document, not to its Location. It is
+        // one-to-many: any number of documents may share the same Sequence, so it is
+        // never checked for uniqueness. A blank entry takes the next document count.
+        $sequence = trim((string) ($payload['sequence_number'] ?? ''));
+        $kept = trim((string) ($existing['sequence_number'] ?? ''));
+        if ($sequence === '') {
+            $sequence = $kept !== '' ? $kept : (string) $this->next_hardcopy_sequence();
+        } elseif ($sequence !== $kept && (!ctype_digit($sequence) || (int) $sequence < 1 || (int) $sequence > 1000000)) {
+            throw new DomainException('Sequence must be a whole number from 1 to 1,000,000. Several documents may share one Sequence.');
+        }
+        $data['sequence_number'] = $sequence;
         $holder = $admin
             ? ((int) ($payload['holder_id'] ?? 0) ?: ($existing['holder_id'] ?? $ownerId))
             : $ownerId;
@@ -134,6 +141,16 @@ class Document_service
         $this->ci->db->where('id', $documentId)->where('status', 'active')->set('version', 'version+1', FALSE)
             ->update('hardcopy_documents', $data);
         return ['document_id' => (int) $documentId];
+    }
+
+    /** The default Sequence for a new hardcopy: the next number after the highest one in use. */
+    private function next_hardcopy_sequence()
+    {
+        $row = $this->ci->db->query(
+            "SELECT COALESCE(MAX(CAST(sequence_number AS UNSIGNED)),0)+1 AS next_sequence
+             FROM hardcopy_documents WHERE sequence_number REGEXP '^[0-9]+$'"
+        )->row_array();
+        return max(1, (int) ($row['next_sequence'] ?? 1));
     }
 
     private function valid_date($value)
@@ -181,22 +198,10 @@ class Document_service
             // the location index migration on existing MariaDB installations.
         }
         if ($asset) {
-            $row = $db->select('b.id,b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $asset)->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)
-                ->get()->row_array();
-            if (!$row)
-                throw new DomainException('Choose an active asset within an active specific and area.');
-            if (
-                ($specific && $specific !== (int) $row['specific_id']) ||
-                ($area && $area !== (int) $row['area_id'])
-            ) {
-                throw new DomainException('Asset does not match the selected area/specific.');
-            }
-            $specific = (int) $row['specific_id'];
-            $area = (int) $row['area_id'];
+            // One Asset Number may be used under several Specifics: the chosen
+            // Specific must be one of its links, never a single stored parent.
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            [$specific, $area] = Asset_specific_policy::resolve($db, $asset, $specific, $area);
         }
         if ($specific) {
             $row = $db->select('s.id,s.area_id')->from('specifics s')
@@ -219,6 +224,160 @@ class Document_service
         $data['specific_id'] = $specific;
         $data['asset_id'] = $asset ?: NULL;
         $data['location_id'] = $location;
+    }
+
+    /**
+     * Permanently delete a DISPOSED document and its dependent rows and stored files.
+     * Administrator only. The disposals and status_history rows are kept as the
+     * permanent record that the document existed and was deleted.
+     */
+    /** Forensic snapshot of the last hard delete, written to the audit log by the caller. */
+    public $last_hard_delete = [];
+
+    public function hard_delete($domain, $id, $actorId)
+    {
+        $this->last_hard_delete = [];
+        $deletedFiles = [];
+        if (!in_array($domain, ['hardcopy', 'softcopy', 'external'], TRUE))
+            throw new DomainException('Hard delete is not available for this document type.');
+        $cfg = $domain === 'external'
+            ? ['table' => 'external_documents'] : $this->ci->Document_model->config($domain);
+        $this->ci->load->model('Identity_model');
+        $this->ci->load->model('Permission_model');
+        $actor = $this->ci->Identity_model->active_user($actorId);
+        if (!$actor || !$this->ci->Permission_model->allowed($actor, 'documents', 'hard_delete'))
+            throw new DomainException('Hard delete permission is required.');
+        $id = (int) $id;
+        $db = $this->ci->db;
+        $storage = [];
+        $db->trans_begin();
+        try {
+            $row = $db->query('SELECT * FROM ' . $cfg['table'] . ' WHERE id=? FOR UPDATE', [$id])->row_array();
+            if (!$row || $row['status'] !== 'disposed')
+                throw new DomainException('Only a disposed document can be permanently deleted.');
+
+            if ($domain === 'hardcopy') {
+                $db->delete('transfers', ['hardcopy_id' => $id]);
+            } elseif ($domain === 'external') {
+                $revisions = array_map('intval', array_column(
+                    $db->select('id')->get_where('external_revisions', ['document_id' => $id])->result_array(),
+                    'id'
+                ));
+                $fileIds = array_column(
+                    $db->select('id')->get_where('files', ['domain' => 'external', 'document_id' => $id])->result_array(),
+                    'id'
+                );
+                if ($revisions) {
+                    $fileIds = array_merge(
+                        $fileIds,
+                        array_column($db->select('file_id')->where_in('id', $revisions)->get('external_revisions')->result_array(), 'file_id'),
+                        array_column($db->select('file_id')->where_in('revision_id', $revisions)->get('external_revision_files')->result_array(), 'file_id')
+                    );
+                }
+                $fileIds = array_values(array_unique(array_map('intval', $fileIds)));
+                $db->where('id', $id)->update('external_documents', ['current_revision_id' => NULL]);
+                if ($revisions) {
+                    $db->where_in('revision_id', $revisions)->delete('external_revision_files');
+                    $db->where_in('id', $revisions)->delete('external_revisions');
+                }
+                foreach ($fileIds as $fileId) {
+                    $used = $db->where('file_id', $fileId)->count_all_results('softcopy_revisions')
+                        + $db->where('file_id', $fileId)->count_all_results('revision_artifacts')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revision_files')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revisions');
+                    if ($used)
+                        continue;
+                    $file = $db->get_where('files', ['id' => $fileId])->row_array();
+                    if ($file) {
+                        $storage[] = $file['storage_name'];
+                        $deletedFiles[] = ['id' => (int) $file['id'], 'name' => $file['original_name'],
+                            'size' => (int) $file['size'], 'fingerprint' => $file['fingerprint'] ?? NULL, 'stage' => $file['stage'] ?? NULL];
+                        $db->delete('files', ['id' => $fileId]);
+                    }
+                }
+            } else {
+                $revisions = array_map('intval', array_column(
+                    $db->select('id')->get_where('softcopy_revisions', ['document_id' => $id])->result_array(),
+                    'id'
+                ));
+                $fileIds = array_column(
+                    $db->select('id')->get_where('files', ['domain' => 'softcopy', 'document_id' => $id])->result_array(),
+                    'id'
+                );
+                if ($revisions) {
+                    $fileIds = array_merge(
+                        $fileIds,
+                        array_column($db->select('file_id')->where_in('document_id', [$id])->get('softcopy_revisions')->result_array(), 'file_id'),
+                        array_column($db->select('file_id')->where_in('revision_id', $revisions)->get('revision_artifacts')->result_array(), 'file_id')
+                    );
+                }
+                $fileIds = array_values(array_unique(array_map('intval', $fileIds)));
+                $db->where('id', $id)->update('softcopy_documents', ['current_revision_id' => NULL]);
+                if ($revisions) {
+                    $db->where_in('revision_id', $revisions)->delete('revision_artifacts');
+                    if ($db->table_exists('softcopy_signatory_references')) {
+                        $db->where('softcopy_id', $id)->delete('softcopy_signatory_references');
+                    }
+                    $db->where_in('id', $revisions)->delete('softcopy_revisions');
+                }
+                $db->delete('assignments', ['softcopy_id' => $id]);
+                // Keep a file row that some other record still uses; remove only unshared ones.
+                foreach ($fileIds as $fileId) {
+                    $used = $db->where('file_id', $fileId)->count_all_results('softcopy_revisions')
+                        + $db->where('file_id', $fileId)->count_all_results('revision_artifacts')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revision_files')
+                        + $db->where('file_id', $fileId)->count_all_results('external_revisions');
+                    if ($used)
+                        continue;
+                    $file = $db->get_where('files', ['id' => $fileId])->row_array();
+                    if ($file) {
+                        $storage[] = $file['storage_name'];
+                        $deletedFiles[] = ['id' => (int) $file['id'], 'name' => $file['original_name'],
+                            'size' => (int) $file['size'], 'fingerprint' => $file['fingerprint'] ?? NULL, 'stage' => $file['stage'] ?? NULL];
+                        $db->delete('files', ['id' => $fileId]);
+                    }
+                }
+            }
+            $db->delete('access_grants', ['domain' => $domain, 'document_id' => $id]);
+            if ($domain !== 'external')
+                $db->where($domain . '_id', $id)->update('requests', [$domain . '_id' => NULL]);
+            $db->delete($cfg['table'], ['id' => $id]);
+            $db->insert('status_history', [
+                'domain' => $domain,
+                'document_id' => $id,
+                'previous_status' => 'disposed',
+                'new_status' => 'deleted',
+                'action' => 'hard_delete',
+                'user_id' => (int) $actorId,
+                'remarks' => 'Permanently deleted (hard delete): ' . (string) ($row['title'] ?? '')
+            ]);
+            if ($db->trans_status() === FALSE)
+                throw new DomainException('The document could not be permanently deleted because related records are still in use.');
+            if ($db->trans_commit() === FALSE)
+                throw new DomainException('The permanent deletion could not be committed.');
+        } catch (Throwable $e) {
+            $db->trans_rollback();
+            if ($e instanceof DomainException)
+                throw $e;
+            log_message('error', 'Hard delete failed: ' . $e->getMessage());
+            throw new DomainException('The document could not be permanently deleted. Refresh and try again.');
+        }
+        if ($storage) {
+            require_once APPPATH . 'services/files/file_service.php';
+            (new File_service())->purge_storage($storage);
+        }
+        $this->last_hard_delete = [
+            'domain' => $domain, 'document_id' => $id,
+            'title' => (string) ($row['title'] ?? ''),
+            'document_number' => $row['document_number'] ?? ($row['sequence_number'] ?? NULL),
+            'series_number' => $row['series_number'] ?? NULL,
+            'previous_status' => $row['status'],
+            'created_by' => $row['created_by'] ?? NULL,
+            'disposed_at' => $row['disposed_at'] ?? NULL,
+            'deleted_files' => $deletedFiles,
+            'deleted_file_count' => count($deletedFiles)
+        ];
+        return (string) ($row['title'] ?? '');
     }
 
     public function dispose($domain, $id, $actorId, $reason = '', $action = 'other')

@@ -6,11 +6,14 @@ $can = isset($permissions['*']) || !empty($permissions[$cfg['domain']]['direct']
 $canFile = static function ($action) use ($permissions) {
     return isset($permissions['*']) || !empty($permissions['files'][$action]);
 };
+$canBypassLock = $canFile('download_locked');
+$activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
 // Keep document registers scannable. All other metadata remains available in
 // the shared permission-scoped View Details modal, not duplicated in the table.
 $dt_columns = $cfg['domain'] === 'hardcopy'
     ? [
         'title' => 'Document Title',
+        'sequence_number' => 'Sequence',
         'location_name' => 'Location',
         'holder_name' => 'Holder',
         'status' => 'Status'
@@ -21,6 +24,13 @@ $dt_columns = $cfg['domain'] === 'hardcopy'
         'category_name' => 'Category',
         'status' => 'Status'
     ];
+$signatoriesByDoc = [];
+if ($cfg['domain'] === 'softcopy') {
+    require_once APPPATH . 'services/request/request_policy.php';
+    require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+    $signatoriesByDoc = (new Signatory_reference_service())
+        ->current_for_documents(array_map('intval', array_column($rows, 'id')));
+}
 $dt_rows = [];
 foreach ($rows as $r) {
     $cells = [];
@@ -42,46 +52,82 @@ foreach ($rows as $r) {
             $rec['holder_id'] = $user['id'];
     }
     if ($cfg['domain'] === 'softcopy') {
-        // Table edit is a direct revision, never a generic metadata patch.
+        // Table edit only corrects typos in the details: it can never upload a
+        // new file or change the effective date (that is a revision).
         $rec = [
-            'type' => 'softcopy_revise',
+            'id' => $r['id'],
+            'type' => 'softcopy_correct',
             'softcopy_id' => $r['id'],
-            'subject' => 'Revision: ' . $r['title'],
+            'subject' => 'Correction: ' . $r['title'],
             'title' => $r['title'],
             'document_number' => $r['document_number'],
             'series_number' => $r['series_number'] ?? '',
-            'category_id' => $r['category_id']
+            'category_id' => $r['category_id'],
+            'new_revision_level' => $r['new_revision_level'] ?? '',
+            'page_number' => $r['page_number'] ?? '',
+            'signatories' => $signatoriesByDoc[(int) $r['id']] ?? []
         ];
     }
     $buttons = [['type' => 'view']];
-    $canEdit = $can && !empty($r['can_write']) && $r['status'] === 'active';
+    $canEdit = $can && !empty($r['can_write']) && $r['status'] === 'active' &&
+        !($cfg['domain'] === 'softcopy' && !empty($latest_files[$r['id']]['locked_at']));
     if ($canEdit)
         $buttons[] = ['type' => 'edit'];
+    // Signatories are metadata, so they stay editable even when the file is locked.
+    if ($cfg['domain'] === 'softcopy' && $can && !empty($r['can_write']) && $r['status'] === 'active')
+        $buttons[] = ['type' => 'edit', 'label' => 'Signatories', 'modal' => '#signatoryModal', 'form' => '#signatoryForm'];
     if ($cfg['domain'] === 'softcopy') {
-      
-        if (!empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
+        if ($r['status'] === 'active' && (isset($permissions['*']) ||
+            (!empty($permissions['softcopy'][Request_policy::REVISION_TEMPLATE_ACTION]) &&
+                !empty($permissions['requests']['view']) && !empty($permissions['requests']['add'])))) {
+            $buttons[] = [
+                'type' => 'link',
+                'label' => Request_policy::REVISION_TEMPLATE_LABEL,
+                'url' => 'my-requests?request_category=softcopy&revision_template_for=' . (int) $r['id'],
+                'icon' => 'fa-solid fa-file-pen'
+            ];
+        }
+
+        if ($activeLayout === 'folder' && !empty($file_histories[$r['id']]) && !empty($file_access[$r['id']])) {
             $historyEntries = [];
             foreach ($file_histories[$r['id']] ?? [] as $item) {
                 $historyEntries[] = [
                     'name' => $item['original_name'],
                     'detail' => $item['first_name'] . ' ' . $item['last_name'] . ' — ' . $item['created_at'] .
-                        ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded'),
-                    'url' => $canFile('download') && !empty($item['is_current']) ? site_url('files/download/' . $item['id']) : '',
-                    'print_url' => $canFile('print') && !empty($item['is_current']) ? site_url('files/print/' . $item['id']) : ''
+                        ' · ' . (!empty($item['is_current']) ? 'Current' : 'Superseded') .
+                        ' · ' . (($item['stage'] ?? '') === 'final' ? 'Final (Document Control)'
+                            : (($item['stage'] ?? '') === 'locked' ? 'Locked proposed file' : 'Proposed')) .
+                        (!empty($item['locked_at']) ? ' · Locked ' . $item['locked_at'] . ' by ' .
+                            trim(($item['locked_first_name'] ?? '') . ' ' . ($item['locked_last_name'] ?? '')) : ''),
+                    'url' => !empty($item['is_current']) && $canFile('download')
+                        ? site_url((!empty($item['locked_at']) && !$canBypassLock
+                            ? 'files/preview/' . $item['id']
+                            : 'files/download/' . $item['id']))
+                        : '',
+                    'url_label' => !empty($item['locked_at']) && !$canBypassLock ? 'Preview' : 'Download'
                 ];
             }
             if ($canFile('history'))
                 $buttons[] = ['type' => 'history', 'files' => $historyEntries];
             if (!empty($latest_files[$r['id']])) {
                 $latest = $latest_files[$r['id']];
-                if ($canFile('print'))
-                    $buttons[] = ['type' => 'print', 'url' => 'files/print/' . $latest['id']];
-                if ($canFile('download'))
-                    $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id']];
+                // Locked files are read-only: preview them from View Details. The
+                // original download remains with Download Locked Files roles.
+                $latestLocked = !empty($latest['locked_at']) && !$canBypassLock;
+                if (!$latestLocked) {
+                    if ($canFile('download')) {
+                        $isOffice = in_array(strtolower(pathinfo((string) $latest['original_name'], PATHINFO_EXTENSION)), ['docx', 'xlsx'], TRUE);
+                        $buttons[] = ['type' => 'download', 'url' => 'files/download/' . $latest['id'],
+                            'label' => $isOffice ? 'Download Original' : 'Download'];
+                        if ($isOffice)
+                            $buttons[] = ['type' => 'download', 'url' => 'files/download-pdf/' . $latest['id'], 'label' => 'Download PDF'];
+                    }
+                }
             }
         }
     }
-    if ($canEdit && (isset($permissions['*']) || !empty($permissions['disposal']['direct'])))
+    if ($can && !empty($r['can_write']) && $r['status'] === 'active' &&
+        (isset($permissions['*']) || !empty($permissions['disposal']['direct'])))
         $buttons[] = [
             'type' => 'action',
             'url' => 'documents/' . $cfg['domain'] . '/dispose',
@@ -89,6 +135,15 @@ foreach ($rows as $r) {
             'disposal' => TRUE,
             'description' => 'Choose a disposal reason and confirm this action.',
             'icon' => 'fa-solid fa-trash-can'
+        ];
+    if ((!empty($is_administrator) || !empty($permissions['documents']['hard_delete'])) && $r['status'] === 'disposed')
+        $buttons[] = [
+            'type' => 'action',
+            'url' => 'documents/' . $cfg['domain'] . '/hard-delete',
+            'label' => 'Hard Delete',
+            'password_confirm' => TRUE,
+            'description' => 'This permanently deletes the disposed document, its files and related records. It cannot be undone.',
+            'icon' => 'fa-solid fa-trash-can-arrow-up'
         ];
     $path = [
         'area_id' => $r['area_id'] ?? NULL,
@@ -119,22 +174,35 @@ $dt_total = $total;
 $dt_sort = $table['sort'];
 $dt_dir = strtolower($table['dir']);
 $dt_sortable = $cfg['domain'] === 'hardcopy'
-    ? ['title', 'status'] : ['title', 'document_number', 'status'];
+    ? ['title', 'sequence_number', 'status'] : ['title', 'document_number', 'status'];
 $dt_date_filters = TRUE;
 $dt_filters = ['status' => ['' => 'All Statuses', 'active' => 'Active', 'disposed' => 'Disposed', 'cancelled' => 'Cancelled']];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filters['retention'] = [
+        '' => 'All Retention',
+        'today' => 'Due Today',
+        'overdue' => 'Overdue',
+        'week' => 'Due in the Next 7 Days',
+        'month' => 'Due in 8-30 Days'
+    ];
+if ($cfg['domain'] === 'softcopy')
+    $dt_filters['category'] = ['' => 'All Categories'] + array_column($category_options, 'name', 'id');
 $dt_filters['owner'] = ['' => 'All Owners'] + array_column($owner_options, 'name', 'id');
 $dt_filter_values = [
     'status' => $dt_filter,
     'owner' => $table['owner'],
+    'category' => $cfg['domain'] === 'softcopy' && !empty($table['category'])
+        ? $table['category'] : '',
     'period' => $table['period'] ?? 'all',
     'from' => $table['from'],
     'to' => $table['to']
 ];
+if ($cfg['domain'] === 'hardcopy')
+    $dt_filter_values['retention'] = $table['retention'] ?? '';
 $dt_badges = ['status'];
-$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Softcopy Direct' : 'Hardcopy Direct') : '';
+$dt_create = $can ? ($cfg['domain'] === 'softcopy' ? 'Add New Softcopy Document' : 'Add New Hardcopy Document') : '';
 $dt_folder_browser = $folder_browser;
 $dt_folder_domain = $cfg['domain'];
-$activeLayout = ($table['layout'] ?? 'table') === 'folder' ? 'folder' : 'table';
 $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value) {
     $params = array_merge($folder_params, [
         'folder' => $folder_value,
@@ -151,20 +219,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
         <strong><i class="fa-solid fa-folder-open" aria-hidden="true"></i> Document Browser</strong>
         <small>Choose a layout to browse or manage your records.</small>
     </div>
-    <nav class="document-layout-switch" aria-label="Choose document view">
-        <a href="<?= html_escape($layoutLink('table')) ?>"
-            class="document-layout-choice <?= $activeLayout === 'table' ? 'is-active' : '' ?>"
-            aria-label="Switch to table view" <?= $activeLayout === 'table' ? 'aria-current="page"' : '' ?>>
-            <span class="document-layout-choice-icon"><i class="fa-solid fa-table-list" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy">Table</span>
-        </a>
-        <a href="<?= html_escape($layoutLink('folder')) ?>"
-            class="document-layout-choice <?= $activeLayout === 'folder' ? 'is-active' : '' ?>"
-            aria-label="Switch to folder tree view" <?= $activeLayout === 'folder' ? 'aria-current="page"' : '' ?>>
-            <span class="document-layout-choice-icon"><i class="fa-solid fa-folder-tree" aria-hidden="true"></i></span>
-            <span class="document-layout-choice-copy">Folder</span>
-        </a>
-    </nav>
+    <?php $this->load->view('reusable_components/document_layout_switcher', compact('activeLayout', 'layoutLink')); ?>
 </div>
 <div class="document-register-listing" data-doc-domain="<?= html_escape($cfg['domain']) ?>"
     data-layout="<?= html_escape($activeLayout) ?>">
@@ -209,7 +264,9 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                         <?php if ($cfg['domain'] === 'softcopy'): ?>
                             <?php $this->load->view('pages/request/softcopy_fields', [
                                 'softcopy_options' => $softcopy_options,
-                                'category_options' => $category_options,
+                                'category_options' => $numbered_category_options,
+                                'numbering_options' => $numbering_options,
+                                'number_previews' => $number_previews,
                                 'softcopyDirect' => TRUE
                             ]); ?>
                         <?php else: ?>
@@ -221,6 +278,7 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
                         <?php endif; ?>
                     </div>
                 </div>
+                <input type="hidden" name="return_query" value="">
                 <input type="hidden" name="confirmed" value="no">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
                     value="<?= $this->security->get_csrf_hash() ?>">
@@ -233,6 +291,50 @@ $layoutLink = static function ($target) use ($cfg, $folder_params, $folder_value
         </div>
     </div>
 </div>
+
+<?php if ($cfg['domain'] === 'softcopy' && $can): ?>
+    <div class="modal fade" data-bs-backdrop="static" data-bs-keyboard="false" id="signatoryModal" tabindex="-1"
+        aria-labelledby="signatoryTitle" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+                <form id="signatoryForm" method="post" action="<?= site_url('documents/softcopy/signatories') ?>"
+                    data-confirm="Save the Signatories References for this document?" autocomplete="off">
+                    <div class="modal-header">
+                        <h2 class="modal-title fs-6" id="signatoryTitle">Signatories References</h2>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row g-3">
+                            <input type="hidden" name="id" value="">
+                            <div class="col-12">
+                                <label class="form-label" for="signatoryDocument">Document</label>
+                                <input class="form-control" id="signatoryDocument" name="title" readonly
+                                    autocomplete="off">
+                                <small class="form-text">Only the signatories change. The file, revision and other
+                                    details are not touched, and the previous list is kept in the audit history.</small>
+                            </div>
+                            <?php $this->load->view('pages/request/signatory_fields'); ?>
+                            <div class="col-12">
+                                <label class="form-label" for="signatoryRemarks">Reason
+                                    <span class="optional-label">(optional)</span></label>
+                                <textarea class="form-control" id="signatoryRemarks" name="remarks" rows="2"
+                                    maxlength="255" autocomplete="off"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <input type="hidden" name="return_query" value="">
+                    <input type="hidden" name="confirmed" value="no">
+                    <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
+                        value="<?= $this->security->get_csrf_hash() ?>">
+                    <div class="modal-footer"><button class="btn btn-light" type="button"
+                            data-bs-dismiss="modal">Cancel</button>
+                        <button class="btn btn-primary" type="submit">Save Signatories</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+<?php endif; ?>
 
 <?php if ($cfg['domain'] === 'softcopy'): ?>
     <div class="modal fade file-history-saas" data-bs-backdrop="static" data-bs-keyboard="false" id="fileHistoryModal"

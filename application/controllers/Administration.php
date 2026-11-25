@@ -59,7 +59,7 @@ class Administration extends MY_Controller
                 $row['detail'] = $domain === 'hardcopy'
                     ? 'Current holder' . (
                         !empty($row['location_name'])
-                        ? " · {$row['location_name']} · Sequence {$row['location_sequence']}"
+                        ? " · {$row['location_name']}" . (($row['code'] ?? '') !== '' ? " · Sequence {$row['code']}" : '')
                         : ''
                     )
                     : 'Assigned ' . ($row['assigned_at'] ?? 'date not specified');
@@ -421,6 +421,12 @@ class Administration extends MY_Controller
     {
         $this->mutate('workflows', 'edit', function () {
             (new Administration_service())->save_workflow_step($this->input->post());
+        }, 'admin/workflows');
+    }
+    public function save_document_lock_approver()
+    {
+        $this->mutate('workflows', 'edit', function () {
+            (new Administration_service())->save_document_lock_approver($this->input->post());
         }, 'admin/workflows');
     }
     public function remove_workflow_step()

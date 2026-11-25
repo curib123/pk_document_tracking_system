@@ -57,8 +57,6 @@ class MY_Controller extends CI_Controller
             redirect('change-password');
             exit;
         }
-        require_once APPPATH . 'services/files/file_service.php';
-        (new File_service())->cleanup_daily();
     }
 
     protected function can($module, $action = 'view')
@@ -72,6 +70,19 @@ class MY_Controller extends CI_Controller
         if (!$this->can($module, $action)) {
             show_error('You do not have permission for this action.', 403);
             exit;
+        }
+    }
+
+    /** Re-authenticate the signed-in user (and a typed phrase) before an irreversible action. */
+    protected function require_password_confirmation(string $phrase = 'DELETE'): void
+    {
+        $password = (string) $this->input->post('confirm_password');
+        $typed = trim((string) $this->input->post('confirm_phrase'));
+        $row = $this->user ? $this->db->select('password_hash')->get_where('users', [
+            'id' => (int) $this->user['id'], 'active' => 1
+        ])->row_array() : NULL;
+        if ($typed !== $phrase || $password === '' || !$row || !password_verify($password, (string) $row['password_hash'])) {
+            throw new DomainException('Not deleted: type ' . $phrase . ' and enter your correct password.');
         }
     }
 

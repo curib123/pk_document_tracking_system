@@ -2,8 +2,19 @@
 (function () {
   "use strict";
 
+  window.pkBootstrapUiReady = function () {
+    if (
+      window.pkBootstrapCssReady &&
+      window.pkBootstrapScriptReady &&
+      document.body
+    ) {
+      document.body.classList.remove("offline-ui");
+    }
+  };
+
   // Works on offline office networks when Bootstrap's CDN cannot be reached.
   // Keep native server form actions and confirmation semantics unchanged.
+  var offlineBootstrap = null;
   if (!window.bootstrap) {
     document.body.classList.add("offline-ui");
 
@@ -84,8 +95,10 @@
         },
       },
     };
+    offlineBootstrap = window.bootstrap;
 
     document.addEventListener("click", function (event) {
+      if (window.bootstrap !== offlineBootstrap) return;
       var trigger = event.target.closest("[data-bs-toggle]");
       if (trigger) {
         var type = trigger.getAttribute("data-bs-toggle");
@@ -139,6 +152,7 @@
     });
 
     document.addEventListener("keydown", function (event) {
+      if (window.bootstrap !== offlineBootstrap) return;
       if (event.key === "Escape") {
         if (fallbackOpenModal) {
           // Escape may close dropdowns, but must never close a modal.
@@ -292,17 +306,26 @@
   // Each data cell opens the exact same reusable View modal as the eye
   // action; action buttons and links remain independent and never trigger it.
   var recordViewRequest = 0;
-  function openRecordDetails(serialized, recordTitle) {
+  function openRecordDetails(serialized, recordTitle, source) {
     recordViewRequest++;
     var modal = document.getElementById("viewModal");
     var details = document.getElementById("viewDetails");
     var heading = document.getElementById("viewModalTitle");
     if (!modal || !details) return;
+    var reviewActions = document.getElementById("viewReviewActions");
+    reviewActions.replaceChildren();
+    reviewActions.hidden = true;
     try {
       var data = JSON.parse(serialized);
       if (!data || typeof data !== "object")
         throw new Error("Invalid record details");
       renderRecordDetails(details, data);
+      var actions = source?.closest(".record-actions-horizontal")?.nextElementSibling;
+      if (!actions?.matches("template[data-review-actions]")) actions = null;
+      if (actions) {
+        reviewActions.append(actions.content.cloneNode(true));
+        reviewActions.hidden = false;
+      }
       if (heading && !window.PKDocumentView)
         heading.textContent = recordTitle || "View Details";
     } catch (error) {
@@ -390,13 +413,18 @@
   var sharedViewModal = document.getElementById("viewModal");
   if (sharedViewModal)
     sharedViewModal.addEventListener("hidden.bs.modal", function () {
+      if (sharedViewModal.hasAttribute("data-review-suspended")) return;
       recordViewRequest++;
+      var reviewActions = document.getElementById("viewReviewActions");
+      reviewActions.replaceChildren();
+      reviewActions.hidden = true;
     });
   function showTableCellDetails(row) {
     if (!row || !row.hasAttribute("data-row-view")) return;
     openRecordDetails(
       row.getAttribute("data-row-view"),
       row.getAttribute("data-row-title"),
+      row.querySelector(".js-view"),
     );
   }
   document.addEventListener("click", function (event) {
@@ -416,7 +444,11 @@
   var sidebar = document.getElementById("appSidebar");
   var toggle = document.getElementById("sidebarToggle");
   var sidebarBackdrop = document.getElementById("sidebarBackdrop");
-  var mobileNavigation = window.matchMedia("(max-width: 991.98px)");
+  // Phones, small windows and touch tablets in landscape use the drawer.
+  // Keep in sync with the tablet media query in app.css.
+  var mobileNavigation = window.matchMedia(
+    "(max-width: 991.98px), (max-width: 1366px) and (hover: none) and (pointer: coarse)",
+  );
   function setSidebar(open, returnFocus) {
     if (!sidebar || !toggle) return;
     open = !!open && mobileNavigation.matches;
@@ -428,7 +460,7 @@
     toggle.setAttribute("aria-expanded", String(open));
     if (sidebarBackdrop) sidebarBackdrop.hidden = !open;
     document.body.classList.toggle("sidebar-open", open);
-    if (open) sidebar.querySelector("button,a")?.focus();
+    if (open) sidebar.querySelector("button,a,summary")?.focus();
     else if (returnFocus) toggle.focus();
   }
   toggle?.addEventListener("click", function () {
@@ -455,7 +487,7 @@
     }
     if (event.key === "Tab") {
       var focusable = Array.from(
-        sidebar.querySelectorAll("button,a[href]"),
+        sidebar.querySelectorAll("button,a[href],summary"),
       ).filter(function (node) {
         return node.offsetParent !== null;
       });
@@ -501,52 +533,158 @@
       }, 0);
   });
 
+  function updateSoftcopyCategoryKind(form) {
+    if (!form?.hasAttribute("data-softcopy-category-setup")) return;
+    var select = form.querySelector("[data-softcopy-category-type]");
+    var codeWrap = form.querySelector("[data-category-number-pattern]");
+    var code = form.querySelector('[name="code_pattern"]');
+    if (!select || !codeWrap || !code) return;
+
+    var isFolder = select.value === "folder";
+    codeWrap.hidden = isFolder;
+    code.disabled = isFolder;
+    code.required = !isFolder;
+    // A folder is a hierarchy node, never a numbered document category.
+    // Preserve a typed code when temporarily switching types; the server
+    // discards it if Folder is selected and never uses it for numbering.
+    var parent = form.querySelector('[name="parent_id"]');
+    if (parent) {
+      var selected = parent.value;
+      parent.querySelectorAll("[data-category-parent-kind]").forEach(function (option) {
+        option.disabled = option.dataset.categoryParentKind !== "folder" &&
+          option.value !== selected;
+      });
+    }
+  }
+
+  document.addEventListener("change", function (event) {
+    if (event.target?.matches("[data-softcopy-category-type]")) {
+      updateSoftcopyCategoryKind(event.target.form);
+    }
+  });
+  document.addEventListener("reset", function (event) {
+    if (!event.target?.hasAttribute("data-softcopy-category-setup")) return;
+    setTimeout(function () { updateSoftcopyCategoryKind(event.target); }, 0);
+  });
+
+  function populateEditForm(target, record, title) {
+    target.reset();
+    // Hidden input values survive reset; a new record must clear the edited ID.
+    target.querySelectorAll('input[type="hidden"][name="id"], input[type="hidden"][name="version"]').forEach(function (field) {
+      field.value = record[field.name] ?? "";
+    });
+    var lockedAttachment = !!record.locked_attachment;
+    target
+      .querySelectorAll('[name="revision_attachment"], [name="external_attachment[]"]')
+      .forEach(function (field) {
+        field.disabled = lockedAttachment;
+        var message = field.parentElement?.querySelector(
+          "[data-locked-attachment-message]",
+        );
+        if (message) message.hidden = !lockedAttachment;
+      });
+    target
+      .querySelectorAll('input[name="permissions[]"]')
+      .forEach(function (field) {
+        field.checked = (record.permission_ids || [])
+          .map(Number)
+          .includes(Number(field.value));
+      });
+    target
+      .querySelectorAll('input[name="specific_ids[]"]')
+      .forEach(function (field) {
+        field.checked = (record.specific_ids || [])
+          .map(Number)
+          .includes(Number(field.value));
+      });
+    target.querySelectorAll('input[name="user_ids[]"]').forEach(function (field) {
+      field.checked = (record.user_ids || []).map(Number).includes(Number(field.value));
+    });
+    target.querySelectorAll("[name]").forEach(function (field) {
+      if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
+      if (
+        field.name === "document_number" &&
+        field.tagName === "SELECT" &&
+        record[field.name] != null
+      ) {
+        field.dataset.pendingValue = record[field.name];
+      }
+      if (field.type === "checkbox")
+        field.checked = !!Number(record[field.name]);
+      else field.value = record[field.name] == null ? "" : record[field.name];
+    });
+    syncUserRoles(target, record.role_ids || [record.role_id]);
+    var heading = document.getElementById(
+      target.id === "stepForm"
+        ? "stepTitle"
+        : target.id === "assignmentForm"
+          ? "assignmentModalTitle"
+          : "editTitle",
+    );
+    if (heading)
+      heading.textContent = title;
+    target.dataset.confirmed = "";
+    updateRequestActionFields(target);
+    if (target.id === "stepForm") updateStepApprover();
+    if (target.hasAttribute("data-location-upsert"))
+      updateLocationHierarchy();
+    if (target.hasAttribute("data-hardcopy-upsert"))
+      updateHardcopyHierarchy();
+    updateDocumentDomain();
+    updateDisposalReason();
+    updateHardcopyRequestAction();
+    updateSoftcopyCategoryKind(target);
+    updateHardcopyRetention();
+    updateHardcopyTransfer();
+    if (target.hasAttribute("data-scanned-form")) {
+      target.elements.type.dispatchEvent(new Event("change", { bubbles: true }));
+    }
+    syncSearchableControls(target);
+  }
+
+  var requestPicker = document.getElementById("requestActionPicker");
+  var requestFormSaveDraft = document.getElementById("requestFormSaveDraft");
+  var requestFormSubmit = document.getElementById("requestFormSubmit");
+  function showRequestForm(action, editing) {
+    requestPicker.value = action;
+    requestPicker.disabled = editing;
+    var option = requestPicker.selectedOptions[0];
+    var formId = option?.dataset.requestForm || "";
+    var form = formId ? document.getElementById(formId) : null;
+    document.querySelectorAll("form[data-request-form]").forEach(function (candidate) {
+      candidate.hidden = candidate !== form;
+    });
+    requestFormSaveDraft.disabled = !form;
+    requestFormSaveDraft.setAttribute("form", formId);
+    if (requestFormSubmit) {
+      requestFormSubmit.disabled = !form;
+      requestFormSubmit.setAttribute("form", formId);
+      requestFormSubmit.setAttribute("formaction", option?.dataset.requestSubmitUrl || "");
+    }
+    if (form) form.action = option.dataset.requestDraftUrl;
+    return form;
+  }
+
+  requestPicker?.addEventListener("change", function () {
+    var form = showRequestForm(requestPicker.value, false);
+    if (form) populateEditForm(form, { type: requestPicker.value }, "New Request");
+  });
+
   document.addEventListener("click", function (event) {
+    if (requestPicker && event.target.closest("[data-new-request]")) {
+      showRequestForm("", false);
+      document.getElementById("editTitle").textContent = "New Request";
+    }
     var edit = event.target.closest(".js-edit");
     if (edit) {
       var target = document.querySelector(
         edit.getAttribute("data-target") || "#editForm",
       );
       if (!target) return;
-      target.reset();
       var record = parse(edit, "record");
-      target
-        .querySelectorAll('input[name="permissions[]"]')
-        .forEach(function (field) {
-          field.checked = (record.permission_ids || [])
-            .map(Number)
-            .includes(Number(field.value));
-        });
-      target.querySelectorAll("[name]").forEach(function (field) {
-        if (!Object.prototype.hasOwnProperty.call(record, field.name)) return;
-        if (field.type === "checkbox")
-          field.checked = !!Number(record[field.name]);
-        else field.value = record[field.name] == null ? "" : record[field.name];
-      });
-      syncUserRoles(target, record.role_ids || [record.role_id]);
-      var heading = document.getElementById(
-        target.id === "stepForm"
-          ? "stepTitle"
-          : target.id === "assignmentForm"
-            ? "assignmentModalTitle"
-            : "editTitle",
-      );
-      if (heading)
-        heading.textContent = edit.getAttribute("data-title") || "Edit Record";
-      target.dataset.confirmed = "";
-      updateRequestActionFields();
-      if (target.id === "stepForm") updateStepApprover();
-      if (target.hasAttribute("data-location-upsert"))
-        updateLocationHierarchy();
-      if (target.hasAttribute("data-hardcopy-upsert"))
-        updateHardcopyHierarchy();
-      updateDocumentDomain();
-      updateDisposalReason();
-      updateHardcopyRequestAction();
-      if (target.id === "assignmentForm") updateDocumentDomain();
-      updateHardcopyRetention();
-      updateHardcopyTransfer();
-      syncSearchableControls(target);
+      var request = target.hasAttribute("data-request-form");
+      if (request) showRequestForm(record.type, true);
+      populateEditForm(target, record, request ? "Edit Request" : edit.getAttribute("data-title") || "Edit Record");
     }
 
     var view = event.target.closest(".js-view");
@@ -557,6 +695,7 @@
         openRecordDetails(
           view.getAttribute("data-display"),
           view.getAttribute("data-title"),
+          view,
         );
     }
 
@@ -596,24 +735,13 @@
               var download = document.createElement("a");
               download.className = "btn btn-outline-primary btn-sm";
               download.href = target.href;
-              download.textContent = "Download";
+              var urlLabel = String(file.url_label || "Download");
+              download.textContent = urlLabel;
+              if (urlLabel === "Preview") {
+                download.target = "_blank";
+                download.rel = "noopener";
+              }
               item.append(download);
-            }
-            var printTarget = file.print_url
-              ? new URL(String(file.print_url), window.location.origin)
-              : null;
-            if (
-              printTarget &&
-              printTarget.origin === window.location.origin &&
-              ["http:", "https:"].includes(printTarget.protocol)
-            ) {
-              var print = document.createElement("a");
-              print.className = "btn btn-outline-primary btn-sm";
-              print.href = printTarget.href;
-              print.target = "_blank";
-              print.rel = "noopener";
-              print.textContent = "Print";
-              item.append(print);
             }
           } catch (error) {
             /* Invalid download links are never rendered. */
@@ -633,10 +761,11 @@
     }
   });
 
-  // One request modal is reused across all request types; hide irrelevant fields.
-  function updateRequestActionFields() {
-    var select = document.getElementById("reqType");
-    if (!select) return;
+  function updateRequestActionFields(form) {
+    var select = form?.hasAttribute("data-request-form")
+      ? form.querySelector('select[name="type"]')
+      : document.getElementById("reqType");
+    if (!select || select.form.hasAttribute("data-scanned-form")) return;
     var allowed;
     try {
       allowed = JSON.parse(select.form.dataset.allowedRequestTypes || "null");
@@ -648,7 +777,9 @@
     Array.from(select.options).forEach(function (option) {
       var permitted =
         (!Array.isArray(allowed) || allowed.includes(option.value)) &&
-        (!editing || option.value === current);
+        (!editing || option.value === current) &&
+        // Typo correction exists only for editing an existing record.
+        (option.value !== "softcopy_correct" || editing);
       option.disabled = option.hidden = !permitted;
     });
     if (select.selectedOptions[0]?.disabled || !select.value) {
@@ -661,28 +792,34 @@
     var required = {
       softcopy_id: [
         "softcopy_revise",
-        "softcopy_cancel",
+        "softcopy_correct",
+        "softcopy_revision_template",
         "assignment",
         "access",
       ],
       hardcopy_id: ["hardcopy_update", "disposal", "transfer"],
+      external_document_id: ["external_revise", "disposal"],
+      document_domain: ["disposal"],
       title: [
         "softcopy_create",
+        "softcopy_correct",
         "hardcopy_create",
         "hardcopy_update",
         "softcopy_revise",
+        "external_create",
+        "external_revise",
       ],
-      document_number: ["softcopy_create"],
-      series_number: ["softcopy_create"],
+      generated_document_number: ["softcopy_create"],
       category_id: ["softcopy_create"],
       recipient_id: ["assignment", "access", "transfer"],
       expires_at: ["access"],
       destination_location_id: ["transfer"],
-      new_revision_level: ["softcopy_revise"],
-      effective_date: ["softcopy_revise"],
+      effective_date: ["softcopy_create", "softcopy_revise"],
       // Received and released dates are recorded by PHP, not user inputs.
-      page_number: ["softcopy_revise"],
+      page_number: ["softcopy_revise", "softcopy_correct"],
+      new_revision_level: ["softcopy_create", "softcopy_revise", "softcopy_correct"],
       revision_attachment: ["softcopy_create", "softcopy_revise"],
+      external_attachment: ["external_create", "external_revise"],
     };
     Object.keys(required).forEach(function (name) {
       var field = select.form.querySelector('[name="' + name + '"]');
@@ -691,9 +828,10 @@
       var selectedDomain = select.form.querySelector(
         '[name="document_domain"]',
       )?.value;
-      if (selectedDomain && ["assignment", "access"].includes(operation)) {
+      if (selectedDomain && ["assignment", "access", "disposal"].includes(operation)) {
         if (name === "softcopy_id") show = selectedDomain === "softcopy";
         if (name === "hardcopy_id") show = selectedDomain === "hardcopy";
+        if (name === "external_document_id") show = selectedDomain === "external";
       }
       var parent =
         field.closest("[data-document-domain]") ||
@@ -716,9 +854,259 @@
         field.required = show;
       }
     });
+    updateDirectRevisionLevel(select.form, operation);
+    updateSoftcopyNumberFields(select.form);
+    var directSeriesWrap = select.form.querySelector("[data-direct-series-edit]");
+    var directSeriesField = select.form.querySelector('[name="series_number"]');
+    var selectedSoftcopy = select.form.querySelector('[name="softcopy_id"]');
+    selectedSoftcopy?.querySelectorAll("[data-softcopy-locked]").forEach(function (option) {
+      option.disabled = operation !== "softcopy_revision_template";
+    });
+    var editSeries = select.form.dataset.softcopyDirect === "yes" &&
+      (operation === "softcopy_revise" || operation === "softcopy_correct") &&
+      !!selectedSoftcopy?.value;
+    if (directSeriesWrap) directSeriesWrap.hidden = !editSeries;
+    if (directSeriesField) directSeriesField.disabled = !editSeries;
+    updateExternalRequestFields(select.form);
   }
+
+  function updateDirectRevisionLevel(form, operation) {
+    var level = form.querySelector("[data-direct-revision-level]");
+    if (!level) return;
+    var create = operation === "softcopy_create";
+    var correct = operation === "softcopy_correct";
+    var revise = operation === "softcopy_revise" || correct;
+    var wrap = level.closest("[data-direct-revision-level-wrap]");
+    if (wrap) wrap.hidden = !create && !revise;
+    level.disabled = !create && !revise;
+    level.required = create || revise;
+    if (create) {
+      level.value = "00";
+      return;
+    } else if (!revise) {
+      level.value = "";
+      return;
+    }
+    var source = form.querySelector("#reqSoftcopy");
+    var record = {};
+    try {
+      record = JSON.parse(source?.selectedOptions[0]?.dataset.softcopyRecord || "{}");
+    } catch (error) {
+      record = {};
+    }
+    if (correct) {
+      // A correction keeps the current level unless it is being fixed.
+      if (!level.value) level.value = record.new_revision_level || "";
+      return;
+    }
+    var currentNumber = Number(record.revision_number || 0);
+    level.value = String(Math.max(0, currentNumber)).padStart(2, "0");
+  }
+
+  function updateExternalRequestFields(form) {
+    var action = form.querySelector('[name="type"]');
+    var existing = form.querySelector("[data-external-existing]");
+    if (!action || !existing) return;
+    var revise = action.value === "external_revise";
+    existing.hidden = !revise;
+    existing.querySelectorAll("select").forEach(function (field) {
+      field.disabled = !revise;
+      field.required = revise;
+      if (!revise) field.value = "";
+    });
+    form.querySelectorAll("[data-external-description]").forEach(function (field) {
+      var externalAction = ["external_create", "external_revise"].includes(action.value);
+      var parent = field.closest(".col-md-6, .col-12");
+      if (parent) parent.hidden = !externalAction;
+      field.disabled = !externalAction;
+      field.required = false;
+      if (!externalAction) field.value = "";
+    });
+    form.querySelectorAll("[data-external-category]").forEach(function (parent) {
+      var externalAction = ["external_create", "external_revise"].includes(action.value);
+      parent.hidden = !externalAction;
+      parent.querySelectorAll("select").forEach(function (field) {
+        field.disabled = !externalAction;
+      });
+    });
+    var attachment = form.querySelector('[name="external_attachment"]');
+    if (attachment) {
+      attachment.required = !form.querySelector('[name="id"]')?.value;
+    }
+  }
+
+  function updateRetentionPeriod(form) {
+    var startField = form.querySelector('[name="retention_start_date"]');
+    var endField = form.querySelector('[name="retention_end_date"]');
+    var periodField = form.querySelector("[data-retention-period]");
+    if (!startField || !endField || !periodField) return;
+    if (!startField.value || !endField.value || endField.value < startField.value) {
+      periodField.value = "";
+      endField.setCustomValidity(
+        startField.value && endField.value && endField.value < startField.value
+          ? "Retention end date must be on or after the start date."
+          : "",
+      );
+      return;
+    }
+    endField.setCustomValidity("");
+
+    var startParts = startField.value.split("-").map(Number);
+    var endParts = endField.value.split("-").map(Number);
+    var startDate = new Date(Date.UTC(startParts[0], startParts[1] - 1, startParts[2]));
+    var endDate = new Date(Date.UTC(endParts[0], endParts[1] - 1, endParts[2]));
+    function afterMonths(date, count) {
+      var monthIndex = date.getUTCFullYear() * 12 + date.getUTCMonth() + count;
+      var year = Math.floor(monthIndex / 12);
+      var month = monthIndex % 12;
+      var lastDay = new Date(Date.UTC(year, month + 1, 0)).getUTCDate();
+      return new Date(Date.UTC(year, month, Math.min(date.getUTCDate(), lastDay)));
+    }
+    function dateValue(date) {
+      return date.getTime();
+    }
+    var years = endDate.getUTCFullYear() - startDate.getUTCFullYear();
+    var cursor = afterMonths(startDate, years * 12);
+    if (dateValue(cursor) > dateValue(endDate)) {
+      years -= 1;
+      cursor = afterMonths(startDate, years * 12);
+    }
+    var months =
+      (endDate.getUTCFullYear() - cursor.getUTCFullYear()) * 12 +
+      endDate.getUTCMonth() -
+      cursor.getUTCMonth();
+    cursor = afterMonths(cursor, months);
+    if (dateValue(cursor) > dateValue(endDate)) {
+      months -= 1;
+      cursor = afterMonths(afterMonths(startDate, years * 12), months);
+    }
+    var days = Math.round((dateValue(endDate) - dateValue(cursor)) / 86400000);
+    var parts = [];
+    [[years, "year"], [months, "month"], [days, "day"]].forEach(function (part) {
+      if (part[0] > 0) parts.push(part[0] + " " + part[1] + (part[0] === 1 ? "" : "s"));
+    });
+    periodField.value = parts.join(", ") || "0 days";
+  }
+
+  function updateSoftcopyNumberFields(form) {
+    var category = form.querySelector('[name="category_id"]');
+    var checker = form.querySelector("[data-series-number-checker]");
+    var autoField = form.querySelector('[name="generated_document_number"]');
+    var manualField = form.querySelector('[name="document_number"]');
+    var seriesField = form.querySelector('[name="generated_series_number"]');
+    if (!category || !checker || !autoField || !manualField || !seriesField) return;
+
+    var create = form.querySelector('[name="type"]')?.value === "softcopy_create";
+    var manual = create && checker.checked;
+    var autoWrap = form.querySelector("[data-document-number-auto]");
+    var manualWrap = form.querySelector("[data-document-number-manual]");
+    var checkerWrap = form.querySelector("[data-series-number-checker-wrap]");
+    var seriesWrap = form.querySelector("[data-series-number-field]");
+    checker.disabled = !create;
+    if (!create) checker.checked = false;
+    if (checkerWrap) checkerWrap.hidden = !create;
+    if (autoWrap) autoWrap.hidden = !create || manual;
+    if (manualWrap) manualWrap.hidden = !manual;
+    autoField.disabled = !create || manual;
+    autoField.required = create && !manual;
+    manualField.disabled = !manual;
+    manualField.required = manual;
+
+    var selected = category.options[category.selectedIndex];
+    var docPattern = selected?.dataset.codePattern || "";
+    var parts = docPattern.match(/^(.*?)(\d+)$/);
+    var prefix = parts ? parts[1] : "";
+    var initial = parts ? Number(parts[2]) : 0;
+    var width = parts ? parts[2].length : 0;
+    var numberOptions = {};
+    try {
+      numberOptions = JSON.parse(selected?.dataset.numberOptions || "{}");
+    } catch (error) {
+      numberOptions = {};
+    }
+
+    var currentNumber = manualField.value || manualField.dataset.pendingValue || "";
+    manualField.replaceChildren(new Option("Choose an existing document number", ""));
+    Object.keys(numberOptions).sort().forEach(function (number) {
+      manualField.add(new Option(number, number));
+    });
+    manualField.value = Object.prototype.hasOwnProperty.call(numberOptions, currentNumber)
+      ? currentNumber
+      : "";
+    delete manualField.dataset.pendingValue;
+
+    var maximum = 0;
+    var hasMatching = false;
+    Object.keys(numberOptions).forEach(function (number) {
+      if (!number.startsWith(prefix)) return;
+      var suffix = number.slice(prefix.length);
+      if (!/^\d+$/.test(suffix)) return;
+      hasMatching = true;
+      var value = Number(suffix);
+      if (value >= maximum) {
+        maximum = value;
+        width = Math.max(width, suffix.length);
+      }
+    });
+    var suggested = "";
+    if (selected?.dataset.nextNumber) {
+      suggested = selected.dataset.nextNumber;
+    } else if (prefix && initial > 0) {
+      var nextDocument = String(hasMatching ? Math.max(initial, maximum + 1) : initial);
+      suggested = prefix + nextDocument.padStart(Math.max(width, nextDocument.length), "0");
+    }
+    // Direct softcopy lets the user overwrite the generated number; keep a typed
+    // value until the category changes. Requests stay read-only and always refresh.
+    var typed = !autoField.readOnly && autoField.dataset.userEdited === "1" &&
+      autoField.dataset.forCategory === category.value;
+    if (!typed) {
+      autoField.value = suggested;
+      autoField.dataset.userEdited = "";
+      autoField.dataset.forCategory = category.value;
+      // Hidden inputs survive form.reset(), so clear the flag explicitly.
+      var editedFlag = form.querySelector("[data-document-number-edited]");
+      if (editedFlag) editedFlag.value = "";
+    }
+
+    // The Series No. is typed in manually. The most recent series of the chosen
+    // Document No. is shown only as the placeholder, as a guide.
+    var info = numberOptions[manualField.value] || {};
+    var latestSeries = info.latest_series || "";
+    var seriesApplicable = manual && !!manualField.value;
+    seriesField.disabled = !seriesApplicable;
+    seriesField.required = seriesApplicable;
+    if (seriesWrap) seriesWrap.hidden = !seriesApplicable;
+    if (!seriesApplicable) seriesField.value = "";
+    seriesField.placeholder = latestSeries
+      ? "Previous: " + latestSeries
+      : "Enter the Series No.";
+
+    var seriesGuide = form.querySelector("[data-series-number-guide]");
+    if (seriesGuide) {
+      seriesGuide.hidden = !seriesApplicable;
+      seriesGuide.textContent = latestSeries
+        ? "Type the new Series No. The previous series for this Document No. is " + latestSeries + "."
+        : "Type the Series No. This Document No. has no series yet.";
+    }
+  }
+  document.addEventListener("input", function (event) {
+    var field = event.target;
+    if (field?.name === "generated_document_number" && !field.readOnly) {
+      field.dataset.userEdited = "1";
+      // Tells the server to use this exact number. An untouched field is only
+      // a preview, and the next free number is assigned when approving.
+      var editedFlag = field.form?.querySelector("[data-document-number-edited]");
+      if (editedFlag) editedFlag.value = "1";
+    }
+  });
   // Selecting a different softcopy starts from that record, never a previous
   // document's proposed title, revision attachment or effective date.
+  // Programmatic changes (e.g. file auto-fill) must refresh the searchable box text.
+  document.addEventListener("change", function (event) {
+    if (event.target?.matches?.("select[data-searchable]")) {
+      syncSearchableControls(event.target.form);
+    }
+  });
   document.addEventListener("change", function (event) {
     if (event.target?.id !== "reqSoftcopy") return;
     var source = event.target,
@@ -735,12 +1123,13 @@
         if (field) field.value = record[name] ?? "";
       },
     );
-    ["new_revision_level", "effective_date", "revision_attachment"].forEach(
+    ["effective_date", "revision_attachment"].forEach(
       function (name) {
         var field = form.querySelector('[name="' + name + '"]');
         if (field) field.value = "";
       },
     );
+    updateDirectRevisionLevel(form, form.querySelector('[name="type"]')?.value);
     var subject = form.querySelector('[name="subject"]');
     if (
       subject &&
@@ -748,6 +1137,39 @@
     ) {
       subject.value = source.value
         ? "Document action: " + (record.title || "Selected softcopy")
+        : "";
+      subject.dataset.autoSubject = subject.value;
+    }
+  });
+  document.addEventListener("input", function (event) {
+    if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
+      updateRetentionPeriod(event.target.form);
+    }
+  });
+  document.addEventListener("change", function (event) {
+    if (!event.target?.matches("[data-request-external-source]")) return;
+    var select = event.target;
+    var record = {};
+    try {
+      record = JSON.parse(select.selectedOptions[0]?.dataset.externalRecord || "{}");
+    } catch (error) {
+      record = {};
+    }
+    var form = select.form;
+    ["title", "description", "external_document_number"].forEach(function (name) {
+      var field = form.querySelector('[name="' + name + '"]');
+      if (field) field.value = record[name] || "";
+    });
+    var category = form.querySelector('[name="external_category_id"]');
+    if (category && record.category_id) category.value = record.category_id;
+    var subsidiary = form.querySelector('[name="subsidiary_name"]');
+    if (subsidiary) subsidiary.value = record.subsidiary_name || "";
+    var subject = form.querySelector('[name="subject"]');
+    if (subject && (!subject.value || subject.value === subject.dataset.autoSubject)) {
+      var isDisposal = form.querySelector('[name="type"]')?.value === "disposal";
+      subject.value = select.value
+        ? (isDisposal ? "Disposal request: " : "External revision: ") +
+          (record.title || "Selected document")
         : "";
       subject.dataset.autoSubject = subject.value;
     }
@@ -789,10 +1211,24 @@
       });
   }
   document.addEventListener("change", function (event) {
-    if (event.target?.id === "reqType") updateRequestActionFields();
+    if (event.target?.matches('[name="retention_start_date"], [name="retention_end_date"]')) {
+      updateRetentionPeriod(event.target.form);
+    }
+    if (event.target?.matches('#reqType, form[data-request-form] select[name="type"]'))
+      updateRequestActionFields(event.target.form);
+    if (event.target?.id === "reqCategory" ||
+        event.target?.matches("[data-series-number-checker]") ||
+        event.target?.id === "reqNumber") {
+      // A Series No. typed for a different Document No. must not carry over.
+      if (event.target?.id === "reqCategory" || event.target?.id === "reqNumber") {
+        var typedSeries = event.target.form?.querySelector('[name="generated_series_number"]');
+        if (typedSeries) typedSeries.value = "";
+      }
+      updateSoftcopyNumberFields(event.target.form);
+    }
     if (event.target?.name === "document_domain") {
       updateDocumentDomain();
-      updateRequestActionFields();
+      updateRequestActionFields(event.target.form);
     }
     if (event.target?.hasAttribute("data-disposal-reason"))
       updateDisposalReason();
@@ -800,6 +1236,9 @@
   updateDocumentDomain();
   updateDisposalReason();
   updateRequestActionFields();
+  document.querySelectorAll("form[data-request-form]").forEach(updateRequestActionFields);
+  document.querySelectorAll("[data-softcopy-category-setup]").forEach(updateSoftcopyCategoryKind);
+  document.querySelectorAll("form").forEach(updateRetentionPeriod);
 
   function updateStepApprover() {
     var type = document.getElementById("stepApproverType");
@@ -871,6 +1310,32 @@
     });
   updateStepApprover();
 
+  // One Asset Number can belong to many Specifics (and so several Areas): its options carry
+  // comma lists in data-specific-ids and data-area-ids.
+  function listHas(option, key, value) {
+    return (option.dataset[key] || "").split(",").indexOf(String(value)) !== -1;
+  }
+  function listOnly(option, key) {
+    var values = (option.dataset[key] || "").split(",").filter(Boolean);
+    return values.length === 1 ? values[0] : "";
+  }
+  // Choosing an Asset fills its Area and Specific only when it has a single one; with several,
+  // keep the chosen Specific if the asset is used under it, otherwise ask the user to choose.
+  function applyAssetParents(option, area, specific) {
+    var onlyArea = listOnly(option, "areaIds");
+    if (onlyArea) area.value = onlyArea;
+    var onlySpecific = listOnly(option, "specificIds");
+    if (onlySpecific) specific.value = onlySpecific;
+    else if (specific.value && !listHas(option, "specificIds", specific.value))
+      specific.value = "";
+  }
+  function assetMatches(option, area, specific) {
+    return (
+      (!area.value || listHas(option, "areaIds", area.value)) &&
+      (!specific.value || listHas(option, "specificIds", specific.value))
+    );
+  }
+
   // Location upsert uses live predefined Area > Specific > Asset relationships.
   // The PHP service validates all relationships again before writing to MySQL.
   function updateLocationHierarchy(changed) {
@@ -886,9 +1351,9 @@
     }
 
     if (changed === "asset" && asset.value) {
-      var chosenAsset = selectedOption(asset);
-      specific.value = chosenAsset.dataset.specificId || "";
-      area.value = chosenAsset.dataset.areaId || "";
+      applyAssetParents(selectedOption(asset), area, specific);
+      if (specific.value)
+        area.value = selectedOption(specific).dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       var chosenSpecific = selectedOption(specific);
       area.value = chosenSpecific.dataset.areaId || "";
@@ -906,10 +1371,7 @@
 
     Array.from(asset.options).forEach(function (option) {
       if (!option.value) return;
-      var matchesSpecific =
-        !specific.value || option.dataset.specificId === specific.value;
-      var matchesArea = !area.value || option.dataset.areaId === area.value;
-      var available = matchesSpecific && matchesArea;
+      var available = assetMatches(option, area, specific);
       option.hidden = !available;
       option.disabled = !available;
     });
@@ -920,7 +1382,7 @@
     var help = form.querySelector("#location-hierarchy-help");
     if (help) {
       help.textContent = asset.value
-        ? "Area and specific automatically match the selected asset."
+        ? "Area and specific match the selected asset. If it is used under several specifics, choose one."
         : specific.value
           ? "Area automatically matches the selected specific."
           : "Select an Area and Specific. Asset Number is optional.";
@@ -1088,9 +1550,9 @@
       asset.value =
         loc.dataset.assetId === "0" ? "" : loc.dataset.assetId || "";
     } else if (changed === "asset" && asset.value) {
-      var a = chosen(asset);
-      area.value = a.dataset.areaId || "";
-      specific.value = a.dataset.specificId || "";
+      applyAssetParents(chosen(asset), area, specific);
+      if (specific.value)
+        area.value = chosen(specific).dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       area.value = chosen(specific).dataset.areaId || "";
     }
@@ -1098,10 +1560,7 @@
       return !area.value || opt.dataset.areaId === area.value;
     });
     filter(asset, function (opt) {
-      return (
-        (!area.value || opt.dataset.areaId === area.value) &&
-        (!specific.value || opt.dataset.specificId === specific.value)
-      );
+      return assetMatches(opt, area, specific);
     });
     filter(location, function (opt) {
       return (
@@ -1138,7 +1597,7 @@
   updateHardcopyHierarchy();
 
   function updateHardcopyTransfer(changed) {
-    var form = document.querySelector("#editForm[data-hardcopy-transfer]");
+    var form = document.querySelector("form[data-hardcopy-transfer]");
     if (!form) return;
     var source = form.querySelector("[data-transfer-source]");
     var area = form.querySelector('[data-transfer-level="area"]');
@@ -1197,9 +1656,10 @@
       asset.value =
         chosen.dataset.assetId === "0" ? "" : chosen.dataset.assetId || "";
     } else if (changed === "asset" && asset.value) {
-      var chosen = asset.options[asset.selectedIndex];
-      specific.value = chosen.dataset.specificId || "";
-      area.value = chosen.dataset.areaId || "";
+      applyAssetParents(asset.options[asset.selectedIndex], area, specific);
+      if (specific.value)
+        area.value =
+          specific.options[specific.selectedIndex].dataset.areaId || area.value;
     } else if (changed === "specific" && specific.value) {
       area.value =
         specific.options[specific.selectedIndex].dataset.areaId || "";
@@ -1215,10 +1675,7 @@
       return !area.value || o.dataset.areaId === area.value;
     });
     filter(asset, function (o) {
-      return (
-        (!area.value || o.dataset.areaId === area.value) &&
-        (!specific.value || o.dataset.specificId === specific.value)
-      );
+      return assetMatches(o, area, specific);
     });
     filter(location, function (o) {
       return (
@@ -1492,6 +1949,7 @@
 
   var pendingForm = null;
   var pendingParent = null;
+  var pendingSubmitter = null;
   function showConfirmation() {
     window.bootstrap.Modal.getOrCreateInstance(
       document.getElementById("confirmModal"),
@@ -1505,7 +1963,14 @@
       }
       pendingParent = null;
       pendingForm = null;
+      pendingSubmitter = null;
     });
+  // Forms that must return to the current register view (table/folder layout,
+  // open folder, filters) carry it in return_query.
+  document.addEventListener("submit", function (event) {
+    var field = event.target.querySelector?.('[name="return_query"]');
+    if (field) field.value = window.location.search.replace(/^\?/, "");
+  });
   document.addEventListener("submit", function (event) {
     var form = event.target;
     if (!form.matches("form[data-confirm]") || form.dataset.confirmed === "yes")
@@ -1513,8 +1978,9 @@
     if (!window.bootstrap) return; // Server also checks confirmed=yes.
     event.preventDefault();
     pendingForm = form;
+    pendingSubmitter = event.submitter;
     document.getElementById("confirmMessage").textContent =
-      form.getAttribute("data-confirm") || "Continue?";
+      pendingSubmitter?.dataset.confirm || form.dataset.confirm || "Continue?";
     pendingParent = form.closest(".modal.show");
     if (pendingParent) {
       pendingParent.addEventListener("hidden.bs.modal", showConfirmation, {
@@ -1531,6 +1997,7 @@
     confirmButton.addEventListener("click", function () {
       if (!pendingForm) return;
       var form = pendingForm;
+      var submitter = pendingSubmitter;
       pendingForm = null;
       window.bootstrap.Modal.getOrCreateInstance(
         document.getElementById("confirmModal"),
@@ -1538,7 +2005,7 @@
       form.dataset.confirmed = "yes";
       var flag = form.querySelector('[name="confirmed"]');
       if (flag) flag.value = "yes";
-      form.requestSubmit();
+      form.requestSubmit(submitter || undefined);
     });
 
   // A saved workflow returns to the same editor, refreshed with the latest
@@ -1559,14 +2026,68 @@
     }
     window.bootstrap.Modal.getOrCreateInstance(editor).show();
   }
+  // After a new hardcopy document is saved, reopen a blank Add modal for the
+  // same Location so several documents can be filed in a row.
+  function reopenHardcopyAdd() {
+    var params = new URLSearchParams(window.location.search);
+    var locationId = params.get("add_location");
+    if (!locationId || !/^[0-9]+$/.test(locationId)) return;
+    params.delete("add_location");
+    var query = params.toString();
+    try {
+      window.history.replaceState(
+        null,
+        "",
+        window.location.pathname + (query ? "?" + query : ""),
+      );
+    } catch (e) {}
+    var form = document.querySelector("#editForm[data-hardcopy-upsert]");
+    var modal = document.getElementById("editModal");
+    var location = form?.querySelector('[data-hardcopy-level="location"]');
+    if (!form || !modal || !location || !window.bootstrap) return;
+    form.reset();
+    var idField = form.querySelector('[name="id"]');
+    var versionField = form.querySelector('[name="version"]');
+    if (idField) idField.value = "";
+    if (versionField) versionField.value = "";
+    location.value = locationId;
+    if (location.value !== locationId) return; // Location no longer available.
+    form.dataset.confirmed = "";
+    var confirmedField = form.querySelector('[name="confirmed"]');
+    if (confirmedField) confirmedField.value = "no";
+    updateHardcopyHierarchy("location");
+    updateHardcopyRetention();
+    syncSearchableControls(form);
+    var heading = document.getElementById("editTitle");
+    if (heading) heading.textContent = "Add New Hardcopy Document";
+    window.bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
+  function openRevisionTemplateRequest() {
+    var modal = document.querySelector("#editModal[data-revision-template-document]");
+    if (!modal || !requestPicker) return;
+    var action = "softcopy_revision_template";
+    var form = showRequestForm(action, false);
+    if (!form) return;
+    populateEditForm(form, { type: action, softcopy_id: modal.dataset.revisionTemplateDocument },
+      "Request Template for Revision");
+    window.bootstrap.Modal.getOrCreateInstance(modal).show();
+  }
   var noticeModal = document.getElementById("appAlertModal");
   if (noticeModal) {
-    noticeModal.addEventListener("hidden.bs.modal", reopenWorkflow, {
-      once: true,
-    });
+    noticeModal.addEventListener(
+      "hidden.bs.modal",
+      function () {
+        reopenWorkflow();
+        reopenHardcopyAdd();
+        openRevisionTemplateRequest();
+      },
+      { once: true },
+    );
     window.bootstrap.Modal.getOrCreateInstance(noticeModal).show();
   } else {
     reopenWorkflow();
+    reopenHardcopyAdd();
+    openRevisionTemplateRequest();
   }
 
   document.addEventListener("change", function (event) {

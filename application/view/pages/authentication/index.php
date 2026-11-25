@@ -11,8 +11,10 @@
     <link rel="icon" href="<?= base_url('assets/images/peanut-kisses.png') ?>">
     <?php $this->load->view('reusable_components/pwa_head'); ?>
 
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <!-- Office LAN assets; no external CDN requests. -->
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/bootstrap.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/fontawesome.min.css') ?>">
+    <link rel="stylesheet" href="<?= base_url('assets/css/vendor/poppins.css') ?>">
 
     <link rel="stylesheet" href="<?= base_url('assets/css/colors.css') ?>">
     <link rel="stylesheet" href="<?= base_url('assets/css/app.css') ?>">
@@ -34,11 +36,11 @@
             <div class="login-intro">
 
                 <span class="login-kicker">
-                    PEANUT KISSES · DOCUMENT TRACKING SYSTEM
+                    PEANUT KISSES · DOCUMENT CONTROL SYSTEM
                 </span>
 
                 <h1 id="loginWelcomeHeading" class="login-welcome">
-                    Secure access for your document tracking control center.
+                    Secure access for your document control center.
                 </h1>
 
                 <p>

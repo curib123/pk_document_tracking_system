@@ -1,16 +1,18 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/request/request_policy.php';
 
 class File_model extends CI_Model
 {
     /** Controlled request files: owner or actively assigned approver only. */
-    public function review_file($requestId, $viewer)
+    public function review_file($requestId, $viewer, $requestedFileId = 0)
     {
         $r = $this->db->get_where('requests', ['id' => (int) $requestId])->row_array();
-        if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise'], TRUE))
+        if (!$r || !in_array($r['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
             return NULL;
         $allowed = (int) $r['requested_by'] === (int) $viewer['id'];
+        $finalizer = FALSE;
         if (!$allowed && $r['status'] === 'submitted') {
             $steps = $this->db->get_where('workflow_steps', [
                 'request_id' => (int) $requestId,
@@ -24,6 +26,10 @@ class File_model extends CI_Model
                         User_roles::matches($viewer, (int) ($a['value'] ?? 0)))
                 ) {
                     $allowed = TRUE;
+                    // The approver at the workflow's final-file step edits the locked file.
+                    $graph = json_decode((string) ($r['snapshot'] ?? ''), TRUE) ?: [];
+                    $finalizer = is_string($graph['finalize_step_key'] ?? NULL) &&
+                        $graph['finalize_step_key'] === ($step['node_key'] ?? NULL);
                     break;
                 }
             }
@@ -31,35 +37,89 @@ class File_model extends CI_Model
         if (!$allowed)
             return NULL;
         $data = json_decode($r['payload'], TRUE) ?: [];
-        $create = $r['type'] === 'softcopy_create';
-        $fileId = (int) ($data[$create ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
-        if (!$fileId)
+        $create = in_array($r['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($r['type'], 'external_');
+        $fileField = $create ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $create ? 'controlled_file_ids' : 'revision_file_ids';
+        $fileIds = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($data[$filesField] ?? [$data[$fileField] ?? 0])
+        ))));
+        // The DCO's pending final file is reviewable by later approvers and the requester.
+        $finalId = (int) ($data['final_file_id'] ?? 0);
+        if ($finalId && (int) $requestedFileId === $finalId && !$external) {
+            return $this->db->get_where('files', [
+                'id' => $finalId, 'purpose' => 'dco_final', 'domain' => 'softcopy', 'status' => 'pending',
+                'document_id' => $create ? NULL : (int) $r['softcopy_id']
+            ])->row_array();
+        }
+        // Once Document Control uploaded the final file, the proposed file is removed.
+        if ($finalId && !$external && !$finalizer)
             return NULL;
-        return $this->db->get_where('files', [
+        $fileId = (int) $requestedFileId ?: (int) ($data[$fileField] ?? ($fileIds[0] ?? 0));
+        if (!$fileId || !in_array($fileId, $fileIds, TRUE))
+            return NULL;
+        $source = $this->db->get_where('files', [
             'id' => $fileId,
             'uploaded_by' => (int) $r['requested_by'],
             'purpose' => $create ? 'creation' : 'revision',
-            'domain' => 'softcopy',
-            'document_id' => $create ? NULL : (int) $r['softcopy_id'],
+            'domain' => $external ? 'external' : 'softcopy',
+            'document_id' => $create ? NULL : (int) ($external
+                ? ($data['external_document_id'] ?? 0) : $r['softcopy_id']),
             'status' => 'pending'
         ])->row_array();
+        if ($source && $finalizer)
+            $source['finalizer_access'] = TRUE;
+        return $source;
     }
 
     public function approved_file($id)
     {
-        return $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')
+        $file = $this->db->select('f.*, s.created_by AS owner_id, s.status AS document_status')
             ->from('files f')
             ->join('softcopy_documents s', 's.id = f.document_id AND f.domain = "softcopy"')
             ->join('softcopy_revisions current', 'current.id=s.current_revision_id AND current.file_id=f.id')
             ->where('f.id', (int) $id)
             ->where('f.status', 'approved')
             ->limit(1)->get()->row_array();
+        if ($file)
+            return $file;
+        return $this->db->select('f.*,e.created_by AS owner_id,e.status AS document_status')
+            ->from('files f')
+            ->join('external_documents e', 'e.id=f.document_id AND f.domain="external"')
+            ->join('external_revision_files current_files', 'current_files.file_id=f.id')
+            ->join('external_revisions current', 'current.id=e.current_revision_id AND current.id=current_files.revision_id')
+            ->where('f.id', (int) $id)->where('f.status', 'approved')
+            ->limit(1)->get()->row_array();
+    }
+
+    public function revision_template(int $requestId, int $requesterId): ?array
+    {
+        return $this->db->select("f.*, JSON_UNQUOTE(JSON_EXTRACT(r.result, '$.template_expires_on')) AS template_expires_on", FALSE)
+            ->from('requests r')
+            ->join('softcopy_documents d', 'd.id=r.softcopy_id')
+            ->join('files f', "f.id=CAST(JSON_UNQUOTE(JSON_EXTRACT(r.result, '$.template_file_id')) AS UNSIGNED)
+                AND f.document_id=d.id", 'inner', FALSE)
+            ->where([
+                'r.id' => $requestId, 'r.requested_by' => $requesterId,
+                'r.type' => Request_policy::REVISION_TEMPLATE, 'r.status' => 'approved',
+                'd.status' => 'active', 'f.domain' => 'softcopy', 'f.purpose' => 'revision_template',
+                'f.status' => 'approved'
+            ])->get()->row_array() ?: NULL;
     }
 
     public function allowed($user, $file)
     {
         if (!$user || !$file || $file['document_status'] !== 'active')
             return FALSE;
+        if (($file['domain'] ?? '') === 'external') {
+            if ((int) $file['owner_id'] === (int) $user['id'])
+                return TRUE;
+            $this->load->model('Permission_model');
+            $permissions = $this->Permission_model->for_user($user);
+            return isset($permissions['*']) || !empty($permissions['files']['view_all']) ||
+                !empty($permissions['documents']['access_all']) || !empty($permissions['documents']['view_all']);
+        }
         $scope = $this->file_scope($user);
         return $this->db->from('softcopy_documents d')
             ->where('d.id', (int) $file['document_id'])->where('d.status', 'active')
@@ -84,13 +144,16 @@ class File_model extends CI_Model
         $scope = $this->file_scope($user);
         $canHistory = $this->Permission_model->allowed($user, 'files', 'history');
         $this->db->select('f.id,f.document_id,f.original_name,f.size,f.mime_type,f.created_at,
-                f.status,u.first_name,u.last_name,
+                f.status,f.stage,f.finalized_at,f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name,
+                u.first_name,u.last_name,
                 (f.status="approved" AND current.file_id=f.id) AS is_current,
                 ROW_NUMBER() OVER (PARTITION BY f.document_id ORDER BY (current.file_id=f.id) DESC,f.id DESC) AS history_rank', FALSE)
             ->from('files f')->join('softcopy_documents d', 'd.id=f.document_id')
             ->join('softcopy_revisions current', 'current.id=d.current_revision_id', 'left')
             ->join('users u', 'u.id=f.uploaded_by')
+            ->join('users lu', 'lu.id=f.locked_by', 'left')
             ->where('f.domain', 'softcopy')->where_in('f.status', ['approved', 'superseded'])->where('d.status', 'active')
+            ->where('f.purpose !=', 'revision_template')
             ->where_in('f.document_id', array_map('intval', $ids))
             ->where($scope, NULL, FALSE);
         if (!$canHistory)
@@ -100,6 +163,29 @@ class File_model extends CI_Model
         $result = [];
         foreach ($rows as $file)
             $result[$file['document_id']][] = $file;
+        return $result;
+    }
+
+    public function current_external_files(array $documentIds): array
+    {
+        $documentIds = array_values(array_unique(array_filter(array_map('intval', $documentIds))));
+        if (!$documentIds) {
+            return [];
+        }
+        $rows = $this->db->select('d.id AS document_id,f.id,f.original_name,f.mime_type,f.size,f.created_at,
+                f.locked_by,f.locked_at,lu.first_name AS locked_first_name,lu.last_name AS locked_last_name', FALSE)
+            ->from('external_documents d')
+            ->join('external_revisions r', 'r.id=d.current_revision_id')
+            ->join('external_revision_files rf', 'rf.revision_id=r.id')
+            ->join('files f', 'f.id=rf.file_id AND f.status="approved"')
+            ->join('users lu', 'lu.id=f.locked_by', 'left')
+            ->where_in('d.id', $documentIds)
+            ->order_by('rf.file_id')
+            ->get()->result_array();
+        $result = [];
+        foreach ($rows as $file) {
+            $result[(int) $file['document_id']][] = $file;
+        }
         return $result;
     }
 }

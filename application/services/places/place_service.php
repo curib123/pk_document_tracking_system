@@ -24,19 +24,39 @@ class Place_service
         }
         if ($data[$c['key']] === '')
             throw new DomainException('Name is required.');
-        foreach (['name', 'asset_number', 'folder_name'] as $key) {
+        foreach (['name', 'asset_number', 'folder_name', 'code_pattern'] as $key) {
             if (isset($data[$key]) && mb_strlen((string) $data[$key]) > 150)
                 throw new DomainException('Value is too long.');
         }
         if ($c['slug'] === 'specific' && !$data['area_id'])
             throw new DomainException('Choose an area.');
-        if ($c['slug'] === 'asset' && !$data['specific_id'])
-            throw new DomainException('Choose a specific.');
+        $specificIds = [];
+        if ($c['slug'] === 'asset') {
+            // One Asset Number can belong to many Specifics.
+            $specificIds = array_values(array_unique(array_filter(array_map('intval', (array) ($post['specific_ids'] ?? [])))));
+            if (!$specificIds)
+                throw new DomainException('Choose at least one specific.');
+        }
         if ($c['slug'] === 'location')
             $this->prepare_location($data);
-        if ($c['slug'] === 'softcopy-categories') {
+        $categorySlugs = ['softcopy-categories', 'external-categories'];
+        if (in_array($c['slug'], $categorySlugs, TRUE)) {
             if (!$data['folder_name'])
                 throw new DomainException('Folder name is required.');
+            if ($c['slug'] === 'softcopy-categories') {
+                $data['category_type'] = $data['category_type'] ?: 'pattern';
+                if (!in_array($data['category_type'], ['folder', 'pattern'], TRUE))
+                    throw new DomainException('Choose a valid Softcopy Category type.');
+                if ($data['category_type'] === 'folder') {
+                    // Folder-only nodes organize bounded nested folders; they
+                    // never allocate document numbers or require a code pattern.
+                    $data['code_pattern'] = NULL;
+                } elseif (preg_match('/[\r\n]/', $data['code_pattern'])) {
+                    throw new DomainException('Document No. Code Pattern cannot contain line breaks.');
+                }
+                if (mb_strlen($data['code_pattern']) > 100)
+                    throw new DomainException('Document code pattern must not exceed 100 characters.');
+            }
             if (!$id)
                 $data['created_by'] = $actorId;
             if ($id && $id === $data['parent_id'])
@@ -46,10 +66,62 @@ class Place_service
             $data['active'] = !empty($post['active']) ? 1 : 0;
         $this->ci->db->trans_begin();
         try {
-            if ($c['slug'] === 'softcopy-categories') {
+            if (in_array($c['slug'], $categorySlugs, TRUE)) {
                 require_once APPPATH . 'services/places/category_parent_policy.php';
-                $categories = $this->ci->db->query('SELECT id,parent_id,active FROM categories ORDER BY id FOR UPDATE')->result_array();
+                $categoryColumns = $c['slug'] === 'softcopy-categories'
+                    ? 'id,parent_id,active,category_type,code_pattern' : 'id,parent_id,active';
+                $categories = $this->ci->db->query(
+                    'SELECT ' . $categoryColumns . ' FROM ' . $c['table'] . ' ORDER BY id FOR UPDATE'
+                )->result_array();
                 Category_parent_policy::validate($categories, $id, (int) $data['parent_id']);
+                if ($c['slug'] === 'softcopy-categories') {
+                    $byId = [];
+                    foreach ($categories as $category)
+                        $byId[(int) $category['id']] = $category;
+                    $prior = $byId[$id] ?? NULL;
+                    if ($data['category_type'] === 'pattern' &&
+                        !preg_match('/^.+-[0-9]+$/D', $data['code_pattern']) &&
+                        // Existing legacy prefix formats remain editable as
+                        // long as their saved pattern has not been changed.
+                        (!$prior || $prior['category_type'] !== 'pattern' ||
+                         $prior['code_pattern'] !== $data['code_pattern'])) {
+                        throw new DomainException('Document No. Code Pattern must end in a numeric segment after the final dash, such as PPM-001.');
+                    }
+                    $parentId = (int) $data['parent_id'];
+                    if ($parentId && ($byId[$parentId]['category_type'] ?? '') !== 'folder'
+                        && (!$prior || (int) $prior['parent_id'] !== $parentId)) {
+                        throw new DomainException('Parent Category must be a Folder category, not a Document Number Pattern category.');
+                    }
+                    if ($prior && $data['category_type'] === 'folder'
+                        && $prior['category_type'] !== 'folder') {
+                        $hasDocuments = $this->ci->db->where('category_id', $id)
+                            ->count_all_results('softcopy_documents') > 0;
+                        if ($hasDocuments)
+                            throw new DomainException('This category already contains documents. Move them before converting it to a folder-only category.');
+                    }
+                    if ($prior && $data['category_type'] === 'pattern'
+                        && $prior['category_type'] === 'folder') {
+                        foreach ($categories as $child) {
+                            if ((int) ($child['parent_id'] ?? 0) === $id) {
+                                throw new DomainException('This folder has child categories. Move them before converting it into a Document Number Pattern category.');
+                            }
+                        }
+                    }
+                }
+            }
+            if ($c['slug'] === 'softcopy-categories' && $data['category_type'] === 'pattern') {
+                $patternPrefix = preg_replace('/[0-9]+$/', '', $data['code_pattern']);
+                $patterns = $this->ci->db->query(
+                    'SELECT id,code_pattern,category_type FROM categories WHERE id<>? FOR UPDATE',
+                    [$id]
+                )->result_array();
+                foreach ($patterns as $category) {
+                    if ($category['category_type'] !== 'pattern')
+                        continue;
+                    $existingPrefix = preg_replace('/[0-9]+$/', '', (string) $category['code_pattern']);
+                    if (strcasecmp($existingPrefix, $patternPrefix) === 0)
+                        throw new DomainException('Each Document Number Pattern category must have a unique document code prefix.');
+                }
             }
             if (
                 $c['slug'] === 'specific' && !$this->ci->db->get_where('areas', [
@@ -58,12 +130,13 @@ class Place_service
                 ])->row_array()
             )
                 throw new DomainException('Choose an active parent area.');
-            if (
-                $c['slug'] === 'asset' && !$this->ci->db->select('s.id')->from('specifics s')
-                    ->join('areas a', 'a.id=s.area_id')->where('s.id', $data['specific_id'])
-                    ->where('s.active', 1)->where('a.active', 1)->get()->row_array()
-            )
-                throw new DomainException('Choose an active specific in an active area.');
+            if ($c['slug'] === 'asset') {
+                $linked = $this->ci->db->select('s.id')->from('specifics s')
+                    ->join('areas a', 'a.id=s.area_id')->where_in('s.id', $specificIds)
+                    ->where('s.active', 1)->where('a.active', 1)->get()->result_array();
+                if (count($linked) !== count($specificIds))
+                    throw new DomainException('Choose only active specifics in active areas.');
+            }
             if ($id) {
                 $old = $this->ci->db->query('SELECT * FROM ' . $c['table'] . ' WHERE id=? FOR UPDATE', [$id])->row_array();
                 if (!$old)
@@ -80,6 +153,8 @@ class Place_service
                 $this->ci->db->insert($c['table'], $data);
                 $id = (int) $this->ci->db->insert_id();
             }
+            if ($c['slug'] === 'asset')
+                $this->sync_asset_specifics($id, $specificIds);
             if ($this->ci->db->trans_status() === FALSE)
                 throw new DomainException('Could not save. Check unique values and relations.');
             $this->ci->db->trans_commit();
@@ -91,6 +166,25 @@ class Place_service
             throw new DomainException('Could not save this place. Refresh and try again.');
         }
     }
+    /**
+     * Replace an Asset Number's links with the chosen Specifics. Links to Specifics that are
+     * no longer offered (inactive, or in an inactive area) are kept, so editing never drops them.
+     */
+    private function sync_asset_specifics($assetId, array $specificIds)
+    {
+        $db = $this->ci->db;
+        $offered = array_map('intval', array_column(
+            $db->select('s.id')->from('specifics s')->join('areas a', 'a.id=s.area_id')
+                ->where('s.active', 1)->where('a.active', 1)->get()->result_array(),
+            'id'
+        ));
+        $remove = array_values(array_diff($offered, $specificIds));
+        if ($remove)
+            $db->where('asset_id', (int) $assetId)->where_in('specific_id', $remove)->delete('asset_specifics');
+        foreach ($specificIds as $specificId)
+            $db->query('INSERT IGNORE INTO asset_specifics (asset_id,specific_id) VALUES (?,?)', [(int) $assetId, (int) $specificId]);
+    }
+
     /**
      * Predefined Location hierarchy, strictly resolved from the existing pk_dts
      * areas, specifics and assets (not from client-supplied parent IDs).
@@ -119,22 +213,9 @@ class Place_service
         $assetId = (int) ($data['asset_id'] ?? 0);
 
         if ($assetId) {
-            $asset = $this->ci->db->select('b.id,b.specific_id,s.area_id')
-                ->from('assets b')->join('specifics s', 's.id=b.specific_id')
-                ->join('areas a', 'a.id=s.area_id')
-                ->where('b.id', $assetId)->where('b.active', 1)
-                ->where('s.active', 1)->where('a.active', 1)
-                ->limit(1)->get()->row_array();
-            if (!$asset)
-                throw new DomainException('Choose an active asset linked to an active specific and area.');
-            if ($specificId && $specificId !== (int) $asset['specific_id']) {
-                throw new DomainException('Selected asset does not belong to the chosen specific.');
-            }
-            if ($areaId && $areaId !== (int) $asset['area_id']) {
-                throw new DomainException('Selected asset does not belong to the chosen area.');
-            }
-            $specificId = (int) $asset['specific_id'];
-            $areaId = (int) $asset['area_id'];
+            // An Asset Number may be used under several Specifics; the Location picks one.
+            require_once APPPATH . 'services/places/asset_specific_policy.php';
+            [$specificId, $areaId] = Asset_specific_policy::resolve($this->ci->db, $assetId, $specificId, $areaId);
         }
 
         if ($specificId) {
@@ -166,7 +247,8 @@ class Place_service
     }
 
     /**
-     * Sequence belongs to the Location, ordered within its Specific.
+     * Internal display order of a Location within its Specific. It is not shown:
+     * the visible Sequence belongs to each hardcopy document.
      * Assign the next number inside the transaction; the database unique key
      * prevents simultaneous inserts from silently sharing a position.
      */
@@ -193,6 +275,13 @@ class Place_service
         $record = $this->ci->Place_model->find($c, $id);
         if (!$record)
             throw new DomainException('Record not found.');
+        if ($c['slug'] === 'softcopy-categories') {
+            // Do not strand nested folders or active code-pattern children.
+            $children = $this->ci->db->where('parent_id', (int) $id)
+                ->where('active', 1)->count_all_results('categories');
+            if ($children > 0)
+                throw new DomainException('Move or deactivate child categories before deactivating this parent folder.');
+        }
         $this->ci->db->where('id', (int) $id)->set('version', 'version+1', FALSE)->update($c['table'], ['active' => 0]);
         if ($this->ci->db->error()['code'])
             throw new DomainException('This place could not be deactivated.');

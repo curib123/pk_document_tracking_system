@@ -1,0 +1,68 @@
+<div class="d-none">
+    <label class="form-label" for="externalRequestType">External Document Action</label>
+    <select class="form-select" name="type" id="externalRequestType" required autocomplete="off">
+        <option value="external_create">External Create Request</option>
+        <option value="external_revise">External Revised Request</option>
+    </select>
+</div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestSubject">Subject / Reason</label>
+    <textarea class="form-control" name="subject" id="externalRequestSubject" rows="1" maxlength="255" required
+        autocomplete="off"></textarea>
+</div>
+<div class="col-12" data-external-existing hidden>
+    <label class="form-label" for="reqExternal">Existing External Document</label>
+    <select class="form-select" name="external_document_id" id="reqExternal" data-request-external-source data-searchable disabled autocomplete="off">
+        <option value="">Choose an external document</option>
+        <?php foreach ($external_options as $item): ?>
+            <option value="<?= (int) $item['id'] ?>"
+                <?= !empty($item['has_locked_file']) ? 'disabled' : '' ?>
+                data-external-record="<?= html_escape(json_encode($item, JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT)) ?>">
+                <?= html_escape($item['title'] . ' · Revision ' . ($item['revision_level'] ?? '00') .
+                    (!empty($item['has_locked_file']) ? ' (Locked - read-only)' : '')) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestTitle">Document Title</label>
+    <input class="form-control" id="externalRequestTitle" name="title" maxlength="255" required autocomplete="off">
+</div>
+<div class="col-md-6">
+    <label class="form-label" for="externalRequestNumber">Document No. <span class="optional-label">(optional)</span></label>
+    <input class="form-control" id="externalRequestNumber" name="external_document_number" maxlength="150" autocomplete="off">
+</div>
+<?php $this->load->view('reusable_components/subsidiary_field', [
+    'subsidiary_field_id' => 'externalRequestSubsidiary', 'subsidiary_options' => $subsidiary_options
+]); ?>
+<div class="col-md-6" data-external-category>
+    <label class="form-label" for="externalRequestCategory">External Category</label>
+    <select class="form-select" id="externalRequestCategory" name="external_category_id" data-searchable autocomplete="off">
+        <?php foreach ($external_category_options as $category): ?>
+            <option value="<?= (int) $category['id'] ?>" <?= (int) $category['id'] === 1 ? 'selected' : '' ?>>
+                <?= html_escape($category['name']) ?>
+            </option>
+        <?php endforeach; ?>
+    </select>
+</div>
+<div class="col-12">
+    <label class="form-label" for="externalRequestDescription">Description</label>
+    <textarea class="form-control" id="externalRequestDescription" name="description" maxlength="2000"
+        data-external-description rows="3" autocomplete="off"></textarea>
+</div>
+<div class="col-12">
+    <label class="form-label" for="externalRequestAttachment">Attach Files <span class="optional-label">(up to 20 files, 15 MB each)</span></label>
+    <input class="form-control" id="externalRequestAttachment" type="file" name="external_attachment[]"
+        accept=".pdf,image/*" multiple autocomplete="off">
+    <small class="text-secondary">PDF and image files only (up to 20 files, 15 MB each).</small>
+    <small class="form-text" data-locked-attachment-message hidden>
+        This attachment was locked by the designated approver. Keep the existing file; replacement is unavailable.
+    </small>
+</div>
+<div class="col-12">
+    <small class="form-text">The revision level is assigned automatically: new documents start at 00 and each revision increments the previous level.</small>
+</div>
+<div class="col-12">
+    <label class="form-label" for="externalRequestRemarks">Remarks <span class="optional-label">(optional)</span></label>
+    <textarea class="form-control" id="externalRequestRemarks" name="remarks" rows="3" autocomplete="off"></textarea>
+</div>

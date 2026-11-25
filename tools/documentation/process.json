@@ -1,0 +1,1533 @@
+{
+  "title": "PK Document Control System - Process Flow",
+  "pages": [
+    {
+      "id": "sign-in-and-find-documents",
+      "title": "Sign in and find documents",
+      "summary": "Sign in, find a document and use the actions your account allows.",
+      "steps": [
+        {
+          "actor": "Staff member",
+          "text": "Sign in with the account your Administrator provided."
+        },
+        {
+          "actor": "Staff member",
+          "text": "If asked, replace your temporary password before continuing."
+        },
+        {
+          "actor": "Staff member",
+          "text": "Open Overview, Hardcopy Documents, Softcopy Documents or External Documents."
+        },
+        {
+          "actor": "Staff member",
+          "text": "Use folders, Search and filters. Open View Details to read the full record."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Show the records and actions allowed for this account."
+        },
+        {
+          "actor": "Staff member",
+          "text": "Open View and Document Files for Softcopy downloads and permitted history."
+        }
+      ],
+      "notes": [
+        "Viewing, editing, approving and using files each require permission.",
+        "Hardcopy records track physical documents. Softcopy and External Documents can include controlled files.",
+        "Word and Excel files are previewed as a PDF converted by LibreOffice. The original upload is kept for authorized download. A locked file is preview-only unless your role has Download Locked Files access.",
+        "Approval at the document-locking step locks a request attachment as read-only; the timeline marks that step with a Locked badge."
+      ]
+    },
+    {
+      "id": "hardcopy-direct-registration",
+      "title": "Register or edit a hardcopy",
+      "summary": "An authorized holder registers or edits a physical document. Saving updates the record immediately.",
+      "steps": [
+        {
+          "actor": "Document holder",
+          "text": "Open Hardcopy Documents. Choose Add New Hardcopy Document, or Edit an active record."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Enter Document Title. Choose Area, Specific, optional Asset and Location."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Check Current Holder and retention dates. Leave Sequence blank for the next number, or enter one shared with other documents. For a new record, add Reason / Notes if needed."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Choose Save Document and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check the storage, holder and dates; save the active record and its history."
+        }
+      ],
+      "notes": [
+        "Only the current holder with direct hardcopy permission, or an Administrator, can edit an active hardcopy.",
+        "Administrators may select another active holder. Other users register themselves as holder.",
+        "Register and edit hardcopies directly. New Hardcopy Create and Update requests are unavailable."
+      ]
+    },
+    {
+      "id": "hardcopy-retention-monitoring",
+      "title": "Check storage and retention dates",
+      "summary": "Check where a hardcopy is kept and when its retention period ends, then arrange any follow-up.",
+      "steps": [
+        {
+          "actor": "Document holder",
+          "text": "Open Hardcopy Documents. Use folders or Search to find the document."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Open View Details. Check Area, Specific, Asset, Location and Current Holder."
+        },
+        {
+          "actor": "Document holder",
+          "text": "When editing, enable Track retention period. Enter Retention Start and Retention End."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Show days remaining, Due today or an overdue message using office dates."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Filter by Due Today, Overdue, Due in the Next 7 Days or Due in 8-30 Days."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Review the physical document. Arrange a permitted update, transfer or disposal if needed."
+        }
+      ],
+      "notes": [
+        "Both retention dates are required when tracking is enabled. Retention End must be on or after Retention Start.",
+        "Reminders cover visible active hardcopies whose retention end date has arrived. Retention never triggers automatic disposal.",
+        "Several hardcopy documents may share one Location. Each document carries its own Sequence, and several documents may share the same Sequence. A Location has no Sequence."
+      ]
+    },
+    {
+      "id": "softcopy-direct-maintenance",
+      "title": "Create or revise a softcopy directly",
+      "summary": "An authorized controller creates a softcopy or makes a revision available immediately.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Softcopy Documents. Choose Add New Softcopy Document, or Edit an active record."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Create Softcopy or Revise Softcopy. Enter Subject / Reason and Proposed Document Title."
+        },
+        {
+          "actor": "Document controller",
+          "text": "To create, choose Category. To revise, choose Existing Softcopy Document."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Check Number of Pages and attach Document File. Add Effective Date and Remarks if needed."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Approve Directly and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Create the active document or publish its next revision with the replacement file."
+        }
+      ],
+      "notes": [
+        "Pattern categories increment the number after the final dash; Folder categories are nested parents only. A direct creation may type over the generated number with one not yet in use. Series No. has no pattern: it is typed for an existing Document No.",
+        "A file is required: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX, up to 15 MB. A blank direct Effective Date uses the approval date.",
+        "Revision keeps the document number, series and category. Softcopy cancellation is unavailable; authorized disposal is separate."
+      ]
+    },
+    {
+      "id": "external-direct-maintenance",
+      "title": "Create or revise external documents directly",
+      "summary": "An authorized controller records a document from outside the organization and makes its file available.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open External Documents. Choose Add New External Document, or Edit an active record."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Enter Document Title, choose Category and add Description if needed."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Attach Files and select up to 20 PDF, image, scan or supported document files. For a revision, these files become the replacement attachments."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Save Directly and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Create an active record at revision 00, or publish the next revision and its replacement file."
+        }
+      ],
+      "notes": [
+        "External Documents use External Categories and do not use retention dates.",
+        "Attach up to 20 PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX files, up to 15 MB each. Description may contain up to 2,000 characters.",
+        "Revising a record or using its file requires the appropriate permission and document access."
+      ]
+    },
+    {
+      "id": "document-create-revise-request",
+      "title": "Request a new document or revision",
+      "summary": "Default review order: Requester's leader > Plant Manager > Document Control Officer. Final approval creates the document or publishes its revision.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests and New Request. Choose the softcopy or external action."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Create or Revise. Enter Subject / Reason, the proposed title and other requested details."
+        },
+        {
+          "actor": "Requester",
+          "text": "For creation, choose Category. For revision, choose the existing document. Attach the required file and add optional Remarks."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Review in the displayed order. At each step, choose Approve, Return or Reject and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Final approval creates an Active record and file at revision 00, or publishes the next revision and file. Request: Completed."
+        }
+      ],
+      "notes": [
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends the request as Rejected. No new record or revision is applied. The request cannot be resubmitted.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route.",
+        "Softcopy creation: Number of Pages and optional series. External: External Create Request or External Revised Request; Description.",
+        "PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX; up to 15 MB. Pending files are not current. Creation numbers are assigned at approval."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise"
+      ]
+    },
+    {
+      "id": "revision-template",
+      "title": "Request and release an editable template",
+      "summary": "Document Control provides an editable copy on an approved request. The current softcopy stays in place.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "On the softcopy row select Request Template for Revision and fill Subject / Reason."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Open Review request in My Tasks. Approve or reject the request."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Upload a Word, Excel, or text file up to 15 MB. Set the required download expiry date and select Upload and Approve."
+        },
+        {
+          "actor": "Requester",
+          "text": "Use Download Template in My Requests through the selected date in Philippine time."
+        }
+      ],
+      "notes": [
+        "The download endpoint blocks saved links after expiry.",
+        "Previously approved templates without a date stay available."
+      ]
+    },
+    {
+      "id": "scanned-requests",
+      "title": "Request a scanned document or folder change",
+      "summary": "Upload, update, removal and folder requests go to Document Control by default.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "In New Request, choose Upload Scanned Document, Update Scanned Document, Delete Scanned Document, or Create Category / Folder."
+        },
+        {
+          "actor": "Requester",
+          "text": "Complete the required details and select Submit Request or Save Draft."
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Review in My Tasks. Approve, return for correction, or reject."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "After final approval, apply the change and update the scanned register or available folders."
+        }
+      ],
+      "notes": [
+        "The published workflow determines the approvers.",
+        "Updates without new attachments keep the existing files."
+      ]
+    },
+    {
+      "id": "request-draft-submit",
+      "title": "Save, submit or remove your draft",
+      "summary": "Choose whether to keep a draft or start approval from the request form.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests, select New Request, choose an action, and complete the form."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Requester",
+          "text": "Open View Details. Check the proposal and the file preview on the Document File tab."
+        },
+        {
+          "actor": "Requester",
+          "text": "Use Submit on a saved draft, or use Submit Request from Edit. Check the Approval Process Timeline."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check permission, active choices and files. Mark Submitted and notify the first approver."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Apply changes only after final approval. A transfer stays Approved until Dispatch and Accept complete it."
+        }
+      ],
+      "notes": [
+        "Only the requester can edit their Draft or Returned request. Submitted and resubmitted requests keep the original route.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected without applying the change. That request cannot be resubmitted.",
+        "A Submitted Access, Assignment or Transfer request blocks another of these for the same requester and document.",
+        "Only the requester can Cancel a Draft. Delete permanently removes an eligible Cancelled draft only if never submitted."
+      ],
+      "decision_examples": [
+        "approval-return-reject",
+        "approval-softcopy-revise",
+        "approval-external-create",
+        "approval-external-revise",
+        "approval-transfer",
+        "approval-access",
+        "approval-assignment",
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "approval-return-reject",
+      "kind": "approval-example",
+      "title": "Softcopy creation: approve, return or reject",
+      "summary": "Default workflow example: Softcopy Request (Create Softcopy). Each assigned reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the proposal and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Create the Active record and file at revision 00. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. No new document is created."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Only the assigned user or role can decide; Administrator status gives no bypass."
+      ]
+    },
+    {
+      "id": "approval-softcopy-revise",
+      "kind": "approval-example",
+      "title": "Softcopy revision: approve, return or reject",
+      "summary": "Default workflow example: Softcopy Request (Revise Softcopy). Each assigned reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the revision request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Publish the next revision and replacement file. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. The current approved file and revision stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Revision keeps the document number, category and series. The approved replacement becomes the current file."
+      ]
+    },
+    {
+      "id": "approval-external-create",
+      "kind": "approval-example",
+      "title": "External creation: approve, return or reject",
+      "summary": "Default workflow example: External Document Request (External Create Request). Each reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the external creation request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Review & Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Review & Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Create the Active record and file at revision 00. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. No new external document is created."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "External Documents uses its own categories. The attached file becomes the current file after final approval."
+      ]
+    },
+    {
+      "id": "approval-external-revise",
+      "kind": "approval-example",
+      "title": "External revision: approve, return or reject",
+      "summary": "Default workflow example: External Document Request (External Revised Request). Each reviewer can Approve, Return or Reject.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the external revision request and Submit."
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Noted By"
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Requester's leader approves",
+              "next": "Plant Manager reviews next."
+            },
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Publish the next revision and replacement file. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Requester's leader returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester's leader reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "Not applied. The current external file and revision stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "The approved replacement becomes the current Download file. External Documents has no separate File History action."
+      ]
+    },
+    {
+      "id": "approval-transfer",
+      "kind": "approval-example",
+      "title": "Hardcopy transfer: approve, return or reject",
+      "summary": "Default workflow example: Hardcopy Transfer Request. Requester Confirmation is an approval step before the physical handoff.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the transfer request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager  Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer Approval"
+        },
+        {
+          "actor": "Requester account",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Status: Approved; handoff: For Transfer. Then Dispatch and Accept."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No handoff is created. The current holder and location stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Only the requester can Dispatch; only the named receiver can Accept. Holder and location change after Accept."
+      ]
+    },
+    {
+      "id": "approval-access",
+      "kind": "approval-example",
+      "title": "Document access: approve, return or reject",
+      "summary": "Default workflow example: Document Access Request. The requester completes the final Requester Confirmation step.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the access request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester account",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Grant access through the approved expiry. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No new access is granted. Existing permissions stay unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Access is for the requester. The expiry must still be valid at final approval; document holder and location stay unchanged."
+      ]
+    },
+    {
+      "id": "approval-assignment",
+      "kind": "approval-example",
+      "title": "Document assignment: approve, return or reject",
+      "summary": "Default workflow example: Document Assignment Request. The final Requester Approval step is assigned to the requester's leader.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the assignment request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester's leader",
+          "text": "Requester Approval"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester's leader reviews next."
+            },
+            {
+              "when": "Requester's leader approves",
+              "next": "Assign the softcopy or hardcopy to the requester. Status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester's leader returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No new assignment or hardcopy holder change is applied."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Softcopy assignment adds the requester as assignee. Hardcopy assignment changes the holder, keeps Location and records no physical handoff."
+      ]
+    },
+    {
+      "id": "approval-disposal",
+      "kind": "approval-example",
+      "title": "Disposal request: approve, return or reject",
+      "summary": "Default workflow example: Disposal Request. The requester completes the final Requester Confirmation step.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Prepare the disposal request and Submit."
+        },
+        {
+          "actor": "Plant Manager",
+          "text": "Plant Manager Approval"
+        },
+        {
+          "actor": "Document Control Officer",
+          "text": "Document Control Officer"
+        },
+        {
+          "actor": "Requester account",
+          "text": "Requester Confirmation"
+        }
+      ],
+      "review": "At each review: read the proposal, approval history and the file preview in View Details when available. Choose an action, add remarks if needed and Confirm.",
+      "paths": [
+        {
+          "label": "Approve",
+          "cases": [
+            {
+              "when": "Plant Manager approves",
+              "next": "Document Control Officer reviews next."
+            },
+            {
+              "when": "Document Control Officer approves",
+              "next": "Requester reviews next."
+            },
+            {
+              "when": "Requester approves",
+              "next": "Mark the document Disposed and record it. Request status: Completed."
+            }
+          ]
+        },
+        {
+          "label": "Return",
+          "cases": [
+            {
+              "when": "Plant Manager returns",
+              "next": "Requester corrects and resubmits. Status: Returned until resubmission."
+            },
+            {
+              "when": "Document Control Officer returns",
+              "next": "Plant Manager reviews again. Status stays Submitted."
+            },
+            {
+              "when": "Requester returns",
+              "next": "Document Control Officer reviews again. Status stays Submitted."
+            }
+          ]
+        },
+        {
+          "label": "Reject",
+          "cases": [
+            {
+              "when": "Any assigned operator rejects",
+              "next": "Status: Rejected. The approval route ends."
+            },
+            {
+              "when": "Proposed change",
+              "next": "No disposal is applied. The document stays unchanged."
+            },
+            {
+              "when": "Requester checks the result",
+              "next": "Read the decision and remarks. This request cannot be resubmitted."
+            }
+          ]
+        }
+      ],
+      "notes": [
+        "This sample uses the supplied default. Check your Approval Process Timeline. Resubmission keeps the original route.",
+        "Disposal requests cover Hardcopy and External Documents. Hardcopy disposal clears Location; active document grants are revoked."
+      ]
+    },
+    {
+      "id": "hardcopy-transfer-request",
+      "title": "Request and approve a hardcopy transfer",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Approval prepares the physical handoff.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests and New Request. Choose the request action."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Hardcopy Document. Check Original Places and Holder against the current record."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Destination Area, Specific, optional Asset and a different Location."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Receiving User. Enter Request Subject and optional Remarks, then select Submit Request or Save Draft."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Choose Approve, Return or Reject in the displayed order. Requester account completes Requester Confirmation in My Tasks."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "After final approval: request Approved; handoff For Transfer. Holder and location stay unchanged until Accept."
+        }
+      ],
+      "notes": [
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no handoff or holder change. The request cannot be resubmitted.",
+        "Source, destination and receiver must be active and allowed. Destination needs Area, Specific and Location; Asset is optional.",
+        "The requester may differ from Current Holder. Only the original requester can later Dispatch.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route."
+      ],
+      "decision_examples": [
+        "approval-transfer"
+      ]
+    },
+    {
+      "id": "hardcopy-dispatch-accept",
+      "title": "Dispatch and receive a hardcopy",
+      "summary": "Default approvals first: Plant Manager > Document Control Officer > Requester account. Then the requester dispatches and the named receiver accepts.",
+      "steps": [
+        {
+          "actor": "Original requester",
+          "text": "Open My Tasks > Hardcopy Transfer Request. Find Physical Transfer Handoffs."
+        },
+        {
+          "actor": "Original requester",
+          "text": "For a For Transfer handoff, release the document. Choose Dispatch and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Mark In Transit. Record who dispatched the document and when."
+        },
+        {
+          "actor": "Receiving user",
+          "text": "After receiving the document, open Physical Transfer Handoffs. Choose Accept and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check that the document and Location are active, the holder is unchanged and storage matches approval."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Make the receiver the holder and update storage. Mark the handoff Accepted and the request Completed."
+        }
+      ],
+      "notes": [
+        "Only the original requester can Dispatch. Only the named receiving user can Accept an In Transit handoff.",
+        "A changed holder, unavailable Location or changed approved storage path blocks acceptance; the handoff stays unchanged.",
+        "A holder change revokes the previous holder's personal hardcopy access grants. Global permissions still apply.",
+        "Before final approval: first-step Return goes to the requester (Returned); later Return goes to the previous approver (Submitted).",
+        "Reject ends approval as Rejected with no handoff. Check Approval Process Timeline; Dispatch and Accept are separate from approvals."
+      ],
+      "decision_examples": [
+        "approval-transfer"
+      ]
+    },
+    {
+      "id": "request-temporary-access",
+      "title": "Request temporary document access",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Request access for yourself.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests and New Request. Choose the request action."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Softcopy or Hardcopy and its document. Check your name in Recipient / Assigned User."
+        },
+        {
+          "actor": "Requester",
+          "text": "Enter Subject / Reason. Set Access Expires At after today and add Remarks if needed."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Review in the displayed order. Choose Approve, Return or Reject; Requester account has the final confirmation."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Final approval grants access through the approved expiry date. Request: Completed. Holder and assignments stay unchanged."
+        }
+      ],
+      "notes": [
+        "For yourself only; Recipient / Assigned User cannot change. Check Approval Process Timeline; resubmission keeps its route.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no new access. Existing permissions stay unchanged. The request cannot be resubmitted.",
+        "Expiry must still be valid at final approval. Access ends at the end of the selected date, or earlier if revoked.",
+        "Document and file permissions still apply. Seeing a document title does not grant download, print or edit rights."
+      ],
+      "decision_examples": [
+        "approval-access"
+      ]
+    },
+    {
+      "id": "request-document-assignment",
+      "title": "Request a document assignment",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester's leader. The final step is named Requester Approval.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests and New Request. Choose the request action."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Softcopy or Hardcopy and its document. Check your name in Recipient / Assigned User."
+        },
+        {
+          "actor": "Requester",
+          "text": "Enter Subject / Reason and optional Remarks. Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Choose Approve, Return or Reject in order. The requester's leader completes Requester Approval."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "On final approval for Softcopy, add the requester as an assignee and keep existing assignees. Request: Completed."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "On final approval for Hardcopy, make the requester Current Holder. Keep storage unchanged. Request: Completed."
+        }
+      ],
+      "notes": [
+        "This request is for you. Authorized controllers use Document Assignments to assign others. Check Approval Process Timeline.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected. No assignment or holder change is applied. The request cannot be resubmitted.",
+        "Hardcopy assignment does not move the document or use Dispatch and Accept. Resubmission keeps the original route.",
+        "Assignment does not create temporary access. The account's document and file permissions still apply."
+      ],
+      "decision_examples": [
+        "approval-assignment"
+      ]
+    },
+    {
+      "id": "direct-document-assignments",
+      "title": "Assign one document directly",
+      "summary": "An authorized controller adds a softcopy assignee or changes a hardcopy holder immediately.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Document Assignments. Choose Hardcopy / Places or Softcopy / Categories."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Assign Document. Select the active document and Assigned User."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Save Assignment and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check the active document and user, and any active hardcopy transfer."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Change the hardcopy holder or add the softcopy assignee. Keep storage unchanged."
+        }
+      ],
+      "notes": [
+        "Direct assignment requires its own permission and takes effect immediately. It needs no approval, Dispatch or Accept.",
+        "Hardcopy assignment changes the recorded holder and keeps the storage place. It does not physically move the document.",
+        "Softcopy assignment keeps existing assignees. An active Hardcopy transfer blocks reassignment. File permissions still apply."
+      ]
+    },
+    {
+      "id": "bulk-hardcopy-assignment",
+      "title": "Assign all hardcopies at a Location",
+      "summary": "An authorized controller gives every active hardcopy at one Location the same recorded holder.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Document Assignments. Choose Hardcopy / Places."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Location and Assigned User. Review the active records at that Location."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Assign All and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check the user, active records, 2,000-document limit and any active transfers."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Change the holder for every selected document. Keep each storage location unchanged."
+        }
+      ],
+      "notes": [
+        "Bulk assignment includes all active hardcopies at the selected Location, up to 2,000 documents.",
+        "For Transfer or In Transit handoffs block hardcopy reassignment. Resolve the active transfer before retrying.",
+        "Direct assignment needs its own permission and no approval, Dispatch or Accept. It changes records without physically moving documents."
+      ]
+    },
+    {
+      "id": "bulk-softcopy-assignment",
+      "title": "Assign all softcopies in a category",
+      "summary": "An authorized controller adds a user to every active softcopy in the chosen category and its subcategories.",
+      "steps": [
+        {
+          "actor": "Document controller",
+          "text": "Open Document Assignments. Choose Softcopy / Categories."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Category / Subcategory and Assigned User. Review the category and its subcategories."
+        },
+        {
+          "actor": "Document controller",
+          "text": "Choose Assign All and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check the active user, selected records and 2,000-document limit."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Add the user to every selected document. Keep the existing assignees."
+        }
+      ],
+      "notes": [
+        "The selected category and all its subcategories are included. Only active softcopies are assigned, up to 2,000 documents.",
+        "Direct assignment requires its own permission and takes effect immediately, without an approval request.",
+        "Assignment does not create a temporary personal access grant. The account's document and file permissions still apply."
+      ]
+    },
+    {
+      "id": "document-disposal",
+      "title": "Dispose of a document directly",
+      "summary": "An authorized holder or controller records the method and marks the document Disposed immediately.",
+      "steps": [
+        {
+          "actor": "Document holder or controller",
+          "text": "Open the document register. Choose Dispose on an active record you are allowed to manage."
+        },
+        {
+          "actor": "Document holder or controller",
+          "text": "Choose Shred, Scratch or Other. Describe the method if you choose Other."
+        },
+        {
+          "actor": "Document holder or controller",
+          "text": "Confirm the direct disposal."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check both required direct permissions, the reason and whether the document can be disposed of."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Mark Disposed. Save the method, responsible person and disposal history."
+        }
+      ],
+      "notes": [
+        "Direct disposal supports all three registers and needs both direct permissions. Other requires a description of up to 250 characters.",
+        "Direct Hardcopy disposal retains Location and personal grants. Softcopy disposal retires its controlled files.",
+        "External disposal keeps stored files and revision records but blocks normal download. Retention never triggers automatic disposal."
+      ]
+    },
+    {
+      "id": "document-disposal-request",
+      "title": "Request hardcopy or external disposal",
+      "summary": "Default review order: Plant Manager > Document Control Officer > Requester account (Requester Confirmation). Final approval applies disposal.",
+      "steps": [
+        {
+          "actor": "Requester",
+          "text": "Open My Requests and New Request. Choose the request action."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Hardcopy or External and its active document. Complete the request details."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Shred, Scratch or Other. Describe Other and add Remarks if needed."
+        },
+        {
+          "actor": "Requester",
+          "text": "Choose Submit Request to start approval or Save Draft to continue later."
+        },
+        {
+          "actor": "Assigned approvers",
+          "text": "Follow Approval Process Timeline. Choose Approve, Return or Reject; Requester account has the final confirmation."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "After final approval, mark the document Disposed and the request Completed. Keep approval and disposal history."
+        }
+      ],
+      "notes": [
+        "Hardcopy and External only. Softcopy disposal uses a permitted direct action. Other needs a description of up to 250 characters.",
+        "First-step Return: requester corrects and resubmits (Returned). Later Return: previous approver reviews again (Submitted).",
+        "Reject ends approval as Rejected with no disposal. The document stays unchanged. The request cannot be resubmitted.",
+        "Supplied default shown. Check Approval Process Timeline; resubmission keeps the original route.",
+        "Approved Hardcopy disposal clears Location and personal grants. External disposal keeps stored files and revision records."
+      ],
+      "decision_examples": [
+        "approval-disposal"
+      ]
+    },
+    {
+      "id": "maintain-places-categories",
+      "title": "Set up storage places and categories",
+      "summary": "Maintain the storage places and category folders people choose when recording documents.",
+      "steps": [
+        {
+          "actor": "Places maintainer",
+          "text": "Open Master Data. Choose Area, Specific, Asset Number, Location, Softcopy Category, External Category or Subsidiary Setup."
+        },
+        {
+          "actor": "Places maintainer",
+          "text": "Create Area, then a Specific within it. Add optional Asset Numbers and choose every Specific each one is used under."
+        },
+        {
+          "actor": "Places maintainer",
+          "text": "For Location, enter Location Name, Area and Specific. Add Asset Number and Archive Date if needed."
+        },
+        {
+          "actor": "Places maintainer",
+          "text": "For a Softcopy Category, choose Folder for parent/nested folders without numbering, or Document Number Pattern to generate document numbers; numbered categories can be children of Folder categories."
+        },
+        {
+          "actor": "Places maintainer",
+          "text": "Save and confirm. Use Edit or Deactivate when allowed."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check parent choices, category nesting and unique codes. Update the available choices."
+        }
+      ],
+      "notes": [
+        "One Asset Number is a single record that can belong to many Specifics. A Location can omit Asset Number. It has no Sequence: the Sequence belongs to each hardcopy document.",
+        "Softcopy Categories and External Categories are separate. Only Softcopy Document Number Pattern categories have a numbering pattern; Folder-only categories organize nested parent folders.",
+        "Deactivation removes a choice from active selection; it does not delete the existing document records."
+      ]
+    },
+    {
+      "id": "manage-users-roles",
+      "title": "Manage users, roles and permissions",
+      "summary": "Create accounts, assign roles and choose which pages and actions each person can use.",
+      "steps": [
+        {
+          "actor": "Account administrator",
+          "text": "Open Roles & Permissions. Choose Add Role or Edit, select allowed actions, then Save Role."
+        },
+        {
+          "actor": "Account administrator",
+          "text": "Open User Management. Choose Add User or Edit and enter the account details."
+        },
+        {
+          "actor": "Account administrator",
+          "text": "Choose Primary role, Assigned roles and optional Leader. Check Active account, then Save User."
+        },
+        {
+          "actor": "Account administrator",
+          "text": "Give sign-in details securely to the intended person. Reset a temporary password when needed."
+        },
+        {
+          "actor": "Staff member",
+          "text": "Sign in with the temporary password, then replace it as prompted."
+        },
+        {
+          "actor": "Account administrator",
+          "text": "Review Assigned Documents. Deactivate users or unused roles, or Remove an eligible role."
+        }
+      ],
+      "notes": [
+        "Active roles combine a user's permissions. The Leader receives approval steps configured as Requester's leader.",
+        "A delegated administrator cannot grant permissions they do not hold or create an Administrator role assignment.",
+        "Roles still used by accounts or approval routes cannot be removed. Account and role actions each require their own permission."
+      ]
+    },
+    {
+      "id": "publish-approval-workflow",
+      "title": "Publish an approval route",
+      "summary": "Choose who approves future requests and in what order. Previously submitted requests keep their recorded route.",
+      "steps": [
+        {
+          "actor": "Workflow administrator",
+          "text": "Open Workflow Builder. Select the request type and version."
+        },
+        {
+          "actor": "Workflow administrator",
+          "text": "Choose Start First Draft or Create Next Draft."
+        },
+        {
+          "actor": "Workflow administrator",
+          "text": "Choose Add Approval Step. Name it and select a role, person, requester's leader or requester."
+        },
+        {
+          "actor": "Workflow administrator",
+          "text": "Choose Save Step. Edit, reorder or Remove steps to match the process."
+        },
+        {
+          "actor": "Workflow administrator",
+          "text": "Choose Validate & Publish and confirm."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Publish the checked route for future submissions. Keep the route already saved for existing requests."
+        }
+      ],
+      "notes": [
+        "Published versions are read-only. Create a draft to change future approvals.",
+        "Submission must resolve active approvers. A route that needs a requester's leader cannot start without an active assigned leader.",
+        "Check the published route for the actual approval order. Default route examples may change."
+      ]
+    },
+    {
+      "id": "notifications-and-audit",
+      "title": "Follow reminders and review past actions",
+      "summary": "Use notices to find work needing attention. Authorized reviewers can trace recorded actions in the audit trail.",
+      "steps": [
+        {
+          "actor": "Staff member",
+          "text": "Check the counts beside My Requests and My Tasks. Filter the relevant register."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Highlight your Draft or Returned requests, assigned approvals and physical handoff tasks."
+        },
+        {
+          "actor": "Staff member",
+          "text": "Open a task reminder. Read the request before taking an allowed action."
+        },
+        {
+          "actor": "Document holder",
+          "text": "Open a retention reminder. Check the hardcopy's due or overdue date."
+        },
+        {
+          "actor": "Auditor",
+          "text": "Open Internal Audit Trail. Search or filter to find the action."
+        },
+        {
+          "actor": "Auditor",
+          "text": "Open View Details. Check who acted, when it happened and the result."
+        }
+      ],
+      "notes": [
+        "Approval Process Timeline and request history explain request decisions. Internal Audit Trail records wider system actions.",
+        "Reminders do not approve, dispatch, accept or dispose of documents; the responsible person still confirms the action.",
+        "Counts and alerts reflect the signed-in account's allowed work. Dates and times use Asia/Manila."
+      ]
+    },
+    {
+      "id": "backup-and-archive-cleanup",
+      "title": "Create, download or import a backup",
+      "summary": "Keep protected recovery copies and remove eligible older backup and log archives when needed.",
+      "steps": [
+        {
+          "actor": "Backup operator",
+          "text": "Open Backup & Restore. Check that backup setup is ready."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Choose Backup now and confirm to create a protected backup."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "List the completed backup with its type, creation time and size."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Choose Download. Store the backup in a secure place."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "To add an existing backup, choose Import backup. Select Backup ZIP and confirm."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Choose Clean up when appropriate. Confirm removal of eligible archives older than three months."
+        }
+      ],
+      "notes": [
+        "A backup contains system records, application code and private files. Routine temporary files and existing backup archives are excluded.",
+        "The daily backup target is 5:00 PM, Asia/Manila. Automatic runs require the server scheduler to be configured and verified.",
+        "Import verifies and stores a backup; it does not restore live data. Clean up applies to eligible backup, audit and log archives."
+      ]
+    },
+    {
+      "id": "restore-system-data",
+      "title": "Restore records and private files",
+      "summary": "Replace current records and private files with a checked backup, then sign in and verify the result.",
+      "steps": [
+        {
+          "actor": "Backup operator",
+          "text": "Open Backup & Restore. Choose Restore system data."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Choose Backup to restore. Enter Your password and type RESTORE."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Choose Restore selected backup. Confirm replacement of current records and private files."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Check the backup and permission. Save a recovery backup before replacing current data."
+        },
+        {
+          "actor": "PK DCS",
+          "text": "Pause normal use, restore records and private files, then sign out the operator."
+        },
+        {
+          "actor": "Backup operator",
+          "text": "Sign in again. Check the restored records, attachments and everyday tasks."
+        }
+      ],
+      "notes": [
+        "Plan a maintenance period: restoration replaces current records and private files with the selected backup's contents.",
+        "Enter the operator's account password. The server must also be configured to open and verify the protected archive.",
+        "The web restore does not replace application code. A system maintainer handles code recovery separately when needed."
+      ]
+    }
+  ]
+}

@@ -1,4 +1,3 @@
-
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 
@@ -55,6 +54,7 @@ $route['dashboard']['GET'] = 'Dashboard/index';
 // View pending tasks and the notification inbox.
 $route['notifications/tasks']['GET'] = 'Notifications/pending';
 $route['notifications/inbox']['GET'] = 'Notifications/inbox';
+$route['notifications/retention']['GET'] = 'Notifications/retention';
 
 // Claim a task or mark a notification as read.
 $route['notifications/tasks/claim']['POST'] = 'Notifications/claim';
@@ -68,14 +68,23 @@ $route['notifications/inbox/read']['POST'] = 'Notifications/mark_read';
 */
 
 // Display a document section or category.
+$route['documents/scanned']['GET'] = 'Scanned_documents/index';
+$route['documents/scanned/file/(:num)']['GET'] = 'Scanned_documents/file/$1';
+$route['documents/external']['GET'] = 'External_documents/index';
+$route['documents/external/direct']['POST'] = 'External_documents/direct';
+$route['documents/external/dispose']['POST'] = 'External_documents/dispose';
+$route['documents/external/hard-delete']['POST'] = 'External_documents/hard_delete';
 $route['documents/(:any)']['GET'] = 'Documents/index/$1';
 
 // Add a softcopy document directly.
 $route['documents/softcopy/direct']['POST'] = 'Documents/direct_softcopy';
+$route['documents/softcopy/signatories']['POST'] = 'Documents/update_signatories';
 
 // Save document changes or dispose of a document.
 $route['documents/(:any)/save']['POST'] = 'Documents/save/$1';
 $route['documents/(:any)/dispose']['POST'] = 'Documents/dispose/$1';
+// Administrator-only permanent deletion of disposed documents.
+$route['documents/(:any)/hard-delete']['POST'] = 'Documents/hard_delete/$1';
 
 
 /*
@@ -89,12 +98,22 @@ $route['files/upload']['POST'] = 'Files/upload';
 
 // Download, print, or view a file.
 $route['files/download/(:num)']['GET'] = 'Files/download/$1';
+$route['files/revision-template/(:num)']['GET'] = 'Files/download_revision_template/$1';
+$route['files/download-pdf/(:num)']['GET'] = 'Files/download_pdf/$1';
+$route['files/download-external/(:num)']['GET'] = 'Files/download_external/$1';
 $route['files/print/(:num)']['GET'] = 'Files/print_file/$1';
 $route['files/print-content/(:num)']['GET'] = 'Files/print_content/$1';
+$route['files/preview/(:num)']['GET'] = 'Files/preview/$1';
+// Office's "Open in app" fetcher probes with HEAD before GET; without a
+// matching route it 404s the handshake and Office reports the document
+// as unreadable, even though the stored file itself is intact.
+$route['files/preview-content/(:num)/(:any)/(:any)']['GET'] = 'Files/preview_content/$1/$2/$3';
+$route['files/preview-content/(:num)/(:any)/(:any)']['HEAD'] = 'Files/preview_content/$1/$2/$3';
 
 // Review a file or access its review content.
 $route['files/review/(:num)']['GET'] = 'Files/review/$1';
 $route['files/review-content/(:num)/(:any)/(:any)']['GET'] = 'Files/review_content/$1/$2/$3';
+$route['files/review-content/(:num)/(:any)/(:any)']['HEAD'] = 'Files/review_content/$1/$2/$3';
 
 // Configure office document viewing or printing.
 $route['files/office-setup']['GET'] = 'Files/office_setup';
@@ -122,8 +141,10 @@ $route['places/(:any)/deactivate']['POST'] = 'Places/deactivate/$1';
 */
 
 // View and manage the current user's requests.
+$route['my-requests']['GET'] = 'Requests/mine';
 $route['my-requests/(:any)']['GET'] = 'Requests/mine/$1';
 $route['my-requests/(:any)/save']['POST'] = 'Requests/save/$1';
+$route['my-requests/(:any)/save-and-submit']['POST'] = 'Requests/save_and_submit/$1';
 $route['my-requests/(:any)/submit']['POST'] = 'Requests/submit/$1';
 $route['my-requests/(:any)/cancel']['POST'] = 'Requests/cancel/$1';
 $route['my-requests/(:any)/delete']['POST'] = 'Requests/delete/$1';
@@ -136,6 +157,7 @@ $route['my-requests/(:any)/delete']['POST'] = 'Requests/delete/$1';
 */
 
 // View assigned tasks and submit workflow decisions.
+$route['my-tasks']['GET'] = 'Requests/tasks';
 $route['my-tasks/(:any)']['GET'] = 'Requests/tasks/$1';
 $route['my-tasks/(:any)/decide']['POST'] = 'Requests/decide/$1';
 
@@ -224,6 +246,7 @@ $route['admin/workflows']['GET'] = 'Administration/workflows';
 
 // Add, update, remove, or reorder workflow steps.
 $route['admin/workflows/step/save']['POST'] = 'Administration/save_workflow_step';
+$route['admin/workflows/document-lock-approver']['POST'] = 'Administration/save_document_lock_approver';
 $route['admin/workflows/step/remove']['POST'] = 'Administration/remove_workflow_step';
 $route['admin/workflows/step/move']['POST'] = 'Administration/move_workflow_step';
 

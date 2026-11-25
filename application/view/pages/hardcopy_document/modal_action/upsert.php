@@ -12,7 +12,12 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   <input class="form-control" id="hardcopyTitle" name="title" required maxlength="255"
     placeholder="Enter the hardcopy document title" autocomplete="off">
 </div>
-<input type="hidden" id="hardcopySequence" name="sequence_number">
+<div class="col-12">
+  <label class="form-label" for="hardcopySequence">Sequence <span class="optional-label">(next number if empty)</span></label>
+  <input class="form-control" id="hardcopySequence" name="sequence_number" type="number"
+    min="1" max="1000000" step="1" placeholder="e.g. 1" autocomplete="off">
+  <div class="form-text">Belongs to this document, not its Location. Several documents may share one Sequence.</div>
+</div>
 
 <div class="col-md-6">
   <label class="form-label" for="hardcopyArea">Area</label>
@@ -40,8 +45,8 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
   <select class="form-select" id="hardcopyAsset" name="asset_id" data-hardcopy-level="asset" data-searchable autocomplete="off">
     <option value="">No asset / not assigned</option>
     <?php foreach ($options['assets'] as $asset): ?>
-      <option value="<?= (int) $asset['id'] ?>" data-specific-id="<?= (int) $asset['specific_id'] ?>"
-        data-area-id="<?= (int) $asset['area_id'] ?>"><?= html_escape($asset['name']) ?></option>
+      <option value="<?= (int) $asset['id'] ?>" data-specific-ids="<?= html_escape($asset['specific_ids']) ?>"
+        data-area-ids="<?= html_escape($asset['area_ids']) ?>"><?= html_escape($asset['name']) ?></option>
     <?php endforeach; ?>
   </select>
 
@@ -55,7 +60,7 @@ $myHolderName = trim((string) ($user['name'] ?? ''));
       <option value="<?= (int) $location['id'] ?>" data-area-id="<?= (int) ($location['area_id'] ?? 0) ?>"
         data-specific-id="<?= (int) ($location['specific_id'] ?? 0) ?>"
         data-asset-id="<?= (int) ($location['asset_id'] ?? 0) ?>">
-        <?= html_escape($location['name'] . ' · Sequence ' . $location['sequence_number']) ?></option>
+        <?= html_escape($location['name']) ?></option>
     <?php endforeach; ?>
   </select>
 

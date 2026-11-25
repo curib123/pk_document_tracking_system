@@ -1,5 +1,21 @@
-/* Install once. All application responses stay live; no documents are cached. */
+/* Network-only application: never cache authenticated documents or responses. */
 "use strict";
+
+function unavailableResponse() {
+  return new Response(
+    '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1">' +
+      '<title>Office network unavailable · PK DCS</title><body><h1>Office network unavailable</h1>' +
+      '<p>Reconnect to the office LAN or check that the PK DCS server is running, then refresh.</p></body></html>',
+    {
+      status: 503,
+      headers: {
+        "Content-Type": "text/html; charset=utf-8",
+        "Cache-Control": "no-store",
+      },
+    },
+  );
+}
+
 self.addEventListener("install", function (event) {
   event.waitUntil(self.skipWaiting());
 });
@@ -7,31 +23,14 @@ self.addEventListener("activate", function (event) {
   event.waitUntil(self.clients.claim());
 });
 self.addEventListener("fetch", function (event) {
+  var request = event.request;
+  // The browser serves static assets normally, including its HTTP cache.
+  // Lack of public internet does not mean the office LAN is unavailable.
+  // Never abort an otherwise successful slow office server response.
   if (
-    event.request.method !== "GET" ||
-    !event.request.url.startsWith(self.registration.scope)
-  )
-    return;
-  event.respondWith(
-    fetch(new Request(event.request, { cache: "no-store" })).catch(function () {
-      if (event.request.mode === "navigate") {
-        return new Response(
-          '<!doctype html><html lang="en"><meta name="viewport" content="width=device-width,initial-scale=1">' +
-            "<title>Connection unavailable · PK DTS</title><body><h1>Connection unavailable</h1>" +
-            "<p>Reconnect to your network, then refresh to use PK Document Control.</p></body></html>",
-          {
-            status: 503,
-            headers: {
-              "Content-Type": "text/html; charset=utf-8",
-              "Cache-Control": "no-store",
-            },
-          },
-        );
-      }
-      return new Response("Connection unavailable.", {
-        status: 503,
-        headers: { "Cache-Control": "no-store" },
-      });
-    }),
-  );
+    request.method !== "GET" ||
+    request.mode !== "navigate" ||
+    !request.url.startsWith(self.registration.scope)
+  ) return;
+  event.respondWith(fetch(request).catch(unavailableResponse));
 });

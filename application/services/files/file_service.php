@@ -3,7 +3,12 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class File_service
 {
+    private const ORPHAN_GRACE_SECONDS = 86400;
+    private const ORPHAN_BATCH_SIZE = 250;
+
     private $ci;
+    /** Storage name of the most recently staged upload (for rollback cleanup). */
+    public $last_storage = '';
 
     public function __construct()
     {
@@ -50,6 +55,7 @@ class File_service
         if ($document && !in_array($document['status'], ['disposed', 'cancelled'], TRUE)) return;
         $db->where('domain', 'softcopy')->where('document_id', $documentId)
             ->where_in('status', ['approved', 'pending', 'superseded'])
+            ->where('locked_at IS NULL', NULL, FALSE)
             ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'deleted']);
     }
 
@@ -57,32 +63,40 @@ class File_service
     public function retire_request_attachment(array $request, int $actorId = 0, string $reason = ''): int
     {
         if (!in_array($request['status'], ['rejected', 'cancelled'], TRUE)) return 0;
-        if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise'], TRUE)) return 0;
+        if (!in_array($request['type'], ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE)) return 0;
         $payload = json_decode($request['payload'] ?? '{}', TRUE) ?: [];
-        $creation = $request['type'] === 'softcopy_create';
-        $id = (int) ($payload[$creation ? 'controlled_file_id' : 'revision_file_id'] ?? 0);
-        if (!$id) return 0;
+        $creation = in_array($request['type'], ['softcopy_create', 'external_create'], TRUE);
+        $external = str_starts_with($request['type'], 'external_');
+        $fileField = $creation ? 'controlled_file_id' : 'revision_file_id';
+        $filesField = $creation ? 'controlled_file_ids' : 'revision_file_ids';
+        $ids = array_values(array_unique(array_filter(array_map(
+            'intval',
+            (array) ($payload[$filesField] ?? [$payload[$fileField] ?? 0])
+        ))));
+        if (!$ids) return 0;
         $data = ['status' => $request['status'] === 'rejected' ? 'rejected' : 'deleted'];
         if ($request['status'] === 'rejected' && $actorId) {
             $data += ['rejected_by' => $actorId, 'rejected_at' => date('Y-m-d H:i:s'), 'rejection_reason' => $reason];
         }
-        $this->ci->db->where([
-            'id' => $id, 'domain' => 'softcopy', 'status' => 'pending',
-            'document_id' => $creation ? NULL : (int) $request['softcopy_id'],
+        $this->ci->db->where_in('id', $ids)->where([
+            'domain' => $external ? 'external' : 'softcopy', 'status' => 'pending',
+            'document_id' => $creation ? NULL : (int) ($external
+                ? ($payload['external_document_id'] ?? 0) : $request['softcopy_id']),
             'uploaded_by' => (int) $request['requested_by'], 'purpose' => $creation ? 'creation' : 'revision'
-        ])->set('version', 'version + 1', FALSE)->update('files', $data);
-        return $id;
+        ])->where('locked_at IS NULL', NULL, FALSE)->set('version', 'version + 1', FALSE)->update('files', $data);
+        return count($ids);
     }
 
     /** Called after commit; historical rows and revision links remain available. */
-    public function cleanup_retired(int $documentId = 0, int $fileId = 0, array $statuses = ['superseded', 'deleted', 'rejected']): int
+    public function cleanup_retired(int $documentId = 0, int $fileId = 0, array $statuses = ['superseded', 'deleted', 'rejected'], string $domain = 'softcopy'): int
     {
         $db = $this->ci->db;
         if ($db->trans_active())
             return 0;
         $removed = 0;
         try {
-            $db->where('domain', 'softcopy')->where_in('status', $statuses);
+            $db->where('domain', $domain)->where_in('status', $statuses);
+            $db->where('locked_at IS NULL', NULL, FALSE);
             if ($documentId > 0) $db->where('document_id', $documentId);
             if ($fileId > 0) $db->where('id', $fileId);
             $files = $db->get('files')->result_array();
@@ -97,9 +111,11 @@ class File_service
                 $path = $this->controlled_path((string) $file['storage_name']);
                 if (!$path)
                     continue;
-                if (@unlink($path))
+                if (@unlink($path)) {
+                    require_once APPPATH . 'services/files/pdf_preview_service.php';
+                    Pdf_preview_service::forget((string) $file['storage_name']);
                     $removed++;
-                else
+                } else
                     log_message('error', 'Retired Document Filecleanup failed for file ' . (int) $file['id'] . '.');
             }
         } catch (Throwable $error) {
@@ -110,28 +126,147 @@ class File_service
         return $removed;
     }
 
-    /** Daily reconciliation also covers legacy terminal records and deleted documents. */
-    public function cleanup_daily(): void
+    /**
+     * Permanently remove stored bytes after a hard delete has committed. A storage
+     * name still referenced by any remaining files row is never removed.
+     */
+    public function purge_storage(array $storageNames): int
     {
-        if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return;
+        $db = $this->ci->db;
+        if ($db->trans_active())
+            return 0;
+        $removed = 0;
+        foreach (array_unique($storageNames) as $storage) {
+            $storage = (string) $storage;
+            try {
+                if ($db->where('storage_name', $storage)->count_all_results('files') > 0)
+                    continue;
+                $path = $this->controlled_path($storage);
+                if (!$path)
+                    continue;
+                if (@unlink($path)) {
+                    require_once APPPATH . 'services/files/pdf_preview_service.php';
+                    Pdf_preview_service::forget($storage);
+                    $removed++;
+                } else
+                    log_message('error', 'Hard delete could not remove a stored Document File.');
+            } catch (Throwable $error) {
+                log_message('error', 'Hard delete file cleanup failed.');
+            }
+        }
+        return $removed;
+    }
+
+    /** Reconcile retired files and storage entries without a database record once per day. */
+    public function cleanup_daily(): bool
+    {
+        if (!$this->cleanup_orphans_daily())
+            return FALSE;
+        return $this->run_daily_cleanup('controlled-file-cleanup', fn() => $this->reconcile_retired());
+    }
+
+    public function cleanup_orphans_daily(): bool
+    {
+        // Test databases can share the workspace's live upload directory.
+        return getenv('PK_TEST_DB') === '1' ||
+            $this->run_daily_cleanup('orphan-file-cleanup', fn() => $this->cleanup_unregistered());
+    }
+
+    private function run_daily_cleanup(string $checkpoint, callable $clean): bool
+    {
+        if ($this->ci->db->trans_active() || is_file(PK_ROOT . '/storage/.restore-in-progress')) return FALSE;
         $day = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
         $databaseKey = $this->ci->db->hostname . ':' . $this->ci->db->database;
-        $marker = PK_ROOT . '/storage/.controlled-file-cleanup-' . substr(hash('sha256', $databaseKey), 0, 16);
-        if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return;
-        $lock = fopen($marker, 'c+');
-        if (!$lock) return;
+        $marker = PK_ROOT . "/storage/.$checkpoint-" . substr(hash('sha256', $databaseKey), 0, 16);
+        if (is_file($marker) && trim((string) file_get_contents($marker)) === $day) return TRUE;
+        $lock = @fopen($marker, 'c+');
+        if (!$lock) {
+            log_message('error', 'Daily Document Filecleanup could not open its checkpoint; it will be retried.');
+            return FALSE;
+        }
+        $locked = FALSE;
         try {
-            if (!flock($lock, LOCK_EX | LOCK_NB)) return;
-            if (trim((string) stream_get_contents($lock)) === $day) return;
-            $this->reconcile_retired();
+            if (!flock($lock, LOCK_EX | LOCK_NB)) return FALSE;
+            $locked = TRUE;
             rewind($lock);
-            ftruncate($lock, 0);
-            fwrite($lock, $day);
+            if (trim((string) stream_get_contents($lock)) === $day) return TRUE;
+            $clean();
+            rewind($lock);
+            if (!ftruncate($lock, 0) || fwrite($lock, $day) === FALSE || !fflush($lock)) {
+                log_message('error', 'Daily Document Filecleanup could not update its checkpoint; it will be retried.');
+                return FALSE;
+            }
+            return TRUE;
         } catch (Throwable $error) {
             log_message('error', 'Daily Document Filecleanup failed; it will be retried.');
+            return FALSE;
         } finally {
-            flock($lock, LOCK_UN);
+            if ($locked) flock($lock, LOCK_UN);
             fclose($lock);
+        }
+    }
+
+    private function cleanup_unregistered(): void
+    {
+        $cutoff = time() - self::ORPHAN_GRACE_SECONDS;
+        $storage = realpath(PK_ROOT . '/storage');
+        if ($storage === FALSE)
+            throw new RuntimeException('Private storage is unavailable.');
+
+        foreach (['documents' => '/^([a-f0-9]{64})$/D', 'previews' => '/^([a-f0-9]{64})\.pdf$/D'] as $folder => $pattern) {
+            $directory = $storage . DIRECTORY_SEPARATOR . $folder;
+            if (!file_exists($directory) && !is_link($directory))
+                continue;
+            if (is_link($directory) || realpath($directory) !== $directory)
+                throw new RuntimeException('Private storage contains an unexpected directory link.');
+
+            $candidates = [];
+            foreach (new FilesystemIterator($directory) as $entry) {
+                if (!preg_match($pattern, $entry->getFilename(), $matches) ||
+                    !$this->is_old_stored_file($entry->getPathname(), $cutoff))
+                    continue;
+                $candidates[$matches[1]] = $entry->getPathname();
+                if (count($candidates) === self::ORPHAN_BATCH_SIZE) {
+                    $this->remove_unregistered_batch($candidates, $cutoff);
+                    $candidates = [];
+                }
+            }
+            if ($candidates)
+                $this->remove_unregistered_batch($candidates, $cutoff);
+        }
+    }
+
+    private function is_old_stored_file(string $path, int $cutoff): bool
+    {
+        clearstatcache(TRUE, $path);
+        if (is_link($path) || !is_file($path))
+            return FALSE;
+        $modified = @filemtime($path);
+        return $modified !== FALSE && $modified <= $cutoff;
+    }
+
+    private function remove_unregistered_batch(array $candidates, int $cutoff): void
+    {
+        $db = $this->ci->db;
+        if (!$db->trans_begin())
+            throw new RuntimeException('Could not start the stored file check.');
+        try {
+            // Locking reads wait for concurrent uploads to commit their metadata.
+            $rows = $db->query('SELECT storage_name FROM files WHERE storage_name IN ? FOR UPDATE', [array_keys($candidates)]);
+            if (!$rows)
+                throw new RuntimeException('Could not verify stored files against the database.');
+            foreach ($rows->result_array() as $row)
+                unset($candidates[strtolower($row['storage_name'])]);
+
+            foreach ($candidates as $path) {
+                if ($this->is_old_stored_file($path, $cutoff) && !@unlink($path) && $this->is_old_stored_file($path, $cutoff))
+                    throw new RuntimeException('Could not remove an unregistered stored file.');
+            }
+            if (!$db->trans_commit())
+                throw new RuntimeException('Could not complete the stored file check.');
+        } catch (Throwable $error) {
+            $db->trans_rollback();
+            throw $error;
         }
     }
 
@@ -144,10 +279,11 @@ class File_service
             WHERE f.domain="softcopy" AND f.document_id IS NOT NULL
             AND (d.id IS NULL OR d.status IN ("disposed","cancelled"))')->result_array();
         foreach ($documents as $document) $this->retire_document((int) $document['document_id']);
-        $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise'])
+        $requests = $db->where_in('type', ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'])
             ->where_in('status', ['rejected', 'cancelled'])->get('requests')->result_array();
         foreach ($requests as $request) $this->retire_request_attachment($request);
-        return $this->cleanup_retired();
+        $this->cleanup_retired();
+        return $this->cleanup_retired(0, 0, ['deleted', 'rejected'], 'external');
     }
 
     // Document Files are private while awaiting approval.
@@ -155,6 +291,17 @@ class File_service
     public function stage_creation($actorId, $upload)
     {
         return $this->stage_controlled(NULL, $actorId, $upload, 'creation');
+    }
+
+    public function stage_scanned($documentId, int $actorId, array $upload): int
+    {
+        return $this->stage_controlled($documentId, $actorId, $upload,
+            $documentId === NULL ? 'creation' : 'revision', 'scanned');
+    }
+
+    public function stage_external_creation($actorId, $uploads): array
+    {
+        return $this->stage_external_uploads(NULL, $actorId, $uploads, 'creation');
     }
 
     public function stage_revision($docId, $actorId, $upload)
@@ -168,7 +315,120 @@ class File_service
         return $this->stage_controlled((int) $docId, $actorId, $upload, 'revision');
     }
 
-    private function stage_controlled($docId, $actorId, $upload, $purpose)
+    public function stage_external_revision($docId, $actorId, $uploads): array
+    {
+        $document = $this->ci->db->get_where('external_documents', [
+            'id' => (int) $docId,
+            'status' => 'active'
+        ])->row_array();
+        if (!$document)
+            throw new DomainException('Select an active external document.');
+        return $this->stage_external_uploads((int) $docId, $actorId, $uploads, 'revision');
+    }
+
+    private function stage_external_uploads($docId, $actorId, $uploads): array
+    {
+        $files = $this->normalize_external_uploads($uploads);
+        if (count($files) > 20) {
+            throw new DomainException('Upload no more than 20 files at once.');
+        }
+        $staged = [];
+        try {
+            foreach ($files as $upload) {
+                $staged[] = $this->stage_controlled($docId, $actorId, $upload, $docId === NULL ? 'creation' : 'revision', 'external');
+            }
+        } catch (Throwable $error) {
+            $this->cleanup_staged($staged);
+            throw $error;
+        }
+        return $staged;
+    }
+
+    private function normalize_external_uploads($uploads): array
+    {
+        if (!is_array($uploads) || !array_key_exists('name', $uploads)) {
+            return [];
+        }
+        if (!is_array($uploads['name'])) {
+            return (int) ($uploads['error'] ?? UPLOAD_ERR_NO_FILE) === UPLOAD_ERR_NO_FILE ? [] : [$uploads];
+        }
+        $files = [];
+        foreach ($uploads['name'] as $index => $name) {
+            $file = [];
+            foreach (['name', 'type', 'tmp_name', 'error', 'size'] as $key) {
+                $file[$key] = $uploads[$key][$index] ?? NULL;
+            }
+            if ((int) ($file['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE || $name !== '') {
+                $files[] = $file;
+            }
+        }
+        return $files;
+    }
+
+    public function cleanup_staged(array $fileIds): void
+    {
+        $fileIds = array_values(array_unique(array_filter(array_map('intval', $fileIds))));
+        if (!$fileIds) {
+            return;
+        }
+        $files = $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('locked_at IS NULL', NULL, FALSE)
+            ->where('status', 'pending')->get('files')->result_array();
+        $this->ci->db->where_in('id', $fileIds)->where('domain', 'external')
+            ->where('locked_at IS NULL', NULL, FALSE)
+            ->where('status', 'pending')->delete('files');
+        foreach ($files as $file) {
+            $path = $this->controlled_path((string) $file['storage_name']);
+            if ($path && !@unlink($path)) {
+                log_message('error', 'Staged external attachment cleanup failed for file ' . (int) $file['id'] . '.');
+            }
+        }
+    }
+
+    /**
+     * The DCO's edited file for a locked softcopy attachment. It stays private and
+     * pending until the request completes, then becomes the final controlled copy.
+     */
+    public function stage_final(array $request, int $sourceFileId, int $actorId, $upload): int
+    {
+        $creation = $request['type'] === 'softcopy_create';
+        $id = $this->stage_controlled(
+            $creation ? NULL : (int) $request['softcopy_id'],
+            $actorId,
+            $upload,
+            'dco_final',
+            'softcopy',
+            ['stage' => 'final', 'source_file_id' => $sourceFileId, 'finalized_by' => $actorId, 'finalized_at' => date('Y-m-d H:i:s')]
+        );
+        return $id;
+    }
+
+    public function stage_revision_template(int $documentId, int $actorId, array $upload, string $approvedAt): int
+    {
+        if ((int) ($upload['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_OK)
+            throw new DomainException('The editable revision template could not be uploaded. Choose a file up to 15 MB.');
+        return $this->stage_controlled($documentId, $actorId, $upload, 'revision_template', 'softcopy', [
+            'status' => 'approved', 'approved_by' => $actorId, 'approved_at' => $approvedAt
+        ]);
+    }
+
+    /** Pending final file (if any) for a request payload. */
+    public function pending_final_file(array $payload): ?array
+    {
+        $id = (int) ($payload['final_file_id'] ?? 0);
+        return $id ? ($this->ci->db->get_where('files', [
+            'id' => $id, 'purpose' => 'dco_final', 'status' => 'pending'
+        ])->row_array() ?: NULL) : NULL;
+    }
+
+    /** Removes the uploaded bytes when the surrounding transaction rolled back. */
+    public function discard_storage(string $storage): void
+    {
+        $path = $this->controlled_path($storage);
+        if ($path) @unlink($path);
+    }
+
+    private function stage_controlled($docId, $actorId, $upload, $purpose, $domain = 'softcopy', array $extra = [])
     {
         if (
             !is_array($upload) || (int) ($upload['error'] ?? -1) !== UPLOAD_ERR_OK ||
@@ -196,10 +456,13 @@ class File_service
             'xlsx' => ['application/zip', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet']
         ];
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($upload['tmp_name']);
-        if (
-            !$name || strlen($name) > 255 || !isset($allowed[$ext]) ||
-            !in_array($mime, $allowed[$ext], TRUE)
-        ) {
+        $validType = $domain === 'external'
+            ? (($ext === 'pdf' && $mime === 'application/pdf') ||
+                ($ext !== '' && strpos((string) $mime, 'image/') === 0))
+            : (isset($allowed[$ext]) && in_array($mime, $allowed[$ext], TRUE));
+        if ($purpose === 'revision_template' && (!$validType || !$this->is_editable_template($ext, $upload['tmp_name'])))
+            throw new DomainException('Upload an editable Word (.docx), Excel (.xlsx), or text (.txt) file.');
+        if (!$name || strlen($name) > 255 || !$validType) {
             throw new DomainException('Unsupported Document Fileformat.');
         }
         $directory = PK_ROOT . '/storage/documents';
@@ -212,7 +475,8 @@ class File_service
             throw new DomainException('Could not store the Document File.');
         }
         chmod($path, 0600);
-        $saved = $this->ci->db->insert('files', [
+        $this->last_storage = $storage;
+        $saved = $this->ci->db->insert('files', $extra + [
             'original_name' => $name,
             'storage_name' => $storage,
             'size' => $size,
@@ -220,7 +484,7 @@ class File_service
             'fingerprint' => hash_file('sha256', $path),
             'extension' => $ext,
             'purpose' => $purpose,
-            'domain' => 'softcopy',
+            'domain' => $domain,
             'document_id' => $docId,
             'uploaded_by' => (int) $actorId,
             'status' => 'pending'
@@ -230,6 +494,21 @@ class File_service
             throw new DomainException('Unable to record Document File.');
         }
         return (int) $this->ci->db->insert_id();
+    }
+
+    private function is_editable_template(string $extension, string $path): bool
+    {
+        if ($extension === 'txt')
+            return TRUE;
+        $officePart = ['docx' => 'word/document.xml', 'xlsx' => 'xl/workbook.xml'][$extension] ?? NULL;
+        if (!$officePart)
+            return FALSE;
+        $archive = new ZipArchive();
+        if ($archive->open($path, ZipArchive::RDONLY) !== TRUE)
+            return FALSE;
+        $valid = $archive->locateName('[Content_Types].xml') !== FALSE && $archive->locateName($officePart) !== FALSE;
+        $archive->close();
+        return $valid;
     }
 
     /** Legacy upload form delegates to the same locked revision transaction as Direct. */
@@ -251,7 +530,6 @@ class File_service
             'document_number' => $document['document_number'],
             'series_number' => $document['series_number'],
             'category_id' => $document['category_id'],
-            'new_revision_level' => $post['new_revision_level'] ?? '',
             'page_number' => $post['page_number'] ?? 1,
             'effective_date' => $post['effective_date'] ?? ''
         ], (int) $actorId, $upload);

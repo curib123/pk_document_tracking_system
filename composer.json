@@ -1,6 +1,6 @@
 {
   "name": "curib123/pk-document-tracking-system",
-  "description": "PK DTS original schema CodeIgniter 3 master-based MVC rebuild",
+  "description": "PK DCS (Document Control System) original schema CodeIgniter 3 master-based MVC rebuild",
   "type": "project",
   "require": {
     "php": "^8.0",

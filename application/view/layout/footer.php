@@ -62,6 +62,32 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
     </div>
 </div>
 
+<div class="modal fade app-alert-modal" data-bs-backdrop="static" data-bs-keyboard="false"
+    id="retentionNotificationModal" tabindex="-1" role="alertdialog" aria-modal="true" aria-hidden="true"
+    aria-labelledby="retentionNotificationTitle" aria-describedby="retentionNotificationMessage"
+    data-list-url="<?= html_escape(site_url('notifications/retention')) ?>"
+    data-user-id="<?= (int) ($user['id'] ?? 0) ?>">
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content app-alert-content app-alert-warning">
+            <div class="modal-header border-0">
+                <div class="app-alert-symbol" aria-hidden="true">
+                    <?php $this->load->view('reusable_components/alert_icon', ['alert_kind' => 'warning']); ?></div>
+                <button class="btn-close" type="button" data-bs-dismiss="modal"
+                    aria-label="Close retention notification"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <h2 class="h5 fw-bold mb-2" id="retentionNotificationTitle">Document reminders</h2>
+                <p class="text-secondary" id="retentionNotificationMessage">Review expired retention periods. A daily alarm from 4:00 PM Philippine time reminds you to upload scanned documents as a backup.</p>
+                <ol class="task-notification-list" id="retentionNotificationList"></ol>
+            </div>
+            <div class="modal-footer border-0">
+                <button class="btn btn-light" type="button" data-scan-alarm-enable>Enable reminder sound</button>
+                <button class="btn btn-primary" type="button" data-bs-dismiss="modal">Got it</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Waiting feedback is a live status; native forms and returned results stay authoritative. -->
 <div class="action-feedback" id="appActionFeedback" hidden role="status" aria-live="polite" aria-atomic="true">
     <div class="action-feedback-card">
@@ -120,6 +146,34 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                                 class="optional-label">(optional)</span></label>
                         <textarea class="form-control" id="actionRemark" name="remark" rows="3" autocomplete="off"></textarea>
                     </div>
+                    <div id="actionPasswordFields" hidden>
+                        <p class="text-danger small mb-2"><strong>This permanently erases the document, its files and records.</strong>
+                            Recommended: download a full backup first (Administration &gt; Backups).</p>
+                        <label for="actionConfirmPhrase" class="form-label">Type <strong>DELETE</strong> to confirm</label>
+                        <input class="form-control mb-2" type="text" id="actionConfirmPhrase" name="confirm_phrase" autocomplete="off" disabled>
+                        <label for="actionConfirmPassword" class="form-label">Your password</label>
+                        <input class="form-control" type="password" id="actionConfirmPassword" name="confirm_password" autocomplete="current-password" disabled>
+                    </div>
+                    <div id="actionFinalFields" hidden>
+                        <div data-final-document-copy>
+                            <p class="mb-2"><strong>Step 1.</strong> Download the locked approved file and edit it.
+                                <a class="btn btn-sm btn-outline-primary ms-1" id="actionFinalDownload" href="#"><i class="fa-solid fa-download" aria-hidden="true"></i> Download locked file</a></p>
+                            <p class="mb-2"><strong>Step 2.</strong> Upload your edited file. The requester’s proposed file is then removed.</p>
+                        </div>
+                        <label for="actionFinalFile" class="form-label"><span id="actionFinalFileLabel">Final edited file</span> <span class="text-danger">(required)</span></label>
+                        <input class="form-control" type="file" id="actionFinalFile" name="final_file" disabled
+                            accept=".pdf,.docx,.xlsx,.txt,.png,.jpg,.jpeg" aria-describedby="actionFinalFileHelp">
+                        <small class="form-text" id="actionFinalFileHelp">
+                            <span data-final-document-copy>Upload your edited version of the locked file. It becomes the final controlled document and the proposed file is removed.</span>
+                            <span data-template-copy hidden>Word (.docx), Excel (.xlsx), or text (.txt), up to 15 MB. The requester can download it after approval.</span>
+                        </small>
+                        <div class="mt-3" id="actionTemplateExpiryFields" hidden>
+                            <label for="actionTemplateExpiry" class="form-label">Download expiry date <span class="text-danger">(required)</span></label>
+                            <input class="form-control" type="date" id="actionTemplateExpiry" name="template_expires_on"
+                                min="<?= date('Y-m-d') ?>" aria-describedby="actionTemplateExpiryHelp" disabled>
+                            <small class="form-text" id="actionTemplateExpiryHelp">The requester can download the template through this date, Philippine time.</small>
+                        </div>
+                    </div>
                     <div class="row g-3 mt-2" id="actionDisposalFields" hidden>
                         <?php $this->load->view('pages/request/disposal_fields', ['disposal_field_prefix' => 'directDisposal']); ?>
                     </div>
@@ -128,12 +182,13 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
                 <input type="hidden" name="decision" value="">
                 <input type="hidden" name="step_key" value="">
                 <input type="hidden" name="direction" value="">
+                <input type="hidden" name="return_query" value="">
                 <input type="hidden" name="confirmed" value="no">
                 <input type="hidden" name="<?= $this->security->get_csrf_token_name() ?>"
                     value="<?= $this->security->get_csrf_hash() ?>">
                 <div class="modal-footer"><button type="button" class="btn btn-light"
                         data-bs-dismiss="modal">Cancel</button><button class="btn btn-danger"
-                        type="submit">Continue</button></div>
+                        type="submit" id="actionContinue">Continue</button></div>
             </form>
         </div>
     </div>
@@ -174,6 +229,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
             <div class="modal-footer doc-modal-footer">
                 <p class="doc-modal-footnote" id="viewDocumentFootnote" hidden><i class="fa-solid fa-lock"
                         aria-hidden="true"></i> Read-only details within your access permissions</p>
+                <div id="viewReviewActions" role="group" aria-label="Review decision" hidden></div>
                 <button type="button" class="btn btn-light" data-bs-dismiss="modal">Close</button>
             </div>
         </div>
@@ -203,22 +259,29 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
         </div>
     </div>
 </div>
-<script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
-<script src="<?= base_url('assets/js/app.js') ?>"></script>
-<script src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
-<script src="<?= base_url('assets/js/row-actions.js') ?>"></script>
-<script src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
-<script src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
-<script src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
-<script src="<?= base_url('assets/js/document-view.js') ?>"></script>
-<script src="<?= base_url('assets/js/document-tree.js') ?>"></script>
-<script src="<?= base_url('assets/js/auth.js') ?>"></script>
-<script src="<?= base_url('assets/js/dashboard.js') ?>"></script>
-<script src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
-<script src="<?= base_url('assets/js/live-table.js') ?>"></script>
-<script src="<?= base_url('assets/js/motion.js') ?>"></script>
+<!-- Run local Bootstrap before the application handlers. -->
+<script defer src="<?= base_url('assets/js/vendor/bootstrap.bundle.min.js') ?>"></script>
+<?php if ($this->router->fetch_class() === 'dashboard'): ?>
+<script defer src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
+<?php endif; ?>
+<script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/retention-notifications.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/scanned-documents.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/row-actions.js?v=' . filemtime(FCPATH . 'assets/js/row-actions.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/notification-inbox.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/logout-transition.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/action-feedback.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/softcopy-autofill.js?v=' . filemtime(FCPATH . 'assets/js/softcopy-autofill.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/signatory-references.js?v=' . filemtime(FCPATH . 'assets/js/signatory-references.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/preview-viewer.js?v=' . filemtime(FCPATH . 'assets/js/preview-viewer.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/document-view.js?v=' . filemtime(FCPATH . 'assets/js/document-view.js')) ?>"></script>
+<script defer src="<?= base_url('assets/js/document-tree.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/auth.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/dashboard.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/live-table.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/motion.js') ?>"></script>
 </body>
 
 </html>

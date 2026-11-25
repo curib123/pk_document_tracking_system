@@ -118,6 +118,12 @@ class Document_detail_model extends CI_Model
             foreach ($disposals as $disposal)
                 $disposalsByDoc[$disposal['document_id']] = Disposal_details::recorded($disposal);
         }
+        $signatoriesByDoc = [];
+        if ($domain === 'softcopy') {
+            require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+            $signatoriesByDoc = (new Signatory_reference_service())
+                ->current_for_documents(array_map('intval', array_column($rows, 'id')));
+        }
         $output = [];
         foreach ($rows as $document) {
             $id = (int) $document['id'];
@@ -149,7 +155,7 @@ class Document_detail_model extends CI_Model
                         'Specific' => $document['specific_name'] ?? '',
                         'Asset' => $document['asset_name'] ?? '',
                         'Location' => $document['location_name'] ?? '',
-                        'Location Sequence' => $document['location_sequence'] ?? '',
+                        'Sequence' => $document['sequence_number'] ?? '',
                         'Current Holder' => $document['holder_name'] ?? '',
                         'Days until disposal' => Retention_countdown::label(
                             $document['retention_enabled'] ?? 0,
@@ -165,7 +171,6 @@ class Document_detail_model extends CI_Model
                     'fields' => [
                         'Category / Folder' => $document['category_name'] ?? '',
                         'Series' => $document['series_number'] ?? '',
-                        'Revision Number' => $document['revision_number'] ?? '',
                         'Revision Level' => $document['new_revision_level'] ?? '',
                         'Effective Date' => $document['new_effective_date'] ?? '',
                         'Pages' => $document['page_number'] ?? '',
@@ -176,15 +181,37 @@ class Document_detail_model extends CI_Model
                 $fileFields = [];
                 $links = [];
                 foreach ($fileHistories[$id] ?? [] as $index => $file) {
-                    if (!$can('files', 'history') && empty($file['is_current']))
+                    $current = !empty($file['is_current']);
+                    if (!$can('files', 'history') && !$current)
                         continue;
-                    $fileFields[($index + 1) . '. ' . $file['original_name']] =
-                        number_format((int) $file['size']) . ' bytes · ' . $file['mime_type'] . ' · ' . $file['created_at'] .
-                        ' · ' . (!empty($file['is_current']) ? 'Current' : 'Superseded');
+                    $stage = match ($file['stage'] ?? '') {
+                        'final' => 'Final (Document Control)',
+                        'locked' => 'Locked proposed file',
+                        default => 'Proposed'
+                    };
+                    $metadata = [
+                        ($current ? 'Current' : 'Superseded') . ' · ' . $stage,
+                        'Uploaded by ' . trim($file['first_name'] . ' ' . $file['last_name']) . ' on ' . $file['created_at'],
+                        number_format((int) $file['size']) . ' bytes · ' . $file['mime_type']
+                    ];
+                    if (!empty($file['locked_at'])) {
+                        $lockedBy = trim(($file['locked_first_name'] ?? '') . ' ' . ($file['locked_last_name'] ?? ''));
+                        $metadata[] = 'Locked on ' . $file['locked_at'] . ($lockedBy === '' ? '' : ' by ' . $lockedBy);
+                    }
+                    $fileFields[($index + 1) . '. ' . $file['original_name']] = implode("\n", $metadata);
+                    // Locked files are a read-only preview; download/print stay with
+                    // roles holding Download Locked Files (e.g. Document Control, admin).
+                    $unlocked = empty($file['locked_at']) || $can('files', 'download_locked');
+                    $extension = strtolower(pathinfo((string) $file['original_name'], PATHINFO_EXTENSION));
+                    // Word/Excel are previewed as a PDF rendered from the preserved original.
+                    $previewType = in_array($extension, ['docx', 'xlsx'], TRUE) ? 'application/pdf' : (string) $file['mime_type'];
                     $links[] = [
                         'label' => 'Download ' . $file['original_name'],
-                        'url' => $can('files', 'download') && !empty($file['is_current']) ? site_url('files/download/' . $file['id']) : '',
-                        'print_url' => $can('files', 'print') && !empty($file['is_current']) ? site_url('files/print/' . $file['id']) : ''
+                        'url' => $can('files', 'download') && $current && $unlocked ? site_url('files/download/' . $file['id']) : '',
+                        'pdf_url' => $can('files', 'download') && $current && $unlocked && in_array($extension, ['docx', 'xlsx'], TRUE)
+                            ? site_url('files/download-pdf/' . $file['id']) : '',
+                        'preview_url' => $can('files', 'view') && $current ? site_url('files/preview/' . $file['id']) : '',
+                        'preview_type' => $previewType
                     ];
                 }
                 $sections[] = [
@@ -193,8 +220,23 @@ class Document_detail_model extends CI_Model
                     'description' => 'Current approved file and revision history · latest 25',
                     'fields' => $fileFields,
                     'links' => $links,
-                    'empty' => 'No Document Filehistory available within your file permissions.'
+                    'show_file_metadata' => TRUE,
+                    'empty' => 'No document files available within your permissions.'
                 ];
+                // Optional; read-only, exactly as recorded with the current revision.
+                $signatoryFields = [];
+                foreach ($signatoriesByDoc[$id] ?? [] as $index => $signatory) {
+                    $signatoryFields[($index + 1) . '. ' . $signatory['title']] =
+                        $signatory['full_name'] . ' · ' . $signatory['position'];
+                }
+                if ($signatoryFields) {
+                    $sections[] = [
+                        'key' => 'signatories',
+                        'title' => 'Signatories References',
+                        'description' => 'Signatories recorded with the current revision',
+                        'fields' => $signatoryFields
+                    ];
+                }
             }
             if ($document['status'] === 'disposed')
                 array_splice($sections, 2, 0, [

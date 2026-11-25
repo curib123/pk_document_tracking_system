@@ -18,7 +18,7 @@
  <p class="small text-secondary">Automatically loaded from the selected hardcopy record.</p>
 </div>
 <?php foreach(['title'=>'Document Title','area_name'=>'Area','specific_name'=>'Specific','asset_name'=>'Asset',
- 'location_name'=>'Location','location_sequence'=>'Location Sequence',
+ 'sequence_number'=>'Sequence','location_name'=>'Location',
  'holder_name'=>'Current Holder'] as $key=>$label): ?>
 <div class="col-md-6">
  <label class="form-label" for="original-<?= $key ?>"><?= html_escape($label) ?></label>
@@ -41,10 +41,11 @@
   <option value=""><?= $level==='location'?'Choose a location':($level==='asset'?'No asset / not assigned':'All '.$meta[0]) ?></option>
   <?php foreach($transfer_options[$meta[1]] as $option): ?>
   <option value="<?= (int)$option['id'] ?>"
-   <?php if($level!=='area'): ?>data-area-id="<?= (int)($option['area_id']??0) ?>"<?php endif; ?>
-   <?php if($level==='asset'||$level==='location'): ?>data-specific-id="<?= (int)($option['specific_id']??0) ?>"<?php endif; ?>
+   <?php if($level==='asset'): ?>data-area-ids="<?= html_escape($option['area_ids']) ?>" data-specific-ids="<?= html_escape($option['specific_ids']) ?>"<?php endif; ?>
+   <?php if($level==='specific'||$level==='location'): ?>data-area-id="<?= (int)($option['area_id']??0) ?>"<?php endif; ?>
+   <?php if($level==='location'): ?>data-specific-id="<?= (int)($option['specific_id']??0) ?>"<?php endif; ?>
    <?php if($level==='location'): ?>data-asset-id="<?= (int)($option['asset_id']??0) ?>"<?php endif; ?>>
-   <?= html_escape($option['name'].($level==='location'?' · Sequence '.$option['sequence_number']:'')) ?>
+   <?= html_escape($option['name']) ?>
   </option>
   <?php endforeach; ?>
  </select>

@@ -1,6 +1,7 @@
 <?php
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
+require_once APPPATH . 'services/request/request_policy.php';
 
 /**
  * Actionable navigation counts, scoped to the signed-in user.
@@ -9,7 +10,9 @@ require_once APPPATH . 'services/security/user_roles.php';
 class Notification_model extends CI_Model
 {
     private $tabs = [
-        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel'],
+        'softcopy' => ['softcopy_create', 'softcopy_revise', 'softcopy_cancel', Request_policy::REVISION_TEMPLATE],
+        'external' => ['external_create', 'external_revise'],
+        'scanned' => ['scanned_create', 'scanned_update', 'scanned_delete', 'scanned_category_create'],
         'hardcopy' => ['hardcopy_create', 'hardcopy_update'],
         'hardcopy-transfer' => ['transfer'],
         'hardcopy-disposal' => ['disposal'],
@@ -67,12 +70,9 @@ class Notification_model extends CI_Model
                 $tasks[$tab] += (int) $row['total'];
         }
 
-        // Physical handoffs also live under My Tasks > Hardcopy Transfer.
-        $handoffs = $this->db->from('transfers')->group_start()
-            ->group_start()->where('status', 'for_transfer')->where('current_holder_id', $userId)->group_end()
-            ->or_group_start()->where('status', 'in_transit')->where('recipient_id', $userId)->group_end()
-            ->group_end()->count_all_results();
-        $tasks['hardcopy-transfer'] += (int) $handoffs;
+        // Physical handoffs are listed in My Tasks alongside workflow approvals.
+        $this->load->model('Transfer_model');
+        $tasks['hardcopy-transfer'] += $this->Transfer_model->pending_count($user);
 
         return [
             'requests' => $requests,
@@ -130,7 +130,7 @@ class Notification_model extends CI_Model
                 'title' => $this->taskTitle($row),
                 'request_reference' => $row['reference'],
                 'label' => $row['label'],
-                'url' => 'my-tasks/' . $tab . '?' . http_build_query(['q' => $row['reference']])
+                'url' => 'my-tasks?' . http_build_query(['request_category' => $tab, 'q' => $row['reference']])
             ];
         }
         return [

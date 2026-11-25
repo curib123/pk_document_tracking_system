@@ -1,0 +1,27 @@
+{
+  "my-tasks": {
+    "file": "my-tasks.png",
+    "width": 1700,
+    "height": 900,
+    "controls": {
+      "Approve": {
+        "x": 638.9,
+        "y": 809,
+        "width": 106.5,
+        "height": 44
+      },
+      "Return": {
+        "x": 855.1,
+        "y": 809,
+        "width": 96.5,
+        "height": 44
+      },
+      "Reject": {
+        "x": 753.4,
+        "y": 809,
+        "width": 93.7,
+        "height": 44
+      }
+    }
+  }
+}

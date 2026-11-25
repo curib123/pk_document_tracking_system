@@ -98,6 +98,7 @@
 
   function reset() {
     modal.classList.remove("is-document-view");
+    modal.classList.remove("is-external-document-view");
     modal.classList.remove("is-assignment-view");
     modal.setAttribute("data-view-domain", "");
     [
@@ -132,6 +133,14 @@
   var STORAGE_LEVELS = ["Area", "Specific", "Asset", "Location"];
   var STORAGE_HEADER_FIELDS = ["Current Holder", "Days until disposal"];
   var HEADER_FIELDS = {
+    "Document No.": "fa-code-branch",
+    Subsidiary: "fa-user",
+    Category: "fa-folder-open",
+    Status: "fa-circle-info",
+    Description: "fa-circle-info",
+    "Revision Level": "fa-code-branch",
+    "Created Date": "fa-calendar-plus",
+    Updated: "fa-clock-rotate-left",
     "Created By": "fa-user",
     "Requested By": "fa-user",
     "Created": "fa-calendar-plus",
@@ -142,6 +151,17 @@
     "Recorded At": "fa-clock-rotate-left",
     "Record Version": "fa-code-branch",
     "Request Version": "fa-code-branch",
+  };
+
+  // Classification and revision details of a softcopy sit in the top header, not the body.
+  var REVISION_HEADER_FIELDS = {
+    "Category / Folder": "fa-folder-open",
+    Series: "fa-layer-group",
+    "Revision Level": "fa-code-branch",
+    "Effective Date": "fa-calendar-check",
+    Pages: "fa-file-lines",
+    "Date Received": "fa-inbox",
+    "Date Released": "fa-paper-plane",
   };
 
   function hasStorageValue(value) {
@@ -215,11 +235,11 @@
       var entries = normalizedEntries(section.fields).filter(function (entry) {
         return (
           !(section.key === "overview" && (repeated[entry[0]] || Object.prototype.hasOwnProperty.call(HEADER_FIELDS, entry[0]))) &&
+          !(section.key === "revision" && Object.prototype.hasOwnProperty.call(REVISION_HEADER_FIELDS, entry[0])) &&
           !(domain === "softcopy" && entry[0] === "Document Number" && hasStorageValue(entry[1])) &&
           !(
             section.key === "storage" &&
-            (STORAGE_HEADER_FIELDS.includes(entry[0]) ||
-              entry[0] === "Location Sequence")
+            STORAGE_HEADER_FIELDS.includes(entry[0])
           )
         );
       });
@@ -314,6 +334,10 @@
   function prepareHeading(data) {
     modal.classList.add("is-document-view");
     var h = data.header || {};
+    var isExternalDocument = h.eyebrow === "EXTERNAL DOCUMENT";
+    if (isExternalDocument) {
+      modal.classList.add("is-external-document-view");
+    }
     var domain =
       data.domain === "hardcopy"
         ? "hardcopy"
@@ -344,17 +368,32 @@
         return section.key === "overview";
       });
       var recordFields = (overview && overview.fields) || {};
-      normalizedEntries(recordFields).forEach(function (entry) {
-        var label = entry[0];
-        if (!Object.prototype.hasOwnProperty.call(HEADER_FIELDS, label)) return;
-        var item = node("div", "doc-modal-metadata-item" + (/Version$/.test(label) ? " is-version" : ""));
-        var term = node("dt", "doc-modal-metadata-label");
-        var glyph = node("span", "doc-modal-metadata-icon " + HEADER_FIELDS[label]);
-        glyph.setAttribute("aria-hidden", "true");
-        term.append(glyph, node("span", "", label));
-        item.append(term, node("dd", "doc-modal-metadata-value", fieldValue([label, recordFields[label]])));
-        metadata.append(item);
+      var revision = data.sections.find(function (section) {
+        return section.key === "revision";
       });
+      function addMetadata(fields, icons) {
+        normalizedEntries(fields).forEach(function (entry) {
+          var label = entry[0];
+          if (!Object.prototype.hasOwnProperty.call(icons, label)) return;
+          if (isExternalDocument && label === "Status") return;
+          var metadataValue = fieldValue([label, fields[label]]);
+          var item = node(
+            "div",
+            "doc-modal-metadata-item" +
+              (/Version$/.test(label) ? " is-version" : "") +
+              (metadataValue.length > 120 ? " is-wide" : ""),
+          );
+          var term = node("dt", "doc-modal-metadata-label");
+          var glyph = node("span", "doc-modal-metadata-icon " + icons[label]);
+          glyph.setAttribute("aria-hidden", "true");
+          term.append(glyph, node("span", "", label));
+          item.append(term, node("dd", "doc-modal-metadata-value", metadataValue));
+          metadata.append(item);
+        });
+      }
+      // Classification and revision first, then who created or changed the record.
+      if (revision) addMetadata(revision.fields || {}, REVISION_HEADER_FIELDS);
+      addMetadata(recordFields, HEADER_FIELDS);
       metadata.hidden = !metadata.children.length;
     }
 
@@ -491,50 +530,98 @@
     var links = Array.isArray(section.links) ? section.links : [];
     entries.forEach(function (entry, index) {
       var row = node("article", "doc-modal-file-item");
-      var fileIcon = node("span", "doc-modal-file-icon");
-      fileIcon.append(icon("files"));
-      var content = node("div", "doc-modal-file-content");
-      content.append(
-        node(
-          "strong",
-          "doc-modal-file-title",
-          entry[0].replace(/^\d+\.\s*/, ""),
-        ),
-      );
-      content.append(node("p", "doc-modal-file-meta", formatDates(entry[1])));
-      row.append(fileIcon, content);
+      var fileInfo = node("div", "doc-modal-file-info");
       var link = links[index] || {};
+      var fileName = entry[0].replace(/^\d+\.\s*/, "");
+      var previewDestination = link.preview_url ? safeLink(link.preview_url) : null;
+      if (previewDestination && String(link.preview_type || "").indexOf("image/") === 0) {
+        var preview = node("img", "doc-modal-file-preview");
+        preview.src = previewDestination;
+        preview.alt = fileName;
+        preview.loading = "eager";
+        row.append(preview);
+      } else if (previewDestination && link.preview_type === "application/pdf") {
+        var pdf = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
+        pdf.src = previewDestination + "#toolbar=0&navpanes=0&view=Fit";
+        pdf.title = "Preview " + fileName;
+        row.append(pdf);
+      } else if (previewDestination && link.preview_type === "text/plain") {
+        var text = node("iframe", "doc-modal-file-preview doc-modal-file-pdf");
+        text.src = previewDestination;
+        text.title = "Preview " + fileName;
+        row.append(text);
+      }
+      fileInfo.append(node("strong", "doc-modal-file-title", fileName));
+      // In-page fullscreen works for every previewable file, including locked ones,
+      // and keeps the PDF toolbar (save/print) hidden.
+      var previewElement = row.querySelector(".doc-modal-file-preview");
+      var requestFullscreen = previewElement &&
+        (previewElement.requestFullscreen || previewElement.webkitRequestFullscreen);
+      // Images and PDFs (including Word and Excel, shown as PDF) open in a viewer that
+      // supports mouse zoom and pan. Text previews keep the plain browser fullscreen.
+      var viewerKind = !previewElement ? "" :
+        previewElement.tagName === "IMG" ? "image" :
+        link.preview_type === "application/pdf" ? "pdf" : "";
+      if (requestFullscreen || (viewerKind && window.PKPreviewViewer)) {
+        var fullscreen = node(
+          "button",
+          "btn btn-sm btn-outline-secondary doc-modal-download",
+          "Fullscreen",
+        );
+        fullscreen.type = "button";
+        fullscreen.setAttribute("aria-label", "Show " + fileName + " fullscreen");
+        function nativeFullscreen() {
+          try {
+            var request = previewElement.requestFullscreen
+              ? previewElement.requestFullscreen()
+              : previewElement.webkitRequestFullscreen();
+            if (request && request.catch) request.catch(function () {});
+          } catch (error) {
+            /* Fullscreen can be blocked by the browser; the inline preview remains. */
+          }
+        }
+        fullscreen.addEventListener("click", function () {
+          if (viewerKind && window.PKPreviewViewer) {
+            window.PKPreviewViewer.open({
+              kind: viewerKind,
+              url: previewDestination,
+              title: fileName,
+              opener: fullscreen,
+              onFail: requestFullscreen ? nativeFullscreen : null,
+            });
+          } else if (requestFullscreen) nativeFullscreen();
+        });
+        fileInfo.append(fullscreen);
+      }
       var destination = link.url ? safeLink(link.url) : null;
+      var pdfDestination = link.pdf_url ? safeLink(link.pdf_url) : null;
       if (destination) {
         var anchor = node(
           "a",
           "btn btn-sm btn-outline-primary doc-modal-download",
-          "Download",
+          pdfDestination ? "Download Original" : "Download",
         );
         anchor.href = destination;
         anchor.setAttribute(
           "aria-label",
-          "Download " + entry[0].replace(/^\d+\.\s*/, ""),
+          (pdfDestination ? "Download original of " : "Download ") + fileName,
         );
         anchor.append(icon("files"));
-        row.append(anchor);
+        fileInfo.append(anchor);
       }
-      var printDestination = link.print_url ? safeLink(link.print_url) : null;
-      if (printDestination) {
-        var print = node(
+      if (pdfDestination) {
+        var pdfAnchor = node(
           "a",
           "btn btn-sm btn-outline-primary doc-modal-download",
-          "Print",
+          "Download PDF",
         );
-        print.href = printDestination;
-        print.target = "_blank";
-        print.rel = "noopener";
-        print.setAttribute(
-          "aria-label",
-          "Print " + entry[0].replace(/^\d+\.\s*/, ""),
-        );
-        row.append(print);
+        pdfAnchor.href = pdfDestination;
+        pdfAnchor.setAttribute("aria-label", "Download PDF copy of " + fileName);
+        fileInfo.append(pdfAnchor);
       }
+      row.append(fileInfo);
+      if (section.show_file_metadata)
+        row.append(node("p", "doc-modal-file-meta", formatDates(entry[1], false)));
       list.append(row);
     });
     return list;
@@ -595,6 +682,22 @@
       iso: day + "T" + String(hour).padStart(2, "0") + ":" +
         String(minute).padStart(2, "0") + ":" + String(second).padStart(2, "0") + "+08:00",
     };
+  }
+
+  // "locked": this approval locked the attached file. "locks": this step will lock it.
+  function lockBadge(state) {
+    var locked = state === "locked";
+    var badge = node(
+      "span",
+      "doc-workflow-lock-badge" + (locked ? " is-locked" : ""),
+    );
+    var lock = node("i", "fa-solid fa-lock");
+    lock.setAttribute("aria-hidden", "true");
+    badge.append(lock, locked ? " Locked" : " Locks file on approval");
+    badge.title = locked
+      ? "Approving this step locked the attached file as read-only"
+      : "Approving this step locks the attached file as read-only";
+    return badge;
   }
 
   function makeDecisionTimeline(history, order, isTransfer) {
@@ -690,6 +793,7 @@
           }),
         ),
       );
+      if (event.locked) heading.append(lockBadge("locked"));
       item.append(marker, heading);
       if (event.request_reference || event.request_title || event.transfer_reference)
         item.append(
@@ -763,6 +867,8 @@
         node("h4", "doc-workflow-step-name", valueText(step.label)),
         node("span", "doc-workflow-step-status", statusText),
       );
+      if (step.lock === "locked" || step.lock === "locks")
+        heading.append(lockBadge(step.lock));
       tile.append(
         heading,
         node("p", "doc-workflow-step-approver", valueText(step.approver_label)),
@@ -888,7 +994,9 @@
       panel.append(sectionTitle(section), makeAssignedDocuments(section));
       return;
     }
-    var entries = normalizedEntries(section.fields);
+    var entries = section.key === "files"
+      ? Object.entries(section.fields || {})
+      : normalizedEntries(section.fields);
     var hasSteps =
       section.key === "approvals" &&
       Array.isArray(section.steps) &&
@@ -1049,6 +1157,9 @@
     sidebar.setAttribute("role", "tablist");
     sidebar.setAttribute("aria-label", assigned ? "Assigned document types" : "Document detail concerns");
     var main = node("div", "doc-modal-main");
+    var initialTab = data.review
+      ? Math.max(0, concerns.findIndex(function (section) { return section.key === "files"; }))
+      : 0;
     concerns.forEach(function (section, i) {
       var key = section.key || "overview";
       var id = "viewDocSection" + i;
@@ -1057,9 +1168,9 @@
       tab.id = "viewDocTab" + i;
       tab.setAttribute("role", "tab");
       tab.setAttribute("aria-controls", id);
-      tab.setAttribute("aria-selected", i === 0 ? "true" : "false");
-      tab.tabIndex = i === 0 ? 0 : -1;
-      if (i === 0) tab.classList.add("is-active");
+      tab.setAttribute("aria-selected", i === initialTab ? "true" : "false");
+      tab.tabIndex = i === initialTab ? 0 : -1;
+      if (i === initialTab) tab.classList.add("is-active");
       tab.append(
         icon(key),
         node("span", "doc-modal-tab-name", section.title || "Details"),
@@ -1070,7 +1181,7 @@
       panel.setAttribute("role", "tabpanel");
       panel.setAttribute("aria-labelledby", tab.id);
       panel.tabIndex = 0;
-      panel.hidden = i !== 0;
+      panel.hidden = i !== initialTab;
       renderSection(panel, section);
       main.append(panel);
     });
@@ -1111,6 +1222,7 @@
   // Clear permission-scoped record details once the modal closes, so a
   // later generic View Details action never flashes the previous document.
   modal.addEventListener("hidden.bs.modal", function () {
+    if (modal.hasAttribute("data-review-suspended")) return;
     reset();
     var details = document.getElementById("viewDetails");
     if (details) details.replaceChildren();

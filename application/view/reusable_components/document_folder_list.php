@@ -7,6 +7,8 @@ defined('BASEPATH') OR exit('No direct script access allowed');
  * No additional queries or APIs: reuse the authorized paginated dt_rows.
  */
 require_once APPPATH . 'services/presentation/document_folder_tree.php';
+$dt_create = $dt_create ?? '';
+$isCategoryTree = $dt_path === 'places/scanned-categories';
 $browser = $dt_folder_browser;
 $tree = $browser['tree'];
 $nodes = $tree['nodes'] ?? [];
@@ -51,7 +53,24 @@ foreach ($selectedFolders as $at) {
         $at = (string) $nodes[$at]['parent'];
     }
 }
-$sortRecent = ($dt_sort === 'updated_at' || $dt_sort === 'updated') && strtolower($dt_dir) === 'desc';
+// After a save, reopen the folders that lead to the saved document.
+$savedId = (int) $this->input->get('saved');
+if ($savedId > 0) {
+    foreach ($byFolder as $folderKey => $folderRows) {
+        foreach ($folderRows as $folderRow) {
+            if ((int) $folderRow['id'] !== $savedId)
+                continue;
+            $at = (string) $folderKey;
+            $seen = [];
+            while ($at !== '' && isset($nodes[$at]) && !isset($seen[$at]) && count($seen) < 32) {
+                $seen[$at] = TRUE;
+                $selectedChain[$at] = TRUE;
+                $at = (string) $nodes[$at]['parent'];
+            }
+        }
+    }
+}
+$sortRecent =($dt_sort === 'updated_at' || $dt_sort === 'updated') && strtolower($dt_dir) === 'desc';
 $sortAZ = $dt_sort === 'title' && strtolower($dt_dir) === 'asc';
 $sortZA = $dt_sort === 'title' && strtolower($dt_dir) === 'desc';
 
@@ -73,12 +92,13 @@ $renderDocument = function (array $dt_row) use ($dt_columns, $dt_folder_domain) 
         'png' => 'fa-file-image',
         'txt' => 'fa-file-lines'
     ][$extension] ?? 'fa-file-lines';
+    if (($dt_row['record_kind'] ?? '') === 'folder') $fileIcon = 'fa-folder';
     ?>
     <li class="doc-tree-file" data-record-id="<?= (int) $dt_row['id'] ?>">
         <span class="doc-tree-file-icon" aria-hidden="true"><i class="fa-regular <?= html_escape($fileIcon) ?>"></i></span>
         <div class="doc-tree-file-content">
             <button class="doc-tree-file-name js-view" type="button"
-                data-title="View Document Details" data-display="<?= html_escape(json_encode(
+                data-title="<?= ($dt_row['record_kind'] ?? '') === 'folder' ? 'View Folder Details' : 'View Document Details' ?>" data-display="<?= html_escape(json_encode(
                     $dt_row['display'],
                     JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT
                 )) ?>" aria-label="View <?= html_escape($title) ?> details"><?= html_escape($displayName) ?></button>
@@ -106,7 +126,7 @@ $renderDocument = function (array $dt_row) use ($dt_columns, $dt_folder_domain) 
 };
 
 $renderNode = NULL;
-$renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $byFolder, $renderDocument, $currentFolder, $selectedChain, $selectedFolders, $folderUrl, $kinds, $dt_folder_domain, $searching, $searchFolders) {
+$renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $byFolder, $renderDocument, $currentFolder, $selectedChain, $selectedFolders, $folderUrl, $kinds, $dt_folder_domain, $searching, $searchFolders, $dt_create, $isCategoryTree) {
     if ($depth >= 32 || !isset($nodes[$key]))
         return;
     $node = $nodes[$key];
@@ -130,7 +150,7 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
                     <small><?= html_escape($label) ?></small>
                 </span>
                 <?php if ($count): ?>
-                    <span class="doc-tree-node-count" aria-label="<?= $count ?> documents on this page"><?= $count ?> on
+                    <span class="doc-tree-node-count" aria-label="<?= $count ?> <?= $isCategoryTree ? 'folders' : 'documents' ?> on this page"><?= $count ?> on
                         page</span>
                 <?php endif; ?>
             </summary>
@@ -141,6 +161,16 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
                 <?php foreach ($items as $dt_row):
                     $renderDocument($dt_row);
                 endforeach; ?>
+                <?php if ($dt_folder_domain === 'hardcopy' && !empty($dt_create) && !empty($node['place'])): ?>
+                    <li class="doc-tree-view-folder doc-tree-add-document">
+                        <button type="button" class="btn btn-sm btn-outline-primary js-edit" data-bs-toggle="modal"
+                            data-bs-target="#editModal" data-target="#editForm"
+                            data-record="<?= html_escape(json_encode($node['place'])) ?>"
+                            data-title="<?= html_escape($dt_create . ' — ' . $node['name']) ?>">
+                            <i class="fa-solid fa-plus me-1" aria-hidden="true"></i> <?= $isCategoryTree ? 'Add folder' : 'Add document here' ?>
+                        </button>
+                    </li>
+                <?php endif; ?>
                 <?php if ($isCurrent): ?>
                     <li class="doc-tree-view-folder">
                         <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i>
@@ -149,7 +179,7 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
                 <?php else: ?>
                     <li class="doc-tree-view-folder">
                         <a href="<?= html_escape($folderUrl($key)) ?>"
-                            title="Filter the register to this folder and browse all its documents">
+                            title="<?= $isCategoryTree ? 'Browse this folder' : 'Filter the register to this folder and browse all its documents' ?>">
                             <i class="fa-solid fa-filter" aria-hidden="true"></i>
                             Browse this <?= html_escape(strtolower($label)) ?>
                         </a>
@@ -183,7 +213,7 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
     </div>
     <div class="doc-tree-filter-line">
        
-        <span>Open each folder to follow the hierarchy to its documents.</span>
+        <span><?= $isCategoryTree ? 'Open each folder to manage its allocation and nested folders.' : 'Open each folder to follow the hierarchy to its documents.' ?></span>
         <div class="doc-folder-sort" aria-label="Document ordering">
             <a class="<?= $sortRecent ? 'is-active' : '' ?>"
                 href="<?= html_escape($folderUrl($currentFolder, 'updated_at', 'desc')) ?>">Recent</a>
@@ -221,8 +251,8 @@ $renderNode = function ($key, $depth = 0) use (&$renderNode, $nodes, $counts, $b
         <?php if (empty($visibleRoots) && empty($byFolder['unfiled'])): ?>
             <div class="doc-folder-empty" role="status">
                 <i class="fa-regular fa-folder-open" aria-hidden="true"></i>
-                <strong>No folders or documents available</strong>
-                <p>Try the All Documents link or change the search filters.</p>
+                <strong><?= $isCategoryTree ? 'No folders available' : 'No folders or documents available' ?></strong>
+                <p><?= $isCategoryTree ? 'Create a folder or change the search filters.' : 'Try the All Documents link or change the search filters.' ?></p>
             </div>
         <?php endif; ?>
     </div>

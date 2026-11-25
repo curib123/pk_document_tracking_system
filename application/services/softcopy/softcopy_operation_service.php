@@ -22,41 +22,133 @@ class Softcopy_operation_service
         }
     }
 
-    public function validate_revision($payload)
+    public function validate_effective_date($payload)
     {
-        $level = trim((string) ($payload['new_revision_level'] ?? ''));
-        if ($level === '' || mb_strlen($level) > 30) {
-            throw new DomainException('New revision level must contain 1 to 30 characters.');
-        }
         $effective = (string) ($payload['effective_date'] ?? '');
         if ($effective !== '') {
             $parsed = DateTime::createFromFormat('!Y-m-d', $effective);
             if (!$parsed || $parsed->format('Y-m-d') !== $effective)
                 throw new DomainException('Effective date must be valid when provided.');
         }
+    }
+
+    public function validate_revision($payload)
+    {
+        $this->validate_effective_date($payload);
         if ((int) ($payload['page_number'] ?? 0) < 1) {
             throw new DomainException('Number of pages must be at least one.');
         }
     }
 
+    public function validate_revision_level($payload)
+    {
+        $value = $payload['new_revision_level'] ?? NULL;
+        if (!is_scalar($value)) {
+            throw new DomainException('Revision level is required and must be no longer than 30 characters.');
+        }
+        $level = trim((string) $value);
+        if ($level === '' || mb_strlen($level) > 30) {
+            throw new DomainException('Revision level is required and must be no longer than 30 characters.');
+        }
+    }
+
+    public function assert_document_unlocked(int $documentId): void
+    {
+        $locked = $this->ci->db->select('f.id')->from('softcopy_documents d')
+            ->join('softcopy_revisions r', 'r.id=d.current_revision_id')
+            ->join('files f', 'f.id=r.file_id')
+            ->where('d.id', $documentId)->where('f.locked_at IS NOT NULL', NULL, FALSE)
+            ->limit(1)->get()->row_array();
+        if ($locked)
+            throw new DomainException('This softcopy file is locked after approval and cannot be replaced or deleted.');
+    }
+
+    /**
+     * The DCO's edited file, when the workflow required one. It, not the
+     * requester's proposed file, becomes the final controlled revision file.
+     */
+    private function final_file(array $payload, $documentId, int $requestId = 0): ?array
+    {
+        $finalId = (int) ($payload['final_file_id'] ?? 0);
+        if (!$finalId)
+            return NULL;
+        $final = $this->ci->db->get_where('files', [
+            'id' => $finalId, 'domain' => 'softcopy', 'purpose' => 'dco_final',
+            'status' => 'pending', 'document_id' => $documentId
+        ])->row_array();
+        if (!$final)
+            throw new DomainException('The final file uploaded by Document Control is unavailable. Return the request to Document Control.');
+        require_once APPPATH . 'services/files/file_service.php';
+        (new File_service())->require_stored_file($final);
+        return $final;
+    }
+
+    /** Requester's locked proposal is kept as history once a final file replaces it. */
+    private function approve_final(array $final, int $actorId, $documentId): void
+    {
+        $this->ci->db->where('id', (int) $final['id'])->update('files', [
+            'document_id' => $documentId, 'status' => 'approved', 'stage' => 'final',
+            'approved_by' => $actorId, 'approved_at' => date('Y-m-d H:i:s')
+        ]);
+    }
+
     public function apply($type, $payload, $softcopyId, $actorId, $ownerId, $requestId = NULL)
     {
         $this->validate_type($type);
+        if ($requestId === NULL && in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE)) {
+            $this->validate_revision_level($payload);
+        }
         $db = $this->ci->db;
         $reason = trim((string) ($payload['remarks'] ?? ''));
         $title = trim((string) ($payload['title'] ?? ''));
         if ($type === 'softcopy_create') {
-            $number = trim((string) ($payload['document_number'] ?? ''));
+            $this->validate_effective_date($payload);
             $categoryId = (int) ($payload['category_id'] ?? 0);
-            $series = trim((string) ($payload['series_number'] ?? ''));
+            require_once APPPATH . 'services/softcopy/document_number_generator.php';
+            $reuseNumber = !empty($payload['series_number_checker']);
+            // manual_document_number is only ever set by the direct service.
+            $typedNumber = !$reuseNumber ? trim((string) ($payload['manual_document_number'] ?? '')) : '';
+            $number = $reuseNumber
+                ? trim((string) ($payload['document_number'] ?? ''))
+                : Document_number_generator::next($db, $categoryId);
+            if ($typedNumber !== '' && $typedNumber !== $number) {
+                if (mb_strlen($typedNumber) > 100) {
+                    throw new DomainException('Document number must be 100 characters or fewer.');
+                }
+                if ($db->get_where('softcopy_documents', ['document_number' => $typedNumber])->row_array()) {
+                    throw new DomainException('That document number is already in use. Use "Need Series Number?" to add a series to an existing number.');
+                }
+                $number = $typedNumber;
+            }
+            // The Series No. is typed in by the requester; there is no code pattern.
+            $series = $reuseNumber ? trim((string) ($payload['generated_series_number'] ?? '')) : '';
+            if ($reuseNumber) {
+                if ($series === '') {
+                    throw new DomainException('Enter the Series No. for this Document No.');
+                }
+                if (!$db->get_where('softcopy_documents', [
+                    'category_id' => $categoryId,
+                    'document_number' => $number
+                ])->row_array()) {
+                    throw new DomainException('Choose an existing Document No. from the selected category.');
+                }
+            }
+            if (mb_strlen($series) > 100) {
+                throw new DomainException('Series No. must be 100 characters or fewer.');
+            }
             if (
                 $title === '' || mb_strlen($title) > 255 || $number === '' || mb_strlen($number) > 100 ||
                 mb_strlen($series) > 100 || !$categoryId
             ) {
-                throw new DomainException('Document title, number and category are required.');
+                throw new DomainException('Document title and category are required.');
             }
-            if (!$db->get_where('categories', ['id' => $categoryId, 'active' => 1])->row_array()) {
-                throw new DomainException('Choose an active softcopy category.');
+            if ($reuseNumber) {
+                if ($db->get_where('softcopy_documents', [
+                    'document_number' => $number,
+                    'series_number' => $series
+                ])->row_array()) {
+                    throw new DomainException('That document number and series number are already in use.');
+                }
             }
             if (
                 !$db->insert('softcopy_documents', [
@@ -69,8 +161,23 @@ class Softcopy_operation_service
                     'creation_reason' => $reason ?: trim((string) ($payload['subject'] ?? '')),
                     'source_request_id' => $requestId
                 ])
-            )
+            ) {
+                $databaseError = $db->error();
+                if ((int) ($databaseError['code'] ?? 0) === 1062) {
+                    log_message(
+                        'error',
+                        'Softcopy creation duplicate index error: ' . ($databaseError['message'] ?? 'unknown database error')
+                    );
+                    throw new DomainException(
+                        'This document number and series number are already in use. Confirm the softcopy series-number index migration is applied.'
+                    );
+                }
+                log_message(
+                    'error',
+                    'Softcopy document insert failed: ' . ($databaseError['message'] ?? 'unknown database error')
+                );
                 throw new DomainException('Unable to create the softcopy document.');
+            }
             $newId = (int) $db->insert_id();
             $fileId = (int) ($payload['controlled_file_id'] ?? 0);
             $file = $db->get_where('files', [
@@ -83,8 +190,12 @@ class Softcopy_operation_service
             ])->row_array();
             if (!$file)
                 throw new DomainException('A pending Document Fileis required to create a softcopy.');
-            $today = date('Y-m-d');
-            $revisionLevel = trim((string) ($payload['new_revision_level'] ?? '')) ?: '00';
+            $final = $this->final_file($payload, NULL);
+            $revisionFileId = $final ? (int) $final['id'] : $fileId;
+            $today = (new DateTimeImmutable('now', new DateTimeZone('Asia/Manila')))->format('Y-m-d');
+            $revisionLevel = $requestId === NULL
+                ? trim((string) $payload['new_revision_level'])
+                : '00';
             $effective = (string) ($payload['effective_date'] ?? '');
             $received = (string) ($payload['date_received'] ?? '');
             $released = (string) ($payload['date_released'] ?? '');
@@ -110,28 +221,38 @@ class Softcopy_operation_service
                     'date_received' => $received,
                     'date_released' => $released,
                     'approval_date' => $today,
-                    'file_id' => $fileId,
+                    'file_id' => $revisionFileId,
                     'uploaded_by' => $ownerId,
                     'approved_by' => $actorId
                 ])
             )
                 throw new DomainException('Unable to register initial controlled revision.');
             $revisionId = (int) $db->insert_id();
+            $this->save_signatories($newId, $revisionId, $payload, (int) $ownerId);
             $db->where('id', $newId)->update('softcopy_documents', [
                 'current_revision_id' => $revisionId
             ]);
             $db->where('id', $fileId)->update('files', [
                 'document_id' => $newId,
-                'status' => 'approved',
+                'status' => $final ? 'superseded' : 'approved',
+                'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
-            ]);
+            ] + ($final ? ['locked_at' => NULL] : []) // proposal is replaced; unlock so cleanup purges it
+            );
+            if ($final)
+                $this->approve_final($final, $actorId, $newId);
             if ($requestId !== NULL) {
                 $db->where('id', $requestId)->update('requests', ['softcopy_id' => $newId]);
             } else {
                 $this->audit($newId, 'new', 'active', 'direct_create', $actorId, $reason);
             }
-            return ['document_id' => $newId, 'file_id' => $fileId, 'revision_id' => $revisionId];
+            return [
+                'document_id' => $newId,
+                'document_number' => $number,
+                'file_id' => $revisionFileId,
+                'revision_id' => $revisionId
+            ];
         }
 
         $rows = $db->query('SELECT * FROM softcopy_documents WHERE id=? FOR UPDATE', [(int) $softcopyId])
@@ -142,7 +263,20 @@ class Softcopy_operation_service
         }
 
         if ($type === 'softcopy_revise') {
+            $this->assert_document_unlocked((int) $softcopyId);
             $this->validate_revision($payload);
+            $series = $requestId === NULL && array_key_exists('series_number', $payload)
+                && $payload['series_number'] !== NULL
+                ? trim((string) $payload['series_number'])
+                : trim((string) ($doc['series_number'] ?? ''));
+            if (mb_strlen($series) > 100) {
+                throw new DomainException('Series No. must be 100 characters or fewer.');
+            }
+            if ($series !== '' && $db->where('document_number', $doc['document_number'])
+                ->where('series_number', $series)->where('id !=', (int) $softcopyId)
+                ->limit(1)->get('softcopy_documents')->row_array()) {
+                throw new DomainException('That document number and series number are already in use.');
+            }
             $fileId = (int) ($payload['revision_file_id'] ?? 0);
             $file = $db->get_where('files', [
                 'id' => $fileId,
@@ -156,14 +290,16 @@ class Softcopy_operation_service
                 throw new DomainException('A pending controlled revision attachment is required.');
             require_once APPPATH . 'services/files/file_service.php';
             (new File_service())->require_stored_file($file);
+            $final = $this->final_file($payload, (int) $softcopyId);
+            $revisionFileId = $final ? (int) $final['id'] : $fileId;
             $max = $db->select_max('revision_number')
                 ->get_where('softcopy_revisions', ['document_id' => $softcopyId])->row_array();
             $previous = $doc['current_revision_id'] ?
                 $db->get_where('softcopy_revisions', ['id' => $doc['current_revision_id']])->row_array() : NULL;
-            $level = trim((string) $payload['new_revision_level']);
-            if ($previous && $level === $previous['new_revision_level']) {
-                throw new DomainException('New revision level must differ from the current revision.');
-            }
+            $nextRevisionNumber = (int) ($max['revision_number'] ?? 0) + 1;
+            $level = $requestId === NULL
+                ? trim((string) $payload['new_revision_level'])
+                : str_pad((string) max(0, $nextRevisionNumber - 1), 2, '0', STR_PAD_LEFT);
             if ($title !== '' && mb_strlen($title) > 255) {
                 throw new DomainException('Document title is too long.');
             }
@@ -173,11 +309,11 @@ class Softcopy_operation_service
             if (
                 !$db->insert('softcopy_revisions', [
                     'document_id' => (int) $softcopyId,
-                    'revision_number' => (int) ($max['revision_number'] ?? 0) + 1,
+                    'revision_number' => $nextRevisionNumber,
                     'reason' => $reason,
                     'effective_date' => $effective,
                     'page_number' => (int) $payload['page_number'],
-                    'series_number' => $doc['series_number'],
+                    'series_number' => $series !== '' ? $series : NULL,
                     'document_title' => $title ?: $doc['title'],
                     'previous_revision_level' => $previous['new_revision_level'] ?? NULL,
                     'new_revision_level' => $level,
@@ -186,33 +322,41 @@ class Softcopy_operation_service
                     'date_received' => $received,
                     'date_released' => $date,
                     'approval_date' => $date,
-                    'file_id' => $fileId,
+                    'file_id' => $revisionFileId,
                     'uploaded_by' => $ownerId,
                     'approved_by' => $actorId
                 ])
             )
                 throw new DomainException('Unable to save softcopy revision.');
             $revisionId = (int) $db->insert_id();
+            $this->save_signatories((int) $softcopyId, $revisionId, $payload, (int) $ownerId);
             $db->where('id', $softcopyId)->update('softcopy_documents', [
                 'current_revision_id' => $revisionId,
-                'title' => $title ?: $doc['title']
+                'title' => $title ?: $doc['title'],
+                'series_number' => $series !== '' ? $series : NULL
             ]);
             $db->where('id', $fileId)->update('files', [
-                'status' => 'approved',
+                'status' => $final ? 'superseded' : 'approved',
+                'stage' => $final ? 'locked' : 'final',
                 'approved_by' => $actorId,
                 'approved_at' => date('Y-m-d H:i:s')
-            ]);
+            ] + ($final ? ['locked_at' => NULL] : []) // proposal is replaced; unlock so cleanup purges it
+            );
+            if ($final)
+                $this->approve_final($final, $actorId, (int) $softcopyId);
             // Preserve historical rows/revision links, but only this approved
             // replacement remains controlled. Physical cleanup runs after commit.
             $db->where('domain', 'softcopy')->where('document_id', (int) $softcopyId)
-                ->where('status', 'approved')->where('id !=', $fileId)
+                ->where('status', 'approved')->where('id !=', $revisionFileId)->where('purpose !=', 'revision_template')
                 ->set('version', 'version + 1', FALSE)->update('files', ['status' => 'superseded']);
             if ($requestId === NULL) {
                 $this->audit($softcopyId, 'active', 'active', 'direct_revise', $actorId, $reason);
             }
-            return ['document_id' => (int) $softcopyId, 'revision_id' => $revisionId, 'file_id' => $fileId];
+            return ['document_id' => (int) $softcopyId, 'revision_id' => $revisionId, 'file_id' => $revisionFileId];
         }
 
+        if ($type === 'softcopy_cancel')
+            $this->assert_document_unlocked((int) $softcopyId);
         $db->where('id', $softcopyId)->update('softcopy_documents', [
             'previous_status' => $doc['status'],
             'status' => 'cancelled'
@@ -228,6 +372,17 @@ class Softcopy_operation_service
             $reason
         );
         return ['document_id' => (int) $softcopyId];
+    }
+
+    /** Optional Signatories References entered with the create/revise action. */
+    private function save_signatories(int $softcopyId, int $revisionId, array $payload, int $ownerId): void
+    {
+        $rows = $payload['signatories'] ?? [];
+        if (!is_array($rows) || !$rows) {
+            return;
+        }
+        require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+        (new Signatory_reference_service())->save($softcopyId, $revisionId, $rows, $ownerId);
     }
 
     private function audit($id, $previous, $current, $action, $actor, $remarks)

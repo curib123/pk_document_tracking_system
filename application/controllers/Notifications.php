@@ -3,6 +3,15 @@ defined('BASEPATH') OR exit('No direct script access allowed');
 
 class Notifications extends MY_Controller
 {
+    private function releaseSessionLock(): void
+    {
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (!session_write_close()) {
+                log_message('error', 'Unable to release the PHP session lock before notification processing.');
+            }
+        }
+    }
+
     private function response(array $tasks, int $status = 200)
     {
         foreach ($tasks as &$task) {
@@ -11,7 +20,9 @@ class Notifications extends MY_Controller
                 'title' => $task['title'],
                 'request_reference' => $task['reference'],
                 'label' => $task['label'],
-                'url' => site_url('my-tasks/' . $task['tab']) . '?' . http_build_query(['q' => $task['reference']])
+                'url' => site_url('my-tasks') . '?' . http_build_query([
+                    'request_category' => $task['tab'], 'q' => $task['reference']
+                ])
             ];
         }
         unset($task);
@@ -27,6 +38,7 @@ class Notifications extends MY_Controller
         if (!$this->user || !empty($this->user['require_password_change']))
             return $this->output->set_status_header(401)->set_content_type('application/json')
                 ->set_output('{"items":[],"total":0}');
+        $this->releaseSessionLock();
         $page = (int) $this->input->get('page', TRUE);
         $limit = (int) $this->input->get('limit', TRUE);
         $this->load->model('Notification_model');
@@ -53,6 +65,7 @@ class Notifications extends MY_Controller
         if (!preg_match('/^[1-9][0-9]*:[1-9][0-9]*$/D', $key))
             return $this->output->set_status_header(400)->set_content_type('application/json')
                 ->set_output('{"ok":false}');
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         $claimed = $this->Notification_model->claim_approvals($this->user, [$key]);
         $page = $this->Notification_model->unread_page($this->user, 1, 5);
@@ -72,8 +85,24 @@ class Notifications extends MY_Controller
     {
         if (!$this->user || !empty($this->user['require_password_change']))
             return $this->response([], 401);
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         return $this->response($this->Notification_model->pending_approvals($this->user));
+    }
+
+    public function retention()
+    {
+        if (!$this->user || !empty($this->user['require_password_change']))
+            return $this->output->set_status_header(401)->set_header('Cache-Control', 'no-store, private')
+                ->set_content_type('application/json')->set_output('{"items":[]}');
+        $this->releaseSessionLock();
+        $this->load->model('Document_model');
+        $items = $this->Document_model->retention_alerts($this->user);
+        require_once APPPATH . 'services/documents/scanned_document_service.php';
+        $items = array_merge($items, (new Scanned_document_service())->alerts($this->user));
+        return $this->output->set_header('Cache-Control', 'no-store, private')
+            ->set_content_type('application/json')
+            ->set_output(json_encode(['items' => $items]));
     }
 
     public function claim()
@@ -83,6 +112,7 @@ class Notifications extends MY_Controller
         $keys = $this->input->post('keys');
         if (!is_array($keys) || count($keys) > 100)
             return $this->response([], 400);
+        $this->releaseSessionLock();
         $this->load->model('Notification_model');
         try {
             return $this->response($this->Notification_model->claim_approvals($this->user, $keys));

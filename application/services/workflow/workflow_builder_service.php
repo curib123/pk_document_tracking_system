@@ -2,6 +2,7 @@
 defined('BASEPATH') OR exit('No direct script access allowed');
 require_once APPPATH . 'services/security/user_roles.php';
 require_once APPPATH . 'services/workflow/workflow_graph.php';
+require_once APPPATH . 'services/request/request_policy.php';
 
 /** Mutate draft routes only; serialize publication against edits and cloning. */
 class Workflow_builder_service
@@ -22,8 +23,7 @@ class Workflow_builder_service
             throw new DomainException('Workflow editing permission is required.');
         $this->ci->db->trans_begin();
         try {
-            // There are nine predefined workflow definitions. One consistent
-            // lock order prevents clone/edit/publish races and duplicate drafts.
+            // One lock order prevents clone/edit/publish races and duplicate drafts.
             $this->ci->db->query('SELECT id FROM workflows ORDER BY id FOR UPDATE');
             $result = $operation();
             if ($this->ci->db->trans_status() === FALSE)
@@ -61,7 +61,41 @@ class Workflow_builder_service
 
     private function persist(array $version, array $graph): void
     {
+        // Defaults for a graph that has never been configured: the Plant Manager
+        // step locks the approved file and the Document Control Officer step
+        // finalizes it. Admins can reassign or clear both in the builder.
+        $type = (string) ($this->ci->db->select('request_type')->get_where('workflows', ['id' => (int) $version['workflow_id']])->row()->request_type ?? '');
+        $defaultStep = static function (array $steps, string $label) {
+            foreach ($steps as $step)
+                if (strcasecmp((string) ($step['approver']['label'] ?? ''), $label) === 0)
+                    return $step['key'];
+            return NULL;
+        };
+        if (!array_key_exists('document_lock_step_key', $graph) &&
+            in_array($type, ['softcopy_create', 'softcopy_revise', 'external_create', 'external_revise'], TRUE))
+            $graph['document_lock_step_key'] = $defaultStep($graph['steps'], 'Plant Manager');
+        if (!array_key_exists('finalize_step_key', $graph) &&
+            in_array($type, ['softcopy_create', 'softcopy_revise'], TRUE))
+            $graph['finalize_step_key'] = $defaultStep($graph['steps'], 'Document Control Officer');
+        $lockIndex = NULL;
+        $lockKey = $graph['document_lock_step_key'] ?? NULL;
+        if (is_string($lockKey)) {
+            $index = array_search($lockKey, array_column($graph['steps'], 'key'), TRUE);
+            if ($index !== FALSE)
+                $lockIndex = $index;
+        }
+        $finalIndex = NULL;
+        $finalKey = $graph['finalize_step_key'] ?? NULL;
+        if (is_string($finalKey)) {
+            $index = array_search($finalKey, array_column($graph['steps'], 'key'), TRUE);
+            if ($index !== FALSE)
+                $finalIndex = $index;
+        }
         $graph['steps'] = Workflow_graph::renumber($graph['steps']);
+        $graph['document_lock_step_key'] = $lockIndex !== NULL
+            ? $graph['steps'][$lockIndex]['key'] : NULL;
+        $graph['finalize_step_key'] = $finalIndex !== NULL
+            ? $graph['steps'][$finalIndex]['key'] : NULL;
         Workflow_graph::validate($graph, FALSE);
         $this->ci->db->where('id', (int) $version['id'])->where('status', 'draft')
             ->update('workflow_versions', ['graph' => json_encode($graph, JSON_UNESCAPED_UNICODE | JSON_THROW_ON_ERROR)]);
@@ -126,6 +160,23 @@ class Workflow_builder_service
         });
     }
 
+    public function save_document_lock_approver(array $post): void
+    {
+        $this->transaction(function () use ($post) {
+            $version = $this->draft($post['workflow_version_id'] ?? 0, $post);
+            $graph = $version['decoded'];
+            $stepKey = trim((string) ($post['document_lock_step_key'] ?? ''));
+            if ($stepKey !== '' && !in_array($stepKey, array_column($graph['steps'], 'key'), TRUE))
+                throw new DomainException('Choose a document-locking approver from the configured approval steps.');
+            $graph['document_lock_step_key'] = $stepKey !== '' ? $stepKey : NULL;
+            $finalKey = trim((string) ($post['finalize_step_key'] ?? ''));
+            if ($finalKey !== '' && !in_array($finalKey, array_column($graph['steps'], 'key'), TRUE))
+                throw new DomainException('Choose a final-file approver from the configured approval steps.');
+            $graph['finalize_step_key'] = $finalKey !== '' ? $finalKey : NULL;
+            $this->persist($version, $graph);
+        });
+    }
+
     public function move_workflow_step(array $post): void
     {
         $this->transaction(function () use ($post) {
@@ -158,6 +209,8 @@ class Workflow_builder_service
             $workflow = $this->ci->db->get_where('workflows', ['id' => $version['workflow_id']])->row_array();
             if (!$workflow)
                 throw new DomainException('Workflow not found.');
+            if ($workflow['request_type'] === Request_policy::REVISION_TEMPLATE)
+                Request_policy::revision_template_dco_role($this->ci->db, $version['decoded']);
             $ids = array_column($this->ci->db->select('id')->get_where('workflows', [
                 'request_type' => $workflow['request_type']
             ])->result_array(), 'id');

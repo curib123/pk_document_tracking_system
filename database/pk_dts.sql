@@ -75,7 +75,6 @@ INSERT INTO `areas` (`id`, `name`, `active`, `version`, `created_at`, `updated_a
 
 CREATE TABLE `assets` (
   `id` bigint(20) UNSIGNED NOT NULL,
-  `specific_id` bigint(20) UNSIGNED NOT NULL,
   `asset_number` varchar(100) NOT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `version` int(11) NOT NULL DEFAULT 1,
@@ -87,12 +86,36 @@ CREATE TABLE `assets` (
 -- Dumping data for table `assets`
 --
 
-INSERT INTO `assets` (`id`, `specific_id`, `asset_number`, `active`, `version`, `created_at`, `updated_at`) VALUES
-(1, 7, '0012-0000424500008', 1, 1, '2026-10-16 06:19:54', '2026-10-16 06:19:54'),
-(2, 7, '012-0000424500001', 1, 1, '2026-10-16 06:20:12', '2026-10-16 06:20:12'),
-(3, 7, '012-0000424500002', 1, 1, '2026-10-16 06:20:35', '2026-10-16 06:20:35'),
-(4, 6, 'PK - PNK - 00106947', 1, 1, '2026-10-16 06:21:00', '2026-10-16 06:21:00'),
-(5, 1, 'PK-PNK-00106945', 1, 1, '2026-10-16 06:21:26', '2026-10-16 06:21:26');
+INSERT INTO `assets` (`id`, `asset_number`, `active`, `version`, `created_at`, `updated_at`) VALUES
+(1, '0012-0000424500008', 1, 1, '2026-10-16 06:19:54', '2026-10-16 06:19:54'),
+(2, '012-0000424500001', 1, 1, '2026-10-16 06:20:12', '2026-10-16 06:20:12'),
+(3, '012-0000424500002', 1, 1, '2026-10-16 06:20:35', '2026-10-16 06:20:35'),
+(4, 'PK - PNK - 00106947', 1, 1, '2026-10-16 06:21:00', '2026-10-16 06:21:00'),
+(5, 'PK-PNK-00106945', 1, 1, '2026-10-16 06:21:26', '2026-10-16 06:21:26');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `asset_specifics`
+-- One Asset Number can belong to many Specifics.
+--
+
+CREATE TABLE `asset_specifics` (
+  `asset_id` bigint(20) UNSIGNED NOT NULL,
+  `specific_id` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `asset_specifics`
+--
+
+INSERT INTO `asset_specifics` (`asset_id`, `specific_id`, `created_at`) VALUES
+(1, 7, '2026-10-16 06:19:54'),
+(2, 7, '2026-10-16 06:20:12'),
+(3, 7, '2026-10-16 06:20:35'),
+(4, 6, '2026-10-16 06:21:00'),
+(5, 1, '2026-10-16 06:21:26');
 
 -- --------------------------------------------------------
 
@@ -121,6 +144,8 @@ CREATE TABLE `categories` (
   `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
   `name` varchar(150) NOT NULL,
   `folder_name` varchar(150) NOT NULL,
+  `category_type` varchar(20) NOT NULL DEFAULT 'pattern',
+  `code_pattern` varchar(150) DEFAULT 'DOC-001',
   `description` text DEFAULT NULL,
   `active` tinyint(4) NOT NULL DEFAULT 1,
   `created_by` bigint(20) UNSIGNED NOT NULL,
@@ -133,8 +158,49 @@ CREATE TABLE `categories` (
 -- Dumping data for table `categories`
 --
 
-INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(1, NULL, 'Uncategorized', 'Uncategorized', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+INSERT INTO `categories` (`id`, `parent_id`, `name`, `folder_name`, `category_type`, `code_pattern`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'pattern', 'DOC-1-001', 'Uncategorized', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_categories`
+--
+
+CREATE TABLE `external_categories` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `parent_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `name` varchar(150) NOT NULL,
+  `folder_name` varchar(150) NOT NULL,
+  `description` text DEFAULT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Dumping data for table `external_categories`
+--
+
+INSERT INTO `external_categories` (`id`, `parent_id`, `name`, `folder_name`, `description`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
+(1, NULL, 'Uncategorized', 'Uncategorized', 'Uncategorized external documents', 1, 2, 1, '2026-10-16 05:47:05', '2026-10-16 05:47:05');
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `subsidiaries`
+--
+
+CREATE TABLE `subsidiaries` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `name` varchar(150) NOT NULL,
+  `active` tinyint(4) NOT NULL DEFAULT 1,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 -- --------------------------------------------------------
 
@@ -184,6 +250,9 @@ CREATE TABLE `files` (
   `status` varchar(30) NOT NULL DEFAULT 'pending',
   `approved_by` bigint(20) UNSIGNED DEFAULT NULL,
   `approved_at` datetime DEFAULT NULL,
+  `lock_request_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `locked_by` bigint(20) UNSIGNED DEFAULT NULL,
+  `locked_at` datetime DEFAULT NULL,
   `rejected_by` bigint(20) UNSIGNED DEFAULT NULL,
   `rejected_at` datetime DEFAULT NULL,
   `rejection_reason` text DEFAULT NULL,
@@ -405,7 +474,18 @@ INSERT INTO `permissions` (`id`, `name`, `module_key`, `module_label`, `action_k
 (85, 'Settings: Edit', 'settings', 'Settings', 'edit', 'Edit', 'Allows edit operations for settings.', 1),
 (86, 'Files: History', 'files', 'Files', 'history', 'File History', 'View Document Filerevision history within authorized documents.', 1),
 (87, 'Files: Print', 'files', 'Files', 'print', 'Print', 'Print the current approved file within authorized documents.', 1),
-(88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1);
+(88, 'Files: Download', 'files', 'Files', 'download', 'Download', 'Download the current approved file within authorized documents.', 1),
+(89, 'External Documents: View', 'external_documents', 'External Documents', 'view', 'View', 'Allows view operations for external documents.', 1),
+(90, 'External Documents: Request', 'external_documents', 'External Documents', 'request', 'Request', 'Allows create and revision request operations for external documents.', 1),
+(91, 'External Documents: Direct', 'external_documents', 'External Documents', 'direct', 'Direct', 'Allows direct registration operations for external documents.', 1),
+(92, 'External Categories: View', 'external_categories', 'External Categories', 'view', 'View', 'Allows view operations for external categories.', 1),
+(93, 'External Categories: Add', 'external_categories', 'External Categories', 'add', 'Add', 'Allows add operations for external categories.', 1),
+(94, 'External Categories: Edit', 'external_categories', 'External Categories', 'edit', 'Edit', 'Allows edit operations for external categories.', 1),
+(95, 'External Categories: Delete', 'external_categories', 'External Categories', 'delete', 'Delete', 'Allows delete operations for external categories.', 1),
+(96, 'Subsidiaries: View', 'subsidiaries', 'Subsidiaries', 'view', 'View', 'Allows view operations for subsidiaries.', 1),
+(97, 'Subsidiaries: Add', 'subsidiaries', 'Subsidiaries', 'add', 'Add', 'Allows add operations for subsidiaries.', 1),
+(98, 'Subsidiaries: Edit', 'subsidiaries', 'Subsidiaries', 'edit', 'Edit', 'Allows edit operations for subsidiaries.', 1),
+(99, 'Subsidiaries: Delete', 'subsidiaries', 'Subsidiaries', 'delete', 'Delete', 'Allows delete operations for subsidiaries.', 1);
 
 -- --------------------------------------------------------
 
@@ -589,7 +669,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (1, 85),
 (1, 86),
 (1, 87),
-(1, 88),
 (2, 13),
 (2, 14),
 (2, 15),
@@ -684,7 +763,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (3, 81),
 (3, 86),
 (3, 87),
-(3, 88),
 (4, 29),
 (4, 33),
 (4, 34),
@@ -707,7 +785,6 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (4, 82),
 (4, 86),
 (4, 87),
-(4, 88),
 (5, 29),
 (5, 33),
 (5, 34),
@@ -735,8 +812,35 @@ INSERT INTO `role_permissions` (`role_id`, `permission_id`) VALUES
 (5, 80),
 (5, 81),
 (5, 86),
-(5, 87),
-(5, 88);
+(5, 87);
+
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, external_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` softcopy_permission ON softcopy_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` external_permission
+  ON external_permission.`module_key`='external_documents'
+  AND external_permission.`action_key`=softcopy_permission.`action_key`
+WHERE softcopy_permission.`module_key`='softcopy'
+  AND softcopy_permission.`action_key` IN ('view','request','direct');
+
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, external_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` category_permission ON category_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` external_permission
+  ON external_permission.`module_key`='external_categories'
+  AND external_permission.`action_key`=category_permission.`action_key`
+WHERE category_permission.`module_key`='categories';
+
+INSERT INTO `role_permissions` (`role_id`, `permission_id`)
+SELECT existing_grants.`role_id`, subsidiary_permission.`id`
+FROM `role_permissions` existing_grants
+JOIN `permissions` external_category_permission ON external_category_permission.`id`=existing_grants.`permission_id`
+JOIN `permissions` subsidiary_permission
+  ON subsidiary_permission.`module_key`='subsidiaries'
+  AND subsidiary_permission.`action_key`=external_category_permission.`action_key`
+WHERE external_category_permission.`module_key`='external_categories';
 
 -- --------------------------------------------------------
 
@@ -829,6 +933,82 @@ CREATE TABLE `softcopy_revisions` (
   `approved_by` bigint(20) UNSIGNED NOT NULL,
   `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
   `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `softcopy_signatory_references`
+--
+
+CREATE TABLE `softcopy_signatory_references` (
+  `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `softcopy_id` bigint(20) UNSIGNED NOT NULL,
+  `revision_id` bigint(20) UNSIGNED NOT NULL,
+  `sort_order` smallint(5) UNSIGNED NOT NULL DEFAULT 1,
+  `signatory_title` varchar(150) NOT NULL,
+  `signatory_full_name` varchar(150) NOT NULL,
+  `signatory_position` varchar(150) NOT NULL,
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `ssr_revision` (`revision_id`,`sort_order`),
+  KEY `ssr_softcopy` (`softcopy_id`),
+  KEY `ssr_title` (`signatory_title`),
+  KEY `ssr_full_name` (`signatory_full_name`),
+  KEY `ssr_position` (`signatory_position`),
+  KEY `ssr_created_by` (`created_by`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_documents`
+--
+
+CREATE TABLE `external_documents` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `title` varchar(255) NOT NULL,
+  `document_number` varchar(150) DEFAULT NULL,
+  `subsidiary_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `description` varchar(2000) NOT NULL DEFAULT '',
+  `category_id` bigint(20) UNSIGNED NOT NULL DEFAULT 1,
+  `current_revision_id` bigint(20) UNSIGNED DEFAULT NULL,
+  `status` varchar(30) NOT NULL DEFAULT 'active',
+  `created_by` bigint(20) UNSIGNED NOT NULL,
+  `version` int(11) NOT NULL DEFAULT 1,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_revisions`
+--
+
+CREATE TABLE `external_revisions` (
+  `id` bigint(20) UNSIGNED NOT NULL,
+  `document_id` bigint(20) UNSIGNED NOT NULL,
+  `revision_number` int(10) UNSIGNED NOT NULL,
+  `revision_level` varchar(30) NOT NULL,
+  `description` varchar(2000) NOT NULL DEFAULT '',
+  `file_id` bigint(20) UNSIGNED NOT NULL,
+  `uploaded_by` bigint(20) UNSIGNED NOT NULL,
+  `approved_by` bigint(20) UNSIGNED NOT NULL,
+  `approved_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp()
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
+-- Table structure for table `external_revision_files`
+--
+
+CREATE TABLE `external_revision_files` (
+  `revision_id` bigint(20) UNSIGNED NOT NULL,
+  `file_id` bigint(20) UNSIGNED NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
@@ -1021,14 +1201,17 @@ CREATE TABLE `workflows` (
 --
 
 INSERT INTO `workflows` (`id`, `workflow_key`, `name`, `description`, `request_type`, `active`, `created_by`, `version`, `created_at`, `updated_at`) VALUES
-(10, 'softcopy_create', 'Softcopy Create approval', NULL, 'softcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(11, 'softcopy_revise', 'Softcopy Revise approval', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(13, 'hardcopy_create', 'Hardcopy Create approval', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(14, 'hardcopy_update', 'Hardcopy Update approval', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(15, 'transfer', 'Transfer approval', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(16, 'assignment', 'Assignment approval', NULL, 'assignment', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(17, 'access', 'Access approval', NULL, 'access', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
-(18, 'disposal', 'Disposal approval', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41');
+(10, 'softcopy_create', 'Softcopy Request', NULL, 'softcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(11, 'softcopy_revise', 'Softcopy Request', NULL, 'softcopy_revise', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(12, 'softcopy_cancel', 'Softcopy Request', NULL, 'softcopy_cancel', 0, 2, 1, '2026-10-12 02:45:00', '2026-10-12 02:45:00'),
+(13, 'hardcopy_create', 'Hardcopy Request', NULL, 'hardcopy_create', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(14, 'hardcopy_update', 'Hardcopy Request', NULL, 'hardcopy_update', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(15, 'transfer', 'Hardcopy Transfer Request', NULL, 'transfer', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(16, 'assignment', 'Document Assignment Request', NULL, 'assignment', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(17, 'access', 'Document Access Request', NULL, 'access', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(18, 'disposal', 'Disposal Request', NULL, 'disposal', 1, 2, 1, '2026-10-16 05:45:41', '2026-10-16 05:45:41'),
+(19, 'external_create', 'External Document Request', NULL, 'external_create', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00'),
+(20, 'external_revise', 'External Document Request', NULL, 'external_revise', 1, 2, 1, '2026-11-04 00:00:00', '2026-11-04 00:00:00');
 
 -- --------------------------------------------------------
 
@@ -1155,7 +1338,36 @@ INSERT INTO `workflow_versions` (`id`, `workflow_id`, `version_number`, `status`
 (16, 12, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:02:24', 1, '2026-10-16 06:01:14'),
 (17, 10, 2, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:04:34', 1, '2026-10-16 06:03:41'),
 (18, 11, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester\'s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-10-16 08:05:56', 1, '2026-10-16 06:04:49'),
-(19, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager  Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-16 08:07:49', 1, '2026-10-16 06:06:08');
+(19, 15, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Plant Manager  Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_2\",\"name\":\"Document Control Officer Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}},{\"key\":\"step_3\",\"name\":\"Requester Confirmation\",\"approver\":{\"type\":\"requester\",\"value\":null,\"label\":\"Requester account\"}}]}', 2, '2026-10-16 08:07:49', 1, '2026-10-16 06:06:08'),
+(20, 19, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester''s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer Review & Approval\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00'),
+(21, 20, 1, 'published', 1, '{\"steps\":[{\"key\":\"step_1\",\"name\":\"Noted By\",\"approver\":{\"type\":\"requester_leader\",\"value\":null,\"label\":\"Requester''s leader\"}},{\"key\":\"step_2\",\"name\":\"Plant Manager Approval\",\"approver\":{\"type\":\"role\",\"value\":3,\"label\":\"Plant Manager\"}},{\"key\":\"step_3\",\"name\":\"Document Control Officer\",\"approver\":{\"type\":\"role\",\"value\":2,\"label\":\"Document Control Officer\"}}]}', 2, '2026-11-04 00:00:00', 1, '2026-11-04 00:00:00');
+
+UPDATE `workflow_versions` v
+JOIN `workflows` w ON w.`id` = v.`workflow_id`
+SET v.`graph` = JSON_SET(
+  v.`graph`,
+  '$.document_lock_step_key',
+  JSON_EXTRACT(
+    v.`graph`,
+    REPLACE(
+      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      '.approver.label',
+      '.key'
+    )
+  )
+)
+WHERE v.`status` = 'published'
+  AND v.`is_default` = 1
+  AND w.`request_type` IN ('softcopy_create', 'softcopy_revise', 'external_create', 'external_revise')
+  AND JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label') IS NOT NULL
+  AND JSON_UNQUOTE(JSON_EXTRACT(
+    v.`graph`,
+    REPLACE(
+      JSON_SEARCH(v.`graph`, 'one', 'Plant Manager', NULL, '$.steps[*].approver.label'),
+      '.approver.label',
+      '.approver.type'
+    )
+  )) = 'role';
 
 --
 -- Indexes for dumped tables
@@ -1185,8 +1397,14 @@ ALTER TABLE `areas`
 ALTER TABLE `assets`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `asset_number` (`asset_number`),
-  ADD KEY `asset_lookup` (`active`,`specific_id`,`asset_number`),
-  ADD KEY `specific_id` (`specific_id`);
+  ADD KEY `asset_lookup` (`active`,`asset_number`);
+
+--
+-- Indexes for table `asset_specifics`
+--
+ALTER TABLE `asset_specifics`
+  ADD PRIMARY KEY (`asset_id`,`specific_id`),
+  ADD KEY `idx_asset_specifics_specific` (`specific_id`);
 
 --
 -- Indexes for table `assignments`
@@ -1202,8 +1420,52 @@ ALTER TABLE `assignments`
 --
 ALTER TABLE `categories`
   ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `category_code_pattern` (`code_pattern`),
   ADD KEY `parent_id` (`parent_id`),
   ADD KEY `created_by` (`created_by`);
+
+--
+-- Indexes for table `external_categories`
+--
+ALTER TABLE `external_categories`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `external_categories_parent` (`parent_id`),
+  ADD KEY `external_categories_active_name` (`active`,`name`);
+
+--
+-- Indexes for table `subsidiaries`
+--
+ALTER TABLE `subsidiaries`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `subsidiaries_active_name` (`active`,`name`);
+
+--
+-- Indexes for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `external_documents_number` (`document_number`),
+  ADD KEY `external_documents_subsidiary` (`subsidiary_id`),
+  ADD KEY `external_documents_category` (`category_id`),
+  ADD KEY `external_documents_creator_status` (`created_by`,`status`),
+  ADD KEY `external_documents_current_revision` (`current_revision_id`);
+
+--
+-- Indexes for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  ADD PRIMARY KEY (`id`),
+  ADD UNIQUE KEY `external_revision_number` (`document_id`,`revision_number`),
+  ADD UNIQUE KEY `external_revision_file` (`file_id`),
+  ADD KEY `external_revision_uploaded_by` (`uploaded_by`),
+  ADD KEY `external_revision_approved_by` (`approved_by`);
+
+--
+-- Indexes for table `external_revision_files`
+--
+ALTER TABLE `external_revision_files`
+  ADD PRIMARY KEY (`revision_id`,`file_id`),
+  ADD UNIQUE KEY `external_revision_file_attachment` (`file_id`);
 
 --
 -- Indexes for table `disposals`
@@ -1221,6 +1483,7 @@ ALTER TABLE `files`
   ADD UNIQUE KEY `storage_name` (`storage_name`),
   ADD KEY `uploaded_by` (`uploaded_by`),
   ADD KEY `approved_by` (`approved_by`),
+  ADD KEY `files_locked_request` (`lock_request_id`),
   ADD KEY `rejected_by` (`rejected_by`),
   ADD KEY `document_files` (`domain`,`document_id`,`status`);
 
@@ -1321,7 +1584,8 @@ ALTER TABLE `settings`
 --
 ALTER TABLE `softcopy_documents`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `document_number` (`document_number`),
+  ADD KEY `document_number` (`document_number`),
+  ADD UNIQUE KEY `document_series` (`document_number`,`series_number`),
   ADD KEY `category_id` (`category_id`),
   ADD KEY `created_by` (`created_by`),
   ADD KEY `softcopy_status` (`status`,`title`),
@@ -1336,6 +1600,30 @@ ALTER TABLE `softcopy_revisions`
   ADD UNIQUE KEY `revision_per_document` (`document_id`,`revision_number`),
   ADD KEY `uploaded_by` (`uploaded_by`),
   ADD KEY `approved_by` (`approved_by`);
+
+--
+-- AUTO_INCREMENT for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `external_categories`
+--
+ALTER TABLE `external_categories`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `subsidiaries`
+--
+ALTER TABLE `subsidiaries`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
+
+--
+-- AUTO_INCREMENT for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT;
 
 --
 -- Indexes for table `specifics`
@@ -1489,7 +1777,7 @@ ALTER TABLE `notifications`
 -- AUTO_INCREMENT for table `permissions`
 --
 ALTER TABLE `permissions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=89;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=100;
 
 --
 -- AUTO_INCREMENT for table `requests`
@@ -1573,7 +1861,7 @@ ALTER TABLE `workflow_steps`
 -- AUTO_INCREMENT for table `workflow_versions`
 --
 ALTER TABLE `workflow_versions`
-  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=20;
+  MODIFY `id` bigint(20) UNSIGNED NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=22;
 
 --
 -- Constraints for dumped tables
@@ -1591,8 +1879,9 @@ ALTER TABLE `access_grants`
 --
 -- Constraints for table `assets`
 --
-ALTER TABLE `assets`
-  ADD CONSTRAINT `assets_ibfk_1` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`);
+ALTER TABLE `asset_specifics`
+  ADD CONSTRAINT `asset_specifics_asset_fk` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`),
+  ADD CONSTRAINT `asset_specifics_specific_fk` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`);
 
 --
 -- Constraints for table `assignments`
@@ -1608,6 +1897,13 @@ ALTER TABLE `assignments`
 ALTER TABLE `categories`
   ADD CONSTRAINT `categories_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `categories` (`id`),
   ADD CONSTRAINT `categories_ibfk_2` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `external_categories`
+--
+ALTER TABLE `external_categories`
+  ADD CONSTRAINT `external_categories_parent_fk` FOREIGN KEY (`parent_id`) REFERENCES `external_categories` (`id`),
+  ADD CONSTRAINT `external_categories_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `disposals`
@@ -1642,6 +1938,31 @@ ALTER TABLE `locations`
   ADD CONSTRAINT `locations_ibfk_1` FOREIGN KEY (`area_id`) REFERENCES `areas` (`id`),
   ADD CONSTRAINT `locations_ibfk_2` FOREIGN KEY (`specific_id`) REFERENCES `specifics` (`id`),
   ADD CONSTRAINT `locations_ibfk_3` FOREIGN KEY (`asset_id`) REFERENCES `assets` (`id`);
+
+--
+-- Constraints for table `external_documents`
+--
+ALTER TABLE `external_documents`
+  ADD CONSTRAINT `external_documents_creator_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `external_documents_category_fk` FOREIGN KEY (`category_id`) REFERENCES `external_categories` (`id`),
+  ADD CONSTRAINT `external_documents_subsidiary_fk` FOREIGN KEY (`subsidiary_id`) REFERENCES `subsidiaries` (`id`),
+  ADD CONSTRAINT `external_documents_current_revision_fk` FOREIGN KEY (`current_revision_id`) REFERENCES `external_revisions` (`id`);
+
+--
+-- Constraints for table `external_revisions`
+--
+ALTER TABLE `external_revisions`
+  ADD CONSTRAINT `external_revisions_document_fk` FOREIGN KEY (`document_id`) REFERENCES `external_documents` (`id`),
+  ADD CONSTRAINT `external_revisions_file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`),
+  ADD CONSTRAINT `external_revisions_uploaded_by_fk` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
+  ADD CONSTRAINT `external_revisions_approved_by_fk` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `external_revision_files`
+--
+ALTER TABLE `external_revision_files`
+  ADD CONSTRAINT `external_revision_files_revision_fk` FOREIGN KEY (`revision_id`) REFERENCES `external_revisions` (`id`),
+  ADD CONSTRAINT `external_revision_files_file_fk` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`);
 
 --
 -- Constraints for table `notifications`
@@ -1689,6 +2010,14 @@ ALTER TABLE `softcopy_revisions`
   ADD CONSTRAINT `softcopy_revisions_ibfk_2` FOREIGN KEY (`file_id`) REFERENCES `files` (`id`),
   ADD CONSTRAINT `softcopy_revisions_ibfk_3` FOREIGN KEY (`uploaded_by`) REFERENCES `users` (`id`),
   ADD CONSTRAINT `softcopy_revisions_ibfk_4` FOREIGN KEY (`approved_by`) REFERENCES `users` (`id`);
+
+--
+-- Constraints for table `softcopy_signatory_references`
+--
+ALTER TABLE `softcopy_signatory_references`
+  ADD CONSTRAINT `ssr_softcopy_fk` FOREIGN KEY (`softcopy_id`) REFERENCES `softcopy_documents` (`id`),
+  ADD CONSTRAINT `ssr_revision_fk` FOREIGN KEY (`revision_id`) REFERENCES `softcopy_revisions` (`id`),
+  ADD CONSTRAINT `ssr_created_by_fk` FOREIGN KEY (`created_by`) REFERENCES `users` (`id`);
 
 --
 -- Constraints for table `specifics`
@@ -1760,3 +2089,154 @@ COMMIT;
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
 /*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+
+
+-- Scanned records become usable only after their request completes DCO approval.
+CREATE TABLE IF NOT EXISTS scanned_categories (
+ id bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ parent_id bigint unsigned DEFAULT NULL,
+ parent_scope bigint unsigned GENERATED ALWAYS AS (COALESCE(parent_id,0)) STORED,
+ name varchar(150) NOT NULL,
+ created_by bigint unsigned NOT NULL,
+ approved_by bigint unsigned NOT NULL,
+ request_id bigint unsigned NOT NULL,
+ created_at timestamp NOT NULL DEFAULT current_timestamp(),
+ updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+ KEY scanned_category_parent (parent_id),
+ UNIQUE KEY scanned_category_sibling (parent_scope,name),
+ UNIQUE KEY scanned_category_request (request_id),
+ FOREIGN KEY (parent_id) REFERENCES scanned_categories(id),
+ FOREIGN KEY (created_by) REFERENCES users(id),
+ FOREIGN KEY (approved_by) REFERENCES users(id),
+ FOREIGN KEY (request_id) REFERENCES requests(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+CREATE TABLE IF NOT EXISTS scanned_documents (
+ id bigint unsigned NOT NULL AUTO_INCREMENT PRIMARY KEY,
+ title varchar(255) NOT NULL,
+ category_id bigint unsigned NOT NULL,
+ retention_start_date date NOT NULL,
+ retention_end_date date NOT NULL,
+ scan_due_date date DEFAULT NULL,
+ status varchar(20) NOT NULL DEFAULT 'active',
+ version int NOT NULL DEFAULT 1,
+ created_by bigint unsigned NOT NULL,
+ approved_by bigint unsigned NOT NULL,
+ created_at timestamp NOT NULL DEFAULT current_timestamp(),
+ updated_at timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+ KEY scanned_owner_status (created_by,status),
+ KEY scanned_retention (status,retention_end_date),
+ FOREIGN KEY (category_id) REFERENCES scanned_categories(id),
+ FOREIGN KEY (created_by) REFERENCES users(id),
+ FOREIGN KEY (approved_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
+ ('Scanned Documents: View','scanned_documents','Scanned Documents','view','View','View scanned records within document access.',1),
+ ('Scanned Documents: Request','scanned_documents','Scanned Documents','request','Upload','Request registration of scanned documents.',1),
+ ('Scanned Documents: Update','scanned_documents','Scanned Documents','edit','Request Update','Request changes, subject to DCO approval.',1),
+ ('Scanned Documents: Delete','scanned_documents','Scanned Documents','delete','Request Deletion','Request deletion, subject to DCO approval.',1),
+ ('Scanned Categories: Request','scanned_categories','Scanned Categories','request','Request Category','Request root or nested folders, subject to DCO approval.',1)
+ON DUPLICATE KEY UPDATE name=VALUES(name),description=VALUES(description);
+
+-- Users with existing document request grants receive the new upload capability.
+-- Update/delete are deliberately assigned separately by an administrator.
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT rp.role_id,np.id FROM role_permissions rp
+JOIN permissions p ON p.id=rp.permission_id AND p.module_key='softcopy' AND p.action_key IN ('view','request')
+JOIN permissions np ON np.module_key='scanned_documents' AND np.action_key=p.action_key;
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT rp.role_id,np.id FROM role_permissions rp
+JOIN permissions p ON p.id=rp.permission_id AND p.module_key='scanned_documents' AND p.action_key='request'
+JOIN permissions np ON np.module_key='scanned_categories' AND np.action_key='request';
+
+INSERT INTO workflows (workflow_key,name,description,request_type,active,created_by)
+SELECT t.type,t.name,'Requires final Document Control Officer approval.',t.type,1,u.id
+FROM (
+ SELECT 'scanned_create' AS type,'Scanned Document Upload' AS name UNION ALL
+ SELECT 'scanned_update','Scanned Document Update' UNION ALL
+ SELECT 'scanned_delete','Scanned Document Deletion' UNION ALL
+ SELECT 'scanned_category_create','Scanned Category Approval'
+) t JOIN (SELECT id FROM users ORDER BY id LIMIT 1) u
+WHERE NOT EXISTS (SELECT 1 FROM workflows w WHERE w.workflow_key=t.type);
+
+INSERT INTO workflow_versions (workflow_id,version_number,status,is_default,graph,created_by,published_at)
+SELECT w.id,1,'published',1,
+ JSON_OBJECT('steps',JSON_ARRAY(JSON_OBJECT('key','step_1','name','DCO Review and Approval',
+ 'approver',JSON_OBJECT('type','role','value',r.id,'label',r.name)))),w.created_by,NOW()
+FROM workflows w JOIN roles r ON r.name='Document Control Officer' AND r.active=1
+WHERE w.request_type IN ('scanned_create','scanned_update','scanned_delete','scanned_category_create')
+ AND NOT EXISTS (SELECT 1 FROM workflow_versions v WHERE v.workflow_id=w.id);
+
+
+-- Apply after 20261117_scanned_documents.sql. Safe to rerun.
+-- Direct Master Data categories have no originating approval request.
+ALTER TABLE scanned_categories MODIFY request_id bigint unsigned DEFAULT NULL;
+SET @scanned_version_sql = IF(
+ (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()
+  AND TABLE_NAME='scanned_categories' AND COLUMN_NAME='version') = 0,
+ 'ALTER TABLE scanned_categories ADD COLUMN version int NOT NULL DEFAULT 1', 'SELECT 1');
+PREPARE scanned_version_stmt FROM @scanned_version_sql;
+EXECUTE scanned_version_stmt;
+DEALLOCATE PREPARE scanned_version_stmt;
+
+CREATE TABLE IF NOT EXISTS scanned_category_allocations (
+ category_id bigint unsigned NOT NULL,
+ user_id bigint unsigned NOT NULL,
+ allocated_by bigint unsigned NOT NULL,
+ allocated_at timestamp NOT NULL DEFAULT current_timestamp(),
+ PRIMARY KEY (category_id,user_id),
+ KEY scanned_allocation_user (user_id),
+ FOREIGN KEY (category_id) REFERENCES scanned_categories(id),
+ FOREIGN KEY (user_id) REFERENCES users(id),
+ FOREIGN KEY (allocated_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
+ ('Scanned Categories: View','scanned_categories','Scanned Categories','view','View','View scanned category folders in Master Data.',1),
+ ('Scanned Categories: Create','scanned_categories','Scanned Categories','add','Create','Create approved root or nested scanned folders in Master Data.',1),
+ ('Scanned Categories: Edit','scanned_categories','Scanned Categories','edit','Edit','Rename or move scanned folders in Master Data.',1),
+ ('Scanned Categories: Allocate','scanned_categories','Scanned Categories','allocate','Allocate to Users','Allocate scanned folders to users for upload selection.',1)
+ON DUPLICATE KEY UPDATE name=VALUES(name),action_label=VALUES(action_label),description=VALUES(description);
+
+-- Initial DCO grants are editable through Roles & Permissions; runtime uses permissions.
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT r.id,p.id FROM roles r JOIN permissions p ON p.module_key='scanned_categories'
+ AND p.action_key IN ('view','add','edit','allocate')
+WHERE r.name='Document Control Officer' AND r.active=1;
+
+-- Optional document descriptions; existing scanned records remain valid. Safe to rerun.
+SET @scanned_description_sql = IF(
+ (SELECT COUNT(*) FROM information_schema.COLUMNS WHERE TABLE_SCHEMA=DATABASE()
+  AND TABLE_NAME='scanned_documents' AND COLUMN_NAME='description') = 0,
+ 'ALTER TABLE scanned_documents ADD COLUMN description varchar(2000) NOT NULL DEFAULT \'\' AFTER title', 'SELECT 1');
+PREPARE scanned_description_stmt FROM @scanned_description_sql;
+EXECUTE scanned_description_stmt;
+DEALLOCATE PREPARE scanned_description_stmt;
+
+-- Seed the permission and default DCO workflow. Safe to rerun.
+INSERT IGNORE INTO permissions (name,module_key,module_label,action_key,action_label,description,version) VALUES
+ ('Softcopy: Request Template for Revision','softcopy','Softcopy','request_revision_template','Request Template for Revision',
+  'Request and download a DCO-approved editable revision template for an existing softcopy document.',1);
+SET @seed_revision_template_grants = ROW_COUNT();
+
+INSERT IGNORE INTO role_permissions (role_id,permission_id)
+SELECT rp.role_id,np.id FROM role_permissions rp
+JOIN permissions p ON p.id=rp.permission_id AND p.module_key='softcopy' AND p.action_key='request'
+JOIN permissions np ON np.module_key='softcopy' AND np.action_key='request_revision_template'
+WHERE @seed_revision_template_grants = 1;
+
+INSERT INTO workflows (workflow_key,name,description,request_type,active,created_by)
+SELECT 'softcopy_revision_template','Request Template for Revision',
+ 'Document Control approves and provides an editable template in the final step.',
+ 'softcopy_revision_template',1,u.id
+FROM (SELECT id FROM users ORDER BY id LIMIT 1) u
+WHERE NOT EXISTS (SELECT 1 FROM workflows WHERE workflow_key='softcopy_revision_template');
+
+INSERT INTO workflow_versions (workflow_id,version_number,status,is_default,graph,created_by,published_at)
+SELECT w.id,1,'published',1,
+ JSON_OBJECT('steps',JSON_ARRAY(JSON_OBJECT('key','step_1','name','DCO Review and Approval',
+ 'approver',JSON_OBJECT('type','role','value',r.id,'label',r.name)))),w.created_by,NOW()
+FROM workflows w JOIN roles r ON r.name='Document Control Officer' AND r.active=1
+WHERE w.workflow_key='softcopy_revision_template'
+ AND NOT EXISTS (SELECT 1 FROM workflow_versions v WHERE v.workflow_id=w.id);

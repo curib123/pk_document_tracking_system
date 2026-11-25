@@ -72,6 +72,9 @@ class Documents extends MY_Controller
         }
         $softcopy_options = $domain === 'softcopy' ? $this->Document_model->options('softcopy', $this->user, FALSE, TRUE) : [];
         $category_options = $domain === 'softcopy' ? $options['categories'] : [];
+        $numbered_category_options = $domain === 'softcopy' ? $this->Place_model->options('numbered_categories') : [];
+        $numbering_options = $domain === 'softcopy' ? $this->Document_model->softcopy_numbering_catalog($this->user) : [];
+        $number_previews = $domain === 'softcopy' ? $this->Document_model->softcopy_number_previews($numbered_category_options) : [];
         $latest = [];
         $accessible = [];
         $filesByDocument = [];
@@ -102,6 +105,9 @@ class Documents extends MY_Controller
             'file_histories' => $filesByDocument,
             'softcopy_options' => $softcopy_options,
             'category_options' => $category_options,
+            'numbered_category_options' => $numbered_category_options,
+            'numbering_options' => $numbering_options,
+            'number_previews' => $number_previews,
             'folder_browser' => $browser,
             'folder_base' => "documents/{$domain}",
             'folder_params' => [
@@ -114,12 +120,33 @@ class Documents extends MY_Controller
                 'to' => $state['to'],
                 'period' => $state['period'],
                 'owner' => $state['owner'],
+                'category' => $state['category'],
+                'retention' => $state['retention'],
                 'layout' => $state['layout']
             ],
             'folder_value' => $browser['folder'],
             'folder_page' => $state['page'],
             'is_administrator' => $this->can('*', '*')
         ]);
+    }
+    /** Return to the register view (layout, folder, filters) the form was submitted from. */
+    private function back_to_register($domain, $savedId = 0, $addLocationId = 0)
+    {
+        $allowed = ['q', 'page', 'limit', 'sort', 'dir', 'folder', 'layout', 'status', 'owner', 'category', 'period', 'from', 'to', 'retention'];
+        $query = [];
+        parse_str((string) $this->input->post('return_query'), $query);
+        $query = array_filter(
+            array_intersect_key($query, array_flip($allowed)),
+            static function ($value) {
+                return is_string($value) && strlen($value) <= 100; }
+        );
+        // The folder layout reopens the folders that lead to the saved document.
+        if ((int) $savedId > 0)
+            $query['saved'] = (int) $savedId;
+        // A new document reopens the Add modal for the same Location.
+        if ((int) $addLocationId > 0)
+            $query['add_location'] = (int) $addLocationId;
+        redirect("documents/{$domain}" . ($query ? '?' . http_build_query($query) : ''));
     }
     public function direct_softcopy()
     {
@@ -139,11 +166,42 @@ class Documents extends MY_Controller
                 $_FILES['revision_attachment'] ?? NULL
             );
             $this->audit_created('softcopy_documents', $result['document_id']);
-            $this->notice('Softcopy action approved and applied directly.');
+            $message = !empty($result['corrected'])
+                ? 'Document details corrected.'
+                : 'Softcopy action approved and applied directly.';
+            if (($this->input->post('type') ?? '') === 'softcopy_create' && !empty($result['document_number']))
+                $message .= ' Generated document number: ' . $result['document_number'] . '.';
+            $this->notice($message);
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/softcopy");
+        $this->back_to_register('softcopy');
+    }
+
+    /** Add or correct the Signatories References of an existing softcopy (audited). */
+    public function update_signatories()
+    {
+        $this->require_permission('softcopy', 'direct');
+        $this->confirmed();
+        try {
+            $id = (int) $this->input->post('id');
+            if (!$this->Document_model->manageable('softcopy', $id, $this->user)) {
+                throw new DomainException('Document is not available in your authorized scope.');
+            }
+            require_once APPPATH . 'services/softcopy/signatory_reference_service.php';
+            $service = new Signatory_reference_service();
+            $service->replace(
+                $id,
+                $service->from_post($this->input->post()),
+                (int) $this->user['id'],
+                trim((string) $this->input->post('remarks'))
+            );
+            $this->audit_created('softcopy_documents', $id);
+            $this->notice('Signatories References saved.');
+        } catch (Throwable $e) {
+            $this->error_notice($e);
+        }
+        $this->back_to_register('softcopy', (int) $this->input->post('id'));
     }
 
     public function save($domain)
@@ -153,14 +211,41 @@ class Documents extends MY_Controller
             return $this->direct_softcopy();
         $this->require_permission($domain, 'direct');
         $this->confirmed();
+        $savedId = 0;
+        $addLocationId = 0;
         try {
             $savedId = (new Document_service())->save($domain, $this->input->post(), $this->user);
             $this->audit_created('hardcopy_documents', $savedId);
             $this->notice('Document saved.');
+            if (!(int) $this->input->post('id'))
+                $addLocationId = (int) $this->input->post('location_id');
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/{$domain}");
+        $this->back_to_register($domain, $savedId, $addLocationId);
+    }
+    /** Permission-gated permanent deletion of an already disposed document. */
+    public function hard_delete($domain)
+    {
+        $this->Document_model->config($domain);
+        $this->authenticate();
+        if (!$this->can('documents', 'hard_delete'))
+            show_error('Hard delete permission is required.', 403);
+        $this->confirmed();
+        $id = (int) $this->input->post('id');
+        try {
+            $this->require_password_confirmation();
+            $service = new Document_service();
+            $title = $service->hard_delete($domain, $id, (int) $this->user['id']);
+            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id,
+                ['title' => $title] + $service->last_hard_delete);
+            $this->notice('Document permanently deleted.');
+        } catch (Throwable $e) {
+            $this->audit_event('documents/' . $domain . '/hard-delete', $domain . '_documents:' . $id,
+                ['reason' => $e instanceof DomainException ? $e->getMessage() : 'error'], NULL, 'failed');
+            $this->error_notice($e);
+        }
+        $this->back_to_register($domain);
     }
     public function dispose($domain)
     {
@@ -189,6 +274,6 @@ class Documents extends MY_Controller
         } catch (Throwable $e) {
             $this->error_notice($e);
         }
-        redirect("documents/{$domain}");
+        $this->back_to_register($domain);
     }
 }
