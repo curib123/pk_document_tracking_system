@@ -26,7 +26,7 @@ $dt_filter_values = ['type' => $table['type']];
     <header class="backup-overview">
         <div>
             <h1>Backup &amp; Restore</h1>
-            <p>Daily schedule: 5:00 PM · Asia/Manila</p>
+            <p>Daily at 5:00 PM Philippine time. Keeps the three latest automatic backups.</p>
             <?php if ($backup_last_auto): ?>
                 <small>Last automatic backup: <?= html_escape($backupTime($backup_last_auto['created_at'])) ?></small>
             <?php endif; ?>
@@ -40,7 +40,7 @@ $dt_filter_values = ['type' => $table['type']];
                     <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore system data
                 </button>
                 <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
-                    data-confirm="Delete backup and log archives older than three months?" autocomplete="off">
+                    data-confirm="Clean up manual backups, recovery snapshots, and logs older than three months?" autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-light" type="submit" <?= $backup_error ? 'disabled' : '' ?>>Clean up</button>

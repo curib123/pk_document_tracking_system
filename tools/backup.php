@@ -26,8 +26,11 @@ try {
     if ($command === 'auto' || $command === 'manual') {
         $result = $service->backup($command);
         echo "Created encrypted signed backup: " . $result['name'] . "\n";
-        if ($result['retention'] === NULL || $result['retention']['failed'])
-            fwrite(STDERR, "Retention cleanup was incomplete; retry php tools/backup.php retention.\n");
+        if ($result['retention'] === NULL || $result['retention']['failed']) {
+            $retry = $command === 'auto' ? 'Cleanup will retry after the next successful automatic backup.' :
+                'Retry with php tools/backup.php retention.';
+            fwrite(STDERR, "Retention cleanup was incomplete. $retry\n");
+        }
     } elseif ($command === 'retention') {
         $result = $service->apply_retention();
         echo "Three-month retention cutoff: " . $result['cutoff'] . "\n";

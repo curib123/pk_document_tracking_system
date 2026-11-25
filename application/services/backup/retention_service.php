@@ -1,9 +1,11 @@
 <?php
 defined('BASEPATH') OR defined('PK_ROOT') OR exit('No direct script access allowed');
 
-/** Three calendar months of managed archives and daily logs; never documents. */
+/** Automatic backup rotation and three calendar months of other archives and logs. */
 final class Retention_service
 {
+    private const AUTOMATIC_LIMIT = 3;
+
     private $root;
     private $backups;
     private $timezone;
@@ -18,8 +20,8 @@ final class Retention_service
         $this->timezone = new DateTimeZone('Asia/Manila');
     }
 
-    /** Caller holds Backup_service's archive/restore lock. */
-    public function cleanup(?DateTimeImmutable $now = NULL): array
+    /** Caller holds the archive lock and supplies the automatic archive only after publishing it. */
+    public function cleanup(?DateTimeImmutable $now = NULL, ?string $publishedAutomatic = NULL): array
     {
         if (file_exists($this->root . '/storage/.restore-in-progress'))
             throw new DomainException('Retention is paused during restore maintenance.');
@@ -37,6 +39,7 @@ final class Retention_service
 
         $names = glob($this->backups . '/pk-dts-*.zip') ?: [];
         $latestByClass = [];
+        $automaticArchives = [];
         foreach ($names as $path) {
             if (!is_file($path) || is_link($path))
                 continue;
@@ -44,12 +47,16 @@ final class Retention_service
             $archiveDate = $this->managedDate('backups', $name);
             if (!$archiveDate)
                 continue;
-            $kind = strpos($name, 'pk-dts-recovery-') === 0
-                ? 'recovery' : 'regular';
             // Files copied/imported between disks often have the same mtime.
             // Use the archive's validated timestamp instead, with mtime as a tie-breaker.
             $stamp = $archiveDate->getTimestamp();
             $modified = (int) @filemtime($path);
+            if (strpos($name, 'pk-dts-auto-') === 0) {
+                $automaticArchives[$name] = [$stamp, $modified, $name];
+                continue;
+            }
+            $kind = strpos($name, 'pk-dts-recovery-') === 0
+                ? 'recovery' : 'manual';
             if (
                 !isset($latestByClass[$kind]) ||
                 $stamp > $latestByClass[$kind]['stamp'] ||
@@ -61,6 +68,12 @@ final class Retention_service
         }
         foreach ($latestByClass as $latest) {
             $protectedArchives[$latest['name']] = TRUE;
+        }
+        $expiredAutomatic = [];
+        if ($publishedAutomatic !== NULL && isset($automaticArchives[$publishedAutomatic])) {
+            unset($automaticArchives[$publishedAutomatic]);
+            arsort($automaticArchives);
+            $expiredAutomatic = array_slice($automaticArchives, self::AUTOMATIC_LIMIT - 1, NULL, TRUE);
         }
 
         $result = [
@@ -92,15 +105,16 @@ final class Retention_service
                 }
                 foreach ($names as $name) {
                     $created = $this->managedDate($kind, $name);
-                    
-                    if ($kind === 'backups' && isset($protectedArchives[$name])) {
-                        continue;
-                    }
                     if ($created === NULL)
                         continue;
-                    // Daily logs contain a whole day's events: keep the cutoff day.
-                    $expired = $kind === 'backups' ? $created < $cutoff :
-                        $created->format('Y-m-d') < $cutoff->format('Y-m-d');
+                    if ($kind === 'backups' && strpos($name, 'pk-dts-auto-') === 0) {
+                        $expired = isset($expiredAutomatic[$name]);
+                    } elseif ($kind === 'backups') {
+                        $expired = !isset($protectedArchives[$name]) && $created < $cutoff;
+                    } else {
+                        // Daily logs contain a whole day's events: keep the cutoff day.
+                        $expired = $created->format('Y-m-d') < $cutoff->format('Y-m-d');
+                    }
                     if (!$expired)
                         continue;
                     $path = $directory . '/' . $name;

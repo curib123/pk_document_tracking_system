@@ -72,11 +72,12 @@ final class Backup_service
         $lock=$this->lock();
         try {
             $result=$this->createLocked($kind);
-            // Never prune before a replacement snapshot has completed.
+            // Rotate automatic backups only after publishing a verified replacement.
             try {
-                $result['retention']=$this->retentionService()->cleanup();
+                $publishedAutomatic=$kind==='auto'?$result['name']:NULL;
+                $result['retention']=$this->retentionService()->cleanup(NULL,$publishedAutomatic);
                 if ($result['retention']['failed'])
-                    error_log('PK DCS retention cleanup is incomplete; retry tools/backup.php retention.');
+                    error_log('PK DCS retention cleanup is incomplete.');
             } catch (Throwable $error) {
                 $result['retention']=NULL;
                 error_log('PK DCS retention cleanup failed: '.$error->getMessage());
