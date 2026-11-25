@@ -232,12 +232,17 @@ Configure these variables in the PHP process environment:
 | `PK_BACKUP_DIR` | Optional private backup folder |
 
 ```powershell
+php tools/backup.php auto
 php tools/backup.php manual
 php tools/backup.php list
 php tools/backup.php verify <archive-name.zip>
 ```
 
 Replace `<archive-name.zip>` with the intended archive name.
+The shorter `php tools/backup auto` command also works. For a device that stores
+its PHP backup environment outside the checkout, an ignored `.env.backup.php`
+in the project root can require that private file for CLI runs. An explicit
+database host, port, name, or backup directory selects the process environment.
 
 [install_backup_schedule.ps1](tools/install_backup_schedule.ps1) registers a daily
 4:45 PM maintenance task and 5:00 PM backup task on a Windows host using UTC+08:00.

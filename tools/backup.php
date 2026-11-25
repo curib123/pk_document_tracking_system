@@ -9,8 +9,7 @@
  * php tools/backup.php verify pk-dts-auto-YYYYMMDD-HHMMSS-xxxxxxxxxx.zip
  * php tools/backup.php restore pk-dts-auto-YYYYMMDD-HHMMSS-xxxxxxxxxx.zip
  *
- * Set PK_BACKUP_PASSWORD, PK_BACKUP_SIGNING_KEY and DB_* in the scheduler
- * process environment. Check docs/backup-restore.md before enabling 5 PM.
+ * Supply the backup environment through the process or the local CLI config.
  */
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
@@ -22,6 +21,13 @@ require_once PK_ROOT . '/application/services/backup/backup_service.php';
 date_default_timezone_set('Asia/Manila');
 $command = $argv[1] ?? '';
 try {
+    $localConfig = PK_ROOT . '/.env.backup.php';
+    // An explicit database or backup directory identifies a separate setup.
+    if (getenv('PK_TEST_DB') !== '1' && getenv('DB_HOST') === FALSE &&
+        getenv('DB_PORT') === FALSE && getenv('DB_DATABASE') === FALSE &&
+        getenv('PK_BACKUP_DIR') === FALSE && is_file($localConfig)) {
+        require_once $localConfig;
+    }
     $service = new Backup_service(PK_ROOT);
     if ($command === 'auto' || $command === 'manual') {
         $result = $service->backup($command);
