@@ -134,7 +134,7 @@ final class Backup_service
                 throw new DomainException('Unable to start the backup ZIP.');
             $zipOpen=TRUE;
             $entries=[];
-            $files=$this->sourceFiles();
+            $files=$this->sourceFiles($kind);
             $files['database.sql']=$sqlPath;
             foreach ($files as $archive=>$path) {
                 if (!is_file($path) || !is_readable($path))
@@ -358,7 +358,7 @@ final class Backup_service
             }
         } finally {$zip->close();}
     }
-    private function sourceFiles(): array
+    private function sourceFiles(string $kind): array
     {
         $files=[];$rootReal=realpath($this->root);
         $iterator=new RecursiveIteratorIterator(
@@ -371,6 +371,7 @@ final class Backup_service
             if ($this->inside($real,$this->directory)) continue;
             $relative=ltrim(str_replace('\\','/',substr($real,strlen($rootReal))),'/');
             if (preg_match('~^(?:\.git|node_modules|storage/sessions|storage/cache|storage/backups|tests/__pycache__)(?:/|$)~',$relative) ||
+                ($kind==='auto' && preg_match('~^storage/(?:documentation-review|visio-repair|previews)(?:/|$)~',$relative)) ||
                 preg_match('~(^|/)\.env(?:\.[^/]*)?$~',$relative) ||
                 preg_match('~(^|/)(?:\.DS_Store|Thumbs\.db)$~',$relative) ||
                 strpos($entry->getFilename(),'~$')===0)
