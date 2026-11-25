@@ -127,10 +127,12 @@ final class Backup_service
         $tempArchive=$this->directory.'/.'.bin2hex(random_bytes(12)).'.zip.tmp';
         $sqlPath=$tempDir.'/database.sql';
         $zip=new ZipArchive();
+        $zipOpen=FALSE;
         try {
             $this->dumpDatabase($sqlPath);
             if ($zip->open($tempArchive,ZipArchive::CREATE|ZipArchive::EXCL)!==TRUE)
                 throw new DomainException('Unable to start the backup ZIP.');
+            $zipOpen=TRUE;
             $entries=[];
             $files=$this->sourceFiles();
             $files['database.sql']=$sqlPath;
@@ -157,8 +159,8 @@ final class Backup_service
                     !$zip->setEncryptionName($path,ZipArchive::EM_AES_256,$this->password()))
                     throw new DomainException('Failed to protect backup metadata.');
             }
+            $zipOpen=FALSE;
             if (!$zip->close()) throw new DomainException('Could not finish backup ZIP.');
-            $zip=NULL;
             @chmod($tempArchive,0600);
             $this->verify($tempArchive);
             if (!rename($tempArchive,$this->directory.'/'.$name))
@@ -166,9 +168,12 @@ final class Backup_service
             return ['name'=>$name,'size'=>(int)filesize($this->directory.'/'.$name),
                 'created_at'=>$now->getTimestamp(),'kind'=>$kind];
         } finally {
-            if ($zip instanceof ZipArchive) $zip->close();
-            @unlink($tempArchive);
-            $this->removeDirectory($tempDir);
+            try {
+                if ($zipOpen) $zip->close();
+            } finally {
+                @unlink($tempArchive);
+                $this->removeDirectory($tempDir);
+            }
         }
     }
 
@@ -367,7 +372,8 @@ final class Backup_service
             $relative=ltrim(str_replace('\\','/',substr($real,strlen($rootReal))),'/');
             if (preg_match('~^(?:\.git|node_modules|storage/sessions|storage/cache|storage/backups|tests/__pycache__)(?:/|$)~',$relative) ||
                 preg_match('~(^|/)\.env(?:\.[^/]*)?$~',$relative) ||
-                preg_match('~(^|/)(?:\.DS_Store|Thumbs\.db)$~',$relative))
+                preg_match('~(^|/)(?:\.DS_Store|Thumbs\.db)$~',$relative) ||
+                strpos($entry->getFilename(),'~$')===0)
                 continue;
             $files['files/'.$relative]=$real;
         }
