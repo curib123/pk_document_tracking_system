@@ -1,0 +1,316 @@
+{
+  "title": "PK DOCUMENT TRACKING SYSTEM / PROPOSED PROCESS FLOW",
+  "format": "sample-process",
+  "sample_reference": "SA Documents/RMS/process flow old.vsdx",
+  "pages": [
+    {
+      "title": "Proposed request preparation and submission",
+      "subprocess": "1. Prepare, save and submit a request",
+      "steps": [
+        {
+          "id": "choose",
+          "actor": "Requester",
+          "icon": "person",
+          "description": "Choose a request action, enter its details and select Save Draft."
+        },
+        {
+          "id": "validate",
+          "actor": "PK DTS",
+          "icon": "computer",
+          "description": "Validate fields, permission, ownership and active targets; save a valid draft."
+        },
+        {
+          "id": "draft",
+          "actor": "Requester",
+          "icon": "person",
+          "description": "Reopen the saved draft; review the proposal and required Document File."
+        },
+        {
+          "id": "submit",
+          "actor": "Requester",
+          "icon": "document",
+          "description": "Submit the saved proposal for its configured approval route."
+        },
+        {
+          "id": "activate",
+          "actor": "PK DTS",
+          "icon": "database",
+          "description": "Capture the published route and version; activate the first step; mark Submitted."
+        }
+      ],
+      "notes": [
+        "Softcopy Create/Revise need a Document File before submission: PDF, TXT, PNG, JPG/JPEG, DOCX or XLSX; maximum 15 MB.",
+        "Only the requester may edit Draft/Returned proposals. Access and assignment requests name that requester as recipient.",
+        "Cancel applies only to Drafts; owner-only Delete applies to eligible Cancelled drafts with no submission or workflow state.",
+        "Access expiry must be after today when saved and remain valid at final approval.",
+        "A Submitted access, assignment or transfer request blocks another of these for the same requester and document.",
+        "Hardcopy updates require the current holder or an Administrator."
+      ],
+      "legend": [
+        "Softcopy Create registers a controlled record/file; Revise publishes a replacement revision; Cancel marks Cancelled and retires files.",
+        "Hardcopy Create registers title, storage and holder; Update applies proposed metadata and retention information.",
+        "Access Grant provides time-limited access; Document Assignment adds a softcopy assignee or changes the hardcopy holder.",
+        "Hardcopy Transfer creates handoff work (sheet 3). Hardcopy Disposal marks Disposed, clears Location and revokes grants."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:116-547",
+        "application/services/request/request_policy.php:4-39",
+        "application/services/files/file_service.php:171-231",
+        "application/controllers/Requests.php:114-164",
+        "application/models/Request_model.php:225-244",
+        "application/services/documents/document_service.php:67-136",
+        "application/services/documents/document_access_service.php:18-84",
+        "application/services/softcopy/softcopy_operation_service.php:43-233",
+        "application/services/request/request_service.php:565-714"
+      ]
+    },
+    {
+      "title": "Proposed approval and return process",
+      "subprocess": "2. Review, decide and apply a request",
+      "steps": [
+        {
+          "id": "request",
+          "actor": "Requester",
+          "icon": "person",
+          "description": "Submit a proposal and await the assigned review."
+        },
+        {
+          "id": "task",
+          "actor": "PK DTS",
+          "icon": "computer",
+          "description": "Present the active approval task to its assigned user or configured role."
+        },
+        {
+          "id": "review",
+          "actor": "Assigned approver",
+          "icon": "reviewer",
+          "description": "Review the proposal, required pending file and decision history."
+        },
+        {
+          "id": "decide",
+          "actor": "Assigned approver",
+          "icon": "reviewer",
+          "description": "Choose Approve, Return or Reject; add an optional remark for Return or Reject."
+        },
+        {
+          "id": "history",
+          "actor": "PK DTS",
+          "icon": "database",
+          "description": "Save the decision and history; continue, return or end the approval route."
+        },
+        {
+          "id": "apply",
+          "actor": "PK DTS",
+          "icon": "document",
+          "description": "On final approval, apply the operation; complete the request or prepare a transfer."
+        }
+      ],
+      "notes": [
+        "Only the active step's assigned user or role member may decide. Types: user, role, Requester's leader or requester; resolved accounts must be active at submission.",
+        "Return after the first step will reopen the immediately preceding approved step. Return from the first step will send the proposal to its requester.",
+        "Resubmission will retain the captured approval route and preserve previous decision history. Rejection will end the request.",
+        "Final approval applies the operation atomically; failed checks save no decision. A transfer remains Approved until Dispatch and Accept complete."
+      ],
+      "legend": [
+        "Approve: continue the configured route or apply the final operation.",
+        "Return: reopen the previous step or return to the requester.",
+        "Reject: end the approval route."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:393-547,719-846",
+        "application/models/Request_model.php:24-40",
+        "application/models/File_model.php:7-44",
+        "application/services/workflow/workflow_graph.php:14-31"
+      ]
+    },
+    {
+      "title": "Proposed physical document transfer",
+      "subprocess": "3. Approve, dispatch and accept a hardcopy",
+      "steps": [
+        {
+          "id": "prepare",
+          "actor": "Requester",
+          "icon": "person",
+          "description": "Select an active hardcopy, recipient and different active destination; submit."
+        },
+        {
+          "id": "approval",
+          "actor": "Configured approvers",
+          "icon": "reviewer",
+          "description": "Review and approve the transfer through its configured approval route."
+        },
+        {
+          "id": "handoff",
+          "actor": "PK DTS",
+          "icon": "computer",
+          "description": "Prepare the For Transfer handoff; preserve the current holder and Location."
+        },
+        {
+          "id": "dispatch",
+          "actor": "Original requester",
+          "icon": "person",
+          "description": "Dispatch the physical document and confirm its release."
+        },
+        {
+          "id": "accept",
+          "actor": "Designated recipient",
+          "icon": "person",
+          "description": "Accept the in-transit document and confirm physical receipt."
+        },
+        {
+          "id": "custody",
+          "actor": "PK DTS",
+          "icon": "database",
+          "description": "Recheck the holder and approved destination; update custody and Location; complete the request."
+        }
+      ],
+      "notes": [
+        "Only the original transfer requester will be allowed to Dispatch; this account may differ from the current holder. Only the designated recipient will be allowed to Accept.",
+        "Approval will prepare the handoff without moving custody. Dispatch will mark it In Transit; recipient acceptance will complete it.",
+        "Acceptance will require the active document, unchanged holder and approved active destination hierarchy. A failed check will preserve custody and location.",
+        "When custody changes to another user, acceptance will revoke the previous holder's personal hardcopy grants."
+      ],
+      "legend": [
+        "For Transfer: approved handoff awaiting Dispatch.",
+        "In Transit: dispatched document awaiting recipient acceptance.",
+        "Accepted / Completed: receipt and custody update recorded."
+      ],
+      "sources": [
+        "application/services/request/request_service.php:320-390,643-673,784-789",
+        "application/services/transfer/transfer_service.php:13-142",
+        "application/services/transfer/transfer_destination_policy.php:1-16",
+        "application/models/Transfer_model.php:6-34"
+      ]
+    },
+    {
+      "title": "Proposed document use and direct maintenance",
+      "subprocess": "4. Browse, use files and apply authorized direct actions",
+      "steps": [
+        {
+          "id": "browse",
+          "actor": "Registered user",
+          "icon": "person",
+          "description": "Sign in, complete any required temporary-password setup, and open the Softcopy or Hardcopy catalog."
+        },
+        {
+          "id": "scope",
+          "actor": "PK DTS",
+          "icon": "computer",
+          "description": "Apply role permissions and document scope to records and available actions."
+        },
+        {
+          "id": "use",
+          "actor": "Registered user",
+          "icon": "document",
+          "description": "For a softcopy, open, download or print its current controlled file when authorized."
+        },
+        {
+          "id": "direct",
+          "actor": "Authorized operator",
+          "icon": "admin",
+          "description": "Choose a permitted direct document maintenance or assignment action."
+        },
+        {
+          "id": "check",
+          "actor": "PK DTS",
+          "icon": "computer",
+          "description": "Validate the direct permission, document scope, active targets and proposed changes."
+        },
+        {
+          "id": "record",
+          "actor": "PK DTS",
+          "icon": "database",
+          "description": "Apply the authorized changes immediately and save the controlled record."
+        }
+      ],
+      "notes": [
+        "File access requires permission, document scope, an active record and its current approved file; catalog visibility alone is insufficient.",
+        "Direct actions need their own permission and apply without an approval request.",
+        "Assignments cover one record, a hardcopy Location or a softcopy category branch; bulk limit: 2,000 active records.",
+        "Hardcopy assignment changes Current Holder immediately, without Dispatch/Accept; softcopy assignment adds the user and keeps earlier assignees.",
+        "Active transfers block direct hardcopy reassignment. Expired or revoked grants confer no access."
+      ],
+      "legend": [
+        "Direct Softcopy actions: Create, Revise, Cancel and Dispose.",
+        "Direct Hardcopy actions: Create, Update and Dispose.",
+        "Direct assignments: selected active document or permitted location/category group."
+      ],
+      "sources": [
+        "application/controllers/Documents.php:17-194",
+        "application/controllers/Files.php:22-239",
+        "application/controllers/Administration.php:130-337",
+        "application/services/softcopy/softcopy_direct_service.php:4-8",
+        "application/services/documents/document_access_service.php:18-84",
+        "application/services/security/document_scope.php:22-74",
+        "application/services/documents/document_service.php:224-276",
+        "application/core/MY_Controller.php:48-60",
+        "application/controllers/Auth.php:24-62"
+      ],
+      "layout": "independent-paths"
+    },
+    {
+      "title": "Proposed administration, audit and recovery",
+      "subprocess": "5. Maintain definitions and prepare controlled recovery",
+      "steps": [
+        {
+          "id": "enter",
+          "actor": "Authorized maintainer",
+          "icon": "admin",
+          "description": "Sign in and open the permitted system administration pages."
+        },
+        {
+          "id": "identity",
+          "actor": "Account administrator",
+          "icon": "admin",
+          "description": "Maintain active user accounts, roles and delegated permissions."
+        },
+        {
+          "id": "places",
+          "actor": "Authorized maintainer",
+          "icon": "document",
+          "description": "Maintain the hardcopy place hierarchy and softcopy categories."
+        },
+        {
+          "id": "workflow",
+          "actor": "Workflow administrator",
+          "icon": "reviewer",
+          "description": "Clone and edit workflow drafts; publish the default approval route per request type."
+        },
+        {
+          "id": "audit",
+          "actor": "Authorized audit / backup user",
+          "icon": "computer",
+          "description": "Inspect audit records; create, download or import backups; clean up eligible old archives."
+        },
+        {
+          "id": "recover",
+          "actor": "PK DTS",
+          "icon": "database",
+          "description": "Verify the selected archive, password and RESTORE confirmation; create a recovery snapshot before restoring database and private data."
+        }
+      ],
+      "notes": [
+        "Separate admin permissions; workflow changes preserve Submitted/Returned routes.",
+        "Backup needs encryption password, signing key, AES-256 ZIP and DB tools. Includes DB/code/private data; excludes sessions/cache/backups.",
+        "Restore checks archive/password/RESTORE, makes a recovery backup, restores DB/private data in maintenance, then signs out. Code recovery is offline.",
+        "Cleanup: eligible backup/audit/log archives older than 3 months."
+      ],
+      "legend": [
+        "Places: Area > Specific > optional Asset > Location.",
+        "Categories: softcopy category and subcategory hierarchy.",
+        "Recovery: protected archive, verified contents and pre-restore snapshot."
+      ],
+      "sources": [
+        "application/controllers/Administration.php:340-448",
+        "application/controllers/Places.php:31-88",
+        "application/services/workflow/workflow_builder_service.php:87-202",
+        "application/libraries/Audit_file.php:5-52",
+        "application/controllers/Audit.php:6-30",
+        "application/controllers/Backups.php:6-155",
+        "application/services/backup/backup_service.php:47-53,109-362,454-470",
+        "application/services/backup/retention_service.php:22-126"
+      ],
+      "layout": "administration-options"
+    }
+  ]
+}

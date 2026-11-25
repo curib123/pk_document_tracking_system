@@ -1,0 +1,158 @@
+{
+  "title": "PK DOCUMENT TRACKING SYSTEM DATA FLOW DIAGRAM",
+  "format": "sample-dfd",
+  "sample_reference": "SA Documents/From Alyn/Healthcare Benefits_DFD.pdf",
+  "pages": [
+    {
+      "title": "DOCUMENT REQUESTS AND CONTROL",
+      "module": "Document Register\nRequests and Approvals\nControlled Files",
+      "actors": [
+        {
+          "id": "requester",
+          "role": "REQUESTER",
+          "icon": "person",
+          "inputs": [
+            "SIGN-IN AND PASSWORD DATA",
+            "DOCUMENT QUERIES",
+            "REQUEST DETAILS AND PROPOSAL FILES"
+          ],
+          "outputs": [
+            "SESSION AND PERSONAL DASHBOARD",
+            "AUTHORIZED RECORDS AND FILES",
+            "REQUEST STATUS AND HISTORY"
+          ]
+        },
+        {
+          "id": "approver",
+          "role": "ASSIGNED APPROVER",
+          "icon": "reviewer",
+          "inputs": [
+            "DECISION AND OPTIONAL REMARKS"
+          ],
+          "outputs": [
+            "ASSIGNED TASKS AND ALERTS",
+            "PROPOSAL DETAILS AND FILES"
+          ]
+        },
+        {
+          "id": "controller",
+          "role": "AUTHORIZED DOCUMENT CONTROLLER",
+          "icon": "admin",
+          "inputs": [
+            "DIRECT DOCUMENT DATA AND FILES",
+            "USER ASSIGNMENT SELECTIONS"
+          ],
+          "outputs": [
+            "DOCUMENT ACTION RESULTS",
+            "ASSIGNMENT DETAILS"
+          ]
+        }
+      ],
+      "legend": [
+        "CREATE SOFTCOPY",
+        "REVISE SOFTCOPY",
+        "CANCEL SOFTCOPY",
+        "CREATE HARDCOPY",
+        "UPDATE HARDCOPY",
+        "GRANT ACCESS",
+        "ASSIGN DOCUMENT",
+        "TRANSFER HARDCOPY",
+        "DISPOSE HARDCOPY"
+      ],
+      "notes": [
+        "Roles describe responsibilities and may overlap. Sign-in and any required temporary-password setup will precede protected modules; access will follow permissions.",
+        "Access and assignment requests will apply to the requester. Direct document changes and assignments will require separate permissions.",
+        "The published route will select approvers. Return will reopen the previous approval step; first-step Return will send the request to its requester. Reading an alert will not record a decision."
+      ],
+      "sources": [
+        "application/controllers/Documents.php:17",
+        "application/controllers/Documents.php:125",
+        "application/controllers/Documents.php:150",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:133",
+        "application/controllers/Requests.php:146",
+        "application/controllers/Administration.php:130",
+        "application/controllers/Files.php:22",
+        "application/services/request/request_service.php:179",
+        "application/services/request/request_service.php:393",
+        "application/services/request/request_service.php:719",
+        "application/services/documents/document_access_service.php:34",
+        "application/controllers/Auth.php:24-62",
+        "application/core/MY_Controller.php:48-60",
+        "application/controllers/Dashboard.php:5-13",
+        "application/models/Dashboard_model.php:24-84",
+        "application/controllers/Notifications.php:27-73"
+      ]
+    },
+    {
+      "title": "PHYSICAL HANDOFFS AND ADMINISTRATION",
+      "module": "Physical Transfer Handoffs\nSetup and Administration\nAudit and Backup",
+      "actors": [
+        {
+          "id": "transfer_requester",
+          "role": "TRANSFER REQUESTER",
+          "icon": "person",
+          "inputs": [
+            "DISPATCH CONFIRMATION"
+          ],
+          "outputs": [
+            "APPROVED HANDOFF DETAILS",
+            "TRANSFER STATUS"
+          ]
+        },
+        {
+          "id": "receiving_user",
+          "role": "RECEIVING USER",
+          "icon": "person",
+          "inputs": [
+            "RECEIPT CONFIRMATION"
+          ],
+          "outputs": [
+            "INCOMING HANDOFF DETAILS",
+            "CUSTODY AND LOCATION"
+          ]
+        },
+        {
+          "id": "administrator",
+          "role": "ADMINISTRATOR",
+          "icon": "admin",
+          "inputs": [
+            "ACCOUNT, ROLE, PLACE AND WORKFLOW DATA",
+            "AUDIT SEARCH CRITERIA",
+            "BACKUP INPUTS AND RESTORE AUTHORIZATION"
+          ],
+          "outputs": [
+            "SAVED SETUP AND TEMPORARY CREDENTIALS",
+            "AUDIT EVENTS",
+            "BACKUP ARCHIVES AND OPERATION RESULTS"
+          ]
+        }
+      ],
+      "legend": [
+        "DISPATCH: requester confirmation of physical release",
+        "ACCEPT: recipient confirmation of physical receipt",
+        "BACKUP INPUTS: operation selection or imported archive"
+      ],
+      "notes": [
+        "Only the transfer requester will dispatch; only the designated recipient will accept. Acceptance will update the holder and location.",
+        "Physical paper will move between people outside PK DTS. Arrows show handoff data rather than paper movement.",
+        "Administration will follow module permissions. Backup and restore will require completed configuration and readiness checks."
+      ],
+      "sources": [
+        "application/controllers/Requests.php:166",
+        "application/controllers/Requests.php:180",
+        "application/services/transfer/transfer_service.php:13",
+        "application/services/transfer/transfer_service.php:48",
+        "application/controllers/Administration.php:40",
+        "application/controllers/Administration.php:374",
+        "application/controllers/Administration.php:403",
+        "application/controllers/Administration.php:425",
+        "application/controllers/Places.php:1",
+        "application/controllers/Backups.php:6",
+        "application/controllers/Backups.php:54",
+        "application/controllers/Backups.php:101",
+        "application/view/pages/administration/backups.php:5"
+      ]
+    }
+  ]
+}

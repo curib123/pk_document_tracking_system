@@ -1,0 +1,79 @@
+{
+  "softcopy_files": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1032.421875,
+        "y": 408,
+        "width": 100.6875,
+        "height": 34,
+        "label": "Open Document File History"
+      },
+      {
+        "x": 1208.84375,
+        "y": 408,
+        "width": 96.453125,
+        "height": 34,
+        "label": "Download the current approved file"
+      },
+      {
+        "x": 1138.109375,
+        "y": 408,
+        "width": 65.734375,
+        "height": 34,
+        "label": "Open the protected print view"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "file_history": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 257,
+        "y": 355.796875,
+        "width": 236.21875,
+        "height": 30.796875,
+        "label": "Read the document file history"
+      },
+      {
+        "x": 199,
+        "y": 471.796875,
+        "width": 1042,
+        "height": 65.390625,
+        "label": "Check current and historical revisions"
+      }
+    ],
+    "route": "documents/softcopy"
+  },
+  "print_file": {
+    "width": 1440,
+    "height": 960,
+    "annotations": [
+      {
+        "x": 1217.40625,
+        "y": 23,
+        "width": 72.578125,
+        "height": 47,
+        "label": "Use the print action after review"
+      },
+      {
+        "x": 28,
+        "y": 149,
+        "width": 1384,
+        "height": 774,
+        "label": "Review the controlled file before printing"
+      },
+      {
+        "x": 53,
+        "y": 174,
+        "width": 1334,
+        "height": 720,
+        "label": "Controlled document preview"
+      }
+    ],
+    "route": "files/print/3"
+  }
+}

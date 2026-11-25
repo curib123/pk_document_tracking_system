@@ -1,0 +1,146 @@
+{
+  "flows": [
+    {
+      "type": "softcopy_create",
+      "label": "Create Softcopy",
+      "tab": "softcopy",
+      "form": "flow_softcopy_create",
+      "save": "flow_softcopy_create_save",
+      "draft": "draft_softcopy_create",
+      "result": "result_softcopy_create",
+      "sample": {
+        "subject": "Create Softcopy - documentation sample",
+        "title": "Sample controlled procedure",
+        "document_number": "DEMO-REQUEST-001"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "softcopy_revise",
+      "label": "Revise Softcopy",
+      "tab": "softcopy",
+      "form": "flow_softcopy_revise",
+      "save": "flow_softcopy_revise_save",
+      "draft": "draft_softcopy_revise",
+      "result": "result_softcopy_revise",
+      "sample": {
+        "subject": "Revise Softcopy - documentation sample",
+        "title": "Sample controlled procedure - updated",
+        "new_revision_level": "01"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "softcopy_cancel",
+      "label": "Cancel Softcopy",
+      "tab": "softcopy",
+      "form": "flow_softcopy_cancel",
+      "save": "flow_softcopy_cancel_save",
+      "draft": "draft_softcopy_cancel",
+      "result": "result_softcopy_cancel",
+      "sample": {
+        "subject": "Cancel Softcopy - documentation sample",
+        "title": "Sample controlled procedure - updated"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "hardcopy_create",
+      "label": "Create Hardcopy",
+      "tab": "hardcopy",
+      "form": "flow_hardcopy_create",
+      "save": "flow_hardcopy_create_save",
+      "draft": "draft_hardcopy_create",
+      "result": "result_hardcopy_create",
+      "sample": {
+        "subject": "Create Hardcopy - documentation sample",
+        "title": "Sample signed register"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "hardcopy_update",
+      "label": "Update Hardcopy",
+      "tab": "hardcopy",
+      "form": "flow_hardcopy_update",
+      "save": "flow_hardcopy_update_save",
+      "draft": "draft_hardcopy_update",
+      "result": "result_hardcopy_update",
+      "sample": {
+        "subject": "Update Hardcopy - documentation sample",
+        "title": "Sample signed register - updated"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "access",
+      "label": "Grant Access",
+      "tab": "access-grant",
+      "form": "flow_access",
+      "save": "flow_access_save",
+      "draft": "draft_access",
+      "result": "result_access",
+      "sample": {
+        "subject": "Grant Access - documentation sample",
+        "expires_at": "2027-12-31",
+        "title": "Example softcopy - documentation only"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "assignment",
+      "label": "Assign Document",
+      "tab": "document-assign",
+      "form": "flow_assignment",
+      "save": "flow_assignment_save",
+      "draft": "draft_assignment",
+      "result": "result_assignment",
+      "sample": {
+        "subject": "Assign Document - documentation sample",
+        "title": "Example softcopy - documentation only"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    },
+    {
+      "type": "transfer",
+      "label": "Transfer Hardcopy",
+      "tab": "hardcopy-transfer",
+      "form": "flow_transfer",
+      "save": "flow_transfer_save",
+      "draft": "draft_transfer",
+      "result": "result_transfer",
+      "sample": {
+        "subject": "Transfer Hardcopy - documentation sample",
+        "title": "Sample signed register - updated",
+        "recipient": "Receiver Demo",
+        "location": "Sample receiving location"
+      },
+      "status": "approved",
+      "final_status": "completed"
+    },
+    {
+      "type": "disposal",
+      "label": "Dispose Hardcopy",
+      "tab": "hardcopy-disposal",
+      "form": "flow_disposal",
+      "save": "flow_disposal_save",
+      "draft": "draft_disposal",
+      "result": "result_disposal",
+      "sample": {
+        "subject": "Dispose Hardcopy - documentation sample",
+        "disposal_reason": "shred",
+        "title": "Example hardcopy - documentation only"
+      },
+      "status": "completed",
+      "final_status": "completed"
+    }
+  ],
+  "verification": "All nine sample flows were executed against the current controllers in a disposable synthetic database; return/reject and draft delete branches also verified."
+}

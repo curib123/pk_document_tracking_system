@@ -16,8 +16,3 @@ __pycache__/
 *.bak.sql
 .env
 .env.*
-
-# Draft guide decks built by tools/documentation/build_user_guide.py
-/tools/documentation/build/
-# Office lock files
-~$*

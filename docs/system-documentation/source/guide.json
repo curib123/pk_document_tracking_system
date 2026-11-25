@@ -1,0 +1,800 @@
+{
+  "sections": [
+    {
+      "title": "1. System access and responsibilities",
+      "route": "login",
+      "steps": [
+        "Open the PK Document Control address supplied by your system administrator in your browser.",
+        "Obtain your own Username and password from the administrator when access is provided. Administrators will manage account creation and password resets in User Management.",
+        "Use Hardcopy Documents to find physical records and their storage location or holder. Use Softcopy Documents to find controlled electronic records and their current files.",
+        "Use My Requests when you need approval to create, change, transfer, dispose of, access, or be assigned a document.",
+        "Use My Tasks to review approval work assigned to your account or one of your roles, and to complete physical transfer handoffs.",
+        "Authorized document controllers and administrators also receive management menus for direct actions, assignments, reference places, users, roles, workflows, audit, and backups."
+      ],
+      "notes": [
+        "Permissions and document access will determine the menus, records, request actions, and file buttons available to each user.",
+        "Ask your administrator when a needed menu or document is unavailable; do not use another person's account.",
+        "Document access will not automatically grant permission to edit, download, print, approve, or administer the system."
+      ],
+      "sources": [
+        "application/view/layout/sidebar_top_nav.php:4",
+        "application/controllers/Documents.php:17",
+        "application/controllers/Requests.php:18",
+        "application/view/pages/authentication/index.php:156"
+      ],
+      "slide_steps": [
+        "Open the address supplied by your system administrator and use your own account.",
+        "Hardcopy Documents tracks physical records; Softcopy Documents provides controlled electronic records and files.",
+        "Use My Requests for approval proposals and My Tasks for assigned approvals or physical handoffs.",
+        "Document controllers and administrators receive extra management menus when permitted.",
+        "Ask the administrator when a needed menu, action, or record is unavailable."
+      ],
+      "screenshot": "login",
+      "slide_notes": [
+        "Permissions and document access will determine the menus, records, request actions, and file buttons available to each user."
+      ]
+    },
+    {
+      "title": "2. Sign in and change your password",
+      "route": "login / change-password",
+      "steps": [
+        "On Sign in to your account, enter your Username and Password, then select Sign In.",
+        "If Change your temporary password appears, enter the Current or temporary password, a New password, and Confirm new password.",
+        "Choose a new password with more than 8 characters, up to 72 bytes, and do not reuse the temporary password. Enter the same new password in both new-password fields.",
+        "Select Set permanent password. You must finish this setup before accessing documents, requests, or administration.",
+        "To change your password later, open your name at the top right and select Change Password. Complete the three password fields, then select Update Password and confirm the action.",
+        "To leave the system, open the same account menu, select Sign Out, and confirm."
+      ],
+      "notes": [
+        "If Invalid username or password appears, recheck the credentials. After too many failed attempts, wait before trying again or contact the administrator.",
+        "The proposed sign-in screen will use administrator-managed password resets. Contact an administrator for a new temporary password.",
+        "Your name and role will appear in the account menu, where Change Password will provide the self-service password action."
+      ],
+      "sources": [
+        "application/view/pages/authentication/index.php:116",
+        "application/view/pages/authentication/first_login.php:8",
+        "application/view/pages/authentication/password_fields.php:3",
+        "application/view/layout/sidebar_top_nav.php:323",
+        "application/view/layout/footer.php:183",
+        "application/controllers/Auth.php:32"
+      ],
+      "slide_steps": [
+        "Enter Username and Password, then select Sign In.",
+        "For a temporary password, complete Current or temporary password, New password, and Confirm new password.",
+        "Choose more than 8 characters, up to 72 bytes; select Set permanent password.",
+        "Later, open your name \u2192 Change Password, complete the fields, then Update Password \u2192 Confirm.",
+        "Open your name \u2192 Sign Out \u2192 Confirm to finish your session."
+      ],
+      "screenshot": "login",
+      "slide_notes": [
+        "If Invalid username or password appears, recheck the credentials. After too many failed attempts, wait before trying again or contact the administrator."
+      ]
+    },
+    {
+      "title": "3. Overview and main navigation",
+      "route": "dashboard",
+      "steps": [
+        "Select Overview in the left navigation to return to your dashboard.",
+        "Read Accessible documents for the number of records you are authorized to see, and Created by you for records you created within that access.",
+        "Read Pending approvals for work assigned to you or your role, and Outstanding handoffs for your physical dispatch or receipt tasks.",
+        "Use Your document register to compare accessible Hardcopy and Softcopy counts. Use My request status to see the status distribution of your own requests.",
+        "Open Hardcopy Documents or Softcopy Documents under Document Management to browse records.",
+        "Open My Requests or My Tasks under Document Requests. Their badges indicate draft or returned requests and pending tasks respectively.",
+        "On a narrow screen, use the Toggle navigation menu button to show the navigation. Open your name at the top right for account actions, and use the bell to open Notifications."
+      ],
+      "notes": [
+        "Dashboard numbers will reflect the signed-in user's authorized records and assigned work.",
+        "Additional menus will appear only when the account has the corresponding permissions."
+      ],
+      "sources": [
+        "application/view/pages/dashboard/index.php:39",
+        "application/view/pages/dashboard/index.php:62",
+        "application/view/pages/dashboard/index.php:97",
+        "application/view/layout/sidebar_top_nav.php:63",
+        "application/view/layout/sidebar_top_nav.php:259"
+      ],
+      "slide_steps": [
+        "Select Overview for your dashboard. On narrow screens, use Toggle navigation to show the sidebar.",
+        "Check Accessible documents and Created by you for counts within your document access.",
+        "Check Pending approvals and Outstanding handoffs for work assigned to you or your roles.",
+        "Read Your document register and My request status to see document and request distributions.",
+        "Use the left navigation for documents, My Requests, My Tasks, and permitted management pages; use the bell for Notifications."
+      ],
+      "slide_notes": [
+        "Dashboard numbers will reflect the signed-in user's authorized records and assigned work."
+      ]
+    },
+    {
+      "title": "4. Find and inspect document records",
+      "route": "documents/hardcopy / documents/softcopy",
+      "steps": [
+        "Open Hardcopy Documents or Softcopy Documents, then choose Table or Folder in the Document Browser.",
+        "In Table view, enter text in Search records. Narrow the results with All Statuses, All Owners, and the date-period control when needed.",
+        "For dates, choose All time, Today, This week, This month, This year, or Custom range. Custom range provides Start date and End date. Select Clear to remove filters.",
+        "In Folder view, open folders to follow the hierarchy. Hardcopy folders follow Area, Specific, optional Asset, and Location; softcopy folders follow categories and subcategories.",
+        "Use the folder breadcrumbs to return to a parent. Use Recent, A\u2013Z, or Z\u2013A to change document ordering, and All Documents when you need the full authorized register.",
+        "Select the document title or View action to open its details. Hardcopy records show storage, custody, retention, related requests, approval history, and transfer history where recorded.",
+        "For softcopy details, inspect Revision & Classification, Document Files, Related Requests, and Approval History. Select Close when finished.",
+        "Use Rows per page and the previous or next page controls for longer lists."
+      ],
+      "notes": [
+        "The proposed hardcopy register will show Document Title, Location, Holder, and Status. The softcopy register will show Document Title, Document Number, Category, and Status.",
+        "Only authorized folders and records will be available. The status filters will include Active, Disposed, and Cancelled."
+      ],
+      "sources": [
+        "application/view/pages/documents/shared_index.php:11",
+        "application/view/pages/documents/shared_index.php:124",
+        "application/view/pages/documents/shared_index.php:149",
+        "application/view/reusable_components/reusable_datatable.php:31",
+        "application/view/reusable_components/document_folder_list.php:167",
+        "application/models/Document_detail_model.php:124"
+      ],
+      "slide_steps": [
+        "Open Hardcopy Documents or Softcopy Documents and choose Table or Folder.",
+        "Use Search records, status, owner, and date filters. Select Clear to remove filters.",
+        "Expand hardcopy Area \u2192 Specific \u2192 optional Asset \u2192 Location, or softcopy category folders. Use breadcrumbs and All Documents to change scope.",
+        "Open a document title or View action for full details, related requests, approval history, and applicable file or transfer history.",
+        "Use Rows per page, page arrows, and Recent / A\u2013Z / Z\u2013A ordering to browse long lists."
+      ],
+      "slide_notes": [
+        "The proposed hardcopy register will show Document Title, Location, Holder, and Status. The softcopy register will show Document Title, Document Number, Category, and Status."
+      ]
+    },
+    {
+      "title": "5. Request a hardcopy record or update",
+      "route": "my-requests/hardcopy",
+      "steps": [
+        "Open My Requests, select Hardcopy Requests, and select New Request.",
+        "Choose Create Hardcopy or Update Hardcopy in Request Action and enter Subject / Reason. For Update Hardcopy, first choose the Existing Hardcopy Document.",
+        "Enter the Document Title and select its Area, Specific, optional Asset, and Location. Choose entries from the system lists so the storage hierarchy remains consistent.",
+        "Check Current Holder. For an ordinary requester it uses the signed-in account; an administrator may select a holder.",
+        "Optionally enable Track retention period. When enabled, enter both Retention Start and Retention End; End must be on or after Start.",
+        "Add optional Reason / Notes or remarks where displayed. Check the proposed storage and holder before saving.",
+        "Select Save Draft and confirm. Back in the list, open View to check the proposal, then select Submit and confirm to start approval.",
+        "Follow the request in My Requests. The proposed record or update will be applied after the required approvals complete."
+      ],
+      "notes": [
+        "Asset is optional; Area, Specific, and Location are required in the hardcopy form.",
+        "Saving a draft will keep the proposal outside the approval process. Use Submit after checking it.",
+        "Use Hardcopy Transfer for a physical handoff rather than treating a draft metadata update as proof of receipt."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:351",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:11",
+        "application/view/pages/hardcopy_document/modal_action/upsert.php:65",
+        "application/controllers/Requests.php:114",
+        "application/controllers/Requests.php:134"
+      ],
+      "slide_steps": [
+        "Open My Requests \u2192 Hardcopy Requests \u2192 New Request; choose Create Hardcopy or Update Hardcopy and enter Subject / Reason.",
+        "For Update, select Existing Hardcopy Document. Enter or check Document Title and the storage hierarchy.",
+        "Choose Area, Specific, optional Asset, and Location; check Current Holder.",
+        "Optionally enable retention monitoring and enter both Start and End dates (End on/after Start). Add notes, then Save Draft and Confirm.",
+        "Review the saved proposal, then Submit \u2192 Confirm. Track its approval before treating the proposed change as applied."
+      ],
+      "slide_notes": [
+        "Asset is optional; Area, Specific, and Location are required in the hardcopy form."
+      ]
+    },
+    {
+      "title": "6. Request a new softcopy document",
+      "route": "my-requests/softcopy",
+      "steps": [
+        "Open My Requests, select Softcopy Requests, and select New Request.",
+        "Set Softcopy Action to Create Softcopy and enter Subject / Reason.",
+        "Enter Proposed Document Title and Document Number, add the optional Series Number if used, and choose the Category.",
+        "Under Document File, choose the file that approvers must review. Supported choices shown by the form are PDF, TXT, PNG, JPG, JPEG, DOCX, and XLSX, with a 15 MB maximum.",
+        "Add optional Remarks to explain the proposal or direct approvers to a point that needs attention.",
+        "Select Save Draft and confirm. Open the saved request to check its title, classification, and attachment; use Review File when available.",
+        "Select Submit and confirm to send the draft through the published approval workflow.",
+        "Check My Requests for progress. Once approved and completed, find the controlled record in Softcopy Documents."
+      ],
+      "notes": [
+        "Create and Revise will require a document file. When editing a draft, retain its attachment or select a replacement.",
+        "The selected action will determine which fields appear. Create Softcopy will omit fields used only for revisions.",
+        "An attachment in a draft or submitted request will remain a proposal until the workflow completes."
+      ],
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:8",
+        "application/view/pages/request/softcopy_fields.php:31",
+        "application/view/pages/request/softcopy_fields.php:68",
+        "public/assets/js/app.js:661",
+        "application/view/pages/request/shared_index.php:337"
+      ],
+      "slide_steps": [
+        "Open My Requests \u2192 Softcopy Requests \u2192 New Request and choose Create Softcopy.",
+        "Enter Subject / Reason, Proposed Document Title, Document Number, optional Series Number, and Category.",
+        "Attach the Document File: PDF, TXT, PNG, JPG, JPEG, DOCX, or XLSX; maximum 15 MB.",
+        "Add optional Remarks, then Save Draft \u2192 Confirm. Review the saved proposal and attachment.",
+        "Select Submit \u2192 Confirm and track the approval. The completed record appears in Softcopy Documents."
+      ],
+      "slide_notes": [
+        "Create and Revise will require a document file. When editing a draft, retain its attachment or select a replacement."
+      ]
+    },
+    {
+      "title": "7. Revise, cancel, download, or print softcopies",
+      "route": "my-requests/softcopy / documents/softcopy",
+      "steps": [
+        "To propose a revision, open My Requests \u2192 Softcopy Requests \u2192 New Request and choose Revise Softcopy.",
+        "Choose Existing Softcopy Document. Check the loaded document information, enter Subject / Reason, and confirm the Proposed Document Title.",
+        "Enter New Revision Level and Number of Pages, choose an optional Effective Date, and attach the revised Document File. A blank Effective Date defaults to approval day.",
+        "Add Remarks, select Save Draft and confirm, review the proposal, then Submit it for approval.",
+        "To request cancellation of an existing controlled record, choose Cancel Softcopy, select the document, explain Subject / Reason, and save and submit the request.",
+        "To obtain the current authorized file, open Softcopy Documents and use Download or Print on the record when those buttons are available.",
+        "For a printable preview, wait for preparation, then select Print. For an Office file without a browser print preview, download it and use File \u2192 Print in Word or Excel.",
+        "Select File History to open Document File History and inspect available revision entries when permitted. Check the Current or Superseded label before using a file."
+      ],
+      "notes": [
+        "File History will offer Download and Print for the current file when permitted. Historical entries will preserve revision information without guaranteeing access to retired files.",
+        "Cancel Softcopy will apply to a controlled document; Cancel on a draft request will cancel only that draft."
+      ],
+      "sources": [
+        "application/view/pages/request/softcopy_fields.php:10",
+        "application/view/pages/request/softcopy_fields.php:52",
+        "public/assets/js/app.js:720",
+        "application/view/pages/documents/shared_index.php:62",
+        "application/view/pages/files/print.php:17"
+      ],
+      "slide_steps": [
+        "For revision, choose Revise Softcopy and select Existing Softcopy Document.",
+        "Check the title, enter New Revision Level and Number of Pages, and attach the revised file. Effective Date is optional.",
+        "Save Draft \u2192 Confirm, review the proposal, then Submit \u2192 Confirm.",
+        "For controlled cancellation, choose Cancel Softcopy, select the document, and explain Subject / Reason before saving and submitting.",
+        "Use permitted Download, Print, and File History actions in Softcopy Documents for the current controlled file."
+      ],
+      "slide_notes": [
+        "File History will offer Download and Print for the current file when permitted. Historical entries will preserve revision information without guaranteeing access to retired files."
+      ]
+    },
+    {
+      "title": "8. Save, submit, and track requests",
+      "route": "my-requests/softcopy",
+      "steps": [
+        "Open My Requests and choose the tab for the work: Softcopy Requests, Hardcopy Requests, Hardcopy Transfer, Hardcopy Disposal, Document Access Grants, or Document Assignments.",
+        "Select New Request, choose an available Request Action, and complete the fields that appear for that action.",
+        "Select Save Draft and approve the confirmation. A Draft remains editable by its requester when the necessary permissions are present.",
+        "Open View to check Request & Ownership, the proposed metadata, the Document File where relevant, and the Approval Process Timeline.",
+        "Select Submit and confirm when ready. Submitted indicates that the request is awaiting its workflow; use the timeline and Workflow Activity Log to identify the current stage and recorded decisions.",
+        "If the request is Returned to you, read the recorded remarks, edit the proposal, save it, and Submit again.",
+        "Use Cancel on a Draft that you no longer need. If Delete becomes available on your cancelled, never-submitted draft, it permanently removes that draft after confirmation.",
+        "Search using Request Reference, and use status, action, or date filters to find older requests."
+      ],
+      "notes": [
+        "Request filters will include Draft, Submitted, Completed, Approved, Rejected, Returned, and Cancelled. An Approved transfer will still require the physical handoff steps.",
+        "Only the requester will be able to edit their own draft or returned request. Submitted requests will remain protected from draft editing.",
+        "Submission will require a published workflow. Resubmitting a returned request will retain its original workflow version."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:4",
+        "application/view/pages/request/shared_index.php:206",
+        "application/view/pages/request/shared_index.php:285",
+        "application/services/request/request_policy.php:4",
+        "application/services/request/request_service.php:462"
+      ],
+      "slide_steps": [
+        "Choose the appropriate My Requests tab and select New Request; complete the action-specific fields.",
+        "Save Draft \u2192 Confirm records the proposal. Open View to inspect metadata, any attachment, and its approval timeline.",
+        "Select Submit \u2192 Confirm when ready. Submitted means the published approval workflow has started.",
+        "For a request Returned to you, read the remarks, Edit, save, and Submit again.",
+        "Cancel an unwanted Draft. Delete is permanent and is offered only for your cancelled, never-submitted draft."
+      ],
+      "slide_notes": [
+        "Request filters will include Draft, Submitted, Completed, Approved, Rejected, Returned, and Cancelled. An Approved transfer will still require the physical handoff steps."
+      ],
+      "screenshot": "draft_hardcopy_create"
+    },
+    {
+      "title": "9. Request document access or assignment",
+      "route": "my-requests/access-grant / my-requests/document-assign",
+      "steps": [
+        "Open My Requests and choose Document Access Grants to request access, or Document Assignments to request that a document be assigned to you.",
+        "Select New Request. Check the Request Action, then enter the Subject explaining what you need.",
+        "Choose Document Type: Softcopy or Hardcopy. Select the corresponding Softcopy Document or Hardcopy Document from the list.",
+        "Check Recipient / Assigned User. In these request tabs the recipient is your signed-in account and is read-only.",
+        "For a Grant Access request, set Access Expires At to a date after today. Allow enough time for approval and the intended use. Add optional Remarks that help the approvers understand the purpose.",
+        "Select Save Draft and confirm. Inspect the saved request, then select Submit and confirm.",
+        "Follow the Approval Process Timeline and Workflow Activity Log in View. When completed, return to the appropriate document register and check the access or assignment."
+      ],
+      "notes": [
+        "Access and assignment requests will apply to the requester. Authorized controllers will assign records to other users through Document Assignments in the Document Control menu.",
+        "Only the document field matching the selected Document Type will be active.",
+        "An access grant will not enable file actions outside the recipient's role permissions.",
+        "The access expiry must still be in the future when final approval applies the grant. If approval is delayed, the request may need to be returned for a later expiry date.",
+        "A completed hardcopy assignment will change Current Holder. A completed softcopy assignment will add or reactivate the requester's assignment while preserving other users' assignments."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:420",
+        "application/view/pages/request/shared_index.php:430",
+        "application/view/pages/request/shared_index.php:472",
+        "application/view/pages/request/shared_index.php:487",
+        "public/assets/js/app.js:678",
+        "application/services/request/request_service.php:213",
+        "application/services/documents/document_access_service.php:34",
+        "application/services/documents/document_access_service.php:62"
+      ],
+      "slide_steps": [
+        "Open My Requests \u2192 Document Access Grants or Document Assignments and select New Request.",
+        "Enter Subject, choose Document Type, and select the Softcopy or Hardcopy Document.",
+        "Check Recipient / Assigned User: it is your signed-in account and is read-only.",
+        "For access, choose Access Expires At after today, allowing time for approval and use. Add optional Remarks; Save Draft \u2192 Confirm, then Submit \u2192 Confirm.",
+        "Inspect the Approval Process Timeline and verify the completed access or assignment in the document register."
+      ],
+      "slide_notes": [
+        "Access and assignment requests will apply to the requester. Authorized controllers will assign records to other users through Document Assignments in the Document Control menu."
+      ]
+    },
+    {
+      "title": "10. Request a hardcopy transfer",
+      "route": "my-requests/hardcopy-transfer",
+      "steps": [
+        "Open My Requests \u2192 Hardcopy Transfer and select New Request.",
+        "Select the Hardcopy Document you intend to transfer. Read Original Places and Holder, which loads the document title, current storage hierarchy, location sequence, and current holder.",
+        "Under Transfer Destination, select Destination Area, Destination Specific, optional Destination Asset, and Destination Location.",
+        "Check the completed hierarchy. Selecting a child can fill its parents; the destination location must differ from the original location.",
+        "Choose Receiving User and enter Request Subject. Add optional Remarks to explain the move.",
+        "Select Save Draft and confirm, review the original and destination information, then select Submit and confirm.",
+        "Track approval in My Requests. After approval, use My Tasks \u2192 Hardcopy Transfer to record Dispatch and Accept at the actual handoff stages."
+      ],
+      "notes": [
+        "The hardcopy selection will be limited to records the user is permitted to transfer.",
+        "Approval will authorize the transfer; dispatch and recipient acceptance will record the physical handoff separately.",
+        "A transfer will require a receiving user and destination. Entering a remark alone will not update custody."
+      ],
+      "sources": [
+        "application/view/pages/request/hardcopy_transfer_fields.php:5",
+        "application/view/pages/request/hardcopy_transfer_fields.php:17",
+        "application/view/pages/request/hardcopy_transfer_fields.php:30",
+        "application/view/pages/request/hardcopy_transfer_fields.php:54",
+        "application/controllers/Requests.php:87"
+      ],
+      "slide_steps": [
+        "Open My Requests \u2192 Hardcopy Transfer \u2192 New Request and select Hardcopy Document.",
+        "Check Original Places and Holder, including location sequence.",
+        "Choose the destination Area, Specific, optional Asset, and Location. Destination must differ from the original.",
+        "Select Receiving User, enter Request Subject, and add optional Remarks; Save Draft \u2192 Confirm, then Submit \u2192 Confirm.",
+        "After approval, complete dispatch and recipient acceptance in My Tasks \u2192 Hardcopy Transfer."
+      ],
+      "slide_notes": [
+        "The hardcopy selection will be limited to records the user is permitted to transfer."
+      ]
+    },
+    {
+      "title": "11. Dispatch and accept the physical hardcopy",
+      "route": "my-tasks/hardcopy-transfer",
+      "steps": [
+        "Open My Tasks and select Hardcopy Transfer after the transfer has been approved.",
+        "Find the Physical Transfer Handoffs section below the request list. Check Hardcopy, Requester / Dispatcher, Current Holder, Recipient, and Stage.",
+        "As the transfer requester, locate the approved handoff awaiting transfer. Select Dispatch when physically releasing the correct document to the intended recipient.",
+        "Check the Dispatch Hardcopy confirmation and select Confirm. The system will record the release and await recipient acceptance.",
+        "As the destination recipient, open My Tasks \u2192 Hardcopy Transfer and locate the handoff marked In Transit.",
+        "After receiving and checking the physical document, select Accept and then Confirm.",
+        "Reopen Hardcopy Documents and inspect the holder and location to verify the completed receipt. Use Transfer History in the document details when checking the recorded handoff."
+      ],
+      "notes": [
+        "Only the transfer requester can dispatch. Only the destination recipient can accept.",
+        "Accept will confirm physical receipt and update custody and location. Record these actions when the physical handoff occurs.",
+        "Users may receive dispatch or receipt tasks even when they are not general workflow approvers."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:519",
+        "application/view/pages/request/shared_index.php:556",
+        "application/controllers/Requests.php:169",
+        "application/controllers/Requests.php:184",
+        "application/models/Document_detail_model.php:223"
+      ],
+      "slide_steps": [
+        "Open My Tasks \u2192 Hardcopy Transfer and find Physical Transfer Handoffs.",
+        "Check the document, requester, current holder, recipient, and stage.",
+        "The requester selects Dispatch at physical release, then Confirm.",
+        "After physical receipt, the recipient selects Accept for the In Transit handoff, then Confirm.",
+        "Inspect the updated holder, location, and Transfer History in Hardcopy Documents."
+      ],
+      "slide_notes": [
+        "Only the transfer requester can dispatch. Only the destination recipient can accept."
+      ]
+    },
+    {
+      "title": "12. Request hardcopy disposal",
+      "route": "my-requests/hardcopy-disposal",
+      "steps": [
+        "Open My Requests \u2192 Hardcopy Disposal and select New Request.",
+        "Check Request Action and enter Subject / Reason explaining the disposal proposal.",
+        "Choose the Hardcopy Document. Recheck its title, holder, location, and retention information in the register before proceeding.",
+        "Select Disposal Reason: Shred, Scratch, or Other. If you choose Other, complete Other Reason.",
+        "Add optional Remarks, select Save Draft, and confirm.",
+        "Review the saved proposal, then select Submit and confirm to send it for approval.",
+        "Follow the request status and recorded decisions. After completion, open the hardcopy record using the Disposed status filter and inspect Disposal Details."
+      ],
+      "notes": [
+        "Saving a disposal proposal will create a draft; the disposal action will apply only after approval completes.",
+        "Only authorized users receive direct Dispose actions in the document register. That direct action also requires a disposal reason and confirmation.",
+        "Track retention period provides record information; follow your organization's disposal procedure when carrying out the physical disposal."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:389",
+        "application/view/pages/request/disposal_fields.php:6",
+        "public/assets/js/app.js:774",
+        "application/view/pages/documents/shared_index.php:84",
+        "application/models/Document_detail_model.php:200"
+      ],
+      "slide_steps": [
+        "Open My Requests \u2192 Hardcopy Disposal \u2192 New Request.",
+        "Enter Subject / Reason and select Hardcopy Document; check its location, holder, and retention details.",
+        "Choose Shred, Scratch, or Other; complete Other Reason when selected. Add optional Remarks.",
+        "Save Draft \u2192 Confirm, review the proposal, then Submit \u2192 Confirm.",
+        "After approval completes, use the Disposed filter to inspect Disposal Details in the register."
+      ],
+      "slide_notes": [
+        "Saving a disposal proposal will create a draft; the disposal action will apply only after approval completes."
+      ]
+    },
+    {
+      "title": "13. Review and decide approval tasks",
+      "route": "my-tasks/softcopy",
+      "steps": [
+        "Open My Tasks and choose the request category. Use the tab badge, Search records, or the Request Reference to find the item awaiting your review.",
+        "Open View. Read Request & Ownership, the proposed document information, the Approval Process Timeline, and Workflow Activity Log.",
+        "For a softcopy request with an attachment, use Review File to inspect the proposed file before deciding.",
+        "For an Office attachment, use Open in Word or Excel, Open in WPS, or Download as offered. If WPS opening requires setup, use Download WPS opener setup and follow its README, or download and open the file normally.",
+        "Choose Approve when the proposal should move forward, Reject when it should stop, or Return when the preceding stage needs to review it again.",
+        "For Approve, read the shared confirmation and select Confirm. For Return or Reject, enter an optional Remark and select Continue; Continue itself confirms that decision.",
+        "Reopen the request details to verify the recorded decision and the next stage. The final approval applies the document action; approved transfers continue to dispatch and receipt."
+      ],
+      "notes": [
+        "Only the currently assigned approver, or an authorized member of the assigned role, may decide.",
+        "Return at the first approval step will send the request to its requester for correction. Return at a later step will reactivate the immediately previous approver.",
+        "Review File will open the proposal for inspection. Use the task's decision buttons to record approval.",
+        "Editing a review copy in Word, Excel, or WPS will not update the proposal attachment or controlled document. If an application link expires, refresh Review File to obtain a new link."
+      ],
+      "sources": [
+        "application/view/pages/request/shared_index.php:235",
+        "application/view/layout/footer.php:118",
+        "application/view/pages/files/review.php:11",
+        "application/services/request/request_service.php:739",
+        "application/services/request/request_service.php:792",
+        "public/assets/js/row-actions.js:19"
+      ],
+      "slide_steps": [
+        "Open My Tasks, choose a category, and open the assigned request's View details.",
+        "Read the proposal, Approval Process Timeline, and Workflow Activity Log; use Review File for an attached softcopy.",
+        "Choose Approve \u2192 Confirm to move the current step forward.",
+        "Choose Return or Reject, enter an optional Remark, then Continue to record the decision.",
+        "Inspect the updated timeline. Return at step one sends to the requester; later-step Return reactivates the previous approver."
+      ],
+      "slide_notes": [
+        "Only the currently assigned approver, or an authorized member of the assigned role, may decide."
+      ]
+    },
+    {
+      "title": "14. Read notifications and approval reminders",
+      "route": "top navigation / my-tasks/softcopy",
+      "steps": [
+        "Select the bell at the top of the workspace to open Notifications. Its badge represents unread notifications.",
+        "Read the Request Reference, document or task title, and approval label for each entry.",
+        "Select an entry to mark that notification read and open the corresponding My Tasks category filtered to the request reference.",
+        "Use Previous, Next, and Rows in the notification panel when there are multiple pages.",
+        "If an Approval needed reminder appears, read the new-task list, open the relevant task link when needed, or select Got it to close the reminder.",
+        "Use My Tasks to perform the actual review and decision. Use My Tasks \u2192 Hardcopy Transfer for physical dispatch or acceptance work."
+      ],
+      "notes": [
+        "Selecting an entry will acknowledge that notification. Opening the panel alone will leave unread entries unacknowledged.",
+        "Reading or dismissing a notification will not approve or reject its request.",
+        "No unread notifications means the inbox has no unread entries; continue to use My Tasks to check current assigned work."
+      ],
+      "sources": [
+        "application/view/layout/sidebar_top_nav.php:294",
+        "public/assets/js/notification-inbox.js:61",
+        "public/assets/js/notification-inbox.js:85",
+        "application/controllers/Notifications.php:14",
+        "application/view/layout/footer.php:55"
+      ],
+      "slide_steps": [
+        "Open the bell to read Notifications and their Request Reference, title, and approval label.",
+        "Select an entry to mark that notification read and open the matching My Tasks list.",
+        "Use Previous, Next, and Rows for additional notification pages.",
+        "If Approval needed appears, inspect its new-task links or select Got it.",
+        "Use My Tasks to record the actual decision or handoff; reading a notice does not approve it."
+      ],
+      "slide_notes": [
+        "Selecting an entry will acknowledge that notification. Opening the panel alone will leave unread entries unacknowledged."
+      ]
+    },
+    {
+      "title": "15. Apply authorized direct document actions",
+      "route": "documents/hardcopy / documents/softcopy",
+      "steps": [
+        "Open the relevant document register. Direct-action buttons appear only to users who have the required direct permission.",
+        "To add a hardcopy directly, select Hardcopy Direct, enter Document Title, Area, Specific, optional Asset, Location, and Current Holder, and complete optional retention information or Reason / Notes.",
+        "Select Save Document, review the confirmation, and continue. Check the saved record in the register.",
+        "To create, revise, or cancel a softcopy directly, select Softcopy Direct and choose the Softcopy Action. Complete the same action-specific information used in a softcopy request.",
+        "Attach a Document File for direct Create or Revise. Select Approve Directly, check the confirmation, and continue to apply the action.",
+        "Use Edit on an active, manageable hardcopy to change its metadata. On softcopies, Edit opens a direct revision action.",
+        "If Dispose is available and appropriate, choose the disposal reason, complete Other Reason when required, and confirm. Inspect the resulting status and record details."
+      ],
+      "notes": [
+        "An authorized direct softcopy action will be approved and applied immediately. Use My Requests when approval through the workflow is required.",
+        "Edit and Dispose require an active record within the operator's permitted scope. Dispose also requires direct disposal permission.",
+        "The hardcopy holder will be fixed to an ordinary user's account; administrators will be able to select a holder."
+      ],
+      "sources": [
+        "application/view/pages/documents/shared_index.php:5",
+        "application/view/pages/documents/shared_index.php:45",
+        "application/view/pages/documents/shared_index.php:134",
+        "application/view/pages/documents/shared_index.php:200",
+        "application/view/pages/documents/shared_index.php:227",
+        "application/controllers/Documents.php:125"
+      ],
+      "slide_steps": [
+        "Open the permitted document register. Direct actions require the corresponding direct permission.",
+        "For a hardcopy, select Hardcopy Direct and complete title, storage hierarchy, holder, and optional retention or notes.",
+        "Select Save Document \u2192 Confirm, then inspect the saved record.",
+        "For a softcopy, choose Softcopy Direct, select the action, and complete the visible fields; Create and Revise require a file.",
+        "Select Approve Directly \u2192 Confirm. Edit an active record or use Dispose with a disposal reason only when those actions are permitted."
+      ],
+      "slide_notes": [
+        "An authorized direct softcopy action will be approved and applied immediately. Use My Requests when approval through the workflow is required."
+      ]
+    },
+    {
+      "title": "16. Assign documents directly to users",
+      "route": "admin/document-assignments",
+      "steps": [
+        "Open Document Assignments under Document Control. Choose Hardcopy / Places or Softcopy / Categories.",
+        "For one document, select Assign Document, choose the Hardcopy Document or Softcopy Document, and choose Assigned User.",
+        "Select Save Assignment and confirm. Check the register's Document, Assigned To, and Updated values.",
+        "Use Edit on a row to assign the selected document to a user, then save and confirm. Hardcopy assignment replaces Current Holder. Softcopy assignment adds or reactivates the selected user's assignment and retains other users' assignments.",
+        "For all active hardcopies at a location, choose Location and Assigned User in the location assignment panel, then select Assign All and confirm.",
+        "For active softcopies in a category, choose Category / Subcategory and Assigned User, then select Assign All and confirm. The confirmation includes the category's subcategories.",
+        "Use Search records and All Assigned Users to inspect assignments. In User Management, the Assigned Documents action provides another view of a selected user's active assigned records."
+      ],
+      "notes": [
+        "This page applies assignments directly and requires direct assignment permission. Approval-based assignment requests remain in My Requests \u2192 Document Assignments.",
+        "Read the selected location or category carefully before confirming Assign All, because it applies to multiple active records.",
+        "Hardcopy assignment will change Current Holder immediately without dispatch or receipt steps. Softcopy assignment will preserve earlier users' assignments when a different user is selected.",
+        "Complete active hardcopy handoffs before reassigning affected records. The system will block single and bulk hardcopy assignments while an affected record has an active transfer.",
+        "Assign All will support up to 2,000 active records in the selected location or category branch. Use individual assignments or a smaller category branch when the selection exceeds this limit.",
+        "Physical transfer requests have their own approval, dispatch, and acceptance flow."
+      ],
+      "sources": [
+        "application/view/pages/administration/document_assignments.php:11",
+        "application/view/pages/administration/document_assignments.php:28",
+        "application/view/pages/administration/document_assignments.php:66",
+        "application/view/pages/administration/document_assignments.php:171",
+        "application/view/pages/user/index.php:49",
+        "application/controllers/Administration.php:130",
+        "application/controllers/Administration.php:223",
+        "application/controllers/Administration.php:297",
+        "application/services/documents/document_access_service.php:34"
+      ],
+      "slide_steps": [
+        "Open Document Assignments and choose Hardcopy / Places or Softcopy / Categories.",
+        "Select Assign Document, choose the document and Assigned User, then Save Assignment \u2192 Confirm.",
+        "Use Edit to select an Assigned User. Hardcopy replaces Current Holder; softcopy adds the selected user and retains earlier assignees.",
+        "For a bulk hardcopy assignment, select Location and Assigned User, then Assign All \u2192 Confirm. Complete active transfers first.",
+        "For softcopies, select Category / Subcategory and Assigned User, then Assign All \u2192 Confirm; subcategories are included."
+      ],
+      "slide_notes": [
+        "Hardcopy assignment will change Current Holder immediately. Softcopy assignment will retain earlier assignees. Assign All will be limited to 2,000 active records."
+      ]
+    },
+    {
+      "title": "17. Maintain places and softcopy categories",
+      "route": "places",
+      "steps": [
+        "Open Setup Places and choose the permitted tab: Area, Specific, Asset, Location, or Softcopy Categories.",
+        "Use the Add button for the selected tab to create reference data, or Edit to update an existing item.",
+        "Create an Area by name; create a Specific under its Area; create an Asset Number under its Specific. These relationships support hardcopy storage choices.",
+        "For a Location, enter Location Name and select Area and Specific. Asset Number is optional. Enter Sequence if a particular order is required, or leave it empty for automatic ordering.",
+        "Check the location sequence guidance: it is unique within the Specific, with A = 1, B = 2, and C = 3. Complete optional Archive Date where used.",
+        "For Softcopy Categories, complete Name, Folder, optional Description, and the Parent when making a subcategory.",
+        "Check the Active option, select Save Record, and confirm. Use status and parent filters to find saved items.",
+        "Use Deactivate when a reference item should no longer be active; historical links are preserved."
+      ],
+      "notes": [
+        "Only tabs and actions permitted for the signed-in account will be shown.",
+        "A Location can be saved without an Asset Number. Keep Area and Specific consistent when choosing children.",
+        "Deactivating reference data is different from disposing of a document record."
+      ],
+      "sources": [
+        "application/view/pages/places/shared_index.php:95",
+        "application/models/Place_model.php:5",
+        "application/view/pages/places/location/modal_action/upsert.php:10",
+        "application/view/pages/places/shared_index.php:137",
+        "application/view/pages/places/shared_index.php:54"
+      ],
+      "slide_steps": [
+        "Open Setup Places and choose Area, Specific, Asset, Location, or Softcopy Categories.",
+        "Use Add or Edit. Maintain Area \u2192 Specific \u2192 optional Asset before selecting Location.",
+        "For Location, enter Location Name, Area, Specific, optional Asset Number, and optional Sequence or Archive Date.",
+        "For Softcopy Categories, enter Name, Folder, optional Description, and Parent for a subcategory.",
+        "Check Active, then Save Record \u2192 Confirm. Deactivate an unused reference item to preserve its historical links."
+      ],
+      "slide_notes": [
+        "Only tabs and actions permitted for the signed-in account will be shown."
+      ]
+    },
+    {
+      "title": "18. Create and maintain user accounts",
+      "route": "admin/users",
+      "steps": [
+        "Open User Management. Search the list or filter by status and role to find an account; use View to inspect its details.",
+        "Select Add User, or use Edit for an existing account. Enter First Name, optional Middle Name, Last Name, Username, and Position Title.",
+        "Choose Primary role and check the Assigned roles that the account should receive. Select Leader when required by the person's approval workflow.",
+        "Check Active account, select Save User, and confirm.",
+        "For a new user, read the Temporary account credentials page. Provide the generated Username and temporary password to that account owner through your approved private channel.",
+        "For an existing user who needs a password reset, edit the account and select Generate a new temporary password for this existing account, then save and confirm.",
+        "Use Deactivate to disable an eligible account while preserving its related history. Use Assigned Documents, when available, to inspect its active hardcopy and softcopy assignments."
+      ],
+      "notes": [
+        "A temporary password will be displayed once after saving. The user will be required to replace it before accessing protected modules.",
+        "Leader will be optional in account data. An active leader will be required when a request's workflow uses Requester's leader.",
+        "Account permissions will restrict available actions. Users will not be able to deactivate themselves, and administrator accounts will receive additional protection."
+      ],
+      "sources": [
+        "application/view/pages/user/index.php:5",
+        "application/view/pages/user/index.php:108",
+        "application/view/pages/user/index.php:149",
+        "application/view/pages/user/temporary_credentials.php:2",
+        "application/services/request/request_service.php:501"
+      ],
+      "slide_steps": [
+        "Open User Management and select Add User or Edit an existing eligible account.",
+        "Complete First Name, optional Middle Name, Last Name, Username, and Position Title.",
+        "Choose Primary role and Assigned roles; select an optional Leader when the workflow needs one.",
+        "Check Active account, then Save User \u2192 Confirm. New-account credentials appear once; share privately with the owner.",
+        "Use Generate a new temporary password for a reset, Deactivate to disable an eligible account, or Assigned Documents to inspect assignments."
+      ],
+      "slide_notes": [
+        "A temporary password will be displayed once after saving. The user will be required to replace it before accessing protected modules."
+      ]
+    },
+    {
+      "title": "19. Maintain roles and permissions",
+      "route": "admin/roles",
+      "steps": [
+        "Open Roles & Permissions and use the search or All Statuses filter to find a role.",
+        "Select Add Role to create a role, or Edit to update an eligible existing role.",
+        "Enter Role Name and check Active role as appropriate.",
+        "Under Module Permissions, select the actions this role may use. Review the full list before saving so the role matches the person's responsibilities.",
+        "Select Save Role and confirm. Check the saved role and its status.",
+        "Assign the role to the intended accounts in User Management using Primary role and Assigned roles.",
+        "Use Deactivate for an unused role when the action is available. Permanently remove a role only when the interface offers removal for an unused role and the role is no longer required."
+      ],
+      "notes": [
+        "Permissions will control both visible menus and individual actions such as direct changes, requests, downloads, and printing.",
+        "Document access and the active workflow assignment will determine which records or tasks a user can act on.",
+        "Deactivation and permanent removal are separate actions; read the confirmation before continuing."
+      ],
+      "sources": [
+        "application/view/pages/roles_and_permission/index.php:4",
+        "application/view/pages/roles_and_permission/index.php:15",
+        "application/view/pages/roles_and_permission/index.php:87",
+        "application/view/pages/roles_and_permission/index.php:102",
+        "application/view/pages/user/index.php:122"
+      ],
+      "slide_steps": [
+        "Open Roles & Permissions; search or filter to find the role.",
+        "Select Add Role or Edit and enter Role Name; check Active role as appropriate.",
+        "Under Module Permissions, select only the actions needed for this role.",
+        "Select Save Role \u2192 Confirm, then assign the role to users in User Management.",
+        "Use Deactivate or permanent Remove only when offered for an unused role, and read the confirmation carefully."
+      ],
+      "slide_notes": [
+        "Permissions will control both visible menus and individual actions such as direct changes, requests, downloads, and printing."
+      ]
+    },
+    {
+      "title": "20. Configure and publish approval workflows",
+      "route": "admin/workflows",
+      "steps": [
+        "Open Workflow Builder and find the workflow for the relevant Request Type. Open its Steps action to inspect the approval route.",
+        "Use Workflow Version to inspect the available versions. Published versions are read-only.",
+        "Select Start First Draft or Create Next Draft when available to create an editable approval version.",
+        "Select Add Approval Step, enter Approval Step Name, and choose Approver Type: Any active member of role, Specific user, Requester's leader, or Requester account.",
+        "Choose Approver Role or Specific Approver when the selected type requires it, then select Save Step and confirm.",
+        "Use Edit, the up and down controls, and Remove to arrange the draft's approval steps. Check the full route in order, including its final approval.",
+        "Select Validate & Publish and confirm when the draft is ready to be the default for future requests.",
+        "Check that the intended published version is shown. Create another draft for later changes rather than editing the published version."
+      ],
+      "notes": [
+        "A workflow will support up to 30 approval steps and will require an approval route before publication.",
+        "The system will resolve Requester and Requester's leader at submission. Ensure the relevant accounts, roles, and leaders are active.",
+        "Publishing will set the route for future requests. Previously submitted requests, including returned requests that are resubmitted, will retain their original approval timeline."
+      ],
+      "sources": [
+        "application/view/pages/workflow_builder/index.php:5",
+        "application/view/pages/workflow_builder/index.php:108",
+        "application/view/pages/workflow_builder/index.php:118",
+        "application/view/pages/workflow_builder/index.php:227",
+        "application/view/pages/workflow_builder/index.php:275",
+        "application/services/request/request_service.php:462"
+      ],
+      "slide_steps": [
+        "Open Workflow Builder, find the Request Type, and open Steps. Use Workflow Version to inspect the route.",
+        "Select Start First Draft or Create Next Draft; published versions are read-only.",
+        "Add Approval Step, enter its name, and select a role, specific user, Requester's leader, or Requester account; Save Step \u2192 Confirm.",
+        "Edit, move, or remove draft steps until the order is correct, then Validate & Publish \u2192 Confirm.",
+        "Check the published default. Future requests will use it; previously submitted requests will retain their original approval timeline."
+      ],
+      "slide_notes": [
+        "A workflow will support up to 30 approval steps and will require an approval route before publication."
+      ]
+    },
+    {
+      "title": "21. Inspect the Internal Audit Trail",
+      "route": "admin/audit",
+      "steps": [
+        "Open Internal Audit Trail under System Administration.",
+        "Use Search records to find the relevant person, action, or subject recorded in the audit list.",
+        "Choose All Results, Success, or Failed to narrow the outcome. Use the available date controls when investigating a time period.",
+        "Read Recorded At, User, Action, Subject, and Result to identify the event.",
+        "Open View for the row. The Audit Event details show Recorded Activity, including User ID and any recorded Details.",
+        "Select Close when finished and use the page controls to continue through the list.",
+        "For document-specific approval or handoff questions, also inspect Approval History, Related Requests, or Transfer History in the document details."
+      ],
+      "notes": [
+        "The proposed audit page will provide read-only inspection of events, without edit or delete operations.",
+        "If a warning is shown on the page, include it when reporting an investigation to the administrator.",
+        "The proposed navigation will provide Internal Audit Trail and Overview charts. The planned screens will not include a separate Reports menu or report-export control."
+      ],
+      "sources": [
+        "application/view/pages/administration/audit.php:3",
+        "application/view/pages/administration/audit.php:17",
+        "application/view/pages/administration/audit.php:40",
+        "application/view/pages/administration/audit.php:50",
+        "application/models/Document_detail_model.php:207",
+        "application/view/layout/sidebar_top_nav.php:220"
+      ],
+      "slide_steps": [
+        "Open Internal Audit Trail and search for the relevant user, action, or subject.",
+        "Filter All Results, Success, or Failed and choose the required date period.",
+        "Read Recorded At, User, Action, Subject, and Result.",
+        "Open View for Audit Event details, including User ID and recorded Details; select Close when finished.",
+        "For document-specific evidence, also inspect its Approval History, Related Requests, or Transfer History."
+      ],
+      "slide_notes": [
+        "The proposed audit page will provide read-only inspection of events, without edit or delete operations."
+      ]
+    },
+    {
+      "title": "22. Back up, import, and restore system data",
+      "route": "admin/backups",
+      "steps": [
+        "Open Backup & Restore and check readiness before planning a backup or restore. The example screen shows Backup setup is incomplete. Contact your system administrator, a disabled Backup now button, and no archives.",
+        "Arrange for an administrator to complete backup configuration and readiness checks. The planned daily schedule is 5:00 PM, Asia/Manila. After setup, check Last automatic backup and the archive list to confirm each backup run.",
+        "Once backup setup is ready and you have edit permission, select Backup now and confirm Create an encrypted backup of the current system. Check that the resulting archive appears before relying on it.",
+        "Use the archive list's search and type filter to find Manual, Automatic, or Recovery backups. Select Download when an archive and the permitted action are available.",
+        "To add a compatible backup after setup, select Import backup, choose Backup ZIP, submit Import backup, and confirm its verification and storage.",
+        "To restore after setup, select Restore system data, choose Backup to restore, enter Your password, and type RESTORE in Type RESTORE to confirm.",
+        "Read the replacement warning, select Restore selected backup, and confirm only after checking that the archive is the intended recovery point. A recovery backup will be created before records and private files are replaced.",
+        "To remove old backup and log archives when available, select Clean up and confirm the removal of archives older than three months."
+      ],
+      "notes": [
+        "Backup and restore will require administrator configuration and readiness checks before use. The setup-incomplete example will illustrate this prerequisite; it will not represent a completed backup.",
+        "After setup, backup actions will require edit permission. Restoring will replace live records and private files and will create a recovery backup first. Follow the organization's recovery procedure.",
+        "The schedule will describe the intended run time. Check the resulting archive and recorded time after each run before treating that recovery point as available."
+      ],
+      "sources": [
+        "application/view/pages/administration/backups.php:5",
+        "application/view/pages/administration/backups.php:19",
+        "application/view/pages/administration/backups.php:25",
+        "application/view/pages/administration/backups.php:77",
+        "application/view/pages/administration/backups.php:101"
+      ],
+      "slide_steps": [
+        "Open Backup & Restore and check readiness. The example shows incomplete setup, disabled Backup now, and an empty archive list.",
+        "Have the administrator complete configuration and readiness checks before using backup or restore. The planned daily schedule is 5:00 PM, Asia/Manila.",
+        "After setup, select Backup now then Confirm. Check the resulting archive; Download or Import backup will require a ready setup and permission.",
+        "To restore when ready, choose Backup to restore, enter Your password and RESTORE, then Restore selected backup then Confirm. A recovery backup will be created first.",
+        "Use Clean up then Confirm for backup and log archives older than three months. Check archive dates after backup runs."
+      ],
+      "slide_notes": [
+        "Backup setup will need to be completed before backup and restore are available. Restoring will replace live records and private files; follow the approved recovery procedure."
+      ]
+    }
+  ],
+  "format": "PowerPoint 16:9; proposed interface illustrations with navigation callouts",
+  "demonstration_notice": "Proposed screens and example workflows using sample records.",
+  "planning_notice": "This proposed user guide describes the intended operation of PK Document Control before deployment. The following instructions set out how users will work with the proposed screens, permissions, approval routes, and document controls. Illustrations and worked examples use sample records to explain the planned procedures."
+}

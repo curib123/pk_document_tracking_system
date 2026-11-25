@@ -164,106 +164,56 @@ updates address these cases:
 
 | If the installation needs... | Review and apply as appropriate |
 | --- | --- |
-| Category numbering and External document permissions | [Category numbering](database/migrations/20261104_category_code_pattern.sql), then [External permissions](database/migrations/20261104_external_document_permissions.sql) |
-| An External Description field | [External description update](database/migrations/20261104_external_retention_dates_description.sql), if needed |
-| Removal of unused External retention fields | [Remove External retention](database/migrations/20261104_remove_external_retention.sql), after the description update if it was needed |
-| Separate External Categories | [External categories](database/migrations/20261104_external_categories.sql), after the preceding External updates |
-| External document numbers and Subsidiary setup | [External document subsidiaries](database/migrations/20261107_external_document_subsidiaries.sql), after External Categories |
-| Multiple attachments per External revision | [External multiple attachments](database/migrations/20261107_external_multiple_attachments.sql), after External document subsidiaries |
-| Workflow-triggered document locking, Plant Manager defaults, and historical approvals | [Workflow document lock fields](database/migrations/20261110_workflow_document_locks.sql), then [Designate Plant Manager](database/migrations/20261110_designate_plant_manager_document_lock.sql), then [Backfill Plant Manager locks](database/migrations/20261110_backfill_plant_manager_document_locks.sql) |
-| Workflow names matching request categories | [Request workflow names](database/migrations/20261104_request_workflow_names.sql) |
-| The same document number with distinct series | [Softcopy series number index](database/migrations/20261104_softcopy_series_number_index.sql), when category numbering is already installed |
-| Folder-only vs numbered Softcopy Categories | [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql), after category numbering |
-| Multiple folder-only Softcopy Categories | [Folder category pattern migration](database/migrations/20261107_softcopy_folder_category_patterns.sql), after Softcopy Category Types |
-| Manual Series No. (drops the per-Document No. code pattern) | [Remove series patterns migration](database/migrations/20261112_remove_softcopy_series_patterns.sql) |
-| Optional Signatories References on Softcopy create/revise (editable dropdowns fed by saved values) | [Signatories References migration](database/migrations/20261113_softcopy_signatory_references.sql), after the preceding Softcopy updates |
-| Request Template for Revision permission and DCO workflow | [Revision template migration](database/migrations/20261118_softcopy_revision_template.sql) |
+| `application/controllers/` | HTTP controllers and permission checks |
+| `application/models/` | Database queries and listings |
+| `application/services/` | Document, workflow, file, security, and backup operations |
+| `application/view/` | Page templates and shared UI components |
+| `public/assets/` | Styles, JavaScript, fonts, and images |
+| `database/` | Database export and incremental SQL migrations |
+| `storage/` | Private files, sessions, logs, audits, and generated artifacts |
+| `tests/` | Focused browser and HTTP regression checks |
+| `tools/` | Administrator, backup, asset, and local synchronization utilities |
 
-Existing prefix-only category patterns still work. New category patterns should
-include an initial sequence, such as `PPM-001`.
+Shared colors are defined in [public/assets/css/colors.css](public/assets/css/colors.css). Theme behavior lives in [public/assets/js/theme.js](public/assets/js/theme.js), and document View rendering lives in [public/assets/js/document-view.js](public/assets/js/document-view.js).
 
-### Nested Softcopy Category folders and number patterns
+## Verification
 
-**Places → Softcopy Categories** now supports two distinct category types:
+The available browser checks require Python, Playwright, Microsoft Edge, running MySQL, and the PHP dependencies:
 
-- **Folder**: a parent or nested folder. It has no code pattern and cannot
-  directly create a softcopy document. Folder children can be folders or
-  Document Number Pattern categories.
-- **Document Number Pattern**: a document-creation category with a required
-  `Document No. Code Pattern`, e.g. `PPM-001`. It can be under a Folder
-  (or at the root), and each new document increments only the numeric
-  suffix following the final dash: `PPM-001 → PPM-002 → PPM-003`.
+```powershell
+python -m pip install playwright
+python tests/cancelled_draft_delete.py
+python tests/document_assignments.py
+python tests/document_header.py
+python tests/theme_toggle.py
+python tests/dark_mode_feedback.py
+python tests/modal_close_buttons.py
+```
 
-For example, `Quality (Folder) / Procedures (Folder) / Process Manuals
-(Document Number Pattern: PPM-001)`. The folder tree remains nested for
-browsing and assigning documents, while numbered categories are the only
-ones available when creating a new softcopy.
+These checks clone the source database into a generated database ending in `_test`, run a temporary application, and drop that test database afterward. The source database is read for the clone; test mutations apply to the disposable copy. The database account needs permission to create and drop test databases. Generated screenshots are written under ignored `storage/` directories.
 
-Existing categories default to **Document Number Pattern** during migration,
-preserving existing documents and links. New parent selections must be Folder
-categories. An existing legacy parent relationship is preserved on edit, but
-new nested categories cannot be placed beneath a numbered category. Numbered
-categories holding documents cannot be converted to Folder, and Folders with
-children cannot be converted to numbered categories.
+The fixture defaults to `C:\xampp\php\php.exe`, `C:\xampp\mysql\bin\mysql.exe`, and source database `pk_dts`. Override these with `TEST_PHP`, `TEST_MYSQL`, and `TEST_SOURCE_DATABASE`; `mysqldump.exe` must be beside the configured MySQL executable. Database credentials use `DB_HOST`, `DB_USERNAME`, and `DB_PASSWORD`. The fixture currently connects through the client's default MySQL port.
 
-### Softcopy document and series numbers
+External CDN assets are blocked by default to exercise the fallback interface. To also check Bootstrap and other CDN assets:
 
-In **Places → Softcopy Categories**, configure only **Document No. Code Pattern**
-(for example `PPM-001`). Series numbers have **no code pattern**; they are typed in.
+```powershell
+$env:TEST_EXTERNAL_ASSETS = '1'
+python tests/document_assignments.py
+python tests/modal_close_buttons.py
+Remove-Item Env:TEST_EXTERNAL_ASSETS
+```
 
-To create a new document, select its category and leave **Need Series Number?**
-unchecked. The usual next Document No. is generated, without a Series No.
+The current `composer test` and npm build/test scripts reference runner files that are absent from this checkout. Use the focused checks above until those runners are restored.
 
-#### Type a different Document No. (Softcopy Direct only)
+## Sync a development checkout to local XAMPP
 
-On **Softcopy Documents → Add New Softcopy Document**, the **Generated Document
-Number** box is filled with the category's next number and can be typed over.
+When editing a separate development checkout, run this from that checkout:
 
-- **Left unchanged**, the number is a preview. The next free number is assigned
-  when the action is approved, so it can differ if another document took the
-  previewed number in the meantime.
-- **Typed over**, the number (up to 100 characters) is used exactly as entered.
-  It is rejected with *That document number is already in use* if any softcopy
-  already has that Document No.; use **Need Series Number?** to share an
-  existing number instead.
-- Changing **Category** refills the box with that category's next number.
-- A typed number that follows the category pattern moves the sequence: after
-  `PPM-050` is typed, the next automatic number is `PPM-051`.
-- Requests (**My Requests → New Request**) keep the box read-only. Their final
-  number is assigned at final approval.
+```powershell
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/sync_local_xampp.ps1
+```
 
-The form sends `document_number_edited=1` only after the user types in the box,
-and the server ignores the previewed value otherwise. Check this behavior with
-`python tools/tests/softcopy_manual_number_browser.py` (Playwright, Microsoft
-Edge, PHP and MariaDB; the test creates and drops its own database).
-
-#### Add a series to an existing Document No.
-
-To add a series to an existing document:
-
-1. Check **Need Series Number?** on Softcopy Direct or My Requests.
-2. Select the existing **Document No.** (for example, `PPM-001`).
-3. Type the **Series Number**. Its placeholder shows the most recent previous
-   series of that Document No. (for example `Previous: SER-004`) as a guide.
-4. Save/submit and approve. The Series No. is required and must be unique for
-   that Document No. Existing records are never renumbered. Regular revisions
-   **do not** change the series; they retain the existing one.
-
-Existing softcopy numbers, series and revisions are never renumbered. Adding a
-series does not change the original document's record. Concurrent creations in
-the same category are serialized through the category lock and the database
-unique index on Document No. and Series No.
-
-**Database upgrade:** Back up the database, then ensure the
-[document-series unique index](database/migrations/20261104_softcopy_series_number_index.sql)
-is installed before running the
-[remove-series-patterns migration](database/migrations/20261112_remove_softcopy_series_patterns.sql)
-(Series No. is now typed manually),
-plus the [Softcopy Category Types migration](database/migrations/20261107_softcopy_category_kinds.sql)
-to enable Folder and Document Number Pattern category types.
-Migrations are **not run automatically**. If the former experimental category
-series-pattern column was installed, the new code ignores it; the upgrade
-preserves that old column rather than deleting its data.
+The script defaults to `C:\xampp\htdocs\pk_document_tracking_system` and `http://localhost/pk_document_tracking_system/`. Both checkouts must have clean working trees, and the served checkout must be able to fast-forward to the development branch. The script updates tracked files and verifies HTTP asset hashes. It does not import database changes or replace private storage. Reload the browser after syncing.
 
 ## Maintain backups
 
