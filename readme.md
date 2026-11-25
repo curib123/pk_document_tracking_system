@@ -246,12 +246,11 @@ database host, port, name, or backup directory selects the process environment.
 
 [install_backup_schedule.ps1](tools/install_backup_schedule.ps1) registers a daily
 4:45 PM maintenance task and 5:00 PM backup task on a Windows host using UTC+08:00.
-Automatic backups omit the PDF preview cache and local documentation review and
-Visio repair work folders. For a snapshot that includes those folders, use a manual backup.
-After publishing a verified automatic backup, the job retains that archive and
-the two most recent previous automatic backups. A failed run keeps the existing
-automatic backups. The three-month policy applies to manual and imported backups,
-pre-restore recovery snapshots, and logs.
+Automatic and manual backups omit the PDF preview cache and local documentation
+review and Visio repair work folders. After publishing a verified backup, the job
+retains that archive and the two newest previous backups of the same type.
+A failed run keeps the existing archives. The three-month policy applies to
+imported backups, pre-restore recovery snapshots, and logs.
 Maintenance handles retention and controlled-file reconciliation outside of user
 requests. It removes managed uploads and PDF previews at least 24 hours old
 whose storage name has no row in the configured database's `files` table.

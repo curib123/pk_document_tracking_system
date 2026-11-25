@@ -77,7 +77,11 @@ class Backups extends MY_Controller
     {
         $this->execute(static function ($service) {
             $item = $service->backup('manual');
-            return 'Encrypted backup created: ' . $item['name'];
+            $message = 'Encrypted backup created: ' . $item['name'];
+            if ($item['retention'] === NULL || $item['retention']['failed']) {
+                $message .= '. Cleanup is incomplete and will retry after the next successful manual backup.';
+            }
+            return $message;
         });
     }
     public function cleanup()

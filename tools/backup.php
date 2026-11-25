@@ -33,9 +33,7 @@ try {
         $result = $service->backup($command);
         echo "Created encrypted signed backup: " . $result['name'] . "\n";
         if ($result['retention'] === NULL || $result['retention']['failed']) {
-            $retry = $command === 'auto' ? 'Cleanup will retry after the next successful automatic backup.' :
-                'Retry with php tools/backup.php retention.';
-            fwrite(STDERR, "Retention cleanup was incomplete. $retry\n");
+            fwrite(STDERR, "Cleanup is incomplete and will retry after the next successful $command backup.\n");
         }
     } elseif ($command === 'retention') {
         $result = $service->apply_retention();

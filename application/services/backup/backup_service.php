@@ -72,10 +72,9 @@ final class Backup_service
         $lock=$this->lock();
         try {
             $result=$this->createLocked($kind);
-            // Rotate automatic backups only after publishing a verified replacement.
+            // Rotate backups only after publishing a verified replacement.
             try {
-                $publishedAutomatic=$kind==='auto'?$result['name']:NULL;
-                $result['retention']=$this->retentionService()->cleanup(NULL,$publishedAutomatic);
+                $result['retention']=$this->retentionService()->cleanup(NULL,$result['name']);
                 if ($result['retention']['failed'])
                     error_log('PK DCS retention cleanup is incomplete.');
             } catch (Throwable $error) {
@@ -372,7 +371,7 @@ final class Backup_service
             if ($this->inside($real,$this->directory)) continue;
             $relative=ltrim(str_replace('\\','/',substr($real,strlen($rootReal))),'/');
             if (preg_match('~^(?:\.git|node_modules|storage/sessions|storage/cache|storage/backups|tests/__pycache__)(?:/|$)~',$relative) ||
-                ($kind==='auto' && preg_match('~^storage/(?:documentation-review|visio-repair|previews)(?:/|$)~',$relative)) ||
+                ($kind!=='recovery' && preg_match('~^storage/(?:documentation-review|visio-repair|previews)(?:/|$)~',$relative)) ||
                 preg_match('~(^|/)\.env(?:\.[^/]*)?$~',$relative) ||
                 preg_match('~(^|/)(?:\.DS_Store|Thumbs\.db)$~',$relative) ||
                 strpos($entry->getFilename(),'~$')===0)

@@ -26,7 +26,7 @@ $dt_filter_values = ['type' => $table['type']];
     <header class="backup-overview">
         <div>
             <h1>Backup &amp; Restore</h1>
-            <p>Daily at 5:00 PM Philippine time. Keeps the three latest automatic backups.</p>
+            <p>Daily at 5:00 PM Philippine time. Keeps three automatic backups and three created with Backup now.</p>
             <?php if ($backup_last_auto): ?>
                 <small>Last automatic backup: <?= html_escape($backupTime($backup_last_auto['created_at'])) ?></small>
             <?php endif; ?>
@@ -40,13 +40,13 @@ $dt_filter_values = ['type' => $table['type']];
                     <i class="fa-solid fa-rotate-left" aria-hidden="true"></i> Restore system data
                 </button>
                 <form method="post" action="<?= site_url('admin/backups/cleanup') ?>"
-                    data-confirm="Clean up manual backups, recovery snapshots, and logs older than three months?" autocomplete="off">
+                    data-confirm="Clean up imported backups, recovery snapshots, and logs older than three months?" autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-light" type="submit" <?= $backup_error ? 'disabled' : '' ?>>Clean up</button>
                 </form>
                 <form method="post" action="<?= site_url('admin/backups/create') ?>"
-                    data-confirm="Create an encrypted backup of the current system?" autocomplete="off">
+                    data-confirm="Create an encrypted backup? Older manual backups beyond the newest three are removed after verification." autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>

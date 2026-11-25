@@ -44,60 +44,80 @@ try {
     }
 
     $service = new Backup_service($root);
-    $automatic = [];
-    for ($day = 1; $day <= 3; $day++) {
-        $result = $service->backup('auto');
-        $name = 'pk-dts-auto-2020010' . $day . '-170000-0123456789.zip';
-        $destination = $service->directory() . '/' . $name;
-        if (!rename($service->resolve($result['name']), $destination)) {
-            throw new RuntimeException('Could not date the fixture archive.');
+    $kinds = ['auto' => 'automatic', 'manual' => 'manual'];
+    $oldest = [];
+    foreach ($kinds as $kind => $label) {
+        for ($day = 1; $day <= 3; $day++) {
+            $result = $service->backup($kind);
+            $name = 'pk-dts-' . $kind . '-2020010' . $day . '-170000-0123456789.zip';
+            $destination = $service->directory() . '/' . $name;
+            if (!rename($service->resolve($result['name']), $destination)) {
+                throw new RuntimeException('Could not date the fixture archive.');
+            }
+            touch($destination, time() - $day);
+            $oldest[$kind] ??= $name;
         }
-        touch($destination, time() - $day);
-        $automatic[] = $name;
     }
 
-    $manual = $service->backup('manual');
-    $manualManifest = $service->verify($service->resolve($manual['name']));
-    $manualFiles = array_column($manualManifest['files'], 'path');
+    $importDate = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
+    $import = 'pk-dts-manual-import-' . $importDate->format('Ymd-His') . '-0123456789.zip';
+    if (!copy($service->resolve($oldest['manual']), $service->directory() . '/' . $import)) {
+        throw new RuntimeException('Could not seed an imported archive.');
+    }
+    $recovery = $service->backup('recovery');
     $localFiles = ['files/storage/documentation-review/draft.pptx', 'files/storage/visio-repair/draft.vsdx',
         'files/storage/previews/preview.pdf'];
-    check_backup(!array_diff($localFiles, $manualFiles),
-        'manual backups still include local work files');
+    $recoveryManifest = $service->verify($service->resolve($recovery['name']));
+    check_backup(!array_diff($localFiles, array_column($recoveryManifest['files'], 'path')),
+        'recovery snapshots include local work files');
+
+    $before = array_column($service->list_backups(), 'name');
     $service->apply_retention();
-    check_backup(count(glob($service->directory() . '/pk-dts-auto-*.zip')) === 3,
-        'calendar cleanup preserves the three automatic archives regardless of age');
+    check_backup(count($before) === 8 && $before === array_column($service->list_backups(), 'name'),
+        'calendar cleanup preserves the automatic and manual archives regardless of age');
 
     $dump = getenv('PK_MYSQLDUMP');
     putenv('PK_MYSQLDUMP=' . $root . '/missing-mysqldump');
-    $failed = FALSE;
     try {
-        $service->backup('auto');
-    } catch (DomainException $failure) {
-        $failed = TRUE;
+        foreach ($kinds as $kind => $label) {
+            $failed = FALSE;
+            try {
+                $service->backup($kind);
+            } catch (DomainException $failure) {
+                $failed = TRUE;
+            }
+            check_backup($failed && $before === array_column($service->list_backups(), 'name'),
+                "failed $label backup preserves all existing archives");
+        }
     } finally {
         putenv($dump === FALSE ? 'PK_MYSQLDUMP' : 'PK_MYSQLDUMP=' . $dump);
     }
-    check_backup($failed && count(glob($service->directory() . '/pk-dts-auto-*.zip')) === 3 &&
-        is_file($service->resolve($automatic[0])), 'failed automatic backup preserves all existing archives');
 
-    $latest = $service->backup('auto');
-    check_backup($latest['retention']['deleted']['backups'] === 1 && !$latest['retention']['failed'] &&
-        !file_exists($service->directory() . '/' . $automatic[0]) &&
-        is_file($service->resolve($automatic[1])) && is_file($service->resolve($automatic[2])) &&
-        is_file($service->resolve($manual['name'])), 'successful fourth automatic backup deletes only the oldest');
-    $manifest = $service->verify($service->resolve($latest['name']));
-    $files = array_column($manifest['files'], 'path');
     $expected = ['database.sql', 'files/application/code.php', 'files/storage/audit/audit.json',
         'files/storage/documents/document'];
-    check_backup(!array_diff($expected, $files) && !array_intersect($localFiles, $files),
-        'automatic archive contains operational data and omits the three work folders');
+    $latest = [];
+    foreach ($kinds as $kind => $label) {
+        $result = $service->backup($kind);
+        $latest[$kind] = $result['name'];
+        $after = array_column($service->list_backups(), 'name');
+        check_backup($result['retention']['deleted']['backups'] === 1 && !$result['retention']['failed'] &&
+            array_values(array_diff($before, $after)) === [$oldest[$kind]] &&
+            array_values(array_diff($after, $before)) === [$result['name']],
+            "successful fourth $label backup deletes only the oldest of its type");
+        $before = $after;
+
+        $manifest = $service->verify($service->resolve($result['name']));
+        $files = array_column($manifest['files'], 'path');
+        check_backup(!array_diff($expected, $files) && !array_intersect($localFiles, $files),
+            "$label archive contains operational data and omits the three work folders");
+    }
 
     $server->query("UPDATE fixture SET value = 'changed' WHERE id = 1");
     file_put_contents($root . '/storage/documents/document', 'changed document');
-    $restore = $service->restore($latest['name']);
+    $restore = $service->restore($latest['manual']);
     check_backup($server->query('SELECT value FROM fixture WHERE id = 1')->fetch_row()[0] === 'original' &&
         file_get_contents($root . '/storage/documents/document') === 'original document' &&
-        is_file($service->resolve($restore['recovery'])), 'smaller archive restores the database and original document');
+        is_file($service->resolve($restore['recovery'])), 'smaller manual archive restores the database and original document');
 } finally {
     $server->query("DROP DATABASE `$database`");
     if (is_dir($root)) {
