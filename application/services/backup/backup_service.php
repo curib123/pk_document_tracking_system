@@ -134,7 +134,7 @@ final class Backup_service
                 throw new DomainException('Unable to start the backup ZIP.');
             $zipOpen=TRUE;
             $entries=[];
-            $files=$this->sourceFiles($kind);
+            $files=$this->snapshotFiles($kind,$tempDir);
             $files['database.sql']=$sqlPath;
             foreach ($files as $archive=>$path) {
                 if (!is_file($path) || !is_readable($path))
@@ -358,6 +358,32 @@ final class Backup_service
             }
         } finally {$zip->close();}
     }
+    private function snapshotFiles(string $kind, string $tempDir): array
+    {
+        $auditDir=$this->root.'/storage/audit';
+        if (!is_dir($auditDir)) return $this->sourceFiles($kind);
+        if (is_link($auditDir) || !$this->inside(realpath($auditDir),realpath($this->root)))
+            throw new DomainException('The audit directory is unsafe.');
+        $lockPath=$auditDir.'/.audit.lock';
+        if (is_link($lockPath) || (file_exists($lockPath) && !is_file($lockPath)))
+            throw new DomainException('The audit lock path is unsafe.');
+        $lock=@fopen($lockPath,'c');
+        if (!$lock) throw new DomainException('Cannot open the audit lock.');
+        try {
+            if (!flock($lock,LOCK_SH)) throw new DomainException('Cannot lock the audit history for backup.');
+            $files=$this->sourceFiles($kind);
+            unset($files['files/storage/audit/.audit.lock']);
+            // ZIP opens sources at close time. Audit writers can replace their JSON files in between.
+            foreach ($files as $archive=>$path) {
+                if (strpos($archive,'files/storage/audit/')!==0) continue;
+                $staged=$tempDir.'/audit-'.hash('sha256',$archive);
+                if (!@copy($path,$staged)) throw new DomainException('Cannot stage the audit history.');
+                $files[$archive]=$staged;
+            }
+            return $files;
+        } finally {fclose($lock);}
+    }
+
     private function sourceFiles(string $kind): array
     {
         $files=[];$rootReal=realpath($this->root);

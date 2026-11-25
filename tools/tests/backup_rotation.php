@@ -44,6 +44,17 @@ try {
     }
 
     $service = new Backup_service($root);
+    $auditStage = $service->directory() . '/audit-fixture';
+    mkdir($auditStage, 0700);
+    $snapshot = new ReflectionMethod($service, 'snapshotFiles');
+    $snapshot->setAccessible(TRUE);
+    $auditFiles = $snapshot->invoke($service, 'manual', $auditStage);
+    $auditSource = $root . '/storage/audit/audit.json';
+    file_put_contents($auditSource, '{"after":true}');
+    check_backup(file_get_contents($auditFiles['files/storage/audit/audit.json']) === '{}',
+        'a later audit write leaves the staged contents intact');
+    file_put_contents($auditSource, '{}');
+
     $kinds = ['auto' => 'automatic', 'manual' => 'manual'];
     $oldest = [];
     foreach ($kinds as $kind => $label) {
