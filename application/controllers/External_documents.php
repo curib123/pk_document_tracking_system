@@ -17,9 +17,8 @@ class External_documents extends MY_Controller
             show_error('Invalid external document status filter.', 400);
             return;
         }
-        $canViewAll = $this->Permission_model->allowed($this->user, '*', '*') ||
-            $this->Permission_model->allowed($this->user, 'documents', 'access_all') ||
-            $this->Permission_model->allowed($this->user, 'documents', 'view_all');
+        require_once APPPATH . 'services/documents/external_document_service.php';
+        $canViewAll = (new External_document_service())->can_view_all($this->user);
         $ownerOptions = [];
         if ($canViewAll) {
             $this->load->model('Document_model');

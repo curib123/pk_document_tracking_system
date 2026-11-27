@@ -385,6 +385,10 @@
   background: var(--ui-blue-700);
 }
 
+.dashboard-page [data-document-kind="external"] .dashboard-type-marker {
+  background: var(--ui-purple-700);
+}
+
 .dashboard-page .dashboard-request-summary {
   margin-top: auto;
   padding: 12px var(--dashboard-padding);

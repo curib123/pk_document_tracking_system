@@ -6,8 +6,11 @@ $greeting = $hour < 12 ? 'Good morning' : ($hour < 17 ? 'Good afternoon' : 'Good
 $firstName = trim((string) ($user['first_name'] ?? ''));
 $displayName = $firstName !== '' ? $firstName : ($user['username'] ?? 'there');
 $canView = static fn($module) => isset($permissions['*']) || !empty($permissions[$module]['view']);
-$documentCounts = array_filter($document_counts, $canView, ARRAY_FILTER_USE_KEY);
+$documentCounts = $document_counts;
 $documentLabels = array_map('ucfirst', array_keys($documentCounts));
+$documentSummary = count($documentLabels) > 1
+  ? implode(', ', array_slice($documentLabels, 0, -1)) . ' and ' . end($documentLabels)
+  : implode('', $documentLabels);
 $canViewRequests = $canView('requests');
 $requestLabel = static fn($status) => $status === 'submitted'
   ? 'In Progress' : ucwords(str_replace('_', ' ', $status));
@@ -20,20 +23,27 @@ if ($handoffLink) {
   $metricCards['transfers'] = ['Outstanding handoffs', 'View handoffs', 'fa-arrow-right-arrow-left', $handoffLink];
 }
 if ($documentCounts) {
-  $metricCards['documents'] = ['Accessible documents', implode(' and ', $documentLabels), 'fa-folder-open', NULL];
+  $metricCards['documents'] = ['Accessible documents', $documentSummary, 'fa-folder-open', NULL];
   $metricCards['created'] = ['Created by you', 'Within your document access', 'fa-file-circle-plus', NULL];
 }
 ?>
 <div class="dashboard-page">
   <section class="dashboard-welcome" aria-labelledby="dashboardGreeting">
     <h1 id="dashboardGreeting"><?= html_escape($greeting) ?>, <span><?= html_escape($displayName) ?></span></h1>
-    <time class="dashboard-date" datetime="<?= $now->format('Y-m-d') ?>">
-      <span class="dashboard-date-icon" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></span>
-      <span>
-        <strong><?= html_escape($now->format('l')) ?></strong>
-        <small><?= html_escape($now->format('F j, Y')) ?></small>
-      </span>
-    </time>
+    <div class="d-flex flex-wrap align-items-center gap-3">
+      <?php if ($canView('backups')): ?>
+        <a class="btn btn-outline-primary" href="<?= html_escape(site_url('admin/backups')) ?>">
+          <i class="fa-solid fa-database me-2" aria-hidden="true"></i>Backup &amp; Restore
+        </a>
+      <?php endif; ?>
+      <time class="dashboard-date" datetime="<?= $now->format('Y-m-d') ?>">
+        <span class="dashboard-date-icon" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></span>
+        <span>
+          <strong><?= html_escape($now->format('l')) ?></strong>
+          <small><?= html_escape($now->format('F j, Y')) ?></small>
+        </span>
+      </time>
+    </div>
   </section>
 
   <div class="dashboard-metric-row">
@@ -66,7 +76,7 @@ if ($documentCounts) {
               <span class="dashboard-section-icon" aria-hidden="true"><i class="fa-solid fa-folder-tree"></i></span>
               <div>
                 <h2 id="documentChartTitle">Document register</h2>
-                <p><?= html_escape(implode(' and ', $documentLabels)) ?> records you can access</p>
+                <p><?= html_escape($documentSummary) ?> records you can access</p>
               </div>
             </div>
           </header>
@@ -93,9 +103,10 @@ if ($documentCounts) {
             </thead>
             <tbody>
               <?php foreach ($documentCounts as $kind => $count): ?>
+                <?php $query = '?folder=all&layout=table' . ($kind === 'external' ? '&status=all' : ''); ?>
                 <tr>
                   <th scope="row" data-document-kind="<?= html_escape($kind) ?>">
-                    <a class="dashboard-link" href="<?= html_escape(site_url('documents/' . $kind) . '?folder=all&layout=table') ?>">
+                    <a class="dashboard-link" href="<?= html_escape(site_url('documents/' . $kind) . $query) ?>">
                       <span class="dashboard-type-marker" aria-hidden="true"></span>
                       <?= html_escape(ucfirst($kind)) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
                     </a>

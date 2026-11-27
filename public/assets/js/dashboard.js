@@ -9,14 +9,19 @@
     };
     var pie = type === "doughnut";
     var dataset = data.datasets[0];
+    var documentColors = {
+      Hardcopy: ["--ui-blue-700", "--ui-blue-900"],
+      Softcopy: ["--ui-brand-600", "--ui-brand-800"],
+      External: ["--ui-purple-700", "--ui-purple-700"]
+    };
     dataset.backgroundColor = pie
       ? data.labels.map(function (label) {
-          return color(label === "Hardcopy" ? "--ui-blue-700" : "--ui-brand-600");
+          return color(documentColors[label][0]);
         })
       : color("--ui-brand-600");
     dataset.hoverBackgroundColor = pie
       ? data.labels.map(function (label) {
-          return color(label === "Hardcopy" ? "--ui-blue-900" : "--ui-brand-800");
+          return color(documentColors[label][1]);
         })
       : color("--ui-brand-800");
     dataset.borderColor = color("--surface");

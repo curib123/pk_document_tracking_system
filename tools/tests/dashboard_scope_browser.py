@@ -24,11 +24,20 @@ def seed_scope_cases():
     insert('requests', reference='SCOPE-LEGACY-PENDING', type='softcopy_create',
            requested_by=6, payload={}, status='pending')
     insert('requests', reference='SCOPE-AUDITOR-PRIVATE', type='softcopy_create', requested_by=4, payload={})
+    insert('external_documents', title='Leader External Reference', category_id=1, created_by=6, status='disposed')
     sql("""DELETE rp FROM role_permissions rp
         JOIN permissions p ON p.id = rp.permission_id
         WHERE rp.role_id = 4 AND NOT (p.module_key = 'dashboard' AND p.action_key = 'view');
         INSERT IGNORE INTO role_permissions (role_id, permission_id)
         SELECT 4, id FROM permissions WHERE module_key = 'dashboard' AND action_key = 'view';
+        DELETE rp FROM role_permissions rp
+        JOIN permissions p ON p.id = rp.permission_id
+        WHERE rp.role_id = 5 AND (
+            (p.module_key = 'documents' AND p.action_key IN ('access_all', 'view_all')) OR
+            (p.module_key = 'backups' AND p.action_key = 'view')
+        );
+        INSERT IGNORE INTO role_permissions (role_id, permission_id)
+        SELECT 5, id FROM permissions WHERE module_key = 'external_documents' AND action_key = 'view';
         UPDATE transfers SET recipient_id = 4 WHERE status = 'in_transit';""")
 
 
@@ -52,6 +61,17 @@ def follow_count(page, link_pattern, total):
     assert page.goto(href).ok
     expect(page.locator('[data-table-results]')).to_contain_text(f'of {total} records')
     return page.locator('[data-table-results]')
+
+
+def check_external_register(page, total):
+    row = page.locator('.dashboard-page tr').filter(has=page.locator('[data-document-kind=external]'))
+    expect(row.locator('td').first).to_have_text(str(total))
+    chart = page.locator('.dashboard-page [data-chart-type=doughnut]')
+    labels = json.loads(chart.get_attribute('data-chart-labels'))
+    counts = json.loads(chart.get_attribute('data-chart-counts'))
+    assert dict(zip(labels, counts))['External'] == total
+    metric(page, 'documents', sum(counts))
+    return follow_count(page, 'documents/external?', total)
 
 
 def accept_assigned_handoff(page, base):
@@ -84,6 +104,11 @@ def run():
         handoffs = follow_count(leader, 'status=handoffs', 1)
         expect(handoffs).not_to_contain_text('SCOPE-ROLE-TRANSFER')
         expect(handoffs).to_contain_text('DEMO-TRANSFER-')
+        leader.goto(base + 'dashboard')
+        expect(leader.locator('.dashboard-page a[href$="admin/backups"]')).to_have_count(0)
+        external = check_external_register(leader, 1)
+        expect(external).to_contain_text('Leader External Reference')
+        expect(external).not_to_contain_text('Sample Supplier Reference')
 
         auditor = signed_in(browser, base, 'auditor')
         metric(auditor, 'pending_tasks', 1)
@@ -91,6 +116,8 @@ def run():
         expect(auditor.locator('#appSidebar a[href$="my-tasks"] .nav-count')).to_have_text('2')
         expect(auditor.locator('.dashboard-page a[href$="my-requests"]')).to_have_count(0)
         expect(auditor.locator('.dashboard-page [data-chart-type=bar]')).to_have_count(0)
+        expect(auditor.locator('.dashboard-page [data-document-kind=external]')).to_have_count(0)
+        expect(auditor.locator('.dashboard-page a[href$="admin/backups"]')).to_have_count(0)
         receipt = follow_count(auditor, 'status=handoffs', 1)
         expect(receipt).to_contain_text('In Transit')
         accept_assigned_handoff(auditor, base)
@@ -100,7 +127,14 @@ def run():
         admin = signed_in(browser, base, 'admin')
         expect(admin.locator('.dashboard-page [data-chart-type=bar]')).to_have_count(1)
         assert 'Pending' not in admin.locator('[data-chart-type=bar]').get_attribute('data-chart-labels')
-    print('Dashboard counts and linked registers match authorized request and task scopes.')
+        external = check_external_register(admin, 2)
+        expect(external).to_contain_text('Sample Supplier Reference')
+        expect(external).to_contain_text('Leader External Reference')
+        admin.goto(base + 'dashboard')
+        admin.locator('.dashboard-page').get_by_role('link', name='Backup & Restore').click()
+        admin.wait_for_url('**/admin/backups')
+        expect(admin.get_by_role('heading', name='Backup & Restore')).to_be_visible()
+    print('Dashboard counts and links match authorized document, backup, request and task access.')
 
 
 if __name__ == '__main__':

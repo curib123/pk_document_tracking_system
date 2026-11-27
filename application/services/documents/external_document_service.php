@@ -10,6 +10,13 @@ class External_document_service
         $this->ci =& get_instance();
     }
 
+    public function can_view_all(array $user): bool
+    {
+        $this->ci->load->model('Permission_model');
+        return $this->ci->Permission_model->allowed($user, 'documents', 'access_all') ||
+            $this->ci->Permission_model->allowed($user, 'documents', 'view_all');
+    }
+
     public function manageable(int $documentId, array $user): ?array
     {
         $document = $this->ci->db->get_where('external_documents', [
@@ -19,13 +26,7 @@ class External_document_service
         if (!$document) {
             return NULL;
         }
-        $this->ci->load->model('Permission_model');
-        if (
-            (int) $document['created_by'] === (int) ($user['id'] ?? 0) ||
-            $this->ci->Permission_model->allowed($user, '*', '*') ||
-            $this->ci->Permission_model->allowed($user, 'documents', 'access_all') ||
-            $this->ci->Permission_model->allowed($user, 'documents', 'view_all')
-        ) {
+        if ((int) $document['created_by'] === (int) ($user['id'] ?? 0) || $this->can_view_all($user)) {
             return $document;
         }
         return NULL;
