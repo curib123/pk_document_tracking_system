@@ -296,7 +296,7 @@ def main():
             except OSError:
                 time.sleep(.1)
         with sync_playwright() as playwright:
-            browser = playwright.chromium.launch(channel=os.environ.get('PK_TEST_BROWSER', 'msedge'))
+            browser = playwright.chromium.launch(channel=os.environ.get('PK_TEST_BROWSER', 'msedge'), args=['--disable-gpu'])
             exercise(browser, base)
             browser.close()
         print('Revision template browser workflow passed.')
