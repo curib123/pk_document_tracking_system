@@ -20,9 +20,8 @@
         })
       : color("--ui-brand-800");
     dataset.borderColor = color("--surface");
-    options.plugins.legend.labels.color = color("--ui-ink-600");
     if (!pie) {
-      options.scales.x.grid.color = color("--ui-line-soft");
+      options.scales.x.grid.color = color("--ui-line");
       options.scales.x.ticks.color = color("--ui-ink-600");
       options.scales.y.ticks.color = color("--ui-ink-600");
     }
@@ -53,7 +52,7 @@
           data: values,
           borderWidth: pie ? 4 : 0,
           borderRadius: pie ? 0 : 7,
-          maxBarThickness: 38,
+          maxBarThickness: 22,
           categoryPercentage: 0.66,
           barPercentage: 0.76,
         };
@@ -64,27 +63,14 @@
           indexAxis: pie ? "x" : "y",
           animation: reducedMotion.matches ? false : animation,
           ...(pie
-            ? { cutout: "73%", layout: { padding: { top: 5, bottom: 8 } } }
+            ? { cutout: "76%", layout: { padding: 12 } }
             : {
                 layout: {
                   padding: { top: 10, right: 9, bottom: 1, left: 4 },
                 },
               }),
           plugins: {
-            legend: {
-              display: pie,
-              position: "bottom",
-              align: "center",
-              onClick: null,
-              labels: {
-                usePointStyle: true,
-                pointStyle: "circle",
-                boxWidth: 8,
-                boxHeight: 8,
-                padding: 20,
-                font: fonts,
-              },
-            },
+            legend: { display: false },
             tooltip: {
               backgroundColor: "#1c2c43",
               titleColor: "#ffffff",
@@ -113,7 +99,7 @@
                     border: { display: false },
                     ticks: {
                       precision: 0,
-                      font: { family: fonts.family, size: 10 },
+                      font: fonts,
                       padding: 8,
                     },
                   },
@@ -121,7 +107,7 @@
                     grid: { display: false },
                     border: { display: false },
                     ticks: {
-                      font: { family: fonts.family, size: 10 },
+                      font: fonts,
                       autoSkip: false,
                       padding: 9,
                     },
