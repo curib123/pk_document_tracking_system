@@ -72,7 +72,7 @@ def follow_count(page, link_pattern, total):
 
 
 def check_document_register(page, kind, total):
-    row = page.locator('.dashboard-page tr').filter(has=page.locator(f'[data-document-kind={kind}]'))
+    row = page.locator(f'.dashboard-page tr[data-document-kind={kind}]')
     expect(row.locator('td').first).to_have_text(str(total))
     chart = page.locator('.dashboard-page [data-chart-type=doughnut]')
     labels = json.loads(chart.get_attribute('data-chart-labels'))

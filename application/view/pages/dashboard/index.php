@@ -8,9 +8,6 @@ $displayName = $firstName !== '' ? $firstName : ($user['username'] ?? 'there');
 $canView = static fn($module) => isset($permissions['*']) || !empty($permissions[$module]['view']);
 $documentCounts = $document_counts;
 $documentLabels = array_map('ucfirst', array_keys($documentCounts));
-$documentSummary = count($documentLabels) > 1
-  ? implode(', ', array_slice($documentLabels, 0, -1)) . ' and ' . end($documentLabels)
-  : implode('', $documentLabels);
 $canViewRequests = $canView('requests');
 $requestLabel = static fn($status) => $status === 'submitted'
   ? 'In Progress' : ucwords(str_replace('_', ' ', $status));
@@ -23,26 +20,23 @@ if ($handoffLink) {
   $metricCards['transfers'] = ['Outstanding handoffs', 'View handoffs', 'fa-arrow-right-arrow-left', $handoffLink];
 }
 if ($documentCounts) {
-  $metricCards['documents'] = ['Accessible documents', $documentSummary, 'fa-folder-open', NULL];
-  $metricCards['created'] = ['Created by you', 'Within your document access', 'fa-file-circle-plus', NULL];
+  $metricCards['documents'] = ['Accessible documents', NULL, 'fa-folder-open', NULL];
+  $metricCards['created'] = ['Created by you', 'Accessible documents', 'fa-file-circle-plus', NULL];
 }
 ?>
 <div class="dashboard-page">
   <section class="dashboard-welcome" aria-labelledby="dashboardGreeting">
     <h1 id="dashboardGreeting"><?= html_escape($greeting) ?>, <span><?= html_escape($displayName) ?></span></h1>
-    <div class="d-flex flex-wrap align-items-center gap-3">
+    <div class="dashboard-welcome-actions">
+      <time class="dashboard-date" datetime="<?= $now->format('Y-m-d') ?>">
+        <i class="fa-regular fa-calendar-days" aria-hidden="true"></i>
+        <?= html_escape($now->format('l, F j, Y')) ?>
+      </time>
       <?php if ($canView('backups')): ?>
-        <a class="btn btn-outline-primary" href="<?= html_escape(site_url('admin/backups')) ?>">
-          <i class="fa-solid fa-database me-2" aria-hidden="true"></i>Backup &amp; Restore
+        <a class="dashboard-link dashboard-register-link" href="<?= html_escape(site_url('admin/backups')) ?>">
+          <i class="fa-solid fa-database" aria-hidden="true"></i>Backup &amp; Restore
         </a>
       <?php endif; ?>
-      <time class="dashboard-date" datetime="<?= $now->format('Y-m-d') ?>">
-        <span class="dashboard-date-icon" aria-hidden="true"><i class="fa-regular fa-calendar-days"></i></span>
-        <span>
-          <strong><?= html_escape($now->format('l')) ?></strong>
-          <small><?= html_escape($now->format('F j, Y')) ?></small>
-        </span>
-      </time>
     </div>
   </section>
 
@@ -54,15 +48,17 @@ if ($documentCounts) {
           <span class="dashboard-stat-label"><?= html_escape($label) ?></span>
         </div>
         <strong data-metric="<?= html_escape($key) ?>"><?= number_format($metrics[$key]) ?></strong>
-        <div class="dashboard-stat-detail">
-          <?php if ($url): ?>
-            <a class="dashboard-link" href="<?= html_escape($url) ?>">
-              <?= html_escape($detail) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-            </a>
-          <?php else: ?>
-            <?= html_escape($detail) ?>
-          <?php endif; ?>
-        </div>
+        <?php if ($detail): ?>
+          <div class="dashboard-stat-detail">
+            <?php if ($url): ?>
+              <a class="dashboard-link" href="<?= html_escape($url) ?>">
+                <?= html_escape($detail) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+              </a>
+            <?php else: ?>
+              <?= html_escape($detail) ?>
+            <?php endif; ?>
+          </div>
+        <?php endif; ?>
       </div>
     <?php endforeach; ?>
   </div>
@@ -70,53 +66,62 @@ if ($documentCounts) {
   <?php if ($documentCounts || $canViewRequests): ?>
     <div class="dashboard-analytics-row">
       <?php if ($documentCounts): ?>
-        <section class="dashboard-chart-card" aria-labelledby="documentChartTitle">
+        <section class="dashboard-chart-card dashboard-documents-card" aria-labelledby="documentChartTitle">
           <header class="dashboard-section-header">
             <div class="dashboard-section-heading">
               <span class="dashboard-section-icon" aria-hidden="true"><i class="fa-solid fa-folder-tree"></i></span>
-              <div>
-                <h2 id="documentChartTitle">Document register</h2>
-                <p><?= html_escape($documentSummary) ?> records you can access</p>
-              </div>
+              <h2 id="documentChartTitle">Document register</h2>
             </div>
           </header>
-          <?php if ($metrics['documents']): ?>
-            <div class="chart-box dashboard-chart-box dashboard-chart-box-doughnut" hidden>
-              <canvas id="documentTypeChart" role="img" aria-label="Accessible document counts by type"
-                data-chart-type="doughnut" data-chart-labels="<?= html_escape(json_encode($documentLabels)) ?>"
-                data-chart-counts="<?= html_escape(json_encode(array_values($documentCounts))) ?>"></canvas>
-              <div class="dashboard-chart-total" aria-hidden="true">
-                <strong><?= number_format($metrics['documents']) ?></strong>
-                <span>Records</span>
+          <div class="dashboard-document-breakdown">
+            <?php if ($metrics['documents']): ?>
+              <div class="chart-box dashboard-chart-box dashboard-chart-box-doughnut" hidden>
+                <canvas id="documentTypeChart" role="img" aria-label="Accessible document counts by type"
+                  data-chart-type="doughnut" data-chart-labels="<?= html_escape(json_encode($documentLabels)) ?>"
+                  data-chart-counts="<?= html_escape(json_encode(array_values($documentCounts))) ?>"></canvas>
+                <div class="dashboard-chart-total" aria-hidden="true">
+                  <strong><?= number_format($metrics['documents']) ?></strong>
+                  <span>Records</span>
+                </div>
               </div>
-            </div>
-          <?php else: ?>
-            <p class="dashboard-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>No accessible documents yet.</p>
-          <?php endif; ?>
-          <table class="table mb-0 dashboard-breakdown-table" aria-label="Document distribution counts and percentages">
-            <thead>
-              <tr>
-                <th scope="col">Type</th>
-                <th scope="col" class="text-end">Count</th>
-                <th scope="col" class="text-end">Share</th>
-              </tr>
-            </thead>
-            <tbody>
-              <?php foreach ($documentCounts as $kind => $count): ?>
-                <?php $query = '?folder=all&layout=table' . ($kind === 'external' ? '&status=all' : ''); ?>
+            <?php else: ?>
+              <p class="dashboard-empty"><i class="fa-regular fa-folder-open" aria-hidden="true"></i>No accessible documents yet.</p>
+            <?php endif; ?>
+            <table class="table mb-0 dashboard-breakdown-table" aria-label="Document distribution counts and percentages">
+              <thead>
                 <tr>
-                  <th scope="row" data-document-kind="<?= html_escape($kind) ?>">
-                    <a class="dashboard-link" href="<?= html_escape(site_url('documents/' . $kind) . $query) ?>">
-                      <span class="dashboard-type-marker" aria-hidden="true"></span>
-                      <?= html_escape(ucfirst($kind)) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
-                    </a>
-                  </th>
-                  <td class="text-end"><?= number_format($count) ?></td>
-                  <td class="text-end"><?= $metrics['documents'] ? round(100 * $count / $metrics['documents'], 1) . '%' : '—' ?></td>
+                  <th scope="col">Type</th>
+                  <th scope="col" class="text-end">Count</th>
+                  <th scope="col" class="text-end">Share</th>
                 </tr>
-              <?php endforeach; ?>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                <?php foreach ($documentCounts as $kind => $count): ?>
+                  <?php
+                    $query = '?folder=all&layout=table' . ($kind === 'external' ? '&status=all' : '');
+                    $share = $metrics['documents'] ? round(100 * $count / $metrics['documents'], 1) : NULL;
+                  ?>
+                  <tr class="dashboard-document-row" data-document-kind="<?= html_escape($kind) ?>">
+                    <th scope="row">
+                      <a class="dashboard-link" href="<?= html_escape(site_url('documents/' . $kind) . $query) ?>">
+                        <span class="dashboard-type-marker" aria-hidden="true"></span>
+                        <?= html_escape(ucfirst($kind)) ?> <i class="fa-solid fa-arrow-right" aria-hidden="true"></i>
+                      </a>
+                    </th>
+                    <td class="text-end"><?= number_format($count) ?></td>
+                    <td class="text-end">
+                      <div class="dashboard-document-share">
+                        <?php if ($share !== NULL): ?>
+                          <span class="progress" aria-hidden="true"><span class="progress-bar" style="width: <?= $share ?>%"></span></span>
+                        <?php endif; ?>
+                        <span><?= $share !== NULL ? $share . '%' : '—' ?></span>
+                      </div>
+                    </td>
+                  </tr>
+                <?php endforeach; ?>
+              </tbody>
+            </table>
+          </div>
         </section>
       <?php endif; ?>
 
