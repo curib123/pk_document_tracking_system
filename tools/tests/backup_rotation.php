@@ -30,18 +30,34 @@ try {
     $server->select_db($database);
     $server->query('CREATE TABLE fixture (id INT PRIMARY KEY, value VARCHAR(30)) ENGINE=InnoDB');
     $server->query("INSERT INTO fixture VALUES (1, 'original')");
-    $inputs = [
+    $included = [
         'application/code.php' => '<?php return true;',
-        'storage/documents/document' => 'original document',
+        'public/assets/images/logo.png' => 'application logo',
+        'docs/system-documentation/PK_DCS_User_Guide_Step_by_Step.pptx' => 'published guide',
+        'docs/system-documentation/source/process.json' => '{}',
+        'storage/documents/document.png' => 'original document',
+        'storage/documents/previous-version.png' => 'previous document version',
         'storage/audit/audit.json' => '{}',
+        'storage/private-state.json' => '{}'
+    ];
+    $excluded = [
         'storage/documentation-review/draft.pptx' => 'review copy',
         'storage/visio-repair/draft.vsdx' => 'working diagram',
-        'storage/previews/preview.pdf' => 'cached preview'
+        'storage/previews/preview.pdf' => 'cached preview',
+        'docs/system-documentation/PK_DTS_Documentation.zip' => 'generated documentation bundle',
+        'docs/system-documentation/previews/diagram.png' => 'rendered diagram preview',
+        'docs/system-documentation/source/screenshots/requests.png' => 'documentation source screenshot',
+        'tools/documentation/screenshots/guide/signin.png' => 'documentation capture',
+        'storage/dashboard-test.PNG' => 'local test screenshot'
     ];
-    foreach ($inputs as $path => $content) {
-        mkdir(dirname($root . '/' . $path), 0700, TRUE);
+    foreach ($included + $excluded as $path => $content) {
+        $directory = dirname($root . '/' . $path);
+        if (!is_dir($directory)) mkdir($directory, 0700, TRUE);
         file_put_contents($root . '/' . $path, $content);
     }
+    $archivePath = static fn(string $path): string => 'files/' . $path;
+    $expected = array_merge(['database.sql'], array_map($archivePath, array_keys($included)));
+    $localFiles = array_map($archivePath, array_keys($excluded));
 
     $service = new Backup_service($root);
     $auditStage = $service->directory() . '/audit-fixture';
@@ -75,12 +91,7 @@ try {
     if (!copy($service->resolve($oldest['manual']), $service->directory() . '/' . $import)) {
         throw new RuntimeException('Could not seed an imported archive.');
     }
-    $recovery = $service->backup('recovery');
-    $localFiles = ['files/storage/documentation-review/draft.pptx', 'files/storage/visio-repair/draft.vsdx',
-        'files/storage/previews/preview.pdf'];
-    $recoveryManifest = $service->verify($service->resolve($recovery['name']));
-    check_backup(!array_diff($localFiles, array_column($recoveryManifest['files'], 'path')),
-        'recovery snapshots include local work files');
+    $service->backup('recovery');
 
     $before = array_column($service->list_backups(), 'name');
     $service->apply_retention();
@@ -104,8 +115,6 @@ try {
         putenv($dump === FALSE ? 'PK_MYSQLDUMP' : 'PK_MYSQLDUMP=' . $dump);
     }
 
-    $expected = ['database.sql', 'files/application/code.php', 'files/storage/audit/audit.json',
-        'files/storage/documents/document'];
     $latest = [];
     foreach ($kinds as $kind => $label) {
         $result = $service->backup($kind);
@@ -120,15 +129,20 @@ try {
         $manifest = $service->verify($service->resolve($result['name']));
         $files = array_column($manifest['files'], 'path');
         check_backup(!array_diff($expected, $files) && !array_intersect($localFiles, $files),
-            "$label archive contains operational data and omits the three work folders");
+            "$label archive keeps operational data and published guides and omits generated work files");
     }
 
     $server->query("UPDATE fixture SET value = 'changed' WHERE id = 1");
-    file_put_contents($root . '/storage/documents/document', 'changed document');
+    $document = $root . '/storage/documents/document.png';
+    file_put_contents($document, 'changed document');
+    file_put_contents($auditSource, '{"after":true}');
     $restore = $service->restore($latest['manual']);
     check_backup($server->query('SELECT value FROM fixture WHERE id = 1')->fetch_row()[0] === 'original' &&
-        file_get_contents($root . '/storage/documents/document') === 'original document' &&
-        is_file($service->resolve($restore['recovery'])), 'smaller manual archive restores the database and original document');
+        file_get_contents($document) === 'original document' && file_get_contents($auditSource) === '{}',
+        'smaller manual archive restores the database, original document, and audit history');
+    $recovery = $service->verify($service->resolve($restore['recovery']));
+    check_backup(!array_diff(array_merge($expected, $localFiles), array_column($recovery['files'], 'path')),
+        'pre-restore recovery snapshot includes operational data and local work files');
 } finally {
     $server->query("DROP DATABASE `$database`");
     if (is_dir($root)) {

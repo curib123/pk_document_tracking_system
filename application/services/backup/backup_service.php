@@ -397,11 +397,19 @@ final class Backup_service
             if ($this->inside($real,$this->directory)) continue;
             $relative=ltrim(str_replace('\\','/',substr($real,strlen($rootReal))),'/');
             if (preg_match('~^(?:\.git|node_modules|storage/sessions|storage/cache|storage/backups|tests/__pycache__)(?:/|$)~',$relative) ||
-                ($kind!=='recovery' && preg_match('~^storage/(?:documentation-review|visio-repair|previews)(?:/|$)~',$relative)) ||
                 preg_match('~(^|/)\.env(?:\.[^/]*)?$~',$relative) ||
                 preg_match('~(^|/)(?:\.DS_Store|Thumbs\.db)$~',$relative) ||
                 strpos($entry->getFilename(),'~$')===0)
                 continue;
+            if ($kind !== 'recovery' && (
+                preg_match('~^storage/(?:documentation-review|visio-repair|previews)(?:/|$)~', $relative) ||
+                preg_match('~^docs/system-documentation/(?:previews|source/screenshots)/~', $relative) ||
+                strpos($relative, 'tools/documentation/screenshots/') === 0 ||
+                $relative === 'docs/system-documentation/PK_DTS_Documentation.zip' ||
+                (dirname($relative) === 'storage' && strcasecmp($entry->getExtension(), 'png') === 0)
+            )) {
+                continue;
+            }
             $files['files/'.$relative]=$real;
         }
         ksort($files,SORT_STRING);
