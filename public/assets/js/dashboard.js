@@ -17,7 +17,7 @@
       chart.options.plugins.legend.labels.color = color("--ui-ink-600");
       if (!pie) {
         chart.options.scales.x.grid.color = color("--ui-line-soft");
-        chart.options.scales.x.ticks.color = color("--ui-ink-500");
+        chart.options.scales.x.ticks.color = color("--ui-ink-600");
         chart.options.scales.y.ticks.color = color("--ui-ink-600");
       }
       chart.update("none");
