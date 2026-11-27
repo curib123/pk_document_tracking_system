@@ -244,8 +244,8 @@ and their versions, audit history, and published guides. They omit the PDF previ
 cache, local documentation review and Visio repair work folders, the generated
 documentation ZIP, documentation screenshots and preview renders, and test PNGs
 at the root of `storage/`. The pre-restore recovery archive includes these files.
-After publishing a verified backup, the job retains that archive and the two
-newest previous backups of the same type.
+Once a new backup is verified and published, the job keeps the two newest
+archives of that type and removes any older ones.
 A failed run keeps the existing archives. The three-month policy applies to
 imported backups, pre-restore recovery snapshots, and logs.
 Maintenance handles retention and controlled-file reconciliation outside of user

@@ -4,7 +4,7 @@ defined('BASEPATH') OR defined('PK_ROOT') OR exit('No direct script access allow
 /** Automatic and manual backup rotation and three calendar months of other archives and logs. */
 final class Retention_service
 {
-    private const ROTATION_LIMIT = 3;
+    private const ROTATION_LIMIT = 2;
 
     private $root;
     private $backups;

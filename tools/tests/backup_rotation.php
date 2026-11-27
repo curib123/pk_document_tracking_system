@@ -72,26 +72,26 @@ try {
     file_put_contents($auditSource, '{}');
 
     $kinds = ['auto' => 'automatic', 'manual' => 'manual'];
-    $oldest = [];
-    foreach ($kinds as $kind => $label) {
+    $recovery = $service->backup('recovery');
+    $fixtureArchive = $service->resolve($recovery['name']);
+    $existing = [];
+    foreach (array_keys($kinds) as $kind) {
         for ($day = 1; $day <= 3; $day++) {
-            $result = $service->backup($kind);
             $name = 'pk-dts-' . $kind . '-2020010' . $day . '-170000-0123456789.zip';
             $destination = $service->directory() . '/' . $name;
-            if (!rename($service->resolve($result['name']), $destination)) {
-                throw new RuntimeException('Could not date the fixture archive.');
+            if (!copy($fixtureArchive, $destination)) {
+                throw new RuntimeException('Could not seed an existing archive.');
             }
             touch($destination, time() - $day);
-            $oldest[$kind] ??= $name;
+            $existing[$kind][] = $name;
         }
     }
 
     $importDate = new DateTimeImmutable('now', new DateTimeZone('Asia/Manila'));
     $import = 'pk-dts-manual-import-' . $importDate->format('Ymd-His') . '-0123456789.zip';
-    if (!copy($service->resolve($oldest['manual']), $service->directory() . '/' . $import)) {
+    if (!copy($fixtureArchive, $service->directory() . '/' . $import)) {
         throw new RuntimeException('Could not seed an imported archive.');
     }
-    $service->backup('recovery');
 
     $before = array_column($service->list_backups(), 'name');
     $service->apply_retention();
@@ -117,16 +117,24 @@ try {
 
     $latest = [];
     foreach ($kinds as $kind => $label) {
-        $result = $service->backup($kind);
-        $latest[$kind] = $result['name'];
-        $after = array_column($service->list_backups(), 'name');
-        check_backup($result['retention']['deleted']['backups'] === 1 && !$result['retention']['failed'] &&
-            array_values(array_diff($before, $after)) === [$oldest[$kind]] &&
-            array_values(array_diff($after, $before)) === [$result['name']],
-            "successful fourth $label backup deletes only the oldest of its type");
-        $before = $after;
+        [$oldest, $middle, $previous] = $existing[$kind];
+        $rotationCases = [
+            "successful $label backup trims existing archives to the newest two of its type" => [$oldest, $middle],
+            "successful third $label backup removes only the oldest of its type" => [$previous],
+        ];
+        foreach ($rotationCases as $message => $expectedRemoved) {
+            $result = $service->backup($kind);
+            $latest[$kind] = $result['name'];
+            $after = array_column($service->list_backups(), 'name');
+            $removed = array_values(array_diff($before, $after));
+            sort($removed);
+            check_backup($result['retention']['deleted']['backups'] === count($expectedRemoved) &&
+                !$result['retention']['failed'] && $removed === $expectedRemoved &&
+                array_values(array_diff($after, $before)) === [$result['name']], $message);
+            $before = $after;
+        }
 
-        $manifest = $service->verify($service->resolve($result['name']));
+        $manifest = $service->verify($service->resolve($latest[$kind]));
         $files = array_column($manifest['files'], 'path');
         check_backup(!array_diff($expected, $files) && !array_intersect($localFiles, $files),
             "$label archive keeps operational data and published guides and omits generated work files");

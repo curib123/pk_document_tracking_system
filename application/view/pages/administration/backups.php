@@ -26,7 +26,7 @@ $dt_filter_values = ['type' => $table['type']];
     <header class="backup-overview">
         <div>
             <h1>Backup &amp; Restore</h1>
-            <p>Daily at 5:00 PM Philippine time. Keeps three automatic backups and three created with Backup now.</p>
+            <p>Daily at 5:00 PM Philippine time. Keeps two automatic backups and two created with Backup now.</p>
             <?php if ($backup_last_auto): ?>
                 <small>Last automatic backup: <?= html_escape($backupTime($backup_last_auto['created_at'])) ?></small>
             <?php endif; ?>
@@ -46,7 +46,7 @@ $dt_filter_values = ['type' => $table['type']];
                     <button class="btn btn-light" type="submit" <?= $backup_error ? 'disabled' : '' ?>>Clean up</button>
                 </form>
                 <form method="post" action="<?= site_url('admin/backups/create') ?>"
-                    data-confirm="Create an encrypted backup? Older manual backups beyond the newest three are removed after verification." autocomplete="off">
+                    data-confirm="Create an encrypted backup? After verification, the two newest manual backups are kept and older ones are removed." autocomplete="off">
                     <input type="hidden" name="confirmed" value="no">
                     <input type="hidden" name="<?= $csrfName ?>" value="<?= $csrfValue ?>">
                     <button class="btn btn-primary" type="submit" <?= !$ready ? 'disabled' : '' ?>>
