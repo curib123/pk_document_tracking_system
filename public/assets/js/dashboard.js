@@ -1,149 +1,163 @@
-/* Counts and source tables remain accessible even if Chart.js cannot load.
- * Presentation-only chart refinement; no labels, values or data calls changed.
- */
+/* The server-rendered counts are available independently of the charts. */
 (function () {
   "use strict";
+
+  function applyTheme(type, data, options) {
+    var palette = getComputedStyle(document.documentElement);
+    var color = function (name) {
+      return palette.getPropertyValue(name).trim();
+    };
+    var pie = type === "doughnut";
+    var dataset = data.datasets[0];
+    dataset.backgroundColor = pie
+      ? data.labels.map(function (label) {
+          return color(label === "Hardcopy" ? "--ui-blue-700" : "--ui-brand-600");
+        })
+      : color("--ui-brand-600");
+    dataset.hoverBackgroundColor = pie
+      ? data.labels.map(function (label) {
+          return color(label === "Hardcopy" ? "--ui-blue-900" : "--ui-brand-800");
+        })
+      : color("--ui-brand-800");
+    dataset.borderColor = color("--surface");
+    options.plugins.legend.labels.color = color("--ui-ink-600");
+    if (!pie) {
+      options.scales.x.grid.color = color("--ui-line-soft");
+      options.scales.x.ticks.color = color("--ui-ink-600");
+      options.scales.y.ticks.color = color("--ui-ink-600");
+    }
+  }
+
   document.addEventListener("DOMContentLoaded", function () {
+    if (!window.Chart) return;
+
     var charts = [];
-    function color(name) {
-      return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-    }
-    function updateTheme(chart) {
-      var pie = chart.config.type === "doughnut";
-      var dataset = chart.data.datasets[0];
-      dataset.backgroundColor = pie ? [color("--ui-blue-700"), color("--ui-brand-600")] : color("--ui-brand-600");
-      dataset.hoverBackgroundColor = pie ? [color("--ui-blue-900"), color("--ui-brand-800")] : color("--ui-brand-800");
-      dataset.borderColor = color("--surface");
-      chart.options.plugins.legend.labels.color = color("--ui-ink-600");
-      if (!pie) {
-        chart.options.scales.x.grid.color = color("--ui-line-soft");
-        chart.options.scales.x.ticks.color = color("--ui-ink-600");
-        chart.options.scales.y.ticks.color = color("--ui-ink-600");
-      }
-      chart.update("none");
-    }
-    window.addEventListener("pk-theme-change", function () { charts.forEach(updateTheme); });
-    var chartTypeNodes = document.querySelectorAll(
-      ".dashboard-page canvas[data-chart-type]",
-    );
+    var reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+    var animation = { duration: 320 };
+    var chartTypeNodes = document.querySelectorAll(".dashboard-page canvas[data-chart-type]");
     chartTypeNodes.forEach(function (canvas) {
-      if (!window.Chart) {
-        var missingChart = canvas.closest(".chart-box");
-        if (missingChart) missingChart.hidden = true;
-        return;
-      }
+      var box = canvas.closest(".dashboard-chart-box");
+      if (!box) return;
+
       try {
+        var type = canvas.dataset.chartType;
         var labels = JSON.parse(canvas.dataset.chartLabels);
         var values = JSON.parse(canvas.dataset.chartCounts).map(Number);
         var total = values.reduce(function (sum, value) {
           return sum + value;
         }, 0);
-        var pie = canvas.dataset.chartType === "doughnut";
-        var reducedMotion =
-          window.matchMedia &&
-          window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        var pie = type === "doughnut";
         var fonts = { family: "'Poppins', sans-serif", size: 11 };
         var dataset = {
           label: "Records",
           data: values,
-          backgroundColor: pie ? ["#304866", "#ce344c"] : "#be2c43",
-          hoverBackgroundColor: pie ? ["#253a55", "#ad2037"] : "#a82237",
           borderWidth: pie ? 4 : 0,
-          borderColor: "#ffffff",
           borderRadius: pie ? 0 : 7,
           maxBarThickness: 38,
           categoryPercentage: 0.66,
           barPercentage: 0.76,
         };
-        var chart = new window.Chart(canvas, {
-          type: canvas.dataset.chartType,
-          data: { labels: labels, datasets: [dataset] },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            indexAxis: pie ? "x" : "y",
-            animation: reducedMotion ? false : { duration: 320 },
-            ...(pie
-              ? { cutout: "73%", layout: { padding: { top: 5, bottom: 8 } } }
-              : {
-                  layout: {
-                    padding: { top: 10, right: 9, bottom: 1, left: 4 },
-                  },
-                }),
-            plugins: {
-              legend: {
-                display: pie,
-                position: "bottom",
-                align: "center",
-                labels: {
-                  usePointStyle: true,
-                  pointStyle: "circle",
-                  boxWidth: 8,
-                  boxHeight: 8,
-                  padding: 20,
-                  color: "#596a80",
-                  font: fonts,
+        var data = { labels: labels, datasets: [dataset] };
+        var options = {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: pie ? "x" : "y",
+          animation: reducedMotion.matches ? false : animation,
+          ...(pie
+            ? { cutout: "73%", layout: { padding: { top: 5, bottom: 8 } } }
+            : {
+                layout: {
+                  padding: { top: 10, right: 9, bottom: 1, left: 4 },
                 },
+              }),
+          plugins: {
+            legend: {
+              display: pie,
+              position: "bottom",
+              align: "center",
+              onClick: null,
+              labels: {
+                usePointStyle: true,
+                pointStyle: "circle",
+                boxWidth: 8,
+                boxHeight: 8,
+                padding: 20,
+                font: fonts,
               },
-              tooltip: {
-                backgroundColor: "#1c2c43",
-                titleColor: "#ffffff",
-                bodyColor: "#f3f6fb",
-                padding: 12,
-                cornerRadius: 10,
-                displayColors: pie,
-                titleFont: { family: fonts.family, size: 11, weight: "700" },
-                bodyFont: { family: fonts.family, size: 11 },
-                callbacks: {
-                  label: function (item) {
-                    var count = values[item.dataIndex];
-                    return (
-                      labels[item.dataIndex] +
-                      ": " +
-                      count +
-                      " (" +
-                      (total ? ((100 * count) / total).toFixed(1) : "0") +
-                      "%)"
-                    );
-                  },
+            },
+            tooltip: {
+              backgroundColor: "#1c2c43",
+              titleColor: "#ffffff",
+              bodyColor: "#f3f6fb",
+              padding: 12,
+              cornerRadius: 10,
+              displayColors: pie,
+              titleFont: { family: fonts.family, size: 11, weight: "700" },
+              bodyFont: { family: fonts.family, size: 11 },
+              callbacks: {
+                label: function (item) {
+                  var count = values[item.dataIndex];
+                  var share = total ? ((100 * count) / total).toFixed(1) : "0";
+                  return count.toLocaleString("en-PH") + " (" + share + "%)";
                 },
               },
             },
-            ...(pie
-              ? {}
-              : {
-                  scales: {
-                    x: {
-                      beginAtZero: true,
-                      grid: { color: "#edf1f5" },
-                      border: { display: false },
-                      ticks: {
-                        color: "#8c99aa",
-                        precision: 0,
-                        font: { family: fonts.family, size: 10 },
-                        padding: 8,
-                      },
-                    },
-                    y: {
-                      grid: { display: false },
-                      border: { display: false },
-                      ticks: {
-                        color: "#6c7c93",
-                        font: { family: fonts.family, size: 10 },
-                        autoSkip: false,
-                        padding: 9,
-                      },
+          },
+          ...(pie
+            ? {}
+            : {
+                scales: {
+                  x: {
+                    beginAtZero: true,
+                    grid: {},
+                    border: { display: false },
+                    ticks: {
+                      precision: 0,
+                      font: { family: fonts.family, size: 10 },
+                      padding: 8,
                     },
                   },
-                }),
-          },
-        });
-        charts.push(chart);
-        updateTheme(chart);
+                  y: {
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: {
+                      font: { family: fonts.family, size: 10 },
+                      autoSkip: false,
+                      padding: 9,
+                    },
+                  },
+                },
+              }),
+        };
+        applyTheme(type, data, options);
+        box.hidden = false;
+        var chart = new window.Chart(canvas, { type: type, data: data, options: options });
+        if (chart.ctx) {
+          charts.push(chart);
+        } else {
+          box.hidden = true;
+          chart.destroy();
+        }
       } catch (error) {
-        var failedChart = canvas.closest(".chart-box");
-        if (failedChart) failedChart.hidden = true;
+        box.hidden = true;
+        var failedChart = window.Chart.getChart(canvas);
+        if (failedChart) failedChart.destroy();
       }
+    });
+
+    if (!charts.length) return;
+    window.addEventListener("pk-theme-change", function () {
+      charts.forEach(function (chart) {
+        applyTheme(chart.config.type, chart.data, chart.options);
+        chart.update("none");
+      });
+    });
+    reducedMotion.addEventListener("change", function () {
+      charts.forEach(function (chart) {
+        chart.stop();
+        chart.options.animation = reducedMotion.matches ? false : animation;
+        chart.update("none");
+      });
     });
   });
 })();

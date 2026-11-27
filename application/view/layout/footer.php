@@ -263,6 +263,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script defer src="<?= base_url('assets/js/vendor/bootstrap.bundle.min.js') ?>"></script>
 <?php if (strtolower((string) $this->router->fetch_class()) === 'dashboard'): ?>
 <script defer src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
+<script defer src="<?= base_url('assets/js/dashboard.js?v=' . filemtime(FCPATH . 'assets/js/dashboard.js')) ?>"></script>
 <?php endif; ?>
 <script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/task-notifications.js') ?>"></script>
@@ -278,7 +279,6 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 <script defer src="<?= base_url('assets/js/document-view.js?v=' . filemtime(FCPATH . 'assets/js/document-view.js')) ?>"></script>
 <script defer src="<?= base_url('assets/js/document-tree.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/auth.js') ?>"></script>
-<script defer src="<?= base_url('assets/js/dashboard.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/plan-controls.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/live-table.js') ?>"></script>
 <script defer src="<?= base_url('assets/js/motion.js') ?>"></script>
