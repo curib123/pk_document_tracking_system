@@ -261,7 +261,7 @@ if (!in_array($flashKind, ['success', 'danger', 'warning', 'info'], TRUE))
 </div>
 <!-- Run local Bootstrap before the application handlers. -->
 <script defer src="<?= base_url('assets/js/vendor/bootstrap.bundle.min.js') ?>"></script>
-<?php if ($this->router->fetch_class() === 'dashboard'): ?>
+<?php if (strtolower((string) $this->router->fetch_class()) === 'dashboard'): ?>
 <script defer src="<?= base_url('assets/js/vendor/chart.umd.min.js') ?>"></script>
 <?php endif; ?>
 <script defer src="<?= base_url('assets/js/app.js?v=' . filemtime(FCPATH . 'assets/js/app.js')) ?>"></script>
