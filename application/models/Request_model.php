@@ -32,7 +32,7 @@ class Request_model extends CI_Model
             $this->db->where('r.status', 'submitted');
             $this->db->join(
                 'workflow_steps ws',
-                'ws.request_id=r.id AND ws.status="active"'
+                "ws.request_id=r.id AND ws.node_key=r.current_node AND ws.status='active'"
             );
             $this->db->group_start()->where('ws.assigned_user_id', $user['id'])
                 ->or_group_start()->where("JSON_UNQUOTE(JSON_EXTRACT(ws.assignment, '$.type')) = 'role'", NULL, FALSE)
@@ -59,6 +59,26 @@ class Request_model extends CI_Model
                     $this->db->escape('%' . $this->db->escape_like_str($q) . '%') . " ESCAPE '!'", NULL, FALSE)
                 ->group_end();
     }
+
+    public function status_counts($user): array
+    {
+        $counts = array_fill_keys([
+            'draft', 'submitted', 'pending', 'approved', 'rejected', 'completed', 'returned', 'cancelled'
+        ], 0);
+        $this->scope('', $user, FALSE, '', '');
+        $rows = $this->db->select('r.status, COUNT(*) AS total', FALSE)->group_by('r.status')->get()->result_array();
+        foreach ($rows as $row)
+            $counts[$row['status']] = (int) $row['total'];
+        return array_filter($counts);
+    }
+
+    public function approval_counts($user): array
+    {
+        $this->scope('', $user, TRUE, '', '');
+        $rows = $this->db->select('r.type, COUNT(*) AS total', FALSE)->group_by('r.type')->get()->result_array();
+        return array_map('intval', array_column($rows, 'total', 'type'));
+    }
+
     public function listing($tab, $user, $task, $q, $status, $page, $limit, $filters = [])
     {
         $this->scope($tab, $user, $task, $q, $status, $filters);
@@ -76,19 +96,25 @@ class Request_model extends CI_Model
     {
         if (($tab !== '' && $tab !== 'hardcopy-transfer') ||
             !in_array($state['type'], ['', 'transfer'], TRUE) ||
-            !in_array($state['status'], ['', 'for_transfer', 'in_transit'], TRUE)) {
+            !in_array($state['status'], ['', 'handoffs', 'for_transfer', 'in_transit'], TRUE)) {
             return $this->listing($tab, $user, TRUE, $state['q'], $state['status'], $state['page'], $state['limit'], $state);
         }
 
         $this->load->model('Transfer_model');
-        $handoffs = $this->Transfer_model->register_query($user, $state);
-        $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
-        $approvals = $this->db->select(
-            'ws.id AS task_id, 0 AS handoff, r.id AS request_id, r.reference, r.type, r.status,
-             r.created_at, r.updated_at, CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
-            FALSE
-        )->join('users u', 'u.id=r.requested_by')->get_compiled_select();
-        $source = "($approvals UNION ALL $handoffs) AS task_register";
+        $handoffState = $state;
+        if ($handoffState['status'] === 'handoffs')
+            $handoffState['status'] = '';
+        $source = $this->Transfer_model->register_query($user, $handoffState);
+        if ($state['status'] === '') {
+            $this->scope($tab, $user, TRUE, $state['q'], $state['status'], $state);
+            $approvals = $this->db->select(
+                'ws.id AS task_id, 0 AS handoff, r.id AS request_id, r.reference, r.type, r.status,
+                 r.created_at, r.updated_at, CONCAT_WS(" ",u.first_name,u.last_name) AS requester_name',
+                FALSE
+            )->join('users u', 'u.id=r.requested_by')->get_compiled_select();
+            $source = "$approvals UNION ALL $source";
+        }
+        $source = "($source) AS task_register";
         $total = (int) $this->db->query("SELECT COUNT(*) AS total FROM $source")->row()->total;
         $limit = (int) $state['limit'];
         $page = min($state['page'], max(1, (int) ceil($total / $limit)));

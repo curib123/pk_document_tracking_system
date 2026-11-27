@@ -490,6 +490,7 @@ $dt_filters = [
 $dt_filters['status'] = $task ? [
   '' => 'All Statuses',
   'submitted' => 'Pending Approval',
+  'handoffs' => 'Outstanding Handoffs',
   'for_transfer' => 'For Transfer',
   'in_transit' => 'In Transit'
 ] :

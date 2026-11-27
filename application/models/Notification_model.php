@@ -39,7 +39,6 @@ class Notification_model extends CI_Model
         $requests = $this->emptyCounts();
         $tasks = $this->emptyCounts();
         $userId = (int) $user['id'];
-        $roleIds = implode(',', User_roles::ids($user) ?: [0]);
 
         // Only returned drafts require action by their original requester.
         $owned = $this->db->select('type,COUNT(*) AS total', FALSE)
@@ -51,23 +50,11 @@ class Notification_model extends CI_Model
                 $requests[$tab] += (int) $row['total'];
         }
 
-        // Only current, active approval assignments are actionable tasks.
-        // DISTINCT avoids double counting a request for a user matching both
-        // an explicit assignment and a role-based assignment.
-        $assigned = $this->db->select('r.type,COUNT(DISTINCT r.id) AS total', FALSE)
-            ->from('requests r')
-            ->join('workflow_steps s', "s.request_id=r.id AND s.status='active'")
-            ->where('r.status', 'submitted')
-            ->group_start()->where('s.assigned_user_id', $userId)
-            ->or_group_start()
-            ->where("JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.type')) = 'role'", NULL, FALSE)
-            ->where("CAST(JSON_UNQUOTE(JSON_EXTRACT(s.assignment, '$.value')) AS UNSIGNED) IN (" . $roleIds . ")", NULL, FALSE)
-            ->group_end()->group_end()
-            ->group_by('r.type')->get()->result_array();
-        foreach ($assigned as $row) {
-            $tab = $this->tabForType($row['type']);
+        $this->load->model('Request_model');
+        foreach ($this->Request_model->approval_counts($user) as $type => $count) {
+            $tab = $this->tabForType($type);
             if ($tab !== NULL)
-                $tasks[$tab] += (int) $row['total'];
+                $tasks[$tab] += $count;
         }
 
         // Physical handoffs are listed in My Tasks alongside workflow approvals.
