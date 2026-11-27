@@ -39,16 +39,24 @@ class Audit_file
             $temp = tempnam($dir, '.audit-');
             if (!$temp)
                 return FALSE;
-            if (file_put_contents($temp, $json . "\n") === FALSE) {
-                @unlink($temp);
+            try {
+                $contents = $json . "\n";
+                if (file_put_contents($temp, $contents) !== strlen($contents))
+                    return FALSE;
+                chmod($temp, 0600);
+                // Windows readers can temporarily prevent replacement of the daily file.
+                $attempts = DIRECTORY_SEPARATOR === '\\' ? 11 : 1;
+                for ($attempt = 1; $attempt <= $attempts; $attempt++) {
+                    if (@rename($temp, $path))
+                        return TRUE;
+                    if ($attempt < $attempts)
+                        usleep(20000);
+                }
                 return FALSE;
+            } finally {
+                if (is_file($temp))
+                    @unlink($temp);
             }
-            chmod($temp, 0600);
-            if (!rename($temp, $path)) {
-                @unlink($temp);
-                return FALSE;
-            }
-            return TRUE;
         } finally {
             flock($lock, LOCK_UN);
             fclose($lock);
