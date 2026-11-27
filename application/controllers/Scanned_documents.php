@@ -31,9 +31,7 @@ class Scanned_documents extends MY_Controller
             $browser['search'] = Folder_search::for_browser($browser, $state['q'], 'scanned');
         }
         $filter = function () use ($service, $state, $category, $status, $browser) {
-            $this->db->from('scanned_documents d')->join('scanned_categories c', 'c.id=d.category_id')
-                ->where('d.status', $status);
-            if (!$service->global_access($this->user)) $this->db->where('d.created_by', (int) $this->user['id']);
+            $service->register_query($this->user, $status);
             if ($category) $this->db->where('d.category_id', $category);
             if ($state['q'] !== '') {
                 $this->db->group_start()->like('d.title', $state['q'])->or_like('d.description', $state['q'])->or_like('c.name', $state['q']);

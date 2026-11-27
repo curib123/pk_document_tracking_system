@@ -12,7 +12,8 @@
     var documentColors = {
       Hardcopy: ["--ui-blue-700", "--ui-blue-900"],
       Softcopy: ["--ui-brand-600", "--ui-brand-800"],
-      External: ["--ui-purple-700", "--ui-purple-700"]
+      External: ["--ui-purple-700", "--ui-purple-700"],
+      Scanned: ["--ui-green-700", "--ui-green-900"]
     };
     dataset.backgroundColor = pie
       ? data.labels.map(function (label) {

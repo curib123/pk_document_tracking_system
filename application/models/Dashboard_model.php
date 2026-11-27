@@ -12,20 +12,31 @@ class Dashboard_model extends CI_Model
         $counts = [];
         $created = 0;
         $userId = (int) $user['id'];
-        foreach (['hardcopy' => 'hardcopy', 'softcopy' => 'softcopy', 'external' => 'external_documents'] as $domain => $module) {
+        $documentModules = [
+            'hardcopy' => 'hardcopy',
+            'softcopy' => 'softcopy',
+            'external' => 'external_documents',
+            'scanned' => 'scanned_documents'
+        ];
+        foreach ($documentModules as $domain => $module) {
             if (!$this->Permission_model->allowed($user, $module))
                 continue;
             if ($domain === 'external') {
                 require_once APPPATH . 'services/documents/external_document_service.php';
-                $table = 'external_documents';
-                $scope = (new External_document_service())->can_view_all($user)
-                    ? '1=1' : 'd.created_by=' . $userId;
+                $canViewAll = (new External_document_service())->can_view_all($user);
+                $query = $this->db->from('external_documents d');
+                if (!$canViewAll)
+                    $query->where('d.created_by', $userId);
+            } elseif ($domain === 'scanned') {
+                require_once APPPATH . 'services/documents/scanned_document_service.php';
+                $query = (new Scanned_document_service())->register_query($user);
             } else {
                 $table = $this->Document_model->config($domain)['table'];
                 $scope = $this->Document_model->scope($domain, $user);
+                $query = $this->db->from($table . ' d')->where($scope, NULL, FALSE);
             }
-            $totals = $this->db->select('COUNT(*) AS total,SUM(d.created_by=' . $userId . ') AS mine', FALSE)
-                ->from($table . ' d')->where($scope, NULL, FALSE)->get()->row_array();
+            $totals = $query->select('COUNT(*) AS total,SUM(d.created_by=' . $userId . ') AS mine', FALSE)
+                ->get()->row_array();
             $counts[$domain] = (int) $totals['total'];
             $created += (int) $totals['mine'];
         }

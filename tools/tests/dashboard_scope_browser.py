@@ -25,6 +25,13 @@ def seed_scope_cases():
            requested_by=6, payload={}, status='pending')
     insert('requests', reference='SCOPE-AUDITOR-PRIVATE', type='softcopy_create', requested_by=4, payload={})
     insert('external_documents', title='Leader External Reference', category_id=1, created_by=6, status='disposed')
+    scanned_category = sql("SELECT id FROM scanned_categories WHERE name = 'Sample Scanned Records'")
+    for title, owner, status in [('Leader Scanned Record', 6, 'active'),
+                                 ('Admin Scanned Record', 1, 'active'),
+                                 ('Deleted Scanned Record', 6, 'deleted')]:
+        insert('scanned_documents', title=title, category_id=int(scanned_category),
+               retention_start_date='2026-11-01', retention_end_date='2027-11-01',
+               created_by=owner, approved_by=2, status=status)
     sql("""DELETE rp FROM role_permissions rp
         JOIN permissions p ON p.id = rp.permission_id
         WHERE rp.role_id = 4 AND NOT (p.module_key = 'dashboard' AND p.action_key = 'view');
@@ -37,7 +44,8 @@ def seed_scope_cases():
             (p.module_key = 'backups' AND p.action_key = 'view')
         );
         INSERT IGNORE INTO role_permissions (role_id, permission_id)
-        SELECT 5, id FROM permissions WHERE module_key = 'external_documents' AND action_key = 'view';
+        SELECT 5, id FROM permissions
+        WHERE module_key IN ('external_documents', 'scanned_documents') AND action_key = 'view';
         UPDATE transfers SET recipient_id = 4 WHERE status = 'in_transit';""")
 
 
@@ -63,15 +71,16 @@ def follow_count(page, link_pattern, total):
     return page.locator('[data-table-results]')
 
 
-def check_external_register(page, total):
-    row = page.locator('.dashboard-page tr').filter(has=page.locator('[data-document-kind=external]'))
+def check_document_register(page, kind, total):
+    row = page.locator('.dashboard-page tr').filter(has=page.locator(f'[data-document-kind={kind}]'))
     expect(row.locator('td').first).to_have_text(str(total))
     chart = page.locator('.dashboard-page [data-chart-type=doughnut]')
     labels = json.loads(chart.get_attribute('data-chart-labels'))
     counts = json.loads(chart.get_attribute('data-chart-counts'))
-    assert dict(zip(labels, counts))['External'] == total
+    assert dict(zip(labels, counts))[kind.capitalize()] == total
     metric(page, 'documents', sum(counts))
-    return follow_count(page, 'documents/external?', total)
+    expect(chart).to_be_visible()
+    return follow_count(page, f'documents/{kind}?', total)
 
 
 def accept_assigned_handoff(page, base):
@@ -106,9 +115,14 @@ def run():
         expect(handoffs).to_contain_text('DEMO-TRANSFER-')
         leader.goto(base + 'dashboard')
         expect(leader.locator('.dashboard-page a[href$="admin/backups"]')).to_have_count(0)
-        external = check_external_register(leader, 1)
+        external = check_document_register(leader, 'external', 1)
         expect(external).to_contain_text('Leader External Reference')
         expect(external).not_to_contain_text('Sample Supplier Reference')
+        leader.goto(base + 'dashboard')
+        scanned = check_document_register(leader, 'scanned', 1)
+        expect(scanned).to_contain_text('Leader Scanned Record')
+        expect(scanned).not_to_contain_text('Admin Scanned Record')
+        expect(scanned).not_to_contain_text('Deleted Scanned Record')
 
         auditor = signed_in(browser, base, 'auditor')
         metric(auditor, 'pending_tasks', 1)
@@ -117,6 +131,7 @@ def run():
         expect(auditor.locator('.dashboard-page a[href$="my-requests"]')).to_have_count(0)
         expect(auditor.locator('.dashboard-page [data-chart-type=bar]')).to_have_count(0)
         expect(auditor.locator('.dashboard-page [data-document-kind=external]')).to_have_count(0)
+        expect(auditor.locator('.dashboard-page [data-document-kind=scanned]')).to_have_count(0)
         expect(auditor.locator('.dashboard-page a[href$="admin/backups"]')).to_have_count(0)
         receipt = follow_count(auditor, 'status=handoffs', 1)
         expect(receipt).to_contain_text('In Transit')
@@ -127,9 +142,14 @@ def run():
         admin = signed_in(browser, base, 'admin')
         expect(admin.locator('.dashboard-page [data-chart-type=bar]')).to_have_count(1)
         assert 'Pending' not in admin.locator('[data-chart-type=bar]').get_attribute('data-chart-labels')
-        external = check_external_register(admin, 2)
+        external = check_document_register(admin, 'external', 2)
         expect(external).to_contain_text('Sample Supplier Reference')
         expect(external).to_contain_text('Leader External Reference')
+        admin.goto(base + 'dashboard')
+        scanned = check_document_register(admin, 'scanned', 2)
+        expect(scanned).to_contain_text('Leader Scanned Record')
+        expect(scanned).to_contain_text('Admin Scanned Record')
+        expect(scanned).not_to_contain_text('Deleted Scanned Record')
         admin.goto(base + 'dashboard')
         admin.locator('.dashboard-page').get_by_role('link', name='Backup & Restore').click()
         admin.wait_for_url('**/admin/backups')

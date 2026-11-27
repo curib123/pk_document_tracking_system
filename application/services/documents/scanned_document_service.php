@@ -17,6 +17,16 @@ class Scanned_document_service
             $this->ci->Permission_model->allowed($user, 'documents', 'view_all');
     }
 
+    public function register_query(array $user, string $status = 'active')
+    {
+        $globalAccess = $this->global_access($user);
+        $query = $this->ci->db->from('scanned_documents d')
+            ->join('scanned_categories c', 'c.id=d.category_id')->where('d.status', $status);
+        if (!$globalAccess)
+            $query->where('d.created_by', (int) $user['id']);
+        return $query;
+    }
+
     public function authorize(string $type, array $payload, array $user): void
     {
         $this->ci->load->model('Permission_model');
