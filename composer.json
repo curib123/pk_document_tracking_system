@@ -13,7 +13,18 @@
     "ext-mysqli": "*"
   },
   "scripts": {
-    "test": "bash tests/run_unit.sh"
+    "test": [
+      "@php tools/tests/offline_assets.php",
+      "@php tools/tests/scanned_policy.php",
+      "@php tools/tests/scanned_category_policy.php",
+      "@php tools/tests/signatory_references.php",
+      "@php tools/tests/softcopy_document_number_generator.php",
+      "@php tools/tests/workflow_document_lock.php",
+      "@php tools/tests/workflow_final_file_step.php",
+      "@php tools/tests/backup_rotation.php",
+      "@php tools/tests/orphan_file_cleanup.php",
+      "@php tools/tests/scanned_integration.php"
+    ]
   },
   "config": {
     "allow-plugins": false,

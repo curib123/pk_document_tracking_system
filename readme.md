@@ -171,39 +171,32 @@ updates address these cases:
 | `public/assets/` | Styles, JavaScript, fonts, and images |
 | `database/` | Database export and incremental SQL migrations |
 | `storage/` | Private files, sessions, logs, audits, and generated artifacts |
-| `tests/` | Focused browser and HTTP regression checks |
+| `tools/tests/` | PHP and browser regression checks |
 | `tools/` | Administrator, backup, asset, and local synchronization utilities |
 
 Shared colors are defined in [public/assets/css/colors.css](public/assets/css/colors.css). Theme behavior lives in [public/assets/js/theme.js](public/assets/js/theme.js), and document View rendering lives in [public/assets/js/document-view.js](public/assets/js/document-view.js).
 
 ## Verification
 
-The available browser checks require Python, Playwright, Microsoft Edge, running MySQL, and the PHP dependencies:
+Run the PHP checks with Composer. The database checks use disposable fixtures and require a running MySQL server with permission to create and drop test databases.
+
+```powershell
+composer test
+npm.cmd run test:assets
+```
+
+The browser checks require Python, Playwright, Microsoft Edge, MySQL, and the PHP dependencies. Run them from the repository root and set `TEST_MYSQL` if MySQL is missing from PATH.
 
 ```powershell
 python -m pip install playwright
-python tests/cancelled_draft_delete.py
-python tests/document_assignments.py
-python tests/document_header.py
-python tests/theme_toggle.py
-python tests/dark_mode_feedback.py
-python tests/modal_close_buttons.py
+$env:TEST_MYSQL = 'C:\xampp\mysql\bin\mysql.exe'
+python tools/tests/dashboard_scope_browser.py
+python tools/tests/revision_template_browser.py
+python tools/tests/scanned_browser.py
+python tools/tests/softcopy_manual_number_browser.py
 ```
 
-These checks clone the source database into a generated database ending in `_test`, run a temporary application, and drop that test database afterward. The source database is read for the clone; test mutations apply to the disposable copy. The database account needs permission to create and drop test databases. Generated screenshots are written under ignored `storage/` directories.
-
-The fixture defaults to `C:\xampp\php\php.exe`, `C:\xampp\mysql\bin\mysql.exe`, and source database `pk_dts`. Override these with `TEST_PHP`, `TEST_MYSQL`, and `TEST_SOURCE_DATABASE`; `mysqldump.exe` must be beside the configured MySQL executable. Database credentials use `DB_HOST`, `DB_USERNAME`, and `DB_PASSWORD`. The fixture currently connects through the client's default MySQL port.
-
-External CDN assets are blocked by default to exercise the fallback interface. To also check Bootstrap and other CDN assets:
-
-```powershell
-$env:TEST_EXTERNAL_ASSETS = '1'
-python tests/document_assignments.py
-python tests/modal_close_buttons.py
-Remove-Item Env:TEST_EXTERNAL_ASSETS
-```
-
-The current `composer test` and npm build/test scripts reference runner files that are absent from this checkout. Use the focused checks above until those runners are restored.
+`npm.cmd run audit:css` reports CSS selectors for manual review.
 
 ## Sync a development checkout to local XAMPP
 
@@ -331,12 +324,8 @@ Viewer checks cover opening and rendering. The editable diagrams use VSDX.
 
 ## Check application changes
 
-The application test runners referenced by `composer test` and the npm scripts
-are absent from this checkout. The older browser test scripts are also absent;
-do not use those commands as evidence that an application change passed.
-
-Check the affected behavior in the running application with suitable test data.
-Documentation verification above checks the documentation only.
+Use the [application test commands](#verification) to check affected workflows
+with disposable test data.
 
 ## Sync a development checkout to XAMPP
 
